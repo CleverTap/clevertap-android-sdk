@@ -33,6 +33,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,7 +55,6 @@ public class VarCache {
         Logger.i("ctv_VARCACHE",msg,t);
     }
 
-
     private final Map<String, Object> valuesFromClient = new HashMap<>();
 
     private final Map<String, Var<?>> vars = new ConcurrentHashMap<>();
@@ -63,7 +63,7 @@ public class VarCache {
 
     private boolean hasReceivedDiffs = false;
 
-    private CacheUpdateBlock updateBlock =null;
+    private CacheUpdateBlock updateBlock = null;
 
     private Map<String, Object> diffs = new HashMap<>();
 
@@ -89,6 +89,7 @@ public class VarCache {
             t.printStackTrace();
         }
     }
+
     private String loadDataFromCache(){
         log("loadDataFromCache() called");
         String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
@@ -149,26 +150,27 @@ public class VarCache {
     //     for valuesFromClient, it will changed from mapOf() to mapOf("group1":mapOf('myvariable':12.4))
     //    for every next value added, the internal maps of valuesFromClient will get updated accordingly
 
-    public void registerVariable(@NonNull Var<?> var) {
+    public synchronized void registerVariable(@NonNull Var<?> var) {
         log( "registerVariable() called with: var = [" + var + "]");
         vars.put(var.name(), var);
-        synchronized (valuesFromClient) {
-            Object defaultValue = var.defaultValue();
-            if (defaultValue instanceof Map) {
-                defaultValue = CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(defaultValue));
-            }
-            CTVariableUtils.updateValuesAndKinds(
-                var.name(),
-                var.nameComponents(),
-                defaultValue,
-                var.kind(),
-                valuesFromClient,
-                defaultKinds);
+
+        Object defaultValue = var.defaultValue();
+        if (defaultValue instanceof Map) {
+            defaultValue = CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(defaultValue));
         }
+        CTVariableUtils.updateValuesAndKinds(
+            var.name(),
+            var.nameComponents(),
+            defaultValue,
+            var.kind(),
+            valuesFromClient,
+            defaultKinds);
+
         mergeVariable(var);
+
     }
 
-    public <T> T getMergedValue(String variableName) {
+    public synchronized <T> T getMergedValue(String variableName) {
         String[] components = CTVariableUtils.getNameComponents(variableName);
         return getMergedValueFromComponentArray(components);
     }
@@ -176,13 +178,13 @@ public class VarCache {
     //components:["group1","myVariable"]
     //----
     //basically calls getMergedValueFromComponentArray(components,merged[g] or valuesFromClient[g]) and returns its value
-    public <T> T getMergedValueFromComponentArray(Object[] components) {
+    public synchronized <T> T getMergedValueFromComponentArray(Object[] components) {
         return getMergedValueFromComponentArray(components, merged != null ? merged : valuesFromClient);
     }
 
     //components : ["group1","myVariable"]  , values : merged[g] or valuesFromClient[g]
     // will basically set values(i.e merged[g] or valuesFromClient[g]) to mapOf("group1"to mapOf('myVariable' to 12.4))
-    public <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
+    public synchronized <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
         Object mergedPtr = values;
         for (Object component : components) {
             mergedPtr = CTVariableUtils.traverse(mergedPtr, component, false);
@@ -191,7 +193,7 @@ public class VarCache {
     }
 
     //will basically call applyVariableDiffs(..) with values stored in pref
-    private void loadDiffs() {
+    public synchronized void loadDiffs() {
         log( "loadDiffs() called");
         try {
             String variablesFromCache = loadDataFromCache();
@@ -202,47 +204,33 @@ public class VarCache {
             log("Could not load variable diffs.\n" ,e);
         }
     }
-    public void loadDiffsSync(){
-        synchronized (CTVariables.class){
-            log("loadDiffs() called in sync block");
-            loadDiffs();
-        }
-    }
-    public void loadDiffsAsync(){ // TODO To make this method work you need to make parsing and defining of vars in the same async queue
-        log("initAsync() called");
-        log("initAsync: config="+instanceConfig);
-
-        Callable<Object> action = () -> {
-            loadDiffsSync();
-            return null;
-        };
-        try {
-            if (instanceConfig == null) action.call();
-            else CTExecutorFactory.executors(instanceConfig).postAsyncSafelyTask().execute("ctv_past_VarCache#loadDiffsAsync", action);
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-
-    }
 
     //same as loadiffs, but will also trigger one/multi time listeners
-    public void loadDiffsAndTriggerHandlers() {
+    public synchronized void loadDiffsAndTriggerHandlers() {
         log( "loadDiffsAndTriggerHandlers() called");
         loadDiffs();
         triggerHasReceivedDiffs();
     }
 
     //same as loadiffs, but differs in 2 aspects: 1) instead of picking data from cache, it receives data as param and 2) it will also trigger one/mult time listeners
-    public void updateDiffsAndTriggerHandlers(Map<String, Object> diffs) {
+    public synchronized void updateDiffsAndTriggerHandlers(Map<String, Object> diffs) {
         log( "updateDiffsAndTriggerHandlers() called with: diffs = [" + diffs + "]");
         applyVariableDiffs(diffs);
-        saveDiffs();
+        saveDiffsAsync();
         triggerHasReceivedDiffs();
+    }
+
+    private void saveDiffsAsync() {
+        Task<Void> task = CTExecutorFactory.executors(instanceConfig).postAsyncSafelyTask();
+        task.execute("VarCache#saveDiffsAsync", () -> {
+            saveDiffs();
+            return null;
+        });
     }
 
     // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache. must be called on a worker thread to prevent ANR
     @WorkerThread
-    public void saveDiffs() {
+    private void saveDiffs() {
         log( "saveDiffs() called");
         String variablesCipher = JsonUtil.toJson(diffs);
         storeDataInCache(variablesCipher);
@@ -256,11 +244,10 @@ public class VarCache {
     private void applyVariableDiffs(Map<String, Object> diffs) {
         log("applyVariableDiffs() called with: diffs = [" + diffs + "]");
         if (diffs != null) {
-            synchronized (valuesFromClient) {
-                this.diffs = diffs;
-                merged = CTVariableUtils.mergeHelper(valuesFromClient, this.diffs);
-                log("applyVariableDiffs: updated value of merged=["+merged+"]" );
-            }
+            this.diffs = diffs;
+            merged = CTVariableUtils.mergeHelper(valuesFromClient, this.diffs);
+            log("applyVariableDiffs: updated value of merged=["+merged+"]" );
+
             // Update variables with new values. Have to copy the dictionary because a
             // dictionary variable may add a new sub-variable, modifying the variable dictionary.
             for (String name : new HashMap<>(vars).keySet()) {
@@ -273,9 +260,8 @@ public class VarCache {
 
     }
 
-
     //will simply  set hasReceivedDiffs[g] = true; and call updateBlock[g].updateCache() which further triggers the callbacks set by user for listening to variables update
-    public void triggerHasReceivedDiffs() {
+    public synchronized void triggerHasReceivedDiffs() {
         // update block is a callback registered by CTVariables to trigger user's callback once the diffs are changed
         hasReceivedDiffs = true;
         if (updateBlock != null) {
@@ -289,7 +275,7 @@ public class VarCache {
     }
 
     // will reset a lot of global variables
-    public void reset() {
+    public synchronized void reset() {
         defaultKinds.clear();
         diffs.clear();
         hasReceivedDiffs = false;
@@ -300,7 +286,7 @@ public class VarCache {
         storeDataInCache("");
     }
 
-    public <T> Var<T> getVariable(String name) {
+    public synchronized <T> Var<T> getVariable(String name) {
         return JsonUtil.uncheckedCast(vars.get(name));
     }
 
@@ -309,17 +295,16 @@ public class VarCache {
         return vars.size();
     }
 
-    public void setCacheUpdateBlock(CacheUpdateBlock block) {
+    public synchronized void setCacheUpdateBlock(CacheUpdateBlock block) {
         updateBlock = block;
     }
-
 
     public boolean hasReceivedDiffs() {
         return hasReceivedDiffs;
     }
 
     @Discouraged(message = "only for testing")
-    public void logProperties(){
+    public synchronized void logProperties(){
         log("current_props:");
         log("defaultKinds:"+defaultKinds);
         log("diffs:"+diffs);

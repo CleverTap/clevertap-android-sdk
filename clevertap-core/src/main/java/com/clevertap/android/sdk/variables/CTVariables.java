@@ -55,13 +55,12 @@ public class CTVariables {
         log("CTVariables(id: "+this.hashCode()+") initialised with varCache:"+varCache.hashCode());
     }
 
-
     /** WORKING: <br>
      *  0. user calls this function which triggers calls the following functions synchronously :<br><br>
      *      *** {@link VarCache#setCacheUpdateBlock(CacheUpdateBlock)} : this sets a callback in
      *          {@link VarCache} class, which will be triggered once the values are loaded/updated
      *          from the server/cache <br><br>
-     *      *** {@link VarCache#loadDiffsSync()} : this loads the last cached values of Variables from
+     *      *** {@link VarCache#loadDiffs()} : this loads the last cached values of Variables from
      *          Shared Preferences, and updates {@link VarCache()#diffs} & {@link VarCache()#merged}
      *          accordingly <br><br>
      *
@@ -69,7 +68,7 @@ public class CTVariables {
      */
     public void init() {
         log("init() called");
-        varCache.loadDiffsSync();
+        varCache.loadDiffs();
     }
 
     /**
