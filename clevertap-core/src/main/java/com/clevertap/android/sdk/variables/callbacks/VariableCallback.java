@@ -11,9 +11,9 @@ public abstract class VariableCallback<T> implements Runnable {
 
     public void run() {
         synchronized (variable) {
-            this.handle(variable);
+            this.onValueChanged(variable);
         }
     }
 
-    public abstract void handle(Var<T> variable);
+    public abstract void onValueChanged(Var<T> variable);
 }

@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.variables;
 
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -8,7 +7,7 @@ import com.clevertap.android.sdk.BuildConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
+import com.clevertap.android.sdk.variables.callbacks.CacheUpdateCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
@@ -30,7 +29,7 @@ public class CTVariables {
     private boolean variableResponseReceived = false;
     private final List<VariablesChangedCallback> variablesChangedCallbacks = new ArrayList<>();
     private final List<VariablesChangedCallback> oneTimeVariablesChangedCallbacks = new ArrayList<>();
-    private final CacheUpdateBlock triggerVariablesChanged = () -> {
+    private final CacheUpdateCallback triggerVariablesChanged = () -> {
         synchronized (variablesChangedCallbacks) {
             for (VariablesChangedCallback callback : variablesChangedCallbacks) {
                 Utils.runOnUiThread(callback);
@@ -51,13 +50,13 @@ public class CTVariables {
 
     public CTVariables(final VarCache varCache) {
         this.varCache = varCache;
-        this.varCache.setCacheUpdateBlock(triggerVariablesChanged);
+        this.varCache.setCacheUpdateCallback(triggerVariablesChanged);
         log("CTVariables(id: "+this.hashCode()+") initialised with varCache:"+varCache.hashCode());
     }
 
     /** WORKING: <br>
      *  0. user calls this function which triggers calls the following functions synchronously :<br><br>
-     *      *** {@link VarCache#setCacheUpdateBlock(CacheUpdateBlock)} : this sets a callback in
+     *      *** {@link VarCache#setCacheUpdateCallback(CacheUpdateCallback)} : this sets a callback in
      *          {@link VarCache} class, which will be triggered once the values are loaded/updated
      *          from the server/cache <br><br>
      *      *** {@link VarCache#loadDiffs()} : this loads the last cached values of Variables from
@@ -186,7 +185,7 @@ public class CTVariables {
      * from the server. <br>
      * This is used to print warnings in logs (see {@link Var#warnIfNotStarted()},
      * and prevent listeners from triggering ( see {@link Var#update()} and {@link
-     * Var#addValueChangedHandler(VariableCallback)}
+     * Var#addValueChangedCallback(VariableCallback)}
      * <br>
      * <br>
      *

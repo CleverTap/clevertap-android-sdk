@@ -34,10 +34,9 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
+import com.clevertap.android.sdk.variables.callbacks.CacheUpdateCallback;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONObject;
 
@@ -63,7 +62,7 @@ public class VarCache {
 
     private boolean hasReceivedDiffs = false;
 
-    private CacheUpdateBlock updateBlock = null;
+    private CacheUpdateCallback updateCallback = null;
 
     private Map<String, Object> diffs = new HashMap<>();
 
@@ -264,9 +263,9 @@ public class VarCache {
     public synchronized void triggerHasReceivedDiffs() {
         // update block is a callback registered by CTVariables to trigger user's callback once the diffs are changed
         hasReceivedDiffs = true;
-        if (updateBlock != null) {
+        if (updateCallback != null) {
             log("triggering the VariableChangedCallbacks/OneTimeVariableChangedCallbacks because hasReceivedDiffs is now true");
-            updateBlock.updateCache();
+            updateCallback.onCacheUpdated();
         }
     }
 
@@ -280,7 +279,7 @@ public class VarCache {
         diffs.clear();
         hasReceivedDiffs = false;
         merged = null;
-        updateBlock = null;
+        updateCallback = null;
         vars.clear();
         valuesFromClient.clear();
         storeDataInCache("");
@@ -295,8 +294,8 @@ public class VarCache {
         return vars.size();
     }
 
-    public synchronized void setCacheUpdateBlock(CacheUpdateBlock block) {
-        updateBlock = block;
+    public synchronized void setCacheUpdateCallback(CacheUpdateCallback callback) {
+        updateCallback = callback;
     }
 
     public boolean hasReceivedDiffs() {

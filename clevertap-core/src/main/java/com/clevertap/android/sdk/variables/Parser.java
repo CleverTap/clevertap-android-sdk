@@ -199,9 +199,9 @@ public class Parser {
     final boolean hasInstance = instance != null;
     final WeakReference<Object> weakInstance = new WeakReference<>(instance);
 
-    var.addValueChangedHandler(new VariableCallback<T>() {
+    var.addValueChangedCallback(new VariableCallback<T>() {
       @Override
-      public void handle(Var<T> variable) {
+      public void onValueChanged(Var<T> variable) {
         Object instanceFromWeakRef = weakInstance.get();
         if ((hasInstance && instanceFromWeakRef == null) || field == null) {
           var.removeValueChangedHandler(this);

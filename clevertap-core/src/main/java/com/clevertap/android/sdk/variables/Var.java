@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.variables;
 
-
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.Logger;
@@ -20,11 +19,6 @@ import java.util.Map;
 public class Var<T> {
     private final CTVariables ctVariables;
 
-    public Var( final CTVariables ctVariables) {
-        log("Var() called with: ctVariables = [" + ctVariables + "]");
-        this.ctVariables = ctVariables;
-    }
-
     private String name;
 
     private String[] nameComponents;
@@ -42,7 +36,13 @@ public class Var<T> {
     private boolean hadStarted = false;
 
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
+
     private static boolean printedCallbackWarning;
+
+    public Var(CTVariables ctVariables) {
+        log("Var() called with: ctVariables = [" + ctVariables + "]");
+        this.ctVariables = ctVariables;
+    }
 
     private static void log(String msg){
         Logger.v("ctv_VAR",msg);
@@ -51,7 +51,6 @@ public class Var<T> {
     private static void log(String msg,Throwable t){
         Logger.v("ctv_VAR",msg,t);
     }
-
 
     public static <T> Var<T> define(String name, T defaultValue, CTVariables ctVariables) {
         String type = CTVariableUtils.kindFromValue(defaultValue);
@@ -95,7 +94,6 @@ public class Var<T> {
         }
         return var;
     }
-
 
     /**
      * updates the value in {@link #value} by getting the final merged value from
@@ -166,7 +164,6 @@ public class Var<T> {
         }
     }
 
-    //prob a  fault-tolernance check around a case where server values are number but in string format (like "20_000") . this will convert the string to actual number  in double format
     private void modifyNumberValue(String src) {
         try {
             numberValue = Double.valueOf(src);
@@ -207,44 +204,52 @@ public class Var<T> {
     public String name() {
         return name;
     }
+
     public String[] nameComponents() {
         return nameComponents;
     }
+
     public String kind() {
         return kind;
     }
+
     public T defaultValue() {
         return defaultValue;
     }
+
     public T value() {
         warnIfNotStarted();
         return value;
     }
-    public void addValueChangedHandler(VariableCallback<T> handler) {
-        if (handler == null) {
-            log( "Invalid handler parameter provided.");
+
+    public void addValueChangedCallback(VariableCallback<T> callback) {
+        if (callback == null) {
+            log("Invalid callback parameter provided.");
             return;
         }
 
         synchronized (valueChangedHandlers) {
-            valueChangedHandlers.add(handler);
+            valueChangedHandlers.add(callback);
         }
 
         if (ctVariables.isVariableResponseReceived()) {
-            handler.handle(this);
+            callback.onValueChanged(this);
         } else {
-            log("The added listener will get triggered once the values are successfully retrieved");
+            log("The added callback will get triggered once the values are successfully retrieved");
         }
     }
+
     public void removeValueChangedHandler(VariableCallback<T> handler) {
         synchronized (valueChangedHandlers) {
             valueChangedHandlers.remove(handler);
         }
     }
+
     public Number numberValue() {
         warnIfNotStarted();
         return numberValue;
     }
+
     public String stringValue() {
         warnIfNotStarted();
         return stringValue;

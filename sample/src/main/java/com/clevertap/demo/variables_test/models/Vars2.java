@@ -64,30 +64,30 @@ public class Vars2 {
         Var<Double> vb = ct.defineVariable("dDb2",9.99);
         Var<Integer> vc = ct.defineVariable("dIn2",9);
         Var<Boolean> vd = ct.defineVariable("dBool2",false);
-        va.addValueChangedHandler(new VariableCallback<String>() {
+        va.addValueChangedCallback(new VariableCallback<String>() {
             @Override
-            public void handle(Var<String> variable) {
+            public void onValueChanged(Var<String> variable) {
                 UtilsKt.logg("VariableCallback@"+this.hashCode()+"called for "+ va.name()+ ". current value of variable="+va.value());
             }
         });
 
-        vb.addValueChangedHandler(new VariableCallback<Double>() {
+        vb.addValueChangedCallback(new VariableCallback<Double>() {
             @Override
-            public void handle(Var<Double> variable) {
+            public void onValueChanged(Var<Double> variable) {
                 UtilsKt.logg("VariableCallback@"+this.hashCode()+"called for "+ vb.name()+ ". current value of variable="+vb.value());
             }
         });
 
-        vc.addValueChangedHandler(new VariableCallback<Integer>() {
+        vc.addValueChangedCallback(new VariableCallback<Integer>() {
             @Override
-            public void handle(Var<Integer> variable) {
+            public void onValueChanged(Var<Integer> variable) {
                 UtilsKt.logg("VariableCallback@"+this.hashCode()+"called for "+ vc.name()+ ". current value of variable="+vc.value());
             }
         });
 
-        vd.addValueChangedHandler(new VariableCallback<Boolean>() {
+        vd.addValueChangedCallback(new VariableCallback<Boolean>() {
             @Override
-            public void handle(Var<Boolean> variable) {
+            public void onValueChanged(Var<Boolean> variable) {
                 UtilsKt.logg("VariableCallback@"+this.hashCode()+"called for "+ vd.name()+ ". current value of variable="+vd.value());
             }
         });

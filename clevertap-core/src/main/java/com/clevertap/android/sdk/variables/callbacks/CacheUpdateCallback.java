@@ -26,6 +26,6 @@ package com.clevertap.android.sdk.variables.callbacks;
  *
  * @author Ansh Sachdeva
  */
-public interface CacheUpdateBlock {
-  void updateCache();
+public interface CacheUpdateCallback {
+  void onCacheUpdated();
 }

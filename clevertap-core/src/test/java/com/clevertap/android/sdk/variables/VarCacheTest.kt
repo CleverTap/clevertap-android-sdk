@@ -1,13 +1,17 @@
 package com.clevertap.android.sdk.variables
 
 import com.clevertap.android.sdk.variables.VariableDefinitions.NullDefaultValue
+import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.shared.test.BaseTestCase
+import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class VarCacheTest : BaseTestCase() {
@@ -44,7 +48,20 @@ class VarCacheTest : BaseTestCase() {
   }
 
   @Test
-  fun updateDiffsAndTriggerHandlers() {
+  fun `test updateDiffsAndTriggerHandlers`() {
+    ctVariables.init()
+
+    val var1 = Var.define("var1", 1, ctVariables)
+    val var2 = Var.define("group.var2", 2, ctVariables)
+
+    varCache.updateDiffsAndTriggerHandlers(mapOf(
+      "var1" to 10,
+      "group" to mapOf("var2" to 20, "var3" to 30),
+    ))
+
+    assertEquals(10, var1.value())
+    assertEquals(20, var2.value())
+    assertEquals(30, varCache.getMergedValue("group.var3"))
   }
 
   @Test
