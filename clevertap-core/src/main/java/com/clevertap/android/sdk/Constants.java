@@ -298,7 +298,7 @@ public interface Constants {
     /**
      * Valid indexes for the App Inbox item and buttons.
      */
-    int APP_INBOX_ITEM_CONTENT_PAGE_INDEX = 0; //used for non-carousel templates as they have only one page of content to be displayed
+    int APP_INBOX_ITEM_CONTENT_PAGE_INDEX = 0; //used for non-carousel templates as they have only one page of content to display
     int APP_INBOX_ITEM_INDEX = -1;
     int APP_INBOX_CTA1_INDEX = 0;
     int APP_INBOX_CTA2_INDEX = 1;
