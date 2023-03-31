@@ -111,7 +111,7 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
             public void onClick(View v) {
                 CTInboxListViewFragment parent = getParent();
                 if (parent != null) {
-                    parent.handleViewPagerClick(row, position,true);
+                    parent.handleViewPagerClick(row, position);
                 }
             }
         });
