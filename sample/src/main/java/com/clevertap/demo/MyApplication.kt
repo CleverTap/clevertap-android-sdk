@@ -164,8 +164,9 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             "InboxItemClicked at $contentPageIndex page-index with button-index: $buttonIndex"
         )
 
-        //gets the message object clicked as per the page index.
+        //The contentPageIndex corresponds to the page index of the content, which ranges from 0 to the total number of pages for carousel templates. For non-carousel templates, the value is always 0, as they only have one page of content.
         val messageContentObject = message?.inboxMessageContents?.get(contentPageIndex)
+
         //The buttonIndex corresponds to the CTA button clicked (0, 1, or 2). A value of -1 indicates the app inbox body/message clicked.
         if (buttonIndex != -1) {
             //button is clicked
