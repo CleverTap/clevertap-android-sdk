@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
+import static com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_CONTENT_PAGE_INDEX;
+
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -58,9 +60,9 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     public void onClick(View v) {
         if (viewPager != null) {//Handles viewpager clicks
             if (fragment != null) {
-                fragment.handleViewPagerClick(position, viewPager.getCurrentItem(),isBodyClick);
+                fragment.handleViewPagerClick(position, viewPager.getCurrentItem());
             }
-        } else {//Handles button clicks
+        } else {//Handles item and button clicks for non-carousel templates
             if (buttonText != null && buttonObject != null) {
                 if (fragment != null) {
                     if (inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject)
@@ -70,11 +72,11 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         }
                     }
 
-                    fragment.handleClick(this.position, buttonText, buttonObject, getKeyValues(inboxMessage), buttonIndex);
+                    fragment.handleClick(this.position, APP_INBOX_ITEM_CONTENT_PAGE_INDEX, buttonText, buttonObject, getKeyValues(inboxMessage), buttonIndex);
                 }
             } else {
                 if (fragment != null) {
-                    fragment.handleClick(this.position, null, null, null, buttonIndex);
+                    fragment.handleClick(this.position, APP_INBOX_ITEM_CONTENT_PAGE_INDEX,null, null, null, buttonIndex);
                 }
             }
         }

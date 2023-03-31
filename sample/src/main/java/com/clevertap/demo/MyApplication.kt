@@ -151,17 +151,19 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         //dismissAppInbox()
     }
 
-    override fun onInboxItemClicked(message: CTInboxMessage?, itemIndex: Int, buttonIndex: Int) {
+    override fun onInboxItemClicked(message: CTInboxMessage?, contentPageIndex: Int, buttonIndex: Int) {
         Log.i(
             "MyApplication",
-            "InboxItemClicked at $itemIndex position with button-index: $buttonIndex"
+            "InboxItemClicked at $contentPageIndex page-index with button-index: $buttonIndex"
         )
+
+        //The contentPageIndex corresponds to the page index of the content, which ranges from 0 to the total number of pages for carousel templates. For non-carousel templates, the value is always 0, as they only have one page of content.
+        val messageContentObject = message?.inboxMessageContents?.get(contentPageIndex)
 
         //The buttonIndex corresponds to the CTA button clicked (0, 1, or 2). A value of -1 indicates the app inbox body/message clicked.
         if (buttonIndex != -1) {
             //button is clicked
-            val buttonObject: JSONObject? =
-                message?.inboxMessageContents?.get(0)?.links?.get(buttonIndex) as JSONObject?
+            val buttonObject: JSONObject? = messageContentObject?.links?.get(buttonIndex) as JSONObject?
             val buttonType = buttonObject?.optString("type")
             buttonType?.let {
                 when (it) {
