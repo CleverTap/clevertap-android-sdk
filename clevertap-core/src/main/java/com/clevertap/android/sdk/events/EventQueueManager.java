@@ -113,7 +113,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     }
 
     private void processDefineVarsEvent(Context context, JSONObject event) {
-        flushQueueSync(context, EventGroup.VARIABLES,event);
+        sendImmediately(context, EventGroup.VARIABLES, event);
     }
 
     @Override
@@ -125,8 +125,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     public void flush() {
         flushQueueAsync(context, EventGroup.REGULAR);
     }
-
-
 
     @Override
     public void flushQueueAsync(final Context context, final EventGroup eventGroup) {
@@ -140,14 +138,14 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 } else {
                     logger.verbose(config.getAccountId(), "Pushing event onto queue flush sync");
                 }
-                flushQueueSync(context, eventGroup,null);
+                flushQueueSync(context, eventGroup);
                 return null;
             }
         });
     }
 
     @Override
-    public void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final JSONObject immediateSendJson) {
+    public void flushQueueSync(final Context context, final EventGroup eventGroup) {
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             return;
@@ -155,26 +153,44 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
         if (cleverTapMetaData.isOffline()) {
             logger.debug(config.getAccountId(),
-                    "CleverTap Instance has been set to offline, won't send events queue");
+                "CleverTap Instance has been set to offline, won't send events queue");
             return;
         }
 
-        Runnable queueOrRunImmediately = () -> {
-            if(immediateSendJson!=null){
-                boolean isSucess = networkManager.sendQueue(context, eventGroup,
-                        new JSONArray().put(immediateSendJson));
-            } else {
-                networkManager.flushDBQueue(context, eventGroup);
-            }
-        };
-
-        // First request is defineVars
-        // First request is normal clevertap event
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
-            networkManager.initHandshake(eventGroup, queueOrRunImmediately);
+            networkManager.initHandshake(eventGroup, new Runnable() {
+                @Override
+                public void run() {
+                    networkManager.flushDBQueue(context, eventGroup);
+                }
+            });
         } else {
             logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
-            queueOrRunImmediately.run();
+            networkManager.flushDBQueue(context, eventGroup);
+        }
+    }
+
+    @Override
+    public void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData) {
+        if (!NetworkManager.isNetworkOnline(context)) {
+            logger.verbose(config.getAccountId(), "Network connectivity unavailable. Event won't be sent.");
+            return;
+        }
+
+        if (cleverTapMetaData.isOffline()) {
+            logger.debug(config.getAccountId(),
+                "CleverTap Instance has been set to offline, won't send event");
+            return;
+        }
+
+        JSONArray singleEventQueue = new JSONArray().put(eventData);
+
+        if (networkManager.needsHandshakeForDomain(eventGroup)) {
+            networkManager.initHandshake(eventGroup, () -> {
+                networkManager.sendQueue(context, eventGroup, singleEventQueue);
+            });
+        } else {
+            networkManager.sendQueue(context, eventGroup, singleEventQueue);
         }
     }
 

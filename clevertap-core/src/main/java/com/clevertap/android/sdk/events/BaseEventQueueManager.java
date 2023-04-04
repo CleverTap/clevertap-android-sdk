@@ -21,7 +21,9 @@ public abstract class BaseEventQueueManager {
 
     public abstract void pushInitialEventsAsync();
 
-    public abstract void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final  JSONObject immediateSendJson);
+    public abstract void flushQueueSync(final Context context, final EventGroup eventGroup);
+
+    public abstract void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData);
 
     public abstract void scheduleQueueFlush(final Context context);
 }
