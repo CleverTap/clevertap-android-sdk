@@ -36,6 +36,12 @@
 * Minimum Android SDK version bumped to API 19 (Android 4.4)
 * Use v4.7.2, this version contains a bug which causes a crash (`ClassCastException`) in header/footer InApp templates.
 
+### Version 4.6.9 (March 31, 2023)
+#### Changes
+* Renames the `itemIndex` parameter of the `onInboxItemClicked` callback with the `contentPageIndex`. It's not a breaking change.
+* **[Parity with CleverTap iOS SDK]**:
+  The `onInboxItemClicked` callback now provides a different value for contentPageIndex(ex-`itemIndex`) compared to before. Previously, it used to indicate the position of the clicked item within the list container of the App Inbox. However, now it indicates the page index of the content, which ranges from 0 to the total number of pages for carousel templates. For non-carousel templates, the value is always 0, as they only have one page of content.
+
 ### Version 4.6.8 (March 22, 2023)
 #### Breaking Changes
 * **Signature change of `onInboxItemClicked` callback**:
