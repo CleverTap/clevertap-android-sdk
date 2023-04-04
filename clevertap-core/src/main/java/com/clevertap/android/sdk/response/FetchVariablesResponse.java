@@ -28,11 +28,11 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
         this.callbackMgr = mgr;
     }
 
-    private  void log(String s){
-        Logger.v(config.getAccountId(),"ctv_VARIABLE_RESPONSE:"+s);
+    private  void log(String m){
+        Logger.v("variables", m);
     }
-    private  void log(String s,Throwable t){
-        Logger.v(config.getAccountId(),"ctv_VARIABLE_RESPONSE:"+s,t);
+    private  void log(String m,Throwable t){
+        Logger.v("variables", m, t);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
         String varsKey = Constants.REQUEST_VARIABLES_JSON_RESPONSE_KEY;
 
         if (!response.has(varsKey)) {
-            log( "JSON object doesn't contain the Request Variables key");
+            log("JSON object doesn't contain the " + varsKey + " key");
             cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }

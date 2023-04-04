@@ -47,11 +47,11 @@ import org.json.JSONObject;
  */
 public class VarCache {
     private static void log(String msg){
-        Logger.i("ctv_VARCACHE",msg);
+        Logger.d("variables", msg);
     }
 
     private static void log(String msg,Throwable t){
-        Logger.i("ctv_VARCACHE",msg,t);
+        Logger.d("variables", msg, t);
     }
 
     private final Map<String, Object> valuesFromClient = new HashMap<>();
@@ -74,7 +74,6 @@ public class VarCache {
     private final CleverTapInstanceConfig instanceConfig;
 
     public VarCache(CleverTapInstanceConfig config, Context ctx) {
-        log("VarCache() called with: config = [" + config + "], ctx = [" + ctx + "]");
         this.variablesCtx = ctx;
         this.instanceConfig = config;
     }
@@ -90,10 +89,9 @@ public class VarCache {
     }
 
     private String loadDataFromCache(){
-        log("loadDataFromCache() called");
         String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
         String cache =  StorageHelper.getString(variablesCtx,cacheKey, "{}");
-        log("shared pref cache returned string:\n"+cache+"\n========");
+        log("VarCache loaded cache data:\n" + cache);
         return  cache;
     }
 
@@ -105,11 +103,10 @@ public class VarCache {
     @VisibleForTesting
     void mergeVariable(@NonNull Var<?> var) {
         if (merged == null) {
-            log( "mergeVariable() called, but `merged` member is null."
-                + " You should call CTVariables.init() before registering any variables.");
+            log("mergeVariable() called, but `merged` member is null.");
             return;
         } else if (!(merged instanceof Map<?, ?>)) {
-            log( "mergeVariable() called, but `merged` member is not of Map type.");
+            log("mergeVariable() called, but `merged` member is not of Map type.");
             return;
         }
 
@@ -195,7 +192,6 @@ public class VarCache {
 
     //will basically call applyVariableDiffs(..) with values stored in pref
     public synchronized void loadDiffs() {
-        log( "loadDiffs() called");
         try {
             String variablesFromCache = loadDataFromCache();
             Map<String, Object> variablesAsMap = JsonUtil.fromJson(variablesFromCache);
@@ -208,14 +204,12 @@ public class VarCache {
 
     //same as loadiffs, but will also trigger one/multi time listeners
     public synchronized void loadDiffsAndTriggerHandlers() {
-        log( "loadDiffsAndTriggerHandlers() called");
         loadDiffs();
         triggerHasReceivedDiffs();
     }
 
     //same as loadiffs, but differs in 2 aspects: 1) instead of picking data from cache, it receives data as param and 2) it will also trigger one/mult time listeners
     public synchronized void updateDiffsAndTriggerHandlers(Map<String, Object> diffs) {
-        log( "updateDiffsAndTriggerHandlers() called with: diffs = [" + diffs + "]");
         applyVariableDiffs(diffs);
         saveDiffsAsync();
         triggerHasReceivedDiffs();
@@ -266,7 +260,6 @@ public class VarCache {
         // update block is a callback registered by CTVariables to trigger user's callback once the diffs are changed
         hasReceivedDiffs = true;
         if (updateCallback != null) {
-            log("triggering the VariableChangedCallbacks/OneTimeVariableChangedCallbacks because hasReceivedDiffs is now true");
             updateCallback.onCacheUpdated();
         }
     }
@@ -304,14 +297,4 @@ public class VarCache {
         return hasReceivedDiffs;
     }
 
-    @Discouraged(message = "only for testing")
-    public synchronized void logProperties(){
-        log("current_props:");
-        log("defaultKinds:"+defaultKinds);
-        log("diffs:"+diffs);
-        log("merged:"+merged);
-        log("vars:"+vars);
-        log("valuesFromClient:"+valuesFromClient);
-        log("hasReceivedDiffs:"+hasReceivedDiffs);
-    }
 }

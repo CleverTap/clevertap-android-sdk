@@ -760,26 +760,26 @@ public class NetworkManager extends BaseNetworkManager {
     private boolean handleVariablesResponseError(int responseCode, HttpsURLConnection conn) {
         switch (responseCode) {
             case 200:
-                logger.info(config.getAccountId(), "Vars synced successfully.");
+                logger.info("variables", "Vars synced successfully.");
                 return false;
 
             case 400:
                 JSONObject errorStreamJson = getErrorStreamAsJson(conn);
                 if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
                     String errorMessage = errorStreamJson.optString("error");
-                    logger.info(config.getAccountId(), "Error while syncing vars: " + errorMessage);
+                    logger.info("variables", "Error while syncing vars: " + errorMessage);
                 } else {
-                    logger.info(config.getAccountId(), "Error while syncing vars.");
+                    logger.info("variables", "Error while syncing vars.");
                 }
                 return true;
 
             case 401:
-                logger.info(config.getAccountId(), "Unauthorized access from a non-test profile. "
+                logger.info("variables", "Unauthorized access from a non-test profile. "
                     + "Please mark this profile as a test profile from the CleverTap dashboard.");
                 return true;
 
             default:
-                logger.info(config.getAccountId(), "Response code " + responseCode + " while syncing vars.");
+                logger.info("variables", "Response code " + responseCode + " while syncing vars.");
                 return true;
         }
     }

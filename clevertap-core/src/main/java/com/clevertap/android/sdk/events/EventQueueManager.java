@@ -152,7 +152,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
         if (cleverTapMetaData.isOffline()) {
             logger.debug(config.getAccountId(),
-                "CleverTap Instance has been set to offline, won't send events queue");
+                    "CleverTap Instance has been set to offline, won't send events queue");
             return;
         }
 
@@ -500,7 +500,9 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             pushNotificationViewedRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    config.getLogger().verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue flush async");
+                    config.getLogger()
+                        .verbose(config.getAccountId(),
+                            "Pushing Notification Viewed event onto queue flush async");
                     flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
                 }
             };

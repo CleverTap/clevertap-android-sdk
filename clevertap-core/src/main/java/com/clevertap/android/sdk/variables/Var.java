@@ -40,16 +40,15 @@ public class Var<T> {
     private static boolean printedCallbackWarning;
 
     public Var(CTVariables ctVariables) {
-        log("Var() called with: ctVariables = [" + ctVariables + "]");
         this.ctVariables = ctVariables;
     }
 
     private static void log(String msg){
-        Logger.v("ctv_VAR",msg);
+        Logger.v("variable", msg);
     }
 
     private static void log(String msg,Throwable t){
-        Logger.v("ctv_VAR",msg,t);
+        Logger.v("variable", msg, t);
     }
 
     public static <T> Var<T> define(String name, T defaultValue, CTVariables ctVariables) {
@@ -67,7 +66,6 @@ public class Var<T> {
      * @return instance of a {@link  Var} class
      */
     public static <T> Var<T> define(String name, T defaultValue, String kind, CTVariables ctVariables) {
-        log( "define() called with: name = [" + name + "], defaultValue = [" + defaultValue + "], kind = [" + kind + "], ctVariables = [" + ctVariables.hashCode() + "]");
         if (TextUtils.isEmpty(name)) {
             log("Empty name parameter provided. aborting define operation");
             return null;
@@ -79,7 +77,6 @@ public class Var<T> {
 
         Var<T> existing = ctVariables.getVarCache().getVariable(name);
         if (existing != null) {
-            log("A variable exists for current field name. returning existing variable");
             return existing;
         }
 
@@ -117,8 +114,6 @@ public class Var<T> {
         if (ctVariables.isVariableResponseReceived()) {
             hadStarted = true;
             triggerValueChanged();
-        } else {
-            log("CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered");
         }
     }
 
@@ -197,9 +192,8 @@ public class Var<T> {
 
     void warnIfNotStarted() {
         if (!ctVariables.isVariableResponseReceived() && !printedCallbackWarning) {
-            log(
-                    "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "
-                            + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
+            log("CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "
+                + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
             printedCallbackWarning = true;
         }
     }
@@ -237,8 +231,6 @@ public class Var<T> {
 
         if (ctVariables.isVariableResponseReceived()) {
             callback.onValueChanged(this);
-        } else {
-            log("The added callback will get triggered once the values are successfully retrieved");
         }
     }
 

@@ -8,7 +8,6 @@ import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.Field
 
-
 @RunWith(RobolectricTestRunner::class)
 class ParserTest:BaseTestCase() {
 
@@ -90,7 +89,4 @@ class ParserTest:BaseTestCase() {
         Mockito.verify(ctvSpy,Mockito.times(0)).init() // init is called only once when CleverTapAPI instance is created
 
     }
-
-
-
 }

@@ -49,15 +49,14 @@ public class Parser {
   private final CTVariables ctVariables;
 
   private static void log(String msg){
-    Logger.v("ctv_PARSER",msg);
+    Logger.v("variables",msg);
   }
 
   private static void log(String msg,Throwable t){
-    Logger.v("ctv_PARSER",msg,t);
+    Logger.v("variables",msg,t);
   }
 
   public Parser(final CTVariables ctVariables) {
-    log("Parser() called with: ctVariables = [" + ctVariables + "]");
     this.ctVariables = ctVariables;
   }
 
@@ -68,7 +67,6 @@ public class Parser {
    * @param instances Objects of a class
    */
   public void parseVariables(Object... instances) {
-    log("parseVariables() called with: instances = [" + Arrays.toString(instances) + "]");
     try {
       for (Object instance : instances) {
         parseVariablesHelper(instance, instance.getClass());
@@ -84,7 +82,6 @@ public class Parser {
    * called)
    */
   public void parseVariablesForClasses(Class<?>... classes) {
-    log("parseVariablesForClasses() called with: classes = [" + Arrays.toString(classes) + "]");
     try {
       for (Class<?> clazz : classes) {
         parseVariablesHelper(null, clazz);

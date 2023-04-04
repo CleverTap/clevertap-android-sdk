@@ -3103,7 +3103,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (coreState.getConfig().isAnalyticsOnly()) {
             return;
         }
-        Logger.v("ctv_CleverTapApi: Fetching  variables");
+        Logger.v("variables", "Fetching  variables");
         coreState.getCallbackManager().setFetchVariablesCallback(callback);
 
         JSONObject event = new JSONObject();
@@ -3123,14 +3123,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public void syncVariables() {
         if (isDevelopmentMode()) {
-            Logger.v("ctv_CleverTapApi: syncVariables: waiting for id to be available");
+            Logger.v("variables", "syncVariables: waiting for id to be available");
             getCleverTapID(x -> {
                 JSONObject js = coreState.getVarCache().getDefineVarsData();
-                Logger.v("ctv_CleverTapApi: syncVariables: sending following vars to server:" + js);
+                Logger.v("variables", "syncVariables: sending following vars to server:" + js);
                 coreState.getAnalyticsManager().pushDefineVarsEvent(js);
             });
         } else {
-            Logger.v("ctv_CleverTapApi: Since your app is NOT in development mode, variables data will not be sent to server");
+            Logger.v("variables", "Your app is NOT in development mode, variables data will not be sent to server");
         }
     }
 

@@ -300,7 +300,7 @@ class EventQueueManagerTest : BaseTestCase() {
             // Arrange
 
             val captor = ArgumentCaptor.forClass(Runnable::class.java)
-            doNothing().`when`(eventQueueManager).flushQueueSync(ArgumentMatchers.any(), ArgumentMatchers.any(),ArgumentMatchers.any())
+            doNothing().`when`(eventQueueManager).flushQueueSync(ArgumentMatchers.any(), ArgumentMatchers.any())
 
             // Act
             eventQueueManager.scheduleQueueFlush(application)
@@ -311,8 +311,8 @@ class EventQueueManagerTest : BaseTestCase() {
 
             captor.value.run()
 
-            verify(eventQueueManager).flushQueueSync(application, REGULAR,null)
-            verify(eventQueueManager).flushQueueSync(application, PUSH_NOTIFICATION_VIEWED,null)
+            verify(eventQueueManager).flushQueueSync(application, REGULAR)
+            verify(eventQueueManager).flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
         }
     }
 
@@ -344,7 +344,7 @@ class EventQueueManagerTest : BaseTestCase() {
             val shadowOfCM = shadowOf(cm)
             shadowOfCM.setActiveNetworkInfo(null) // make offline
 
-            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED,null)
+            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
             verify(corestate.networkManager, never()).needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED)
         }
@@ -365,7 +365,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
             shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
 
-            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED,null)
+            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
             verify(corestate.networkManager, never()).needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED)
         }
@@ -386,7 +386,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
             shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
 
-            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED,null)
+            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
             verify(corestate.networkManager, never()).initHandshake(ArgumentMatchers.any(), ArgumentMatchers.any())
             verify(corestate.networkManager).flushDBQueue(application, PUSH_NOTIFICATION_VIEWED)
@@ -410,7 +410,7 @@ class EventQueueManagerTest : BaseTestCase() {
             shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
             `when`(corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED)).thenReturn(true)
 
-            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED,null)
+            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
             verify(corestate.networkManager).initHandshake(ArgumentMatchers.any(), captor.capture())
 
