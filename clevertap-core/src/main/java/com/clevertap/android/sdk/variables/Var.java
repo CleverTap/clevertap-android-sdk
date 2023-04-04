@@ -72,6 +72,10 @@ public class Var<T> {
             log("Empty name parameter provided. aborting define operation");
             return null;
         }
+        if (name.startsWith(".") || name.endsWith(".")) {
+            log("Variable name starts or ends with a `.` which is not allowed: " + name);
+            return null;
+        }
 
         Var<T> existing = ctVariables.getVarCache().getVariable(name);
         if (existing != null) {
@@ -101,7 +105,6 @@ public class Var<T> {
      * optionally calls {@link #triggerValueChanged()}
      */
     public synchronized void update() {
-        log( "update() called");
         T oldValue = value;
         value = ctVariables.getVarCache().getMergedValueFromComponentArray(nameComponents);
         if (value == null && oldValue == null) {
