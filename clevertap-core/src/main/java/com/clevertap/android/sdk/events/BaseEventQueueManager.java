@@ -1,9 +1,6 @@
 package com.clevertap.android.sdk.events;
 
 import android.content.Context;
-
-import androidx.annotation.Nullable;
-
 import java.util.concurrent.Future;
 import org.json.JSONObject;
 

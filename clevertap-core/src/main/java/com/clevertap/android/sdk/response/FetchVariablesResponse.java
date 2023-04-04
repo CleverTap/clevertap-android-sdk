@@ -52,11 +52,6 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
         }
 
         String varsKey = Constants.REQUEST_VARIABLES_JSON_RESPONSE_KEY;
-//        try {
-//            //todo remove this code block as it replaces server response with fake respnse
-//            response.put(varsKey,getJson(callbackMgr.getFetchVariablesCallback()!=null));
-//        }
-//        catch (Throwable t){t.printStackTrace();}
 
         if (!response.has(varsKey)) {
             log( "JSON object doesn't contain the Request Variables key");
@@ -85,32 +80,4 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
             cleverTapResponse.processResponse(response, stringBody, context);
         }
     }
-
-//    private static final String[] jsons = new String[]{
-//            "{\"pDb1\":8.88,\"pStr1\":\"server1\",\"pBool1\":true,\"pIn1\":8,\"dDb1\":8.88,\"dIn1\":8,\"dBool1\":true,\"dStr1\":\"server1\",\"pDb1Inst\":8.88,\"pStr1Inst\":\"server1\",\"pBool1Inst\":true,\"pIn1Inst\":8,\"pDb2\":8.88,\"pStr2\":\"server1\",\"pBool2\":true,\"pIn2\":8,\"dDb2\":8.88,\"dIn2\":8,\"dBool2\":true,\"dStr2\":\"server1\",\"pDb2Inst\":8.88,\"pStr2Inst\":\"server1\",\"pBool2Inst\":true,\"pIn2Inst\":8}",
-//            "{\"pDb1\":7.77,\"pStr1\":\"server2\",\"pBool1\":false,\"pIn1\":7,\"dDb1\":7.77,\"dIn1\":7,\"dBool1\":false,\"dStr1\":\"server2\",\"pDb1Inst\":7.77,\"pStr1Inst\":\"server2\",\"pBool1Inst\":false,\"pIn1Inst\":7,\"pDb2\":7.77,\"pStr2\":\"server2\",\"pBool2\":false,\"pIn2\":7,\"dDb2\":7.77,\"dIn2\":7,\"dBool2\":false,\"dStr2\":\"server2\",\"pDb2Inst\":7.77,\"pStr2Inst\":\"server2\",\"pBool2Inst\":false,\"pIn2Inst\":7}",
-//    };
-//
-//    private static int toggler = 0;
-//
-//    private static JSONObject getJson(boolean useToggler) {
-//        JSONObject obj;
-//        try {
-//            if (!useToggler) obj =  new JSONObject(jsons[0]);
-//            else {
-//                toggler = toggler + 1;
-//                if (toggler % 2 == 0)  obj =  new JSONObject(jsons[0]);
-//                else  obj =  new JSONObject(jsons[1]);
-//            }
-//        } catch (Throwable t) {
-//            t.printStackTrace();
-//            obj =  null;
-//        }
-//
-//        Logger.v("CleverTap","ctv_VARIABLE_RESPONSE:getJson called with useToggler = "+useToggler+" and returned following json object:"+obj);
-//
-//        return  obj;
-//    }
-
-
 }
