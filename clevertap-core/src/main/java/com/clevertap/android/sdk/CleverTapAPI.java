@@ -3094,6 +3094,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Fetches variable values from server.
+     */
+    public void fetchVariables() {
+        fetchVariables(null);
+    }
+
+    /**
+     * Fetches variable values from server.
      * Note that SDK keeps only one registered callback, if you call that method again it would
      * override the callback.
      *
@@ -3104,7 +3111,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
         Logger.v("variables", "Fetching  variables");
-        coreState.getCallbackManager().setFetchVariablesCallback(callback);
+        if (callback != null) {
+            coreState.getCallbackManager().setFetchVariablesCallback(callback);
+        }
 
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();

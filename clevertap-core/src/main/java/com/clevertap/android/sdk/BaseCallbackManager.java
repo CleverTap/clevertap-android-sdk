@@ -89,9 +89,7 @@ public abstract class BaseCallbackManager {
 
     public abstract NotificationRenderedListener getNotificationRenderedListener();
 
-
     public abstract FetchVariablesCallback getFetchVariablesCallback();
 
-    public abstract void setFetchVariablesCallback(
-        FetchVariablesCallback fetchVariablesCallback) ;
+    public abstract void setFetchVariablesCallback(FetchVariablesCallback fetchVariablesCallback);
 }
