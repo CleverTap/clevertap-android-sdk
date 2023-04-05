@@ -33,7 +33,7 @@ public class Var<T> {
 
     private String kind;
 
-    private boolean hadStarted = false;
+    private boolean hadStarted = false; // flag to indicate whether the callbacks were invoked for the starting value of the variable
 
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
 
@@ -111,7 +111,7 @@ public class Var<T> {
             return;
         }
         cacheComputedValues();
-        if (ctVariables.isVariableResponseReceived()) {
+        if (ctVariables.hasVarsRequestCompleted()) {
             hadStarted = true;
             triggerValueChanged();
         }
@@ -191,7 +191,7 @@ public class Var<T> {
     }
 
     void warnIfNotStarted() {
-        if (!ctVariables.isVariableResponseReceived() && !printedCallbackWarning) {
+        if (!ctVariables.hasVarsRequestCompleted() && !printedCallbackWarning) {
             log("CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "
                 + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
             printedCallbackWarning = true;
@@ -229,7 +229,7 @@ public class Var<T> {
             valueChangedHandlers.add(callback);
         }
 
-        if (ctVariables.isVariableResponseReceived()) {
+        if (ctVariables.hasVarsRequestCompleted()) {
             callback.onValueChanged(this);
         }
     }

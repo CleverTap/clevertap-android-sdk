@@ -7,7 +7,6 @@ import com.clevertap.android.sdk.BuildConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.variables.callbacks.CacheUpdateCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
@@ -26,10 +25,10 @@ import java.util.Map;
  */
 public class CTVariables {
 
-    private boolean variableResponseReceived = false;
+    private boolean hasVarsRequestCompleted = false;
     private final List<VariablesChangedCallback> variablesChangedCallbacks = new ArrayList<>();
     private final List<VariablesChangedCallback> oneTimeVariablesChangedCallbacks = new ArrayList<>();
-    private final CacheUpdateCallback triggerVariablesChanged = () -> {
+    private final Runnable triggerGlobalCallbacks = () -> {
         synchronized (variablesChangedCallbacks) {
             for (VariablesChangedCallback callback : variablesChangedCallbacks) {
                 Utils.runOnUiThread(callback);
@@ -51,12 +50,12 @@ public class CTVariables {
 
     public CTVariables(final VarCache varCache) {
         this.varCache = varCache;
-        this.varCache.setCacheUpdateCallback(triggerVariablesChanged);
+        this.varCache.setGlobalCallbacksRunnable(triggerGlobalCallbacks);
     }
 
     /** WORKING: <br>
      *  0. user calls this function which triggers calls the following functions synchronously :<br><br>
-     *      *** {@link VarCache#setCacheUpdateCallback(CacheUpdateCallback)} : this sets a callback in
+     *      *** {@link VarCache#setGlobalCallbacksRunnable(Runnable)} : this sets a callback in
      *          {@link VarCache} class, which will be triggered once the values are loaded/updated
      *          from the server/cache <br><br>
      *      *** {@link VarCache#loadDiffs()} : this loads the last cached values of Variables from
@@ -81,7 +80,7 @@ public class CTVariables {
      */
     public void handleVariableResponse(@Nullable final JSONObject response, @Nullable FetchVariablesCallback callback) {
         log("handleVariableResponse() called with: response = [" + response + "]");
-        setVariableResponseReceived(true);
+        setHasVarsRequestCompleted(true);
 
         boolean jsonHasVariableData = response != null;
         try {
@@ -124,7 +123,7 @@ public class CTVariables {
             variablesChangedCallbacks.add(callback);
         }
 
-        if (varCache.hasReceivedDiffs()) {
+        if (hasVarsRequestCompleted()) {
             callback.variablesChanged();
         }
     }
@@ -137,7 +136,7 @@ public class CTVariables {
      * immediately once this function is called
      */
     public void addOneTimeVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
-        if (varCache.hasReceivedDiffs()) {
+        if (hasVarsRequestCompleted) {
             callback.variablesChanged();
         } else {
             synchronized (oneTimeVariablesChangedCallbacks) {
@@ -181,10 +180,10 @@ public class CTVariables {
      * <br>
      * <br>
      *
-     * @return value of {@link #variableResponseReceived  }
+     * @return value of {@link #hasVarsRequestCompleted  }
      */
-    public Boolean isVariableResponseReceived() {
-        return variableResponseReceived;
+    public Boolean hasVarsRequestCompleted() {
+        return hasVarsRequestCompleted;
     }
 
     /**
@@ -193,19 +192,13 @@ public class CTVariables {
      * This is set to : <br>
      * - true, when SDK receives a response for Variable data (in {@link #handleVariableResponse}) (The function is
      * always triggerred, even when api fails) <br> <br>
-     *
-     * <br>
-     * <br>
-     *
-     * @param responseReceived : a boolean to be set {@link #variableResponseReceived  }
      */
-    public void setVariableResponseReceived(boolean responseReceived) {
-        variableResponseReceived = responseReceived; // might not be needed
+    public void setHasVarsRequestCompleted(boolean completed) {
+        hasVarsRequestCompleted = completed;
     }
 
     VarCache getVarCache(){
         return varCache;
     }
-
 
 }

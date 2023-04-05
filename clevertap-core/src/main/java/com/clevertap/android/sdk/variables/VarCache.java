@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.variables;
 
 import android.content.Context;
 
-import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
@@ -13,7 +12,6 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.variables.callbacks.CacheUpdateCallback;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,9 +37,7 @@ public class VarCache {
 
     private final Map<String, String> defaultKinds = new HashMap<>();
 
-    private boolean hasReceivedDiffs = false;
-
-    private CacheUpdateCallback updateCallback = null;
+    private Runnable globalCallbacksRunnable = null;
 
     private Map<String, Object> diffs = new HashMap<>();
 
@@ -184,14 +180,14 @@ public class VarCache {
     //same as loadiffs, but will also trigger one/multi time listeners
     public synchronized void loadDiffsAndTriggerHandlers() {
         loadDiffs();
-        triggerHasReceivedDiffs();
+        triggerGlobalCallbacks();
     }
 
     //same as loadiffs, but differs in 2 aspects: 1) instead of picking data from cache, it receives data as param and 2) it will also trigger one/mult time listeners
     public synchronized void updateDiffsAndTriggerHandlers(Map<String, Object> diffs) {
         applyVariableDiffs(diffs);
         saveDiffsAsync();
-        triggerHasReceivedDiffs();
+        triggerGlobalCallbacks();
     }
 
     private void saveDiffsAsync() {
@@ -235,11 +231,10 @@ public class VarCache {
     }
 
     //will simply  set hasReceivedDiffs[g] = true; and call updateBlock[g].updateCache() which further triggers the callbacks set by user for listening to variables update
-    public synchronized void triggerHasReceivedDiffs() {
+    private synchronized void triggerGlobalCallbacks() {
         // update block is a callback registered by CTVariables to trigger user's callback once the diffs are changed
-        hasReceivedDiffs = true;
-        if (updateCallback != null) {
-            updateCallback.onCacheUpdated();
+        if (globalCallbacksRunnable != null) {
+            globalCallbacksRunnable.run();
         }
     }
 
@@ -251,9 +246,8 @@ public class VarCache {
     public synchronized void reset() {
         defaultKinds.clear();
         diffs.clear();
-        hasReceivedDiffs = false;
         merged = null;
-        updateCallback = null;
+        globalCallbacksRunnable = null;
         vars.clear();
         valuesFromClient.clear();
         storeDataInCache("");
@@ -268,12 +262,8 @@ public class VarCache {
         return vars.size();
     }
 
-    public synchronized void setCacheUpdateCallback(CacheUpdateCallback callback) {
-        updateCallback = callback;
-    }
-
-    public boolean hasReceivedDiffs() {
-        return hasReceivedDiffs;
+    public synchronized void setGlobalCallbacksRunnable(Runnable runnable) {
+        globalCallbacksRunnable = runnable;
     }
 
 }
