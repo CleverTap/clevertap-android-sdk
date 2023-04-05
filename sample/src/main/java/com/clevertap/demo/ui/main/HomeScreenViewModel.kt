@@ -229,6 +229,17 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 } ?: println("inboxMessage is null")
             }
             "2-9" -> {
+                val messageIDs=ArrayList<String>()
+                cleverTapAPI?.unreadInboxMessages?.forEach {
+                    messageIDs.add(it.messageId)
+                }
+                //Delete multiple messages. List of message id should be of type String
+                messageIDs.also {
+                    cleverTapAPI?.deleteInboxMessagesForIDs(it)
+                    println("Deleted list of inboxMessages For IDs = $it")
+                }
+            }
+            "2-10" -> {
                 val firstMessageId = cleverTapAPI?.unreadInboxMessages?.firstOrNull()?.messageId
                 //Mark Message as Read. Message id should be a String
                 firstMessageId?.also {
@@ -236,7 +247,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Marked Message as Read For Id = $it")
                 } ?: println("inboxMessage Id is null")
             }
-            "2-10" -> {
+            "2-11" -> {
                 val firstMessage = cleverTapAPI?.unreadInboxMessages?.firstOrNull()
                 //Mark message as Read. Message should object of CTInboxMessage
                 firstMessage?.also {
@@ -244,7 +255,18 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Marked Message as Read = ${it.messageId}")
                 } ?: println("inboxMessage is null")
             }
-            "2-11" -> {
+            "2-12"->{
+                val messageIDs=ArrayList<String>()
+                cleverTapAPI?.unreadInboxMessages?.forEach {
+                    messageIDs.add(it.messageId)
+                }
+                //Mark multiple messages as read. List of message ids should be of type String
+                messageIDs.also {
+                    cleverTapAPI?.markReadInboxMessagesForIDs(it)
+                    println("Marked Messages as read for list of IDs = $it")
+                }
+            }
+            "2-13" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Raise Notification Viewed event for Inbox Message. Message id should be a String
                 firstMessageId?.also {
@@ -252,7 +274,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Raised Notification Viewed event For Id = $it")
                 } ?: println("inboxMessage Id is null")
             }
-            "2-12" -> {
+            "2-14" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Raise Notification Clicked event for Inbox Message. Message id should be a String
                 firstMessageId?.also {
