@@ -14,7 +14,7 @@ public class VariableDefinitions {
     public static class TestVarsJI {
         @Variable public  String javaIStr = "code_string";
         @Variable public  double javaIDouble = 1.42;
-        @Variable  public  double javaIInt  = 1;
+        @Variable public  double javaIInt  = 1;
         @Variable public  boolean javaIBool = false;
     }
 

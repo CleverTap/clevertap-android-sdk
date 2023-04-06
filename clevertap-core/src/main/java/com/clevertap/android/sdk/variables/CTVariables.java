@@ -4,10 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.clevertap.android.sdk.BuildConfig;
-import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 
@@ -44,8 +42,8 @@ public class CTVariables {
 
     private final VarCache varCache;
 
-    private static void log(String msg){
-        Logger.v("variables", msg);
+    private static void logD(String msg){
+        Logger.d("variables", msg);
     }
 
     public CTVariables(final VarCache varCache) {
@@ -53,36 +51,16 @@ public class CTVariables {
         this.varCache.setGlobalCallbacksRunnable(triggerGlobalCallbacks);
     }
 
-    /** WORKING: <br>
-     *  0. user calls this function which triggers calls the following functions synchronously :<br><br>
-     *      *** {@link VarCache#setGlobalCallbacksRunnable(Runnable)} : this sets a callback in
-     *          {@link VarCache} class, which will be triggered once the values are loaded/updated
-     *          from the server/cache <br><br>
-     *      *** {@link VarCache#loadDiffs()} : this loads the last cached values of Variables from
-     *          Shared Preferences, and updates {@link VarCache()#diffs} & {@link VarCache()#merged}
-     *          accordingly <br><br>
-     *
-     *  Note that user's callbacks are *not* triggered during init call
-     */
     public void init() {
-        log("init() called");
+        logD("init() called");
         varCache.loadDiffs();
     }
 
-    /**
-     * originally  <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L843">handleStartResponse()</a><br><br>
-     * This function is called once the variable data is available in the response of {@link
-     * Constants#APP_LAUNCHED_EVENT}/ {@link Constants#WZRK_FETCH} request  <br><br>
-     * -- if the json data is correct we convert json to map and call {@link VarCache#updateDiffsAndTriggerHandlers(Map)}.<br><br>
-     * -- else we call {@link VarCache#loadDiffsAndTriggerHandlers()} to set data from cache again
-     *
-     * @param response JSONObject . must pass the the json directly (i.e {key:value} and not {vars:{key:value}})
-     */
     public void handleVariableResponse(
         @Nullable JSONObject response,
         @Nullable FetchVariablesCallback fetchCallback
     ) {
-        log("handleVariableResponse() called with: response = [" + response + "]");
+        logD("handleVariableResponse() called with: response = [" + response + "]");
 
         if (response == null) {
             handleVariableResponseError(fetchCallback);
@@ -184,30 +162,10 @@ public class CTVariables {
         }
     }
 
-    /**
-     * originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L1195">Leanplum.hasStarted()</a>
-     * <br>
-     * This flag indicates whether or not the SDK is still in process of receiving a response
-     * from the server. <br>
-     * This is used to print warnings in logs (see {@link Var#warnIfNotStarted()},
-     * and prevent listeners from triggering ( see {@link Var#update()} and {@link
-     * Var#addValueChangedCallback(VariableCallback)}
-     * <br>
-     * <br>
-     *
-     * @return value of {@link #hasVarsRequestCompleted  }
-     */
     public Boolean hasVarsRequestCompleted() {
         return hasVarsRequestCompleted;
     }
 
-    /**
-     * originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/LeanplumInternal.java#L705">LeanplumInternal.setHasStarted(started)</a>
-     * <br><br>
-     * This is set to : <br>
-     * - true, when SDK receives a response for Variable data (in {@link #handleVariableResponse}) (The function is
-     * always triggerred, even when api fails) <br> <br>
-     */
     public void setHasVarsRequestCompleted(boolean completed) {
         hasVarsRequestCompleted = completed;
     }

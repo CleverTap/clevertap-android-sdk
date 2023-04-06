@@ -28,39 +28,42 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
         this.callbackMgr = mgr;
     }
 
-    private  void log(String m){
-        Logger.v("variables", m);
+    private  void logD(String m){
+        Logger.d("variables", m);
     }
-    private  void log(String m,Throwable t){
-        Logger.v("variables", m, t);
+    private  void logI(String m){
+        Logger.d("variables", m);
+    }
+    private  void logI(String m,Throwable t){
+        Logger.i("variables", m, t);
     }
 
     @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
-        log( "Processing Variable response...");
-        log("processResponse() called with: response = [" + response + "], stringBody = [" + stringBody + "], context = [" + context + "]");
+        logI("Processing Variable response...");
+        logD("processResponse() called with: response = [" + response + "], stringBody = [" + stringBody + "], context = [" + context + "]");
 
         if (config.isAnalyticsOnly()) {
-            log("CleverTap instance is configured to analytics only, not processing Variable response");
+            logI("CleverTap instance is configured to analytics only, not processing Variable response");
             cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
 
         if (response == null) {
-            log("Can't parse Variable Response, JSON response object is null");
+            logI("Can't parse Variable Response, JSON response object is null");
             return;
         }
 
         String varsKey = Constants.REQUEST_VARIABLES_JSON_RESPONSE_KEY;
 
         if (!response.has(varsKey)) {
-            log("JSON object doesn't contain the " + varsKey + " key");
+            logI("JSON object doesn't contain the " + varsKey + " key");
             cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
 
         try {
-            log( "Processing Request Variables response");
+            logI("Processing Request Variables response");
 
             JSONObject kvJson = response.getJSONObject(varsKey);
 
@@ -70,11 +73,11 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
                 callbackMgr.setFetchVariablesCallback(null);
             }
             else {
-                log("Can't parse Variable Response, CTVariables is null");
+                logI("Can't parse Variable Response, CTVariables is null");
             }
 
         } catch (Throwable t) {
-            log( "Failed to parse response", t);
+            logI("Failed to parse response", t);
         }
         finally {
             cleverTapResponse.processResponse(response, stringBody, context);

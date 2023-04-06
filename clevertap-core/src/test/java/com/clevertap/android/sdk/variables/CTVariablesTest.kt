@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.variables
 
-import com.clevertap.android.sdk.CleverTapAPI
-import com.clevertap.android.sdk.MockCoreState
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.android.shared.test.BaseTestCase

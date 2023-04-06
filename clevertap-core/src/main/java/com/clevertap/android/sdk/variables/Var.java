@@ -47,10 +47,6 @@ public class Var<T> {
         Logger.v("variable", msg);
     }
 
-    private static void log(String msg,Throwable t){
-        Logger.v("variable", msg, t);
-    }
-
     public static <T> Var<T> define(String name, T defaultValue, CTVariables ctVariables) {
         String type = CTVariableUtils.kindFromValue(defaultValue);
         return define(name, defaultValue, type, ctVariables);
@@ -67,7 +63,7 @@ public class Var<T> {
      */
     public static <T> Var<T> define(String name, T defaultValue, String kind, CTVariables ctVariables) {
         if (TextUtils.isEmpty(name)) {
-            log("Empty name parameter provided. aborting define operation");
+            log("Empty name parameter provided.");
             return null;
         }
         if (name.startsWith(".") || name.endsWith(".")) {

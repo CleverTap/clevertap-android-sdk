@@ -1,17 +1,13 @@
 package com.clevertap.android.sdk.variables
 
 import com.clevertap.android.sdk.variables.VariableDefinitions.NullDefaultValue
-import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.shared.test.BaseTestCase
-import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class VarCacheTest : BaseTestCase() {
@@ -29,11 +25,6 @@ class VarCacheTest : BaseTestCase() {
     ctVariables = CTVariables(varCache)
     parser = Parser(ctVariables)
   }
-
-//  @After
-//  fun tearDown() {
-//    CleverTapAPI.setInstances(null)
-//  }
 
   @Test
   fun loadDiffsSync() {
@@ -248,5 +239,4 @@ class VarCacheTest : BaseTestCase() {
     assertEquals("str2", varCache.getMergedValue("group1.var_string2"));
   }
 
-  // TODO add tests for getMergedValue with overridden values from server
 }

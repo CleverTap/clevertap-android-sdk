@@ -118,7 +118,7 @@ class CTVariableUtilsTest : BaseTestCase() {
   }
 
   @Test
-  fun `test mergeHelper with array`() { // TODO do not crash on unsupported data
+  fun `test mergeHelper with array`() {
     val vars = arrayOf(1, 2, 3, 4)
     val diffs = arrayOf(1, 2, 3, 4)
     Assert.assertThrows(java.lang.ClassCastException::class.java) {
@@ -127,7 +127,7 @@ class CTVariableUtilsTest : BaseTestCase() {
   }
 
   @Test
-  fun `test mergeHelper with map of array`() { // TODO do not crash on unsupported data
+  fun `test mergeHelper with map of array`() {
     val vars = mapOf("arr" to arrayOf(1, 2, 3, 4))
     val diffs = mapOf("arr" to arrayOf(1, 2, 3, 4))
     Assert.assertThrows(java.lang.ClassCastException::class.java) {

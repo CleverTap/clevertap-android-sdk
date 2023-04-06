@@ -14,7 +14,6 @@ import com.clevertap.android.sdk.variables.annotations.Variable;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -137,19 +136,11 @@ public class Parser {
           defineVariable(instance, variableName, stringValue, STRING, field);
         }
       }
-    } catch (IllegalArgumentException t) {
-      log( "Error parsing variables(IllegalArgumentException):", t);
-      t.printStackTrace();
-    } catch (IllegalAccessException t) {
-      log( "Error parsing variables(IllegalAccessException):", t);
-      t.printStackTrace();
     } catch (Throwable t) {
       log( "Error parsing variables:", t);
       t.printStackTrace();
     }
-
   }
-
 
   /**
    * This function simply calls {@link Var#define(String, Object, String, CTVariables)} and attached a

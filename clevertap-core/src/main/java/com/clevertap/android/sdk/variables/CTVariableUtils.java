@@ -13,7 +13,6 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
-
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class CTVariableUtils {
     public static final String VARS = "vars";
@@ -23,15 +22,9 @@ public final class CTVariableUtils {
     public static final String NUMBER = "number";
 
     private static void log(String msg){
-        Logger.v("variables", msg);
+        Logger.d("variables", msg);
     }
 
-    // name: "group1.myVariable", nameComponents: ['group1','myVariable'], value: 12.4, kind: "float", values:valuesFromClient[G],kinds: defaultKinds[G]
-    //-----
-    // this will basically update:
-    // values from mapOf() to mapOf("group1":mapOf('myvariable':12.4)) and
-    // kinds from mapOf() to mapOf("group1.myVariable" : "float")
-    // check test for a more clarity
     public static void updateValuesAndKinds(String name, String[] nameComponents, Object value, String kind, Map<String, Object> values, Map<String, String> kinds) {
         Object valuesPtr = values;
         if (nameComponents != null && nameComponents.length > 0) {
@@ -57,9 +50,7 @@ public final class CTVariableUtils {
     }
 
     /**
-     *
-     *
-     * converts a map like following: <br>
+     * Converts a map like following: <br>
      * <code>
      * &emsp;[<br>
      * &emsp;&emsp;"android.samsung.s22" : 54000,<br>
@@ -229,9 +220,7 @@ public final class CTVariableUtils {
 
 
     /**
-     *
-     *
-     * converts a map like following: <br>
+     * Converts a map like following: <br>
      * <code>
      * &emsp;[<br>
      * &emsp;&emsp;"android": [<br><br>

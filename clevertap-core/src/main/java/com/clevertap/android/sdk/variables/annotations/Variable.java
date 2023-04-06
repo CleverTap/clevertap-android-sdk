@@ -9,10 +9,9 @@ import java.lang.annotation.Target;
  * CleverTap variable annotation.
  * <p>
  * <p>Use this to make this variable changeable from the CleverTap dashboard. Variables must be of
- * type boolean, byte, short, int, long, float, double, char, String, List, or Map. Lists and maps
- * may contain other lists and maps.
+ * type boolean, byte, short, int, long, float, double, char, String, or Map.
  * <p>
- * <p>Variables with this annotation update when the API call for CleverTap.start completes
+ * <p>Variables with this annotation update when the API call for CleverTap fetch completes
  * successfully or fails (in which case values are loaded from a cache stored on the device).
  *
  * @author Ansh Sachdeva

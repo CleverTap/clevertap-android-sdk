@@ -2,6 +2,9 @@ package com.clevertap.android.sdk.variables.callbacks;
 
 import com.clevertap.android.sdk.variables.Var;
 
+/**
+ * Callback registered individually to a Var object.
+ */
 public abstract class VariableCallback<T> implements Runnable {
     private Var<T> variable;
 

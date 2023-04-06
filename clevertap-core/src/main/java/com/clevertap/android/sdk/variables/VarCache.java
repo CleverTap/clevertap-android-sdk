@@ -110,17 +110,6 @@ public class VarCache {
         }
     }
 
-
-    // v: Var("group1.myVariable",12.4,"float") -> unit
-    //-----
-    //  1. will update vars[g] from mapOf() to mapOf("group1.myVariable" to  Var(..) )
-    //  2. make synchronous call to updateValues("group1.myVariable",['group1','myVariable'],12.4,"float",valuesFromClient, defaultKinds)
-    //     (last 2 are global variables,they are prob passed like this  so as to make the whole function testable without relying on global variables)
-    //     This call will var's data  add to both kinds[g] map and valuesFromClient[g] map
-    //     for kinds[g] it will simply change from mapOf() to mapOf("group1.myVariable": "float")
-    //     for valuesFromClient, it will changed from mapOf() to mapOf("group1":mapOf('myvariable':12.4))
-    //    for every next value added, the internal maps of valuesFromClient will get updated accordingly
-
     public synchronized void registerVariable(@NonNull Var<?> var) {
         log( "registerVariable() called with: var = [" + var + "]");
         vars.put(var.name(), var);
@@ -151,12 +140,10 @@ public class VarCache {
         }
     }
 
-    //components:["group1","myVariable"]
     public synchronized <T> T getMergedValueFromComponentArray(Object[] components) {
         return getMergedValueFromComponentArray(components, merged != null ? merged : valuesFromClient);
     }
 
-    //components : ["group1","myVariable"]  , values : merged[g] or valuesFromClient[g]
     public synchronized <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
         Object mergedPtr = values;
         for (Object component : components) {
@@ -165,7 +152,6 @@ public class VarCache {
         return JsonUtil.uncheckedCast(mergedPtr);
     }
 
-    //will basically call applyVariableDiffs(..) with values stored in pref
     public synchronized void loadDiffs() {
         try {
             String variablesFromCache = loadDataFromCache();
@@ -177,13 +163,11 @@ public class VarCache {
         }
     }
 
-    //same as loadiffs, but will also trigger one/multi time listeners
     public synchronized void loadDiffsAndTriggerHandlers() {
         loadDiffs();
         triggerGlobalCallbacks();
     }
 
-    //same as loadiffs, but differs in 2 aspects: 1) instead of picking data from cache, it receives data as param and 2) it will also trigger one/mult time listeners
     public synchronized void updateDiffsAndTriggerHandlers(Map<String, Object> diffs) {
         applyVariableDiffs(diffs);
         saveDiffsAsync();
@@ -198,19 +182,13 @@ public class VarCache {
         });
     }
 
-    // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache. must be called on a worker thread to prevent ANR
     @WorkerThread
     private void saveDiffs() {
-        log( "saveDiffs() called");
+        log("saveDiffs() called");
         String variablesCipher = JsonUtil.toJson(diffs);
         storeDataInCache(variablesCipher);
     }
 
-    //will basically
-    // 1) set diffs[g] = diffs
-    // (2.) call computeMergedDictionary()
-    // (3.) call var.update() for every var in vars[g]
-    // (4.)  if silent is false,  call saveDiffs() and triggerHasReceivedDiffs()
     private void applyVariableDiffs(Map<String, Object> diffs) {
         log("applyVariableDiffs() called with: diffs = [" + diffs + "]");
         if (diffs != null) {
@@ -230,9 +208,7 @@ public class VarCache {
 
     }
 
-    //will simply  set hasReceivedDiffs[g] = true; and call updateBlock[g].updateCache() which further triggers the callbacks set by user for listening to variables update
     private synchronized void triggerGlobalCallbacks() {
-        // update block is a callback registered by CTVariables to trigger user's callback once the diffs are changed
         if (globalCallbacksRunnable != null) {
             globalCallbacksRunnable.run();
         }
@@ -242,7 +218,6 @@ public class VarCache {
         return CTVariableUtils.getFlatVarsJson(valuesFromClient,defaultKinds);
     }
 
-    // will reset a lot of global variables
     public synchronized void reset() {
         defaultKinds.clear();
         diffs.clear();
