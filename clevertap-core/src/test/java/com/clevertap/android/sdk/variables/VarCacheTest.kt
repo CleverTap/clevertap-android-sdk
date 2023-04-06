@@ -27,18 +27,6 @@ class VarCacheTest : BaseTestCase() {
   }
 
   @Test
-  fun loadDiffsSync() {
-  }
-
-  @Test
-  fun loadDiffsAsync() {
-  }
-
-  @Test
-  fun loadDiffsAndTriggerHandlers() {
-  }
-
-  @Test
   fun `test updateDiffsAndTriggerHandlers`() {
     ctVariables.init()
 
@@ -53,26 +41,6 @@ class VarCacheTest : BaseTestCase() {
     assertEquals(10, var1.value())
     assertEquals(20, var2.value())
     assertEquals(30, varCache.getMergedValue("group.var3"))
-  }
-
-  @Test
-  fun saveDiffs() {
-  }
-
-  @Test
-  fun triggerHasReceivedDiffs() {
-  }
-
-  @Test
-  fun getDefineVarsData() {
-  }
-
-  @Test
-  fun setCacheUpdateBlock() {
-  }
-
-  @Test
-  fun hasReceivedDiffs() {
   }
 
   @Test

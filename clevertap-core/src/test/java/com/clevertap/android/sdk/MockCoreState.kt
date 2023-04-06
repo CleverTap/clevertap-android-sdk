@@ -38,5 +38,6 @@ class MockCoreState(context: Context, cleverTapInstanceConfig: CleverTapInstance
         parser = Mockito.mock(Parser::class.java)
         ctVariables = Mockito.mock(CTVariables::class.java)
         varCache = Mockito.mock(VarCache::class.java)
+        controllerManager = Mockito.mock(ControllerManager::class.java)
     }
 }
