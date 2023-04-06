@@ -78,26 +78,41 @@ public class CTVariables {
      *
      * @param response JSONObject . must pass the the json directly (i.e {key:value} and not {vars:{key:value}})
      */
-    public void handleVariableResponse(@Nullable final JSONObject response, @Nullable FetchVariablesCallback callback) {
+    public void handleVariableResponse(
+        @Nullable JSONObject response,
+        @Nullable FetchVariablesCallback fetchCallback
+    ) {
         log("handleVariableResponse() called with: response = [" + response + "]");
-        setHasVarsRequestCompleted(true);
 
-        boolean jsonHasVariableData = response != null;
-        try {
-            if (!jsonHasVariableData) {
-                varCache.loadDiffsAndTriggerHandlers();
-                if(callback!=null)callback.onVariablesFetched(false);
-            } else {
-                Map<String, Object> variableDiffs = JsonUtil.mapFromJson(response);
-                variableDiffs = CTVariableUtils.convertFlatMapToNestedMaps(variableDiffs);
-                varCache.updateDiffsAndTriggerHandlers(variableDiffs);
-                if(callback!=null)callback.onVariablesFetched(true);
-            }
-        } catch (Throwable t) {
-            t.printStackTrace();
+        if (response == null) {
+            handleVariableResponseError(fetchCallback);
+        } else {
+            handleVariableResponseSuccess(response, fetchCallback);
         }
     }
 
+    public void handleVariableResponseError(@Nullable FetchVariablesCallback fetchCallback) {
+        if (!hasVarsRequestCompleted()) {
+            setHasVarsRequestCompleted(true);
+            varCache.loadDiffsAndTriggerHandlers(); // triggers global callbacks only once on error
+        }
+        if (fetchCallback != null) {
+            fetchCallback.onVariablesFetched(false);
+        }
+    }
+
+    private void handleVariableResponseSuccess(
+        @NonNull JSONObject response,
+        @Nullable FetchVariablesCallback fetchCallback
+    ) {
+        setHasVarsRequestCompleted(true);
+        Map<String, Object> variableDiffs = JsonUtil.mapFromJson(response);
+        variableDiffs = CTVariableUtils.convertFlatMapToNestedMaps(variableDiffs);
+        varCache.updateDiffsAndTriggerHandlers(variableDiffs);
+        if (fetchCallback != null) {
+            fetchCallback.onVariablesFetched(true);
+        }
+    }
 
     /**
      * clear current variable data.can be used during profile switch

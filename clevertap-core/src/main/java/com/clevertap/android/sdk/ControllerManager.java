@@ -14,6 +14,7 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.variables.CTVariables;
 
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import java.util.concurrent.Callable;
 
 public class ControllerManager {
@@ -167,5 +168,18 @@ public class ControllerManager {
                 config.getLogger().info("CRITICAL : No device ID found!");
             }
         }
+    }
+
+    public void invokeCallbacksForNetworkError() {
+
+        // Variables
+        if (ctVariables != null) {
+            FetchVariablesCallback fetchCallback = callbackManager.getFetchVariablesCallback();
+            callbackManager.setFetchVariablesCallback(null);
+
+            ctVariables.handleVariableResponseError(fetchCallback);
+        }
+
+        // Add more callbacks if necessary
     }
 }

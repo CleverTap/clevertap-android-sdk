@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.FailureFlushListener;
@@ -67,6 +68,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private Runnable pushNotificationViewedRunnable = null;
 
+    private final ControllerManager controllerManager;
+
     public EventQueueManager(final BaseDatabaseManager baseDatabaseManager,
             Context context,
             CleverTapInstanceConfig config,
@@ -79,7 +82,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             NetworkManager networkManager,
             CoreMetaData coreMetaData,
             CTLockManager ctLockManager,
-            final LocalDataStore localDataStore) {
+            final LocalDataStore localDataStore,
+            ControllerManager controllerManager) {
         this.baseDatabaseManager = baseDatabaseManager;
         this.context = context;
         this.config = config;
@@ -93,6 +97,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         logger = this.config.getLogger();
         cleverTapMetaData = coreMetaData;
         this.ctLockManager = ctLockManager;
+        this.controllerManager = controllerManager;
 
         callbackManager.setFailureFlushListener(this);
     }
@@ -147,12 +152,14 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     public void flushQueueSync(final Context context, final EventGroup eventGroup) {
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
+            controllerManager.invokeCallbacksForNetworkError();
             return;
         }
 
         if (cleverTapMetaData.isOffline()) {
             logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
+            controllerManager.invokeCallbacksForNetworkError();
             return;
         }
 
@@ -169,6 +176,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         }
     }
 
+    /**
+     * This method is currently used only for syncing of variables. If you find it appropriate you
+     * can add handling of network error similar to flushQueueSync, also check return value of
+     * sendQueue for success.
+     */
     @Override
     public void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData) {
         if (!NetworkManager.isNetworkOnline(context)) {

@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.variables
 
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.MockCoreState
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
+import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.Before
@@ -75,6 +78,113 @@ class CTVariablesTest : BaseTestCase() {
 
     assertTrue(callback)
     assertFalse(success)
+  }
+
+  @Test
+  fun `test individual callback`() {
+    ctVariables.init()
+    var counter = 0
+
+    val var1 = Var.define("var1", 1, ctVariables)
+    var1.addValueChangedCallback(object : VariableCallback<Int>() {
+      override fun onValueChanged(variable: Var<Int>) {
+        counter++
+      }
+    })
+
+    // callback invoked on start
+    ctVariables.handleVariableResponse(JSONObject(), null)
+    assertEquals(1, counter)
+
+    // callback not invoked when value is not changed
+    ctVariables.handleVariableResponse(JSONObject(), null)
+    assertEquals(1, counter)
+
+    // callback invoked when value is changed
+    ctVariables.handleVariableResponse(JSONObject().put("var1", 2), null)
+    assertEquals(2, counter)
+  }
+
+  @Test
+  fun `test individual callback on error`() {
+    ctVariables.init()
+    var success = false
+    var callback = false
+    var counter = 0
+
+    val var1 = Var.define("var1", 1, ctVariables)
+    var1.addValueChangedCallback(object : VariableCallback<Int>() {
+      override fun onValueChanged(variable: Var<Int>) {
+        counter++
+      }
+    })
+
+    ctVariables.handleVariableResponseError { isSuccessful ->
+      success = isSuccessful
+      callback = true
+    }
+
+    assertTrue(callback)
+    assertFalse(success)
+    assertEquals(1, counter)
+
+    // callback is not ivoked again
+    ctVariables.handleVariableResponseError(null)
+    assertEquals(1, counter)
+  }
+
+  @Test
+  fun `test global callbacks`() {
+    ctVariables.init()
+    var callbackCounter = 0
+    var oneTimeCounter = 0
+
+    ctVariables.addVariablesChangedCallback(object : VariablesChangedCallback() {
+      override fun variablesChanged() {
+        callbackCounter++
+      }
+    })
+
+    ctVariables.addOneTimeVariablesChangedCallback(object : VariablesChangedCallback() {
+      override fun variablesChanged() {
+        oneTimeCounter++
+      }
+    })
+
+    ctVariables.handleVariableResponse(JSONObject(), null)
+    ctVariables.handleVariableResponse(JSONObject(), null)
+
+    assertEquals(2, callbackCounter)
+    assertEquals(1, oneTimeCounter)
+  }
+
+  @Test
+  fun `test global callbacks on error`() {
+    ctVariables.init()
+    var callbackCounter = 0
+    var oneTimeCounter = 0
+
+    ctVariables.addVariablesChangedCallback(object : VariablesChangedCallback() {
+      override fun variablesChanged() {
+        callbackCounter++
+      }
+    })
+
+    ctVariables.addOneTimeVariablesChangedCallback(object : VariablesChangedCallback() {
+      override fun variablesChanged() {
+        oneTimeCounter++
+      }
+    })
+
+    ctVariables.handleVariableResponse(null, null)
+    assertEquals(1, callbackCounter)
+    assertEquals(1, oneTimeCounter)
+
+    // won't be called on consecutive errors
+
+    ctVariables.handleVariableResponse(null, null)
+    assertEquals(1, callbackCounter)
+    assertEquals(1, oneTimeCounter)
   }
 
 }

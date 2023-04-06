@@ -94,7 +94,7 @@ class CleverTapFactory {
                 eventMediator,
                 sessionManager, callbackManager,
                 mainLooperHandler, deviceInfo, validationResultStack,
-                networkManager, coreMetaData, ctLockManager, localDataStore);
+                networkManager, coreMetaData, ctLockManager, localDataStore, controllerManager);
         coreState.setBaseEventQueueManager(baseEventQueueManager);
 
         AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,

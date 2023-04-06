@@ -192,6 +192,10 @@ public class NetworkManager extends BaseNetworkManager {
             }
 
             loadMore = sendQueue(context, eventGroup, queue);
+            if (!loadMore) {
+                // network error
+                controllerManager.invokeCallbacksForNetworkError();
+            }
         }
     }
 
