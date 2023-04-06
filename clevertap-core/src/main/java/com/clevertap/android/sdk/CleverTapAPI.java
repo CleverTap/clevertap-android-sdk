@@ -1201,8 +1201,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param messageIDs {@link ArrayList} with String values - list of messageIDs of {@link CTInboxMessage} public object of inbox message
      */
     public void deleteInboxMessagesForIDs(final ArrayList<String> messageIDs){
-        for(String messageID:messageIDs){
-            deleteInboxMessage(messageID);
+        if (coreState.getControllerManager().getCTInboxController() != null) {
+            coreState.getControllerManager().getCTInboxController().deleteInboxMessagesForIDs(messageIDs);
+        } else {
+            getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
         }
     }
 
@@ -1944,8 +1946,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param messageIDs {@link ArrayList} with String values - list of messageIDs of {@link CTInboxMessage} public object of inbox message
      */
     public void markReadInboxMessagesForIDs(final ArrayList<String> messageIDs){
-        for(String messageID:messageIDs){
-            markReadInboxMessage(messageID);
+        if (coreState.getControllerManager().getCTInboxController() != null) {
+            coreState.getControllerManager().getCTInboxController().markReadInboxMessagesForIDs(messageIDs);
+        } else {
+            getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
         }
     }
 

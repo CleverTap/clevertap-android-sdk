@@ -74,6 +74,22 @@ public class CTInboxController {
             }
         });
     }
+    @AnyThread
+    public void deleteInboxMessagesForIDs(final ArrayList<String> messageIDs) {
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("deleteInboxMessagesForIDs", new Callable<Void>() {
+            @Override
+            public Void call() {
+                synchronized (ctLockManager.getInboxControllerLock()) {
+                    boolean update = _deleteMessagesForIds(messageIDs);
+                    if (update) {
+                        callbackManager._notifyInboxMessagesDidUpdate();
+                    }
+                }
+                return null;
+            }
+        });
+    }
 
     @AnyThread
     public CTMessageDAO getMessageForId(String messageId) {
@@ -110,6 +126,23 @@ public class CTInboxController {
             public Void call() {
                 synchronized (ctLockManager.getInboxControllerLock()) {
                     boolean read = _markReadForMessageWithId(message.getMessageId());
+                    if (read) {
+                        callbackManager._notifyInboxMessagesDidUpdate();
+                    }
+                }
+                return null;
+            }
+        });
+    }
+
+    @AnyThread
+    public void markReadInboxMessagesForIDs(final ArrayList<String> messageIDs) {
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("markReadInboxMessagesForIDs", new Callable<Void>() {
+            @Override
+            public Void call() {
+                synchronized (ctLockManager.getInboxControllerLock()) {
+                    boolean read = _markReadForMessagesWithIds(messageIDs);
                     if (read) {
                         callbackManager._notifyInboxMessagesDidUpdate();
                     }
@@ -187,6 +220,31 @@ public class CTInboxController {
         });
         return true;
     }
+    @AnyThread
+    boolean _deleteMessagesForIds(final ArrayList<String> messageIDs) {
+        ArrayList<CTMessageDAO> messageDAOList=new ArrayList<>();
+        for(String messageID:messageIDs) {
+            CTMessageDAO messageDAO = findMessageById(messageID);
+            if (messageDAO == null) {
+                continue;
+            }
+            messageDAOList.add(messageDAO);
+        }
+        synchronized (messagesLock) {
+            this.messages.removeAll(messageDAOList);
+        }
+
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("RunDeleteMessagesForIDs", new Callable<Void>() {
+            @Override
+            @WorkerThread
+            public Void call() {
+                dbAdapter.deleteMessagesForIDs(messageIDs, userId);
+                return null;
+            }
+        });
+        return true;
+    }
 
     @AnyThread
     boolean _markReadForMessageWithId(final String messageId) {
@@ -207,6 +265,32 @@ public class CTInboxController {
             @WorkerThread
             public Void call() {
                 dbAdapter.markReadMessageForId(messageId, userId);
+                return null;
+            }
+        });
+        return true;
+    }
+
+    @AnyThread
+    boolean _markReadForMessagesWithIds(final ArrayList<String> messageIDs) {
+        for(String messageId:messageIDs) {
+            CTMessageDAO messageDAO = findMessageById(messageId);
+            if (messageDAO == null) {
+                continue;
+            }
+            synchronized (messagesLock) {
+                messageDAO.setRead(1);
+            }
+        }
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate() );//  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
+        task.addOnFailureListener(e -> Logger.d("Failed to update message read state for ids:"+messageIDs,e));
+
+        task.execute("RunMarkMessagesReadForIDs", new Callable<Void>() {
+            @Override
+            @WorkerThread
+            public Void call() {
+                dbAdapter.markReadMessagesForIds(messageIDs, userId);
                 return null;
             }
         });

@@ -349,6 +349,44 @@ public class DBAdapter {
         }
     }
 
+    /**
+     * Deletes multiple inbox messages for given list of messageIDs
+     *
+     * @param messageIDs ArrayList of type String
+     * @param userId String userId
+     * @return boolean value depending on success of operation
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    @WorkerThread
+    public synchronized boolean deleteMessagesForIDs(ArrayList<String> messageIDs, String userId) {
+        if (messageIDs == null || userId == null) {
+            return false;
+        }
+        final String tName = Table.INBOX_MESSAGES.getName();
+        try {
+            StringBuilder questionMarksBuilder = new StringBuilder();
+            if(messageIDs.size()>0) {
+                questionMarksBuilder.append("?");
+                for (int i = 0; i < messageIDs.size() - 1; i++) {
+                    questionMarksBuilder.append(", ?");
+                }
+            }
+            String[] whereArgs = new String[messageIDs.size()+1];
+            whereArgs = messageIDs.toArray(whereArgs);
+            //Append userID as last element of array to be used by query builder
+            whereArgs[messageIDs.size()]=userId;
+
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            db.delete(tName,  _ID + " IN ( " + questionMarksBuilder + " ) AND "+USER_ID+ " = ?", whereArgs);
+            return true;
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error removing stale records from " + tName, e);
+            return false;
+        } finally {
+            dbHelper.close();
+        }
+    }
+
     public synchronized boolean doesPushNotificationIdExist(String id) {
         return id.equals(fetchPushNotificationId(id));
     }
@@ -502,6 +540,49 @@ public class DBAdapter {
             cv.put(IS_READ, 1);
             db.update(Table.INBOX_MESSAGES.getName(), cv, _ID + " = ? AND " + USER_ID + " = ?",
                     new String[]{messageId, userId});
+            return true;
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error removing stale records from " + tName, e);
+            return false;
+        } finally {
+            dbHelper.close();
+        }
+    }
+
+
+    /**
+     * Marks multiple inbox messages as read for given list of messageIDs
+     *
+     * @param messageIDs ArrayList of type String
+     * @param userId String userId
+     * @return boolean value depending on success of operation
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    @WorkerThread
+    public synchronized boolean markReadMessagesForIds(ArrayList<String> messageIDs, String userId) {
+        if (messageIDs == null || userId == null) {
+            return false;
+        }
+
+        final String tName = Table.INBOX_MESSAGES.getName();
+        try {
+            StringBuilder questionMarksBuilder = new StringBuilder();
+            if(messageIDs.size()>0) {
+                questionMarksBuilder.append("?");
+                for (int i = 0; i < messageIDs.size() - 1; i++) {
+                    questionMarksBuilder.append(", ?");
+                }
+            }
+            String[] whereArgs = new String[messageIDs.size()+1];
+            whereArgs = messageIDs.toArray(whereArgs);
+            //Append userID as last element of array to be used by query builder
+            whereArgs[messageIDs.size()]=userId;
+
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+            ContentValues cv = new ContentValues();
+            cv.put(IS_READ, 1);
+            db.update(Table.INBOX_MESSAGES.getName(), cv, _ID + " IN ( " + questionMarksBuilder + " ) AND "+USER_ID+ " = ?", whereArgs);
             return true;
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error removing stale records from " + tName, e);
