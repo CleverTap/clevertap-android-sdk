@@ -245,4 +245,8 @@ public class Var<T> {
         warnIfNotStarted();
         return stringValue;
     }
+
+    void clearStartFlag() {
+        hadStarted = false;
+    }
 }

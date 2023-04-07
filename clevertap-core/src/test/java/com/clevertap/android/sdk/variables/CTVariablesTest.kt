@@ -185,4 +185,37 @@ class CTVariablesTest : BaseTestCase() {
     assertEquals(1, oneTimeCounter)
   }
 
+  @Test
+  fun `test clearUserContent resets var to default value`() {
+    ctVariables.init()
+    val var1 = Var.define("var1", 1, ctVariables)
+    ctVariables.handleVariableResponse(JSONObject().put("var1", 2), null)
+    assertEquals(2, var1.value())
+
+    ctVariables.clearUserContent()
+    assertFalse(ctVariables.hasVarsRequestCompleted())
+    assertEquals(1, var1.value())
+
+    ctVariables.handleVariableResponse(JSONObject().put("var1", 3), null)
+    assertEquals(3, var1.value())
+  }
+
+  @Test
+  fun `test clearUserContent resets group to default value`() {
+    ctVariables.init()
+    val group = Var.define("group", mapOf("var1" to 1, "var2" to 2), ctVariables)
+    ctVariables.handleVariableResponse(JSONObject().put("group.var1", 111), null)
+
+    assertEquals(111, varCache.getMergedValue("group.var1"))
+    assertEquals(2, varCache.getMergedValue("group.var2"))
+    assertEquals(mapOf("var1" to 111, "var2" to 2), group.value())
+
+    ctVariables.clearUserContent()
+    assertFalse(ctVariables.hasVarsRequestCompleted())
+    assertEquals(mapOf("var1" to 1, "var2" to 2), group.value())
+
+    ctVariables.handleVariableResponse(JSONObject().put("group.var2", 222), null)
+    assertEquals(mapOf("var1" to 1, "var2" to 222), group.value())
+  }
+
 }

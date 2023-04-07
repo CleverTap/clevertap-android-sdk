@@ -2003,7 +2003,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void onUserLogin(final Map<String, Object> profile, final String cleverTapID) {
         coreState.getLoginController().onUserLogin(profile, cleverTapID);
-        clearAllVariablesForCurrentUser();
     }
 
     /**
@@ -3083,13 +3082,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return null;
         }
         return coreState.getVarCache().getVariable(name);
-    }
-
-    /**
-     * clear current variable data.can be used during profile switch
-     */
-    private void clearAllVariablesForCurrentUser() {
-        coreState.getCTVariables().clearUserContent();
     }
 
     /**

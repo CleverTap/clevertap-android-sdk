@@ -96,7 +96,9 @@ public class CTVariables {
      * clear current variable data.can be used during profile switch
      */
     public void clearUserContent() {
-        varCache.reset();
+        logD("Clear user content in CTVariables");
+        setHasVarsRequestCompleted(false); // disable callbacks and wait until fetch is finished
+        varCache.clearUserContent();
     }
 
 
