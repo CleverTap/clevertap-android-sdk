@@ -25,6 +25,9 @@ public class EventMediator {
 
     public boolean shouldDeferProcessingEvent(JSONObject event, int eventType) {
         //noinspection SimplifiableIfStatement
+        if(eventType == Constants.DEFINE_VARS_EVENT){
+            return false;
+        }
         if (config.isCreatedPostAppLaunch()) {
             return false;
         }
@@ -41,7 +44,7 @@ public class EventMediator {
     }
 
     public boolean shouldDropEvent(JSONObject event, int eventType) {
-        if (eventType == Constants.FETCH_EVENT) {
+        if (eventType == Constants.FETCH_EVENT || eventType == Constants.DEFINE_VARS_EVENT) {
             return false;
         }
 

@@ -12,6 +12,9 @@ import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
+import com.clevertap.android.sdk.variables.CTVariables;
+import com.clevertap.android.sdk.variables.Parser;
+import com.clevertap.android.sdk.variables.VarCache;
 
 public class CoreState extends CleverTapState {
 
@@ -54,6 +57,28 @@ public class CoreState extends CleverTapState {
     private BaseNetworkManager networkManager;
 
     private PushProviders pushProviders;
+
+    private VarCache varCache;
+
+    private Parser parser;
+
+    public CTVariables getCTVariables() {
+        return ctVariables;
+    }
+
+    public void setCTVariables(final CTVariables CTVariables) {
+        ctVariables = CTVariables;
+    }
+
+    private CTVariables ctVariables;
+
+    public Parser getParser() {
+        return parser;
+    }
+
+    public void setParser(final Parser parser) {
+        this.parser = parser;
+    }
 
     CoreState(final Context context) {
         super(context);
@@ -228,6 +253,14 @@ public class CoreState extends CleverTapState {
 
     public void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
         this.mainLooperHandler = mainLooperHandler;
+    }
+
+    public VarCache getVarCache() {
+        return varCache;
+    }
+
+    public void setVarCache(final VarCache varCache) {
+        this.varCache = varCache;
     }
 
     private void initProductConfig() {

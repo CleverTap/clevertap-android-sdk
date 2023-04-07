@@ -9,6 +9,9 @@ import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.validation.ValidationResultStack
+import com.clevertap.android.sdk.variables.CTVariables
+import com.clevertap.android.sdk.variables.Parser
+import com.clevertap.android.sdk.variables.VarCache
 import org.mockito.*
 
 class MockCoreState(context: Context, cleverTapInstanceConfig: CleverTapInstanceConfig) : CoreState(context) {
@@ -32,5 +35,9 @@ class MockCoreState(context: Context, cleverTapInstanceConfig: CleverTapInstance
         localDataStore = Mockito.mock(LocalDataStore::class.java)
         baseEventQueueManager = Mockito.mock(EventQueueManager::class.java)
         inAppController = Mockito.mock(InAppController::class.java)
+        parser = Mockito.mock(Parser::class.java)
+        ctVariables = Mockito.mock(CTVariables::class.java)
+        varCache = Mockito.mock(VarCache::class.java)
+        controllerManager = Mockito.mock(ControllerManager::class.java)
     }
 }
