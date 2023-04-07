@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
+import static com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
