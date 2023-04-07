@@ -64,40 +64,24 @@ import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class NetworkManager extends BaseNetworkManager {
-
     private static SSLSocketFactory sslSocketFactory;
-
     private static SSLContext sslContext;
-
     private final BaseCallbackManager callbackManager;
-
     private CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
-
     private final Context context;
-
     private final ControllerManager controllerManager;
-
     private final CoreMetaData coreMetaData;
-
     private int currentRequestTimestamp = 0;
-
     private final BaseDatabaseManager databaseManager;
-
     private final DeviceInfo deviceInfo;
-
     private final LocalDataStore localDataStore;
-
     private final Logger logger;
-
     private int networkRetryCount = 0;
-
     private final ValidationResultStack validationResultStack;
-
     private int responseFailureCount = 0;
-
     private final Validator validator;
+    private int minDelayFrequency = 0;
 
     public static boolean isNetworkOnline(Context context) {
 
@@ -203,8 +187,6 @@ public class NetworkManager extends BaseNetworkManager {
     //randomly adds delay to 1s delay in case of non-EU regions
     @Override
     public int getDelayFrequency() {
-
-        int minDelayFrequency = 0;
 
         logger.debug(config.getAccountId(), "Network retry #" + networkRetryCount);
 
@@ -411,9 +393,6 @@ public class NetworkManager extends BaseNetworkManager {
         this.responseFailureCount = responseFailureCount;
     }
 
-    //gives delay frequency based on region
-    //randomly adds delay to 1s delay in case of non-EU regions
-
     boolean hasDomainChanged(final String newDomain) {
         final String oldDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
         return !newDomain.equals(oldDomain);
@@ -533,7 +512,7 @@ public class NetworkManager extends BaseNetworkManager {
             }
 
             // Resort to string concat for backward compatibility
-            return "[" + header.toString() + ", " + arr.toString().substring(1);
+            return "[" + header + ", " + arr.toString().substring(1);
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "CommsManager: Failed to attach header", t);
             return arr.toString();
@@ -713,11 +692,11 @@ public class NetworkManager extends BaseNetworkManager {
                 JSONObject notification = queue.getJSONObject(queue.length() - 1).optJSONObject("evtData");
                 if (notification != null) {
                     String lastPushInQueue = notification.optString(Constants.WZRK_PUSH_ID);
-                    /**
-                     * Check if, sent push notification viewed event is for latest push notification or older
-                     * If it's for latest push which just came on device then give render callback to listeners
-                     * This will make sure that callback will be given only when viewed event for latest push on device is
-                     * sent to BE.
+                    /*
+                      Check if, sent push notification viewed event is for latest push notification or older
+                      If it's for latest push which just came on device then give render callback to listeners
+                      This will make sure that callback will be given only when viewed event for latest push on device is
+                      sent to BE.
                      */
                     if (coreMetaData.getLastNotificationId() != null && coreMetaData.getLastNotificationId()
                             .equals(lastPushInQueue)) {
@@ -871,7 +850,7 @@ public class NetworkManager extends BaseNetworkManager {
             }
             final JSONObject ret = new JSONObject(all);
             logger.verbose(config.getAccountId(),
-                    "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + all.toString());
+                    "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + all);
             return ret;
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "Failed to construct ARP object", t);
@@ -939,12 +918,9 @@ public class NetworkManager extends BaseNetworkManager {
 
             // Clear all the queues
             Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-            task.execute("CommsManager#setMuted", new Callable<Void>() {
-                @Override
-                public Void call() {
-                    databaseManager.clearQueues(context);
-                    return null;
-                }
+            task.execute("CommsManager#setMuted", () -> {
+                databaseManager.clearQueues(context);
+                return null;
             });
         } else {
             StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MUTED), 0);
