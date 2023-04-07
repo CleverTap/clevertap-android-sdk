@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
@@ -12,6 +13,8 @@ import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +60,8 @@ public class CallbackManager extends BaseCallbackManager {
         this.config = config;
         this.deviceInfo = deviceInfo;
     }
+
+    private FetchVariablesCallback fetchVariablesCallback;
 
     @Override
     public void _notifyInboxMessagesDidUpdate() {
@@ -298,4 +303,14 @@ public class CallbackManager extends BaseCallbackManager {
         notifyUserProfileInitialized(deviceInfo.getDeviceID());
     }
 
+    @Override @Nullable
+    public FetchVariablesCallback getFetchVariablesCallback() {
+        return fetchVariablesCallback;
+    }
+
+    @Override
+    public void setFetchVariablesCallback(
+        FetchVariablesCallback fetchVariablesCallback) {
+        this.fetchVariablesCallback = fetchVariablesCallback;
+    }
 }

@@ -137,7 +137,7 @@ public class LoginInfoProvider {
         try {
             StorageHelper.remove(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY));
             config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                    "removeCachedGUIDs:[]");
+                "removeCachedGUIDs:[]");
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error removing guid cache: " + t.toString());
         }

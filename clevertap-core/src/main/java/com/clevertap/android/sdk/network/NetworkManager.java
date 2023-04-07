@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.BaseCallbackManager;
@@ -38,6 +39,7 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
+import com.clevertap.android.sdk.response.FetchVariablesResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
@@ -46,6 +48,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,6 +59,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
@@ -83,6 +87,8 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final DeviceInfo deviceInfo;
 
+    private final LocalDataStore localDataStore;
+
     private final Logger logger;
 
     private int networkRetryCount = 0;
@@ -90,6 +96,8 @@ public class NetworkManager extends BaseNetworkManager {
     private final ValidationResultStack validationResultStack;
 
     private int responseFailureCount = 0;
+
+    private final Validator validator;
 
     public static boolean isNetworkOnline(Context context) {
 
@@ -124,6 +132,8 @@ public class NetworkManager extends BaseNetworkManager {
         this.config = config;
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
+        this.validator = validator;
+        this.localDataStore = localDataStore;
         logger = this.config.getLogger();
 
         this.coreMetaData = coreMetaData;
@@ -138,6 +148,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config, controllerManager);
         cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
                 callbackManager, controllerManager);
+        cleverTapResponse = new FetchVariablesResponse(cleverTapResponse,config,controllerManager,callbackManager);
         cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config,
                 baseDatabaseManager, callbackManager, controllerManager);
         cleverTapResponse = new InboxResponse(cleverTapResponse, config, ctLockManager,
@@ -181,6 +192,10 @@ public class NetworkManager extends BaseNetworkManager {
             }
 
             loadMore = sendQueue(context, eventGroup, queue);
+            if (!loadMore) {
+                // network error
+                controllerManager.invokeCallbacksForNetworkError();
+            }
         }
     }
 
@@ -314,6 +329,8 @@ public class NetworkManager extends BaseNetworkManager {
 
         if (emptyDomain) {
             domain = Constants.PRIMARY_DOMAIN + "/hello";
+        } else if (eventGroup == EventGroup.VARIABLES) {
+            domain += eventGroup.additionalPath;
         } else {
             domain += "/a1";
         }
@@ -402,7 +419,7 @@ public class NetworkManager extends BaseNetworkManager {
         return !newDomain.equals(oldDomain);
     }
 
-    String insertHeader(Context context, JSONArray arr) {
+    String insertHeader(Context context, JSONArray arr) {//[{}]
         try {
             final JSONObject header = new JSONObject();
 
@@ -603,7 +620,7 @@ public class NetworkManager extends BaseNetworkManager {
      * @return true if the network request succeeded. Anything non 200 results in a false.
      */
     @Override
-    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
+    public boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
         if (queue == null || queue.length() <= 0) {
             return false;
         }
@@ -641,9 +658,15 @@ public class NetworkManager extends BaseNetworkManager {
 
             final int responseCode = conn.getResponseCode();
 
-            // Always check for a 200 OK
-            if (responseCode != 200) {
-                throw new IOException("Response code is not 200. It is " + responseCode);
+            if (eventGroup == EventGroup.VARIABLES) {
+                if (handleVariablesResponseError(responseCode, conn)) {
+                    return false;
+                }
+            } else {
+                // Always check for a 200 OK
+                if (responseCode != 200) {
+                    throw new IOException("Response code is not 200. It is " + responseCode);
+                }
             }
 
             // Check for a change in domain
@@ -668,7 +691,17 @@ public class NetworkManager extends BaseNetworkManager {
                     sb.append(line);
                 }
                 body = sb.toString();
-                getCleverTapResponse().processResponse(null, body, this.context);
+
+                if (eventGroup == EventGroup.VARIABLES) {
+                    CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
+                    cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator,
+                            controllerManager);
+                    cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore,
+                            cleverTapResponse);
+                    cleverTapResponse.processResponse(null, body, this.context);
+                } else {
+                    getCleverTapResponse().processResponse(null, body, this.context);
+                }
             }
 
             setLastRequestTimestamp(getCurrentRequestTimestamp());
@@ -725,6 +758,51 @@ public class NetworkManager extends BaseNetworkManager {
                     // Ignore
                 }
             }
+        }
+    }
+
+    private boolean handleVariablesResponseError(int responseCode, HttpsURLConnection conn) {
+        switch (responseCode) {
+            case 200:
+                logger.info("variables", "Vars synced successfully.");
+                return false;
+
+            case 400:
+                JSONObject errorStreamJson = getErrorStreamAsJson(conn);
+                if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
+                    String errorMessage = errorStreamJson.optString("error");
+                    logger.info("variables", "Error while syncing vars: " + errorMessage);
+                } else {
+                    logger.info("variables", "Error while syncing vars.");
+                }
+                return true;
+
+            case 401:
+                logger.info("variables", "Unauthorized access from a non-test profile. "
+                    + "Please mark this profile as a test profile from the CleverTap dashboard.");
+                return true;
+
+            default:
+                logger.info("variables", "Response code " + responseCode + " while syncing vars.");
+                return true;
+        }
+    }
+
+    private JSONObject getErrorStreamAsJson(HttpsURLConnection conn) {
+        try {
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
+
+            StringBuilder text = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+            }
+
+            return new JSONObject(text.toString());
+
+        } catch (IOException | JSONException e) {
+            return null;
         }
     }
 
