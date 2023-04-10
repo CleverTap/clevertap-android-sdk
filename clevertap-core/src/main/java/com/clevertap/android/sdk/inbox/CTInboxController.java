@@ -230,6 +230,9 @@ public class CTInboxController {
             }
             messageDAOList.add(messageDAO);
         }
+        if(messageDAOList.isEmpty())
+            return false;
+
         synchronized (messagesLock) {
             this.messages.removeAll(messageDAOList);
         }
@@ -273,15 +276,22 @@ public class CTInboxController {
 
     @AnyThread
     boolean _markReadForMessagesWithIds(final ArrayList<String> messageIDs) {
+        Boolean atleastOneMessageIsValid=false;
         for(String messageId:messageIDs) {
             CTMessageDAO messageDAO = findMessageById(messageId);
             if (messageDAO == null) {
                 continue;
             }
-            synchronized (messagesLock) {
-                messageDAO.setRead(1);
+            else {
+                atleastOneMessageIsValid=true;
+                synchronized (messagesLock) {
+                    messageDAO.setRead(1);
+                }
             }
         }
+        if(atleastOneMessageIsValid==false)
+            return false;
+
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate() );//  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
         task.addOnFailureListener(e -> Logger.d("Failed to update message read state for ids:"+messageIDs,e));
