@@ -3024,7 +3024,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return boolean True if development mode, false otherwise.
      */
     boolean isDevelopmentMode() {
-        return CTVariables.isDevelopmentMode();
+        return CTVariables.isDevelopmentMode(context);
     }
 
     /**

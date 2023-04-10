@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.variables;
 
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -101,9 +103,8 @@ public class CTVariables {
         varCache.clearUserContent();
     }
 
-
-    public static boolean isDevelopmentMode() {
-        return BuildConfig.DEBUG;
+    public static boolean isDevelopmentMode(Context context) {
+        return 0 != (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE);
     }
 
     /**
