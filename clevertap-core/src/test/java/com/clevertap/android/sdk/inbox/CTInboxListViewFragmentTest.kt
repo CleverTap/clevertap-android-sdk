@@ -55,7 +55,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_handleClick_when_buttonText_is_empty_fires_url_through_intent() {
 
-        val position = 0
+        val itemPosition = 0
+        val viewPagerPosition = 0
         val buttonTxt = ""
         val buttonIndex = Constants.APP_INBOX_CTA1_INDEX
 
@@ -63,7 +64,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         //Act
-        ctInboxListViewFragmentSpy.handleClick(position, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
+        ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
         verify(
@@ -75,7 +76,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_handleClick_when_buttonText_is_null_fires_url_through_intent() {
 
-        val position = 0
+        val itemPosition = 0
+        val viewPagerPosition = 0
         val buttonTxt = null
         val buttonIndex = Constants.APP_INBOX_CTA1_INDEX
 
@@ -83,7 +85,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         //Act
-        ctInboxListViewFragmentSpy.handleClick(position, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
+        ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
         verify(
@@ -95,7 +97,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_handleClick_when_buttonText_is_present_fires_url_through_intent() {
 
-        val position = 0
+        val itemPosition = 0
+        val viewPagerPosition = 0
         val buttonTxt = "ClickHere"
         val buttonIndex = Constants.APP_INBOX_CTA1_INDEX
 
@@ -103,7 +106,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         //Act
-        ctInboxListViewFragmentSpy.handleClick(position, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
+        ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
         verify(
@@ -115,7 +118,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_handleClick_when_buttonJsonObj_is_null_fires_url_through_intent() {
 
-        val position = 0
+        val itemPosition = 0
+        val viewPagerPosition = 0
         val buttonTxt = "ClickHere"
         val buttonIndex = Constants.APP_INBOX_CTA1_INDEX
 
@@ -125,7 +129,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         //Act
-        ctInboxListViewFragmentSpy.handleClick(position, buttonTxt, buttonJsonObj, keyValuePayload, buttonIndex)
+        ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObj, keyValuePayload, buttonIndex)
 
         //Assert
         verify(
@@ -137,7 +141,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_handleClick_when_buttonJsonObj_is_present_fires_url_through_intent() {
 
-        val position = 0
+        val itemPosition = 0
+        val viewPagerPosition = 0
         val buttonTxt = "ClickHere"
         val buttonIndex = Constants.APP_INBOX_CTA1_INDEX
 
@@ -145,7 +150,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         //Act
-        ctInboxListViewFragmentSpy.handleClick(position, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
+        ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
         verify(
@@ -157,7 +162,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_handleClick_when_keyValuePayload_is_empty_fires_url_through_intent() {
 
-        val position = 0
+        val itemPosition = 0
+        val viewPagerPosition = 0
         val buttonTxt = "ClickHere"
         val buttonIndex = Constants.APP_INBOX_CTA1_INDEX
 
@@ -165,7 +171,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         //Act
-        ctInboxListViewFragmentSpy.handleClick(position, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
+        ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
         verify(
@@ -177,7 +183,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_handleClick_when_keyValuePayload_is_null_fires_url_through_intent() {
 
-        val position = 0
+        val itemPosition = 0
+        val viewPagerPosition = 0
         val buttonTxt = "ClickHere"
         val buttonIndex = Constants.APP_INBOX_CTA1_INDEX
 
@@ -185,7 +192,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         //Act
-        ctInboxListViewFragmentSpy.handleClick(position, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
+        ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
         verify(
@@ -197,7 +204,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     @Test
     fun test_handleClick_when_keyValuePayload_is_present_do_nothing() {
 
-        val position = 0
+        val itemPosition = 0
+        val viewPagerPosition = 0
         val buttonTxt = "ClickHere"
         val buttonIndex = Constants.APP_INBOX_CTA1_INDEX
 
@@ -206,7 +214,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
 
         //Act
-        ctInboxListViewFragmentSpy.handleClick(position, buttonTxt, buttonJsonObjKVType, keyValuePayload, buttonIndex)
+        ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjKVType, keyValuePayload, buttonIndex)
 
         //Assert
         verify(
