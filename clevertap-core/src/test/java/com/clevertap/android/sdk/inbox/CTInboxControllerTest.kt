@@ -9,7 +9,6 @@ import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
-import org.junit.jupiter.api.BeforeAll
 import org.mockito.Mockito.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

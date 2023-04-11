@@ -12,10 +12,10 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import java.util.ArrayList;
-import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONException;
+import java.util.ArrayList;
+import java.util.concurrent.Callable;
 
 /**
  * Controller class which handles Users and Messages for the Notification Inbox
@@ -42,9 +42,9 @@ public class CTInboxController {
     // always call async
     @WorkerThread
     public CTInboxController(CleverTapInstanceConfig config, String guid, DBAdapter adapter,
-            CTLockManager ctLockManager,
-            BaseCallbackManager callbackManager,
-            boolean videoSupported) {
+                             CTLockManager ctLockManager,
+                             BaseCallbackManager callbackManager,
+                             boolean videoSupported) {
         this.userId = guid;
         this.dbAdapter = adapter;
         this.messages = this.dbAdapter.getMessages(this.userId);
@@ -74,6 +74,7 @@ public class CTInboxController {
             }
         });
     }
+
     @AnyThread
     public void deleteInboxMessagesForIDs(final ArrayList<String> messageIDs) {
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
@@ -220,17 +221,18 @@ public class CTInboxController {
         });
         return true;
     }
+
     @AnyThread
     boolean _deleteMessagesForIds(final ArrayList<String> messageIDs) {
-        ArrayList<CTMessageDAO> messageDAOList=new ArrayList<>();
-        for(String messageID:messageIDs) {
+        ArrayList<CTMessageDAO> messageDAOList = new ArrayList<>();
+        for (String messageID : messageIDs) {
             CTMessageDAO messageDAO = findMessageById(messageID);
             if (messageDAO == null) {
                 continue;
             }
             messageDAOList.add(messageDAO);
         }
-        if(messageDAOList.isEmpty())
+        if (messageDAOList.isEmpty())
             return false;
 
         synchronized (messagesLock) {
@@ -276,25 +278,24 @@ public class CTInboxController {
 
     @AnyThread
     boolean _markReadForMessagesWithIds(final ArrayList<String> messageIDs) {
-        Boolean atleastOneMessageIsValid=false;
-        for(String messageId:messageIDs) {
+        Boolean atleastOneMessageIsValid = false;
+        for (String messageId : messageIDs) {
             CTMessageDAO messageDAO = findMessageById(messageId);
             if (messageDAO == null) {
                 continue;
-            }
-            else {
-                atleastOneMessageIsValid=true;
+            } else {
+                atleastOneMessageIsValid = true;
                 synchronized (messagesLock) {
                     messageDAO.setRead(1);
                 }
             }
         }
-        if(atleastOneMessageIsValid==false)
+        if (!atleastOneMessageIsValid)
             return false;
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate() );//  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
-        task.addOnFailureListener(e -> Logger.d("Failed to update message read state for ids:"+messageIDs,e));
+        task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate());
+        task.addOnFailureListener(e -> Logger.d("Failed to update message read state for ids:" + messageIDs, e));
 
         task.execute("RunMarkMessagesReadForIDs", new Callable<Void>() {
             @Override

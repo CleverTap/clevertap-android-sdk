@@ -9,19 +9,23 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 @RestrictTo(Scope.LIBRARY)
 public class DBAdapter {
 
@@ -365,19 +369,19 @@ public class DBAdapter {
         final String tName = Table.INBOX_MESSAGES.getName();
         try {
             StringBuilder questionMarksBuilder = new StringBuilder();
-            if(messageIDs.size()>0) {
+            if (messageIDs.size() > 0) {
                 questionMarksBuilder.append("?");
                 for (int i = 0; i < messageIDs.size() - 1; i++) {
                     questionMarksBuilder.append(", ?");
                 }
             }
-            String[] whereArgs = new String[messageIDs.size()+1];
+            String[] whereArgs = new String[messageIDs.size() + 1];
             whereArgs = messageIDs.toArray(whereArgs);
             //Append userID as last element of array to be used by query builder
-            whereArgs[messageIDs.size()]=userId;
+            whereArgs[messageIDs.size()] = userId;
 
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            db.delete(tName,  _ID + " IN ( " + questionMarksBuilder + " ) AND "+USER_ID+ " = ?", whereArgs);
+            db.delete(tName, _ID + " IN ( " + questionMarksBuilder + " ) AND " + USER_ID + " = ?", whereArgs);
             return true;
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error removing stale records from " + tName, e);
@@ -567,22 +571,22 @@ public class DBAdapter {
         final String tName = Table.INBOX_MESSAGES.getName();
         try {
             StringBuilder questionMarksBuilder = new StringBuilder();
-            if(messageIDs.size()>0) {
+            if (messageIDs.size() > 0) {
                 questionMarksBuilder.append("?");
                 for (int i = 0; i < messageIDs.size() - 1; i++) {
                     questionMarksBuilder.append(", ?");
                 }
             }
-            String[] whereArgs = new String[messageIDs.size()+1];
+            String[] whereArgs = new String[messageIDs.size() + 1];
             whereArgs = messageIDs.toArray(whereArgs);
             //Append userID as last element of array to be used by query builder
-            whereArgs[messageIDs.size()]=userId;
+            whereArgs[messageIDs.size()] = userId;
 
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
 
             ContentValues cv = new ContentValues();
             cv.put(IS_READ, 1);
-            db.update(Table.INBOX_MESSAGES.getName(), cv, _ID + " IN ( " + questionMarksBuilder + " ) AND "+USER_ID+ " = ?", whereArgs);
+            db.update(Table.INBOX_MESSAGES.getName(), cv, _ID + " IN ( " + questionMarksBuilder + " ) AND " + USER_ID + " = ?", whereArgs);
             return true;
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error removing stale records from " + tName, e);
