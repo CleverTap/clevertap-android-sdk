@@ -44,7 +44,7 @@ public class CTInboxListViewFragment extends Fragment {
 
     interface InboxListener {
 
-        void messageDidClick(Context baseContext, int position, CTInboxMessage inboxMessage, Bundle data,
+        void messageDidClick(Context baseContext, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
                 HashMap<String, String> keyValue, int buttonIndex);
 
         void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
@@ -220,11 +220,11 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    void didClick(Bundle data, int position, int viewPagerPosition, HashMap<String, String> keyValuePayload, int buttonIndex) {
+    void didClick(Bundle data, int position, int contentPageIndex, HashMap<String, String> keyValuePayload, int buttonIndex) {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
             //noinspection ConstantConditions
-            listener.messageDidClick(getActivity().getBaseContext(), viewPagerPosition, inboxMessages.get(position), data, keyValuePayload, buttonIndex);
+            listener.messageDidClick(getActivity().getBaseContext(), contentPageIndex, inboxMessages.get(position), data, keyValuePayload, buttonIndex);
         }
     }
 

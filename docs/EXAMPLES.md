@@ -283,7 +283,7 @@ cleverTapDefaultInstance.initializeInbox();
 //Get Inbox Message Count
 cleverTapDefaultInstance.getInboxMessageCount();
 
-//Get Inbox Unre ad Count
+//Get Inbox Unread Count
 cleverTapDefaultInstance.getInboxMessageUnreadCount();
 
 //Get All messages
