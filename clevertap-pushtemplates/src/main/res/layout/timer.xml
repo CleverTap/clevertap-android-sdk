@@ -65,11 +65,22 @@
 
     </RelativeLayout>
 
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:id="@+id/progress_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:paddingStart="@dimen/padding_horizontal"
+        android:paddingEnd="@dimen/padding_horizontal"
+        android:layout_below="@id/rel_lyt"/>
+
     <ImageView
         android:id="@+id/big_image"
         android:layout_width="match_parent"
         android:layout_height="196dp"
-        android:layout_below="@id/rel_lyt"
+        android:layout_below="@id/progress_horizontal"
         android:layout_alignParentBottom="true"
         android:scaleType="centerCrop" />
 

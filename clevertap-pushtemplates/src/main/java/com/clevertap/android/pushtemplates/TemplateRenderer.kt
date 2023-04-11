@@ -164,12 +164,12 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 if (ValidatorFactory.getValidator(TemplateType.ZERO_BEZEL, this)?.validate() == true)
                     return ZeroBezelStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
-            TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            TemplateType.TIMER -> if (VERSION.SDK_INT >= VERSION_CODES.N) {
                 if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
                     val timerEnd = getTimerEnd()
                     if (timerEnd != null) {
                         timerRunner(context, extras, notificationId, timerEnd)
-                        return TimerStyle(this, extras).builderFromStyle(
+                        return TimerStyle(this, notificationId, nb).builderFromStyle(
                             context,
                             extras,
                             notificationId,
