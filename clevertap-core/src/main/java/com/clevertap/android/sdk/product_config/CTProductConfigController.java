@@ -33,7 +33,7 @@ import org.json.JSONObject;
 
 /**
  * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
- *      Note: This class has been deprecated and will be removed in the future versions of this SDK.
+ *      Note: This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
  * </p>
  */
 @Deprecated
@@ -83,7 +83,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -104,7 +104,7 @@ public class CTProductConfigController {
     /**
      * Asynchronously activates the most recently fetched configs, so that the fetched key value pairs take effect.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -156,7 +156,7 @@ public class CTProductConfigController {
     /**
      * Starts fetching configs, adhering to the default minimum fetch interval.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -170,7 +170,7 @@ public class CTProductConfigController {
      * @param minimumFetchIntervalInSeconds - long value of seconds
 
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -183,7 +183,7 @@ public class CTProductConfigController {
     /**
      * Asynchronously fetches and then activates the fetched configs.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -196,7 +196,7 @@ public class CTProductConfigController {
      * This method is internal to CleverTap SDK.
      * Developers should not use this method manually.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -223,7 +223,7 @@ public class CTProductConfigController {
      * @return Boolean - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_BOOLEAN}
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -245,7 +245,7 @@ public class CTProductConfigController {
      * @return Double - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_DOUBLE}
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -271,7 +271,7 @@ public class CTProductConfigController {
      *
      * @return - long value of timestamp in millis.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -286,7 +286,7 @@ public class CTProductConfigController {
      * @return Long - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_LONG}
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -318,7 +318,7 @@ public class CTProductConfigController {
      * @return String - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_STRING}
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -335,7 +335,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -348,7 +348,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -362,7 +362,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -408,7 +408,7 @@ public class CTProductConfigController {
      * Deletes all activated, fetched and defaults configs as well as all Product Config settings.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -421,7 +421,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -434,7 +434,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -449,7 +449,7 @@ public class CTProductConfigController {
      *
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -464,7 +464,7 @@ public class CTProductConfigController {
      *
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -510,7 +510,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -527,7 +527,7 @@ public class CTProductConfigController {
      * Sets the minimum interval between successive fetch calls.
      * @param fetchIntervalInSeconds- interval in seconds.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -537,7 +537,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -594,7 +594,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
