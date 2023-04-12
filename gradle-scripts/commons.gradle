@@ -3,6 +3,7 @@ apply plugin: 'kotlin-android'
 //apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
+apply from: "${project.rootDir}/gradle-scripts/jacoco_root.gradle"
 
 ext {
     Repo = 'Maven'
@@ -48,16 +49,20 @@ android {
 
     buildTypes {
         debug {
-            Boolean coverage = project.hasProperty('coverage') //only true when a command is run with argument, like this : `gradle <command>  -Pcoverage='true'`
-            System.out.println("coverage="+coverage)
-            testCoverageEnabled (coverage) //To get coverage reports for instrumentation tests
+            //only true when a command is run with argument, like this : `gradle <command>  -Pcoverage='true'
+            if(project.hasProperty('coverage')&& project.property('coverage')=='true') {
+                System.out.println("coverage="+project.property('coverage'))
+                testCoverageEnabled = true
+            }
             buildConfigField "String", "SDK_VERSION_STRING",
                     "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.0\""
         }
         release {
-            Boolean coverage = project.hasProperty('coverage') //only true when a command is run with argument, like this : `gradle <command>  -Pcoverage='true'`
-            System.out.println("coverage="+coverage)
-            testCoverageEnabled (coverage) //To get coverage reports for instrumentation tests
+            //only true when a command is run with argument, like this : `gradle <command>  -Pcoverage='true'
+            if(project.hasProperty('coverage') && project.property('coverage')=='true') {
+                System.out.println("coverage="+project.property('coverage'))
+                testCoverageEnabled = true
+            }
             buildConfigField "String", "SDK_VERSION_STRING",
                     "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.0\""
             minifyEnabled false// keep it false we will supply proguard through consumerProguardFiles
