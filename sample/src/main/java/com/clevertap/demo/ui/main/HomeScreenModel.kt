@@ -21,7 +21,8 @@ object HomeScreenModel {
             "INBOX" to listOf(
                 "Open Inbox(with tabs)","Open Inbox(without tabs)","Show Total Counts", "Show Unread Counts", "Get All Inbox Messages",
                 "Get Unread Messages", "Get InboxMessage by messageID", "Delete InboxMessage by messageID",
-                "Delete InboxMessage by Object", "Mark as read by messageID", "Mark as read by Object",
+                "Delete InboxMessage by Object","Delete multiple InboxMessages by list of messageIDs","Mark as read by messageID", "Mark as read by Object",
+                "Mark multiple InboxMessages as read by list of messageIDs",
                 "Notification Viewed event for Message", "Notification Clicked event for Message"
             ),
             "DISPLAY UNITS" to listOf(

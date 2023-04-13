@@ -1200,6 +1200,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Deletes multiple {@link CTInboxMessage} objects for given list of messageIDs
+     *
+     * @param messageIDs {@link ArrayList} with String values - list of messageIDs of {@link CTInboxMessage} public object of inbox message
+     */
+    public void deleteInboxMessagesForIDs(final ArrayList<String> messageIDs){
+        if (coreState.getControllerManager().getCTInboxController() != null) {
+            coreState.getControllerManager().getCTInboxController().deleteInboxMessagesForIDs(messageIDs);
+        } else {
+            getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
+        }
+    }
+
+    /**
      * Disables the Profile/Events Read and Synchronization API
      * Personalization is enabled by default
      */
@@ -1929,6 +1942,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void markReadInboxMessage(String messageId) {
         CTInboxMessage message = getInboxMessageForId(messageId);
         markReadInboxMessage(message);
+    }
+
+    /**
+     * Marks multiple {@link CTInboxMessage} objects as read for given list of messageIDs
+     *
+     * @param messageIDs {@link ArrayList} with String values - list of messageIDs of {@link CTInboxMessage} public object of inbox message
+     */
+    public void markReadInboxMessagesForIDs(final ArrayList<String> messageIDs){
+        if (coreState.getControllerManager().getCTInboxController() != null) {
+            coreState.getControllerManager().getCTInboxController().markReadInboxMessagesForIDs(messageIDs);
+        } else {
+            getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
+        }
     }
 
     @Override

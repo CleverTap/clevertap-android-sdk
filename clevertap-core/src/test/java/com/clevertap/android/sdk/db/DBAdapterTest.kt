@@ -52,6 +52,58 @@ class DBAdapterTest : BaseTestCase() {
     }
 
     @Test
+    fun test_deleteMessagesForIds_when_MessageIDAndUserIdIsPassed_should_DeleteMessagesIfExists(){
+        var msgIds:ArrayList<String>?=null
+        var userId:String?=null
+        var result=false
+
+        // case 1:when msdIds and userId is null, false should be returned
+        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
+        assertFalse(result)
+
+        userId="user_11"
+
+        //case 2: when msgIds and userId is non-null, false should be returned
+        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
+        assertFalse(result)
+
+        userId=null
+        msgIds= ArrayList()
+        //case 3: when msgIds is non-null and userId is null, false should be returned
+        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
+        assertFalse(result)
+
+        //case 4: when msgIds and userId is non-null, sqlite query is run and true is returned
+        userId="user_11"
+        msgIds.add("msg_1")
+        msgIds.add("msg_2")
+        msgIds.add("msg_3")
+
+        //When all msgIds are present in the db all should be deleted
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgIds[0],userId,false),getCtMsgDao(msgIds[1],userId,false),getCtMsgDao(msgIds[2],userId,false)))
+        var msgList=dbAdapter.getMessages(userId)
+        assertEquals(3,msgList.size)
+
+        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
+        assertTrue(result)
+        msgList=dbAdapter.getMessages(userId)
+        assertEquals(0,msgList.size)
+
+
+        // When some msgId from msgIds is not found, it is skipped and remaining are deleted
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgIds[0],userId,false),getCtMsgDao(msgIds[1],userId,false),getCtMsgDao(msgIds[2],userId,false)))
+        msgList=dbAdapter.getMessages(userId)
+        assertEquals(3,msgList.size)
+
+        msgIds.removeLast()
+        msgIds.add("msg_4")
+        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
+        msgList=dbAdapter.getMessages(userId)
+        assertTrue(result)
+        assertEquals(1,msgList.size)
+    }
+
+    @Test
     fun test_doesPushNotificationIdExist_when_pushNotifIdIsPaased_should_storePushNotif() {
         dbAdapter.storePushNotificationId("pushNotif", 0)
         assertTrue { dbAdapter.doesPushNotificationIdExist("pushNotif") }
@@ -135,6 +187,58 @@ class DBAdapterTest : BaseTestCase() {
         assertFalse(msg.isRead == 1)
 
 
+    }
+
+    @Test
+    fun test_markReadMessagesForIds_when_CorrectUserIdAndMessagesArePassed_should_SetMessageIdsAsRead() {
+        var msgIds:ArrayList<String>?=null
+        var userId:String?=null
+        var result:Boolean
+
+        // case 1:when msdIds and userId is null, false should be returned
+        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
+        assertFalse(result)
+
+        userId="user_11"
+        //case 2: when msgIds and userId is non-null, false should be returned
+        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
+        assertFalse(result)
+
+        userId=null
+        msgIds= ArrayList()
+        //case 3: when msgIds is non-null and userId is null, false should be returned
+        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
+        assertFalse(result)
+
+        userId="user_11"
+        msgIds.add("msg_1")
+        msgIds.add("msg_2")
+        msgIds.add("msg_3")
+
+        //case 4: when msgIds and userId is non-null, sqlite query is run and true is returned
+
+        //When all msgIds are present in the db all should be marked as read
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgIds[0],userId,false),getCtMsgDao(msgIds[1],userId,false),getCtMsgDao(msgIds[2],userId,false)))
+        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
+        var msgList=dbAdapter.getMessages(userId)
+        assertTrue(result)
+        for(msg in msgList)
+            assertTrue(msg.isRead==1)
+
+        // When some msgId from msgIds is not found, it is skipped and remaining are marked as read
+        userId="user_12"
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgIds[0],userId,false),getCtMsgDao(msgIds[1],userId,false),getCtMsgDao(msgIds[2],userId,false)))
+        msgIds.removeLast()
+        msgIds.add("msg_4")
+        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
+        msgList=dbAdapter.getMessages(userId)
+        assertTrue(result)
+        for(msg in msgList) {
+            if(msg.id in msgIds)
+                assertTrue(msg.isRead == 1)
+            else
+                assertFalse(msg.isRead == 1)
+        }
     }
 
     @Test
