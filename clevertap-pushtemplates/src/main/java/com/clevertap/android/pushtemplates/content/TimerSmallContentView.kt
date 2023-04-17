@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.Utils
 
 open class TimerSmallContentView(
     context: Context,
-    timer_end: Int?,
+    timer_end_as_long: Int?,
     renderer: TemplateRenderer,
     layoutId: Int = R.layout.timer_collapsed
 ) :
@@ -30,7 +30,7 @@ open class TimerSmallContentView(
         setCustomContentViewMessageColour(renderer.pt_msg_clr)
         remoteView.setChronometer(
             R.id.chronometer,
-            SystemClock.elapsedRealtime() + timer_end!!,
+            SystemClock.elapsedRealtime() + timer_end_as_long!!,
             null,
             true
         )

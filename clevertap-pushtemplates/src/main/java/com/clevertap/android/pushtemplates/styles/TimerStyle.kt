@@ -20,18 +20,19 @@ class TimerStyle(
 ) : Style(renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
-        return if (getTimerEnd() == null)
+        return if (getTimerEnd(true) == null)
             null
         else {
-            return TimerSmallContentView(context, getTimerEnd(), renderer).remoteView
+            return TimerSmallContentView(context, getTimerEnd(true), renderer).remoteView
         }
     }
 
     override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
-        return if (getTimerEnd() == null)
+        return if (getTimerEnd(true) == null)
             null
         else {
-            return TimerBigContentView(context, getTimerEnd(),getTimerEnd1(), renderer,
+            return TimerBigContentView(context, getTimerEnd(true),
+                getTimerEnd(false), renderer,
                 notificationId,nb).remoteView
         }
     }
@@ -55,25 +56,21 @@ class TimerStyle(
         return null
     }
 
+    /**
+     * Returns a timer_end value based on the the boolean. If it's true then timer_end is modified to
+     * return a long value whereas if it's false then it returns timer_end as it is from the payload.
+     *
+     * @return int which is required to show the countdown value for chronometer/countdown thread.
+     */
     @Suppress("LocalVariableName")
-    private fun getTimerEnd(): Int? {
+    private fun getTimerEnd(timerEndAsLong: Boolean): Int? {
         var timer_end: Int? = null
         if (renderer.pt_timer_threshold != -1 && renderer.pt_timer_threshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end = renderer.pt_timer_threshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+            timer_end = if (timerEndAsLong) renderer.pt_timer_threshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+            else renderer.pt_timer_threshold
         } else if (renderer.pt_timer_end >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end = renderer.pt_timer_end * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
-        } else {
-            PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
-        }
-        return timer_end
-    }
-
-    private fun getTimerEnd1(): Int? {
-        var timer_end: Int? = null
-        if (renderer.pt_timer_threshold != -1 && renderer.pt_timer_threshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end = renderer.pt_timer_threshold/* * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND*/
-        } else if (renderer.pt_timer_end >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end = renderer.pt_timer_end * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+            timer_end = if (timerEndAsLong) renderer.pt_timer_end * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+            else renderer.pt_timer_end
         } else {
             PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
         }
