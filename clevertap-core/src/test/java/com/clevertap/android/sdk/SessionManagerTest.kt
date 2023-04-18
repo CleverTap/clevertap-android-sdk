@@ -136,9 +136,9 @@ class SessionManagerTest : BaseTestCase() {
         // 1. coreMetaData.currentSessionId to System.currentTimeMillis() / 1000
         // 2. value of lastSessionId in cache is set to value of coreMetaData.getCurrentSessionId()
 
-        sessionManagerDef.lazyCreateSession(ctxSpy)
         val expectedSettedValue = (System.currentTimeMillis() / 1000).toInt()
-        Thread.sleep(1000)
+        sessionManagerDef.lazyCreateSession(ctxSpy)
+
         Mockito.verify(coreMetaDataSpy,Mockito.times(1)).currentSessionId = 0//(System.currentTimeMillis() / 1000).toInt()
         val settedValue = ctxSpy.getSharedPreferences("WizRocket",Context.MODE_PRIVATE).getInt("lastSessionId:id",-1)
         assertEquals(expectedSettedValue,settedValue)
