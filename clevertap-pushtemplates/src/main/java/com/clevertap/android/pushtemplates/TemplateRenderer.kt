@@ -80,7 +80,9 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     internal var pt_flip_interval = 0
     private var pt_collapse_key: Any? = null
     internal var pt_manual_carousel_type: String? = null
+    internal var pt_timer_progress_view: String? = null
     internal var config: CleverTapInstanceConfig? = null
+    internal var notificationBuilder: NotificationCompat.Builder? = null
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
     enum class LogLevel(private val value: Int) {
@@ -166,9 +168,12 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
 
             TemplateType.TIMER -> if (VERSION.SDK_INT >= VERSION_CODES.N) {
                 if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
-                    val timerEnd = getTimerEnd()
+                    var timerEnd = getTimerEnd()
                     if (timerEnd != null) {
                         timerRunner(context, extras, notificationId, timerEnd)
+                        if (pt_timer_progress_view != null && pt_timer_progress_view.toBoolean()){
+                            timerEnd = timerEnd.div(1000) * 100
+                        }
                         return TimerStyle(this, notificationId, nb).builderFromStyle(
                             context,
                             extras,
@@ -409,6 +414,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_flip_interval = Utils.getFlipInterval(extras)
         pID = extras.getString(Constants.WZRK_PUSH_ID)
         pt_manual_carousel_type = extras.getString(PTConstants.PT_MANUAL_CAROUSEL_TYPE)
+        pt_timer_progress_view = extras.getString(PTConstants.PT_TIMER_PROGRESS_VIEW)
         if (config != null) {
             this.config = config
         }

@@ -4,7 +4,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import android.text.Html
-import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -34,35 +33,36 @@ class TimerBigContentView(
         setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
         setCustomContentViewBigImage(renderer.pt_big_img)
-            if (cachedRemoteViews == null) {
-                setCustomContentViewProgressBar()
-            }
+        setCustomContentViewProgressBar(renderer.pt_timer_progress_view)
     }
 
-    private fun setCustomContentViewProgressBar() {
-        Log.wtf("test","setCustomContentViewProgressBar() is called!")
-        //add empty check before
-        val notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        cachedRemoteViews = remoteView
-        nb.setSmallIcon(renderer.smallIcon)
-            val thread = CountdownThread(
-                timer_end_as_int!!,
-                { tickCount ->
-                    remoteView.setProgressBar(
-                        R.id.progress_horizontal, timer_end_as_int!!, tickCount,
-                        false
-                    )
-                    notificationManager.notify(notificationId, nb.build())
-                },
-                {
-                    remoteView.setProgressBar(
-                        R.id.progress_horizontal, timer_end_as_int!!, 100,
-                        false
-                    )
-                    cachedRemoteViews = null
-                })
-            thread.start()
+    private fun setCustomContentViewProgressBar(pt_show_progress: String?) {
+        if (pt_show_progress.toBoolean()) {
+            if (cachedRemoteViews == null) {
+                val notificationManager =
+                    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                cachedRemoteViews = remoteView
+                nb.setSmallIcon(renderer.smallIcon)
+                remoteView.setViewVisibility(R.id.progress_horizontal,View.VISIBLE)
+                val countdownThread = CountdownThread(
+                    timer_end_as_int!!, { tickCount ->
+                        remoteView.setProgressBar(
+                            R.id.progress_horizontal, timer_end_as_int!!, tickCount,
+                            false
+                        )
+                        notificationManager.notify(notificationId, nb.build())
+                    },{
+                        remoteView.setProgressBar(
+                            R.id.progress_horizontal, timer_end_as_int!!, 100,
+                            false
+                        )
+                        cachedRemoteViews = null
+                    })
+                countdownThread.start()
+            }
+        }else{
+            remoteView.setViewVisibility(R.id.progress_horizontal,View.GONE)
+        }
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
