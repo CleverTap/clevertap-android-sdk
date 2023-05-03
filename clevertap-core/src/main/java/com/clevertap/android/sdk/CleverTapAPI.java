@@ -69,7 +69,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -133,7 +132,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     static CleverTapInstanceConfig defaultConfig;
 
-    private static ConcurrentHashMap<String, CleverTapAPI> instances;
+    private static HashMap<String, CleverTapAPI> instances;
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
@@ -776,11 +775,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return null;// failed to get instance
     }
 
-    public static ConcurrentHashMap<String, CleverTapAPI> getInstances() {
+    public static HashMap<String, CleverTapAPI> getInstances() {
         return instances;
     }
 
-    public static void setInstances(final ConcurrentHashMap<String, CleverTapAPI> instances) {
+    public static void setInstances(final HashMap<String, CleverTapAPI> instances) {
         CleverTapAPI.instances = instances;
     }
 
@@ -866,7 +865,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return null;
         }
         if (instances == null) {
-            instances = new ConcurrentHashMap<>();
+            instances = new HashMap<>();
         }
 
         CleverTapAPI instance = instances.get(config.getAccountId());
