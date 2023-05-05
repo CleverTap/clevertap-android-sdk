@@ -31,6 +31,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+ *      Note: This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+ * </p>
+ */
+@Deprecated
 public class CTProductConfigController {
 
     private enum PROCESSING_STATE {
@@ -40,9 +46,11 @@ public class CTProductConfigController {
     }
 
     //use lock for synchronization for read write
+    @Deprecated
     final Map<String, String> activatedConfigs = Collections.synchronizedMap(new HashMap<String, String>());
 
     //use lock for synchronization for read write
+    @Deprecated
     final Map<String, String> defaultConfigs = Collections.synchronizedMap(new HashMap<String, String>());
 
     AtomicBoolean isInitialized = new AtomicBoolean(false);
@@ -61,12 +69,24 @@ public class CTProductConfigController {
 
     private final CoreMetaData coreMetaData;
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This variable has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     private final ProductConfigSettings settings;
 
     //use lock for synchronization for read write
     private final Map<String, String> waitingTobeActivatedConfig = Collections
             .synchronizedMap(new HashMap<String, String>());
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     CTProductConfigController(Context context, CleverTapInstanceConfig config,
             final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
             final BaseCallbackManager callbackManager, ProductConfigSettings productConfigSettings,
@@ -83,8 +103,11 @@ public class CTProductConfigController {
 
     /**
      * Asynchronously activates the most recently fetched configs, so that the fetched key value pairs take effect.
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
-    @SuppressWarnings("WeakerAccess")
+    @Deprecated
     public void activate() {
         if (TextUtils.isEmpty(settings.getGuid())) {
             return;
@@ -132,7 +155,11 @@ public class CTProductConfigController {
 
     /**
      * Starts fetching configs, adhering to the default minimum fetch interval.
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void fetch() {
         fetch(settings.getNextFetchIntervalInSeconds());
     }
@@ -141,8 +168,12 @@ public class CTProductConfigController {
      * Starts fetching configs, adhering to the specified minimum fetch interval in seconds.
      *
      * @param minimumFetchIntervalInSeconds - long value of seconds
+
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
-    @SuppressWarnings("WeakerAccess")
+    @Deprecated
     public void fetch(long minimumFetchIntervalInSeconds) {
         if (canRequest(minimumFetchIntervalInSeconds)) {
             fetchProductConfig();
@@ -151,7 +182,11 @@ public class CTProductConfigController {
 
     /**
      * Asynchronously fetches and then activates the fetched configs.
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void fetchAndActivate() {
         fetch();
         isFetchAndActivating.set(true);
@@ -160,8 +195,11 @@ public class CTProductConfigController {
     /**
      * This method is internal to CleverTap SDK.
      * Developers should not use this method manually.
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
-
+    @Deprecated
     public void fetchProductConfig() {
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();
@@ -184,7 +222,11 @@ public class CTProductConfigController {
      * @param Key - String
      * @return Boolean - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_BOOLEAN}
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public Boolean getBoolean(String Key) {
         if (isInitialized.get() && !TextUtils.isEmpty(Key)) {
             String value;
@@ -202,7 +244,11 @@ public class CTProductConfigController {
      * @param Key String
      * @return Double - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_DOUBLE}
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public Double getDouble(String Key) {
         if (isInitialized.get() && !TextUtils.isEmpty(Key)) {
             try {
@@ -224,7 +270,11 @@ public class CTProductConfigController {
      * Returns the last fetched timestamp in millis.
      *
      * @return - long value of timestamp in millis.
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public long getLastFetchTimeStampInMillis() {
         return settings.getLastFetchTimeStampInMillis();
     }
@@ -235,7 +285,11 @@ public class CTProductConfigController {
      * @param Key - String
      * @return Long - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_LONG}
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public Long getLong(String Key) {
         if (isInitialized.get() && !TextUtils.isEmpty(Key)) {
             try {
@@ -263,7 +317,11 @@ public class CTProductConfigController {
      * @param Key - String
      * @return String - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_STRING}
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public String getString(String Key) {
         if (isInitialized.get() && !TextUtils.isEmpty(Key)) {
             String value;
@@ -275,6 +333,12 @@ public class CTProductConfigController {
         return DEFAULT_VALUE_FOR_STRING;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public boolean isInitialized() {
         return isInitialized.get();
     }
@@ -282,7 +346,12 @@ public class CTProductConfigController {
     /**
      * This method is internal to CleverTap SDK.
      * Developers should not use this method manually.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void onFetchFailed() {
         isFetchAndActivating.compareAndSet(true, false);
         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Fetch Failed");
@@ -291,7 +360,12 @@ public class CTProductConfigController {
     /**
      * This method is internal to CleverTap SDK.
      * Developers should not use this method manually.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void onFetchSuccess(JSONObject kvResponse) {
         if (TextUtils.isEmpty(settings.getGuid())) {
             return;
@@ -332,7 +406,12 @@ public class CTProductConfigController {
 
     /**
      * Deletes all activated, fetched and defaults configs as well as all Product Config settings.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void reset() {
         defaultConfigs.clear();
         activatedConfigs.clear();
@@ -340,6 +419,12 @@ public class CTProductConfigController {
         eraseStoredConfigFiles();
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public void resetSettings() {
         settings.reset(fileUtils);
     }
@@ -347,7 +432,12 @@ public class CTProductConfigController {
     /**
      * This method is internal to CleverTap SDK.
      * Developers should not use this method manually.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void setArpValue(JSONObject arp) {
         settings.setARPValue(arp);
     }
@@ -356,7 +446,13 @@ public class CTProductConfigController {
      * Sets default configs using an XML resource.
      *
      * @param resourceID - resource Id of the XML.
+     *
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void setDefaults(final int resourceID) {
         setDefaultsWithXmlParser(resourceID, new DefaultXmlParser());
     }
@@ -365,7 +461,13 @@ public class CTProductConfigController {
      * Sets default configs using the given HashMap.
      *
      * @param map - HashMap of the default configs
+     *
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void setDefaults(final HashMap<String, Object> map) {
         Task<Void> task = CTExecutorFactory.executors(config).ioTask();
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -406,7 +508,12 @@ public class CTProductConfigController {
     /**
      * This method is internal to CleverTap SDK.
      * Developers should not use this method manually.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void setGuidAndInit(String cleverTapID) {
         if (isInitialized() || TextUtils.isEmpty(cleverTapID)) {
             return;
@@ -419,12 +526,21 @@ public class CTProductConfigController {
     /**
      * Sets the minimum interval between successive fetch calls.
      * @param fetchIntervalInSeconds- interval in seconds.
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      */
-
+    @Deprecated
     public void setMinimumFetchIntervalInSeconds(long fetchIntervalInSeconds) {
         settings.setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds);
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     void eraseStoredConfigFiles() {
         Task<Void> task = CTExecutorFactory.executors(config).ioTask();
         task.execute("eraseStoredConfigs", new Callable<Void>() {
@@ -476,6 +592,12 @@ public class CTProductConfigController {
         return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + settings.getGuid();
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public ProductConfigSettings getSettings() {
         return settings;
     }

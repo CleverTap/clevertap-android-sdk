@@ -1259,9 +1259,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      * @return object of {@link CTFeatureFlagsController}
      * Handler to get the feature flag values
      */
+    @Deprecated
     public CTFeatureFlagsController featureFlag() {
         if (getConfig().isAnalyticsOnly()) {
             getConfig().getLogger()
@@ -2067,11 +2071,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      * The handle for product config functionalities(fetch/activate etc.)
      *
      * @return - the instance of {@link CTProductConfigController}
      */
     @SuppressWarnings("WeakerAccess")
+    @Deprecated
     public CTProductConfigController productConfig() {
         if (getConfig().isAnalyticsOnly()) {
             getConfig().getLogger().debug(getAccountId(),
@@ -2464,23 +2472,32 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     *
      * This method is used to set the CTFeatureFlagsListener
      * Register to receive feature flag callbacks
      *
      * @param featureFlagsListener The {@link CTFeatureFlagsListener} object
      */
     @SuppressWarnings("unused")
+    @Deprecated
     public void setCTFeatureFlagsListener(CTFeatureFlagsListener featureFlagsListener) {
         coreState.getCallbackManager().setFeatureFlagListener(featureFlagsListener);
     }
 
     /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
      * This method is used to set the product config listener
      * Register to receive callbacks
      *
      * @param listener The {@link CTProductConfigListener} instance
      */
     @SuppressWarnings("unused")
+    @Deprecated
     public void setCTProductConfigListener(CTProductConfigListener listener) {
         coreState.getCallbackManager().setProductConfigListener(listener);
     }
@@ -2739,6 +2756,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                     .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId));
         }
 
+        //todo : replace with variables
         /**
          * Reinitialising product config & Feature Flag controllers with device id, if it's null
          * during first initialisation from CleverTapFactory.getCoreState()
@@ -2751,6 +2769,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                     "Initializing Feature Flags after Device ID Created = " + deviceId);
             ctFeatureFlagsController.setGuidAndInit(deviceId);
         }
+        //todo: replace with variables
         CTProductConfigController ctProductConfigController = coreState.getControllerManager()
                 .getCTProductConfigController();
 

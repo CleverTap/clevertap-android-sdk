@@ -42,12 +42,14 @@ public class CallbackManager extends BaseCallbackManager {
 
     private FailureFlushListener failureFlushListener;
 
+    @Deprecated
     private WeakReference<CTFeatureFlagsListener> featureFlagListenerWeakReference;
 
     private NotificationRenderedListener notificationRenderedListener;
 
     private OnInitCleverTapIDListener onInitCleverTapIDListener;
 
+    @Deprecated
     private WeakReference<CTProductConfigListener> productConfigListener;
 
     private CTPushAmpListener pushAmpListener = null;
@@ -87,6 +89,12 @@ public class CallbackManager extends BaseCallbackManager {
         this.failureFlushListener = failureFlushListener;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     @Override
     public CTFeatureFlagsListener getFeatureFlagListener() {
         if (featureFlagListenerWeakReference != null && featureFlagListenerWeakReference.get() != null) {
@@ -95,6 +103,12 @@ public class CallbackManager extends BaseCallbackManager {
         return null;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     @Override
     public void setFeatureFlagListener(final CTFeatureFlagsListener listener) {
         this.featureFlagListenerWeakReference = new WeakReference<>(listener);
@@ -169,6 +183,12 @@ public class CallbackManager extends BaseCallbackManager {
         this.inboxListener = inboxListener;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     @Override
     public CTProductConfigListener getProductConfigListener() {
         if (productConfigListener != null && productConfigListener.get() != null) {
@@ -177,6 +197,12 @@ public class CallbackManager extends BaseCallbackManager {
         return null;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     @Override
     public void setProductConfigListener(final CTProductConfigListener productConfigListener) {
         if (productConfigListener != null) {
