@@ -1,5 +1,48 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 5.0.0 (May 5, 2023)
+#### New Features
+* Adds support for Remote Config Variables. Please refer to the [Variables.md](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/Variables.md) file to read more on how to integrate this to your app.
+* Adds new APIs, `markReadInboxMessagesForIDs(ArrayList<String> messageIDs)` and `deleteInboxMessagesForIDs(ArrayList<String> messageIDs)` to mark read and delete an array of Inbox Messages.
+
+#### API Changes
+* **Deprecated:** The following methods and classes related to Product Config and Feature Flags have been marked as deprecated in this release, instead use new remote config variables feature. These methods and classes will be removed in the future versions with prior notice.
+    * Product config
+        - `productConfig()`
+        - `productConfig().setDefaults()`
+        - `productConfig().fetch()`
+        - `productConfig().fetch(intervalInSeconds)`
+        - `productConfig().activate()`
+        - `productConfig().fetchAndActivate()`
+        - `setCTProductConfigListener()`
+        - `onInit()`
+        - `onFetched()`
+        - `onActivated()`
+        - `productConfig().setMinimumFetchIntervalInSeconds(seconds)`
+        - `productConfig().getBoolean(key)`
+        - `productConfig().getDouble(key)`
+        - `productConfig().getLong(key)`
+        - `productConfig().getString(key)`
+        - `productConfig().reset()`
+        - `productConfig().getLastFetchTimeStampInMillis()`
+    * Feature flags
+        - `featureFlag()`
+        - `setCTFeatureFlagsListener()`
+        - `featureFlagsUpdated()`
+        - `featureFlag().get(key,defaultVal)`
+
+#### Breaking API Changes
+* **Signature change of `onInboxItemClicked` callback**:
+  It is changed from `onInboxItemClicked(CTInboxMessage message)` to `onInboxItemClicked(CTInboxMessage message, int contentPageIndex, int buttonIndex)`. The `contentPageIndex` corresponds to the page index of the content, which ranges from 0 to the total number of pages for carousel templates. For non-carousel templates, the value is always 0, as they only have one page of content. The `buttonIndex` represents the index of the App Inbox button clicked (0, 1, or 2). A value of -1 indicates the App Inbox item is clicked.
+
+* **Behavioral change of `onInboxItemClicked` callback**:
+  - Previously, the callback was raised when the App Inbox Item is clicked.
+  - Now, it is also raised when the App Inbox button and Item is clicked.
+
+#### Bug Fixes
+* Fixes a bug where App Inbox was not respecting the App Inbox background color when no tabs are provided.
+* Fixes the non-EU retry mechanism bug
+
 ### Version 4.7.5 (March 6, 2023)
 * Bug fixes and performance improvements.
 
