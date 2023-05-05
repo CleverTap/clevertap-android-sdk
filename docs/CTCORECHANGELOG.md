@@ -2,7 +2,7 @@
 
 ### Version 5.0.0 (May 5, 2023)
 #### New Features
-* Adds support for Remote Config Variables. Please refer to the [Variables.md](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/Variables.md) file to read more on how to integrate this to your app.
+* Adds support for Remote Config Variables. Please refer to the [Variables.md](Variables.md) file to read more on how to integrate this to your app.
 * Adds new APIs, `markReadInboxMessagesForIDs(ArrayList<String> messageIDs)` and `deleteInboxMessagesForIDs(ArrayList<String> messageIDs)` to mark read and delete an array of Inbox Messages.
 
 #### API Changes
