@@ -1,5 +1,9 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.0.9 (May 5, 2023)
+#### Bug Fixes
+* Fixes a bug where Rating Submitted event was not being raised by the Rating Template on Android 12 and above.
+
 ### Version 1.0.8 (March 8, 2023)
 * Supports CleverTap Android SDK v4.7.5. CleverTap Push Templates SDK `v1.0.8` requires [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md) to work properly.
 

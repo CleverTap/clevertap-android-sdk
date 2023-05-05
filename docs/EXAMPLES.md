@@ -597,3 +597,7 @@ From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver 
 ```groovy
     implementation "com.android.installreferrer:installreferrer:2.2"
 ```
+
+#### Remote Config Variables
+
+From CleverTap SDK v5.0.0 onwards, you can use Remote Config Variables in your app. Please refer to the [Remote Config Variables doc](Variables.md) to read more on how to integrate this to your app.
