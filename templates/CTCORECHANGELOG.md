@@ -6,15 +6,30 @@
 * Adds new APIs, `markReadInboxMessagesForIDs(ArrayList<String> messageIDs)` and `deleteInboxMessagesForIDs(ArrayList<String> messageIDs)` to mark read and delete an array of Inbox Messages.
 
 #### API Changes
-* **Deprecated:** The following methods and classes related to Product Config and Feature Flags have been marked as deprecated in this release, instead use new remote config variables feature. These methods and classes will be removed in the future versions.
-  - interface `CTFeatureFlagsListener`
-  - interface `CTProductConfigListener`
-  - class `CTFeatureFlagsController` and all it's methods
-  - class `CTProductConfigController` and all it's methods
-  - method `featureFlag()` in `CleverTapAPI`
-  - method `productConfig()` in `CleverTapAPI`
-  - method `setCTFeatureFlagsListener()` in `CleverTapAPI`
-  - method `setCTProductConfigListener()` in `CleverTapAPI`
+* **Deprecated:** The following methods and classes related to Product Config and Feature Flags have been marked as deprecated in this release, instead use new remote config variables feature. These methods and classes will be removed in the future versions with prior notice.
+    * Product config
+        - `productConfig()`
+        - `productConfig().setDefaults()`
+        - `productConfig().fetch()`
+        - `productConfig().fetch(intervalInSeconds)`
+        - `productConfig().activate()`
+        - `productConfig().fetchAndActivate()`
+        - `setCTProductConfigListener()`
+        - `onInit()`
+        - `onFetched()`
+        - `onActivated()`
+        - `productConfig().setMinimumFetchIntervalInSeconds(seconds)`
+        - `productConfig().getBoolean(key)`
+        - `productConfig().getDouble(key)`
+        - `productConfig().getLong(key)`
+        - `productConfig().getString(key)`
+        - `productConfig().reset()`
+        - `productConfig().getLastFetchTimeStampInMillis()`
+    * Feature flags
+        - `featureFlag()`
+        - `setCTFeatureFlagsListener()`
+        - `featureFlagsUpdated()`
+        - `featureFlag().get(key,defaultVal)`
 
 #### Breaking API Changes
 * **Signature change of `onInboxItemClicked` callback**:
