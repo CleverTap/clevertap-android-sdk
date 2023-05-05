@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -23,17 +24,20 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
+
 import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CTPreferenceCache;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.PushPermissionManager;
 import com.clevertap.android.sdk.R;
 import com.google.android.material.tabs.TabLayout;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,8 +52,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     public interface InboxActivityListener {
 
-        void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
-                HashMap<String, String> keyValue,boolean isBodyClick);
+        void messageDidClick(CTInboxActivity ctInboxActivity, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
+                HashMap<String, String> keyValue, int buttonIndex);
 
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
     }
@@ -103,6 +107,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         }
 
         setContentView(R.layout.inbox_activity);
+
+        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
+        coreMetaData.setAppInboxActivity(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(styleConfig.getNavBarTitle());
@@ -266,6 +273,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     protected void onDestroy() {
+        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
+        coreMetaData.setAppInboxActivity(null);
+
         if (styleConfig.isUsingTabs()) {
             List<Fragment> allFragments = getSupportFragmentManager().getFragments();
             for (Fragment fragment : allFragments) {
@@ -280,28 +290,26 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
 
     @Override
-    public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
-            HashMap<String, String> keyValue, boolean isBodyClick) {
-        didClick(data, inboxMessage, keyValue,isBodyClick);
+    public void messageDidClick(Context baseContext, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
+                                HashMap<String, String> keyValue, int buttonIndex) {
+        didClick(data, contentPageIndex, inboxMessage, keyValue, buttonIndex);
     }
 
     @Override
     public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
-        Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = ["
-                + inboxMessage.getMessageId() + "]");
+        Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
         didShow(data, inboxMessage);
     }
 
-    void didClick(Bundle data, CTInboxMessage inboxMessage, HashMap<String, String> keyValue, boolean isBodyClick) {
+    void didClick(Bundle data, int contentPageIndex, CTInboxMessage inboxMessage, HashMap<String, String> keyValue, int buttonIndex) {
         InboxActivityListener listener = getListener();
         if (listener != null) {
-            listener.messageDidClick(this, inboxMessage, data, keyValue,isBodyClick);
+            listener.messageDidClick(this, contentPageIndex, inboxMessage, data, keyValue, buttonIndex);
         }
     }
 
     void didShow(Bundle data, CTInboxMessage inboxMessage) {
-        Logger.v("CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = ["
-                + inboxMessage.getMessageId() + "]");
+        Logger.v( "CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage.getMessageId() + "]");
         InboxActivityListener listener = getListener();
         if (listener != null) {
             listener.messageDidShow(this, inboxMessage, data);

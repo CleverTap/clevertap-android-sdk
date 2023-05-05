@@ -2,6 +2,7 @@ package com.clevertap.android.sdk
 
 import android.location.Location
 import android.os.Bundle
+import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
@@ -540,6 +541,121 @@ class CleverTapAPITest : BaseTestCase() {
         }
     }
 
+    @Test
+    fun deleteInboxMessagesForIDs_inboxControllerNull_logsError() {
+        // Arrange
+        val messageIDs = arrayListOf("1", "2", "3")
+        val inboxController = null
+        val controllerManager = mock(ControllerManager::class.java)
+        corestate.controllerManager=controllerManager
+
+        // Act
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(any())).thenReturn(
+                MockCTExecutors(
+                    cleverTapInstanceConfig
+                )
+            )
+            mockStatic(CleverTapFactory::class.java).use {
+                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                    .thenReturn(corestate)
+                `when`(controllerManager.ctInboxController).thenReturn(inboxController)
+                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+                cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
+
+                // Assert
+                verify(controllerManager).ctInboxController
+                verifyNoMoreInteractions(controllerManager)
+            }
+        }
+    }
+
+    @Test
+    fun deleteInboxMessagesForIDs_inboxControllerNotNull_deletesMessages() {
+        // Arrange
+        val messageIDs = arrayListOf("1", "2", "3")
+        val inboxController = mock(CTInboxController::class.java)
+        val controllerManager = mock(ControllerManager::class.java)
+        corestate.controllerManager = controllerManager
+
+        // Act
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(any())).thenReturn(
+                MockCTExecutors(
+                    cleverTapInstanceConfig
+                )
+            )
+            mockStatic(CleverTapFactory::class.java).use {
+                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                    .thenReturn(corestate)
+                `when`(controllerManager.ctInboxController).thenReturn(inboxController)
+                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+                cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
+
+                // Assert
+                verify(controllerManager,times(2)).ctInboxController
+                verify(inboxController).deleteInboxMessagesForIDs(messageIDs)
+            }
+        }
+    }
+
+    @Test
+    fun markReadInboxMessagesForIDs_inboxControllerNull_logsError() {
+        // Arrange
+        val messageIDs = arrayListOf("1", "2", "3")
+        val inboxController = null
+        val controllerManager = mock(ControllerManager::class.java)
+        corestate.controllerManager=controllerManager
+
+        // Act
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(any())).thenReturn(
+                MockCTExecutors(
+                    cleverTapInstanceConfig
+                )
+            )
+            mockStatic(CleverTapFactory::class.java).use {
+                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                    .thenReturn(corestate)
+                `when`(controllerManager.ctInboxController).thenReturn(inboxController)
+                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+                cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
+
+                // Assert
+                verify(controllerManager).ctInboxController
+                verifyNoMoreInteractions(controllerManager)
+            }
+        }
+    }
+
+    @Test
+    fun markReadInboxMessagesForIDs_inboxControllerNotNull_marksRead() {
+        // Arrange
+        val messageIDs = arrayListOf("1", "2", "3")
+        val inboxController = mock(CTInboxController::class.java)
+        val controllerManager = mock(ControllerManager::class.java)
+        corestate.controllerManager = controllerManager
+
+        // Act
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(any())).thenReturn(
+                MockCTExecutors(
+                    cleverTapInstanceConfig
+                )
+            )
+            mockStatic(CleverTapFactory::class.java).use {
+                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                    .thenReturn(corestate)
+                `when`(controllerManager.ctInboxController).thenReturn(inboxController)
+                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+                cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
+
+                // Assert
+                verify(controllerManager,times(2)).ctInboxController
+                verify(inboxController).markReadInboxMessagesForIDs(messageIDs)
+            }
+        }
+    }
 /* @Test
  fun testPushDeepLink(){
      // Arrange

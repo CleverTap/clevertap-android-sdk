@@ -19,6 +19,8 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private static WeakReference<Activity> currentActivity;
 
+    private WeakReference<Activity> appInboxActivity;
+
     private static int activityCount = 0;
 
     private long appInstallTime = 0;
@@ -99,6 +101,14 @@ public class CoreMetaData extends CleverTapMetaData {
     public static String getCurrentActivityName() {
         Activity current = getCurrentActivity();
         return (current != null) ? current.getLocalClassName() : null;
+    }
+
+    public void setAppInboxActivity(@Nullable Activity activity) {
+        appInboxActivity = new WeakReference<>(activity);
+    }
+
+    public Activity getAppInboxActivity() {
+        return (appInboxActivity == null) ? null : appInboxActivity.get();
     }
 
     public static boolean isAppForeground() {

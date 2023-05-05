@@ -8,6 +8,8 @@ import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +21,12 @@ public abstract class BaseCallbackManager {
 
     public abstract FailureFlushListener getFailureFlushListener();
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public abstract CTFeatureFlagsListener getFeatureFlagListener();
 
     public abstract GeofenceCallback getGeofenceCallback();
@@ -33,6 +41,12 @@ public abstract class BaseCallbackManager {
 
     public abstract CTInboxListener getInboxListener();
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public abstract CTProductConfigListener getProductConfigListener();
 
     public abstract CTPushAmpListener getPushAmpListener();
@@ -52,6 +66,12 @@ public abstract class BaseCallbackManager {
 
     public abstract void setFailureFlushListener(FailureFlushListener failureFlushListener);
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public abstract void setFeatureFlagListener(CTFeatureFlagsListener listener);
 
     public abstract void setGeofenceCallback(GeofenceCallback geofenceCallback);
@@ -69,6 +89,12 @@ public abstract class BaseCallbackManager {
 
     public abstract void setInboxListener(CTInboxListener inboxListener);
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public abstract void setProductConfigListener(
             CTProductConfigListener productConfigListener);
 
@@ -86,4 +112,8 @@ public abstract class BaseCallbackManager {
     public abstract void setNotificationRenderedListener(NotificationRenderedListener notificationRenderedListener);
 
     public abstract NotificationRenderedListener getNotificationRenderedListener();
+
+    public abstract FetchVariablesCallback getFetchVariablesCallback();
+
+    public abstract void setFetchVariablesCallback(FetchVariablesCallback fetchVariablesCallback);
 }

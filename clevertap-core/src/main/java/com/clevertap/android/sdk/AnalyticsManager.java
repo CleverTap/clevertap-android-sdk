@@ -177,6 +177,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     @Override
+    public void pushDefineVarsEvent(JSONObject data){
+        baseEventQueueManager.queueEvent(context, data, Constants.DEFINE_VARS_EVENT);
+    }
+
+    @Override
     public void pushDisplayUnitClickedEventForID(String unitID) {
         JSONObject event = new JSONObject();
 

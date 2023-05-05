@@ -54,6 +54,8 @@ public interface Constants {
     int DATA_EVENT = 5;
     int NV_EVENT = 6;
     int FETCH_EVENT = 7;
+    int DEFINE_VARS_EVENT = 8;
+    String variablePayloadType = "varsPayload";
     String WZRK_FETCH = "wzrk_fetch";
     String ICON_BASE_URL = "http://static.wizrocket.com/android/ico/";
     String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
@@ -87,6 +89,7 @@ public interface Constants {
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
+    String REQUEST_VARIABLES_JSON_RESPONSE_KEY = "vars";
     String REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY = "pc_notifs";
     String GEOFENCES_JSON_RESPONSE_KEY = "geofences";
     String DISCARDED_EVENT_JSON_KEY = "d_e";
@@ -111,7 +114,7 @@ public interface Constants {
     String WZRK_ACCT_ID_KEY = "wzrk_acct_id";
     String WZRK_FROM = "CTPushNotificationReceiver";
     String NETWORK_INFO = "NetworkInfo";
-    String PRIMARY_DOMAIN = "wzrkt.com";
+    String PRIMARY_DOMAIN = "clevertap-prod.com";
     String KEY_DOMAIN_NAME = "comms_dmn";
     String SPIKY_KEY_DOMAIN_NAME = "comms_dmn_spiky";
     String HEADER_DOMAIN_NAME = "X-WZRK-RD";
@@ -123,6 +126,7 @@ public interface Constants {
     String KEY_I = "comms_i";
     String KEY_J = "comms_j";
     String CACHED_GUIDS_KEY = "cachedGUIDsKey";
+    String CACHED_VARIABLES_KEY = "variablesKey";
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";
     String CHARGED_EVENT = "Charged";
@@ -256,6 +260,7 @@ public interface Constants {
     String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
+    int FETCH_TYPE_VARIABLES = 4;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     // error message codes
@@ -294,6 +299,15 @@ public interface Constants {
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
 
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
+
+    /**
+     * Valid indexes for the App Inbox item and buttons.
+     */
+    int APP_INBOX_ITEM_CONTENT_PAGE_INDEX = 0; //used for non-carousel templates as they have only one page of content to display
+    int APP_INBOX_ITEM_INDEX = -1;
+    int APP_INBOX_CTA1_INDEX = 0;
+    int APP_INBOX_CTA2_INDEX = 1;
+    int APP_INBOX_CTA3_INDEX = 2;
 
     String[] NULL_STRING_ARRAY = new String[0];
     String PT_NOTIF_ID = "notificationId";

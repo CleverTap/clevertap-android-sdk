@@ -12,6 +12,9 @@ import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.variables.CTVariables;
+
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import java.util.concurrent.Callable;
 
 public class ControllerManager {
@@ -22,12 +25,24 @@ public class ControllerManager {
 
     private CTDisplayUnitController ctDisplayUnitController;
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     private CTFeatureFlagsController ctFeatureFlagsController;
 
     private CTInboxController ctInboxController;
 
     private final CTLockManager ctLockManager;
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     private CTProductConfigController ctProductConfigController;
 
     private final BaseCallbackManager callbackManager;
@@ -41,6 +56,8 @@ public class ControllerManager {
     private InAppController inAppController;
 
     private PushProviders pushProviders;
+
+    private  CTVariables ctVariables;
 
     public ControllerManager(Context context,
             CleverTapInstanceConfig config,
@@ -65,11 +82,23 @@ public class ControllerManager {
         ctDisplayUnitController = CTDisplayUnitController;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public CTFeatureFlagsController getCTFeatureFlagsController() {
 
         return ctFeatureFlagsController;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public void setCTFeatureFlagsController(
             final CTFeatureFlagsController CTFeatureFlagsController) {
         ctFeatureFlagsController = CTFeatureFlagsController;
@@ -83,13 +112,32 @@ public class ControllerManager {
         ctInboxController = CTInboxController;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public CTProductConfigController getCTProductConfigController() {
         return ctProductConfigController;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public void setCTProductConfigController(
             final CTProductConfigController CTProductConfigController) {
         ctProductConfigController = CTProductConfigController;
+    }
+
+    public CTVariables getCtVariables() {
+        return ctVariables;
+    }
+    public void setCtVariables(CTVariables ctVariables) {
+        this.ctVariables = ctVariables;
     }
 
     public CleverTapInstanceConfig getConfig() {
@@ -156,5 +204,18 @@ public class ControllerManager {
                 config.getLogger().info("CRITICAL : No device ID found!");
             }
         }
+    }
+
+    public void invokeCallbacksForNetworkError() {
+
+        // Variables
+        if (ctVariables != null) {
+            FetchVariablesCallback fetchCallback = callbackManager.getFetchVariablesCallback();
+            callbackManager.setFetchVariablesCallback(null);
+
+            ctVariables.handleVariableResponseError(fetchCallback);
+        }
+
+        // Add more callbacks if necessary
     }
 }

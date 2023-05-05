@@ -1,5 +1,10 @@
 package com.clevertap.android.sdk.inbox;
 
+import static com.clevertap.android.sdk.Constants.APP_INBOX_CTA1_INDEX;
+import static com.clevertap.android.sdk.Constants.APP_INBOX_CTA2_INDEX;
+import static com.clevertap.android.sdk.Constants.APP_INBOX_CTA3_INDEX;
+import static com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX;
+
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -96,7 +101,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         hideTwoButtons(this.cta1, this.cta2, this.cta3);
                         if (parentWeak != null) {
                             this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta1.getText().toString(), cta1Object, parentWeak,false));
+                                    this.cta1.getText().toString(), cta1Object, parentWeak,false, APP_INBOX_CTA1_INDEX));
                         }
                         break;
                     case 2:
@@ -113,9 +118,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         hideOneButton(this.cta1, this.cta2, this.cta3);
                         if (parentWeak != null) {
                             this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta1.getText().toString(), cta1Object, parentWeak,false));
+                                    this.cta1.getText().toString(), cta1Object, parentWeak,false, APP_INBOX_CTA1_INDEX));
                             this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta2.getText().toString(), cta2Object, parentWeak,false));
+                                    this.cta2.getText().toString(), cta2Object, parentWeak,false, APP_INBOX_CTA2_INDEX));
                         }
                         break;
                     case 3:
@@ -136,11 +141,11 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta3.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta3Object)));
                         if (parentWeak != null) {
                             this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta1.getText().toString(), cta1Object, parentWeak,false));
+                                    this.cta1.getText().toString(), cta1Object, parentWeak,false, APP_INBOX_CTA1_INDEX));
                             this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta2.getText().toString(), cta2Object, parentWeak,false));
+                                    this.cta2.getText().toString(), cta2Object, parentWeak,false, APP_INBOX_CTA2_INDEX));
                             this.cta3.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta3.getText().toString(), cta3Object, parentWeak,false));
+                                    this.cta3.getText().toString(), cta3Object, parentWeak,false, APP_INBOX_CTA3_INDEX));
                         }
                         break;
                 }
@@ -362,7 +367,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
 
         if (parentWeak != null) {
             this.clickLayout.setOnClickListener(
-                    new CTInboxButtonClickListener(position, inboxMessage, null, null, parentWeak,true));
+                    new CTInboxButtonClickListener(position, inboxMessage, null, null, parentWeak,true, APP_INBOX_ITEM_INDEX));
         }
 
     }

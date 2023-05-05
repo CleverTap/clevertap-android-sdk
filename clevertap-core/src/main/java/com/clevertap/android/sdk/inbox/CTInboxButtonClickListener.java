@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
+import static com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_CONTENT_PAGE_INDEX;
+
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -26,27 +28,31 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     private final int position;
 
     private ViewPager viewPager;
-    private boolean isBodyClick;
+
+    private final boolean isBodyClick;
+
+    private final int buttonIndex;
 
     CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, JSONObject jsonObject,
-            CTInboxListViewFragment fragment, boolean isInboxMessageBodyClick) {
+            CTInboxListViewFragment fragment, boolean isInboxMessageBodyClick, int buttonIndex) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.buttonText = buttonText;
         this.fragment = fragment; // be sure to pass this as a Weak Ref
         this.buttonObject = jsonObject;
         this.isBodyClick = isInboxMessageBodyClick;
+        this.buttonIndex = buttonIndex;
     }
 
     CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText,
-            CTInboxListViewFragment fragment, ViewPager viewPager, boolean isInboxMessageBodyClick) {
+            CTInboxListViewFragment fragment, ViewPager viewPager, boolean isInboxMessageBodyClick, int buttonIndex) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.buttonText = buttonText;
         this.fragment = fragment; // be sure to pass this as a Weak Ref
         this.viewPager = viewPager;
         this.isBodyClick = isInboxMessageBodyClick;
-
+        this.buttonIndex = buttonIndex;
     }
 
 
@@ -54,9 +60,9 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     public void onClick(View v) {
         if (viewPager != null) {//Handles viewpager clicks
             if (fragment != null) {
-                fragment.handleViewPagerClick(position, viewPager.getCurrentItem(),isBodyClick);
+                fragment.handleViewPagerClick(position, viewPager.getCurrentItem());
             }
-        } else {//Handles button clicks
+        } else {//Handles item and button clicks for non-carousel templates
             if (buttonText != null && buttonObject != null) {
                 if (fragment != null) {
                     if (inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject)
@@ -66,11 +72,11 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         }
                     }
 
-                    fragment.handleClick(this.position, buttonText, buttonObject, getKeyValues(inboxMessage));
+                    fragment.handleClick(this.position, APP_INBOX_ITEM_CONTENT_PAGE_INDEX, buttonText, buttonObject, getKeyValues(inboxMessage), buttonIndex);
                 }
             } else {
                 if (fragment != null) {
-                    fragment.handleClick(this.position, null, null, null);
+                    fragment.handleClick(this.position, APP_INBOX_ITEM_CONTENT_PAGE_INDEX,null, null, null, buttonIndex);
                 }
             }
         }

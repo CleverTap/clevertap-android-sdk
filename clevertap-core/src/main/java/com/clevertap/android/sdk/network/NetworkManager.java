@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.BaseCallbackManager;
@@ -38,6 +39,7 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
+import com.clevertap.android.sdk.response.FetchVariablesResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
@@ -46,6 +48,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,40 +59,29 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class NetworkManager extends BaseNetworkManager {
-
     private static SSLSocketFactory sslSocketFactory;
-
     private static SSLContext sslContext;
-
     private final BaseCallbackManager callbackManager;
-
     private CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
-
     private final Context context;
-
     private final ControllerManager controllerManager;
-
     private final CoreMetaData coreMetaData;
-
     private int currentRequestTimestamp = 0;
-
     private final BaseDatabaseManager databaseManager;
-
     private final DeviceInfo deviceInfo;
-
+    private final LocalDataStore localDataStore;
     private final Logger logger;
-
     private int networkRetryCount = 0;
-
     private final ValidationResultStack validationResultStack;
-
     private int responseFailureCount = 0;
+    private final Validator validator;
+    private int minDelayFrequency = 0;
 
     public static boolean isNetworkOnline(Context context) {
 
@@ -124,6 +116,8 @@ public class NetworkManager extends BaseNetworkManager {
         this.config = config;
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
+        this.validator = validator;
+        this.localDataStore = localDataStore;
         logger = this.config.getLogger();
 
         this.coreMetaData = coreMetaData;
@@ -138,6 +132,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config, controllerManager);
         cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
                 callbackManager, controllerManager);
+        cleverTapResponse = new FetchVariablesResponse(cleverTapResponse,config,controllerManager,callbackManager);
         cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config,
                 baseDatabaseManager, callbackManager, controllerManager);
         cleverTapResponse = new InboxResponse(cleverTapResponse, config, ctLockManager,
@@ -181,6 +176,10 @@ public class NetworkManager extends BaseNetworkManager {
             }
 
             loadMore = sendQueue(context, eventGroup, queue);
+            if (!loadMore) {
+                // network error
+                controllerManager.invokeCallbacksForNetworkError();
+            }
         }
     }
 
@@ -188,8 +187,6 @@ public class NetworkManager extends BaseNetworkManager {
     //randomly adds delay to 1s delay in case of non-EU regions
     @Override
     public int getDelayFrequency() {
-
-        int minDelayFrequency = 0;
 
         logger.debug(config.getAccountId(), "Network retry #" + networkRetryCount);
 
@@ -314,6 +311,8 @@ public class NetworkManager extends BaseNetworkManager {
 
         if (emptyDomain) {
             domain = Constants.PRIMARY_DOMAIN + "/hello";
+        } else if (eventGroup == EventGroup.VARIABLES) {
+            domain += eventGroup.additionalPath;
         } else {
             domain += "/a1";
         }
@@ -394,15 +393,12 @@ public class NetworkManager extends BaseNetworkManager {
         this.responseFailureCount = responseFailureCount;
     }
 
-    //gives delay frequency based on region
-    //randomly adds delay to 1s delay in case of non-EU regions
-
     boolean hasDomainChanged(final String newDomain) {
         final String oldDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
         return !newDomain.equals(oldDomain);
     }
 
-    String insertHeader(Context context, JSONArray arr) {
+    String insertHeader(Context context, JSONArray arr) {//[{}]
         try {
             final JSONObject header = new JSONObject();
 
@@ -516,7 +512,7 @@ public class NetworkManager extends BaseNetworkManager {
             }
 
             // Resort to string concat for backward compatibility
-            return "[" + header.toString() + ", " + arr.toString().substring(1);
+            return "[" + header + ", " + arr.toString().substring(1);
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "CommsManager: Failed to attach header", t);
             return arr.toString();
@@ -603,7 +599,7 @@ public class NetworkManager extends BaseNetworkManager {
      * @return true if the network request succeeded. Anything non 200 results in a false.
      */
     @Override
-    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
+    public boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
         if (queue == null || queue.length() <= 0) {
             return false;
         }
@@ -641,9 +637,15 @@ public class NetworkManager extends BaseNetworkManager {
 
             final int responseCode = conn.getResponseCode();
 
-            // Always check for a 200 OK
-            if (responseCode != 200) {
-                throw new IOException("Response code is not 200. It is " + responseCode);
+            if (eventGroup == EventGroup.VARIABLES) {
+                if (handleVariablesResponseError(responseCode, conn)) {
+                    return false;
+                }
+            } else {
+                // Always check for a 200 OK
+                if (responseCode != 200) {
+                    throw new IOException("Response code is not 200. It is " + responseCode);
+                }
             }
 
             // Check for a change in domain
@@ -668,7 +670,17 @@ public class NetworkManager extends BaseNetworkManager {
                     sb.append(line);
                 }
                 body = sb.toString();
-                getCleverTapResponse().processResponse(null, body, this.context);
+
+                if (eventGroup == EventGroup.VARIABLES) {
+                    CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
+                    cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator,
+                            controllerManager);
+                    cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore,
+                            cleverTapResponse);
+                    cleverTapResponse.processResponse(null, body, this.context);
+                } else {
+                    getCleverTapResponse().processResponse(null, body, this.context);
+                }
             }
 
             setLastRequestTimestamp(getCurrentRequestTimestamp());
@@ -680,11 +692,11 @@ public class NetworkManager extends BaseNetworkManager {
                 JSONObject notification = queue.getJSONObject(queue.length() - 1).optJSONObject("evtData");
                 if (notification != null) {
                     String lastPushInQueue = notification.optString(Constants.WZRK_PUSH_ID);
-                    /**
-                     * Check if, sent push notification viewed event is for latest push notification or older
-                     * If it's for latest push which just came on device then give render callback to listeners
-                     * This will make sure that callback will be given only when viewed event for latest push on device is
-                     * sent to BE.
+                    /*
+                      Check if, sent push notification viewed event is for latest push notification or older
+                      If it's for latest push which just came on device then give render callback to listeners
+                      This will make sure that callback will be given only when viewed event for latest push on device is
+                      sent to BE.
                      */
                     if (coreMetaData.getLastNotificationId() != null && coreMetaData.getLastNotificationId()
                             .equals(lastPushInQueue)) {
@@ -725,6 +737,51 @@ public class NetworkManager extends BaseNetworkManager {
                     // Ignore
                 }
             }
+        }
+    }
+
+    private boolean handleVariablesResponseError(int responseCode, HttpsURLConnection conn) {
+        switch (responseCode) {
+            case 200:
+                logger.info("variables", "Vars synced successfully.");
+                return false;
+
+            case 400:
+                JSONObject errorStreamJson = getErrorStreamAsJson(conn);
+                if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
+                    String errorMessage = errorStreamJson.optString("error");
+                    logger.info("variables", "Error while syncing vars: " + errorMessage);
+                } else {
+                    logger.info("variables", "Error while syncing vars.");
+                }
+                return true;
+
+            case 401:
+                logger.info("variables", "Unauthorized access from a non-test profile. "
+                    + "Please mark this profile as a test profile from the CleverTap dashboard.");
+                return true;
+
+            default:
+                logger.info("variables", "Response code " + responseCode + " while syncing vars.");
+                return true;
+        }
+    }
+
+    private JSONObject getErrorStreamAsJson(HttpsURLConnection conn) {
+        try {
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
+
+            StringBuilder text = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+            }
+
+            return new JSONObject(text.toString());
+
+        } catch (IOException | JSONException e) {
+            return null;
         }
     }
 
@@ -793,7 +850,7 @@ public class NetworkManager extends BaseNetworkManager {
             }
             final JSONObject ret = new JSONObject(all);
             logger.verbose(config.getAccountId(),
-                    "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + all.toString());
+                    "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + all);
             return ret;
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "Failed to construct ARP object", t);
@@ -861,12 +918,9 @@ public class NetworkManager extends BaseNetworkManager {
 
             // Clear all the queues
             Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-            task.execute("CommsManager#setMuted", new Callable<Void>() {
-                @Override
-                public Void call() {
-                    databaseManager.clearQueues(context);
-                    return null;
-                }
+            task.execute("CommsManager#setMuted", () -> {
+                databaseManager.clearQueues(context);
+                return null;
             });
         } else {
             StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MUTED), 0);

@@ -6,6 +6,11 @@ import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT;
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT;
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.PRODUCT_DISPLAY_CONTENT_PENDING_INTENT;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK1_PENDING_INTENT;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK2_PENDING_INTENT;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK3_PENDING_INTENT;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK4_PENDING_INTENT;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK5_PENDING_INTENT;
 import static com.clevertap.android.sdk.pushnotification.CTNotificationIntentService.TYPE_BUTTON_CLICK;
 
 import android.annotation.SuppressLint;
@@ -33,6 +38,7 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory;
@@ -165,7 +171,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                                 if (templateType != null) {
                                     switch (templateType) {
                                         case RATING:
-                                            handleRatingNotification(context, extras);
+                                            handleRatingNotification(context, extras, intent);
                                             break;
                                         case FIVE_ICONS:
                                             handleFiveCTANotification(context, extras);
@@ -392,7 +398,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     }
 
-    private void handleRatingNotification(Context context, Bundle extras) {
+    private void handleRatingNotification(Context context, Bundle extras, Intent intent) {
         try {
             int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
 
@@ -520,6 +526,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 } else {
                     contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_outline);
                 }
+                cancelRatingClickIntents(context,intent);
                 extras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
                 contentViewRating.setOnClickPendingIntent(R.id.tVRatingConfirmation,
                         LaunchPendingIntentFactory.getActivityIntent(extras, context));
@@ -550,9 +557,10 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                     notificationManager.notify(notificationId, notification);
                 }
+
+                Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
+                        Utils.convertRatingBundleObjectToHashMap(extras));
                 if (VERSION.SDK_INT < VERSION_CODES.S) {
-                    Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
-                            Utils.convertRatingBundleObjectToHashMap(extras));
                     handleRatingDeepLink(context, extras, notificationId, pt_dl_clicked, this.config);
                 }
             } else {
@@ -569,6 +577,30 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             }
         } catch (Throwable t) {
             PTLog.verbose("Error creating rating notification ", t);
+        }
+    }
+
+    /**
+     * This method cancels all pending intents fired on click of rating. Allows the user to
+     * click only once for Android 11+ devices.
+     * @param context Context required for cancelling pending intents
+     * @param intent Intent required for cancelling pending intents
+     */
+    private void cancelRatingClickIntents(Context context, Intent intent){
+        if (VERSION.SDK_INT > VERSION_CODES.S) {
+            int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+            flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+
+            PendingIntent.getBroadcast(context,
+                    RATING_CLICK5_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
+            PendingIntent.getBroadcast(context,
+                    RATING_CLICK4_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
+            PendingIntent.getBroadcast(context,
+                    RATING_CLICK3_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
+            PendingIntent.getBroadcast(context,
+                    RATING_CLICK2_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
+            PendingIntent.getBroadcast(context,
+                    RATING_CLICK1_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
         }
     }
 

@@ -14,13 +14,13 @@
     <LinearLayout
         android:id="@+id/inbox_linear_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"></com.google.android.material.tabs.TabLayout>
+            android:layout_height="wrap_content"/>
 
         <androidx.viewpager.widget.ViewPager
             android:id="@+id/view_pager"
