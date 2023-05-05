@@ -217,6 +217,61 @@ public void inboxDidInitialize(){
     cleverTapDefaultInstance.showAppInbox();//Opens Activity with default style config
 }
 ```
+### Dismissing App Inbox
+Use the following method to dismiss the App Inbox Activity as per your business use case -
+
+```java
+cleverTapDefaultInstance.dismissAppInbox();
+```
+
+### App Inbox Item and Button Click Callbacks
+ 
+Let's understand the types of buttons first that App Inbox supports:
+- URL button (fires the deeplink with the associated URL) 
+- Copy to button (Copies the associated text to the clipboard)
+- KV button (contains the custom kev-value pair for custom handling)
+
+
+The Android SDK v4.6.1 and above supports `onInboxItemClicked` callback on the click of an App Inbox item, such as text or media.
+From the Android SDK v4.6.8 onwards and below v4.7.0, the `onInboxItemClicked` callback supports the button click besides the item click.
+
+The callback returns `CTInboxMessage` object, `itemIndex` and `buttonIndex` parameters. To use this callback, check that your activity implements the `InboxMessageListener` and overrides the following method:
+
+```java
+@Override
+public void onInboxItemClicked(CTInboxMessage message, int contentPageIndex, int buttonIndex){
+    Log.i(TAG, "InboxItemClicked at" + contentPageIndex + " page-index with button-index:" + buttonIndex);
+    //The buttonIndex corresponds to the CTA button clicked (0, 1, or 2). A value of -1 indicates the app inbox body/message clicked.
+        
+    List<CTInboxMessageContent> inboxMessageContentList = message.getInboxMessageContents();
+    //The contentPageIndex corresponds to the page index of the content, which ranges from 0 to the total number of pages for carousel templates. For non-carousel templates, the value is always 0, as they only have one page of content.
+    CTInboxMessageContent messageContentObject = inboxMessageContentList.get(contentPageIndex);
+    if (buttonIndex != -1) {
+        //button is clicked
+        try {
+            List<CTInboxMessageContent> inboxMessageContentList = message.getInboxMessageContents();
+            JSONObject buttonObject = (JSONObject) messageContentObject.getLinks().get(buttonIndex);
+            String buttonType = buttonObject.getString("type");
+            Log.i(TAG, "type of button clicked: " + buttonType);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    } else {
+        //Item is clicked
+        Log.i(TAG, "type/template of App Inbox item:" + message.type);
+    }
+}
+```
+
+Android SDK v3.6.1 and above supports an exclusive `onInboxButtonClick` callback on the click of **KV** type of buttons. It returns a Map of Key-Value pairs. To use this, make sure your activity implements the `InboxMessageButtonListener` and override the following method:
+
+```java
+ @Override
+public void onInboxButtonClick(HashMap<String, String> hashMap) {
+    Log.i(TAG, "InboxButtonClick with payload:" + payload);
+}
+```
+
 ### Creating your own App Inbox
 
 You can choose to create your own App Inbox with the help of the following APIs -

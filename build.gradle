@@ -18,7 +18,8 @@ buildscript {
         classpath Libs.sonarqube_gradle_plugin
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.1'
         classpath("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.20.0-RC1")
-        classpath("com.vanniktech:gradle-android-junit-jacoco-plugin:0.16.0")
+        classpath('org.jacoco:org.jacoco.core:0.8.8')
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20'
 
     }
 }
@@ -35,6 +36,7 @@ allprojects {
     }
 }
 
+apply plugin: 'jacoco'
 apply plugin: 'org.sonarqube'
 sonarqube {
     properties {
@@ -44,7 +46,6 @@ sonarqube {
     }
 }
 
-apply from: "${project.rootDir}/gradle-scripts/jacoco_root.gradle"
 
 task clean(type: Delete) {
     delete rootProject.buildDir
@@ -55,6 +56,7 @@ task copyTemplates {
     file("versions.properties").withInputStream { props.load(it) }
     outputs.upToDateWhen { false }
     props.put("clevertap_android_sdk",Libs.clevertap_android_sdk.dropRight(1))
+    props.put("clevertap_rendermax_sdk", Libs.clevertap_rendermax_sdk.dropRight(1))
     props.put("clevertap_geofence_sdk",Libs.clevertap_geofence_sdk.dropRight(1))
     props.put("clevertap_hms_sdk",Libs.clevertap_hms_sdk.dropRight(1))
     props.put("clevertap_xiaomi_sdk",Libs.clevertap_xiaomi_sdk.dropRight(1))

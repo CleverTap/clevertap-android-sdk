@@ -18,6 +18,10 @@ class MockAnalyticsManager : BaseAnalyticsManager() {
     override fun fetchFeatureFlags() {}
     override fun forcePushAppLaunchedEvent() {}
     override fun pushAppLaunchedEvent() {}
+    override fun pushDefineVarsEvent(data: JSONObject?) {
+
+    }
+
     override fun pushDisplayUnitClickedEventForID(unitID: String) {}
     override fun pushDisplayUnitViewedEventForID(unitID: String) {}
     override fun pushError(errorMessage: String, errorCode: Int) {}

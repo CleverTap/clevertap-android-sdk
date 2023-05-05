@@ -21,6 +21,8 @@ public abstract class BaseAnalyticsManager {
 
     public abstract void pushAppLaunchedEvent();
 
+    public abstract void pushDefineVarsEvent(JSONObject data);
+
     public abstract void pushDisplayUnitClickedEventForID(String unitID);
 
     public abstract void pushDisplayUnitViewedEventForID(String unitID);

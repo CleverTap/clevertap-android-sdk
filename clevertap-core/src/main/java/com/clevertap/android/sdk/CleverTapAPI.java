@@ -57,18 +57,22 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.variables.CTVariables;
+import com.clevertap.android.sdk.variables.Var;
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
+import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 
@@ -966,7 +970,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         }
     }
-
     private static CleverTapAPI fromBundle(final Context context, final Bundle extras) {
         String _accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
         return fromAccountId(context, _accountId);
@@ -1194,6 +1197,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void deleteInboxMessage(String messageId) {
         CTInboxMessage message = getInboxMessageForId(messageId);
         deleteInboxMessage(message);
+    }
+
+    /**
+     * Deletes multiple {@link CTInboxMessage} objects for given list of messageIDs
+     *
+     * @param messageIDs {@link ArrayList} with String values - list of messageIDs of {@link CTInboxMessage} public object of inbox message
+     */
+    public void deleteInboxMessagesForIDs(final ArrayList<String> messageIDs){
+        if (coreState.getControllerManager().getCTInboxController() != null) {
+            coreState.getControllerManager().getCTInboxController().deleteInboxMessagesForIDs(messageIDs);
+        } else {
+            getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
+        }
     }
 
     /**
@@ -1932,21 +1948,35 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         markReadInboxMessage(message);
     }
 
+    /**
+     * Marks multiple {@link CTInboxMessage} objects as read for given list of messageIDs
+     *
+     * @param messageIDs {@link ArrayList} with String values - list of messageIDs of {@link CTInboxMessage} public object of inbox message
+     */
+    public void markReadInboxMessagesForIDs(final ArrayList<String> messageIDs){
+        if (coreState.getControllerManager().getCTInboxController() != null) {
+            coreState.getControllerManager().getCTInboxController().markReadInboxMessagesForIDs(messageIDs);
+        } else {
+            getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
+        }
+    }
+
     @Override
-    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, boolean isBodyClick) {
+    public void messageDidClick(CTInboxActivity ctInboxActivity, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, int buttonIndex) {
 
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
 
+        Logger.v("clicked inbox notification.");
+        //notify the onInboxItemClicked callback if the listener is set.
+        if (inboxMessageListener != null && inboxMessageListener.get() != null) {
+            inboxMessageListener.get().onInboxItemClicked(inboxMessage, contentPageIndex, buttonIndex);
+        }
+
         if (keyValue != null && !keyValue.isEmpty()) {
             Logger.v("clicked button of an inbox notification.");
+            //notify the onInboxButtonClick callback if the listener is set.
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
-            }
-        }
-        else{
-            Logger.v("clicked inbox notification.");
-            if (isBodyClick && inboxMessageListener != null && inboxMessageListener.get() != null) {
-                inboxMessageListener.get().onInboxItemClicked(inboxMessage);
             }
         }
     }
@@ -2650,6 +2680,25 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Dismisses the App Inbox Activity if already opened
+     */
+    public void dismissAppInbox() {
+        try {
+            Activity appInboxActivity = getCoreState().getCoreMetaData().getAppInboxActivity();
+            if (appInboxActivity == null) {
+                throw new IllegalStateException("AppInboxActivity reference not found");
+            }
+            if (!appInboxActivity.isFinishing()) {
+                getConfigLogger().verbose(getAccountId(), "Finishing the App Inbox");
+                appInboxActivity.finish();
+            }
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), "Can't dismiss AppInbox, please ensure to call this method after the usage of " +
+                    "cleverTapApiInstance.showAppInbox(). \n" + t);
+        }
+    }
+
+    /**
      * Opens {@link CTInboxActivity} to display Inbox Messages with default {@link CTInboxStyleConfig} object
      */
     @SuppressWarnings({"unused"})
@@ -2974,14 +3023,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     //TODO: start synchronizing entire flow from here
-    public void renderPushNotification(@NonNull INotificationRenderer iNotificationRenderer, Context context,
+    public Future<?> renderPushNotification(@NonNull INotificationRenderer iNotificationRenderer, Context context,
             Bundle extras) {
 
         CleverTapInstanceConfig config = coreState.getConfig();
+        Future<?> future = null;
 
         try {
             Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-            task.execute("CleverTapAPI#renderPushNotification",
+            future = task.submit("CleverTapAPI#renderPushNotification",
                     new Callable<Void>() {
                         @Override
                         public Void call() {
@@ -2990,9 +3040,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
                                 if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
                                     coreState.getPushProviders()
-                                            ._createNotification(context, extras, extras.getInt(Constants.PT_NOTIF_ID));
+                                            ._createNotification(context, extras,
+                                                    extras.getInt(Constants.PT_NOTIF_ID));
                                 } else {
-                                    coreState.getPushProviders()._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
+                                    coreState.getPushProviders()
+                                            ._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
                                 }
                             }
                             return null;
@@ -3001,6 +3053,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         } catch (Throwable t) {
             config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
         }
+
+        return future;
 
     }
 
@@ -3026,4 +3080,176 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public static @XiaomiPush int getEnableXiaomiPushOn() {
         return PushType.XPS.getRunningDevices();
     }
+
+    /**
+     * Check if your app is in development mode. <br>
+     * the following function: {@link CleverTapAPI#syncVariables()} will only work if the app is in
+     * development mode and profile is set as a test profile in CT Dashboard.
+     *
+     * @return boolean True if development mode, false otherwise.
+     */
+    boolean isDevelopmentMode() {
+        return CTVariables.isDevelopmentMode(context);
+    }
+
+    /**
+     * Defines a new variable. If the default vale is null it won't resolve the type properly. In
+     * that case it is better to use the @Variable annotation instead of this method.
+     *
+     * @param name Name of the variable.
+     * @param defaultValue Default value of variable, used when resolving the underlying value type.
+     * @param <T> Type of value.
+     * @return Returns the Var instance.
+     */
+    public <T> Var<T> defineVariable(String name, T defaultValue) {
+        return Var.define(name, defaultValue,coreState.getCTVariables());
+    }
+
+    /**
+     * Parses the @Variable annotated fields from a given instance or multiple instances.
+     *
+     * @param instances Instance or instances to parse.
+     */
+    public void parseVariables(Object... instances) {
+        coreState.getParser().parseVariables(instances);
+    }
+
+    /**
+     * Parses the @Variable annotated static fields from a given class or multiple classes.
+     *
+     * @param classes Class object or objects to parse.
+     */
+    public void parseVariablesForClasses(Class<?>... classes) {
+        coreState.getParser().parseVariablesForClasses(classes);
+    }
+
+    /**
+     * Get a copy of the current value of a variable or a group.
+     *
+     * @param name The name of the variable or the group.
+     * @return The value of the variable or the group.
+     */
+    public Object getVariableValue(String name) {
+        if (name == null) {
+            return null;
+        }
+        return coreState.getVarCache().getMergedValue(name);
+    }
+
+    /**
+     * Get an instance of a variable or a group.
+     *
+     * @param name The name of the variable or the group.
+     * @return The instance of the variable or the group, or null if not created yet.
+     */
+    public <T> Var<T> getVariable(String name) {
+        if (name == null) {
+            return null;
+        }
+        return coreState.getVarCache().getVariable(name);
+    }
+
+    /**
+     * Fetches variable values from server.
+     */
+    public void fetchVariables() {
+        fetchVariables(null);
+    }
+
+    /**
+     * Fetches variable values from server.
+     * Note that SDK keeps only one registered callback, if you call that method again it would
+     * override the callback.
+     *
+     * @param callback Callback instance to be invoked when fetching is done.
+     */
+    public void fetchVariables(FetchVariablesCallback callback) {
+        if (coreState.getConfig().isAnalyticsOnly()) {
+            return;
+        }
+        Logger.v("variables", "Fetching  variables");
+        if (callback != null) {
+            coreState.getCallbackManager().setFetchVariablesCallback(callback);
+        }
+
+        JSONObject event = new JSONObject();
+        JSONObject notif = new JSONObject();
+        try {
+            notif.put("t", Constants.FETCH_TYPE_VARIABLES);
+            event.put("evtName", Constants.WZRK_FETCH);
+            event.put("evtData", notif);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        coreState.getAnalyticsManager().sendFetchEvent(event);
+    }
+
+    /**
+     * Uploads variables to server.
+     */
+    public void syncVariables() {
+        if (isDevelopmentMode()) {
+            Logger.v("variables", "syncVariables: waiting for id to be available");
+            getCleverTapID(x -> {
+                JSONObject js = coreState.getVarCache().getDefineVarsData();
+                Logger.v("variables", "syncVariables: sending following vars to server:" + js);
+                coreState.getAnalyticsManager().pushDefineVarsEvent(js);
+            });
+        } else {
+            Logger.v("variables", "Your app is NOT in development mode, variables data will not be sent to server");
+        }
+    }
+
+    /**
+     * Adds a callback to be invoked when variables are initialised with server values.
+     * Will be called each time new values are fetched.
+     *
+     * @param callback Callback to register.
+     */
+    public void addVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().addVariablesChangedCallback(callback);
+    }
+
+    /**
+     * Adds a callback to be invoked when variables are initialised with server values. Will be
+     * called only once and then removed.
+     *
+     * @param callback Callback to register.
+     */
+    public void addOneTimeVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().addOneTimeVariablesChangedCallback(callback);
+    }
+
+    /**
+     * Removes previously registered callback.
+     *
+     * @param callback Callback to remove.
+     */
+    public void removeVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().removeVariablesChangedCallback(callback);
+    }
+
+    /**
+     * Removes previously registered callback.
+     *
+     * @param callback Callback to remove.
+     */
+    public void removeOneTimeVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().removeOneTimeVariablesChangedHandler(callback);
+    }
+
+    /**
+     *  Removes all previously registered callbacks.
+     */
+    public void removeAllVariablesChangedCallbacks() {
+        coreState.getCTVariables().removeAllVariablesChangedCallbacks();
+    }
+
+    /**
+     *  Removes all previously registered one time callbacks.
+     */
+    public void removeAllOneTimeVariablesChangedCallbacks() {
+        coreState.getCTVariables().removeAllOneTimeVariablesChangedCallbacks();
+    }
+
 }

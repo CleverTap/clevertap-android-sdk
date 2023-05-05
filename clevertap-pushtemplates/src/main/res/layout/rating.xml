@@ -72,7 +72,7 @@
             android:layout_height="wrap_content"
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
-            tools:text="Confirm"
+            android:text="Confirm"
             android:background="#FFFFFF"
             android:gravity="center"
             android:textAppearance="@style/PushTitle"
