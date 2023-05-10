@@ -40,7 +40,7 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
                     .getGlobalInstance(applicationContext,
                             PushNotificationUtil.getAccountIdFromNotificationBundle(message));
             Objects.requireNonNull(cleverTapAPI)
-                    .renderPushNotification(templateRenderer, applicationContext, message);
+                    .renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message);
 
         } catch (Throwable throwable) {
             PTLog.verbose("Error parsing FCM payload", throwable);

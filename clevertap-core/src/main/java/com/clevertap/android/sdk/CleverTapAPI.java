@@ -136,6 +136,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static NotificationHandler sSignedCallNotificationHandler;
 
+    private static HashMap<String,NotificationRenderedListener> sNotificationRenderedListenerMap = new HashMap<>();
+
     private final Context context;
 
     private CoreState coreState;
@@ -207,18 +209,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CleverTapInstanceConfig config = coreState.getConfig();
 
             try {
-                Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-                task.execute("CleverTapAPI#createNotification",
-                        new Callable<Void>() {
-                            @Override
-                            public Void call() {
-                                synchronized (coreState.getPushProviders().getPushRenderingLock()) {
-                                    coreState.getPushProviders().setPushNotificationRenderer(new CoreNotificationRenderer());
-                                    coreState.getPushProviders()._createNotification(context, extras, notificationId);
-                                }
-                                return null;
-                            }
-                        });
+                synchronized (coreState.getPushProviders().getPushRenderingLock()) {
+                    coreState.getPushProviders().setPushNotificationRenderer(new CoreNotificationRenderer());
+                    coreState.getPushProviders()._createNotification(context, extras, notificationId);
+                }
             } catch (Throwable t) {
                 config.getLogger().debug(config.getAccountId(), "Failed to process createNotification()", t);
             }
@@ -2485,6 +2479,21 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
+    public static void addNotificationRenderedListener(String id, final NotificationRenderedListener notificationRenderedListener) {
+       sNotificationRenderedListenerMap.put(id, notificationRenderedListener);
+    }
+
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public static NotificationRenderedListener getNotificationRenderedListener(String id) {
+       return sNotificationRenderedListenerMap.get(id);
+    }
+
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public static NotificationRenderedListener removeNotificationRenderedListener(String id) {
+       return sNotificationRenderedListenerMap.remove(id);
+    }
+
+    @RestrictTo(Scope.LIBRARY_GROUP)
     public NotificationRenderedListener getNotificationRenderedListener() {
         return coreState.getCallbackManager().getNotificationRenderedListener();
     }
@@ -2985,6 +2994,29 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         return future;
+
+    }
+    public void renderPushNotificationOnCallerThread(@NonNull INotificationRenderer iNotificationRenderer, Context context,
+            Bundle extras) {
+
+        CleverTapInstanceConfig config = coreState.getConfig();
+
+        try {
+            synchronized (coreState.getPushProviders().getPushRenderingLock()) {
+                coreState.getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
+
+                if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
+                    coreState.getPushProviders()
+                            ._createNotification(context, extras,
+                                    extras.getInt(Constants.PT_NOTIF_ID));
+                } else {
+                    coreState.getPushProviders()
+                            ._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
+                }
+            }
+        } catch (Throwable t) {
+            config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
+        }
 
     }
 

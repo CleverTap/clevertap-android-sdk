@@ -12,6 +12,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
@@ -25,6 +26,7 @@ import com.clevertap.android.sdk.db.QueueCursor;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
+import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
 import com.clevertap.android.sdk.response.ARPResponse;
 import com.clevertap.android.sdk.response.BaseResponse;
 import com.clevertap.android.sdk.response.CleverTapResponse;
@@ -56,6 +58,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
@@ -675,33 +678,7 @@ public class NetworkManager extends BaseNetworkManager {
             setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
 
             if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-                // get last push id from queue
-
-                JSONObject notification = queue.getJSONObject(queue.length() - 1).optJSONObject("evtData");
-                if (notification != null) {
-                    String lastPushInQueue = notification.optString(Constants.WZRK_PUSH_ID);
-                    /**
-                     * Check if, sent push notification viewed event is for latest push notification or older
-                     * If it's for latest push which just came on device then give render callback to listeners
-                     * This will make sure that callback will be given only when viewed event for latest push on device is
-                     * sent to BE.
-                     */
-                    if (coreMetaData.getLastNotificationId() != null && coreMetaData.getLastNotificationId()
-                            .equals(lastPushInQueue)) {
-                        NotificationRenderedListener notificationRenderedListener
-                                = callbackManager.getNotificationRenderedListener();
-
-                        logger.verbose(config.getAccountId(),
-                                "push notification viewed event sent successfully for push id = " + lastPushInQueue);
-                        if (notificationRenderedListener != null) {
-                            notificationRenderedListener.onNotificationRendered(true);
-                        }
-
-                    }
-                }
-
-                logger.verbose(config.getAccountId(),
-                        "push notification viewed event sent successfully");
+                notifyListenersForPushImpressionSentToServer(queue);
 
             }
             logger.debug(config.getAccountId(), "Queue sent successfully");
@@ -726,6 +703,66 @@ public class NetworkManager extends BaseNetworkManager {
                 }
             }
         }
+    }
+
+    private void notifyListenersForPushImpressionSentToServer(final JSONArray queue) throws JSONException {
+        // get last push id from queue
+
+        JSONObject notification = queue.getJSONObject(queue.length() - 1).optJSONObject("evtData");
+        if (notification != null) {
+            String lastPushInQueue = notification.optString(Constants.WZRK_PUSH_ID);
+            /**
+             * Check if, sent push notification viewed event is for latest push notification or older
+             * If it's for latest push which just came on device then give render callback to listeners
+             * This will make sure that callback will be given only when viewed event for latest push on device is
+             * sent to BE.
+             */
+            if (coreMetaData.getLastNotificationId() != null && coreMetaData.getLastNotificationId()
+                    .equals(lastPushInQueue)) {
+                NotificationRenderedListener notificationRenderedListener
+                        = callbackManager.getNotificationRenderedListener();
+
+                logger.verbose(config.getAccountId(),
+                        "push notification viewed event sent successfully for push id = " + lastPushInQueue);
+                if (notificationRenderedListener != null) {
+                    notificationRenderedListener.onNotificationRendered(true);
+                }
+
+            }
+        }
+
+                 /* verify whether there is a listener assigned to the push ID for monitoring the 'push impression'
+                 event.
+                 */
+
+        for (int i = 0; i < queue.length(); i++) {
+            try {
+                JSONObject notif = queue.getJSONObject(i).optJSONObject("evtData");
+                if (notif != null) {
+                    String pushId = notif.optString(Constants.WZRK_PUSH_ID);
+                    String pushAccountId = notif.optString(Constants.WZRK_ACCT_ID_KEY);
+                    NotificationRenderedListener notificationRenderedListener
+                            = CleverTapAPI.getNotificationRenderedListener(
+                            PushNotificationUtil.buildPushNotificationRenderedListenerKey(pushAccountId,
+                                    pushId));
+
+                    if (notificationRenderedListener!=null)
+                    {
+                        notificationRenderedListener.onNotificationRendered(true);
+                    }
+
+                }
+            } catch (JSONException e) {
+                logger.verbose(config.getAccountId(),
+                        "Encountered an exception while parsing the push notification viewed event queue");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        logger.verbose(config.getAccountId(),
+                "push notification viewed event sent successfully");
     }
 
     void setDomain(final Context context, String domainName) {
