@@ -293,7 +293,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                             applicationContext,
                             PushNotificationUtil.getAccountIdFromNotificationBundle(basicTemplateBundle)
                         )
-                    cleverTapAPI?.renderPushNotification(
+                    cleverTapAPI?.renderPushNotificationOnCallerThread(
                         templateRenderer,
                         applicationContext,
                         basicTemplateBundle
