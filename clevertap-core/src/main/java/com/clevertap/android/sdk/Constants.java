@@ -329,4 +329,9 @@ public interface Constants {
     String REGION_INDIA = "in1";
     String REGION_EUROPE = "eu1";
 
+    // ============ notification image download timeout ===================
+
+    int PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS =  1000;
+    int PN_IMAGE_READ_TIMEOUT_IN_MILLIS =  5000;
+
 }

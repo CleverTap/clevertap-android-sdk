@@ -113,7 +113,8 @@ public class Utils {
             connection.setUseCaches(true);
             connection.addRequestProperty("Content-Type", "application/json");
             connection.addRequestProperty("Accept-Encoding", "gzip, deflate");
-            connection.setConnectTimeout(PTConstants.PT_CONNECTION_TIMEOUT);
+            connection.setConnectTimeout(Constants.PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS);
+            connection.setReadTimeout(Constants.PN_IMAGE_READ_TIMEOUT_IN_MILLIS);
             connection.connect();
             // expect HTTP 200 OK, so we don't mistakenly save error report
             // instead of the file

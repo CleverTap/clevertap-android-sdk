@@ -27,8 +27,10 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
+import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.google.firebase.messaging.RemoteMessage;
@@ -155,7 +157,14 @@ public final class Utils {
         return converted.toString();
     }
 
-    public static Bitmap getBitmapFromURL(@NonNull String srcUrl) {
+    public static Bitmap getBitmapFromURL(@NonNull String srcUrl, @Nullable Context context) {
+        if (context != null) {
+            boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
+            if (!isNetworkOnline) {
+                Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: " + srcUrl);
+                return null;
+            }
+        }
         // Safe bet, won't have more than three /s . url must not be null since we are not handling null pointer exception that would cause otherwise
         srcUrl = srcUrl.replace("///", "/");
         srcUrl = srcUrl.replace("//", "/");
@@ -165,11 +174,14 @@ public final class Utils {
         try {
             URL url = new URL(srcUrl);
             connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(Constants.PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS);
+            connection.setReadTimeout(Constants.PN_IMAGE_READ_TIMEOUT_IN_MILLIS);
+            connection.setUseCaches(true);
             connection.setDoInput(true);
             connection.connect();
             InputStream input = connection.getInputStream();
             return BitmapFactory.decodeStream(input);
-        } catch (IOException e) {
+        } catch (Throwable e) {
 
             Logger.v("Couldn't download the notification icon. URL was: " + srcUrl);
             e.printStackTrace();
@@ -184,6 +196,10 @@ public final class Utils {
                 Logger.v("Couldn't close connection!", t);
             }
         }
+    }
+
+    public static Bitmap getBitmapFromURL(@NonNull String srcUrl) {
+        return getBitmapFromURL(srcUrl, null);
     }
 
     public static Bitmap getBitmapFromURLWithSizeConstraint(String srcUrl, int size) {
@@ -330,7 +346,7 @@ public final class Utils {
     }
 
     @SuppressLint("MissingPermission")
-    public static String getDeviceNetworkType(@NonNull  final Context context) {
+    public static String getDeviceNetworkType(@NonNull final Context context) {
         // Fall back to network type
         TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         if (teleMan == null) {
@@ -403,7 +419,7 @@ public final class Utils {
 
     public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
             throws NullPointerException {
-        return getNotificationBitmapWithSizeConstraints(icoPath,fallbackToAppIcon,context,-1);
+        return getNotificationBitmapWithSizeConstraints(icoPath, fallbackToAppIcon, context, -1);
     }
 
     public static Bitmap getNotificationBitmapWithSizeConstraints(String icoPath, boolean fallbackToAppIcon,
@@ -419,7 +435,7 @@ public final class Utils {
         }
         Bitmap ic;
         if (size == -1) {
-            ic = getBitmapFromURL(icoPath);
+            ic = getBitmapFromURL(icoPath, context);
         } else {
             ic = getBitmapFromURLWithSizeConstraint(icoPath, size);
         }
@@ -457,7 +473,7 @@ public final class Utils {
      * @param context    The Android {@link Context}
      * @param permission The fully qualified Android permission name
      */
-    public static boolean hasPermission(@NonNull final Context context,@NonNull String permission) {
+    public static boolean hasPermission(@NonNull final Context context, @NonNull String permission) {
         try {
             return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
         } catch (Throwable t) {
@@ -580,7 +596,8 @@ public final class Utils {
             return false;
         }
         if (!cleverTapID.matches("[=|<>;+.A-Za-z0-9()!:$@_-]*")) {
-            Logger.i("Custom CleverTap ID cannot contain special characters apart from : =,(,),_,!,@,$,|<,>,;,+,. and - ");
+            Logger.i(
+                    "Custom CleverTap ID cannot contain special characters apart from : =,(,),_,!,@,$,|<,>,;,+,. and - ");
             return false;
         }
         return true;
@@ -660,13 +677,13 @@ public final class Utils {
 
     }
 
-    public static void navigateToAndroidSettingsForNotifications(Context context){
+    public static void navigateToAndroidSettingsForNotifications(Context context) {
         Intent intent = new Intent();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
             intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName());
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
             intent.putExtra("app_package", context.getPackageName());
             intent.putExtra("app_uid", context.getApplicationInfo().uid);
