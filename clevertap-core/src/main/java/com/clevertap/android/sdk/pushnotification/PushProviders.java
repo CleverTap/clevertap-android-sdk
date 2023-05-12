@@ -1167,6 +1167,14 @@ public class PushProviders implements CTPushProviderListener {
                 return;
             }
 
+            long omrStart = extras.getLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, -1);
+            if (omrStart>=0)
+            {
+                long prt = System.currentTimeMillis()-omrStart;
+                extras.putString(Constants.WZRK_PUSH_RENDER_TIME_IN_MILLIS,String.valueOf(prt));
+                config.getLogger()
+                        .verbose("Rendered Push Notification in "+prt+" millis");
+            }
             analyticsManager.pushNotificationViewedEvent(extras);
             config.getLogger()
                     .verbose("Rendered Push Notification... from nh_source = " + extras.getString("nh_source",
