@@ -32,7 +32,7 @@ class TimerBigContentView(context: Context, timer_end: Int?, renderer: TemplateR
 
     private fun setCustomContentViewBigImage(pt_big_img: String?) {
         if (pt_big_img != null && pt_big_img.isNotEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView)
+            Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView,context)
             if (Utils.getFallback()) {
                 remoteView.setViewVisibility(R.id.big_image, View.GONE)
             }
