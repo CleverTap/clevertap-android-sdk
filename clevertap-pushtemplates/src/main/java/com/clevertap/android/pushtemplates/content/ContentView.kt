@@ -128,7 +128,7 @@ open class ContentView(
 
     fun setCustomContentViewLargeIcon(pt_large_icon: String?) {
         if (pt_large_icon != null && pt_large_icon.isNotEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView)
+            Utils.loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView,context)
         } else {
             remoteView.setViewVisibility(R.id.large_icon, View.GONE)
         }

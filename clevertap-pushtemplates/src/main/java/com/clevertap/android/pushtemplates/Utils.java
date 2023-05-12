@@ -27,11 +27,15 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.widget.RemoteViews;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import java.io.ByteArrayInputStream;
@@ -66,7 +70,7 @@ public class Utils {
         if (!icoPath.startsWith("http")) {
             icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
         }
-        Bitmap ic = getBitmapFromURL(icoPath);
+        Bitmap ic = getBitmapFromURL(icoPath,context);
         return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
     }
 
@@ -99,7 +103,15 @@ public class Utils {
         return bitmap;
     }
 
-    private static Bitmap getBitmapFromURL(String srcUrl) {
+    private static Bitmap getBitmapFromURL(String srcUrl, @Nullable Context context) {
+        if (context != null) {
+            boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
+            if (!isNetworkOnline) {
+                Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: " + srcUrl);
+                return null;
+            }
+        }
+
         // Safe bet, won't have more than three /s
         srcUrl = srcUrl.replace("///", "/");
         srcUrl = srcUrl.replace("//", "/");
@@ -262,26 +274,17 @@ public class Utils {
     }
 
     public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
-            RemoteViews remoteViews) {
+            RemoteViews remoteViews,Context context) {
 
-        Bitmap image = getBitmapFromURL(imageUrl);
+        long bmpDownloadStartTimeInMillis = System.currentTimeMillis();
+        Bitmap image = getBitmapFromURL(imageUrl,context);
         setFallback(false);
 
         if (image != null) {
             remoteViews.setImageViewBitmap(imageViewID, image);
-        } else {
-            PTLog.debug("Image was not perfect. URL:" + imageUrl + " hiding image view");
-            setFallback(true);
-        }
-
-    }
-
-    public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
-            RemoteViews remoteViews, Context context) {
-        Bitmap image = getBitmapFromURL(imageUrl);
-        setFallback(false);
-        if (image != null) {
-            remoteViews.setImageViewBitmap(imageViewID, image);
+            long bmpDownloadEndTimeInMillis = System.currentTimeMillis();
+            long pift = bmpDownloadEndTimeInMillis - bmpDownloadStartTimeInMillis;
+            PTLog.verbose("Fetched IMAGE "+imageUrl+" in "+pift+" millis");
         } else {
             PTLog.debug("Image was not perfect. URL:" + imageUrl + " hiding image view");
             setFallback(true);

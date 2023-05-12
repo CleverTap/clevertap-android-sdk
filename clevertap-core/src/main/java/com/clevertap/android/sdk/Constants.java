@@ -305,6 +305,9 @@ public interface Constants {
     String NOTIFICATION_HEALTH = "wzrk_pn_h";
     String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident
     String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
+    String OMR_INVOKE_TIME_IN_MILLIS = "omr_invoke_time_in_millis";
+    String WZRK_PUSH_RENDER_TIME_IN_MILLIS = "wzrk_prt";
+    String WZRK_PUSH_IMAGE_FETCH_TIME_IN_MILLIS = "wzrk_pift";
 
     /**
      * Device app bucket when notification is rendered

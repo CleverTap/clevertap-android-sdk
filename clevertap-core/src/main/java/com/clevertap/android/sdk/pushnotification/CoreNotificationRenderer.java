@@ -57,11 +57,17 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         String bigPictureUrl = extras.getString(Constants.WZRK_BIG_PICTURE);
         if (bigPictureUrl != null && bigPictureUrl.startsWith("http")) {
             try {
+                long bmpDownloadStartTimeInMillis = System.currentTimeMillis();
                 Bitmap bpMap = Utils.getNotificationBitmap(bigPictureUrl, false, context);
 
                 if (bpMap == null) {
                     throw new Exception("Failed to fetch big picture!");
                 }
+                long bmpDownloadEndTimeInMillis = System.currentTimeMillis();
+                long pift = bmpDownloadEndTimeInMillis - bmpDownloadStartTimeInMillis;
+                extras.putString(Constants.WZRK_PUSH_IMAGE_FETCH_TIME_IN_MILLIS,String.valueOf(pift));
+                config.getLogger()
+                        .verbose("Fetched big picture in "+pift+" millis");
 
                 if (extras.containsKey(Constants.WZRK_MSG_SUMMARY)) {
                     String summaryText = extras.getString(Constants.WZRK_MSG_SUMMARY);
