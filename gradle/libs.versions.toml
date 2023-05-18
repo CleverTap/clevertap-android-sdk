@@ -1,7 +1,7 @@
 [versions]
 # Project
 android_compile_sdk = "33"
-android_gradle_plugin = "7.3.0"
+android_gradle_plugin = "7.4.2"
 android_min_sdk = "19"
 android_target_sdk = "33"
 kotlin_plugin = "1.7.20"
@@ -61,7 +61,7 @@ clevertap_xiaomi_sdk = "1.5.2"
 clevertap_push_templates_sdk = "1.0.9"
 
 # Glide
-glide = "4.12"
+glide = "4.12.0"
 
 # Exoplayer
 exoplayer = "2.17.1"
