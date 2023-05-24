@@ -187,4 +187,6 @@ public interface PushConstants {
      * Turn off Xiaomi Push on all devices
      */
     int NO_DEVICES = 3;
+
+    long MIN_PERIODIC_INTERVAL_MILLIS_FLUSH_PUSH_IMPRESSIONS = 15 * 60 * 1000L; // 15 minutes.
 }

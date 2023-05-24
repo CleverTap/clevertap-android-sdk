@@ -2874,7 +2874,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    private static ArrayList<CleverTapAPI> getAvailableInstances(Context context) {
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public static ArrayList<CleverTapAPI> getAvailableInstances(Context context) {
         ArrayList<CleverTapAPI> apiArrayList = new ArrayList<>();
         if (instances == null || instances.isEmpty()) {
             CleverTapAPI cleverTapAPI = CleverTapAPI.getDefaultInstance(context);

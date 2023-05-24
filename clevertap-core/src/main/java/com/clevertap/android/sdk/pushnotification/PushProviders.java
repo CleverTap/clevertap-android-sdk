@@ -4,6 +4,7 @@ import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
 import static com.clevertap.android.sdk.CTXtensions.isNotificationChannelEnabled;
+import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
 
 import android.annotation.SuppressLint;
@@ -28,6 +29,11 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -44,6 +50,7 @@ import com.clevertap.android.sdk.interfaces.AudibleNotification;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
+import com.clevertap.android.sdk.pushnotification.work.FlushPushImpressionsWork;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.PackageUtils;
@@ -58,6 +65,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -124,6 +132,36 @@ public class PushProviders implements CTPushProviderListener {
         this.validationResultStack = validationResultStack;
         this.analyticsManager = analyticsManager;
         initPushAmp();
+        if (isPackageAndOsTargetsAbove(context, VERSION_CODES.O) &&
+                Utils.isMainProcess(context,context.getPackageName())){
+            schedulePushImpressionsFlushWork();
+        }
+    }
+
+    private void schedulePushImpressionsFlushWork() {
+        try {
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .setRequiresCharging(true)
+                    .build();
+
+            PeriodicWorkRequest flushPushImpressionsWorkRequest = new PeriodicWorkRequest.Builder(FlushPushImpressionsWork.class,
+                    PushConstants.MIN_PERIODIC_INTERVAL_MILLIS_FLUSH_PUSH_IMPRESSIONS, TimeUnit.MILLISECONDS)
+                    .setConstraints(constraints)
+                    .build();
+
+            // schedule unique work request to avoid duplicates
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork("flushPushImpressions",
+                    ExistingPeriodicWorkPolicy.KEEP, flushPushImpressionsWorkRequest);
+
+            config.getLogger().debug(config.getAccountId(),
+                    "Finished scheduling periodic work request for push impressions flush...");
+
+        } catch (Throwable t) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Failed to schedule periodic work request for push impressions flush.",t);
+            t.printStackTrace();
+        }
     }
 
     /**
@@ -1179,6 +1217,13 @@ public class PushProviders implements CTPushProviderListener {
             config.getLogger()
                     .verbose("Rendered Push Notification... from nh_source = " + extras.getString("nh_source",
                             "source not available"));
+
+            String ctrm_iurl = extras.getString("ctrm_iurl");
+            if (ctrm_iurl!=null)
+            {
+                Utils.getBitmapFromURL(ctrm_iurl,context);
+                config.getLogger().verbose("get bitmap from url "+ctrm_iurl+" executed successfully!");
+            }
         }
     }
 }

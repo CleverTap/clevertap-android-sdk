@@ -23,6 +23,7 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
+import com.orhanobut.logger.DiskLogAdapter
 import org.json.JSONObject
 import kotlin.system.measureTimeMillis
 
@@ -45,6 +46,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 .build()
         )*/
 
+        com.orhanobut.logger.Logger.addLogAdapter(DiskLogAdapter(this))
         CleverTapAPI.setDebugLevel(VERBOSE)
         //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
         //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
