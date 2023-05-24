@@ -149,7 +149,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     }
 
     @Override
-    public void flushQueueSync(final Context context, final EventGroup eventGroup) {
+    synchronized public void flushQueueSync(final Context context, final EventGroup eventGroup) {
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             controllerManager.invokeCallbacksForNetworkError();

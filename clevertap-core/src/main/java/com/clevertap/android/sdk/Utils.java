@@ -5,6 +5,7 @@ import static com.clevertap.android.sdk.Constants.AUTH;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -23,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Process;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -158,6 +160,7 @@ public final class Utils {
     }
 
     public static Bitmap getBitmapFromURL(@NonNull String srcUrl, @Nullable Context context) {
+        Logger.v("CTRM TESTING", "Reached getBitmapFromURL");
         if (context != null) {
             boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
             if (!isNetworkOnline) {
@@ -172,6 +175,7 @@ public final class Utils {
         srcUrl = srcUrl.replace("https:/", "https://");
         HttpURLConnection connection = null;
         try {
+            Logger.v("CTRM TESTING", "before creating URL object");
             URL url = new URL(srcUrl);
             connection = (HttpURLConnection) url.openConnection();
             connection.setConnectTimeout(Constants.PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS);
@@ -180,6 +184,7 @@ public final class Utils {
             connection.setDoInput(true);
             connection.connect();
             InputStream input = connection.getInputStream();
+            Logger.v("CTRM TESTING", "before decodeStream");
             return BitmapFactory.decodeStream(input);
         } catch (Throwable e) {
 
@@ -188,10 +193,12 @@ public final class Utils {
             return null;
             //todo catch other exceptions?
         } finally {
+            Logger.v("CTRM TESTING", "reached finally");
             try {
                 if (connection != null) {
                     connection.disconnect();
                 }
+                Logger.v("CTRM TESTING", "connection closed");
             } catch (Throwable t) {
                 Logger.v("Couldn't close connection!", t);
             }
@@ -697,5 +704,21 @@ public final class Utils {
 
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
+    }
+
+    public static boolean isMainProcess(Context context,String mainProcessName) {
+
+        ActivityManager am = ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE));
+
+        List<ActivityManager.RunningAppProcessInfo> processInfos = am.getRunningAppProcesses();
+
+        int myPid = Process.myPid();
+
+        for (ActivityManager.RunningAppProcessInfo info : processInfos) {
+            if (info.pid == myPid && mainProcessName.equals(info.processName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
