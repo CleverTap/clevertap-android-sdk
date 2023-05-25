@@ -30,13 +30,13 @@ dependencies {
 }
 
 publishing {
-    publications.create<MavenPublication>("maven") {
+    publications.create<MavenPublication>("Maven") {
         from(project.components["javaPlatform"])
 
         pom {
             name.set(project.name)
-            description.set("Square’s meticulous HTTP client for Java and Kotlin.")
-            url.set("https://square.github.io/okhttp/")
+            description.set("The CleverTap Android SDK")
+            url.set("https://github.com/CleverTap/clevertap-android-sdk/tree/master")
             licenses {
                 license {
                     name.set("The Apache Software License, Version 2.0")
@@ -45,13 +45,13 @@ publishing {
                 }
             }
             scm {
-                connection.set("scm:git:https://github.com/square/okhttp.git")
-                developerConnection.set("scm:git:ssh://git@github.com/square/okhttp.git")
-                url.set("https://github.com/square/okhttp")
+                connection.set("scm:git:github.com/CleverTap/clevertap-android-sdk.git")
+                developerConnection.set("scm:git:ssh:github.com/CleverTap/clevertap-android-sdk.git")
+                url.set("https://github.com/CleverTap/clevertap-android-sdk/tree/master")
             }
             developers {
                 developer {
-                    name.set("Square, Inc.")
+                    name.set("CleverTap")
                 }
             }
         }
