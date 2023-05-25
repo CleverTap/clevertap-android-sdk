@@ -58,7 +58,7 @@ task copyTemplates {
     props.put("clevertap_geofence_sdk",Android.clevertapGeofenceSdk.dropRight(1))
     props.put("clevertap_hms_sdk",Android.clevertapHmsSdk.dropRight(1))
     props.put("clevertap_xiaomi_sdk",Android.clevertapXiaomiSdk.dropRight(1))
-    props.put("push_templates",Android.clevertapPushtemplates.dropRight(1))
+    props.put("push_templates",Android.clevertapPushTemplates.dropRight(1))
 //    props.put("play_services_location",Libs.play_services_location.dropRight(1))
 //    props.put("work_runtime",Libs.work_runtime.dropRight(1))
 //    props.put("concurrent_futures",Libs.concurrent_futures.dropRight(1))
