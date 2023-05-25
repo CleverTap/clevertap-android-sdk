@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
+import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.google.firebase.messaging.RemoteMessage;
@@ -140,6 +141,8 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
 
             Logger.d(TAG, "CTRM received for message");
 
+            String ctrm_iurl = messageBundle.getString("ctrm_iurl");
+
             NotificationInfo notificationInfo = CleverTapAPI.getNotificationInfo(messageBundle);
 
             if (notificationInfo.fromCleverTap) {
@@ -151,8 +154,11 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                             getPushIdFromNotificationBundle(messageBundle)
                     );
                     CleverTapAPI.addNotificationRenderedListener(key, this);
+                    
+                    
 
                     countDownTimer = new CountDownTimer(receiverLifeSpan, 1000) {
+                        int i = 1;
                         @Override
                         public void onFinish() {
                             Logger.v(TAG, "is main thread = " + (Looper.myLooper() == Looper.getMainLooper()));
@@ -163,6 +169,16 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                         @Override
                         public void onTick(final long millisUntilFinished) {
                             // NO-OP
+                            Logger.v("CTRM","Entering level 1 now = "+System.currentTimeMillis()+"i = "+i);
+                            boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
+                            if (!isNetworkOnline)
+                            {
+                                Logger.v("CTRM","network unavailable now = "+System.currentTimeMillis()+"i = "+i);
+                            } else {
+                                Logger.v("CTRM","network available now = "+System.currentTimeMillis()+"i = "+i);
+                            }
+                            Logger.v("CTRM","Exiting level 1 now = "+System.currentTimeMillis()+"i = "+i);
+                            i++;
                         }
                     };
 
