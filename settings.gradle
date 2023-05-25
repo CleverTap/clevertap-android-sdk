@@ -8,7 +8,7 @@ include ':clevertap-geofence'
 include ':clevertap-xps'
 include ':clevertap-hms'
 include ':clevertap-pushtemplates'
-
+include ':clevertap-bom'
 gradleEnterprise {
     buildScan {
         termsOfServiceUrl = "https://gradle.com/terms-of-service"
