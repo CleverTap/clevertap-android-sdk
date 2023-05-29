@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inapp.CTInAppNotification
+import com.clevertap.android.sdk.inapp.CTLocalInApp
 import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.demo.ui.main.HomeScreenFragment
 
@@ -147,6 +148,24 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             initializeInbox()
 
             inAppNotificationListener = this@HomeScreenActivity
+
+            val builder = CTLocalInApp.builder()
+                .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
+                .setTitleText("Get Notified")
+                .setMessageText("Please enable notifications on your device to use Push Notifications.")
+                .followDeviceOrientation(true)
+                .setPositiveBtnText("Allow")
+                .setNegativeBtnText("Cancel")
+                .setBackgroundColor(Constants.WHITE)
+                .setBtnBorderColor(Constants.BLUE)
+                .setTitleTextColor(Constants.BLUE)
+                .setMessageTextColor(Constants.BLACK)
+                .setBtnTextColor(Constants.WHITE)
+                .setBtnBackgroundColor(Constants.BLUE)
+                .setFallbackToSettings(true)
+                .build()
+            CoreMetaData.setCurrentActivity(this@HomeScreenActivity)
+            cleverTapDefaultInstance?.promptPushPrimer(builder)
 
             registerPushPermissionNotificationResponseListener(this@HomeScreenActivity)
         }
