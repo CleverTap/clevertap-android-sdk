@@ -1218,12 +1218,6 @@ public class PushProviders implements CTPushProviderListener {
                     .verbose("Rendered Push Notification... from nh_source = " + extras.getString("nh_source",
                             "source not available"));
 
-            String ctrm_iurl = extras.getString("ctrm_iurl");
-            if (ctrm_iurl!=null)
-            {
-                Utils.getBitmapFromURL(ctrm_iurl,context);
-                config.getLogger().verbose("get bitmap from url "+ctrm_iurl+" executed successfully!");
-            }
         }
     }
 }
