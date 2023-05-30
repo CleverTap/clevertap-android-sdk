@@ -250,17 +250,6 @@ public class CallbackManager extends BaseCallbackManager {
     public void setOnInitCleverTapIDListener(final OnInitCleverTapIDListener onInitCleverTapIDListener) {
         this.onInitCleverTapIDListener = onInitCleverTapIDListener;
     }
-
-    @Override
-    public void setNotificationRenderedListener(final NotificationRenderedListener notificationRenderedListener) {
-        this.notificationRenderedListener = notificationRenderedListener;
-    }
-
-    @Override
-    public NotificationRenderedListener getNotificationRenderedListener() {
-        return notificationRenderedListener;
-    }
-
     //Profile
     @Override
     public void notifyUserProfileInitialized(String deviceID) {

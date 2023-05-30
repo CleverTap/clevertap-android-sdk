@@ -58,7 +58,6 @@ public class CoreMetaData extends CleverTapMetaData {
     /**
      * Last notification received on device from CleverTap in an active session of a process(before process is killed)
      */
-    private String lastNotificationId;
 
     private final Object optOutFlagLock = new Object();
 
@@ -75,15 +74,6 @@ public class CoreMetaData extends CleverTapMetaData {
     public static Activity getCurrentActivity() {
         return (currentActivity == null) ? null : currentActivity.get();
     }
-
-    public String getLastNotificationId() {
-        return lastNotificationId;
-    }
-
-    void setLastNotificationId(final String lastNotificationId) {
-        this.lastNotificationId = lastNotificationId;
-    }
-
     static int getInitialAppEnteredForegroundTime() {
         return initialAppEnteredForegroundTime;
     }
