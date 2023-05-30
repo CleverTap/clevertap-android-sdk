@@ -1,6 +1,5 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-//apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply from: "${project.rootDir}/gradle-scripts/jacoco_root.gradle"
@@ -184,4 +183,4 @@ signing {
     sign publishing.publications
 }
 apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
-//apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"
+apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"
