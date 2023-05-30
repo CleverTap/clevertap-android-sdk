@@ -24,8 +24,6 @@ dependencies {
             api(subproject)
           }
         }
-
-        api("com.clevertap.android:clevertap-android-sdk:5.0.0")
     }
 }
 
