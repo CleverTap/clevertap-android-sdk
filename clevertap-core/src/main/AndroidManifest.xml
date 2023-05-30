@@ -37,7 +37,7 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <receiver
-            android:name="com.clevertap.android.sdk.pushsdk.CTFirebaseMessagingReceiver"
+            android:name="com.clevertap.android.sdk.pushnotification.fcm.CTFirebaseMessagingReceiver"
             android:exported="true"
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter android:priority="-1">
