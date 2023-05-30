@@ -23,18 +23,16 @@ import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
-import androidx.work.Constraints;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.NetworkType;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
+
 import com.clevertap.android.sdk.AnalyticsManager;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -50,13 +48,14 @@ import com.clevertap.android.sdk.interfaces.AudibleNotification;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
-import com.clevertap.android.sdk.pushnotification.work.FlushPushImpressionsWork;
+import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.PackageUtils;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
+
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,7 +64,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -91,6 +90,7 @@ public class PushProviders implements CTPushProviderListener {
     private final CleverTapInstanceConfig config;
 
     private final Context context;
+    private final CTWorkManager ctWorkManager;
 
     private INotificationRenderer iNotificationRenderer = new CoreNotificationRenderer();
 
@@ -109,12 +109,13 @@ public class PushProviders implements CTPushProviderListener {
      */
     @NonNull
     public static PushProviders load(Context context,
-            CleverTapInstanceConfig config,
-            BaseDatabaseManager baseDatabaseManager,
-            ValidationResultStack validationResultStack,
-            AnalyticsManager analyticsManager, ControllerManager controllerManager) {
+                                     CleverTapInstanceConfig config,
+                                     BaseDatabaseManager baseDatabaseManager,
+                                     ValidationResultStack validationResultStack,
+                                     AnalyticsManager analyticsManager, ControllerManager controllerManager,
+                                     CTWorkManager ctWorkManager) {
         PushProviders providers = new PushProviders(context, config, baseDatabaseManager, validationResultStack,
-                analyticsManager);
+                analyticsManager,ctWorkManager);
         providers.init();
         controllerManager.setPushProviders(providers);
         return providers;
@@ -125,44 +126,19 @@ public class PushProviders implements CTPushProviderListener {
             CleverTapInstanceConfig config,
             BaseDatabaseManager baseDatabaseManager,
             ValidationResultStack validationResultStack,
-            AnalyticsManager analyticsManager) {
+            AnalyticsManager analyticsManager, CTWorkManager ctWorkManager) {
         this.context = context;
         this.config = config;
         this.baseDatabaseManager = baseDatabaseManager;
         this.validationResultStack = validationResultStack;
         this.analyticsManager = analyticsManager;
+        this.ctWorkManager = ctWorkManager;
         initPushAmp();
-        if (isPackageAndOsTargetsAbove(context, VERSION_CODES.O) &&
-                Utils.isMainProcess(context,context.getPackageName())){
-            schedulePushImpressionsFlushWork();
-        }
     }
 
-    private void schedulePushImpressionsFlushWork() {
-        try {
-            Constraints constraints = new Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .setRequiresCharging(true)
-                    .build();
 
-            PeriodicWorkRequest flushPushImpressionsWorkRequest = new PeriodicWorkRequest.Builder(FlushPushImpressionsWork.class,
-                    PushConstants.MIN_PERIODIC_INTERVAL_MILLIS_FLUSH_PUSH_IMPRESSIONS, TimeUnit.MILLISECONDS)
-                    .setConstraints(constraints)
-                    .build();
 
-            // schedule unique work request to avoid duplicates
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork("flushPushImpressions",
-                    ExistingPeriodicWorkPolicy.KEEP, flushPushImpressionsWorkRequest);
 
-            config.getLogger().debug(config.getAccountId(),
-                    "Finished scheduling periodic work request for push impressions flush...");
-
-        } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(),
-                    "Failed to schedule periodic work request for push impressions flush.",t);
-            t.printStackTrace();
-        }
-    }
 
     /**
      * Launches an asynchronous task to download the notification icon from CleverTap,
@@ -1206,13 +1182,14 @@ public class PushProviders implements CTPushProviderListener {
             }
 
             long omrStart = extras.getLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, -1);
-            if (omrStart>=0)
-            {
-                long prt = System.currentTimeMillis()-omrStart;
-                extras.putString(Constants.WZRK_PUSH_RENDER_TIME_IN_MILLIS,String.valueOf(prt));
+            if (omrStart >= 0) {
+                long prt = System.currentTimeMillis() - omrStart;
+                extras.putString(Constants.WZRK_PUSH_RENDER_TIME_IN_MILLIS, String.valueOf(prt));
                 config.getLogger()
-                        .verbose("Rendered Push Notification in "+prt+" millis");
+                        .verbose("Rendered Push Notification in " + prt + " millis");
             }
+
+            ctWorkManager.init();
             analyticsManager.pushNotificationViewedEvent(extras);
             config.getLogger()
                     .verbose("Rendered Push Notification... from nh_source = " + extras.getString("nh_source",

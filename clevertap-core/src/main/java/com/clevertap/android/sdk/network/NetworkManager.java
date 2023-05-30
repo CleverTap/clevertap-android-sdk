@@ -9,8 +9,11 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapAPI;
@@ -28,6 +31,7 @@ import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
+import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.response.ARPResponse;
 import com.clevertap.android.sdk.response.BaseResponse;
 import com.clevertap.android.sdk.response.CleverTapResponse;
@@ -166,6 +170,9 @@ public class NetworkManager extends BaseNetworkManager {
 
             if (cursor == null || cursor.isEmpty()) {
                 config.getLogger().verbose(config.getAccountId(), "No events in the queue, failing");
+                if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
+                    notifyListenerForPushImpressionSentToServer(Constants.FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME);
+                }
                 break;
             }
 
@@ -731,15 +738,10 @@ public class NetworkManager extends BaseNetworkManager {
                 if (notif != null) {
                     String pushId = notif.optString(Constants.WZRK_PUSH_ID);
                     String pushAccountId = notif.optString(Constants.WZRK_ACCT_ID_KEY);
-                    NotificationRenderedListener notificationRenderedListener
-                            = CleverTapAPI.getNotificationRenderedListener(
-                            PushNotificationUtil.buildPushNotificationRenderedListenerKey(pushAccountId,
-                                    pushId));
 
-                    if (notificationRenderedListener!=null)
-                    {
-                        notificationRenderedListener.onNotificationRendered(true);
-                    }
+                    notifyListenerForPushImpressionSentToServer(PushNotificationUtil.
+                            buildPushNotificationRenderedListenerKey(pushAccountId,
+                            pushId));
 
                 }
             } catch (JSONException e) {
@@ -753,6 +755,15 @@ public class NetworkManager extends BaseNetworkManager {
 
         logger.verbose(config.getAccountId(),
                 "push notification viewed event sent successfully");
+    }
+
+    private void notifyListenerForPushImpressionSentToServer(@NonNull String listenerKey) {
+        NotificationRenderedListener notificationRenderedListener
+                = CleverTapAPI.getNotificationRenderedListener(listenerKey);
+
+        if (notificationRenderedListener != null) {
+            notificationRenderedListener.onNotificationRendered(true);
+        }
     }
 
     private boolean handleVariablesResponseError(int responseCode, HttpsURLConnection conn) {

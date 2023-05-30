@@ -338,4 +338,8 @@ public interface Constants {
     int PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS =  1000;
     int PN_IMAGE_READ_TIMEOUT_IN_MILLIS =  5000;
 
+    //==============
+
+   String FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME = "flushPushImpressionsOneTime";
+
 }

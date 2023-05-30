@@ -39,6 +39,8 @@ public class FlushPushImpressionsWork extends Worker {
                 Logger.d("Instance is either null or Analytics Only not flushing push impressions!");
                 continue;
             }
+            if (checkIfStopped()) return Result.success();
+
             Logger.i(TAG,"Flushing queue for push impressions on ct instance = "+instance);
             instance.getCoreState().getBaseEventQueueManager().flushQueueSync(applicationContext, EventGroup.PUSH_NOTIFICATION_VIEWED);
             BatteryManager bm = (BatteryManager) applicationContext.getSystemService(BATTERY_SERVICE);
@@ -47,8 +49,19 @@ public class FlushPushImpressionsWork extends Worker {
             HashMap<String,Object> map = new HashMap<>();
             map.put("time",System.currentTimeMillis()/1000);
             map.put("batteryLevel", batLevel);
+
+            if (checkIfStopped()) return Result.success();
+
             instance.pushEvent("Work manager run success",map);
         }
         return Result.success();
     }
+
+    private boolean checkIfStopped() {
+        if (isStopped()) {
+            Logger.v(TAG,"Worker stopped!");
+        }
+        return isStopped();
+    }
+
 }
