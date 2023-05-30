@@ -706,34 +706,10 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     private void notifyListenersForPushImpressionSentToServer(final JSONArray queue) throws JSONException {
-        // get last push id from queue
 
-        JSONObject notification = queue.getJSONObject(queue.length() - 1).optJSONObject("evtData");
-        if (notification != null) {
-            String lastPushInQueue = notification.optString(Constants.WZRK_PUSH_ID);
-            /**
-             * Check if, sent push notification viewed event is for latest push notification or older
-             * If it's for latest push which just came on device then give render callback to listeners
-             * This will make sure that callback will be given only when viewed event for latest push on device is
-             * sent to BE.
-             */
-            if (coreMetaData.getLastNotificationId() != null && coreMetaData.getLastNotificationId()
-                    .equals(lastPushInQueue)) {
-                NotificationRenderedListener notificationRenderedListener
-                        = callbackManager.getNotificationRenderedListener();
-
-                logger.verbose(config.getAccountId(),
-                        "push notification viewed event sent successfully for push id = " + lastPushInQueue);
-                if (notificationRenderedListener != null) {
-                    notificationRenderedListener.onNotificationRendered(true);
-                }
-
-            }
-        }
-
-                 /* verify whether there is a listener assigned to the push ID for monitoring the 'push impression'
-                 event.
-                 */
+         /* verify whether there is a listener assigned to the push ID for monitoring the 'push impression'
+         event.
+         */
 
         for (int i = 0; i < queue.length(); i++) {
             try {

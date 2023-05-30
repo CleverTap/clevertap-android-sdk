@@ -2474,11 +2474,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
-    public void setNotificationRenderedListener(final NotificationRenderedListener notificationRenderedListener) {
-        coreState.getCallbackManager().setNotificationRenderedListener(notificationRenderedListener);
-    }
-
-    @RestrictTo(Scope.LIBRARY_GROUP)
     public static void addNotificationRenderedListener(String id, final NotificationRenderedListener notificationRenderedListener) {
        sNotificationRenderedListenerMap.put(id, notificationRenderedListener);
     }
@@ -2491,11 +2486,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @RestrictTo(Scope.LIBRARY_GROUP)
     public static NotificationRenderedListener removeNotificationRenderedListener(String id) {
        return sNotificationRenderedListenerMap.remove(id);
-    }
-
-    @RestrictTo(Scope.LIBRARY_GROUP)
-    public NotificationRenderedListener getNotificationRenderedListener() {
-        return coreState.getCallbackManager().getNotificationRenderedListener();
     }
 
     /**

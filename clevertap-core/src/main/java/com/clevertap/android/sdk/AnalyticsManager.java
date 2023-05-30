@@ -628,7 +628,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } catch (Throwable ignored) {
             //no-op
         }
-        coreMetaData.setLastNotificationId(extras.getString(Constants.WZRK_PUSH_ID));
         baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT);
     }
 

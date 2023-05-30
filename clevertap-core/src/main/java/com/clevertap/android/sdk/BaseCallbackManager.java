@@ -83,7 +83,4 @@ public abstract class BaseCallbackManager {
 
     public abstract void setOnInitCleverTapIDListener(OnInitCleverTapIDListener onInitCleverTapIDListener);
 
-    public abstract void setNotificationRenderedListener(NotificationRenderedListener notificationRenderedListener);
-
-    public abstract NotificationRenderedListener getNotificationRenderedListener();
 }
