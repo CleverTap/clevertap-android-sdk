@@ -51,6 +51,7 @@ task clean(type: Delete) {
 
 task copyTemplates {
     def props = new Properties()
+    file("versions.properties").withInputStream { props.load(it) }
     outputs.upToDateWhen { false }
     props.put("clevertap_android_sdk",Libs.clevertap_android_sdk.dropRight(1))
     props.put("clevertap_rendermax_sdk", Libs.clevertap_rendermax_sdk.dropRight(1))
