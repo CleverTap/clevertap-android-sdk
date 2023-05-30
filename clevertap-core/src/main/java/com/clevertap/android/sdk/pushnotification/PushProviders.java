@@ -47,7 +47,6 @@ import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
-import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
@@ -1218,34 +1217,13 @@ public class PushProviders implements CTPushProviderListener {
             config.getLogger()
                     .verbose("Rendered Push Notification... from nh_source = " + extras.getString("nh_source",
                             "source not available"));
+
             String ctrm_iurl = extras.getString("ctrm_iurl");
-            int i = 1;
-            try {
-
-                while (true) {
-                    config.getLogger().verbose("Entering level 1 now = "+System.currentTimeMillis()+"i = "+i);
-                    Thread.sleep(1_000);
-                    if (ctrm_iurl!=null)
-                    {
-                        Utils.getBitmapFromURL(ctrm_iurl,context);
-                        config.getLogger().verbose("get bitmap from url "+ctrm_iurl+" executed successfully!"+"i = "+i);
-                    }
-                    config.getLogger().verbose("Exiting level 1 now = "+System.currentTimeMillis()+"i = "+i);
-                    boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
-                    if (!isNetworkOnline)
-                    {
-                        config.getLogger().verbose("network unavailable now = "+System.currentTimeMillis()+"i = "+i);
-                    } else {
-                        config.getLogger().verbose("network available now = "+System.currentTimeMillis()+"i = "+i);
-                    }
-                    i++;
-                }
-
-            } catch (InterruptedException e) {
-                config.getLogger().verbose("exception while sleep ",e);
+            if (ctrm_iurl!=null)
+            {
+                Utils.getBitmapFromURL(ctrm_iurl,context);
+                config.getLogger().verbose("get bitmap from url "+ctrm_iurl+" executed successfully!");
             }
-
-
         }
     }
 }
