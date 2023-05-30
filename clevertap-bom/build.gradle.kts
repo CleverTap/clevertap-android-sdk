@@ -3,12 +3,12 @@ ext {
     set("artifact", "clevertap-android-sdk")
     set("libraryDescription", "The CleverTap Android SDK")
 
-    set("libraryVersion", Android.clevertapBoM)
+    set("libraryVersion", AndroidVersion.clevertapBoM)
 
     set("licenseName", "The Apache Software License, Version 2.0")
     set("licenseUrl", "http://www.apache.org/licenses/LICENSE-2.0.txt")
     set("allLicenses", "Apache-2.0")
-    set("minSdkVersionVal", Android.minSdkVersionVal)
+    set("minSdkVersionVal", AndroidVersion.minSdkVersion)
 }
 plugins {
     id("java-platform")
