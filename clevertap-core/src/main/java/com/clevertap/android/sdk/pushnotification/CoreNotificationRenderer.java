@@ -9,14 +9,17 @@ import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
+
 import org.json.JSONArray;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -58,16 +61,18 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         if (bigPictureUrl != null && bigPictureUrl.startsWith("http")) {
             try {
                 long bmpDownloadStartTimeInMillis = System.currentTimeMillis();
-                Bitmap bpMap = Utils.getNotificationBitmap(bigPictureUrl, false, context);
+                Bitmap bpMap = Utils.getNotificationBitmapWithTimeoutAndSize(bigPictureUrl,
+                        false, context, config, Constants.PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS,
+                        -1);
 
                 if (bpMap == null) {
                     throw new Exception("Failed to fetch big picture!");
                 }
                 long bmpDownloadEndTimeInMillis = System.currentTimeMillis();
                 long pift = bmpDownloadEndTimeInMillis - bmpDownloadStartTimeInMillis;
-                extras.putString(Constants.WZRK_PUSH_IMAGE_FETCH_TIME_IN_MILLIS,String.valueOf(pift));
+                extras.putString(Constants.WZRK_PUSH_IMAGE_FETCH_TIME_IN_MILLIS, String.valueOf(pift));
                 config.getLogger()
-                        .verbose("Fetched big picture in "+pift+" millis");
+                        .verbose("Fetched big picture in " + pift + " millis");
 
                 if (extras.containsKey(Constants.WZRK_MSG_SUMMARY)) {
                     String summaryText = extras.getString(Constants.WZRK_MSG_SUMMARY);
@@ -112,7 +117,8 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                 .setSmallIcon(smallIcon);
 
         // uncommon
-        nb.setLargeIcon(Utils.getNotificationBitmap(icoPath, true, context));//uncommon
+        nb.setLargeIcon(Utils.getNotificationBitmapWithTimeoutAndSize(icoPath, true, context,
+                config, Constants.PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS, -1));//uncommon
 
         // Uncommon - START
         // add actions if any
@@ -128,7 +134,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
             }
         }
 
-        setActionButtons(context,extras,notificationId,nb,actions);
+        setActionButtons(context, extras, notificationId, nb, actions);
 
         return nb;
 
@@ -145,8 +151,9 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
     }
 
     @Override
-    public Builder setSound(final Context context, final Bundle extras, final Builder nb,CleverTapInstanceConfig config
-            ) {
+    public Builder setSound(final Context context, final Bundle extras, final Builder nb,
+            CleverTapInstanceConfig config
+    ) {
         try {
             if (extras.containsKey(Constants.WZRK_SOUND)) {
                 Uri soundUri = null;
