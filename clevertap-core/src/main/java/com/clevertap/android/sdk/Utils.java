@@ -28,14 +28,17 @@ import android.os.Process;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
+
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.google.firebase.messaging.RemoteMessage;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -48,7 +51,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
+
 import javax.net.ssl.HttpsURLConnection;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -450,16 +455,18 @@ public final class Utils {
     }
 
     /**
-     * get bitmap from url within defined timeoutMillis bound and sizeBytes bound or else return null or app icon
-     * based on fallbackToAppIcon param
+     * get bitmap from url within defined timeoutMillis bound and sizeBytes bound or else return
+     * null or app icon based on fallbackToAppIcon param
      */
     public static Bitmap getNotificationBitmapWithTimeoutAndSize(String icoPath, boolean fallbackToAppIcon,
             final Context context, final CleverTapInstanceConfig config, long timeoutMillis, int sizeBytes)
             throws NullPointerException {
         Task<Bitmap> task = CTExecutorFactory.executors(config).ioTask();
-        return task.submitAndGetResult("getNotificationBitmap",
+        Bitmap bitmap = task.submitAndGetResult("getNotificationBitmap",
                 () -> getNotificationBitmapWithSizeConstraints(icoPath, fallbackToAppIcon, context, sizeBytes)
                 , timeoutMillis);
+
+        return (bitmap != null) ? bitmap : ((fallbackToAppIcon) ? getAppIcon(context) : null);
     }
 
     public static int getNow() {
@@ -706,7 +713,7 @@ public final class Utils {
         haveVideoPlayerSupport = checkForExoPlayer();
     }
 
-    public static boolean isMainProcess(Context context,String mainProcessName) {
+    public static boolean isMainProcess(Context context, String mainProcessName) {
 
         ActivityManager am = ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE));
 

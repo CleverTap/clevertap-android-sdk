@@ -336,6 +336,8 @@ public interface Constants {
 
     int PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS =  1000;
     int PN_IMAGE_READ_TIMEOUT_IN_MILLIS =  5000;
+    long PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS =  5000;
+    long PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS =  5000;
 
     //==============
 
