@@ -3056,6 +3056,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return future;
 
     }
+
+    @RestrictTo(Scope.LIBRARY_GROUP)
     public void renderPushNotificationOnCallerThread(@NonNull INotificationRenderer iNotificationRenderer, Context context,
             Bundle extras) {
 
