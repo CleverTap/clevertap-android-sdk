@@ -34,9 +34,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
 
+import com.clevertap.android.sdk.network.DownloadedBitmap;
+import com.clevertap.android.sdk.network.DownloadedBitmap.Status;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
 import com.google.firebase.messaging.RemoteMessage;
 
 import java.io.ByteArrayInputStream;
@@ -61,8 +64,6 @@ import org.json.JSONObject;
 public final class Utils {
 
     public static boolean haveVideoPlayerSupport;
-
-    public static boolean haveDeprecatedFirebaseInstanceId;
 
     public static boolean containsIgnoreCase(Collection<String> collection, String key) {
         if (collection == null || key == null) {
@@ -164,13 +165,14 @@ public final class Utils {
         return converted.toString();
     }
 
-    public static Bitmap getBitmapFromURL(@NonNull String srcUrl, @Nullable Context context) {
+    public static @NonNull DownloadedBitmap getBitmapFromURL(@NonNull String srcUrl, @Nullable Context context) {
+        long downloadStartTimeInSMilliseconds = getNowInMillis();
         Logger.v("CTRM TESTING", "Reached getBitmapFromURL");
         if (context != null) {
             boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
             if (!isNetworkOnline) {
                 Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: " + srcUrl);
-                return null;
+                return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.NO_NETWORK);
             }
         }
         // Safe bet, won't have more than three /s . url must not be null since we are not handling null pointer exception that would cause otherwise
@@ -190,12 +192,13 @@ public final class Utils {
             connection.connect();
             InputStream input = connection.getInputStream();
             Logger.v("CTRM TESTING", "before decodeStream");
-            return BitmapFactory.decodeStream(input);
+            return DownloadedBitmapFactory.INSTANCE.successBitmap(BitmapFactory.decodeStream(input),
+                    getNowInMillis() - downloadStartTimeInSMilliseconds);
         } catch (Throwable e) {
 
             Logger.v("Couldn't download the notification icon. URL was: " + srcUrl);
             e.printStackTrace();
-            return null;
+            return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
             //todo catch other exceptions?
         } finally {
             Logger.v("CTRM TESTING", "reached finally");
@@ -210,11 +213,23 @@ public final class Utils {
         }
     }
 
+    // used by inapp which is unable to provide context, hence need to overload this method.
     public static Bitmap getBitmapFromURL(@NonNull String srcUrl) {
-        return getBitmapFromURL(srcUrl, null);
+        return getBitmapFromURL(srcUrl, null).getBitmap();
     }
 
-    public static Bitmap getBitmapFromURLWithSizeConstraint(String srcUrl, int size) {
+    public static DownloadedBitmap getBitmapFromURLWithSizeConstraint(String srcUrl, int size,
+            final Context context) {
+        Logger.v("CTRM TESTING", "Reached getBitmapFromURL");
+        long downloadStartTimeInSMilliseconds = getNowInMillis();
+        if (context != null) {
+            boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
+            if (!isNetworkOnline) {
+                Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: " + srcUrl);
+                return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.NO_NETWORK);
+            }
+        }
+
         // Safe bet, won't have more than three /s
         srcUrl = srcUrl.replace("///", "/");
         srcUrl = srcUrl.replace("//", "/");
@@ -232,7 +247,7 @@ public final class Utils {
             // instead of the file
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 Logger.d("File not loaded completely not going forward. URL was: " + srcUrl);
-                return null;
+                return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
             }
 
             // might be -1: server did not report the length
@@ -254,7 +269,7 @@ public final class Utils {
                 finalData.write(buffer, 0, count);
                 if (total > size) {
                     Logger.v("Image size is larger than " + size + " bytes. Cancelling download!");
-                    return null;
+                    return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
                 }
                 Logger.v("Downloaded " + total + " bytes");
             }
@@ -277,20 +292,25 @@ public final class Utils {
                 Logger.v("Total decompressed download size for bitmap = " + total);
                 if (fileLength != -1 && fileLength != totalDownloaded) {
                     Logger.d("File not loaded completely not going forward. URL was: " + srcUrl);
-                    return null;
+                    return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
                 }
-                return BitmapFactory.decodeByteArray(decompressedFile.toByteArray(), 0, (int) total);
+                final Bitmap bitmap = BitmapFactory.decodeByteArray(decompressedFile.toByteArray(), 0, (int) total);
+                return DownloadedBitmapFactory.INSTANCE.successBitmap(bitmap,
+                        getNowInMillis() - downloadStartTimeInSMilliseconds);
             }
 
             if (fileLength != -1 && fileLength != totalDownloaded) {
                 Logger.d("File not loaded completely not going forward. URL was: " + srcUrl);
-                return null;
+                return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
             }
-            return BitmapFactory.decodeByteArray(finalData.toByteArray(), 0, (int) totalDownloaded);
+
+            final Bitmap bitmap = BitmapFactory.decodeByteArray(finalData.toByteArray(), 0, (int) totalDownloaded);
+            return DownloadedBitmapFactory.INSTANCE.successBitmap(bitmap,
+                    getNowInMillis() - downloadStartTimeInSMilliseconds);
         } catch (IOException e) {
             e.printStackTrace();
             Logger.v("Couldn't download the file. URL was: " + srcUrl);
-            return null;
+            return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
         } finally {
             try {
                 if (connection != null) {
@@ -300,6 +320,10 @@ public final class Utils {
                 Logger.v("Couldn't close connection!", t);
             }
         }
+    }
+
+    private static long getNowInMillis() {
+        return System.currentTimeMillis();
     }
 
     public static byte[] getByteArrayFromImageURL(String srcUrl) {
@@ -429,44 +453,56 @@ public final class Utils {
         return total - free;
     }
 
-    public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
+    public static DownloadedBitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon,
+            final Context context)
             throws NullPointerException {
         return getNotificationBitmapWithSizeConstraints(icoPath, fallbackToAppIcon, context, -1);
     }
 
-    public static Bitmap getNotificationBitmapWithSizeConstraints(String icoPath, boolean fallbackToAppIcon,
+    public static DownloadedBitmap getNotificationBitmapWithSizeConstraints(String icoPath, boolean fallbackToAppIcon,
             final Context context, int size)
             throws NullPointerException {
         // If the icon path is not specified
         if (icoPath == null || icoPath.equals("")) {
-            return fallbackToAppIcon ? getAppIcon(context) : null;
+            return processDownloadedBitmap(fallbackToAppIcon, context,
+                    DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.NO_IMAGE));
         }
         // Simply stream the bitmap
         if (!icoPath.startsWith("http")) {
             icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
         }
-        Bitmap ic;
+        DownloadedBitmap ic;
         if (size == -1) {
             ic = getBitmapFromURL(icoPath, context);
         } else {
-            ic = getBitmapFromURLWithSizeConstraint(icoPath, size);
+            ic = getBitmapFromURLWithSizeConstraint(icoPath, size, context);
         }
-        return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
+        return processDownloadedBitmap(fallbackToAppIcon, context, ic);
+    }
+
+    @NonNull
+    private static DownloadedBitmap processDownloadedBitmap(final boolean fallbackToAppIcon, final Context context,
+            @NonNull final DownloadedBitmap ic) {
+        return (ic.getBitmap() != null) ? ic : (fallbackToAppIcon ? getAppIcon(context) : ic);
     }
 
     /**
      * get bitmap from url within defined timeoutMillis bound and sizeBytes bound or else return
      * null or app icon based on fallbackToAppIcon param
      */
-    public static Bitmap getNotificationBitmapWithTimeoutAndSize(String icoPath, boolean fallbackToAppIcon,
+    public static @NonNull DownloadedBitmap getNotificationBitmapWithTimeoutAndSize(String icoPath, boolean fallbackToAppIcon,
             final Context context, final CleverTapInstanceConfig config, long timeoutMillis, int sizeBytes)
             throws NullPointerException {
-        Task<Bitmap> task = CTExecutorFactory.executors(config).ioTask();
-        Bitmap bitmap = task.submitAndGetResult("getNotificationBitmap",
+        Task<DownloadedBitmap> task = CTExecutorFactory.executors(config).ioTask();
+        DownloadedBitmap ic = task.submitAndGetResult("getNotificationBitmap",
                 () -> getNotificationBitmapWithSizeConstraints(icoPath, fallbackToAppIcon, context, sizeBytes)
                 , timeoutMillis);
 
-        return (bitmap != null) ? bitmap : ((fallbackToAppIcon) ? getAppIcon(context) : null);
+        if (ic == null) {// in case some exception in executor framework we get null result from future.
+            ic = DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
+        }
+
+        return processDownloadedBitmap(fallbackToAppIcon, context, ic);
     }
 
     public static int getNow() {
@@ -660,19 +696,21 @@ public final class Utils {
         return exoPlayerPresent;
     }
 
-    private static Bitmap getAppIcon(final Context context) throws NullPointerException {
+    private static @NonNull DownloadedBitmap getAppIcon(final Context context) throws NullPointerException {
         // Try to get the app logo first
         try {
             Drawable logo = context.getPackageManager().getApplicationLogo(context.getApplicationInfo());
             if (logo == null) {
                 throw new Exception("Logo is null");
             }
-            return drawableToBitmap(logo);
+            return DownloadedBitmapFactory.INSTANCE.successBitmap(drawableToBitmap(logo), 0);
         } catch (Exception e) {
             e.printStackTrace();
             // Try to get the app icon now
             // No error handling here - handle upstream
-            return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
+            return DownloadedBitmapFactory.INSTANCE.successBitmap(
+                    drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo())),
+                    0);
         }
     }
 
