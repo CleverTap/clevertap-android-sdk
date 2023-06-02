@@ -27,7 +27,6 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import androidx.core.app.NotificationManagerCompat;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
@@ -74,8 +73,6 @@ public class DeviceInfo {
 
         private final String networkType;
 
-        private final boolean notificationsEnabled;
-
         private final String osName;
 
         private final String osVersion;
@@ -109,7 +106,6 @@ public class DeviceInfo {
             width = getWidth();
             widthPixels = getWidthPixels();
             dpi = getDPI();
-            notificationsEnabled = getNotificationEnabledForUser();
             localInAppCount = getLocalInAppCountFromPreference();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 appBucket = getAppBucket();
@@ -278,17 +274,6 @@ public class DeviceInfo {
         @SuppressLint("MissingPermission")
         private String getNetworkType() {
             return Utils.getDeviceNetworkType(context);
-        }
-
-        private boolean getNotificationEnabledForUser() {
-            boolean isNotificationEnabled = true;
-            try {
-                isNotificationEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled();
-            } catch (RuntimeException rte) {
-                Logger.d("Runtime exception caused when checking whether notification are enabled or not");
-                rte.printStackTrace();
-            }
-            return isNotificationEnabled;//returns true if any exception is raised.
         }
 
         private String getOsName() {
@@ -612,10 +597,6 @@ public class DeviceInfo {
 
     public String getNetworkType() {
         return getDeviceCachedInfo().networkType;
-    }
-
-    public boolean getNotificationsEnabledForUser() {
-        return getDeviceCachedInfo().notificationsEnabled;
     }
 
     public String getOsName() {
