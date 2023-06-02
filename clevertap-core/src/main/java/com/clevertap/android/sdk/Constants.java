@@ -308,6 +308,7 @@ public interface Constants {
     String OMR_INVOKE_TIME_IN_MILLIS = "omr_invoke_time_in_millis";
     String WZRK_PUSH_RENDER_TIME_IN_MILLIS = "wzrk_prt";
     String WZRK_PUSH_IMAGE_FETCH_TIME_IN_MILLIS = "wzrk_pift";
+    String WZRK_BPDS = "wzrk_bpds";
 
     /**
      * Device app bucket when notification is rendered
@@ -323,7 +324,7 @@ public interface Constants {
     int PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS =  1000;
     int PN_IMAGE_READ_TIMEOUT_IN_MILLIS =  5000;
     long PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS =  5000;
-    long PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS =  5000;
+    long PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS =  2000;
 
     //==============
 

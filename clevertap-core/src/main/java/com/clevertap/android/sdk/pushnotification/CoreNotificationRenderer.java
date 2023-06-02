@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.pushnotification;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -20,6 +21,9 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
 
+import com.clevertap.android.sdk.network.DownloadedBitmap;
+import com.clevertap.android.sdk.network.DownloadedBitmap.Status;
+import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
 import org.json.JSONArray;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -33,8 +37,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
 
     @Override
     public @Nullable Object getCollapseKey(final Bundle extras) {
-        Object collapse_key = extras.get(Constants.WZRK_COLLAPSE);
-        return collapse_key;
+        return extras.get(Constants.WZRK_COLLAPSE);
     }
 
     @Override
@@ -50,6 +53,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         return notifTitle;
     }
 
+    @SuppressLint("NotificationTrampoline")
     @Override
     public Builder renderNotification(final Bundle extras, final Context context,
             final Builder nb, final CleverTapInstanceConfig config, final int notificationId) {
@@ -59,20 +63,23 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         NotificationCompat.Style style;
         String bigPictureUrl = extras.getString(Constants.WZRK_BIG_PICTURE);
         if (bigPictureUrl != null && bigPictureUrl.startsWith("http")) {
+            DownloadedBitmap downloadedBitmap = DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.ERROR);
             try {
-                long bmpDownloadStartTimeInMillis = System.currentTimeMillis();
-                Bitmap bpMap = Utils.getNotificationBitmapWithTimeoutAndSize(bigPictureUrl,
+                downloadedBitmap = Utils.getNotificationBitmapWithTimeoutAndSize(bigPictureUrl,
                         false, context, config, Constants.PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS,
                         -1);
+
+                Bitmap bpMap = downloadedBitmap.getBitmap();
 
                 if (bpMap == null) {
                     throw new Exception("Failed to fetch big picture!");
                 }
-                long bmpDownloadEndTimeInMillis = System.currentTimeMillis();
-                long pift = bmpDownloadEndTimeInMillis - bmpDownloadStartTimeInMillis;
+                long pift = downloadedBitmap.getDownloadTime();
                 extras.putString(Constants.WZRK_PUSH_IMAGE_FETCH_TIME_IN_MILLIS, String.valueOf(pift));
                 config.getLogger()
                         .verbose("Fetched big picture in " + pift + " millis");
+
+                extras.putString(Constants.WZRK_BPDS,downloadedBitmap.getStatus().getStatusValue());
 
                 if (extras.containsKey(Constants.WZRK_MSG_SUMMARY)) {
                     String summaryText = extras.getString(Constants.WZRK_MSG_SUMMARY);
@@ -87,6 +94,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
             } catch (Throwable t) {
                 style = new NotificationCompat.BigTextStyle()
                         .bigText(notifMessage);
+                extras.putString(Constants.WZRK_BPDS, downloadedBitmap.getStatus().getStatusValue());
                 config.getLogger()
                         .verbose(config.getAccountId(),
                                 "Falling back to big text notification, couldn't fetch big picture",
@@ -95,6 +103,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         } else {
             style = new NotificationCompat.BigTextStyle()
                     .bigText(notifMessage);
+            extras.putString(Constants.WZRK_BPDS, Status.NO_IMAGE.getStatusValue());
         }
 
         boolean requiresChannelId = VERSION.SDK_INT >= VERSION_CODES.O;
@@ -118,7 +127,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
 
         // uncommon
         nb.setLargeIcon(Utils.getNotificationBitmapWithTimeoutAndSize(icoPath, true, context,
-                config, Constants.PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS, -1));//uncommon
+                config, Constants.PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS, -1).getBitmap());//uncommon
 
         // Uncommon - START
         // add actions if any

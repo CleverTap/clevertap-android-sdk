@@ -43,6 +43,7 @@ import android.telephony.TelephonyManager.NETWORK_TYPE_IDEN
 import android.telephony.TelephonyManager.NETWORK_TYPE_LTE
 import android.telephony.TelephonyManager.NETWORK_TYPE_NR
 import android.telephony.TelephonyManager.NETWORK_TYPE_UMTS
+import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.shared.test.BaseTestCase
 import com.google.firebase.messaging.RemoteMessage
 import org.json.JSONArray
@@ -238,7 +239,7 @@ class UtilsTest : BaseTestCase() {
     fun test_drawableToBitmap_when_PassedDrawable_should_ReturnBitmap() {
         val drawable: Drawable = application.getDrawable(R1.drawable.ct_image) ?: error("drawable is null")
         val bitmap = Utils.drawableToBitmap(drawable)
-        printBitmapInfo(bitmap)
+        printBitmapInfo(bmp = bitmap)
         assertNotNull(bitmap)
         // TODO write  what remaining cases ??
     }
@@ -247,17 +248,17 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getBitmapFromURL_when_CorrectImageLinkArePassed_should_ReturnImage() {
-        val url2 = "https:/www.example.com/malformed_url"
+        val url2 = "https://www.freedesktop.org/wiki/logo1.png"
         val image2: Bitmap? = Utils.getBitmapFromURL(url2)
         image2.let {
-            printBitmapInfo(it, "image2")
+            printBitmapInfo(name = "image2",bmp = it)
             assertNull(it)
         }
 
         val url = "https://www.freedesktop.org/wiki/logo.png"
         val image: Bitmap? = Utils.getBitmapFromURL(url)
         image.let {
-            printBitmapInfo(it, "image")
+            printBitmapInfo(name = "image", bmp = it)
             assertNotNull(it)
 
         }
@@ -267,7 +268,7 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getByteArrayFromImageURL_when_CorrectImageLinkArePassed_should_ReturnImageByteArray() {
-        val url2 = "https:/www.example.com/malformed_url"
+        val url2 = "https://www.freedesktop.org/wiki/logo1.png"
         val array2: ByteArray? = Utils.getByteArrayFromImageURL(url2)
         println(" downloaded an array2 of size  ${array2?.size} bytes ")
         assertNull(array2)
@@ -382,30 +383,30 @@ class UtilsTest : BaseTestCase() {
 
         // if context is null, result will always be null irrespective of other params
         val bitmap8 = Utils.getNotificationBitmap(null, false, null)
-        assertNull(bitmap8)
+        assertNull(bitmap8.bitmap)
 
         //if fallbackToAppIcon is false and path is null/empty, result will remain null since the fallback is disabled
         val bitmap71 = Utils.getNotificationBitmap(null, false, context)
         val bitmap72 = Utils.getNotificationBitmap("", false, context)
-        assertNull(bitmap71)
-        assertNull(bitmap72)
+        assertNull(bitmap71.bitmap)
+        assertNull(bitmap72.bitmap)
 
         //if fallbackToAppIcon is true and path is  null, result will  be the app icon
         //---prerequisite-----
         val actualAppDrawable = application.getDrawable(android.R.mipmap.sym_def_app_icon)
         val actualAppIconBitmap = BitmapFactory.decodeResource(context.resources, android.R.mipmap.sym_def_app_icon)
-        printBitmapInfo(actualAppIconBitmap, "actualAppIconBitmap")
+        printBitmapInfo(name = "actualAppIconBitmap",bmp = actualAppIconBitmap)
         ShadowPackageManager().setApplicationIcon(application.packageName, actualAppDrawable)
         //---prerequisite-----
 
         val bitmap61 = Utils.getNotificationBitmap(null, true, context)
-        assertNotNull(bitmap61)
+        assertNotNull(bitmap61.bitmap)
         printBitmapInfo(bitmap61, "bitmap61")
 
         //if fallbackToAppIcon is true and path is  null, result will  be the app icon
         val bitmap62 = Utils.getNotificationBitmap("", true, context)
         printBitmapInfo(bitmap62, "bitmap62")
-        assertNotNull(bitmap62)
+        assertNotNull(bitmap62.bitmap)
 
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
         val bitmap41 =
@@ -415,8 +416,8 @@ class UtilsTest : BaseTestCase() {
         printBitmapInfo(bitmap41, "bitmap41")
         printBitmapInfo(bitmap42, "bitmap42")
 
-        assertNotNull(bitmap41)
-        assertNotNull(bitmap42)
+        assertNotNull(bitmap41.bitmap)
+        assertNotNull(bitmap42.bitmap)
     }
 
     @Test
@@ -432,7 +433,7 @@ class UtilsTest : BaseTestCase() {
         )
         printBitmapInfo(bitmap41, "bitmap41")
 
-        assertNull(bitmap41)
+        assertNull(bitmap41.bitmap)
     }
 
     @Test
@@ -839,11 +840,12 @@ class UtilsTest : BaseTestCase() {
         }
     }
 
-    private fun printBitmapInfo(bitmap: Bitmap?, name: String = "") {
+    private fun printBitmapInfo(downloadedBitmap: DownloadedBitmap? = null, name: String = "", bmp: Bitmap? = null) {
         if (!BuildConfig.DEBUG) {
             println("printBitmapInfo: not debug , returning")
             return
         }
+        val bitmap = downloadedBitmap?.bitmap ?: bmp
         try {
             val hash = bitmap.hashCode().toString()
             print("received bitmap : $name($hash)")
