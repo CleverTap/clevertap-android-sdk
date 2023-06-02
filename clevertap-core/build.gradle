@@ -42,6 +42,7 @@ dependencies {
     // Unit testing dependencies
     testImplementation project(':test_shared')
     testImplementation Libs.firebase_messaging
+    testImplementation fileTree(include: ['*.aar'], dir: 'libs')
 }
 
 sonarqube {
