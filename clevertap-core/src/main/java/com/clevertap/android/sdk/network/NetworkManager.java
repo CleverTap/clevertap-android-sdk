@@ -15,6 +15,7 @@ import androidx.annotation.RestrictTo.Scope;
 
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
+import com.clevertap.android.sdk.CTXtensions;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -465,7 +466,7 @@ public class NetworkManager extends BaseNetworkManager {
                     .getRepo(this.context, config, deviceInfo,
                             validationResultStack).getIdentitySet().toString());
             header.put("ddnd",
-                    !(deviceInfo.getNotificationsEnabledForUser() && (controllerManager.getPushProviders()
+                    !(CTXtensions.areAppNotificationsEnabled(this.context) && (controllerManager.getPushProviders()
                             .isNotificationSupported())));
             if (coreMetaData.isBgPing()) {
                 header.put("bk", 1);

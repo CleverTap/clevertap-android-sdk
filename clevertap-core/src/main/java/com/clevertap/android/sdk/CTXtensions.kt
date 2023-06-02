@@ -28,4 +28,10 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
         areAppNotificationsEnabled()
     }
 
-fun Context.areAppNotificationsEnabled() = NotificationManagerCompat.from(this).areNotificationsEnabled()
+fun Context.areAppNotificationsEnabled() = try {
+    NotificationManagerCompat.from(this).areNotificationsEnabled()
+} catch (e: Exception) {
+    Logger.d("Unable to query notifications enabled flag, returning true!")
+    e.printStackTrace()
+    true
+}
