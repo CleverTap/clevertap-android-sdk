@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
+import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -150,6 +151,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     @Override
     synchronized public void flushQueueSync(final Context context, final EventGroup eventGroup) {
+        flushQueueSync(context,eventGroup,null);
+    }
+
+    @Override
+    public void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final String caller) {
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             controllerManager.invokeCallbacksForNetworkError();
@@ -167,12 +173,12 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             networkManager.initHandshake(eventGroup, new Runnable() {
                 @Override
                 public void run() {
-                    networkManager.flushDBQueue(context, eventGroup);
+                    networkManager.flushDBQueue(context, eventGroup,caller);
                 }
             });
         } else {
             logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
-            networkManager.flushDBQueue(context, eventGroup);
+            networkManager.flushDBQueue(context, eventGroup,caller);
         }
     }
 

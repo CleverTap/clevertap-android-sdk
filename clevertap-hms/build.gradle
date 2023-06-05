@@ -24,4 +24,5 @@ dependencies {
 
     testImplementation project(':test_shared')
     testImplementation Libs.push
+    testImplementation fileTree(include: ['*.aar'], dir: 'libs')
 }

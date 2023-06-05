@@ -6,7 +6,7 @@ import org.json.JSONArray;
 
 public abstract class BaseNetworkManager {
 
-    public abstract void flushDBQueue(final Context context, final EventGroup eventGroup);
+    public abstract void flushDBQueue(final Context context, final EventGroup eventGroup,final String caller);
 
     public abstract int getDelayFrequency();
 
@@ -15,6 +15,6 @@ public abstract class BaseNetworkManager {
 
     public abstract boolean needsHandshakeForDomain(final EventGroup eventGroup);
 
-    public abstract boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue);
+    abstract boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue,final String caller);
 
 }

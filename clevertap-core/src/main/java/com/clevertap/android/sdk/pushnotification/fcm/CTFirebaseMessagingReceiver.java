@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 
 import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.events.EventGroup;
@@ -146,7 +147,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
 
                         if (cleverTapAPI != null) {
                             cleverTapAPI.getCoreState().getBaseEventQueueManager().
-                                    flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
+                                    flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, Constants.D_SRC_PI_R);
                         }
                         //We are done flushing events
                     } catch (Exception e) {
