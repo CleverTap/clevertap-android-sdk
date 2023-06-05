@@ -11,6 +11,7 @@ import androidx.annotation.RequiresApi;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.events.EventQueueManager;
@@ -42,7 +43,8 @@ public class FlushPushImpressionsWork extends Worker {
             if (checkIfStopped()) return Result.success();
 
             Logger.i(TAG,"Flushing queue for push impressions on ct instance = "+instance);
-            instance.getCoreState().getBaseEventQueueManager().flushQueueSync(applicationContext, EventGroup.PUSH_NOTIFICATION_VIEWED);
+            instance.getCoreState().getBaseEventQueueManager().flushQueueSync(applicationContext,
+                    EventGroup.PUSH_NOTIFICATION_VIEWED, Constants.D_SRC_PI_WM);
             BatteryManager bm = (BatteryManager) applicationContext.getSystemService(BATTERY_SERVICE);
             int batLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
 
