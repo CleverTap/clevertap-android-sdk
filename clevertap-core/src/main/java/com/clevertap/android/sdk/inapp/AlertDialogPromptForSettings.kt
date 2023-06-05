@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.CTStringResources
 import com.clevertap.android.sdk.R
 
 /**
- * This class shows an Alert dialog to display a rationale message if notification permission is
+ * This class shows an Alert dialog which is not cancellable to display a rationale message if notification permission is
  * already denied.
  */
 class AlertDialogPromptForSettings private constructor() {
@@ -33,6 +33,7 @@ class AlertDialogPromptForSettings private constructor() {
             ) else AlertDialog.Builder(activity)
 
             builder.setTitle(title)
+                .setCancelable(false)
                 .setMessage(message)
                 .setPositiveButton(positiveButtonText) { dialog, which ->
                     onAccept()
