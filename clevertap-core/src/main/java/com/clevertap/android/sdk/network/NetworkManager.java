@@ -10,6 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
@@ -31,7 +32,6 @@ import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
-import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.response.ARPResponse;
 import com.clevertap.android.sdk.response.BaseResponse;
 import com.clevertap.android.sdk.response.CleverTapResponse;
@@ -166,7 +166,7 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     @Override
-    public void flushDBQueue(final Context context, final EventGroup eventGroup) {
+    public void flushDBQueue(final Context context, final EventGroup eventGroup,@Nullable final String caller) {
         config.getLogger()
                 .verbose(config.getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
@@ -194,7 +194,7 @@ public class NetworkManager extends BaseNetworkManager {
                 break;
             }
 
-            loadMore = sendQueue(context, eventGroup, queue);
+            loadMore = sendQueue(context, eventGroup, queue,caller);
         }
     }
 
@@ -416,9 +416,13 @@ public class NetworkManager extends BaseNetworkManager {
         return !newDomain.equals(oldDomain);
     }
 
-    String insertHeader(Context context, JSONArray arr) {
+    String insertHeader(Context context, JSONArray arr,@Nullable final String caller) {
         try {
             final JSONObject header = new JSONObject();
+
+            if (caller != null) {
+                header.put(Constants.D_SRC, caller);
+            }
 
             String deviceId = deviceInfo.getDeviceID();
             if (deviceId != null && !deviceId.equals("")) {
@@ -617,7 +621,7 @@ public class NetworkManager extends BaseNetworkManager {
      * @return true if the network request succeeded. Anything non 200 results in a false.
      */
     @Override
-    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
+    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue,@Nullable final String caller) {
         if (queue == null || queue.length() <= 0) {
             return false;
         }
@@ -641,7 +645,7 @@ public class NetworkManager extends BaseNetworkManager {
             conn = buildHttpsURLConnection(endpoint);
 
             final String body;
-            final String req = insertHeader(context, queue);
+            final String req = insertHeader(context, queue,caller);
             if (req == null) {
                 logger.debug(config.getAccountId(), "Problem configuring queue request, unable to send queue");
                 return false;

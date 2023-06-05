@@ -389,7 +389,7 @@ class EventQueueManagerTest : BaseTestCase() {
             eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
             verify(corestate.networkManager, never()).initHandshake(ArgumentMatchers.any(), ArgumentMatchers.any())
-            verify(corestate.networkManager).flushDBQueue(application, PUSH_NOTIFICATION_VIEWED)
+            verify(corestate.networkManager).flushDBQueue(application, PUSH_NOTIFICATION_VIEWED,null)
         }
     }
 
@@ -416,7 +416,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             captor.value.run()
 
-            verify(corestate.networkManager).flushDBQueue(application, PUSH_NOTIFICATION_VIEWED)
+            verify(corestate.networkManager).flushDBQueue(application, PUSH_NOTIFICATION_VIEWED,null)
         }
     }
 
