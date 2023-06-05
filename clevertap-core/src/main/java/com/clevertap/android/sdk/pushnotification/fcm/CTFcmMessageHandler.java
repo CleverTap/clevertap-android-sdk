@@ -49,6 +49,22 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
             if (!messageBundle.containsKey("nh_source")) {
                 messageBundle.putString("nh_source", "FcmMessageListenerService");
             }
+            if (message.getOriginalPriority() != message.getPriority()) {
+                /**
+                 * Analytics: If OS alters original priority of a notification
+                 */
+                String strPriority = "";
+                int intPriority = message.getPriority();
+
+                if (intPriority == RemoteMessage.PRIORITY_HIGH) {
+                    strPriority = Constants.PRIORITY_HIGH;
+                } else if (intPriority == RemoteMessage.PRIORITY_NORMAL) {
+                    strPriority = Constants.PRIORITY_NORMAL;
+                } else if (intPriority == RemoteMessage.PRIORITY_UNKNOWN) {
+                    strPriority = Constants.PRIORITY_UNKNOWN;
+                }
+                messageBundle.putString(Constants.WZRK_PN_PRT, strPriority);
+            }
             isSuccess = PushNotificationHandler.getPushNotificationHandler()
                     .onMessageReceived(context, messageBundle, PushType.FCM.toString());
         }
