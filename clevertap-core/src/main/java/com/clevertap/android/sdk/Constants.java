@@ -41,6 +41,9 @@ public interface Constants {
     String LABEL_INTENT_SERVICE = "CLEVERTAP_INTENT_SERVICE";
     String LABEL_XIAOMI_APP_KEY = "CLEVERTAP_XIAOMI_APP_KEY";
     String LABEL_XIAOMI_APP_ID = "CLEVERTAP_XIAOMI_APP_ID";
+    String LABEL_DEFAULT_CHANNEL_ID = "CLEVERTAP_DEFAULT_CHANNEL_ID";
+    String CLEVERTAP_RESERVE_CHANNEL_ID = "clevertap_reserve_channel";
+    String CLEVERTAP_RESERVE_CHANNEL_NAME = "standard";
     String CLEVERTAP_OPTOUT = "ct_optout";
     String CLEVERTAP_STORAGE_TAG = "WizRocket";
     String CLEVERTAP_LOG_TAG = "CleverTap";
