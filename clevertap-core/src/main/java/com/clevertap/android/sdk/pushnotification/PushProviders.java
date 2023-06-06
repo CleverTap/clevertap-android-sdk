@@ -32,6 +32,7 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
 
 import com.clevertap.android.sdk.AnalyticsManager;
+import com.clevertap.android.sdk.CTXtensions;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -1023,9 +1024,10 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
+        String updatedChannelId = null;
         boolean requiresChannelId = VERSION.SDK_INT >= VERSION_CODES.O;
 
-        if (VERSION.SDK_INT >= VERSION_CODES.O) {
+        if (requiresChannelId) {
             int messageCode = -1;
             String value = "";
 
@@ -1040,9 +1042,19 @@ public class PushProviders implements CTPushProviderListener {
                 ValidationResult channelIdError = ValidationResultFactory.create(512, messageCode, value);
                 config.getLogger().debug(config.getAccountId(), channelIdError.getErrorDesc());
                 validationResultStack.pushValidationResult(channelIdError);
+            }
+
+            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context);
+
+            if (updatedChannelId == null || updatedChannelId.trim().isEmpty()) {
+                config.getLogger()
+                        .debug(config.getAccountId(), "Not rendering Push since channel id is null or blank.");
                 return;
             }
+
+            config.getLogger().debug(config.getAccountId(), "Rendering Push on channel = " + updatedChannelId);
         }
+
         int smallIcon;
         try {
             String x = ManifestInfo.getInstance(context).getNotificationIcon();
@@ -1112,7 +1124,7 @@ public class PushProviders implements CTPushProviderListener {
 
         NotificationCompat.Builder nb;
         if (requiresChannelId) {
-            nb = new NotificationCompat.Builder(context, channelId);
+            nb = new NotificationCompat.Builder(context, updatedChannelId);
 
             // choices here are Notification.BADGE_ICON_NONE = 0, Notification.BADGE_ICON_SMALL = 1, Notification.BADGE_ICON_LARGE = 2.  Default is  Notification.BADGE_ICON_LARGE
             String badgeIconParam = extras
