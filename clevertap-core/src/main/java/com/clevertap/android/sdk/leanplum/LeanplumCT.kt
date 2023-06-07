@@ -40,11 +40,6 @@ object LeanplumCT {
   }
 
   @JvmStatic
-  fun addStartResponseHandler(callback: StartCallback?) {
-    // TODO
-  }
-
-  @JvmStatic
   fun advanceTo(state: String?) {
     advanceTo(state, null, null)
   }
@@ -62,17 +57,6 @@ object LeanplumCT {
   @JvmStatic
   fun advanceTo(state: String?, info: String?, params: Map<String, Any?>?) {
     wrapper?.advanceTo(state, info, params)
-  }
-
-  @JvmStatic
-  fun hasStarted(): Boolean {
-    // TODO return whether App Launched is tracked?
-    return false;
-  }
-
-  @JvmStatic
-  fun removeStartResponseHandler(callback: StartCallback?) {
-    // TODO ?
   }
 
   @JvmStatic
