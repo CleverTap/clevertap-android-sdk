@@ -1,10 +1,9 @@
-import static de.fayard.refreshVersions.core.Versions.versionFor
 ext {
     libraryName = 'XiaomiPushSDK'
     artifact = 'clevertap-xiaomi-sdk'
     libraryDescription = 'The CleverTap Android Xiaomi Push SDK'
 
-    libraryVersion = versionFor("version.com.clevertap.android..clevertap-xiaomi-sdk")
+    libraryVersion = Android.clevertapXiaomiSdk
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
@@ -26,7 +25,7 @@ dependencies {
     compileOnly fileTree(include: ["*.jar", "*.aar"], dir: "libs")
 
     compileOnly project(':clevertap-core')
-    compileOnly Libs.androidx_annotation
+    compileOnly (libs.androidx.annotation)
     testImplementation project(':test_shared')
     testImplementation fileTree('libs')
 }

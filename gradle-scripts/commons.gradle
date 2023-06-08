@@ -1,6 +1,5 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-//apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply from: "${project.rootDir}/gradle-scripts/jacoco_root.gradle"
@@ -34,7 +33,7 @@ android {
     buildToolsVersion Android.buildToolsVersionVal
 
     defaultConfig {
-        minSdkVersion minSdkVersionVal
+        minSdkVersion Android.minSdkVersionVal
         targetSdkVersion Android.targetSdkVersionVal
         versionCode "${major}0${minor}0${patch}".toInteger()
         versionName libraryVersion
@@ -184,4 +183,4 @@ signing {
     sign publishing.publications
 }
 apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
-apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"
+//apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"

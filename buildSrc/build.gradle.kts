@@ -1,8 +1,11 @@
-repositories {
-    google()
-    mavenCentral()
-}
+import org.gradle.kotlin.dsl.`kotlin-dsl`
 plugins {
     `kotlin-dsl`
 }
+
+repositories {
+    mavenCentral()
+    google()
+}
+
 
