@@ -12,7 +12,7 @@ buildscript {
     dependencies {
         classpath("com.google.firebase:firebase-crashlytics-gradle:2.8.1")
         classpath("org.jacoco:org.jacoco.core:0.8.8")
-
+        classpath("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.20.0-RC1")
         classpath(libs.android.gradle.plugin)
         classpath(libs.kotlin.gradle.plugin)
         classpath(libs.google.services)
