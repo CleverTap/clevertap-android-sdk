@@ -3,12 +3,12 @@ ext {
     artifact = 'clevertap-geofence-sdk'
     libraryDescription = 'The CleverTap Android Geofence SDK'
 
-    libraryVersion = Android.clevertapGeofenceSdk
+    libraryVersion = AndroidVersion.clevertapGeofenceSdk
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
-    minSdkVersionVal = Android.minSdkVersionVal
+    minSdkVersionVal = AndroidVersion.minSdkVersion
 }
 
 apply from: "../gradle-scripts/commons.gradle"

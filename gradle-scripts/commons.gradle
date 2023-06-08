@@ -29,12 +29,12 @@ group = publishedGroupId
 def (major,minor,patch) = libraryVersion.split("\\.")
 
 android {
-    compileSdkVersion Android.compileSdkVersionVal
-    buildToolsVersion Android.buildToolsVersionVal
+    compileSdkVersion AndroidVersion.compileSdkVersion
+    buildToolsVersion AndroidVersion.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion Android.minSdkVersionVal
-        targetSdkVersion Android.targetSdkVersionVal
+        minSdkVersion AndroidVersion.minSdkVersion
+        targetSdkVersion AndroidVersion.targetSdkVersion
         versionCode "${major}0${minor}0${patch}".toInteger()
         versionName libraryVersion
 
