@@ -3,7 +3,7 @@ ext {
     artifact = 'push-templates'
     libraryDescription = 'The CleverTap Android Push Templates SDK'
 
-    libraryVersion = Android.clevertapPushtemplates
+    libraryVersion = Android.clevertapPushTemplates
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
