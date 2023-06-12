@@ -167,7 +167,6 @@ public final class Utils {
 
     public static @NonNull DownloadedBitmap getBitmapFromURL(@NonNull String srcUrl, @Nullable Context context) {
         long downloadStartTimeInSMilliseconds = getNowInMillis();
-        Logger.v("CTRM TESTING", "Reached getBitmapFromURL");
         if (context != null) {
             boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
             if (!isNetworkOnline) {
@@ -182,7 +181,6 @@ public final class Utils {
         srcUrl = srcUrl.replace("https:/", "https://");
         HttpURLConnection connection = null;
         try {
-            Logger.v("CTRM TESTING", "before creating URL object");
             URL url = new URL(srcUrl);
             connection = (HttpURLConnection) url.openConnection();
             connection.setConnectTimeout(Constants.PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS);
@@ -191,7 +189,6 @@ public final class Utils {
             connection.setDoInput(true);
             connection.connect();
             InputStream input = connection.getInputStream();
-            Logger.v("CTRM TESTING", "before decodeStream");
             return DownloadedBitmapFactory.INSTANCE.successBitmap(BitmapFactory.decodeStream(input),
                     getNowInMillis() - downloadStartTimeInSMilliseconds);
         } catch (Throwable e) {
@@ -201,12 +198,10 @@ public final class Utils {
             return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
             //todo catch other exceptions?
         } finally {
-            Logger.v("CTRM TESTING", "reached finally");
             try {
                 if (connection != null) {
                     connection.disconnect();
                 }
-                Logger.v("CTRM TESTING", "connection closed");
             } catch (Throwable t) {
                 Logger.v("Couldn't close connection!", t);
             }
@@ -220,7 +215,6 @@ public final class Utils {
 
     public static DownloadedBitmap getBitmapFromURLWithSizeConstraint(String srcUrl, int size,
             final Context context) {
-        Logger.v("CTRM TESTING", "Reached getBitmapFromURL");
         long downloadStartTimeInSMilliseconds = getNowInMillis();
         if (context != null) {
             boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);

@@ -32,17 +32,20 @@ public class FlushPushImpressionsWork extends Worker {
     @Override
     public Result doWork() {
 
-        Logger.i(TAG,"starting FlushPushImpressionsWork...");
+        Logger.d(TAG,
+                "hello, this is FlushPushImpressionsWork. I am awake now and ready to flush push impressions:-)");
+
+        Logger.d(TAG,"initiating push impressions flush...");
 
         Context applicationContext = getApplicationContext();
         for (CleverTapAPI instance : CleverTapAPI.getAvailableInstances(applicationContext)) {
             if (instance == null || instance.getCoreState().getConfig().isAnalyticsOnly()) {
-                Logger.d("Instance is either null or Analytics Only not flushing push impressions!");
+                Logger.d("instance is either null or Analytics Only not flushing push impressions!");
                 continue;
             }
             if (checkIfStopped()) return Result.success();
 
-            Logger.i(TAG,"Flushing queue for push impressions on ct instance = "+instance);
+            Logger.d(TAG,"flushing queue for push impressions on ct instance = "+instance);
             instance.getCoreState().getBaseEventQueueManager().flushQueueSync(applicationContext,
                     EventGroup.PUSH_NOTIFICATION_VIEWED, Constants.D_SRC_PI_WM);
             BatteryManager bm = (BatteryManager) applicationContext.getSystemService(BATTERY_SERVICE);
@@ -56,12 +59,13 @@ public class FlushPushImpressionsWork extends Worker {
 
             instance.pushEvent("Work manager run success",map);
         }
+        Logger.d(TAG,"flush push impressions work is DONE! going to sleep now...");
         return Result.success();
     }
 
     private boolean checkIfStopped() {
         if (isStopped()) {
-            Logger.v(TAG,"Worker stopped!");
+            Logger.d(TAG,"someone told me to stop flushing and go to sleep again! going to sleep now.");
         }
         return isStopped();
     }

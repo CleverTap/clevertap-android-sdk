@@ -49,8 +49,10 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
     @SuppressLint("RestrictedApi")
     @Override
     public void onNotificationRendered(final boolean isRendered) {
-        Logger.v(TAG, "onNotificationRendered() called for key = " + key);
-        finishReceiverAndCancelTimer("onNotificationRendered");
+        Logger.v(TAG,
+                "push impression sent successfully by core, i should inform OS to kill receiver. my callback key is "
+                        + key);
+        finishReceiverAndCancelTimer("push impression sent successfully by core");
     }
 
     /**
@@ -61,7 +63,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
      */
     private void finishReceiverAndCancelTimer(String from) {
         try {
-            Logger.v(TAG, "finishCTRMAndCancelTimer() called");
+            Logger.v(TAG, "got a signal to kill receiver and timer because "+from);
 
             if (!key.trim().isEmpty())
             {
@@ -69,10 +71,10 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
             }
 
             long end = System.nanoTime();
-            Logger.v(TAG,
-                    "finishing CTRM in " + TimeUnit.NANOSECONDS.toSeconds(end - start)
-                            + " seconds from finishCTRMAndCancelTimer when " + from);
             if (pendingResult != null && !isPRFinished) {
+
+                Logger.v(TAG, "informing OS to kill receiver...");
+
                 pendingResult.finish();
                 isPRFinished = true;
 
@@ -80,6 +82,14 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                 if (countDownTimer != null) {
                     countDownTimer.cancel();
                 }
+
+                Logger.v(TAG, "informed OS to kill receiver...");
+                Logger.v(TAG,
+                        "receiver was alive for " + TimeUnit.NANOSECONDS.toSeconds(end - start)
+                                + " seconds");
+            } else {
+                Logger.v(TAG,
+                        "have already informed OS to kill receiver, can not inform again else OS will get angry :-O");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -90,8 +100,9 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
     @SuppressLint("RestrictedApi")
     @Override
     public void onReceive(Context context, Intent intent) {
-
         start = System.nanoTime();
+
+        Logger.d(TAG, "received a message from Firebase");
         if (context == null || intent == null) {
             return;
         }
@@ -111,8 +122,6 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
 
         pendingResult = goAsync();
 
-        Logger.d(TAG, "CTRM received for message");
-
         NotificationInfo notificationInfo = CleverTapAPI.getNotificationInfo(messageBundle);
 
         if (notificationInfo.fromCleverTap) {
@@ -128,7 +137,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                 countDownTimer = new CountDownTimer(receiverLifeSpan, 1000) {
                     @Override
                     public void onFinish() {
-                        finishReceiverAndCancelTimer("timer");
+                        finishReceiverAndCancelTimer("receiver life time is expired");
                     }
 
                     @Override
@@ -152,9 +161,9 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                         //We are done flushing events
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Logger.v("CTRM", "Failed executing CTRM thread.", e);
+                        Logger.v("CTRM", "Failed executing CTRM flushQueueSync thread.", e);
                     } finally {
-                        finishReceiverAndCancelTimer("flush from CTRM done!");
+                        finishReceiverAndCancelTimer("flush from receiver is done!");
                     }
 
                 }).start();
