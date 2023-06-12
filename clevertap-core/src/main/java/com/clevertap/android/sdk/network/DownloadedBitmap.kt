@@ -25,6 +25,7 @@ data class DownloadedBitmap(
         SUCCESS("SUCCESS"),
         DOWNLOAD_FAILED("DOWNLOAD_FAILED"),
         NO_NETWORK("NO_NETWORK"),
-        INIT_ERROR("INIT_ERROR")
+        INIT_ERROR("INIT_ERROR"),
+        SIZE_LIMIT_EXCEEDED("SIZE_LIMIT_EXCEEDED")
     }
 }
