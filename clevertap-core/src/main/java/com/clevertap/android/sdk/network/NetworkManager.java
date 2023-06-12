@@ -756,6 +756,8 @@ public class NetworkManager extends BaseNetworkManager {
                 = CleverTapAPI.getNotificationRenderedListener(listenerKey);
 
         if (notificationRenderedListener != null) {
+            logger.verbose(config.getAccountId(),
+                    "notifying listener " + listenerKey + ", that push impression sent successfully");
             notificationRenderedListener.onNotificationRendered(true);
         }
     }
