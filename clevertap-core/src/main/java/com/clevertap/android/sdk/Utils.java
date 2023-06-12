@@ -458,7 +458,7 @@ public final class Utils {
             throws NullPointerException {
         // If the icon path is not specified
         if (icoPath == null || icoPath.equals("")) {
-            return processDownloadedBitmap(fallbackToAppIcon, context,
+            return getDownloadedBitmapPostFallbackIconCheck(fallbackToAppIcon, context,
                     DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.NO_IMAGE));
         }
         // Simply stream the bitmap
@@ -471,11 +471,11 @@ public final class Utils {
         } else {
             ic = getBitmapFromURLWithSizeConstraint(icoPath, size, context);
         }
-        return processDownloadedBitmap(fallbackToAppIcon, context, ic);
+        return getDownloadedBitmapPostFallbackIconCheck(fallbackToAppIcon, context, ic);
     }
 
     @NonNull
-    private static DownloadedBitmap processDownloadedBitmap(final boolean fallbackToAppIcon, final Context context,
+    private static DownloadedBitmap getDownloadedBitmapPostFallbackIconCheck(final boolean fallbackToAppIcon, final Context context,
             @NonNull final DownloadedBitmap ic) {
         return (ic.getBitmap() != null) ? ic : (fallbackToAppIcon ? getAppIcon(context) : ic);
     }
@@ -496,7 +496,7 @@ public final class Utils {
             ic = DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
         }
 
-        return processDownloadedBitmap(fallbackToAppIcon, context, ic);
+        return getDownloadedBitmapPostFallbackIconCheck(fallbackToAppIcon, context, ic);
     }
 
     public static int getNow() {
