@@ -263,7 +263,7 @@ public final class Utils {
                 finalData.write(buffer, 0, count);
                 if (total > size) {
                     Logger.v("Image size is larger than " + size + " bytes. Cancelling download!");
-                    return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
+                    return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.SIZE_LIMIT_EXCEEDED);
                 }
                 Logger.v("Downloaded " + total + " bytes");
             }
