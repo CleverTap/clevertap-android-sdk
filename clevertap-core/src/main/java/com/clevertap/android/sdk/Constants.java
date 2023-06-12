@@ -351,6 +351,6 @@ public interface Constants {
 
     //==============
 
-   String FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME = "flushPushImpressionsOneTime";
+   String FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME = "CTFlushPushImpressionsOneTime";
 
 }

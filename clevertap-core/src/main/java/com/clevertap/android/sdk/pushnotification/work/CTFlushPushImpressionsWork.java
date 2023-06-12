@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.pushnotification.work;
 
 import static android.content.Context.BATTERY_SERVICE;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.BatteryManager;
 import android.os.Build.VERSION_CODES;
@@ -14,15 +13,13 @@ import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.events.EventGroup;
-import com.clevertap.android.sdk.events.EventQueueManager;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import java.util.HashMap;
 
-public class FlushPushImpressionsWork extends Worker {
+public class CTFlushPushImpressionsWork extends Worker {
 
-    public static final String TAG = "FlushPushImpressionsWork";
+    public static final String TAG = "CTFlushPushImpressionsWork";
 
-    public FlushPushImpressionsWork(@NonNull final Context context,
+    public CTFlushPushImpressionsWork(@NonNull final Context context,
             @NonNull final WorkerParameters workerParams) {
         super(context, workerParams);
     }
@@ -33,7 +30,7 @@ public class FlushPushImpressionsWork extends Worker {
     public Result doWork() {
 
         Logger.d(TAG,
-                "hello, this is FlushPushImpressionsWork. I am awake now and ready to flush push impressions:-)");
+                "hello, this is FlushPushImpressionsWork from CleverTap. I am awake now and ready to flush push impressions:-)");
 
         Logger.d(TAG,"initiating push impressions flush...");
 
@@ -59,13 +56,13 @@ public class FlushPushImpressionsWork extends Worker {
 
             instance.pushEvent("Work manager run success",map);
         }
-        Logger.d(TAG,"flush push impressions work is DONE! going to sleep now...");
+        Logger.d(TAG,"flush push impressions work is DONE! going to sleep now...ˁ(-.-)ˀzzZZ");
         return Result.success();
     }
 
     private boolean checkIfStopped() {
         if (isStopped()) {
-            Logger.d(TAG,"someone told me to stop flushing and go to sleep again! going to sleep now.");
+            Logger.d(TAG,"someone told me to stop flushing and go to sleep again! going to sleep now.ˁ(-.-)ˀzzZZ");
         }
         return isStopped();
     }
