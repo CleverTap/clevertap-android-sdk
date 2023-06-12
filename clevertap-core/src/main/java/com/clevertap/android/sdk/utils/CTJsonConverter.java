@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
@@ -16,8 +17,10 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,10 +55,12 @@ public class CTJsonConverter {
         return r;
     }
 
-    public static JSONObject from(DeviceInfo deviceInfo, Location locationFromUser, boolean enableNetworkInfoReporting
+    public static JSONObject from(DeviceInfo deviceInfo, CoreMetaData coreMetaData, boolean enableNetworkInfoReporting
             , boolean deviceIsMultiUser) throws JSONException {
 
         final JSONObject evtData = new JSONObject();
+        Location locationFromUser = coreMetaData.getLocationFromUser();
+
         evtData.put("Build", deviceInfo.getBuild() + "");
         evtData.put("Version", deviceInfo.getVersionName());
         evtData.put("OS Version", deviceInfo.getOsVersion());
@@ -129,6 +134,12 @@ public class CTJsonConverter {
             }
             //Adds an extra field to send local inApp count in queueData.
             evtData.put("LIAMC",deviceInfo.getLocalInAppCount());
+
+            // add custom sdk versions in "af" key of header.
+            HashMap<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
+            for (Entry<String, Integer> entries : allCustomSdkVersions.entrySet()) {
+                evtData.put(entries.getKey(), entries.getValue());
+            }
 
         } catch (Throwable t) {
             // Ignore
