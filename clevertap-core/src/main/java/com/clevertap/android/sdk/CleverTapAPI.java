@@ -3065,6 +3065,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
         try {
             synchronized (coreState.getPushProviders().getPushRenderingLock()) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "rendering push on caller thread with id = " + Thread.currentThread().getId());
                 coreState.getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
 
                 if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
