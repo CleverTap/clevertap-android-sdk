@@ -25,6 +25,6 @@ data class DownloadedBitmap(
         SUCCESS("SUCCESS"),
         DOWNLOAD_FAILED("DOWNLOAD_FAILED"),
         NO_NETWORK("NO_NETWORK"),
-        ERROR("ERROR")
+        ERROR("INIT_ERROR")
     }
 }
