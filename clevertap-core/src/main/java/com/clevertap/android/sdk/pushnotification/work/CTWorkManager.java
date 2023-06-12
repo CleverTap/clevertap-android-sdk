@@ -37,7 +37,7 @@ public class CTWorkManager {
                     .build();
 
             OneTimeWorkRequest flushPushImpressionsWorkRequest = new OneTimeWorkRequest
-                    .Builder(FlushPushImpressionsWork.class)
+                    .Builder(CTFlushPushImpressionsWork.class)
                     .setConstraints(constraints)
                     .build();
 
