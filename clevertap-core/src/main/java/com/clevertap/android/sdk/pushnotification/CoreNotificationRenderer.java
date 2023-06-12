@@ -63,7 +63,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         NotificationCompat.Style style;
         String bigPictureUrl = extras.getString(Constants.WZRK_BIG_PICTURE);
         if (bigPictureUrl != null && bigPictureUrl.startsWith("http")) {
-            DownloadedBitmap downloadedBitmap = DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.ERROR);
+            DownloadedBitmap downloadedBitmap = DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.INIT_ERROR);
             try {
                 downloadedBitmap = Utils.getNotificationBitmapWithTimeoutAndSize(bigPictureUrl,
                         false, context, config, Constants.PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS,
