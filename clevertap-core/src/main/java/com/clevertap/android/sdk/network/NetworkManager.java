@@ -437,11 +437,6 @@ public class NetworkManager extends BaseNetworkManager {
             JSONObject appFields = deviceInfo.getAppLaunchedFields();
             header.put("af", appFields);
 
-            HashMap<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
-            for (Entry<String, Integer> entries : allCustomSdkVersions.entrySet()) {
-                header.put(entries.getKey(), entries.getValue());
-            }
-
             long i = getI();
             if (i > 0) {
                 header.put("_i", i);
