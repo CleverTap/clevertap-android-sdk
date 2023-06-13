@@ -137,25 +137,43 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         });
     }
 
+    /**
+     * Flushes the events queue synchronously with a default null value for the caller.
+     * This is an overloaded method that internally calls {@link EventQueueManager#flushQueueSync(Context, EventGroup, String)}.
+     *
+     * @param context     The Context object.
+     * @param eventGroup  The EventGroup for which the queue needs to be flushed.
+     */
     @Override
     synchronized public void flushQueueSync(final Context context, final EventGroup eventGroup) {
         flushQueueSync(context,eventGroup,null);
     }
 
+    /**
+     * Flushes the events queue synchronously, checking network connectivity, offline mode, and performing handshake if necessary.
+     *
+     * @param context     The Context object.
+     * @param eventGroup  The EventGroup for which the queue needs to be flushed.
+     * @param caller      The optional caller identifier.
+     */
     @Override
     public void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final String caller) {
+        // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             return;
         }
 
+        // Check if CleverTap instance is set to offline mode
         if (cleverTapMetaData.isOffline()) {
             logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
             return;
         }
 
+        // Check if handshake is required for the domain associated with the event group
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
+            // Perform handshake and then flush the DB queue
             networkManager.initHandshake(eventGroup, new Runnable() {
                 @Override
                 public void run() {
@@ -164,6 +182,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             });
         } else {
             logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
+
+            // No handshake required, directly flush the DB queue
             networkManager.flushDBQueue(context, eventGroup,caller);
         }
     }

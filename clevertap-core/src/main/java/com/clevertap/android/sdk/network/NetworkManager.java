@@ -165,6 +165,13 @@ public class NetworkManager extends BaseNetworkManager {
 
     }
 
+    /**
+     * Flushes the events queue from the local database to CleverTap servers.
+     *
+     * @param context     The Context object.
+     * @param eventGroup  The EventGroup indicating the type of events to be flushed.
+     * @param caller      The optional caller identifier.
+     */
     @Override
     public void flushDBQueue(final Context context, final EventGroup eventGroup,@Nullable final String caller) {
         config.getLogger()
@@ -176,11 +183,15 @@ public class NetworkManager extends BaseNetworkManager {
 
         while (loadMore) {
 
+            // Retrieve queued events from the local database in batch size of 50
             cursor = databaseManager.getQueuedEvents(context, 50, previousCursor, eventGroup);
 
             if (cursor == null || cursor.isEmpty()) {
+                // No events in the queue, log and break
                 config.getLogger().verbose(config.getAccountId(), "No events in the queue, failing");
+
                 if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
+                    // Notify listener for push impression sent to the server
                     notifyListenerForPushImpressionSentToServer(Constants.FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME);
                 }
                 break;
@@ -190,10 +201,12 @@ public class NetworkManager extends BaseNetworkManager {
             JSONArray queue = cursor.getData();
 
             if (queue == null || queue.length() <= 0) {
+                // No events in the queue, log and break
                 config.getLogger().verbose(config.getAccountId(), "No events in the queue, failing");
                 break;
             }
 
+            // Send the events queue to CleverTap servers
             loadMore = sendQueue(context, eventGroup, queue,caller);
         }
     }
@@ -416,14 +429,25 @@ public class NetworkManager extends BaseNetworkManager {
         return !newDomain.equals(oldDomain);
     }
 
+    /**
+     * Constructs a header JSON object and inserts it into a new JSON array along with the given JSON array.
+     *
+     * @param context The Context object.
+     * @param arr     The JSON array to include in the resulting array.
+     * @param caller  The optional caller identifier.
+     * @return A new JSON array as a string with the constructed header and the given JSON array.
+     */
     String insertHeader(Context context, JSONArray arr,@Nullable final String caller) {
         try {
+            // Construct the header JSON object
             final JSONObject header = new JSONObject();
 
+            // Add caller if available
             if (caller != null) {
                 header.put(Constants.D_SRC, caller);
             }
 
+            // Add device ID
             String deviceId = deviceInfo.getDeviceID();
             if (deviceId != null && !deviceId.equals("")) {
                 header.put("g", deviceId);
@@ -432,11 +456,14 @@ public class NetworkManager extends BaseNetworkManager {
                         "CRITICAL: Couldn't finalise on a device ID! Using error device ID instead!");
             }
 
+            // Add type as "meta"
             header.put("type", "meta");
 
+            // Add app fields
             JSONObject appFields = deviceInfo.getAppLaunchedFields();
             header.put("af", appFields);
 
+            // Add _i and _j if available
             long i = getI();
             if (i > 0) {
                 header.put("_i", i);
@@ -457,29 +484,40 @@ public class NetworkManager extends BaseNetworkManager {
                 return null;
             }
 
+            // Add account ID, token, and timestamps
             header.put("id", accountId);
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
+
+            // Add ct_pi (identities)
             header.put("ct_pi", IdentityRepoFactory
                     .getRepo(this.context, config, deviceInfo,
                             validationResultStack).getIdentitySet().toString());
+
+            // Add ddnd (Do Not Disturb)
             header.put("ddnd",
                     !(CTXtensions.areAppNotificationsEnabled(this.context) && (controllerManager.getPushProviders()
                             .isNotificationSupported())));
+
+            // Add bk (Background Ping) if required
             if (coreMetaData.isBgPing()) {
                 header.put("bk", 1);
                 coreMetaData.setBgPing(false);
             }
+            // Add rtl (Rendered Target List)
             header.put("rtl", getRenderedTargetList(databaseManager.loadDBAdapter(this.context)));
+
+            // Add rct and ait (Referrer Click Time and App Install Time) if not sent before
             if (!coreMetaData.isInstallReferrerDataSent()) {
                 header.put("rct", coreMetaData.getReferrerClickTime());
                 header.put("ait", coreMetaData.getAppInstallTime());
             }
+            // Add frs (First Request in Session) and update first request flag
             header.put("frs", coreMetaData.isFirstRequestInSession());
             coreMetaData.setFirstRequestInSession(false);
 
-            // Attach ARP
+            //Add ARP (Additional Request Parameters)
             try {
                 final JSONObject arp = getARP();
                 if (arp != null && arp.length() > 0) {
@@ -489,6 +527,7 @@ public class NetworkManager extends BaseNetworkManager {
                 logger.verbose(config.getAccountId(), "Failed to attach ARP", t);
             }
 
+            // Add ref (Referrer Information)
             JSONObject ref = new JSONObject();
             try {
 
@@ -515,11 +554,13 @@ public class NetworkManager extends BaseNetworkManager {
                 logger.verbose(config.getAccountId(), "Failed to attach ref", t);
             }
 
+            // Add wzrk_ref (CleverTap-specific Parameters)
             JSONObject wzrkParams = coreMetaData.getWzrkParams();
             if (wzrkParams != null && wzrkParams.length() > 0) {
                 header.put("wzrk_ref", wzrkParams);
             }
 
+            // Attach InAppFC to header if available
             if (controllerManager.getInAppFCManager() != null) {
                 Logger.v("Attaching InAppFC to Header");
                 controllerManager.getInAppFCManager().attachToHeader(context, header);
@@ -528,6 +569,8 @@ public class NetworkManager extends BaseNetworkManager {
                         "controllerManager.getInAppFCManager() is NULL, not Attaching InAppFC to Header");
             }
 
+            // Create a new JSON array with the header and the given JSON array
+            // Return the new JSON array as a string
             // Resort to string concat for backward compatibility
             return "[" + header.toString() + ", " + arr.toString().substring(1);
         } catch (Throwable t) {
@@ -613,11 +656,18 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     /**
-     * @return true if the network request succeeded. Anything non 200 results in a false.
+     * Sends the queue to the CleverTap server.
+     *
+     * @param context    The Context object.
+     * @param eventGroup The EventGroup representing the type of event queue.
+     * @param queue      The JSON array containing the event queue.
+     * @param caller     The optional caller identifier.
+     * @return True if the queue was sent successfully, false otherwise.
      */
     @Override
     boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue,@Nullable final String caller) {
         if (queue == null || queue.length() <= 0) {
+            // Empty queue, no need to send
             return false;
         }
 
@@ -648,10 +698,13 @@ public class NetworkManager extends BaseNetworkManager {
 
             logger.debug(config.getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
             logger.debug(config.getAccountId(), "Sending queue to: " + endpoint);
+
+            // Enable output for writing data
             conn.setDoOutput(true);
-            // noinspection all
+            // Write the request body to the connection output stream
             conn.getOutputStream().write(req.getBytes("UTF-8"));
 
+            // Get the HTTP response code
             final int responseCode = conn.getResponseCode();
 
             // Always check for a 200 OK
@@ -672,7 +725,7 @@ public class NetworkManager extends BaseNetworkManager {
             }
 
             if (processIncomingHeaders(context, conn)) {
-                // noinspection all
+                // Read the response body from the connection input stream
                 BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
 
                 StringBuilder sb = new StringBuilder();
@@ -681,6 +734,7 @@ public class NetworkManager extends BaseNetworkManager {
                     sb.append(line);
                 }
                 body = sb.toString();
+                // Process the response body
                 getCleverTapResponse().processResponse(null, body, this.context);
             }
 
