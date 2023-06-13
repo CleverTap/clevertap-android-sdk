@@ -642,6 +642,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             return;
         }
 
+        if(!inAppController.canShowInAppOnActivity()) {
+            pendingNotifications.add(inAppNotification);
+            Logger.v(config.getAccountId(), "Not showing In App on blacklisted activity, queuing this In App");
+            return;
+        }
+
         if ((System.currentTimeMillis() / 1000) > inAppNotification.getTimeToLive()) {
             Logger.d("InApp has elapsed its time to live, not showing the InApp");
             return;
