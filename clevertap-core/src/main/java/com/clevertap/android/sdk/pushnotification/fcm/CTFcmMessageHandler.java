@@ -49,20 +49,29 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
             if (!messageBundle.containsKey("nh_source")) {
                 messageBundle.putString("nh_source", "FcmMessageListenerService");
             }
+            /**
+             * Analytics: If FCM alters original priority of a notification
+             */
             if (message.getOriginalPriority() != message.getPriority()) {
-                /**
-                 * Analytics: If OS alters original priority of a notification
-                 */
+
+                // Variable to hold the string representation of the priority value.
                 String strPriority = "";
+
+                // Extracting the priority value from the RemoteMessage and mapping it to the appropriate string constant
                 int intPriority = message.getPriority();
 
-                if (intPriority == RemoteMessage.PRIORITY_HIGH) {
-                    strPriority = Constants.PRIORITY_HIGH;
-                } else if (intPriority == RemoteMessage.PRIORITY_NORMAL) {
-                    strPriority = Constants.PRIORITY_NORMAL;
-                } else if (intPriority == RemoteMessage.PRIORITY_UNKNOWN) {
-                    strPriority = Constants.PRIORITY_UNKNOWN;
+                switch (intPriority) {
+                    case RemoteMessage.PRIORITY_HIGH:
+                        strPriority = Constants.PRIORITY_HIGH;
+                        break;
+                    case RemoteMessage.PRIORITY_NORMAL:
+                        strPriority = Constants.PRIORITY_NORMAL;
+                        break;
+                    case RemoteMessage.PRIORITY_UNKNOWN:
+                        strPriority = Constants.PRIORITY_UNKNOWN;
+                        break;
                 }
+                // Storing the priority value in the messageBundle for analytics purpose.
                 messageBundle.putString(Constants.WZRK_PN_PRT, strPriority);
             }
             isSuccess = PushNotificationHandler.getPushNotificationHandler()
