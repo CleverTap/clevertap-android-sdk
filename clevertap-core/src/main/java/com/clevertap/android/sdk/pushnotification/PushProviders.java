@@ -3,8 +3,6 @@ package com.clevertap.android.sdk.pushnotification;
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
-import static com.clevertap.android.sdk.CTXtensions.isNotificationChannelEnabled;
-import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
 
 import android.annotation.SuppressLint;
@@ -23,17 +21,14 @@ import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
-
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.CTXtensions;
-import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -56,7 +51,6 @@ import com.clevertap.android.sdk.utils.PackageUtils;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
-
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,7 +59,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -207,13 +200,7 @@ public class PushProviders implements CTPushProviderListener {
                     return;
                 }
             }
-            if (!isNotificationChannelEnabled(context, extras.getString(Constants.WZRK_CHANNEL_ID, ""))) {
-                config.getLogger()
-                        .verbose(config.getAccountId(),
-                                "Not rendering push notification as channel = " + extras.getString(
-                                        Constants.WZRK_CHANNEL_ID, "") + " is blocked by user");
-                return;
-            }
+
             String notifTitle = iNotificationRenderer.getTitle(extras,
                     context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
             notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name
@@ -1044,11 +1031,21 @@ public class PushProviders implements CTPushProviderListener {
                 validationResultStack.pushValidationResult(channelIdError);
             }
 
+            // get channel using channel id from push payload. If channel id is null or empty then create default
             updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context);
 
+            // if no channel gets created then do not render push
             if (updatedChannelId == null || updatedChannelId.trim().isEmpty()) {
                 config.getLogger()
                         .debug(config.getAccountId(), "Not rendering Push since channel id is null or blank.");
+                return;
+            }
+
+            // if channel is blocked by user then do not render push
+            if (!CTXtensions.isNotificationChannelEnabled(context,updatedChannelId)) {
+                config.getLogger()
+                        .verbose(config.getAccountId(),
+                                "Not rendering push notification as channel = " + updatedChannelId + " is blocked by user");
                 return;
             }
 

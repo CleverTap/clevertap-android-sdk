@@ -63,8 +63,8 @@ public class ValidationResultFactory {
                                             + values[0];
                             break;
                         case Constants.CHANNEL_ID_NOT_REGISTERED:
-                            msg = "Unable to render notification, channelId: " + values[0]
-                                    + " not registered by the app.";
+                            msg = "Unable to render notification on channelId: " + values[0]
+                                    + " as it is not registered by the app.";
                             break;
                         case Constants.NOTIFICATION_VIEWED_DISABLED:
                             msg

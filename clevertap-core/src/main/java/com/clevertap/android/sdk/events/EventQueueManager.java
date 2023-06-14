@@ -157,7 +157,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      * @param caller      The optional caller identifier.
      */
     @Override
-    public void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final String caller) {
+    synchronized public void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final String caller) {
         // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
