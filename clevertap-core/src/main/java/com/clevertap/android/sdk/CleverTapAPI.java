@@ -144,7 +144,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private final Context context;
 
-    private CoreState coreState;
+    public CoreState coreState;
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
 
@@ -233,7 +233,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     public static @Nullable
     CleverTapAPI getGlobalInstance(Context context, String _accountId) {
-        return fromAccountId(context, _accountId);
+        return CleverTapManager.fromAccountId(context,_accountId);
     }
 
     /**
@@ -719,28 +719,28 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         debugLevel = level.intValue();
     }
 
-    /**
-     * Returns the default shared instance of the CleverTap SDK.
-     *
-     * @param context     The Android context
-     * @param cleverTapID Custom CleverTapID passed by the app
-     * @return The {@link CleverTapAPI} object
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static CleverTapAPI getDefaultInstance(Context context, String cleverTapID) {
-        // For Google Play Store/Android Studio tracking
-        sdkVersion = BuildConfig.SDK_VERSION_STRING;
-
-        if (defaultConfig != null) {
-            return instanceWithConfig(context, defaultConfig, cleverTapID);
-        } else {
-            defaultConfig = getDefaultConfig(context);
-            if (defaultConfig != null) {
-                return instanceWithConfig(context, defaultConfig, cleverTapID);
-            }
-        }
-        return null;
-    }
+//    /**
+//     * Returns the default shared instance of the CleverTap SDK.
+//     *
+//     * @param context     The Android context
+//     * @param cleverTapID Custom CleverTapID passed by the app
+//     * @return The {@link CleverTapAPI} object
+//     */
+//    @SuppressWarnings("WeakerAccess")
+//    public static CleverTapAPI getDefaultInstance(Context context, String cleverTapID) {
+//        // For Google Play Store/Android Studio tracking
+//        sdkVersion = BuildConfig.SDK_VERSION_STRING;
+//
+//        if (defaultConfig != null) {
+//            return CleverTapManager.instanceWithConfig(context, defaultConfig, cleverTapID);
+//        } else {
+//            defaultConfig = getDefaultConfig(context);
+//            if (defaultConfig != null) {
+//                return CleverTapManager.instanceWithConfig(context, defaultConfig, cleverTapID);
+//            }
+//        }
+//        return null;
+//    }
 
     /**
      * Returns the default shared instance of the CleverTap SDK.
@@ -751,10 +751,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("WeakerAccess")
     public static @Nullable
     CleverTapAPI getDefaultInstance(Context context) {
-        return getDefaultInstance(context, null);
+        return CleverTapManager.getDefaultInstance(context, null);
     }
 
-    private static CleverTapAPI fromAccountId(final Context context, final String _accountId) {
+    /*private static CleverTapAPI fromAccountId(final Context context, final String _accountId) {
         if (instances == null) {
             return createInstanceIfAvailable(context, _accountId);
         }
@@ -774,7 +774,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         return null;// failed to get instance
-    }
+    }*/
 
     public static ConcurrentHashMap<String, CleverTapAPI> getInstances() {
         return instances;
@@ -847,50 +847,50 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return The {@link CleverTapAPI} object
      */
     public static CleverTapAPI instanceWithConfig(Context context, CleverTapInstanceConfig config) {
-        return instanceWithConfig(context, config, null);
+        return CleverTapManager.instanceWithConfig(context, config, null);
     }
 
-    /**
-     * Returns an instance of the CleverTap SDK using CleverTapInstanceConfig.
-     *
-     * @param context The Android context
-     * @param config  The {@link CleverTapInstanceConfig} object
-     * @return The {@link CleverTapAPI} object
-     */
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public static CleverTapAPI instanceWithConfig(Context context, @NonNull CleverTapInstanceConfig config,
-            String cleverTapID) {
-        //noinspection Constant Conditions
-        if (config == null) {
-            Logger.v("CleverTapInstanceConfig cannot be null");
-            return null;
-        }
-        if (instances == null) {
-            instances = new ConcurrentHashMap<>();
-        }
-
-        CleverTapAPI instance = instances.get(config.getAccountId());
-        if (instance == null) {
-            instance = new CleverTapAPI(context, config, cleverTapID);
-            instances.put(config.getAccountId(), instance);
-            final CleverTapAPI finalInstance = instance;
-            Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
-            task.execute("recordDeviceIDErrors", new Callable<Void>() {
-                @Override
-                public Void call() {
-                    if (finalInstance.getCleverTapID() != null) {
-                        finalInstance.coreState.getLoginController().recordDeviceIDErrors();
-                    }
-                    return null;
-                }
-            });
-        } else if (instance.isErrorDeviceId() && instance.getConfig().getEnableCustomCleverTapId() && Utils
-                .validateCTID(cleverTapID)) {
-            instance.coreState.getLoginController().asyncProfileSwitchUser(null, null, cleverTapID);
-        }
-        Logger.v(config.getAccountId() + ":async_deviceID", "CleverTapAPI instance = " + instance);
-        return instance;
-    }
+//    /**
+//     * Returns an instance of the CleverTap SDK using CleverTapInstanceConfig.
+//     *
+//     * @param context The Android context
+//     * @param config  The {@link CleverTapInstanceConfig} object
+//     * @return The {@link CleverTapAPI} object
+//     */
+//    @SuppressWarnings({"unused", "WeakerAccess"})
+//    public static CleverTapAPI instanceWithConfig(Context context, @NonNull CleverTapInstanceConfig config,
+//            String cleverTapID) {
+//        //noinspection Constant Conditions
+//        if (config == null) {
+//            Logger.v("CleverTapInstanceConfig cannot be null");
+//            return null;
+//        }
+//        if (instances == null) {
+//            instances = new ConcurrentHashMap<>();
+//        }
+//
+//        CleverTapAPI instance = instances.get(config.getAccountId());
+//        if (instance == null) {
+//            instance = new CleverTapAPI(context, config, cleverTapID);
+//            instances.put(config.getAccountId(), instance);
+//            final CleverTapAPI finalInstance = instance;
+//            Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
+//            task.execute("recordDeviceIDErrors", new Callable<Void>() {
+//                @Override
+//                public Void call() {
+//                    if (finalInstance.getCleverTapID() != null) {
+//                        finalInstance.coreState.getLoginController().recordDeviceIDErrors();
+//                    }
+//                    return null;
+//                }
+//            });
+//        } else if (instance.isErrorDeviceId() && instance.getConfig().getEnableCustomCleverTapId() && Utils
+//                .validateCTID(cleverTapID)) {
+//            instance.coreState.getLoginController().asyncProfileSwitchUser(null, null, cleverTapID);
+//        }
+//        Logger.v(config.getAccountId() + ":async_deviceID", "CleverTapAPI instance = " + instance);
+//        return instance;
+//    }
 
     /**
      * Returns whether or not the app is in the foreground.
@@ -938,7 +938,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("WeakerAccess")
     public static void onActivityResumed(Activity activity, String cleverTapID) {
         if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null, cleverTapID);
+//            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null, cleverTapID);
+             CleverTapManager.instanceWithConfig(activity.getApplicationContext(), null, cleverTapID);
         }
 
         CoreMetaData.setAppForeground(true);
@@ -972,7 +973,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
     private static CleverTapAPI fromBundle(final Context context, final Bundle extras) {
         String _accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
-        return fromAccountId(context, _accountId);
+        return CleverTapManager.fromAccountId(context,_accountId);
     }
 
     @RestrictTo(Scope.LIBRARY)
@@ -1080,7 +1081,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     // Initialize
-    private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
+    public CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
 
         CoreState coreState = CleverTapFactory
@@ -2789,7 +2790,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     }
 
-    private CleverTapInstanceConfig getConfig() {
+    public CleverTapInstanceConfig getConfig() {
         return coreState.getConfig();
     }
 
@@ -2797,7 +2798,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return getConfig().getLogger();
     }
 
-    private boolean isErrorDeviceId() {
+    public boolean isErrorDeviceId() {
         return coreState.getDeviceInfo().isErrorDeviceId();
     }
 
@@ -2836,7 +2837,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     static void onActivityCreated(Activity activity, String cleverTapID) {
         // make sure we have at least the default instance created here.
         if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null, cleverTapID);
+//            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null, cleverTapID);
+            CleverTapManager.instanceWithConfig(activity.getApplicationContext(), null, cleverTapID);
         }
 
         if (instances == null) {
@@ -2901,39 +2903,39 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     private static CleverTapAPI createInstanceIfAvailable(Context context, String _accountId) {
-        return createInstanceIfAvailable(context, _accountId, null);
+        return CleverTapManager.createInstanceIfAvailable(context, _accountId, null);
     }
 
-    private static @Nullable
-    CleverTapAPI createInstanceIfAvailable(Context context, String _accountId, String cleverTapID) {
-        try {
-            if (_accountId == null) {
-                try {
-                    return CleverTapAPI.getDefaultInstance(context, cleverTapID);
-                } catch (Throwable t) {
-                    Logger.v("Error creating shared Instance: ", t.getCause());
-                    return null;
-                }
-            }
-            String configJson = StorageHelper.getString(context, "instance:" + _accountId, "");
-            if (!configJson.isEmpty()) {
-                CleverTapInstanceConfig config = CleverTapInstanceConfig.createInstance(configJson);
-                Logger.v("Inflated Instance Config: " + configJson);
-                return config != null ? CleverTapAPI.instanceWithConfig(context, config, cleverTapID) : null;
-            } else {
-                try {
-                    CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
-                    return (instance != null && instance.coreState.getConfig().getAccountId().equals(_accountId))
-                            ? instance : null;
-                } catch (Throwable t) {
-                    Logger.v("Error creating shared Instance: ", t.getCause());
-                    return null;
-                }
-            }
-        } catch (Throwable t) {
-            return null;
-        }
-    }
+//    private static @Nullable
+//    CleverTapAPI createInstanceIfAvailable(Context context, String _accountId, String cleverTapID) {
+//        try {
+//            if (_accountId == null) {
+//                try {
+//                    return CleverTapAPI.getDefaultInstance(context, cleverTapID);
+//                } catch (Throwable t) {
+//                    Logger.v("Error creating shared Instance: ", t.getCause());
+//                    return null;
+//                }
+//            }
+//            String configJson = StorageHelper.getString(context, "instance:" + _accountId, "");
+//            if (!configJson.isEmpty()) {
+//                CleverTapInstanceConfig config = CleverTapInstanceConfig.createInstance(configJson);
+//                Logger.v("Inflated Instance Config: " + configJson);
+//                return config != null ? CleverTapAPI.instanceWithConfig(context, config, cleverTapID) : null;
+//            } else {
+//                try {
+//                    CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
+//                    return (instance != null && instance.coreState.getConfig().getAccountId().equals(_accountId))
+//                            ? instance : null;
+//                } catch (Throwable t) {
+//                    Logger.v("Error creating shared Instance: ", t.getCause());
+//                    return null;
+//                }
+//            }
+//        } catch (Throwable t) {
+//            return null;
+//        }
+//    }
 
     private static ArrayList<CleverTapAPI> getAvailableInstances(Context context) {
         ArrayList<CleverTapAPI> apiArrayList = new ArrayList<>();
@@ -2948,29 +2950,29 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return apiArrayList;
     }
 
-    /**
-     * Creates default {@link CleverTapInstanceConfig} object and returns it
-     *
-     * @param context The Android context
-     * @return The {@link CleverTapInstanceConfig} object
-     */
-    private static CleverTapInstanceConfig getDefaultConfig(Context context) {
-        ManifestInfo manifest = ManifestInfo.getInstance(context);
-        String accountId = manifest.getAccountId();
-        String accountToken = manifest.getAcountToken();
-        String accountRegion = manifest.getAccountRegion();
-        if (accountId == null || accountToken == null) {
-            Logger.i(
-                    "Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
-            return null;
-        }
-        if (accountRegion == null) {
-            Logger.i("Account Region not specified in the AndroidManifest - using default region");
-        }
-
-        return CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
-
-    }
+//    /**
+//     * Creates default {@link CleverTapInstanceConfig} object and returns it
+//     *
+//     * @param context The Android context
+//     * @return The {@link CleverTapInstanceConfig} object
+//     */
+//    private static CleverTapInstanceConfig getDefaultConfig(Context context) {
+//        ManifestInfo manifest = ManifestInfo.getInstance(context);
+//        String accountId = manifest.getAccountId();
+//        String accountToken = manifest.getAcountToken();
+//        String accountRegion = manifest.getAccountRegion();
+//        if (accountId == null || accountToken == null) {
+//            Logger.i(
+//                    "Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
+//            return null;
+//        }
+//        if (accountRegion == null) {
+//            Logger.i("Account Region not specified in the AndroidManifest - using default region");
+//        }
+//
+//        return CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
+//
+//    }
 
     private static @Nullable
     CleverTapAPI getDefaultInstanceOrFirstOther(Context context) {
