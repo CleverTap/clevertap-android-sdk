@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest package="com.clevertap.demo"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Required runtime permission to display notifications on Android 13 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application>
+
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="TEST-R78-ZZK-955Z" />
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="TEST-311-ba2" />
+
+    </application>
+</manifest>

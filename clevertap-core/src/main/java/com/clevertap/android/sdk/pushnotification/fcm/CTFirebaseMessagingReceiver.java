@@ -103,6 +103,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
         start = System.nanoTime();
 
         Logger.d(TAG, "received a message from Firebase");
+        Logger.d(TAG, "CTRM is ordered = "+isOrderedBroadcast());
         if (context == null || intent == null) {
             return;
         }
