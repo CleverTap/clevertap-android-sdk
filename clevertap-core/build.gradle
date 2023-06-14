@@ -22,6 +22,7 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.test.ext:junit-ktx:1.1.5'
     compileOnly fileTree(include: ['*.aar'], dir: 'libs')
 
     compileOnly Libs.firebase_messaging
@@ -43,6 +44,17 @@ dependencies {
     testImplementation project(':test_shared')
     testImplementation Libs.firebase_messaging
     testImplementation fileTree(include: ['*.aar'], dir: 'libs')
+
+    androidTestImplementation "androidx.work:work-testing:2.7.1"
+    androidTestImplementation "androidx.test:runner:1.5.2"
+    androidTestImplementation "androidx.test:rules:1.5.0"
+    // Optional -- UI testing with Espresso
+    androidTestImplementation Libs.espresso_core
+    // Optional -- UI testing with UI Automator
+    androidTestImplementation "androidx.test.uiautomator:uiautomator:2.3.0-alpha03"
+    androidTestImplementation fileTree(include: ['*.aar'], dir: 'libs')
+    // Optional -- UI testing with Compose
+    androidTestImplementation Libs.androidx_test_ext_junit
 }
 
 sonarqube {
