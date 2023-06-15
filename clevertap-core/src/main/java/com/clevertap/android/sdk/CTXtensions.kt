@@ -11,6 +11,8 @@ import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
+import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
+import com.clevertap.android.sdk.task.CTExecutorFactory
 
 fun Context.isPackageAndOsTargetsAbove(apiLevel: Int) =
     VERSION.SDK_INT > apiLevel && targetSdkVersion > apiLevel
@@ -96,4 +98,31 @@ fun NotificationManager.getOrCreateChannel(
         e.printStackTrace()
     }
     return null
+}
+
+/**
+ * Flushes push notification impressions on the CleverTap instance in blocking fashion on a postAsyncSafely executor.
+ * postAsyncSafely executor will make sure that multiple flush operations occur in sequence.
+
+ * @param logTag is tag name to identify the task state in logs
+ * @param caller The caller.
+ * @param context The application context.
+ */
+fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: String, context: Context) {
+    val flushTask = CTExecutorFactory.executors(coreState.config).postAsyncSafelyTask<Void?>()
+
+    val flushFutureResult = flushTask.submit(logTag) {
+        try {
+            coreState.baseEventQueueManager.flushQueueSync(context, PUSH_NOTIFICATION_VIEWED, caller)
+        } catch (e: Exception) {
+            Logger.d(logTag, "failed to flush push impressions on ct instance = " + coreState.config.accountId)
+        }
+        null
+    }
+
+    try {
+        flushFutureResult.get()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
 }

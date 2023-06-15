@@ -14,6 +14,7 @@ import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.work.CTFlushPushImpressionsWork
 import com.clevertap.android.sdk.utils.CTJsonConverter
@@ -24,7 +25,7 @@ import org.junit.*
 import org.junit.runner.*
 
 @RunWith(AndroidJUnit4::class)
-class BasicInstrumentationTest{
+class PIFlushWorkInstrumentationTest{
     @Before
     fun setup() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -66,16 +67,35 @@ class BasicInstrumentationTest{
 
         val myContext = ApplicationProvider.getApplicationContext<Context>()
         val defaultInstance = CleverTapAPI.getDefaultInstance(myContext)
-        val event = JSONObject()
-        try {
-            val notif: JSONObject = CTJsonConverter.getWzrkFields(bundle)
-            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
-            event.put("evtData", notif)
-        } catch (ignored: Throwable) {
-            //no-op
+
+        val config1 = CleverTapInstanceConfig.createInstance(myContext, "88R-R54-5Z6Z", "452-2bb");
+        config1.isAnalyticsOnly = true
+        val config2 = CleverTapInstanceConfig.createInstance(myContext, "TEST-46W-WWR-R85Z", "TEST-200-064");
+
+        val ctInstance1 = CleverTapAPI.instanceWithConfig(myContext,config1);
+        val ctInstance2 = CleverTapAPI.instanceWithConfig(myContext,config2);
+
+        val bundle1 = (bundle.clone() as Bundle).apply {
+            putString("wzrk_acct_id", "88R-R54-5Z6Z")
+        }
+        val bundle2 = (bundle.clone() as Bundle).apply {
+            putString("wzrk_acct_id", "TEST-46W-WWR-R85Z")
         }
 
-        defaultInstance!!.coreState!!.databaseManager.queuePushNotificationViewedEventToDB(myContext,event)
+        listOf(Pair(defaultInstance,bundle),Pair(ctInstance1,bundle1), Pair(ctInstance2,bundle2)).map {
+            val event = JSONObject()
+            try {
+                val notif: JSONObject = CTJsonConverter.getWzrkFields(it.second)
+                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
+                event.put("evtData", notif)
+            } catch (ignored: Throwable) {
+                //no-op
+            }
+            Pair(it.first,event)
+        }.forEach {
+            it.first!!.coreState!!.databaseManager.queuePushNotificationViewedEventToDB(myContext, it.second)
+        }
+
 
         val constraints = Builder()
             .setRequiredNetworkType(CONNECTED)
