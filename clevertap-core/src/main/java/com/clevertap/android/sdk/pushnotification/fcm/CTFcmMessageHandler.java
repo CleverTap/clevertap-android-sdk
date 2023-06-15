@@ -45,35 +45,11 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
 
         Bundle messageBundle = mParser.toBundle(message);
         if (messageBundle != null) {
-            messageBundle.putString(Constants.NOTIFICATION_HEALTH, Constants.WZRK_HEALTH_STATE_GOOD);
-            if (!messageBundle.containsKey("nh_source")) {
-                messageBundle.putString("nh_source", "FcmMessageListenerService");
-            }
             /**
              * Analytics: If FCM alters original priority of a notification
              */
-            if (message.getOriginalPriority() != message.getPriority()) {
+            messageBundle = new FcmNotificationBundleManipulation(messageBundle).addPriority(message).build();
 
-                // Variable to hold the string representation of the priority value.
-                String strPriority = "";
-
-                // Extracting the priority value from the RemoteMessage and mapping it to the appropriate string constant
-                int intPriority = message.getPriority();
-
-                switch (intPriority) {
-                    case RemoteMessage.PRIORITY_HIGH:
-                        strPriority = Constants.PRIORITY_HIGH;
-                        break;
-                    case RemoteMessage.PRIORITY_NORMAL:
-                        strPriority = Constants.PRIORITY_NORMAL;
-                        break;
-                    case RemoteMessage.PRIORITY_UNKNOWN:
-                        strPriority = Constants.PRIORITY_UNKNOWN;
-                        break;
-                }
-                // Storing the priority value in the messageBundle for analytics purpose.
-                messageBundle.putString(Constants.WZRK_PN_PRT, strPriority);
-            }
             isSuccess = PushNotificationHandler.getPushNotificationHandler()
                     .onMessageReceived(context, messageBundle, PushType.FCM.toString());
         }

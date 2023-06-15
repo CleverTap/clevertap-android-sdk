@@ -160,7 +160,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                                         messageBundle));
 
                         if (cleverTapAPI != null) {
-                            CTXtensions.flushPushImpressionsOnPostAsyncSafely(cleverTapAPI,TAG,Constants.D_SRC_PI_R,context);
+                            CTXtensions.flushPushImpressionsOnPostAsyncSafely(cleverTapAPI,TAG+"#flushQueueSync",Constants.D_SRC_PI_R,context);
                         }
                         //We are done flushing events
                     } catch (Exception e) {
