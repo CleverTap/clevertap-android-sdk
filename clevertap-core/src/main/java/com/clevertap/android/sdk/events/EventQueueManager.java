@@ -170,6 +170,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      */
     @Override
     public void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final String caller) {
+        /*if (caller == null && eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)
+            return;*/
         // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
