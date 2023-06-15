@@ -320,7 +320,6 @@ public interface Constants {
     String PT_INPUT_KEY = "pt_input_reply";
 
     // ==========Fallback keys=========
-    String NOTIFICATION_HEALTH = "wzrk_pn_h";
     String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident
     String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
     String OMR_INVOKE_TIME_IN_MILLIS = "omr_invoke_time_in_millis";

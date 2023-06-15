@@ -96,7 +96,6 @@ class PIFlushWorkInstrumentationTest{
             it.first!!.coreState!!.databaseManager.queuePushNotificationViewedEventToDB(myContext, it.second)
         }
 
-
         val constraints = Builder()
             .setRequiredNetworkType(CONNECTED)
             .setRequiresCharging(true)
