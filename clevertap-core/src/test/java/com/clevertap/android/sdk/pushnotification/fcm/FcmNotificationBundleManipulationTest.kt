@@ -32,10 +32,44 @@ class FcmNotificationBundleManipulationTest : BaseTestCase() {
     }
 
     @Test
-    fun addPriority_withDifferentOriginalPriority_shouldAddPriorityToBundle() {
+    fun addPriority_withDifferentOriginalPriority_shouldAddHighPriorityToBundle() {
         val priority = RemoteMessage.PRIORITY_HIGH
         val originalPriority = RemoteMessage.PRIORITY_NORMAL
         val strPriority = Constants.PRIORITY_HIGH
+
+        `when`(remoteMessage.originalPriority).thenReturn(originalPriority)
+        `when`(remoteMessage.priority).thenReturn(priority)
+
+        assertEquals(null, messageBundle.getString(Constants.WZRK_PN_PRT))
+
+        val actualBundle = notificationManipulation.addPriority(remoteMessage).build()
+
+        assertEquals(messageBundle, actualBundle)
+
+        assertEquals(strPriority, messageBundle.getString(Constants.WZRK_PN_PRT))
+    }
+    @Test
+    fun addPriority_withDifferentOriginalPriority_shouldAddNormalPriorityToBundle() {
+        val priority = RemoteMessage.PRIORITY_NORMAL
+        val originalPriority = RemoteMessage.PRIORITY_HIGH
+        val strPriority = Constants.PRIORITY_NORMAL
+
+        `when`(remoteMessage.originalPriority).thenReturn(originalPriority)
+        `when`(remoteMessage.priority).thenReturn(priority)
+
+        assertEquals(null, messageBundle.getString(Constants.WZRK_PN_PRT))
+
+        val actualBundle = notificationManipulation.addPriority(remoteMessage).build()
+
+        assertEquals(messageBundle, actualBundle)
+
+        assertEquals(strPriority, messageBundle.getString(Constants.WZRK_PN_PRT))
+    }
+    @Test
+    fun addPriority_withDifferentOriginalPriority_shouldAddUnknownPriorityToBundle() {
+        val priority = RemoteMessage.PRIORITY_UNKNOWN
+        val originalPriority = RemoteMessage.PRIORITY_HIGH
+        val strPriority = Constants.PRIORITY_UNKNOWN
 
         `when`(remoteMessage.originalPriority).thenReturn(originalPriority)
         `when`(remoteMessage.priority).thenReturn(priority)
