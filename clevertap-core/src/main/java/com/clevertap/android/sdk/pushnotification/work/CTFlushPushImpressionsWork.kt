@@ -36,7 +36,7 @@ class CTFlushPushImpressionsWork(context: Context, workerParams: WorkerParameter
                     return Result.success()
 
                 it.apply {
-                    Logger.d(tag, "flushing queue for push impressions on ct instance = $accountId")
+                    Logger.d(tag, "flushing queue for push impressions on CT instance = $accountId")
 
                     flushPushImpressionsOnPostAsyncSafely(tag, Constants.D_SRC_PI_WM, context)
 
