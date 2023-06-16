@@ -2,12 +2,14 @@
 
 package com.clevertap.android.sdk
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
@@ -78,14 +80,20 @@ fun NotificationManager.getOrCreateChannel(
         }
 
         /**
-         * create default channel
+         * create fallback channel
          */
-        if (getNotificationChannel(Constants.CLEVERTAP_RESERVE_CHANNEL_ID) == null) {
+        if (getNotificationChannel(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID) == null) {
+
+            val defaultChannelName = try {
+                  context.getString(R.string.fcm_fallback_notification_channel_label)
+            } catch (e: Exception) {
+                Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME
+            }
 
             createNotificationChannel(
                 NotificationChannel(
-                    Constants.CLEVERTAP_RESERVE_CHANNEL_ID,
-                    Constants.CLEVERTAP_RESERVE_CHANNEL_NAME,
+                    Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID,
+                    defaultChannelName,
                     NotificationManager.IMPORTANCE_DEFAULT
                 ).also {
                     Logger.d(Constants.CLEVERTAP_LOG_TAG, "created default channel: $it")
@@ -93,7 +101,7 @@ fun NotificationManager.getOrCreateChannel(
             )
         }
 
-        return Constants.CLEVERTAP_RESERVE_CHANNEL_ID
+        return Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID
     } catch (e: Exception) {
         e.printStackTrace()
     }
