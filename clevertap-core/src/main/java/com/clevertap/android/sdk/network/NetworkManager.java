@@ -185,6 +185,15 @@ public class NetworkManager extends BaseNetworkManager {
                 if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
                     // Notify listener for push impression sent to the server
                     notifyListenerForPushImpressionSentToServer(Constants.FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME);
+                    if (previousCursor!=null && previousCursor.getData()!=null)
+                    {
+                        try {
+                            notifyListenersForPushImpressionSentToServer(previousCursor.getData());
+                        } catch (Exception e) {
+                            config.getLogger().verbose(config.getAccountId(),
+                                    "met with exception while notifying listeners for PushImpressionSentToServer event");
+                        }
+                    }
                 }
                 break;
             }
@@ -750,10 +759,6 @@ public class NetworkManager extends BaseNetworkManager {
             setLastRequestTimestamp(getCurrentRequestTimestamp());
             setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
 
-            if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-                notifyListenersForPushImpressionSentToServer(queue);
-
-            }
             logger.debug(config.getAccountId(), "Queue sent successfully");
 
             responseFailureCount = 0;
