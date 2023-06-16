@@ -165,7 +165,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                         //We are done flushing events
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Logger.v("CTRM", "Failed executing CTRM flushQueueSync thread.", e);
+                        Logger.v(TAG, "Failed executing CTRM flushQueueSync thread.", e);
                     } finally {
                         finishReceiverAndCancelTimer("flush from receiver is done!");
                     }
