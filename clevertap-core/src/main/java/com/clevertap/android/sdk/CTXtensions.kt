@@ -43,6 +43,15 @@ fun Context.areAppNotificationsEnabled() = try {
     true
 }
 
+/**
+ * Retrieves or creates the notification channel based on the given channel ID.
+ * If the given channel ID is not registered, it falls back to the manifest channel ID.
+ * If the manifest channel ID is not registered or not available, it creates and returns the default channel ID.
+ *
+ * @param msgChannel The channel ID received in the push payload.
+ * @param context The context of the application.
+ * @return The channel ID of the notification channel to be used.
+ */
 @RequiresApi(VERSION_CODES.O)
 @WorkerThread
 fun NotificationManager.getOrCreateChannel(
