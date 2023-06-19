@@ -218,6 +218,43 @@ class CTXtensionsTest : BaseTestCase() {
         }
     }
 
+    //given = null | manifest = not registered | default = not registered
+    @Test
+    fun test_getOrCreateChannel_when_given_channel_null_and_manifestChannel_not_registered_and_default_not_registered_then_return_default_channel() {
+        mockStatic(ManifestInfo::class.java).use {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mock(ManifestInfo::class.java)
+
+            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
+            `when`(manifestInfo.devDefaultPushChannelId).thenReturn("NonRegisteredManifestChannelId")
+
+            val actual = nm.getOrCreateChannel(null, application)
+            assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
+        }
+    }
+
+    //given = null | manifest = not registered | default = registered
+    @Test
+    fun test_getOrCreateChannel_when_given_channel_null_and_manifestChannel_not_registered_and_default_is_registered_then_return_default_channel() {
+        mockStatic(ManifestInfo::class.java).use {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mock(ManifestInfo::class.java)
+
+            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
+            `when`(manifestInfo.devDefaultPushChannelId).thenReturn("NonRegisteredManifestChannelId")
+
+            // Configure the test notification channel with an existing fallback channel
+            configureTestNotificationChannel(
+                NotificationManager.IMPORTANCE_DEFAULT, true, 30,
+                channelID = Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID
+            )
+
+            val actual = nm.getOrCreateChannel(null, application)
+            assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
+        }
+    }
+
+
     @Test
     fun test_getOrCreateChannel_when_getNotificationChannel_throws_exception_return_null() {
         mockStatic(ManifestInfo::class.java).use {
