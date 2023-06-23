@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.leanplum
 
-import android.app.Application
-import com.clevertap.android.sdk.ActivityLifecycleCallback
 import com.clevertap.android.sdk.Logger
 
 internal class CTWrapper(private val ctProvider: CleverTapProvider) {
