@@ -393,18 +393,19 @@ class UtilsTest : BaseTestCase() {
 
         // if context is null, result will always be null irrespective of other params
         val bitmap8 = HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest(null))
-        //Utils.getNotificationBitmap(null, false, null)
         assertNull(bitmap8.bitmap)
+        assertEquals(DownloadedBitmap.Status.NO_IMAGE,bitmap8.status)
 
         //if fallbackToAppIcon is false and path is null/empty, result will remain null since the fallback is disabled
         val bitmap71 =
             HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest(null, false, context))
-        //Utils.getNotificationBitmap(null, false, context)
         val bitmap72 =
             HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest("", false, context))
-        //Utils.getNotificationBitmap("", false, context)
         assertNull(bitmap71.bitmap)
+        assertEquals(DownloadedBitmap.Status.NO_IMAGE,bitmap71.status)
+
         assertNull(bitmap72.bitmap)
+        assertEquals(DownloadedBitmap.Status.NO_IMAGE,bitmap72.status)
 
         //if fallbackToAppIcon is true and path is  null, result will  be the app icon
         //---prerequisite-----
@@ -416,15 +417,15 @@ class UtilsTest : BaseTestCase() {
 
         val bitmap61 =
             HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest(null, true, context))
-        //Utils.getNotificationBitmap(null, true, context)
         assertNotNull(bitmap61.bitmap)
+        assertEquals(DownloadedBitmap.Status.SUCCESS,bitmap61.status)
         printBitmapInfo(bitmap61, "bitmap61")
 
         //if fallbackToAppIcon is true and path is  null, result will  be the app icon
         val bitmap62 =
             HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest("", true, context))
-        //Utils.getNotificationBitmap("", true, context)
         printBitmapInfo(bitmap62, "bitmap62")
+        assertEquals(DownloadedBitmap.Status.SUCCESS,bitmap62.status)
         assertNotNull(bitmap62.bitmap)
 
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
@@ -436,7 +437,6 @@ class UtilsTest : BaseTestCase() {
                 application.applicationContext
             )
         )
-        //Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", false, application.applicationContext)
         val bitmap42 = HttpBitmapLoader.getHttpBitmap(
             DOWNLOAD_NOTIFICATION_BITMAP,
             BitmapDownloadRequest(
@@ -445,12 +445,45 @@ class UtilsTest : BaseTestCase() {
                 application.applicationContext
             )
         )
-        //Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", true, application.applicationContext)
         printBitmapInfo(bitmap41, "bitmap41")
         printBitmapInfo(bitmap42, "bitmap42")
 
         assertNotNull(bitmap41.bitmap)
+        assertEquals(DownloadedBitmap.Status.SUCCESS,bitmap41.status)
         assertNotNull(bitmap42.bitmap)
+        assertEquals(DownloadedBitmap.Status.SUCCESS,bitmap42.status)
+
+        val bitmap43 = HttpBitmapLoader.getHttpBitmap(
+            DOWNLOAD_NOTIFICATION_BITMAP,
+            BitmapDownloadRequest(
+                "https://www.abc.cz/iceeo/faviceeeeon.ico",
+                false,
+                application.applicationContext
+            )
+        )
+        printBitmapInfo(bitmap43, "bitmap43")
+
+        assertNull(bitmap43.bitmap)
+        assertEquals(DownloadedBitmap.Status.DOWNLOAD_FAILED,bitmap43.status)
+    }
+
+    @Test
+    fun test_getNotificationBitmap_when_context_is_passed_and_network_is_unavailable_and_fallbackIsFalse_shouldReturnNull(){
+        val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val shadowConnectivityManager = Shadows.shadowOf(connectivityManager)
+        shadowConnectivityManager.setActiveNetworkInfo(null)
+
+        val bitmap41 = HttpBitmapLoader.getHttpBitmap(
+            DOWNLOAD_NOTIFICATION_BITMAP,
+            BitmapDownloadRequest(
+                "https://www.pod.cz/ico/favicon.ico",
+                false,
+                application.applicationContext
+            )
+        )
+        assertNull(bitmap41.bitmap)
+        assertEquals(DownloadedBitmap.Status.NO_NETWORK,bitmap41.status)
+
     }
 
     @Test
@@ -470,6 +503,7 @@ class UtilsTest : BaseTestCase() {
         printBitmapInfo(bitmap41, "bitmap41")
 
         assertNull(bitmap41.bitmap)
+        assertEquals(DownloadedBitmap.Status.SIZE_LIMIT_EXCEEDED,bitmap41.status)
     }
 
     @Test
