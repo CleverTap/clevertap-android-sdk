@@ -16,6 +16,7 @@ import android.app.job.JobParameters;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.media.AudioAttributes;
 import android.net.Uri;
@@ -3036,5 +3037,40 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public static @XiaomiPush int getEnableXiaomiPushOn() {
         return PushType.XPS.getRunningDevices();
+    }
+
+    /**
+     * Retrieves a notification bitmap with a specified timeout and size constraint.
+     *
+     * @param bitmapSrcUrl      The URL of the bitmap to download.
+     * @param fallbackToAppIcon Specifies whether to fallback to the app icon if the bitmap is not available.
+     * @param context           The context of the application.
+     * @param config            The CleverTap instance configuration.
+     * @param timeoutInMillis   The timeout duration for the bitmap download in milliseconds.
+     * @param sizeInBytes       The maximum size of the bitmap in bytes.
+     * @return The downloaded bitmap or null if it couldn't be downloaded or doesn't exist.
+     */
+    public static @Nullable Bitmap getNotificationBitmapWithTimeoutAndSize(String bitmapSrcUrl,
+            boolean fallbackToAppIcon,
+            final Context context, final CleverTapInstanceConfig config, long timeoutInMillis, int sizeInBytes) {
+        return Utils.getNotificationBitmapWithTimeoutAndSize(bitmapSrcUrl, fallbackToAppIcon, context, config,
+                timeoutInMillis, sizeInBytes).getBitmap();
+    }
+
+    /**
+     * Retrieves a notification bitmap with a specified timeout.
+     *
+     * @param bitmapSrcUrl      The URL of the bitmap to download.
+     * @param fallbackToAppIcon Specifies whether to fallback to the app icon if the bitmap is not available.
+     * @param context           The context of the application.
+     * @param config            The CleverTap instance configuration.
+     * @param timeoutInMillis   The timeout duration for the bitmap download in milliseconds.
+     * @return The downloaded bitmap or null if it couldn't be downloaded or doesn't exist.
+     */
+    public static @Nullable Bitmap getNotificationBitmapWithTimeout(String bitmapSrcUrl,
+            boolean fallbackToAppIcon,
+            final Context context, final CleverTapInstanceConfig config, long timeoutInMillis) {
+        return Utils.getNotificationBitmapWithTimeout(bitmapSrcUrl, fallbackToAppIcon, context, config,
+                timeoutInMillis).getBitmap();
     }
 }
