@@ -43,6 +43,10 @@ import android.telephony.TelephonyManager.NETWORK_TYPE_IDEN
 import android.telephony.TelephonyManager.NETWORK_TYPE_LTE
 import android.telephony.TelephonyManager.NETWORK_TYPE_NR
 import android.telephony.TelephonyManager.NETWORK_TYPE_UMTS
+import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest
+import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
+import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_NOTIFICATION_BITMAP
+import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.shared.test.BaseTestCase
 import com.google.firebase.messaging.RemoteMessage
@@ -72,7 +76,6 @@ class UtilsTest : BaseTestCase() {
         assertFalse { Utils.containsIgnoreCase(collection, key) }
     }
 
-
     @Test
     fun test_containsIgnoreCase_when_CollectionNullAndKeyNotNull_should_ReturnFalse() {
         val collection: List<String>? = null
@@ -94,14 +97,12 @@ class UtilsTest : BaseTestCase() {
         assertFalse { Utils.containsIgnoreCase(collection, key) }
     }
 
-
     @Test
     fun test_containsIgnoreCase_when_CollectionNotNullAndKeyNotNullAndKeyInCollection_should_ReturnTrue() {
         val collection: List<String>? = listOf("hello")
         val key: String? = "HelLO"
         assertTrue { Utils.containsIgnoreCase(collection, key) }
     }
-
 
     //------------------------------------------------------------------------------------
 
@@ -114,7 +115,6 @@ class UtilsTest : BaseTestCase() {
         assertEquals(0, map.size)
     }
 
-
     @Test
     fun test_convertBundleObjectToHashMap_when_BundleIsPassed_should_ReturnHashMap() {
         val bundle = Bundle().also { it.putChar("gender", 'M') }
@@ -123,7 +123,6 @@ class UtilsTest : BaseTestCase() {
         assertNotNull(map)
         assertEquals(1, map.size)
     }
-
 
     //------------------------------------------------------------------------------------
 
@@ -147,7 +146,6 @@ class UtilsTest : BaseTestCase() {
         //list = Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(jsonArray)
         //printIfDebug("list is $list")
         //assertEquals(0,list.size)
-
     }
 
     //------------------------------------------------------------------------------------
@@ -166,13 +164,11 @@ class UtilsTest : BaseTestCase() {
         printIfDebug("list is $list")
         assertEquals(0, list.size)
 
-
         // when array has malformed items, it returns a list of 0 item // todo can't get exception to throw
         //jsonArray = JSONArray().also { it.put(false) }
         //list = Utils.convertJSONArrayToArrayList(jsonArray)
         //printIfDebug("list is $list")
         //assertEquals(0, list.size)
-
     }
 
     //------------------------------------------------------------------------------------
@@ -195,7 +191,6 @@ class UtilsTest : BaseTestCase() {
         assertEquals(null, map["some_number"])
 
         // TODO : can't get JSONException to fire
-
     }
 
     //------------------------------------------------------------------------------------
@@ -251,11 +246,31 @@ class UtilsTest : BaseTestCase() {
         val url2 = "https://www.freedesktop.org/wiki/logo1.png"
         val image2: Bitmap? = Utils.getBitmapFromURL(url2)
         image2.let {
-            printBitmapInfo(name = "image2",bmp = it)
+            printBitmapInfo(name = "image2", bmp = it)
             assertNull(it)
         }
 
         val url = "https://www.freedesktop.org/wiki/logo.png"
+        val image: Bitmap? = Utils.getBitmapFromURL(url)
+        image.let {
+            printBitmapInfo(name = "image", bmp = it)
+            assertNotNull(it)
+
+        }
+    }
+
+    @Test
+    fun test_getBitmapFromURL_when_image_link_is_blank_should_ReturnNull() {
+        val image2: Bitmap? = Utils.getBitmapFromURL("")
+        image2.let {
+            printBitmapInfo(name = "image2", bmp = it)
+            assertNull(it)
+        }
+    }
+
+    @Test
+    fun test_getBitmapFromURL_when_image_link_contains_single_or_double_slash_should_ReturnImage() {
+        val url = "https:/www.freedesktop.org//wiki///logo.png"
         val image: Bitmap? = Utils.getBitmapFromURL(url)
         image.let {
             printBitmapInfo(name = "image", bmp = it)
@@ -273,12 +288,10 @@ class UtilsTest : BaseTestCase() {
         println(" downloaded an array2 of size  ${array2?.size} bytes ")
         assertNull(array2)
 
-
         val url = "https://www.freedesktop.org/wiki/logo.png"
         val array: ByteArray? = Utils.getByteArrayFromImageURL(url)
         println(" downloaded an array of size  ${array?.size} bytes ,")
         assertNotNull(array)
-
     }
 
     //------------------------------------------------------------------------------------
@@ -314,7 +327,6 @@ class UtilsTest : BaseTestCase() {
         val receivedType = Utils.getDeviceNetworkType(application)
         println("receivedType = $receivedType")
         assertEquals("Unavailable", receivedType)
-
     }
 
     @Test
@@ -362,9 +374,7 @@ class UtilsTest : BaseTestCase() {
             printIfDebug("receivedType = $receivedType")
             assertEquals(it.second, receivedType)
         }
-
     }
-
 
     //------------------------------------------------------------------------------------
 
@@ -382,12 +392,17 @@ class UtilsTest : BaseTestCase() {
         val context = application.applicationContext
 
         // if context is null, result will always be null irrespective of other params
-        val bitmap8 = Utils.getNotificationBitmap(null, false, null)
+        val bitmap8 = HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest(null))
+        //Utils.getNotificationBitmap(null, false, null)
         assertNull(bitmap8.bitmap)
 
         //if fallbackToAppIcon is false and path is null/empty, result will remain null since the fallback is disabled
-        val bitmap71 = Utils.getNotificationBitmap(null, false, context)
-        val bitmap72 = Utils.getNotificationBitmap("", false, context)
+        val bitmap71 =
+            HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest(null, false, context))
+        //Utils.getNotificationBitmap(null, false, context)
+        val bitmap72 =
+            HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest("", false, context))
+        //Utils.getNotificationBitmap("", false, context)
         assertNull(bitmap71.bitmap)
         assertNull(bitmap72.bitmap)
 
@@ -395,24 +410,42 @@ class UtilsTest : BaseTestCase() {
         //---prerequisite-----
         val actualAppDrawable = application.getDrawable(android.R.mipmap.sym_def_app_icon)
         val actualAppIconBitmap = BitmapFactory.decodeResource(context.resources, android.R.mipmap.sym_def_app_icon)
-        printBitmapInfo(name = "actualAppIconBitmap",bmp = actualAppIconBitmap)
+        printBitmapInfo(name = "actualAppIconBitmap", bmp = actualAppIconBitmap)
         ShadowPackageManager().setApplicationIcon(application.packageName, actualAppDrawable)
         //---prerequisite-----
 
-        val bitmap61 = Utils.getNotificationBitmap(null, true, context)
+        val bitmap61 =
+            HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest(null, true, context))
+        //Utils.getNotificationBitmap(null, true, context)
         assertNotNull(bitmap61.bitmap)
         printBitmapInfo(bitmap61, "bitmap61")
 
         //if fallbackToAppIcon is true and path is  null, result will  be the app icon
-        val bitmap62 = Utils.getNotificationBitmap("", true, context)
+        val bitmap62 =
+            HttpBitmapLoader.getHttpBitmap(DOWNLOAD_NOTIFICATION_BITMAP, BitmapDownloadRequest("", true, context))
+        //Utils.getNotificationBitmap("", true, context)
         printBitmapInfo(bitmap62, "bitmap62")
         assertNotNull(bitmap62.bitmap)
 
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
-        val bitmap41 =
-            Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", false, application.applicationContext)
-        val bitmap42 =
-            Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", true, application.applicationContext)
+        val bitmap41 = HttpBitmapLoader.getHttpBitmap(
+            DOWNLOAD_NOTIFICATION_BITMAP,
+            BitmapDownloadRequest(
+                "https://www.pod.cz/ico/favicon.ico",
+                false,
+                application.applicationContext
+            )
+        )
+        //Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", false, application.applicationContext)
+        val bitmap42 = HttpBitmapLoader.getHttpBitmap(
+            DOWNLOAD_NOTIFICATION_BITMAP,
+            BitmapDownloadRequest(
+                "https://www.pod.cz/ico/favicon.ico",
+                true,
+                application.applicationContext
+            )
+        )
+        //Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", true, application.applicationContext)
         printBitmapInfo(bitmap41, "bitmap41")
         printBitmapInfo(bitmap42, "bitmap42")
 
@@ -425,12 +458,15 @@ class UtilsTest : BaseTestCase() {
         val context = application.applicationContext
 
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
-        val bitmap41 = Utils.getNotificationBitmapWithSizeConstraints(
-            "https://www.pod.cz/ico/favicon.ico",
-            false,
-            application.applicationContext,
-            10
+        val bitmap41 = HttpBitmapLoader.getHttpBitmap(
+            DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP,
+            BitmapDownloadRequest(
+                "https://www.pod.cz/ico/favicon.ico",
+                false,
+                application.applicationContext, downloadSizeLimitInBytes = 10
+            )
         )
+
         printBitmapInfo(bitmap41, "bitmap41")
 
         assertNull(bitmap41.bitmap)
@@ -441,12 +477,15 @@ class UtilsTest : BaseTestCase() {
         val context = application.applicationContext
 
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
-        val bitmap41 = Utils.getNotificationBitmapWithSizeConstraints(
-            "https://www.pod.cz/ico/favicon.ico",
-            false,
-            application.applicationContext,
-            10 * 1024 * 1024
+        val bitmap41 = HttpBitmapLoader.getHttpBitmap(
+            DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP,
+            BitmapDownloadRequest(
+                "https://www.pod.cz/ico/favicon.ico",
+                false,
+                application.applicationContext, downloadSizeLimitInBytes = 10 * 1024 * 1024
+            )
         )
+
         printBitmapInfo(bitmap41, "bitmap41")
 
         assertNotNull(bitmap41)
@@ -475,8 +514,6 @@ class UtilsTest : BaseTestCase() {
         printIfDebug("thumb21 is $thumb21. thumb22 is $thumb22 ")
         assertEquals(0, thumb21)
         assertEquals(R1.drawable.ct_image, thumb22)
-
-
     }
 
     //------------------------------------------------------------------------------------
@@ -485,15 +522,18 @@ class UtilsTest : BaseTestCase() {
     fun test_hasPermission_when_PermissionNameAndContextIsPassed_should_ReturnEitherTrueOrFalse() {
         val application = application
 
-
         //assertFalse { Utils.hasPermission(null, Manifest.permission.INTERNET) } // context can't be null
         //assertFalse { Utils.hasPermission(null, null) }// permission can't be null or empty
         assertFalse { Utils.hasPermission(application.applicationContext, "") } // permission can't be null or empty
-        assertFalse { Utils.hasPermission(application.applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE) }// permission unavailable
+        assertFalse {
+            Utils.hasPermission(
+                application.applicationContext,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+        }// permission unavailable
 
         shadowApplication.grantPermissions(Manifest.permission.LOCATION_HARDWARE)
         assertTrue { Utils.hasPermission(application.applicationContext, Manifest.permission.LOCATION_HARDWARE) }
-
     }
 
     //------------------------------------------------------------------------------------
@@ -510,7 +550,6 @@ class UtilsTest : BaseTestCase() {
         activity.finish()
         //ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         assertTrue(Utils.isActivityDead(activity))
-
     }
 
     //------------------------------------------------------------------------------------
@@ -531,33 +570,33 @@ class UtilsTest : BaseTestCase() {
     @Test
     fun test_isServiceAvailable_when_ClassAnContextIsPAssed_should_ReturnTrueOrFalse() {
         kotlin.runCatching {
-        var clazz: Class<*>? = null
-        var context: Context? = null
+            var clazz: Class<*>? = null
+            var context: Context? = null
 
-        // if either of clazz or context is nul, will return false
-        //assertFalse { Utils.isServiceAvailable(context, clazz) }
+            // if either of clazz or context is nul, will return false
+            //assertFalse { Utils.isServiceAvailable(context, clazz) }
 
-        // if clazz is available, will return true
-        //----pre setup-----------------------------------------------------------------
-        //todo : giving NPE // @ piyush
-        val service = ServiceInfo().also {
-            it.name = "ABCService"
-            it.packageName = application.applicationInfo.packageName
-        }
-        val packageInfo = PackageInfo().also {
-            it.applicationInfo = application.applicationInfo
-            it.services = arrayOf(service)
-        }
-        ShadowPackageManager().installPackage(packageInfo)
-        //----pre setup-----------------------------------------------------------------
+            // if clazz is available, will return true
+            //----pre setup-----------------------------------------------------------------
+            //todo : giving NPE // @ piyush
+            val service = ServiceInfo().also {
+                it.name = "ABCService"
+                it.packageName = application.applicationInfo.packageName
+            }
+            val packageInfo = PackageInfo().also {
+                it.applicationInfo = application.applicationInfo
+                it.services = arrayOf(service)
+            }
+            ShadowPackageManager().installPackage(packageInfo)
+            //----pre setup-----------------------------------------------------------------
 
-        clazz = Class.forName("ABCService")
-        context = application.applicationContext
-        assertTrue { Utils.isServiceAvailable(context, clazz) }
+            clazz = Class.forName("ABCService")
+            context = application.applicationContext
+            assertTrue { Utils.isServiceAvailable(context, clazz) }
 
-        // if clazz is not available, will return false
-        clazz = Class.forName("NotABCService")
-        assertFalse { Utils.isServiceAvailable(context, clazz) }
+            // if clazz is not available, will return false
+            clazz = Class.forName("NotABCService")
+            assertFalse { Utils.isServiceAvailable(context, clazz) }
 
         }
     }
@@ -589,7 +628,6 @@ class UtilsTest : BaseTestCase() {
         printIfDebug("result3:$result3")
         assertNotNull(result3)
         assertEquals(result3, "value")
-
     }
 
     //------------------------------------------------------------------------------------
@@ -635,7 +673,6 @@ class UtilsTest : BaseTestCase() {
         printIntentInfo(intent, "after setting package")
         assertNull(intent.getPackage())
 
-
         // test 3: we are trying to fire an activity that is part of current application AND IS registered
         //outcome 3: intent will get the package set successfully
         activityComponent = ComponentName(application.packageName, "${application.packageName}.MyActivity")
@@ -655,7 +692,6 @@ class UtilsTest : BaseTestCase() {
         assertEquals(application.packageName, intent.getPackage())
 
         //test 4 ?? todo
-
     }
 
     //------------------------------------------------------------------------------------
@@ -671,7 +707,6 @@ class UtilsTest : BaseTestCase() {
         assertEquals(1, bundle.size())
         assertEquals("boy", bundle.getString("a"))
         printIfDebug(bundle.getString("a"))
-
     }
 
     //------------------------------------------------------------------------------------
@@ -683,13 +718,13 @@ class UtilsTest : BaseTestCase() {
             null,
             "",
             "   ",
-            "1111111122222222333333334444444455555555666666667777777788888888"+"___morethan64_chars",
+            "1111111122222222333333334444444455555555666666667777777788888888" + "___morethan64_chars",
             "a 2 b c",
             "//\\\\"
         ).forEach {
             val isValid = Utils.validateCTID(it)
-            println("following string is ${if(isValid)"valid  " else "invalid"} | '$it'")
-            assertFalse { isValid}
+            println("following string is ${if (isValid) "valid  " else "invalid"} | '$it'")
+            assertFalse { isValid }
         }
         // valid ids :
         listOf(
@@ -703,8 +738,8 @@ class UtilsTest : BaseTestCase() {
             "====",
         ).forEach {
             val isValid = Utils.validateCTID(it)
-            println("following string is ${if(isValid)"valid  " else "invalid"} | '$it'")
-            assertTrue { isValid}
+            println("following string is ${if (isValid) "valid  " else "invalid"} | '$it'")
+            assertTrue { isValid }
         }
     }
 
@@ -797,7 +832,12 @@ class UtilsTest : BaseTestCase() {
         }
     }
 
-    private fun prepareForTeleConnectTest(networkType: Int = NETWORK_TYPE_CDMA, teleServiceAvailable: Boolean = true, hasRPSPermission: Boolean = true, sdk: Int = M) {
+    private fun prepareForTeleConnectTest(
+        networkType: Int = NETWORK_TYPE_CDMA,
+        teleServiceAvailable: Boolean = true,
+        hasRPSPermission: Boolean = true,
+        sdk: Int = M
+    ) {
         printIfDebug("prepareForTeleConnectTest() called with: networkType = $networkType, teleServiceAvailable = $teleServiceAvailable, hasRPSPermission = $hasRPSPermission, sdk = $sdk")
         when {
             !teleServiceAvailable -> shadowApplication.setSystemService(Context.TELEPHONY_SERVICE, null)
@@ -817,10 +857,7 @@ class UtilsTest : BaseTestCase() {
                 }
             }
         }
-
-
     }
-
 
     private fun printIntentInfo(intent: Intent?, startMsg: String) {
         if (intent == null) {
@@ -855,8 +892,7 @@ class UtilsTest : BaseTestCase() {
             print("\t config: ${bitmap?.config}")
             print("\t isRecycled: ${bitmap?.isRecycled}")
             println()
-        }
-        catch (t: Throwable) {
+        } catch (t: Throwable) {
             println("error happened while logging bitmap: ${t.message}")
         }
     }
@@ -864,5 +900,4 @@ class UtilsTest : BaseTestCase() {
     private fun printIfDebug(value: Any?) {
         if (BuildConfig.DEBUG) println(value)
     }
-
 }

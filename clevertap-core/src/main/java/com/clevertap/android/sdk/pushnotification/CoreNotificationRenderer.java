@@ -65,9 +65,8 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         if (bigPictureUrl != null && bigPictureUrl.startsWith("http")) {
             DownloadedBitmap downloadedBitmap = DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.INIT_ERROR);
             try {
-                downloadedBitmap = Utils.getNotificationBitmapWithTimeoutAndSize(bigPictureUrl,
-                        false, context, config, Constants.PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS,
-                        -1);
+                downloadedBitmap = Utils.getNotificationBitmapWithTimeout(bigPictureUrl,
+                        false, context, config, Constants.PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS);
 
                 Bitmap bpMap = downloadedBitmap.getBitmap();
 
@@ -126,8 +125,8 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                 .setSmallIcon(smallIcon);
 
         // uncommon
-        nb.setLargeIcon(Utils.getNotificationBitmapWithTimeoutAndSize(icoPath, true, context,
-                config, Constants.PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS, -1).getBitmap());//uncommon
+        nb.setLargeIcon(Utils.getNotificationBitmapWithTimeout(icoPath, true, context,
+                config, Constants.PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS).getBitmap());//uncommon
 
         // Uncommon - START
         // add actions if any
