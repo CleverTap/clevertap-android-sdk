@@ -13,7 +13,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -28,35 +27,25 @@ import android.os.Process;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
-
+import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest;
+import com.clevertap.android.sdk.bitmap.HttpBitmapLoader;
+import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation;
 import com.clevertap.android.sdk.network.DownloadedBitmap;
-import com.clevertap.android.sdk.network.DownloadedBitmap.Status;
-import com.clevertap.android.sdk.network.NetworkManager;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
 import com.google.firebase.messaging.RemoteMessage;
-
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
-
 import javax.net.ssl.HttpsURLConnection;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -165,158 +154,13 @@ public final class Utils {
         return converted.toString();
     }
 
-    public static @NonNull DownloadedBitmap getBitmapFromURL(@NonNull String srcUrl, @Nullable Context context) {
-        long downloadStartTimeInSMilliseconds = getNowInMillis();
-        if (context != null) {
-            boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
-            if (!isNetworkOnline) {
-                Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: " + srcUrl);
-                return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.NO_NETWORK);
-            }
-        }
-        // Safe bet, won't have more than three /s . url must not be null since we are not handling null pointer exception that would cause otherwise
-        srcUrl = srcUrl.replace("///", "/");
-        srcUrl = srcUrl.replace("//", "/");
-        srcUrl = srcUrl.replace("http:/", "http://");
-        srcUrl = srcUrl.replace("https:/", "https://");
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(srcUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(Constants.PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS);
-            connection.setReadTimeout(Constants.PN_IMAGE_READ_TIMEOUT_IN_MILLIS);
-            connection.setUseCaches(true);
-            connection.setDoInput(true);
-            connection.connect();
-            InputStream input = connection.getInputStream();
-            return DownloadedBitmapFactory.INSTANCE.successBitmap(BitmapFactory.decodeStream(input),
-                    getNowInMillis() - downloadStartTimeInSMilliseconds);
-        } catch (Throwable e) {
-
-            Logger.v("Couldn't download the notification icon. URL was: " + srcUrl);
-            e.printStackTrace();
-            return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
-            //todo catch other exceptions?
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            } catch (Throwable t) {
-                Logger.v("Couldn't close connection!", t);
-            }
-        }
-    }
-
     // used by inapp which is unable to provide context, hence need to overload this method.
     public static Bitmap getBitmapFromURL(@NonNull String srcUrl) {
-        return getBitmapFromURL(srcUrl, null).getBitmap();
+        BitmapDownloadRequest bitmapDownloadRequest = new BitmapDownloadRequest(srcUrl);
+        return HttpBitmapLoader.getHttpBitmap(HttpBitmapOperation.DOWNLOAD_INAPP_BITMAP,bitmapDownloadRequest).getBitmap();
     }
 
-    public static DownloadedBitmap getBitmapFromURLWithSizeConstraint(String srcUrl, int size,
-            final Context context) {
-        long downloadStartTimeInSMilliseconds = getNowInMillis();
-        if (context != null) {
-            boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
-            if (!isNetworkOnline) {
-                Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: " + srcUrl);
-                return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.NO_NETWORK);
-            }
-        }
-
-        // Safe bet, won't have more than three /s
-        srcUrl = srcUrl.replace("///", "/");
-        srcUrl = srcUrl.replace("//", "/");
-        srcUrl = srcUrl.replace("http:/", "http://");
-        srcUrl = srcUrl.replace("https:/", "https://");
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(srcUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setDoInput(true);
-            connection.setUseCaches(true);
-            connection.addRequestProperty("Accept-Encoding", "gzip, deflate");
-            connection.connect();
-            // expect HTTP 200 OK, so we don't mistakenly save error report
-            // instead of the file
-            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                Logger.d("File not loaded completely not going forward. URL was: " + srcUrl);
-                return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
-            }
-
-            // might be -1: server did not report the length
-            long fileLength = connection.getContentLength();
-            boolean isGZipEncoded = (connection.getContentEncoding() != null &&
-                    connection.getContentEncoding().contains("gzip"));
-
-            // download the file
-            InputStream input = connection.getInputStream();
-
-            byte[] buffer = new byte[16384];
-            ByteArrayOutputStream finalData = new ByteArrayOutputStream();
-
-            Logger.v("Downloading " + srcUrl + "....");
-            long total = 0;
-            int count;
-            while ((count = input.read(buffer)) != -1) {
-                total += count;
-                finalData.write(buffer, 0, count);
-                if (total > size) {
-                    Logger.v("Image size is larger than " + size + " bytes. Cancelling download!");
-                    return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.SIZE_LIMIT_EXCEEDED);
-                }
-                Logger.v("Downloaded " + total + " bytes");
-            }
-
-            byte[] tmpByteArray = new byte[16384];
-            long totalDownloaded = total;
-
-            Logger.v("Total download size for bitmap = " + totalDownloaded);
-
-            if (isGZipEncoded) {
-                InputStream is = new ByteArrayInputStream(finalData.toByteArray());
-                ByteArrayOutputStream decompressedFile = new ByteArrayOutputStream();
-                GZIPInputStream gzipInputStream = new GZIPInputStream(is);
-                total = 0;
-                int counter;
-                while ((counter = gzipInputStream.read(tmpByteArray)) != -1) {
-                    total += counter;
-                    decompressedFile.write(tmpByteArray, 0, counter);
-                }
-                Logger.v("Total decompressed download size for bitmap = " + total);
-                if (fileLength != -1 && fileLength != totalDownloaded) {
-                    Logger.d("File not loaded completely not going forward. URL was: " + srcUrl);
-                    return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
-                }
-                final Bitmap bitmap = BitmapFactory.decodeByteArray(decompressedFile.toByteArray(), 0, (int) total);
-                return DownloadedBitmapFactory.INSTANCE.successBitmap(bitmap,
-                        getNowInMillis() - downloadStartTimeInSMilliseconds);
-            }
-
-            if (fileLength != -1 && fileLength != totalDownloaded) {
-                Logger.d("File not loaded completely not going forward. URL was: " + srcUrl);
-                return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
-            }
-
-            final Bitmap bitmap = BitmapFactory.decodeByteArray(finalData.toByteArray(), 0, (int) totalDownloaded);
-            return DownloadedBitmapFactory.INSTANCE.successBitmap(bitmap,
-                    getNowInMillis() - downloadStartTimeInSMilliseconds);
-        } catch (IOException e) {
-            e.printStackTrace();
-            Logger.v("Couldn't download the file. URL was: " + srcUrl);
-            return DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            } catch (Throwable t) {
-                Logger.v("Couldn't close connection!", t);
-            }
-        }
-    }
-
-    private static long getNowInMillis() {
+    public static long getNowInMillis() {
         return System.currentTimeMillis();
     }
 
@@ -424,58 +268,14 @@ public final class Utils {
         }
     }
 
-//    @RestrictTo(Scope.LIBRARY)
-//    public static String getFcmTokenUsingManifestMetaEntry(Context context, CleverTapInstanceConfig config) {
-//        String token = null;
-//        try {
-//            String senderID = ManifestInfo.getInstance(context).getFCMSenderId();
-//            if (senderID != null) {
-//                config.getLogger().verbose(config.getAccountId(),
-//                        "Requesting an FCM token with Manifest SenderId - " + senderID);
-//                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
-//            }
-//            config.getLogger().info(config.getAccountId(), "FCM token using Manifest SenderId: " + token);
-//        } catch (Throwable t) {
-//            config.getLogger().verbose(config.getAccountId(), "Error requesting FCM token with Manifest SenderId", t);
-//        }
-//        return token;
-//    }
-
     public static long getMemoryConsumption() {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
         return total - free;
     }
 
-    public static DownloadedBitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon,
-            final Context context)
-            throws NullPointerException {
-        return getNotificationBitmapWithSizeConstraints(icoPath, fallbackToAppIcon, context, -1);
-    }
-
-    public static DownloadedBitmap getNotificationBitmapWithSizeConstraints(String icoPath, boolean fallbackToAppIcon,
-            final Context context, int size)
-            throws NullPointerException {
-        // If the icon path is not specified
-        if (icoPath == null || icoPath.equals("")) {
-            return getDownloadedBitmapPostFallbackIconCheck(fallbackToAppIcon, context,
-                    DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.NO_IMAGE));
-        }
-        // Simply stream the bitmap
-        if (!icoPath.startsWith("http")) {
-            icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
-        }
-        DownloadedBitmap ic;
-        if (size == -1) {
-            ic = getBitmapFromURL(icoPath, context);
-        } else {
-            ic = getBitmapFromURLWithSizeConstraint(icoPath, size, context);
-        }
-        return getDownloadedBitmapPostFallbackIconCheck(fallbackToAppIcon, context, ic);
-    }
-
     @NonNull
-    private static DownloadedBitmap getDownloadedBitmapPostFallbackIconCheck(final boolean fallbackToAppIcon, final Context context,
+    public static DownloadedBitmap getDownloadedBitmapPostFallbackIconCheck(final boolean fallbackToAppIcon, final Context context,
             @NonNull final DownloadedBitmap ic) {
         return (ic.getBitmap() != null) ? ic : (fallbackToAppIcon ? getAppIcon(context) : ic);
     }
@@ -487,16 +287,16 @@ public final class Utils {
     public static @NonNull DownloadedBitmap getNotificationBitmapWithTimeoutAndSize(String icoPath, boolean fallbackToAppIcon,
             final Context context, final CleverTapInstanceConfig config, long timeoutMillis, int sizeBytes)
             throws NullPointerException {
-        Task<DownloadedBitmap> task = CTExecutorFactory.executors(config).ioTask();
-        DownloadedBitmap ic = task.submitAndGetResult("getNotificationBitmap",
-                () -> getNotificationBitmapWithSizeConstraints(icoPath, fallbackToAppIcon, context, sizeBytes)
-                , timeoutMillis);
-
-        if (ic == null) {// in case some exception in executor framework we get null result from future.
-            ic = DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.DOWNLOAD_FAILED);
-        }
-
-        return getDownloadedBitmapPostFallbackIconCheck(fallbackToAppIcon, context, ic);
+        final BitmapDownloadRequest bitmapDownloadRequest = new BitmapDownloadRequest(icoPath, fallbackToAppIcon,
+                context, config, timeoutMillis, sizeBytes);
+        return HttpBitmapLoader.getHttpBitmap(HttpBitmapOperation.DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,bitmapDownloadRequest);
+    }
+    public static @NonNull DownloadedBitmap getNotificationBitmapWithTimeout(String icoPath, boolean fallbackToAppIcon,
+            final Context context, final CleverTapInstanceConfig config, long timeoutMillis)
+            throws NullPointerException {
+        final BitmapDownloadRequest bitmapDownloadRequest = new BitmapDownloadRequest(icoPath, fallbackToAppIcon,
+                context, config, timeoutMillis);
+        return HttpBitmapLoader.getHttpBitmap(HttpBitmapOperation.DOWNLOAD_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,bitmapDownloadRequest);
     }
 
     public static int getNow() {
