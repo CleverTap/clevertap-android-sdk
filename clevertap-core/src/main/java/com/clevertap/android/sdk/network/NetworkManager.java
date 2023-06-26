@@ -192,7 +192,6 @@ public class NetworkManager extends BaseNetworkManager {
 
                 if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
                     // Notify listener for push impression sent to the server
-                    notifyListenerForPushImpressionSentToServer(Constants.FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME);
                     if (previousCursor!=null && previousCursor.getData()!=null)
                     {
                         try {
