@@ -323,8 +323,6 @@ public interface Constants {
     String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident
     String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
     String OMR_INVOKE_TIME_IN_MILLIS = "omr_invoke_time_in_millis";
-    String WZRK_PUSH_RENDER_TIME_IN_MILLIS = "wzrk_prt";
-    String WZRK_PUSH_IMAGE_FETCH_TIME_IN_MILLIS = "wzrk_pift";
     String WZRK_BPDS = "wzrk_bpds";
     String WZRK_PN_PRT = "wzrk_pn_prt";
     String PRIORITY_NORMAL = "normal";
@@ -332,12 +330,6 @@ public interface Constants {
     String D_SRC = "d_src";// data source for push impressions
     String D_SRC_PI_R = "PI_R";// push impression data source is Receiver
     String D_SRC_PI_WM = "PI_WM";// push impression data source is work manager
-
-    /**
-     * Device app bucket when notification is rendered
-     */
-    String WZRK_HEALTH_STATE_GOOD = "true";
-    String WZRK_HEALTH_STATE_BAD = "false";
 
     String REGION_INDIA = "in1";
     String REGION_EUROPE = "eu1";
