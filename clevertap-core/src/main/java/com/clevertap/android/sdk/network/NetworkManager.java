@@ -33,7 +33,6 @@ import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
-import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.response.ARPResponse;
 import com.clevertap.android.sdk.response.BaseResponse;
 import com.clevertap.android.sdk.response.CleverTapResponse;
@@ -41,34 +40,35 @@ import com.clevertap.android.sdk.response.CleverTapResponseHelper;
 import com.clevertap.android.sdk.response.ConsoleResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.FeatureFlagResponse;
+import com.clevertap.android.sdk.response.FetchVariablesResponse;
 import com.clevertap.android.sdk.response.GeofenceResponse;
 import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
-import com.clevertap.android.sdk.response.FetchVariablesResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
+
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class NetworkManager extends BaseNetworkManager {
@@ -669,7 +669,7 @@ public class NetworkManager extends BaseNetworkManager {
      * @return True if the queue was sent successfully, false otherwise.
      */
     @Override
-    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue,@Nullable final String caller) {
+    public boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue, @Nullable final String caller) {
         if (queue == null || queue.length() <= 0) {
             // Empty queue, no need to send
             return false;
