@@ -12,7 +12,9 @@ import static com.clevertap.android.xps.XpsConstants.XIAOMI_LOG_TAG;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.INotificationParser;
@@ -24,6 +26,7 @@ import com.xiaomi.mipush.sdk.ErrorCode;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import com.xiaomi.mipush.sdk.MiPushCommandMessage;
 import com.xiaomi.mipush.sdk.MiPushMessage;
+
 import java.util.List;
 
 /**
@@ -48,6 +51,10 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
      * <br><br>
      * Use this method if you have custom implementation of xiaomi push service and wants to create push-template
      * notification/non push-template notification using CleverTap
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: Starting from core v5.1.0, this method runs on the caller's thread. Make sure to call it
+     * in onMessageReceive() of messaging service.
+     * </p>
      */
     @Override
     public boolean createNotification(Context context, MiPushMessage message) {
