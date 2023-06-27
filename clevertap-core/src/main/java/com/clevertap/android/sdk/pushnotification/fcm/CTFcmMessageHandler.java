@@ -5,9 +5,10 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 
 import android.content.Context;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.INotificationParser;
 import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
@@ -35,6 +36,10 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
      * <br><br>
      * Use this method if you have custom implementation of messaging service and wants to create push-template
      * notification/non push-template notification using CleverTap
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: Starting from v5.1.0, this method runs on the caller's thread. Make sure to call it
+     * in onMessageReceive() of messaging service.
+     * </p>
      */
     @Override
     public boolean createNotification(final Context context, final RemoteMessage message) {

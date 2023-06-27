@@ -6,7 +6,9 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.
 
 import android.content.Context;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.INotificationParser;
@@ -36,6 +38,10 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
      * <br><br>
      * Use this method if you have custom implementation of huawei messaging service and wants to create push-template
      * notification/non push-template notification using CleverTap
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: Starting from core v5.1.0, this method runs on the caller's thread. Make sure to call it
+     * in onMessageReceive() of messaging service.
+     * </p>
      */
     @Override
     public boolean createNotification(Context context, final RemoteMessage remoteMessage) {
