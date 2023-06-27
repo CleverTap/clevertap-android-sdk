@@ -130,10 +130,6 @@ public class PushProviders implements CTPushProviderListener {
         initPushAmp();
     }
 
-
-
-
-
     /**
      * Launches an asynchronous task to download the notification icon from CleverTap,
      * and create the Android notification.
@@ -1009,7 +1005,7 @@ public class PushProviders implements CTPushProviderListener {
 
         String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
         String updatedChannelId = null;
-        boolean requiresChannelId = VERSION.SDK_INT >= VERSION_CODES.O;
+        final boolean requiresChannelId = VERSION.SDK_INT >= VERSION_CODES.O;
 
         if (requiresChannelId) {
             int messageCode = -1;

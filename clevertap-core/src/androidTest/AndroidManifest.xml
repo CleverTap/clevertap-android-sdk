@@ -11,10 +11,10 @@
 
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="TEST-R78-ZZK-955Z" />
+            android:value="TEST" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="TEST-311-ba2" />
+            android:value="TEST" />
 
     </application>
 </manifest>
