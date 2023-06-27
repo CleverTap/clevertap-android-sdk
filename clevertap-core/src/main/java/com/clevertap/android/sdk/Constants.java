@@ -63,6 +63,7 @@ public interface Constants {
     String SC_OUTGOING_EVENT_NAME = "SCOutgoing";
     String SC_INCOMING_EVENT_NAME = "SCIncoming";
     String SC_END_EVENT_NAME = "SCEnd";
+    String SC_CAMPAIGN_OPT_OUT_EVENT_NAME = "SCCampaignOptOut";
     String GEOFENCE_ENTERED_EVENT_NAME = "Geocluster Entered";
     String GEOFENCE_EXITED_EVENT_NAME = "Geocluster Exited";
     String APP_LAUNCHED_EVENT = "App Launched";
