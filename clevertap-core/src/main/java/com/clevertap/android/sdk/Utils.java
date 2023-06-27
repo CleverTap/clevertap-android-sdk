@@ -154,7 +154,7 @@ public final class Utils {
         return converted.toString();
     }
 
-    // used by inapp which is unable to provide context, hence need to overload this method.
+    // used by inapp.
     public static Bitmap getBitmapFromURL(@NonNull String srcUrl) {
         BitmapDownloadRequest bitmapDownloadRequest = new BitmapDownloadRequest(srcUrl);
         return HttpBitmapLoader.getHttpBitmap(HttpBitmapOperation.DOWNLOAD_INAPP_BITMAP,bitmapDownloadRequest).getBitmap();
@@ -547,16 +547,20 @@ public final class Utils {
 
     public static boolean isMainProcess(Context context, String mainProcessName) {
 
-        ActivityManager am = ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE));
+        try {
+            ActivityManager am = ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE));
 
-        List<ActivityManager.RunningAppProcessInfo> processInfos = am.getRunningAppProcesses();
+            List<ActivityManager.RunningAppProcessInfo> processInfos = am.getRunningAppProcesses();
 
-        int myPid = Process.myPid();
+            int myPid = Process.myPid();
 
-        for (ActivityManager.RunningAppProcessInfo info : processInfos) {
-            if (info.pid == myPid && mainProcessName.equals(info.processName)) {
-                return true;
+            for (ActivityManager.RunningAppProcessInfo info : processInfos) {
+                if (info.pid == myPid && mainProcessName.equals(info.processName)) {
+                    return true;
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return false;
     }
