@@ -21,6 +21,13 @@ public class CTWebInterface {
 
     public CTWebInterface(CleverTapAPI instance) {
         this.weakReference = new WeakReference<>(instance);
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI != null) {
+            CoreState coreState = cleverTapAPI.getCoreState();
+            if(coreState != null) {
+                coreState.getCoreMetaData().setWebInterfaceInitializedExternally(true);
+            }
+        }
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -44,6 +51,7 @@ public class CTWebInterface {
             cleverTapAPI.promptForPushPermission(shouldShowFallbackSettings);
         }
     }
+
     /**
      * Method to be called from WebView Javascript to dismiss the InApp notification
      */
@@ -105,11 +113,6 @@ public class CTWebInterface {
             cleverTapAPI.decrementValue(key, value);
         }
     }
-
-
-
-
-
 
     /**
      * Method to be called from WebView Javascript to add profile properties in CleverTap
@@ -350,7 +353,6 @@ public class CTWebInterface {
             }
         }
     }
-
 
     /**
      * Method to be called from WebView Javascript to push profile/properties in CleverTap after
