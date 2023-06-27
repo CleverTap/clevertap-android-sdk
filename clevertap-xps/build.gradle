@@ -29,5 +29,4 @@ dependencies {
     compileOnly Libs.androidx_annotation
     testImplementation project(':test_shared')
     testImplementation fileTree('libs')
-    testImplementation fileTree(include: ['*.aar'], dir: 'libs')
 }
