@@ -37,17 +37,7 @@ class CTFlushPushImpressionsWork(context: Context, workerParams: WorkerParameter
 
                 it.apply {
                     Logger.d(tag, "flushing queue for push impressions on CT instance = $accountId")
-
                     flushPushImpressionsOnPostAsyncSafely(tag, Constants.D_SRC_PI_WM, context)
-
-                    val bm = context.getSystemService(BATTERY_SERVICE) as BatteryManager
-                    val batLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-
-                    val map = hashMapOf<String, Any>()
-                    map["time"] = Utils.getNow()
-                    map["batteryLevel"] = batLevel
-
-                    pushEvent("Work manager run success", map)
                 }
             }
 

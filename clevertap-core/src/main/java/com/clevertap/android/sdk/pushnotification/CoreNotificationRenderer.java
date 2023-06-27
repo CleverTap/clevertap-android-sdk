@@ -74,7 +74,6 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                     throw new Exception("Failed to fetch big picture!");
                 }
                 long pift = downloadedBitmap.getDownloadTime();
-                extras.putString(Constants.WZRK_PUSH_IMAGE_FETCH_TIME_IN_MILLIS, String.valueOf(pift));
                 config.getLogger()
                         .verbose("Fetched big picture in " + pift + " millis");
 
