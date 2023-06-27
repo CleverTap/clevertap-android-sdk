@@ -349,13 +349,13 @@ CleverTap handles closing the notification with Action buttons. You will have to
 CleverTap IntentService to your AndroidManifest.xml and the SDK will do it for you automatically
 
 ```xml
-
-<service android:name="com.clevertap.android.sdk.pushnotification.CTNotificationIntentService"
-    android:exported="false">
-    <intent-filter>
-        <action android:name="com.clevertap.PUSH_EVENT" />
-    </intent-filter>
-</service>
+    <service
+         android:name="com.clevertap.android.sdk.pushnotification.CTNotificationIntentService"
+         android:exported="false">
+         <intent-filter>
+             <action android:name="com.clevertap.PUSH_EVENT"/>
+         </intent-filter>
+     </service>
 ``` 
 
 Starting from `core v5.1.0` we have introduced a new feature that allows developers to define a
@@ -372,9 +372,11 @@ manifest file:
 By including this metadata, you can define a specific notification channel that CleverTap will use
 if the channel provided in push payload is not registered by your app. This ensures that push
 notifications are displayed consistently even if the app's notification channels are not set up.
+
 In case the SDK does not find the default channel ID specified in the manifest, it will
 automatically fallback to using a default channel called "Miscellaneous". This ensures that push
 notifications are still delivered, even if no specific default channel is specified in the manifest.
+
 This enhancement provides developers with greater control over the default notification channel used
 by CleverTap for push notifications, ensuring a seamless and customizable user experience.
 
@@ -420,8 +422,9 @@ use CleverTap's Push Amplification via background ping service, add the followin
 app's `AndroidManifest.xml`
 
 ```xml
-
-<meta-data android:name="CLEVERTAP_BACKGROUND_SYNC" android:value="1" />
+<meta-data
+    android:name="CLEVERTAP_BACKGROUND_SYNC"
+    android:value="1"/>
  ```
 
 #### In-App Notifications

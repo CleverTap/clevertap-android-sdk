@@ -33,9 +33,9 @@ We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as depend
 Alternatively, you can download and add the AAR file included in this repo in your Module libs directory and tell gradle to install it like this:
     
  ```groovy
-    dependencies {
-    implementation(name: "clevertap-android-sdk-5.1.0", ext: 'aar')
-}
+    dependencies {      
+        implementation (name: "clevertap-android-sdk-5.1.0", ext: 'aar')
+    }
 ```
 
 
