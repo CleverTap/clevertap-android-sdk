@@ -413,7 +413,7 @@ public class NetworkManager extends BaseNetworkManager {
             header.put("type", "meta");
 
             JSONObject appFields = deviceInfo.getAppLaunchedFields();
-            if(config.isWebInterfaceInitializedExternally()) {
+            if(coreMetaData.isWebInterfaceInitializedExternally()) {
                 appFields.put("wv_init", true);
             }
             header.put("af", appFields);

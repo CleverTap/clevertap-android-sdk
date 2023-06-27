@@ -73,14 +73,6 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean useGoogleAdId;
 
-    /**
-     * Flag indicating whether the {@link CTWebInterface} is initialized from outside of the SDK.
-     * <p>
-     * When this flag is true, it means that the {@link CTWebInterface} has been initialized externally, typically by the application.
-     * </p>
-     */
-    private boolean webInterfaceInitializedExternally;
-
     @SuppressWarnings("unused")
     public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
             @NonNull String accountToken) {
@@ -118,7 +110,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.createdPostAppLaunch = config.createdPostAppLaunch;
         this.sslPinning = config.sslPinning;
         this.backgroundSync = config.backgroundSync;
-        this.webInterfaceInitializedExternally = config.webInterfaceInitializedExternally;
         this.enableCustomCleverTapId = config.enableCustomCleverTapId;
         this.fcmSenderId = config.fcmSenderId;
         this.packageName = config.packageName;
@@ -237,7 +228,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         createdPostAppLaunch = in.readByte() != 0x00;
         sslPinning = in.readByte() != 0x00;
         backgroundSync = in.readByte() != 0x00;
-        webInterfaceInitializedExternally = in.readByte() != 0x00;
         enableCustomCleverTapId = in.readByte() != 0x00;
         fcmSenderId = in.readString();
         packageName = in.readString();
@@ -370,7 +360,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (createdPostAppLaunch ? 0x01 : 0x00));
         dest.writeByte((byte) (sslPinning ? 0x01 : 0x00));
         dest.writeByte((byte) (backgroundSync ? 0x01 : 0x00));
-        dest.writeByte((byte) (webInterfaceInitializedExternally ? 0x01 : 0x00));
         dest.writeByte((byte) (enableCustomCleverTapId ? 0x01 : 0x00));
         dest.writeString(fcmSenderId);
         dest.writeString(packageName);
@@ -421,14 +410,6 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     boolean isUseGoogleAdId() {
         return useGoogleAdId;
-    }
-
-    public void setWebInterfaceInitializedExternally(boolean isInitialized) {
-        this.webInterfaceInitializedExternally = isInitialized;
-    }
-
-    public boolean isWebInterfaceInitializedExternally() {
-        return webInterfaceInitializedExternally;
     }
 
     void setCreatedPostAppLaunch() {
