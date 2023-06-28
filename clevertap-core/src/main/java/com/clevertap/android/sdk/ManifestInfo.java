@@ -44,6 +44,8 @@ public class ManifestInfo {
 
     private static String xiaomiAppID;
 
+    private final String devDefaultPushChannelId;
+
     private final String[] profileKeys;
 
     public synchronized static ManifestInfo getInstance(Context context) {
@@ -99,6 +101,8 @@ public class ManifestInfo {
             xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
         }
 
+        devDefaultPushChannelId = _getManifestStringValueForKey(metaData, Constants.LABEL_DEFAULT_CHANNEL_ID);
+
         profileKeys = parseProfileKeys(metaData);
     }
 
@@ -112,6 +116,9 @@ public class ManifestInfo {
 
     public String getFCMSenderId() {
         return fcmSenderId;
+    }
+    public String getDevDefaultPushChannelId() {
+        return devDefaultPushChannelId;
     }
 
     public String getIntentServiceName() {

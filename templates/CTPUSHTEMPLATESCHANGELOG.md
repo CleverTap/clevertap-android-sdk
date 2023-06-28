@@ -1,13 +1,26 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.1.0 (June 28, 2023)
+
+* Supports CleverTap Android SDK v5.1.0.
+* RenderMax Push SDK functionality is now supported directly within the CleverTap Core SDK starting
+  from core v5.1.0.
+
 ### Version 1.0.9 (May 5, 2023)
+
 #### Bug Fixes
-* Fixes a bug where Rating Submitted event was not being raised by the Rating Template on Android 12 and above.
+
+* Fixes a bug where Rating Submitted event was not being raised by the Rating Template on Android 12
+  and above.
 
 ### Version 1.0.8 (March 8, 2023)
-* Supports CleverTap Android SDK v4.7.5. CleverTap Push Templates SDK `v1.0.8` requires [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md) to work properly.
+
+* Supports CleverTap Android SDK v4.7.5. CleverTap Push Templates SDK `v1.0.8`
+  requires [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+  to work properly.
 
 ### Version 1.0.7 (December 5, 2022)
+
 * UI bug fixes for Non-linear Product Catalogue template.
 * Supports CleverTap Android SDK v4.7.2.
 

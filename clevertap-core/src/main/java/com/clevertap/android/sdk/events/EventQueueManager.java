@@ -3,6 +3,9 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
+
+import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -26,13 +29,15 @@ import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class EventQueueManager extends BaseEventQueueManager implements FailureFlushListener {
 
@@ -148,14 +153,37 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         });
     }
 
+    /**
+     * Flushes the events queue synchronously with a default null value for the caller.
+     * This is an overloaded method that internally calls {@link EventQueueManager#flushQueueSync(Context, EventGroup, String)}.
+     *
+     * @param context     The Context object.
+     * @param eventGroup  The EventGroup for which the queue needs to be flushed.
+     */
     @Override
     public void flushQueueSync(final Context context, final EventGroup eventGroup) {
+        flushQueueSync(context,eventGroup,null);
+    }
+
+    /**
+     * Flushes the events queue synchronously, checking network connectivity, offline mode, and performing handshake if necessary.
+     *
+     * @param context     The Context object.
+     * @param eventGroup  The EventGroup for which the queue needs to be flushed.
+     * @param caller      The optional caller identifier.
+     */
+    @Override
+    public void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final String caller) {
+        /*if (caller == null && eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)
+            return;*/
+        // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             controllerManager.invokeCallbacksForNetworkError();
             return;
         }
 
+        // Check if CleverTap instance is set to offline mode
         if (cleverTapMetaData.isOffline()) {
             logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
@@ -163,16 +191,20 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             return;
         }
 
+        // Check if handshake is required for the domain associated with the event group
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
+            // Perform handshake and then flush the DB queue
             networkManager.initHandshake(eventGroup, new Runnable() {
                 @Override
                 public void run() {
-                    networkManager.flushDBQueue(context, eventGroup);
+                    networkManager.flushDBQueue(context, eventGroup,caller);
                 }
             });
         } else {
             logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
-            networkManager.flushDBQueue(context, eventGroup);
+
+            // No handshake required, directly flush the DB queue
+            networkManager.flushDBQueue(context, eventGroup,caller);
         }
     }
 
@@ -198,10 +230,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
             networkManager.initHandshake(eventGroup, () -> {
-                networkManager.sendQueue(context, eventGroup, singleEventQueue);
+                networkManager.sendQueue(context, eventGroup, singleEventQueue, null);
             });
         } else {
-            networkManager.sendQueue(context, eventGroup, singleEventQueue);
+            networkManager.sendQueue(context, eventGroup, singleEventQueue, null);
         }
     }
 
