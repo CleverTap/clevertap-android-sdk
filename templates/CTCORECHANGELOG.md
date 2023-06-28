@@ -21,7 +21,9 @@
           By utilizing these new APIs, you can enhance the push delivery experience for custom
           rendering and ensure efficient handling of notification bitmaps in your Android app.
 * Adds support for developer defined default notification channel. Please refer to
-  the [EXAMPLES.md](EXAMPLES.md) file to read more on how to setup default channel in your app.
+  the [EXAMPLES.md](EXAMPLES.md#push-notifications) file to read more on how to setup default
+  channel in your app.Also please note that this is only supported for clevertap core notifications.
+  Support for push templates will be released soon.
 * RenderMax Push SDK functionality is now supported directly within the CleverTap Core SDK.
 * Adds interface for `Leanplum` APIs. This interface wraps `CleverTapAPI` methods inside `Leanplum`
   APIs to ensure a smoother migration experience.

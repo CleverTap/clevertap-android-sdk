@@ -360,7 +360,8 @@ CleverTap IntentService to your AndroidManifest.xml and the SDK will do it for y
 
 Starting from `core v5.1.0` we have introduced a new feature that allows developers to define a
 default notification channel for their app. This feature provides flexibility in handling push
-notifications.
+notifications. Please note that this is only supported for clevertap core notifications. Support for
+push templates will be released soon.
 To specify the default notification channel ID, you can add the following metadata in your app's
 manifest file:
 
