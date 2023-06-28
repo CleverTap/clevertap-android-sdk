@@ -41,6 +41,9 @@ public interface Constants {
     String LABEL_INTENT_SERVICE = "CLEVERTAP_INTENT_SERVICE";
     String LABEL_XIAOMI_APP_KEY = "CLEVERTAP_XIAOMI_APP_KEY";
     String LABEL_XIAOMI_APP_ID = "CLEVERTAP_XIAOMI_APP_ID";
+    String LABEL_DEFAULT_CHANNEL_ID = "CLEVERTAP_DEFAULT_CHANNEL_ID";
+    String FCM_FALLBACK_NOTIFICATION_CHANNEL_ID = "fcm_fallback_notification_channel";
+    String FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Misc";
     String CLEVERTAP_OPTOUT = "ct_optout";
     String CLEVERTAP_STORAGE_TAG = "WizRocket";
     String CLEVERTAP_LOG_TAG = "CleverTap";
@@ -317,17 +320,29 @@ public interface Constants {
     String PT_INPUT_KEY = "pt_input_reply";
 
     // ==========Fallback keys=========
-    String NOTIFICATION_HEALTH = "wzrk_pn_h";
     String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident
     String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
-
-    /**
-     * Device app bucket when notification is rendered
-     */
-    String WZRK_HEALTH_STATE_GOOD = "true";
-    String WZRK_HEALTH_STATE_BAD = "false";
+    String OMR_INVOKE_TIME_IN_MILLIS = "omr_invoke_time_in_millis";
+    String WZRK_BPDS = "wzrk_bpds";
+    String WZRK_PN_PRT = "wzrk_pn_prt";
+    String PRIORITY_NORMAL = "normal";
+    String PRIORITY_UNKNOWN = "fcm_unknown";
+    String D_SRC = "d_src";// data source for push impressions
+    String D_SRC_PI_R = "PI_R";// push impression data source is Receiver
+    String D_SRC_PI_WM = "PI_WM";// push impression data source is work manager
 
     String REGION_INDIA = "in1";
     String REGION_EUROPE = "eu1";
+
+    // ============ notification image download timeout ===================
+
+    int PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS =  1000;
+    int PN_IMAGE_READ_TIMEOUT_IN_MILLIS =  5000;
+    long PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS =  5000;
+    long PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS =  2000;
+
+    //==============
+
+   String FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME = "CTFlushPushImpressionsOneTime";
 
 }
