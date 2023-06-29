@@ -2,6 +2,12 @@
 
 ### Version 5.1.0 (June 28, 2023)
 
+> ⚠️ **NOTE**
+
+```
+Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.1.0
+```
+
 #### New Features
 
 * Adds new APIs,
