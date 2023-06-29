@@ -2,6 +2,12 @@
 
 ### Version 5.1.0 (June 28, 2023)
 
+> ⚠️ **NOTE**
+
+```
+Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.1.0
+```
+
 #### New Features
 
 * Adds new APIs,
@@ -20,8 +26,7 @@
           to limit the size of the bitmap to optimize memory usage.
           By utilizing these new APIs, you can enhance the push delivery experience for custom
           rendering and ensure efficient handling of notification bitmaps in your Android app.
-* Adds support for developer defined default notification channel for non-push template
-  notifications. Please refer to
+* Adds support for developer defined default notification channel. Please refer to
   the [EXAMPLES.md](EXAMPLES.md#push-notifications) file to read more on how to setup default
   channel in your app.Also please note that this is only supported for clevertap core notifications.
   Support for push templates will be released soon.
