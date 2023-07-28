@@ -48,7 +48,7 @@ public class CTWebInterface {
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
             dismissInAppNotification();
-            cleverTapAPI.promptForPushPermission(shouldShowFallbackSettings);
+            cleverTapAPI.promptForPushPermission(CoreMetaData.getCurrentActivity(), shouldShowFallbackSettings);
         }
     }
 
