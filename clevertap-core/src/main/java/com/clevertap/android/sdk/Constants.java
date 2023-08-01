@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
@@ -184,6 +185,7 @@ public interface Constants {
     String KEY_BG = "bg";
     String KEY_TITLE = "title";
     String KEY_TEXT = "text";
+    String KEY_KEY = "key";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
     String KEY_HIDE_CLOSE = "close";
