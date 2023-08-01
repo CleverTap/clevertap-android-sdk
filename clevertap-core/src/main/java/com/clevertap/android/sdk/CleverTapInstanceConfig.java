@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants.IdentityType;
+import com.clevertap.android.sdk.cryption.AESCrypt;
+import com.clevertap.android.sdk.cryption.Crypt;
 import com.clevertap.android.sdk.login.LoginConstants;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +74,9 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean sslPinning;
 
     private boolean useGoogleAdId;
+    private int encryptionLevel;
+    private Crypt crypt;
+
 
     @SuppressWarnings("unused")
     public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
@@ -116,9 +121,12 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.beta = config.beta;
         this.allowedPushTypes = config.allowedPushTypes;
         this.identityKeys = config.identityKeys;
+        this.encryptionLevel = config.encryptionLevel;
+        this.crypt = config.crypt;
     }
 
-    private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
+    private
+    CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
             boolean isDefault) {
         this.accountId = accountId;
         this.accountToken = accountToken;
@@ -139,6 +147,21 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = manifest.getPackageName();
         this.enableCustomCleverTapId = manifest.useCustomId();
         this.beta = manifest.enableBeta();
+        try {
+            int parsedEncryptionLevel = Integer.parseInt(manifest.getEncryptionLevel());
+            if(parsedEncryptionLevel <= 1){
+                this.encryptionLevel = parsedEncryptionLevel;
+            }
+            else{
+                this.encryptionLevel = 0;
+                Logger.v("Supported encryption levels are only 0 and 1. Setting it to 0 by default");
+            }
+        } catch (Throwable t){
+            this.encryptionLevel = 0;
+            Logger.v("Unable to parse encryption level from the Manifest, setting it to 0", t.getCause());
+        }
+
+        this.crypt = new AESCrypt(accountId, encryptionLevel);
         /*
          * For default instance, use manifest meta, otherwise use from setter field
          */
@@ -209,6 +232,10 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (configJsonObject.has(Constants.KEY_IDENTITY_TYPES)) {
                 this.identityKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
             }
+            if(configJsonObject.has(Constants.KEY_ENCRYPTION_LEVEL)){
+                this.encryptionLevel = configJsonObject.getInt(Constants.KEY_ENCRYPTION_LEVEL);
+            }
+            this.crypt = new AESCrypt(accountId, encryptionLevel);
         } catch (Throwable t) {
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
             throw (t);
@@ -236,6 +263,8 @@ public class CleverTapInstanceConfig implements Parcelable {
         allowedPushTypes = new ArrayList<>();
         in.readList(allowedPushTypes, String.class.getClassLoader());
         identityKeys = in.createStringArray();
+        encryptionLevel = in.readInt();
+        crypt = new AESCrypt(accountId, encryptionLevel);
     }
 
     @Override
@@ -366,6 +395,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
         dest.writeList(allowedPushTypes);
         dest.writeStringArray(identityKeys);
+        dest.writeInt(encryptionLevel);
     }
 
     public boolean getEnableCustomCleverTapId() {
@@ -415,6 +445,23 @@ public class CleverTapInstanceConfig implements Parcelable {
     void setCreatedPostAppLaunch() {
         this.createdPostAppLaunch = true;
     }
+    public void setEncryptionLevel(Crypt.EncryptionLevel encryptionLevel) {
+        this.encryptionLevel = encryptionLevel.intValue();
+        if(crypt != null){
+            crypt.setEncryptionLevel(this.encryptionLevel);
+        }
+    }
+    public int getEncryptionLevel() {
+        return encryptionLevel;
+    }
+
+    public Crypt getCrypt(){
+        if(crypt ==  null) {
+            this.crypt = new AESCrypt(accountId, encryptionLevel);
+        }
+        return crypt;
+    }
+
 
     String toJSONString() {
         JSONObject configJsonObject = new JSONObject();
@@ -436,6 +483,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_PACKAGE_NAME, getPackageName());
             configJsonObject.put(Constants.KEY_BETA, isBeta());
             configJsonObject.put(Constants.KEY_ALLOWED_PUSH_TYPES, toJsonArray(allowedPushTypes));
+            configJsonObject.put(Constants.KEY_ENCRYPTION_LEVEL , getEncryptionLevel());
             return configJsonObject.toString();
         } catch (Throwable e) {
             Logger.v("Unable to convert config to JSON : ", e.getCause());

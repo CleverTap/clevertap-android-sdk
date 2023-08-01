@@ -46,6 +46,8 @@ public class ManifestInfo {
 
     private final String[] profileKeys;
 
+    private static String encryptionLevel;
+
     public synchronized static ManifestInfo getInstance(Context context) {
         if (instance == null) {
             instance = new ManifestInfo(context);
@@ -82,6 +84,7 @@ public class ManifestInfo {
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BACKGROUND_SYNC));
         useCustomID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_CUSTOM_ID));
         fcmSenderId = _getManifestStringValueForKey(metaData, Constants.LABEL_FCM_SENDER_ID);
+        encryptionLevel = _getManifestStringValueForKey(metaData,Constants.LABEL_ENCRYPTION_LEVEL);
         if (fcmSenderId != null) {
             fcmSenderId = fcmSenderId.replace("id:", "");
         }
@@ -136,6 +139,9 @@ public class ManifestInfo {
 
     boolean enableBeta() {
         return beta;
+    }
+    public String getEncryptionLevel(){
+        return encryptionLevel;
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)

@@ -849,8 +849,10 @@ public class NetworkManager extends BaseNetworkManager {
                 }
             }
             final JSONObject ret = new JSONObject(all);
+            if(ret.has(Constants.KEY_k_n))
+                ret.put(Constants.KEY_k_n,config.getCrypt().decrypt(ret.getString(Constants.KEY_k_n),Constants.KEY_k_n));
             logger.verbose(config.getAccountId(),
-                    "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + all);
+                    "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + ret);
             return ret;
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "Failed to construct ARP object", t);

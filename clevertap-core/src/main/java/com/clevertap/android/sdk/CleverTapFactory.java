@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.events.EventQueueManager;
@@ -41,6 +42,7 @@ class CleverTapFactory {
 
         CleverTapInstanceConfig config = new CleverTapInstanceConfig(cleverTapInstanceConfig);
         coreState.setConfig(config);
+        CryptUtils.migrateEncryptionLevel(context, config);
 
         EventMediator eventMediator = new EventMediator(context, config, coreMetaData);
         coreState.setEventMediator(eventMediator);

@@ -41,6 +41,7 @@ public interface Constants {
     String LABEL_INTENT_SERVICE = "CLEVERTAP_INTENT_SERVICE";
     String LABEL_XIAOMI_APP_KEY = "CLEVERTAP_XIAOMI_APP_KEY";
     String LABEL_XIAOMI_APP_ID = "CLEVERTAP_XIAOMI_APP_ID";
+    String LABEL_ENCRYPTION_LEVEL = "CLEVERTAP_ENCRYPTION_LEVEL";
     String CLEVERTAP_OPTOUT = "ct_optout";
     String CLEVERTAP_STORAGE_TAG = "WizRocket";
     String CLEVERTAP_LOG_TAG = "CleverTap";
@@ -196,6 +197,7 @@ public interface Constants {
     String KEY_PACKAGE_NAME = "packageName";
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
+    String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
     String EXTRAS_FROM = "extras_from";
@@ -254,10 +256,16 @@ public interface Constants {
     String KEY_HAS_URL = "hasUrl";
     String KEY_HAS_LINKS = "hasLinks";
     String KEY_LINKS = "links";
+    String KEY_k_n = "k_n";
+    String KEY_ENCRYPTION_MIGRATION = "encryptionMigration";
     String TEST_IDENTIFIER = "0_0";
     String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
     String FEATURE_FLAG_UNIT = "Feature Flag : ";
     String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
+
+    String CRYPTION_SALT = "W1ZRCl3>";
+    String CRYPTION_IV = "__CL3>3Rt#P__1V_";
+
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
     int FETCH_TYPE_VARIABLES = 4;
@@ -297,6 +305,8 @@ public interface Constants {
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
+    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_k_n, CACHED_GUIDS_KEY));
+    HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
 
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
 

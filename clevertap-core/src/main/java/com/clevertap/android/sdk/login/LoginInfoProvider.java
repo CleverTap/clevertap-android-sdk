@@ -49,8 +49,8 @@ public class LoginInfoProvider {
         if (isErrorDeviceId() || guid == null || key == null || identifier == null) {
             return;
         }
-
-        String cacheKey = key + "_" + identifier;
+        String encryptedIdentifier = config.getCrypt().encrypt(identifier,Constants.CACHED_GUIDS_KEY);
+        String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
         try {
             cache.put(cacheKey, guid);
@@ -163,8 +163,8 @@ public class LoginInfoProvider {
         if (key == null || identifier == null) {
             return null;
         }
-
-        String cacheKey = key + "_" + identifier;
+        String encryptedIdentifier = config.getCrypt().encrypt(identifier,Constants.CACHED_GUIDS_KEY);
+        String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
         try {
             String cachedGuid = cache.getString(cacheKey);
