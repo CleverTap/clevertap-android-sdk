@@ -186,6 +186,7 @@ public interface Constants {
     String KEY_TITLE = "title";
     String KEY_TEXT = "text";
     String KEY_KEY = "key";
+    String KEY_VALUE = "value";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
     String KEY_HIDE_CLOSE = "close";

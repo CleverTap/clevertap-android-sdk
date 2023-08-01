@@ -109,9 +109,15 @@ public class CTInboxMessage implements Parcelable {
                         .getJSONArray(Constants.KEY_CUSTOM_KV) : null;
                 if (customKVJsonArray != null) {
                     for (int i = 0; i < customKVJsonArray.length(); i++) {
-                        if (customKVJsonArray.getJSONObject(i).has(Constants.KEY_KEY)) {
-                            String value = customKVJsonArray.getJSONObject(i).getString(Constants.KEY_KEY);
-                            customData.put(Constants.KEY_KEY, value);
+                        JSONObject customKVJSONObject = customKVJsonArray.getJSONObject(i);
+                        if (customKVJSONObject.has(Constants.KEY_KEY)) {
+                            String key = customKVJSONObject.getString(Constants.KEY_KEY);
+                            if (customKVJSONObject.has(Constants.KEY_VALUE)) {
+                                JSONObject value = customKVJSONObject.getJSONObject(Constants.KEY_VALUE);
+                                {
+                                    customData.put(key, value.getString(Constants.KEY_TEXT));
+                                }
+                            }
                         }
                     }
                 }
