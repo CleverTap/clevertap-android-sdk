@@ -7,7 +7,9 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
@@ -25,15 +27,17 @@ import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class AnalyticsManager extends BaseAnalyticsManager {
 
@@ -102,8 +106,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         task.execute("addMultiValuesForKey", new Callable<Void>() {
             @Override
             public Void call() {
-                final String command = (localDataStore.getProfileValueForKey(key) != null)
-                        ? Constants.COMMAND_ADD : Constants.COMMAND_SET;
+                final String command = Constants.COMMAND_ADD;
                 _handleMultiValues(values, key, command);
                 return null;
             }
