@@ -1063,13 +1063,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Calls the push primer flow for Android 13 and above devices.
-     * @param activity Activity - Current activity reference to display the local inApp
      * @param jsonObject JSONObject - Accepts jsonObject created by {@link CTLocalInApp} object
      */
     @SuppressLint("NewApi")
-    public void promptPushPrimer(Activity activity, JSONObject jsonObject) {
+    public void promptPushPrimer(JSONObject jsonObject) {
         if (isPackageAndOsTargetsAbove(context, 32)) {
-            coreState.getInAppController().promptPushPrimer(activity, jsonObject);
+            coreState.getInAppController().promptPushPrimer(jsonObject);
         } else {
             Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
         }
@@ -1081,9 +1080,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                             dialog which routes to app's notification settings page.
      */
     @SuppressLint("NewApi")
-    public void promptForPushPermission(Activity activity, boolean showFallbackSettings){
+    public void promptForPushPermission(boolean showFallbackSettings){
         if (isPackageAndOsTargetsAbove(context, 32)) {
-            coreState.getInAppController().promptPermission(activity, showFallbackSettings);
+            coreState.getInAppController().promptPermission(showFallbackSettings);
         } else {
             Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
         }

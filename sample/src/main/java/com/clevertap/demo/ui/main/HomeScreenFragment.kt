@@ -24,8 +24,6 @@ import com.clevertap.android.geofence.CTGeofenceAPI
 import com.clevertap.android.geofence.CTGeofenceSettings
 import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener
 import com.clevertap.android.sdk.CleverTapAPI
-import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.inapp.CTLocalInApp
 import com.clevertap.demo.BuildConfig
 import com.clevertap.demo.HomeScreenActivity
 import com.clevertap.demo.R
@@ -92,116 +90,6 @@ class HomeScreenFragment : Fragment() {
                     }
                 }
                 "7-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
-                "10-0" -> {
-                    Log.d("commandPosition1", commandPosition + "1");
-
-                    val builder = CTLocalInApp.builder()
-                        .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
-                        .setTitleText("Get Notified")
-                        .setMessageText("Please enable notifications on your device to use Push Notifications.")
-                        .followDeviceOrientation(true)
-                        .setPositiveBtnText("Allow")
-                        .setNegativeBtnText("Cancel")
-                        .setBackgroundColor(Constants.WHITE)
-                        .setBtnBorderColor(Constants.BLUE)
-                        .setTitleTextColor(Constants.BLUE)
-                        .setMessageTextColor(Constants.BLACK)
-                        .setBtnTextColor(Constants.WHITE)
-                        .setBtnBackgroundColor(Constants.BLUE)
-                        .build()
-                    cleverTapInstance?.promptPushPrimer(activity, builder)
-                }
-
-                "10-1" -> {
-                    val builder = CTLocalInApp.builder()
-                        .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
-                        .setTitleText("Get Notified")
-                        .setMessageText("Please enable notifications on your device to use Push Notifications.")
-                        .followDeviceOrientation(true)
-                        .setPositiveBtnText("Allow")
-                        .setNegativeBtnText("Cancel")
-                        .setBackgroundColor(Constants.WHITE)
-                        .setBtnBorderColor(Constants.BLUE)
-                        .setTitleTextColor(Constants.BLUE)
-                        .setMessageTextColor(Constants.BLACK)
-                        .setBtnTextColor(Constants.WHITE)
-                        .setImageUrl("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png")
-                        .setBtnBackgroundColor(Constants.BLUE)
-                        .build()
-                    cleverTapInstance?.promptPushPrimer(activity, builder)
-                }
-
-                "10-2" -> {
-                    val builder = CTLocalInApp.builder()
-                        .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
-                        .setTitleText("Get Notified")
-                        .setMessageText("Please enable notifications on your device to use Push Notifications.")
-                        .followDeviceOrientation(true)
-                        .setPositiveBtnText("Allow")
-                        .setNegativeBtnText("Cancel")
-                        .setBackgroundColor(Constants.WHITE)
-                        .setBtnBorderColor(Constants.BLUE)
-                        .setTitleTextColor(Constants.BLUE)
-                        .setMessageTextColor(Constants.BLACK)
-                        .setBtnTextColor(Constants.WHITE)
-                        .setBtnBackgroundColor(Constants.BLUE)
-                        .setFallbackToSettings(true)
-                        .build()
-                    cleverTapInstance?.promptPushPrimer(activity, builder)
-                }
-
-                "10-3" -> {
-                    val builder = CTLocalInApp.builder()
-                        .setInAppType(CTLocalInApp.InAppType.ALERT)
-                        .setTitleText("Get Notified")
-                        .setMessageText("Enable Notification permission")
-                        .followDeviceOrientation(true)
-                        .setPositiveBtnText("Allow")
-                        .setNegativeBtnText("Cancel")
-                        .build()
-                    cleverTapInstance?.promptPushPrimer(activity, builder)
-                }
-
-                "10-4" -> {
-                    val builder = CTLocalInApp.builder()
-                        .setInAppType(CTLocalInApp.InAppType.ALERT)
-                        .setTitleText("Get Notified")
-                        .setMessageText("Enable Notification permission")
-                        .followDeviceOrientation(false)
-                        .setPositiveBtnText("Allow")
-                        .setNegativeBtnText("Cancel")
-                        .build()
-                    cleverTapInstance?.promptPushPrimer(activity, builder)
-                }
-
-                "10-5" -> {
-                    val builder = CTLocalInApp.builder()
-                        .setInAppType(CTLocalInApp.InAppType.ALERT)
-                        .setTitleText("Get Notified")
-                        .setMessageText("Enable Notification permission")
-                        .followDeviceOrientation(true)
-                        .setPositiveBtnText("Allow")
-                        .setNegativeBtnText("Cancel")
-                        .setFallbackToSettings(true)
-                        .build()
-                    cleverTapInstance?.promptPushPrimer(activity, builder)
-                }
-
-                "10-6" -> {
-                    if (cleverTapInstance?.isPushPermissionGranted == false) {
-                        cleverTapInstance.promptForPushPermission(activity, false)
-                    } else {
-                        Log.v("HomeScreenViewModel", "Notification permission is already granted.")
-                    }
-                }
-
-                "10-7" -> {
-                    if (cleverTapInstance?.isPushPermissionGranted == false) {
-                        cleverTapInstance.promptForPushPermission(activity, false)
-                    } else {
-                        Log.v("HomeScreenViewModel", "Notification permission is already granted.")
-                    }
-                }
             }
         })
     }

@@ -192,7 +192,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     @RequiresApi(api = 33)
-    public void promptPushPrimer(Activity activity, JSONObject jsonObject){
+    public void promptPushPrimer(JSONObject jsonObject){
         int permissionStatus = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.POST_NOTIFICATIONS);
 
@@ -200,37 +200,28 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             //Checks whether permission request is asked for the first time.
             boolean isFirstTimeRequest = CTPreferenceCache.getInstance(context, config).isFirstTimeRequest();
 
-            Activity currentActivity = CoreMetaData.getCurrentActivity();
-            if (currentActivity == null && activity != null) {
-                Logger.v("Core Activity reference is not available hence using the passed one!");
-                currentActivity = activity;
-                CoreMetaData.setCurrentActivity(currentActivity);
-            }
+            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    ANDROID_PERMISSION_STRING);
 
-            if (currentActivity != null) {
-                boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                        Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                        ANDROID_PERMISSION_STRING);
-
-                if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
-                    if (!jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false)) {
-                        Logger.v("Notification permission is denied. Please grant notification permission access" +
-                                " in your app's settings to send notifications");
-                        notifyPushPermissionResult(false);
-                    } else {
-                        showSoftOrHardPrompt(jsonObject);
-                    }
-                    return;
+            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
+                if (!jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false)) {
+                    Logger.v("Notification permission is denied. Please grant notification permission access" +
+                            " in your app's settings to send notifications");
+                    notifyPushPermissionResult(false);
+                } else {
+                    showSoftOrHardPrompt(jsonObject);
                 }
-                showSoftOrHardPrompt(jsonObject);
+                return;
             }
+            showSoftOrHardPrompt(jsonObject);
         } else {
             notifyPushPermissionResult(true);
         }
     }
 
     @RequiresApi(api = 33)
-    public void promptPermission(Activity activity, boolean showFallbackSettings) {
+    public void promptPermission(boolean showFallbackSettings) {
         JSONObject object = new JSONObject();
         try {
             object.put(FALLBACK_TO_NOTIFICATION_SETTINGS, showFallbackSettings);
@@ -238,7 +229,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        promptPushPrimer(activity, object);
+        promptPushPrimer(object);
     }
 
     /**
