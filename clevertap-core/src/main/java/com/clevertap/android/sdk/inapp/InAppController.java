@@ -200,8 +200,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             //Checks whether permission request is asked for the first time.
             boolean isFirstTimeRequest = CTPreferenceCache.getInstance(context, config).isFirstTimeRequest();
 
+            Activity currentActivity = CoreMetaData.getCurrentActivity();
+            if (currentActivity == null) {
+                Logger.d("CurrentActivity reference is null. Can't process the push-primer request!");
+                return;
+            }
+
             boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    currentActivity,
                     ANDROID_PERMISSION_STRING);
 
             if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
