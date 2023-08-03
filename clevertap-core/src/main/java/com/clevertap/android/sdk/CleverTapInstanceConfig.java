@@ -147,20 +147,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = manifest.getPackageName();
         this.enableCustomCleverTapId = manifest.useCustomId();
         this.beta = manifest.enableBeta();
-        try {
-            int parsedEncryptionLevel = Integer.parseInt(manifest.getEncryptionLevel());
-            if(parsedEncryptionLevel <= 1){
-                this.encryptionLevel = parsedEncryptionLevel;
-            }
-            else{
-                this.encryptionLevel = 0;
-                Logger.v("Supported encryption levels are only 0 and 1. Setting it to 0 by default");
-            }
-        } catch (Throwable t){
-            this.encryptionLevel = 0;
-            Logger.v("Unable to parse encryption level from the Manifest, setting it to 0", t.getCause());
-        }
-
+        this.encryptionLevel = manifest.getEncryptionLevel();
         this.crypt = new AESCrypt(accountId, encryptionLevel);
         /*
          * For default instance, use manifest meta, otherwise use from setter field

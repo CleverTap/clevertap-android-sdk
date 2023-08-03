@@ -46,7 +46,7 @@ public class ManifestInfo {
 
     private final String[] profileKeys;
 
-    private static String encryptionLevel;
+    private static int encryptionLevel;
 
     public synchronized static ManifestInfo getInstance(Context context) {
         if (instance == null) {
@@ -84,7 +84,20 @@ public class ManifestInfo {
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BACKGROUND_SYNC));
         useCustomID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_CUSTOM_ID));
         fcmSenderId = _getManifestStringValueForKey(metaData, Constants.LABEL_FCM_SENDER_ID);
-        encryptionLevel = _getManifestStringValueForKey(metaData,Constants.LABEL_ENCRYPTION_LEVEL);
+        try {
+            int parsedEncryptionLevel = Integer.parseInt(_getManifestStringValueForKey(metaData,Constants.LABEL_ENCRYPTION_LEVEL));
+            if(parsedEncryptionLevel >= 0 && parsedEncryptionLevel <= 1){
+                encryptionLevel = parsedEncryptionLevel;
+            }
+            else{
+                encryptionLevel = 0;
+                Logger.v("Supported encryption levels are only 0 and 1. Setting it to 0 by default");
+            }
+        } catch (Throwable t){
+            encryptionLevel = 0;
+            Logger.v("Unable to parse encryption level from the Manifest, Setting it to 0 by default", t.getCause());
+        }
+
         if (fcmSenderId != null) {
             fcmSenderId = fcmSenderId.replace("id:", "");
         }
@@ -140,7 +153,7 @@ public class ManifestInfo {
     boolean enableBeta() {
         return beta;
     }
-    public String getEncryptionLevel(){
+    public int getEncryptionLevel(){
         return encryptionLevel;
     }
 
