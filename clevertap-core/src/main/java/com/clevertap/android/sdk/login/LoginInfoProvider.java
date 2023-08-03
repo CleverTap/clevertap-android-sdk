@@ -10,11 +10,14 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.concurrent.Callable;
 
 /**
  * Handles saving and/or providing login related information.
@@ -163,18 +166,25 @@ public class LoginInfoProvider {
         if (key == null || identifier == null) {
             return null;
         }
-        String encryptedIdentifier = config.getCrypt().encrypt(identifier,Constants.CACHED_GUIDS_KEY);
-        String cacheKey = key + "_" + encryptedIdentifier;
-        JSONObject cache = getCachedGUIDs();
-        try {
-            String cachedGuid = cache.getString(cacheKey);
-            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                    "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "]");
-            return cachedGuid;
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error reading guid cache: " + t.toString());
-            return null;
-        }
+        Task<String> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        return task.submitAndGetResult("getGuidForIdentifier", new Callable<String>() {
+            @Override
+            public String call() {
+
+                String encryptedIdentifier = config.getCrypt().encrypt(identifier,Constants.CACHED_GUIDS_KEY);
+                String cacheKey = key + "_" + encryptedIdentifier;
+                JSONObject cache = getCachedGUIDs();
+                try {
+                    String cachedGuid = cache.getString(cacheKey);
+                    config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                            "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "]");
+                    return cachedGuid;
+                } catch (Throwable t) {
+                    config.getLogger().verbose(config.getAccountId(), "Error reading guid cache: " + t.toString());
+                    return null;
+                }
+            }
+        },Long.MAX_VALUE);
     }
 
     public boolean isAnonymousDevice() {

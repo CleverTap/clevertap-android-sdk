@@ -10,6 +10,8 @@ import android.content.pm.PackageManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 
 import org.json.JSONObject;
@@ -17,6 +19,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 
 public final class CryptUtils {
 
@@ -34,15 +37,23 @@ public final class CryptUtils {
 
         int configEncryptionLevel = config.getEncryptionLevel();
         int storedEncryptionLevel = StorageHelper.getInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_ENCRYPTION_LEVEL), 0);
-        config.getLogger().verbose(config.getAccountId(), "Migrating encryption level from " + storedEncryptionLevel + " to " + configEncryptionLevel);
         if (storedEncryptionLevel == configEncryptionLevel) {
             return;
         }
+        config.getLogger().verbose(config.getAccountId(), "Migrating encryption level from " + storedEncryptionLevel + " to " + configEncryptionLevel);
         StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_ENCRYPTION_LEVEL), configEncryptionLevel);
 
         // If configEncryptionLevel is greater than storedEncryptionLevel, encryption level has increased. Hence perform encryption
         // Otherwise decryption
-        migrateEncryption(configEncryptionLevel > storedEncryptionLevel, context, config);
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("migratingEncryptionLevel", new Callable<Void>() {
+            @Override
+            public Void call() {
+                migrateEncryption(configEncryptionLevel > storedEncryptionLevel, context, config);
+                return null;
+            }
+        });
+
     }
 
     static void migrateEncryption(boolean encrypt, Context context, CleverTapInstanceConfig config) {
