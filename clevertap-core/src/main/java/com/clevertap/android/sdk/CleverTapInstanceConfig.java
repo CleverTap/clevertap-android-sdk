@@ -15,7 +15,6 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
 import com.clevertap.android.sdk.Constants.IdentityType;
-import com.clevertap.android.sdk.cryption.Crypt;
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.login.LoginConstants;
 
@@ -79,7 +78,6 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean useGoogleAdId;
     private int encryptionLevel;
-    private Crypt crypt;// TODO:@Anush: no need of Crypt anymore
 
 
     @SuppressWarnings("unused")
@@ -126,7 +124,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.allowedPushTypes = config.allowedPushTypes;
         this.identityKeys = config.identityKeys;
         this.encryptionLevel = config.encryptionLevel;
-        this.crypt = config.crypt;
     }
 
     private

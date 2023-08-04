@@ -77,15 +77,15 @@ object CryptUtils {
     private fun migrateCachedGuidsKeyPref(
         encrypt: Boolean,
         config: CleverTapInstanceConfig,
-        context: Context?,// TODO:@Anush: why context is nullable here?
+        context: Context,
         cryptHandler: CryptHandler
     ) {
         config.logger.verbose(
             config.accountId,
             "Migrating encryption level for cachedGUIDsKey prefs"
         )
-        val json =// TODO:@Anush: if context is nullable then this will crash
-            StorageHelper.getStringFromPrefs(context!!, config, Constants.CACHED_GUIDS_KEY, null)
+        val json =
+            StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null)
         val cachedGuidJsonObj = CTJsonConverter.toJsonObject(json, config.logger, config.accountId)
         val newGuidJsonObj = JSONObject()
         try {
