@@ -4,13 +4,18 @@ import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.StorageHelper
-import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 import java.io.File
 import java.util.Objects
 
 object CryptUtils {
+
+    private const val MIGRATION_FAILED = 0x00
+    private const val MIGRATION_CACHED_GUID_SUCCESS = 0x01
+    private const val MIGRATION_ARP_SUCCESS = 0x10
+    private const val MIGRATION_SUCCESS = 0x11
+
     /**
      * This method migrates the encryption level of the stored data for the current account ID
      *
@@ -32,28 +37,42 @@ object CryptUtils {
         if (storedEncryptionLevel == configEncryptionLevel) {
             return
         }
+
+        val storedMigrationStatus = StorageHelper.getInt(
+            context,
+            StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MIGRATION_STATUS),
+            MIGRATION_FAILED
+        )
+
+        // TODO:@Anush: complete rest of the logic
+
         config.logger.verbose(
             config.accountId,
             "Migrating encryption level from $storedEncryptionLevel to $configEncryptionLevel"
         )
-        StorageHelper.putInt(
-            context,
-            StorageHelper.storageKeyWithSuffix(config, Constants.KEY_ENCRYPTION_LEVEL),
-            configEncryptionLevel
-        )
-
         // If configEncryptionLevel is greater than storedEncryptionLevel, encryption level has increased. Hence perform encryption
         // Otherwise decryption
-        val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
-        task.execute("migratingEncryptionLevel") {
-            migrateEncryption(
-                configEncryptionLevel > storedEncryptionLevel,
+
+        val migrateEncryptionStatus = migrateEncryption(
+            configEncryptionLevel > storedEncryptionLevel,
+            context,
+            config,
+            cryptHandler
+        )
+
+        StorageHelper.putInt(
+            context,
+            StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MIGRATION_STATUS),
+            migrateEncryptionStatus
+        )
+        if (migrateEncryptionStatus == MIGRATION_SUCCESS) {
+            StorageHelper.putInt(
                 context,
-                config,
-                cryptHandler
+                StorageHelper.storageKeyWithSuffix(config, Constants.KEY_ENCRYPTION_LEVEL),
+                configEncryptionLevel
             )
-            null
         }
+
     }
 
     private fun migrateEncryption(
@@ -61,9 +80,12 @@ object CryptUtils {
         context: Context,
         config: CleverTapInstanceConfig,
         cryptHandler: CryptHandler
-    ) {
-        migrateCachedGuidsKeyPref(encrypt, config, context, cryptHandler)
-        migrateARPPreferenceFiles(encrypt, config, context, cryptHandler)
+    ): Int {
+        val migrateCachedGuidsKeyPrefStatus =
+            migrateCachedGuidsKeyPref(encrypt, config, context, cryptHandler)
+        val migrateARPPreferenceFilesStatus =
+            migrateARPPreferenceFiles(encrypt, config, context, cryptHandler)
+        return migrateCachedGuidsKeyPrefStatus or migrateARPPreferenceFilesStatus
     }
 
     /**
@@ -73,13 +95,15 @@ object CryptUtils {
      * @param encrypt - Flag to indicate the task to be either encryption or decryption
      * @param config  - The [CleverTapInstanceConfig] object
      * @param context - The Android context
+     * @return isMigrationSuccess - Int
      */
     private fun migrateCachedGuidsKeyPref(
         encrypt: Boolean,
         config: CleverTapInstanceConfig,
         context: Context?,// TODO:@Anush: why context is nullable here?
         cryptHandler: CryptHandler
-    ) {
+    ): Int {
+        var isMigrationSuccess = MIGRATION_FAILED
         config.logger.verbose(
             config.accountId,
             "Migrating encryption level for cachedGUIDsKey prefs"
@@ -114,9 +138,13 @@ object CryptUtils {
                     "setCachedGUIDs after migration:[$cachedGuid]"
                 )
             }
+
+            isMigrationSuccess = MIGRATION_CACHED_GUID_SUCCESS
         } catch (t: Throwable) {
             config.logger.verbose(config.accountId, "Error migrating cached guids: $t")
         }
+
+        return isMigrationSuccess
     }
 
     /**
@@ -125,13 +153,16 @@ object CryptUtils {
      * @param encrypt - Flag to indicate the task to be either encryption or decryption
      * @param config  - The [CleverTapInstanceConfig] object
      * @param context - The Android context
+     * @return isMigrationSuccess - Int
      */
     private fun migrateARPPreferenceFiles(
         encrypt: Boolean,
         config: CleverTapInstanceConfig,
         context: Context,
         cryptHandler: CryptHandler
-    ) {
+    ): Int {
+        var isMigrationSuccess = MIGRATION_FAILED
+
         config.logger.verbose(config.accountId, "Migrating encryption level for ARP related prefs")
         try {
             // Gets all the files present in the shared_prefs directory
@@ -158,8 +189,15 @@ object CryptUtils {
                     }
                 }
             }
+
+            isMigrationSuccess = MIGRATION_ARP_SUCCESS
         } catch (e: Exception) {
             config.logger.verbose(config.accountId, "Error migrating ARP Preference Files: $e")
         }
+
+        return isMigrationSuccess
     }
+
+    private fun isMigrationSuccess(flagSet: Int, flag: Int) = (flagSet or flag) == flagSet
 }
+

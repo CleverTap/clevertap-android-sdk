@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
@@ -198,6 +199,7 @@ public interface Constants {
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
+    String KEY_MIGRATION_STATUS = "migration_status";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
     String EXTRAS_FROM = "extras_from";
