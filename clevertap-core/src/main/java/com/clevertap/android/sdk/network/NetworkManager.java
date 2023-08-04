@@ -21,6 +21,7 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueCursor;
 import com.clevertap.android.sdk.events.EventGroup;
@@ -81,6 +82,7 @@ public class NetworkManager extends BaseNetworkManager {
     private final ValidationResultStack validationResultStack;
     private int responseFailureCount = 0;
     private final Validator validator;
+    private final CryptHandler cryptHandler;
     private int minDelayFrequency = 0;
 
     public static boolean isNetworkOnline(Context context) {
@@ -111,7 +113,8 @@ public class NetworkManager extends BaseNetworkManager {
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
-            LocalDataStore localDataStore) {
+            LocalDataStore localDataStore,
+            CryptHandler cryptHandler) {
         this.context = context;
         this.config = config;
         this.deviceInfo = deviceInfo;
@@ -123,6 +126,7 @@ public class NetworkManager extends BaseNetworkManager {
         this.coreMetaData = coreMetaData;
         this.validationResultStack = validationResultStack;
         this.controllerManager = controllerManager;
+        this.cryptHandler = cryptHandler;
         databaseManager = baseDatabaseManager;
         // maintain order
         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
@@ -139,7 +143,7 @@ public class NetworkManager extends BaseNetworkManager {
                 callbackManager, controllerManager);
 
         cleverTapResponse = new ConsoleResponse(cleverTapResponse, config);
-        cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator, controllerManager);
+        cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator, controllerManager, cryptHandler);
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
         cleverTapResponse = new InAppResponse(cleverTapResponse, config, controllerManager, false);
 
@@ -674,7 +678,7 @@ public class NetworkManager extends BaseNetworkManager {
                 if (eventGroup == EventGroup.VARIABLES) {
                     CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
                     cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator,
-                            controllerManager);
+                            controllerManager, cryptHandler);
                     cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore,
                             cleverTapResponse);
                     cleverTapResponse.processResponse(null, body, this.context);
@@ -850,7 +854,7 @@ public class NetworkManager extends BaseNetworkManager {
             }
             final JSONObject ret = new JSONObject(all);
             if(ret.has(Constants.KEY_k_n))
-                ret.put(Constants.KEY_k_n,config.getCrypt().decrypt(ret.getString(Constants.KEY_k_n),Constants.KEY_k_n));
+                ret.put(Constants.KEY_k_n, cryptHandler.decrypt(ret.getString(Constants.KEY_k_n), Constants.KEY_k_n));
             logger.verbose(config.getAccountId(),
                     "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + ret);
             return ret;

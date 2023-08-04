@@ -7,7 +7,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.cryption.Crypt;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.validation.Validator;
@@ -31,15 +31,18 @@ public class ARPResponse extends CleverTapResponseDecorator {
 
     private final Validator validator;
 
+    private final CryptHandler cryptHandler;
+
     public ARPResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
             NetworkManager networkManager,
-            Validator validator, ControllerManager controllerManager) {
+            Validator validator, ControllerManager controllerManager, CryptHandler cryptHandler) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
         ctProductConfigController = controllerManager.getCTProductConfigController();
         logger = this.config.getLogger();
         this.networkManager = networkManager;
         this.validator = validator;
+        this.cryptHandler = cryptHandler;
     }
 
     @Override
@@ -84,7 +87,6 @@ public class ARPResponse extends CleverTapResponseDecorator {
         final SharedPreferences prefs = StorageHelper.getPreferences(context, nameSpaceKey);
         final SharedPreferences.Editor editor = prefs.edit();
 
-        Crypt crypt = config.getCrypt();
         final Iterator<String> keys = arp.keys();
         while (keys.hasNext()) {
             final String key = keys.next();
@@ -95,7 +97,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
                     editor.putInt(key, update);
                 } else if (o instanceof String) {
                     if (((String) o).length() < 100) {
-                        editor.putString(key, crypt.encrypt((String) o, key));
+                        editor.putString(key, cryptHandler.encrypt((String) o, key));
                     } else {
                         logger.verbose(config.getAccountId(),
                                 "ARP update for key " + key + " rejected (string value too long)");

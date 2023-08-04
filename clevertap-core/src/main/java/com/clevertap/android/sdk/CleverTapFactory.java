@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.EventMediator;
@@ -42,7 +43,10 @@ class CleverTapFactory {
 
         CleverTapInstanceConfig config = new CleverTapInstanceConfig(cleverTapInstanceConfig);
         coreState.setConfig(config);
-        CryptUtils.migrateEncryptionLevel(context, config);
+
+        CryptHandler cryptHandler = new CryptHandler(config.getEncryptionLevel(), CryptHandler.EncryptionAlgorithm.AES, config.getAccountId());
+        coreState.setCryptHandler(cryptHandler);
+        CryptUtils.migrateEncryptionLevel(context, config, cryptHandler);
 
         EventMediator eventMediator = new EventMediator(context, config, coreMetaData);
         coreState.setEventMediator(eventMediator);
@@ -89,14 +93,14 @@ class CleverTapFactory {
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
                 validationResultStack, controllerManager, baseDatabaseManager,
-                callbackManager, ctLockManager, validator, localDataStore);
+                callbackManager, ctLockManager, validator, localDataStore, cryptHandler);
         coreState.setNetworkManager(networkManager);
 
         EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config,
                 eventMediator,
                 sessionManager, callbackManager,
                 mainLooperHandler, deviceInfo, validationResultStack,
-                networkManager, coreMetaData, ctLockManager, localDataStore, controllerManager);
+                networkManager, coreMetaData, ctLockManager, localDataStore, controllerManager, cryptHandler);
         coreState.setBaseEventQueueManager(baseEventQueueManager);
 
         AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
@@ -136,7 +140,7 @@ class CleverTapFactory {
         LoginController loginController = new LoginController(context, config, deviceInfo,
                 validationResultStack, baseEventQueueManager, analyticsManager,
                 coreMetaData, controllerManager, sessionManager,
-                localDataStore, callbackManager, baseDatabaseManager, ctLockManager);
+                localDataStore, callbackManager, baseDatabaseManager, ctLockManager, cryptHandler);
         coreState.setLoginController(loginController);
 
         VarCache varCache = new VarCache(config,context);

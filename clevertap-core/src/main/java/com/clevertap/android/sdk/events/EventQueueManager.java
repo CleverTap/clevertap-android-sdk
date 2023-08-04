@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.SessionManager;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
@@ -69,6 +70,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     private Runnable pushNotificationViewedRunnable = null;
 
     private final ControllerManager controllerManager;
+    private final CryptHandler cryptHandler;
 
     public EventQueueManager(final BaseDatabaseManager baseDatabaseManager,
             Context context,
@@ -83,7 +85,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             CoreMetaData coreMetaData,
             CTLockManager ctLockManager,
             final LocalDataStore localDataStore,
-            ControllerManager controllerManager) {
+            ControllerManager controllerManager,
+            CryptHandler cryptHandler) {
         this.baseDatabaseManager = baseDatabaseManager;
         this.context = context;
         this.config = config;
@@ -98,6 +101,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         cleverTapMetaData = coreMetaData;
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
+        this.cryptHandler = cryptHandler;
 
         callbackManager.setFailureFlushListener(this);
     }
@@ -318,7 +322,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 Iterator<String> i = baseProfile.keys();
                 IdentityRepo iProfileHandler = IdentityRepoFactory
                         .getRepo(context, config, deviceInfo, validationResultStack);
-                setLoginInfoProvider(new LoginInfoProvider(context, config, deviceInfo));
+                setLoginInfoProvider(new LoginInfoProvider(context, config, deviceInfo, cryptHandler));
                 while (i.hasNext()) {
                     String next = i.next();
 

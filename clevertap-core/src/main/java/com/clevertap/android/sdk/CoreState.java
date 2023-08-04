@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventMediator;
@@ -61,6 +63,8 @@ public class CoreState extends CleverTapState {
     private VarCache varCache;
 
     private Parser parser;
+
+    private CryptHandler cryptHandler;
 
     public CTVariables getCTVariables() {
         return ctVariables;
@@ -267,6 +271,14 @@ public class CoreState extends CleverTapState {
 
     public void setVarCache(final VarCache varCache) {
         this.varCache = varCache;
+    }
+
+    public CryptHandler getCryptHandler() {
+        return cryptHandler;
+    }
+
+    public void setCryptHandler(final CryptHandler cryptHandler) {
+        this.cryptHandler = cryptHandler;
     }
 
     /**

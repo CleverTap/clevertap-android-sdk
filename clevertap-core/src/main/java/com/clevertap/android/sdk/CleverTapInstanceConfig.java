@@ -13,8 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants.IdentityType;
-import com.clevertap.android.sdk.cryption.AESCrypt;
 import com.clevertap.android.sdk.cryption.Crypt;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.login.LoginConstants;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -148,7 +148,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.enableCustomCleverTapId = manifest.useCustomId();
         this.beta = manifest.enableBeta();
         this.encryptionLevel = manifest.getEncryptionLevel();
-        this.crypt = new AESCrypt(accountId, encryptionLevel);
         /*
          * For default instance, use manifest meta, otherwise use from setter field
          */
@@ -222,7 +221,6 @@ public class CleverTapInstanceConfig implements Parcelable {
             if(configJsonObject.has(Constants.KEY_ENCRYPTION_LEVEL)){
                 this.encryptionLevel = configJsonObject.getInt(Constants.KEY_ENCRYPTION_LEVEL);
             }
-            this.crypt = new AESCrypt(accountId, encryptionLevel);
         } catch (Throwable t) {
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
             throw (t);
@@ -251,7 +249,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         in.readList(allowedPushTypes, String.class.getClassLoader());
         identityKeys = in.createStringArray();
         encryptionLevel = in.readInt();
-        crypt = new AESCrypt(accountId, encryptionLevel);
     }
 
     @Override
@@ -432,23 +429,12 @@ public class CleverTapInstanceConfig implements Parcelable {
     void setCreatedPostAppLaunch() {
         this.createdPostAppLaunch = true;
     }
-    public void setEncryptionLevel(Crypt.EncryptionLevel encryptionLevel) {
+    public void setEncryptionLevel(CryptHandler.EncryptionLevel encryptionLevel) {
         this.encryptionLevel = encryptionLevel.intValue();
-        if(crypt != null){
-            crypt.setEncryptionLevel(this.encryptionLevel);
-        }
     }
     public int getEncryptionLevel() {
         return encryptionLevel;
     }
-
-    public Crypt getCrypt(){
-        if(crypt ==  null) {
-            this.crypt = new AESCrypt(accountId, encryptionLevel);
-        }
-        return crypt;
-    }
-
 
     String toJSONString() {
         JSONObject configJsonObject = new JSONObject();

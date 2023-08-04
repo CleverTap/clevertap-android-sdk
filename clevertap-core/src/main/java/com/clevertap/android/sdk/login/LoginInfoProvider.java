@@ -10,14 +10,12 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 
 import org.json.JSONObject;
 
 import java.util.Iterator;
-import java.util.concurrent.Callable;
 
 /**
  * Handles saving and/or providing login related information.
@@ -31,10 +29,18 @@ public class LoginInfoProvider {
 
     private final DeviceInfo deviceInfo;
 
+    private CryptHandler cryptHandler;
+
     public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
         this.context = context;
         this.config = config;
         this.deviceInfo = deviceInfo;
+    }
+    public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo, CryptHandler cryptHandler) {
+        this.context = context;
+        this.config = config;
+        this.deviceInfo = deviceInfo;
+        this.cryptHandler = cryptHandler;
     }
 
     //Profile
@@ -52,14 +58,14 @@ public class LoginInfoProvider {
         if (isErrorDeviceId() || guid == null || key == null || identifier == null) {
             return;
         }
-        String encryptedIdentifier = config.getCrypt().encrypt(identifier,Constants.CACHED_GUIDS_KEY);
+        String encryptedIdentifier = cryptHandler.encrypt(identifier,Constants.CACHED_GUIDS_KEY);
         String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
         try {
             cache.put(cacheKey, guid);
             setCachedGUIDs(cache);
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error caching guid: " + t.toString());
+            config.getLogger().verbose(config.getAccountId(), "Error caching guid: " + t);
         }
     }
 
@@ -94,7 +100,7 @@ public class LoginInfoProvider {
                 }
             }
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error removing cached key: " + t.toString());
+            config.getLogger().verbose(config.getAccountId(), "Error removing cached key: " + t);
         }
     }
 
@@ -132,7 +138,7 @@ public class LoginInfoProvider {
             config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                     "setCachedGUIDs:[" + cachedGuid + "]");
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t.toString());
+            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t);
         }
     }
 
@@ -142,7 +148,7 @@ public class LoginInfoProvider {
             config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "removeCachedGUIDs:[]");
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error removing guid cache: " + t.toString());
+            config.getLogger().verbose(config.getAccountId(), "Error removing guid cache: " + t);
         }
     }
 
@@ -166,25 +172,18 @@ public class LoginInfoProvider {
         if (key == null || identifier == null) {
             return null;
         }
-        Task<String> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        return task.submitAndGetResult("getGuidForIdentifier", new Callable<String>() {
-            @Override
-            public String call() {
-
-                String encryptedIdentifier = config.getCrypt().encrypt(identifier,Constants.CACHED_GUIDS_KEY);
-                String cacheKey = key + "_" + encryptedIdentifier;
-                JSONObject cache = getCachedGUIDs();
-                try {
-                    String cachedGuid = cache.getString(cacheKey);
-                    config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                            "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "]");
-                    return cachedGuid;
-                } catch (Throwable t) {
-                    config.getLogger().verbose(config.getAccountId(), "Error reading guid cache: " + t.toString());
-                    return null;
-                }
-            }
-        },Long.MAX_VALUE);
+        String encryptedIdentifier = cryptHandler.encrypt(identifier, Constants.CACHED_GUIDS_KEY);
+        String cacheKey = key + "_" + encryptedIdentifier;
+        JSONObject cache = getCachedGUIDs();
+        try {
+            String cachedGuid = cache.getString(cacheKey);
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                    "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "]");
+            return cachedGuid;
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error reading guid cache: " + t);
+            return null;
+        }
     }
 
     public boolean isAnonymousDevice() {
