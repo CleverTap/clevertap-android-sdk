@@ -9,16 +9,20 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
 import com.clevertap.android.sdk.Constants.IdentityType;
 import com.clevertap.android.sdk.cryption.Crypt;
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.login.LoginConstants;
+
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import org.json.JSONObject;
 
 public class CleverTapInstanceConfig implements Parcelable {
 
@@ -75,7 +79,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean useGoogleAdId;
     private int encryptionLevel;
-    private Crypt crypt;
+    private Crypt crypt;// TODO:@Anush: no need of Crypt anymore
 
 
     @SuppressWarnings("unused")

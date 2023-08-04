@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 import java.io.File
-import java.util.*
+import java.util.Objects
 
 object CryptUtils {
     /**
@@ -77,14 +77,14 @@ object CryptUtils {
     private fun migrateCachedGuidsKeyPref(
         encrypt: Boolean,
         config: CleverTapInstanceConfig,
-        context: Context?,
+        context: Context?,// TODO:@Anush: why context is nullable here?
         cryptHandler: CryptHandler
     ) {
         config.logger.verbose(
             config.accountId,
             "Migrating encryption level for cachedGUIDsKey prefs"
         )
-        val json =
+        val json =// TODO:@Anush: if context is nullable then this will crash
             StorageHelper.getStringFromPrefs(context!!, config, Constants.CACHED_GUIDS_KEY, null)
         val cachedGuidJsonObj = CTJsonConverter.toJsonObject(json, config.logger, config.accountId)
         val newGuidJsonObj = JSONObject()
