@@ -67,7 +67,7 @@ public class LoginInfoProvider {
         JSONObject cache = getCachedGUIDs();
         try {
             cache.put(cacheKey, guid);
-            setCachedGUIDs(cache);
+            setCachedGUIDs(cache);// TODO:@Anush: I feel like this will just create new entry instead of updating plain to encrypted, plain one need to be removed
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error caching guid: " + t);
         }

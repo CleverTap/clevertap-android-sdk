@@ -4,7 +4,6 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import java.nio.charset.StandardCharsets
 import java.security.spec.KeySpec
-import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
@@ -31,14 +30,15 @@ class AESCrypt : Crypt() {
      * @return encrypted text
      */
     override fun encryptInternal(plainText: String, accountID: String): String? {
-        val encryptedText = Arrays.toString(
-            performCryptOperation(
-                Cipher.ENCRYPT_MODE, generateKeyPassword(accountID), plainText.toByteArray(
-                    StandardCharsets.UTF_8
-                )
+
+        return performCryptOperation(
+            Cipher.ENCRYPT_MODE, generateKeyPassword(accountID), plainText.toByteArray(
+                StandardCharsets.UTF_8
             )
-        )
-        return if (encryptedText == "null") null else encryptedText
+        )?.let { encryptedBytes ->
+            encryptedBytes.contentToString()
+        }
+
     }
 
     /**
@@ -49,12 +49,11 @@ class AESCrypt : Crypt() {
      * @return decrypted text
      */
     override fun decryptInternal(cipherText: String, accountID: String): String? {
-        val bytes = parseCipherText(cipherText) ?: return null
-        val byteResult =
+        return parseCipherText(cipherText)?.let { bytes ->
             performCryptOperation(Cipher.DECRYPT_MODE, generateKeyPassword(accountID), bytes)
-        if (byteResult != null)
-            return String(byteResult, StandardCharsets.UTF_8)
-        return null
+        }?.let { decryptedBytes ->
+            String(decryptedBytes, StandardCharsets.UTF_8)
+        }
     }
 
     /**

@@ -2,12 +2,20 @@ package com.clevertap.android.sdk.cryption
 
 import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.Constants.*
+import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
+import com.clevertap.android.sdk.Constants.CLEVERTAP_STORAGE_TAG
+import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_CGK_SUCCESS
+import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_FAIL
+import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_KN_SUCCESS
+import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_FLAG_STATUS
+import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
+import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_MIGRATION
+import com.clevertap.android.sdk.Constants.KEY_k_n
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 import java.io.File
-import java.util.*
+import java.util.Objects
 
 object CryptUtils {
 
@@ -44,12 +52,12 @@ object CryptUtils {
                 StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_FLAG_STATUS),
                 ENCRYPTION_FLAG_FAIL
             )
-        }
+        }// TODO:@Anush: This will fail when no value in pref for KEY_ENCRYPTION_FLAG_STATUS and config encrypt level is 0
         StorageHelper.putInt(
             context,
             StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_LEVEL),
             configEncryptionLevel
-        )
+        )// TODO:@Anush: store new level only if migration success
 
         if (encryptionFlagStatus == 3) {
             config.logger.verbose(
