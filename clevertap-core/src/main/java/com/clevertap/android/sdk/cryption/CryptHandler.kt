@@ -1,12 +1,16 @@
 package com.clevertap.android.sdk.cryption
 
+import android.content.Context
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.StorageHelper
 
 class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, accountID: String) {
     private var encryptionLevel: EncryptionLevel
     private var encryptionType: EncryptionAlgorithm
     private var crypt: Crypt
     private var accountID: String
+    var encryptionFlagStatus: Int
 
     enum class EncryptionAlgorithm {
         AES
@@ -24,21 +28,22 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
         this.encryptionLevel = EncryptionLevel.values()[encryptionLevel]
         this.encryptionType = encryptionType
         this.accountID = accountID
+        this.encryptionFlagStatus = 0x00
         this.crypt = CryptFactory.getCrypt(encryptionType)
     }
 
     /**
-     * This method returns the encrypted text if the key is a part of the current encryption level
+     * This method returns the encrypted text if the key is a part of the current encryption level and is not already encrypted
      *
      * @param plainText - plainText to be encrypted
      * @param key       - key of the plainText to be encrypted
      * @return encrypted text
      */
-    fun encrypt(plainText: String, key: String): String {
+    fun encrypt(plainText: String, key: String): String? {
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM ->
-                if (Constants.MEDIUM_CRYPT_KEYS.contains(key))
-                    return crypt.encryptInternal(plainText, accountID) ?: plainText
+                if (key in Constants.MEDIUM_CRYPT_KEYS && !isTextEncrypted(plainText))
+                    return crypt.encryptInternal(plainText, accountID)
             else -> return plainText
         }
         return plainText
@@ -51,21 +56,47 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
      * @param key        - key of the cipherText that needs to be decrypted
      * @return decrypted text
      */
-    fun decrypt(cipherText: String, key: String): String {
-        return when (encryptionLevel) {
-            EncryptionLevel.MEDIUM -> {
-                if (key in Constants.MEDIUM_CRYPT_KEYS)
-                    crypt.decryptInternal(cipherText, accountID) ?: cipherText
-                else
-                    cipherText
-            }
-            else -> {
-                // None crypt keys is required in the case of migration only
-                if (Constants.NONE_CRYPT_KEYS.contains(key))
-                    crypt.decryptInternal(cipherText, accountID) ?: cipherText
-                else
-                    cipherText
+    fun decrypt(cipherText: String, key: String): String? {
+        if (isTextEncrypted(cipherText)) {
+            when (encryptionLevel) {
+                EncryptionLevel.MEDIUM -> {
+                    if (key in Constants.MEDIUM_CRYPT_KEYS)
+                        return crypt.decryptInternal(cipherText, accountID)
+                }
+                else -> {
+                    // None crypt keys is required in the case of migration only
+                    if (key in Constants.NONE_CRYPT_KEYS)
+                        return crypt.decryptInternal(cipherText, accountID)
+                }
             }
         }
+        return cipherText
     }
+
+    private fun isTextEncrypted(plainText: String): Boolean {
+        return plainText.startsWith('[') && plainText.endsWith(']') && !plainText.startsWith("[ \"")
+    }
+
+    fun updateEncryptionFlagOnFailure(
+        context: Context,
+        config: CleverTapInstanceConfig,
+        failedFlag: Int
+    ) {
+
+        val updatedEncryptionFlag = (failedFlag xor encryptionFlagStatus) and encryptionFlagStatus
+        config.logger.verbose(
+            config.accountId,
+            "Updating encryption flag status after error in encryption to $updatedEncryptionFlag"
+        )
+        StorageHelper.putInt(
+            context, StorageHelper.storageKeyWithSuffix(
+                config,
+                Constants.KEY_ENCRYPTION_FLAG_STATUS
+            ),
+            updatedEncryptionFlag
+        )
+        this.encryptionFlagStatus = updatedEncryptionFlag
+
+    }
+
 }

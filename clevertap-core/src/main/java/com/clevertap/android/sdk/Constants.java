@@ -198,6 +198,7 @@ public interface Constants {
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
+    String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
     String EXTRAS_FROM = "extras_from";
@@ -296,6 +297,10 @@ public interface Constants {
     int INVALID_MULTI_VALUE_KEY = 23;
     int RESTRICTED_MULTI_VALUE_KEY = 24;
     int INVALID_INCREMENT_DECREMENT_VALUE = 25;
+    int ENCRYPTION_FLAG_FAIL = 0b00;
+    int ENCRYPTION_FLAG_CGK_SUCCESS = 0b01;
+    int ENCRYPTION_FLAG_KN_SUCCESS = 0b10;
+
     String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
     String SEPARATOR_COMMA = ",";
     String EMPTY_STRING = "";

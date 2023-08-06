@@ -97,7 +97,12 @@ public class ARPResponse extends CleverTapResponseDecorator {
                     editor.putInt(key, update);
                 } else if (o instanceof String) {
                     if (((String) o).length() < 100) {
-                        editor.putString(key, cryptHandler.encrypt((String) o, key));
+                        String encrypted = cryptHandler.encrypt((String) o, key);
+                        if(encrypted == null) {
+                            encrypted = (String) o;
+                            cryptHandler.updateEncryptionFlagOnFailure(context,config,Constants.ENCRYPTION_FLAG_KN_SUCCESS);
+                        }
+                        editor.putString(key, encrypted);
                     } else {
                         logger.verbose(config.getAccountId(),
                                 "ARP update for key " + key + " rejected (string value too long)");

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.DBManager;
@@ -19,6 +20,7 @@ import com.clevertap.android.sdk.validation.Validator;
 import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.Parser;
 import com.clevertap.android.sdk.variables.VarCache;
+
 import java.util.concurrent.Callable;
 
 class CleverTapFactory {
@@ -46,7 +48,11 @@ class CleverTapFactory {
 
         CryptHandler cryptHandler = new CryptHandler(config.getEncryptionLevel(), CryptHandler.EncryptionAlgorithm.AES, config.getAccountId());
         coreState.setCryptHandler(cryptHandler);
-        CryptUtils.migrateEncryptionLevel(context, config, cryptHandler);
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("migratingEncryptionLevel", () -> {
+            CryptUtils.migrateEncryptionLevel(context, config, cryptHandler);
+            return null;
+        });
 
         EventMediator eventMediator = new EventMediator(context, config, coreMetaData);
         coreState.setEventMediator(eventMediator);

@@ -59,6 +59,10 @@ public class LoginInfoProvider {
             return;
         }
         String encryptedIdentifier = cryptHandler.encrypt(identifier,Constants.CACHED_GUIDS_KEY);
+        if (encryptedIdentifier == null) {
+            encryptedIdentifier = identifier;
+            cryptHandler.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_CGK_SUCCESS);
+        }
         String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
         try {
@@ -182,8 +186,17 @@ public class LoginInfoProvider {
             return cachedGuid;
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error reading guid cache: " + t);
-            return null;
         }
+        try {
+            cacheKey = key + "_" + identifier;
+            String cachedGuid = cache.getString(cacheKey);
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                    "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "]");
+            return cachedGuid;
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error reading guid cache after retry: " + t);
+        }
+        return null;
     }
 
     public boolean isAnonymousDevice() {

@@ -31,13 +31,14 @@ class AESCrypt : Crypt() {
      * @return encrypted text
      */
     override fun encryptInternal(plainText: String, accountID: String): String? {
-        return Arrays.toString(
+        val encryptedText = Arrays.toString(
             performCryptOperation(
                 Cipher.ENCRYPT_MODE, generateKeyPassword(accountID), plainText.toByteArray(
                     StandardCharsets.UTF_8
                 )
             )
         )
+        return if (encryptedText == "null") null else encryptedText
     }
 
     /**
@@ -72,7 +73,7 @@ class AESCrypt : Crypt() {
                 bytes[i] = byteStrings[i].toByte()
             }
             bytes
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             Logger.v("Unable to parse cipher text", e)
             null
         }

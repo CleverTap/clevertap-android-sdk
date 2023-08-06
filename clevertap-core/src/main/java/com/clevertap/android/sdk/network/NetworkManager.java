@@ -34,17 +34,20 @@ import com.clevertap.android.sdk.response.CleverTapResponseHelper;
 import com.clevertap.android.sdk.response.ConsoleResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.FeatureFlagResponse;
+import com.clevertap.android.sdk.response.FetchVariablesResponse;
 import com.clevertap.android.sdk.response.GeofenceResponse;
 import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
-import com.clevertap.android.sdk.response.FetchVariablesResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -55,13 +58,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class NetworkManager extends BaseNetworkManager {
@@ -853,8 +852,14 @@ public class NetworkManager extends BaseNetworkManager {
                 }
             }
             final JSONObject ret = new JSONObject(all);
-            if(ret.has(Constants.KEY_k_n))
-                ret.put(Constants.KEY_k_n, cryptHandler.decrypt(ret.getString(Constants.KEY_k_n), Constants.KEY_k_n));
+            if (ret.has(Constants.KEY_k_n)) {
+                String knValue = ret.getString(Constants.KEY_k_n);
+                String decrypted = cryptHandler.decrypt(knValue, Constants.KEY_k_n);
+                if (decrypted == null)
+                    ret.put(Constants.KEY_k_n, knValue);
+                else
+                    ret.put(Constants.KEY_k_n, decrypted);
+            }
             logger.verbose(config.getAccountId(),
                     "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + ret);
             return ret;
