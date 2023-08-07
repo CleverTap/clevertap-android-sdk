@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.validation.Validator;
@@ -98,9 +99,9 @@ public class ARPResponse extends CleverTapResponseDecorator {
                 } else if (o instanceof String) {
                     if (((String) o).length() < 100) {
                         String encrypted = cryptHandler.encrypt((String) o, key);
-                        if(encrypted == null) {
+                        if (encrypted == null) {
                             encrypted = (String) o;
-                            cryptHandler.updateEncryptionFlagOnFailure(context,config,Constants.ENCRYPTION_FLAG_KN_SUCCESS);
+                            CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_KN_SUCCESS, cryptHandler);
                         }
                         editor.putString(key, encrypted);
                     } else {

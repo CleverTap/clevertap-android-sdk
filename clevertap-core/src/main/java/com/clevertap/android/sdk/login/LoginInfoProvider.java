@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 
 import org.json.JSONObject;
@@ -61,13 +62,13 @@ public class LoginInfoProvider {
         String encryptedIdentifier = cryptHandler.encrypt(identifier,Constants.CACHED_GUIDS_KEY);
         if (encryptedIdentifier == null) {
             encryptedIdentifier = identifier;
-            cryptHandler.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_CGK_SUCCESS);
+            CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_CGK_SUCCESS, cryptHandler);
         }
         String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
         try {
             cache.put(cacheKey, guid);
-            setCachedGUIDs(cache);// TODO:@Anush: I feel like this will just create new entry instead of updating plain to encrypted, plain one need to be removed
+            setCachedGUIDs(cache);
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error caching guid: " + t);
         }

@@ -76,27 +76,4 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
     private fun isTextEncrypted(plainText: String): Boolean {
         return plainText.startsWith('[') && plainText.endsWith(']') && !plainText.startsWith("[ \"")
     }
-
-    fun updateEncryptionFlagOnFailure(
-        context: Context,
-        config: CleverTapInstanceConfig,
-        failedFlag: Int
-    ) {
-
-        val updatedEncryptionFlag = (failedFlag xor encryptionFlagStatus) and encryptionFlagStatus
-        config.logger.verbose(
-            config.accountId,
-            "Updating encryption flag status after error in encryption to $updatedEncryptionFlag"
-        )
-        StorageHelper.putInt(
-            context, StorageHelper.storageKeyWithSuffix(
-                config,
-                Constants.KEY_ENCRYPTION_FLAG_STATUS
-            ),
-            updatedEncryptionFlag
-        )
-        this.encryptionFlagStatus = updatedEncryptionFlag
-
-    }
-
 }

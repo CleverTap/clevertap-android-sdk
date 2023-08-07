@@ -44,7 +44,10 @@ object CryptUtils {
             config.accountId,
             "Migrating encryption level from $storedEncryptionLevel to $configEncryptionLevel"
         )
-        encryptionFlagStatus = if (storedEncryptionLevel != configEncryptionLevel) {
+
+        encryptionFlagStatus = if(storedEncryptionLevel == -1 && configEncryptionLevel == 0)
+            return
+        else if (storedEncryptionLevel != configEncryptionLevel) {
             ENCRYPTION_FLAG_FAIL
         } else {
             StorageHelper.getInt(
@@ -52,12 +55,12 @@ object CryptUtils {
                 StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_FLAG_STATUS),
                 ENCRYPTION_FLAG_FAIL
             )
-        }// TODO:@Anush: This will fail when no value in pref for KEY_ENCRYPTION_FLAG_STATUS and config encrypt level is 0
+        }
         StorageHelper.putInt(
             context,
             StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_LEVEL),
             configEncryptionLevel
-        )// TODO:@Anush: store new level only if migration success
+        )
 
         if (encryptionFlagStatus == 3) {
             config.logger.verbose(
@@ -228,5 +231,28 @@ object CryptUtils {
             migrationStatus = ENCRYPTION_FLAG_FAIL
         }
         return migrationStatus
+    }
+    @JvmStatic
+    fun updateEncryptionFlagOnFailure(
+        context: Context,
+        config: CleverTapInstanceConfig,
+        failedFlag: Int,
+        cryptHandler: CryptHandler
+    ) {
+
+        val updatedEncryptionFlag = (failedFlag xor cryptHandler.encryptionFlagStatus) and cryptHandler.encryptionFlagStatus
+        config.logger.verbose(
+            config.accountId,
+            "Updating encryption flag status after error in encryption to $updatedEncryptionFlag"
+        )
+        StorageHelper.putInt(
+            context, StorageHelper.storageKeyWithSuffix(
+                config,
+                KEY_ENCRYPTION_FLAG_STATUS
+            ),
+            updatedEncryptionFlag
+        )
+        cryptHandler.encryptionFlagStatus = updatedEncryptionFlag
+
     }
 }
