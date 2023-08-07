@@ -855,9 +855,8 @@ public class NetworkManager extends BaseNetworkManager {
             if (ret.has(Constants.KEY_ENCRYPTION_k_n)) {
                 String knValue = ret.getString(Constants.KEY_ENCRYPTION_k_n);
                 String decrypted = cryptHandler.decrypt(knValue, Constants.KEY_ENCRYPTION_k_n);
-                if (decrypted == null)
-                    ret.put(Constants.KEY_ENCRYPTION_k_n, knValue);
-                else
+                // If decrypted is null then don't attach k_n in arp data
+                if (decrypted != null)
                     ret.put(Constants.KEY_ENCRYPTION_k_n, decrypted);
             }
             logger.verbose(config.getAccountId(),
