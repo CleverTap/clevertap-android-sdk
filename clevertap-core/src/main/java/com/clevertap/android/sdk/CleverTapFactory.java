@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptUtils;
+import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.events.EventQueueManager;
@@ -50,14 +51,14 @@ class CleverTapFactory {
         coreState.setCryptHandler(cryptHandler);
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("migratingEncryptionLevel", () -> {
-            CryptUtils.migrateEncryptionLevel(context, config, cryptHandler);
+            CryptUtils.migrateEncryptionLevel(context, config, cryptHandler, new DBAdapter(context,config));
             return null;
         });
 
         EventMediator eventMediator = new EventMediator(context, config, coreMetaData);
         coreState.setEventMediator(eventMediator);
 
-        LocalDataStore localDataStore = new LocalDataStore(context, config);
+        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler);
         coreState.setLocalDataStore(localDataStore);
 
         DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);

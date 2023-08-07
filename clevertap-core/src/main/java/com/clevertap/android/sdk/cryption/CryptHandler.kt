@@ -1,9 +1,6 @@
 package com.clevertap.android.sdk.cryption
 
-import android.content.Context
-import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.StorageHelper
 
 class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, accountID: String) {
     private var encryptionLevel: EncryptionLevel
@@ -42,7 +39,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
     fun encrypt(plainText: String, key: String): String? {
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM ->
-                if (key in Constants.MEDIUM_CRYPT_KEYS && !isTextEncrypted(plainText))
+                if (key.lowercase() in Constants.MEDIUM_CRYPT_KEYS && !isTextEncrypted(plainText))
                     return crypt.encryptInternal(plainText, accountID)
             else -> return plainText
         }
@@ -60,12 +57,12 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
         if (isTextEncrypted(cipherText)) {
             when (encryptionLevel) {
                 EncryptionLevel.MEDIUM -> {
-                    if (key in Constants.MEDIUM_CRYPT_KEYS)
+                    if (key.lowercase() in Constants.MEDIUM_CRYPT_KEYS)
                         return crypt.decryptInternal(cipherText, accountID)
                 }
                 else -> {
                     // None crypt keys is required in the case of migration only
-                    if (key in Constants.NONE_CRYPT_KEYS)
+                    if (key.lowercase() in Constants.NONE_CRYPT_KEYS)
                         return crypt.decryptInternal(cipherText, accountID)
                 }
             }

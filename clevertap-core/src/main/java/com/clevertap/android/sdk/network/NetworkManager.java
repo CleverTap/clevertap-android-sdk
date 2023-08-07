@@ -852,13 +852,13 @@ public class NetworkManager extends BaseNetworkManager {
                 }
             }
             final JSONObject ret = new JSONObject(all);
-            if (ret.has(Constants.KEY_k_n)) {
-                String knValue = ret.getString(Constants.KEY_k_n);
-                String decrypted = cryptHandler.decrypt(knValue, Constants.KEY_k_n);
+            if (ret.has(Constants.KEY_ENCRYPTION_k_n)) {
+                String knValue = ret.getString(Constants.KEY_ENCRYPTION_k_n);
+                String decrypted = cryptHandler.decrypt(knValue, Constants.KEY_ENCRYPTION_k_n);
                 if (decrypted == null)
-                    ret.put(Constants.KEY_k_n, knValue);
+                    ret.put(Constants.KEY_ENCRYPTION_k_n, knValue);
                 else
-                    ret.put(Constants.KEY_k_n, decrypted);
+                    ret.put(Constants.KEY_ENCRYPTION_k_n, decrypted);
             }
             logger.verbose(config.getAccountId(),
                     "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + ret);

@@ -60,7 +60,7 @@ public class LoginInfoProvider {
         if (isErrorDeviceId() || guid == null || key == null || identifier == null) {
             return;
         }
-        String encryptedIdentifier = cryptHandler.encrypt(identifier,Constants.CACHED_GUIDS_KEY);
+        String encryptedIdentifier = cryptHandler.encrypt(identifier, key);
         if (encryptedIdentifier == null) {
             encryptedIdentifier = identifier;
             CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_CGK_SUCCESS, cryptHandler);
@@ -178,7 +178,7 @@ public class LoginInfoProvider {
         if (key == null || identifier == null) {
             return null;
         }
-        String encryptedIdentifier = cryptHandler.encrypt(identifier, Constants.CACHED_GUIDS_KEY);
+        String encryptedIdentifier = cryptHandler.encrypt(identifier, key);
         String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
         try {

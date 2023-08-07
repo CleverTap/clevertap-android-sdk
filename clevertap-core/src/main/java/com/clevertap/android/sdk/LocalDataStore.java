@@ -8,17 +8,21 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
+import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @SuppressWarnings("unused")
 @RestrictTo(Scope.LIBRARY)
@@ -40,6 +44,8 @@ public class LocalDataStore {
 
     private final Context context;
 
+    private final CryptHandler cryptHandler;
+
     private DBAdapter dbAdapter;
 
     private final ExecutorService es;
@@ -47,10 +53,11 @@ public class LocalDataStore {
     private final String eventNamespace = "local_events";
 
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config) {
+    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
+        this.cryptHandler = cryptHandler;
         inflateLocalProfileAsync(context);
     }
 
@@ -443,7 +450,10 @@ public class LocalDataStore {
                                     JSONArray jsonArray = profile.getJSONArray(key);
                                     PROFILE_FIELDS_IN_THIS_SESSION.put(key, jsonArray);
                                 } else {
-                                    PROFILE_FIELDS_IN_THIS_SESSION.put(key, value);
+                                    Object decrypted = cryptHandler.decrypt((String) value, key);
+                                    if (decrypted == null)
+                                        decrypted = value;
+                                    PROFILE_FIELDS_IN_THIS_SESSION.put(key, decrypted);
                                 }
                             } catch (JSONException e) {
                                 // no-op
@@ -505,8 +515,30 @@ public class LocalDataStore {
             @Override
             public void run() {
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
+                    JSONObject jsonObjectEncrypted = new JSONObject();
+                    boolean passFlag = true;
+                    try {
+                        for (Map.Entry<String, Object> entry : PROFILE_FIELDS_IN_THIS_SESSION.entrySet()) {
+                            String key = entry.getKey();
+                            Object value = entry.getValue();
+                            if (value instanceof String) {
+                                String enc = cryptHandler.encrypt((String) value, key);
+                                if (enc == null) {
+                                    enc = (String) value;
+                                    passFlag = false;
+                                }
+                                jsonObjectEncrypted.put(entry.getKey(), enc);
+                            }
+                        }
+                    } catch (JSONException e) {
+                        passFlag = false;
+                        jsonObjectEncrypted = new JSONObject(PROFILE_FIELDS_IN_THIS_SESSION);
+                    }
+                    if (!passFlag)
+                        CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_DB_SUCCESS, cryptHandler);
+
                     long status = dbAdapter
-                            .storeUserProfile(profileID, new JSONObject(PROFILE_FIELDS_IN_THIS_SESSION));
+                            .storeUserProfile(profileID, jsonObjectEncrypted);
                     getConfigLogger().verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);
                 }

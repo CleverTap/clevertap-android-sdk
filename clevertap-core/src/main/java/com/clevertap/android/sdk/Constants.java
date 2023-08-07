@@ -257,8 +257,13 @@ public interface Constants {
     String KEY_HAS_URL = "hasUrl";
     String KEY_HAS_LINKS = "hasLinks";
     String KEY_LINKS = "links";
-    String KEY_k_n = "k_n";
-    String KEY_ENCRYPTION_MIGRATION = "encryptionMigration";
+    String KEY_ENCRYPTION_k_n = "k_n";
+    String KEY_ENCRYPTION_MIGRATION = "encryptionmigration";
+    String KEY_ENCRYPTION_CGK = "cgk";
+    String KEY_ENCRYPTION_NAME = "name";
+    String KEY_ENCRYPTION_IDENTITY = "identity";
+    String KEY_ENCRYPTION_PHONE = "phone";
+    String KEY_ENCRYPTION_EMAIL = "email";
     String TEST_IDENTIFIER = "0_0";
     String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
     String FEATURE_FLAG_UNIT = "Feature Flag : ";
@@ -300,6 +305,7 @@ public interface Constants {
     int ENCRYPTION_FLAG_FAIL = 0b00;
     int ENCRYPTION_FLAG_CGK_SUCCESS = 0b01;
     int ENCRYPTION_FLAG_KN_SUCCESS = 0b10;
+    int ENCRYPTION_FLAG_DB_SUCCESS = 0b100;
 
     String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
     String SEPARATOR_COMMA = ",";
@@ -310,7 +316,7 @@ public interface Constants {
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
-    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_k_n, CACHED_GUIDS_KEY, KEY_ENCRYPTION_MIGRATION));
+    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_k_n, KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_CGK));
     HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
 
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
