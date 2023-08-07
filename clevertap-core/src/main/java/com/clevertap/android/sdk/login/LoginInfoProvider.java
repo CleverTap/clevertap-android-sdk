@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.utils.CTJsonConverter;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * Handles saving and/or providing login related information.
@@ -187,6 +188,8 @@ public class LoginInfoProvider {
             return cachedGuid;
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error reading guid cache: " + t);
+            if(Objects.equals(encryptedIdentifier, identifier))
+                return null;
         }
         try {
             cacheKey = key + "_" + identifier;

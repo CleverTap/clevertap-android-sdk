@@ -28,7 +28,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
         this.encryptionLevel = EncryptionLevel.values()[encryptionLevel]
         this.encryptionType = encryptionType
         this.accountID = accountID
-        this.encryptionFlagStatus = 0x00
+        this.encryptionFlagStatus = 0b00
         this.crypt = CryptFactory.getCrypt(encryptionType)
     }
 
