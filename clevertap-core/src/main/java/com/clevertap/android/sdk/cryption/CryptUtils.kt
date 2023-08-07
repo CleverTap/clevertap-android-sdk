@@ -38,7 +38,7 @@ object CryptUtils {
         val storedEncryptionLevel = StorageHelper.getInt(
             context,
             StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_LEVEL),
-            0
+            -1
         )
         config.logger.verbose(
             config.accountId,
