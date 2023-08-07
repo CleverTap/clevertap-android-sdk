@@ -239,24 +239,19 @@ object CryptUtils {
         cryptHandler: CryptHandler,
         dbAdapter: DBAdapter
     ): Int {
-        val piiKeys = arrayListOf(
-            KEY_ENCRYPTION_NAME,
-            KEY_ENCRYPTION_EMAIL,
-            KEY_ENCRYPTION_IDENTITY,
-            KEY_ENCRYPTION_PHONE
-        )
+
         var migrationStatus = ENCRYPTION_FLAG_DB_SUCCESS
         val profile =
             dbAdapter.fetchUserProfileById(config.accountId) ?: return ENCRYPTION_FLAG_DB_SUCCESS
         try {
-            for (piiKey in piiKeys) {
+            for (piiKey in piiDBKeys) {
                 if (profile.has(piiKey)) {
                     val value = profile[piiKey]
                     if (value is String) {
                         var crypted = if (encrypt)
                             cryptHandler.encrypt(value, piiKey)
                         else
-                            cryptHandler.decrypt(value, piiKey)
+                            cryptHandler.decrypt(value, KEY_ENCRYPTION_MIGRATION)
                         if (crypted == null) {
                             crypted = value
                             migrationStatus = ENCRYPTION_FLAG_FAIL

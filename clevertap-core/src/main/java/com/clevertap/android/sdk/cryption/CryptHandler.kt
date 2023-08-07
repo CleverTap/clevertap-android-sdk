@@ -39,7 +39,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
     fun encrypt(plainText: String, key: String): String? {
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM ->
-                if (key.lowercase() in Constants.MEDIUM_CRYPT_KEYS && !isTextEncrypted(plainText))
+                if (key in Constants.MEDIUM_CRYPT_KEYS && !isTextEncrypted(plainText))
                     return crypt.encryptInternal(plainText, accountID)
             else -> return plainText
         }
@@ -61,9 +61,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
                         return crypt.decryptInternal(cipherText, accountID)
                 }
                 else -> {
-                    // None crypt keys is required in the case of migration only
-                    if (key.lowercase() in Constants.NONE_CRYPT_KEYS)
-                        return crypt.decryptInternal(cipherText, accountID)
+                    return crypt.decryptInternal(cipherText, accountID)
                 }
             }
         }

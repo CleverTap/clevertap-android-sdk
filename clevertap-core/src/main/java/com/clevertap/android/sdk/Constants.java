@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
@@ -260,10 +261,10 @@ public interface Constants {
     String KEY_ENCRYPTION_k_n = "k_n";
     String KEY_ENCRYPTION_MIGRATION = "encryptionmigration";
     String KEY_ENCRYPTION_CGK = "cgk";
-    String KEY_ENCRYPTION_NAME = "name";
-    String KEY_ENCRYPTION_IDENTITY = "identity";
-    String KEY_ENCRYPTION_PHONE = "phone";
-    String KEY_ENCRYPTION_EMAIL = "email";
+    String KEY_ENCRYPTION_NAME = "Name";
+    String KEY_ENCRYPTION_IDENTITY = "Identity";
+    String KEY_ENCRYPTION_PHONE = "Phone";
+    String KEY_ENCRYPTION_EMAIL = "Email";
     String TEST_IDENTIFIER = "0_0";
     String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
     String FEATURE_FLAG_UNIT = "Feature Flag : ";
@@ -316,8 +317,10 @@ public interface Constants {
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
-    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_k_n, KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_CGK));
+    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_k_n, KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME));
     HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
+    HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
+
 
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
 

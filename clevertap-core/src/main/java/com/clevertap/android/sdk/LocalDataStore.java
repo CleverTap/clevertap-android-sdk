@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.Constants.piiDBKeys;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -515,30 +517,25 @@ public class LocalDataStore {
             @Override
             public void run() {
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-                    JSONObject jsonObjectEncrypted = new JSONObject();
+                    HashMap<String, Object> profile = PROFILE_FIELDS_IN_THIS_SESSION;
+
                     boolean passFlag = true;
-                    try {
-                        for (Map.Entry<String, Object> entry : PROFILE_FIELDS_IN_THIS_SESSION.entrySet()) {
-                            String key = entry.getKey();
-                            Object value = entry.getValue();
-                            if (value instanceof String) {
-                                String enc = cryptHandler.encrypt((String) value, key);
-                                if (enc == null) {
-                                    enc = (String) value;
-                                    passFlag = false;
-                                }
-                                jsonObjectEncrypted.put(entry.getKey(), enc);
+                    for (String piiKey : piiDBKeys) {
+                        if (profile.get(piiKey) != null) {
+                            Object value = profile.get(piiKey);
+                            String encrypted = cryptHandler.encrypt((String) value, piiKey);
+                            if (encrypted == null) {
+                                passFlag = false;
                             }
+                            profile.put(piiKey, encrypted);
                         }
-                    } catch (JSONException e) {
-                        passFlag = false;
-                        jsonObjectEncrypted = new JSONObject(PROFILE_FIELDS_IN_THIS_SESSION);
                     }
+                    JSONObject jsonObjectEncrypted = new JSONObject(profile);
+
                     if (!passFlag)
                         CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_DB_SUCCESS, cryptHandler);
 
-                    long status = dbAdapter
-                            .storeUserProfile(profileID, jsonObjectEncrypted);
+                    long status = dbAdapter.storeUserProfile(profileID, jsonObjectEncrypted);
                     getConfigLogger().verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);
                 }
