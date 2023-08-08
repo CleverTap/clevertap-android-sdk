@@ -4,7 +4,6 @@ import android.content.Context;
 
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptUtils;
-import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.events.EventQueueManager;
@@ -47,11 +46,14 @@ class CleverTapFactory {
         CleverTapInstanceConfig config = new CleverTapInstanceConfig(cleverTapInstanceConfig);
         coreState.setConfig(config);
 
+        DBManager baseDatabaseManager = new DBManager(config, ctLockManager);
+        coreState.setDatabaseManager(baseDatabaseManager);
+
         CryptHandler cryptHandler = new CryptHandler(config.getEncryptionLevel(), CryptHandler.EncryptionAlgorithm.AES, config.getAccountId());
         coreState.setCryptHandler(cryptHandler);
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("migratingEncryptionLevel", () -> {
-            CryptUtils.migrateEncryptionLevel(context, config, cryptHandler, new DBAdapter(context,config));
+            CryptUtils.migrateEncryptionLevel(context, config, cryptHandler, baseDatabaseManager.loadDBAdapter(context));
             return null;
         });
 
@@ -71,9 +73,6 @@ class CleverTapFactory {
 
         SessionManager sessionManager = new SessionManager(config, coreMetaData, validator, localDataStore);
         coreState.setSessionManager(sessionManager);
-
-        DBManager baseDatabaseManager = new DBManager(config, ctLockManager);
-        coreState.setDatabaseManager(baseDatabaseManager);
 
         ControllerManager controllerManager = new ControllerManager(context, config,
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
