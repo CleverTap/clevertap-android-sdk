@@ -452,9 +452,12 @@ public class LocalDataStore {
                                     JSONArray jsonArray = profile.getJSONArray(key);
                                     PROFILE_FIELDS_IN_THIS_SESSION.put(key, jsonArray);
                                 } else {
-                                    Object decrypted = cryptHandler.decrypt((String) value, key);
-                                    if (decrypted == null)
-                                        decrypted = value;
+                                    Object decrypted = value;
+                                    if (value instanceof String) {
+                                        decrypted = cryptHandler.decrypt((String) value, key);
+                                        if (decrypted == null)
+                                            decrypted = value;
+                                    }
                                     PROFILE_FIELDS_IN_THIS_SESSION.put(key, decrypted);
                                 }
                             } catch (JSONException e) {
