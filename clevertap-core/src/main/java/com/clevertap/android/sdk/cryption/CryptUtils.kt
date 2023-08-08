@@ -56,12 +56,12 @@ object CryptUtils {
             configEncryptionLevel
         )
 
-        if (encryptionFlagStatus == 3) {
+        if (encryptionFlagStatus == 7) {
             config.logger.verbose(
                 config.accountId,
-                "Encryption flag status is 3, no need to migrate"
+                "Encryption flag status is 7, no need to migrate"
             )
-            cryptHandler.encryptionFlagStatus = 3
+            cryptHandler.encryptionFlagStatus = 7
             return
         }
 

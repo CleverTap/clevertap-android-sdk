@@ -7,9 +7,8 @@ import com.clevertap.android.shared.test.Constant.Companion
 import org.junit.*
 import org.junit.runner.*;
 import org.mockito.*
+import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner;
-import java.util.concurrent.Callable
-import java.util.concurrent.Future
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -198,5 +197,10 @@ class CleverTapFactoryTest : BaseTestCase() {
     fun test_getCoreState_ReturnedObjectMustHaveNonNullLoginController(){
         val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
         assertNotNull(coreState.loginController)
+    }
+    @Test
+    fun test_getCoreState_ReturnedObjectMustHaveNonNullCryptHandler(){
+        val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
+        assertNotNull(coreState.cryptHandler)
     }
 }
