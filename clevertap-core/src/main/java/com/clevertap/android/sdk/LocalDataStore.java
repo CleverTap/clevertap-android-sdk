@@ -295,8 +295,12 @@ public class LocalDataStore {
 
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
             try {
+                Object property = PROFILE_FIELDS_IN_THIS_SESSION.get(key);
+                if (property instanceof String && CryptHandler.isTextEncrypted((String) property)) {
+                    getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property because it wasn't decrypted");
+                    return null;
+                }
                 return PROFILE_FIELDS_IN_THIS_SESSION.get(key);
-
             } catch (Throwable t) {
                 getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property", t);
                 return null;

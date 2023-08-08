@@ -334,7 +334,7 @@ object CryptUtils {
             (failedFlag xor cryptHandler.encryptionFlagStatus) and cryptHandler.encryptionFlagStatus
         config.logger.verbose(
             config.accountId,
-            "Updating encryption flag status after error in encryption to $updatedEncryptionFlag"
+            "Updating encryption flag status after error in $failedFlag to $updatedEncryptionFlag"
         )
         StorageHelper.putInt(
             context, StorageHelper.storageKeyWithSuffix(

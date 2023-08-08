@@ -70,14 +70,17 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
         return cipherText
     }
 
-    /**
-     * This method checks if text is already encrypted. Encrypted text is always of the format [.....]
-     *
-     * @param plainText -  plain text
-     * @return boolean indicating if text is encrypted
-     */
-    private fun isTextEncrypted(plainText: String): Boolean {
-        // value in k_n is of the format [ "....."], hence the additional check is required
-        return plainText.startsWith('[') && plainText.endsWith(']') && !plainText.startsWith("[ \"")
+    companion object {
+        /**
+         * This method checks if text is already encrypted. Encrypted text is always of the format [.....]
+         *
+         * @param plainText -  plain text
+         * @return boolean indicating if text is encrypted
+         */
+        @JvmStatic
+        fun isTextEncrypted(plainText: String): Boolean {
+            // value in k_n is of the format [ "....."], hence the additional check is required
+            return plainText.startsWith('[') && plainText.endsWith(']') && !plainText.startsWith("[ \"")
+        }
     }
 }

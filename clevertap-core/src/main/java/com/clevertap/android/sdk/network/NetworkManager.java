@@ -856,8 +856,7 @@ public class NetworkManager extends BaseNetworkManager {
                 String knValue = ret.getString(Constants.KEY_ENCRYPTION_k_n);
                 String decrypted = cryptHandler.decrypt(knValue, Constants.KEY_ENCRYPTION_k_n);
                 // If decrypted is null then don't attach k_n in arp data
-                if (decrypted != null)
-                    ret.put(Constants.KEY_ENCRYPTION_k_n, decrypted);
+                ret.put(Constants.KEY_ENCRYPTION_k_n, decrypted);
             }
             logger.verbose(config.getAccountId(),
                     "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + ret);
