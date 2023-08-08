@@ -62,6 +62,7 @@ public class LoginInfoProvider {
         }
         String encryptedIdentifier = cryptHandler.encrypt(identifier, key);
         if (encryptedIdentifier == null) {
+            // If encrypted is null then fallback to plain text
             encryptedIdentifier = identifier;
             CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_CGK_SUCCESS, cryptHandler);
         }
@@ -169,7 +170,7 @@ public class LoginInfoProvider {
 
     /**
      * Returns the Guid Value corresponding to the given <Key, Value>
-     *
+     * If guid for encrypted identifier is not found, then it tries searching for un-encrypted identifier
      * @param key        - Identity Key e.g Email
      * @param identifier - Value corresponding to the Key e.g abc@gmail.com
      * @return - String value of Guid if any entry is saved with Key_Value
@@ -195,7 +196,7 @@ public class LoginInfoProvider {
             cacheKey = key + "_" + identifier;
             String cachedGuid = cache.getString(cacheKey);
             config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                    "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "]");
+                    "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "] after retry");
             return cachedGuid;
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error reading guid cache after retry: " + t);

@@ -100,6 +100,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
                     if (((String) o).length() < 100) {
                         String encrypted = cryptHandler.encrypt((String) o, key);
                         if (encrypted == null) {
+                            // If encryption fails, fallback to plain text
                             encrypted = (String) o;
                             CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_KN_SUCCESS, cryptHandler);
                         }

@@ -29,6 +29,7 @@ object CryptUtils {
      * @param context - The Android context
      * @param config  - The [CleverTapInstanceConfig] object
      * @param cryptHandler - The [CryptHandler] object
+     * @param dbAdapter - The [DBAdapter] object
      */
     @JvmStatic
     fun migrateEncryptionLevel(
@@ -46,6 +47,8 @@ object CryptUtils {
             -1
         )
 
+        // Nothing to migrate if a new app install and configEncryption level is 0, hence return
+        // If encryption level is updated (0 to 1 or 1 to 0) then set status to all migrations failed (0)
         encryptionFlagStatus = if (storedEncryptionLevel == -1 && configEncryptionLevel == 0)
             return
         else if (storedEncryptionLevel != configEncryptionLevel) {
@@ -74,7 +77,7 @@ object CryptUtils {
 
         config.logger.verbose(
             config.accountId,
-            "Migrating encryption level from $storedEncryptionLevel to $configEncryptionLevel"
+            "Migrating encryption level from $storedEncryptionLevel to $configEncryptionLevel with current flag status $encryptionFlagStatus"
         )
 
         // If configEncryptionLevel is one then encrypt otherwise decrypt
@@ -88,6 +91,18 @@ object CryptUtils {
         )
     }
 
+    /**
+     * This method migrates the encryption level. There are currently 3 migrations required.
+     * The migration strategy is such that even if one entry fails in one of the 3 migrations, flag for that migration is set to 0
+     * and reattempted during the next instance creation
+     *
+     * @param encrypt - Flag to indicate the task to be either encryption or decryption
+     * @param config  - The [CleverTapInstanceConfig] object
+     * @param context - The Android context
+     * @param cryptHandler - The [CryptHandler] object
+     * @param encryptionFlagStatus - Current value of the flag
+     * @param dbAdapter - The [dbAdapter] object
+     */
     private fun migrateEncryption(
         encrypt: Boolean,
         context: Context,
@@ -96,6 +111,7 @@ object CryptUtils {
         encryptionFlagStatus: Int,
         dbAdapter: DBAdapter
     ) {
+        // And operation checks if the required bit is set or not
         var cgkFlag = encryptionFlagStatus and ENCRYPTION_FLAG_CGK_SUCCESS
         if (cgkFlag == ENCRYPTION_FLAG_FAIL)
             cgkFlag = migrateCachedGuidsKeyPref(encrypt, config, context, cryptHandler)
@@ -130,7 +146,7 @@ object CryptUtils {
      * @param config  - The [CleverTapInstanceConfig] object
      * @param context - The Android context
      * @param cryptHandler - The [CryptHandler] object
-     * Returns the status for migration
+     * Returns the status of cgk migration
      */
     private fun migrateCachedGuidsKeyPref(
         encrypt: Boolean,
@@ -195,7 +211,7 @@ object CryptUtils {
      * @param config  - The [CleverTapInstanceConfig] object
      * @param context - The Android context
      * @param cryptHandler - The [CryptHandler] object
-     * @return - Returns the status for migration
+     * @return - Returns the status of kn migration
      */
     private fun migrateARPPreferenceFiles(
         encrypt: Boolean,
@@ -228,7 +244,7 @@ object CryptUtils {
                         if (crypted == null) {
                             config.logger.verbose(
                                 config.accountId,
-                                "Error migrating k_n in ARP Pref"
+                                "Error migrating k_n in $prefFile"
                             )
                             crypted = value
                             migrationStatus = ENCRYPTION_FLAG_FAIL
@@ -245,13 +261,23 @@ object CryptUtils {
         return migrationStatus
     }
 
+    /**
+     * This method migrates the encryption level of the value under cachedGUIDsKey stored in the shared preference file
+     * Only the value of the identifier(eg: johndoe@gmail.com) is encrypted/decrypted for this key throughout the sdk
+     *
+     * @param encrypt - Flag to indicate the task to be either encryption or decryption
+     * @param config  - The [CleverTapInstanceConfig] object
+     * @param cryptHandler - The [CryptHandler] object
+     * @param dbAdapter - The [dbAdapter] object
+     * Returns the status of db migration
+     */
     private fun migrateDBProfile(
         encrypt: Boolean,
         config: CleverTapInstanceConfig,
         cryptHandler: CryptHandler,
         dbAdapter: DBAdapter
     ): Int {
-
+        config.logger.verbose(config.accountId, "Migrating encryption level for user profile in DB")
         var migrationStatus = ENCRYPTION_FLAG_DB_SUCCESS
         val profile =
             dbAdapter.fetchUserProfileById(config.accountId) ?: return ENCRYPTION_FLAG_DB_SUCCESS
@@ -265,6 +291,10 @@ object CryptUtils {
                         else
                             cryptHandler.decrypt(value, KEY_ENCRYPTION_MIGRATION)
                         if (crypted == null) {
+                            config.logger.verbose(
+                                config.accountId,
+                                "Error migrating $piiKey entry in db profile"
+                            )
                             crypted = value
                             migrationStatus = ENCRYPTION_FLAG_FAIL
                         }
@@ -281,6 +311,16 @@ object CryptUtils {
         return migrationStatus
     }
 
+    /**
+     * This method migrates the encryption level of the value under cachedGUIDsKey stored in the shared preference file
+     * Only the value of the identifier(eg: johndoe@gmail.com) is encrypted/decrypted for this key throughout the sdk
+     *
+     * @param context - Context object
+     * @param config  - The [CleverTapInstanceConfig] object
+     * @param failedFlag - Indicates which encryption has failed
+     * @param cryptHandler - The [CryptHandler] object
+     * Returns the status of db migration
+     */
     @JvmStatic
     fun updateEncryptionFlagOnFailure(
         context: Context,
@@ -289,6 +329,7 @@ object CryptUtils {
         cryptHandler: CryptHandler
     ) {
 
+        // This operation sets the bit for the required encryption fail to 0
         val updatedEncryptionFlag =
             (failedFlag xor cryptHandler.encryptionFlagStatus) and cryptHandler.encryptionFlagStatus
         config.logger.verbose(

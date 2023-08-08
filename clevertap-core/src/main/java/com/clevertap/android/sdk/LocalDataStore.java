@@ -523,6 +523,7 @@ public class LocalDataStore {
                     HashMap<String, Object> profile = PROFILE_FIELDS_IN_THIS_SESSION;
 
                     boolean passFlag = true;
+                    // Encrypts only the pii keys before storing to DB
                     for (String piiKey : piiDBKeys) {
                         if (profile.get(piiKey) != null) {
                             Object value = profile.get(piiKey);

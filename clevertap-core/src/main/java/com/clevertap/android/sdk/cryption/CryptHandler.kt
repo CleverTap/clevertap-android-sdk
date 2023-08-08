@@ -31,6 +31,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
 
     /**
      * This method returns the encrypted text if the key is a part of the current encryption level and is not already encrypted
+     * Returns null if encryptInternal fails
      *
      * @param plainText - plainText to be encrypted
      * @param key       - key of the plainText to be encrypted
@@ -48,6 +49,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
 
     /**
      * This method returns the decrypted text if the key is a part of the current encryption level
+     * Returns null if decryptInternal fails
      *
      * @param cipherText - cipherText to be decrypted
      * @param key        - key of the cipherText that needs to be decrypted
@@ -68,7 +70,14 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
         return cipherText
     }
 
+    /**
+     * This method checks if text is already encrypted. Encrypted text is always of the format [.....]
+     *
+     * @param plainText -  plain text
+     * @return boolean indicating if text is encrypted
+     */
     private fun isTextEncrypted(plainText: String): Boolean {
+        // value in k_n is of the format [ "....."], hence the additional check is required
         return plainText.startsWith('[') && plainText.endsWith(']') && !plainText.startsWith("[ \"")
     }
 }
