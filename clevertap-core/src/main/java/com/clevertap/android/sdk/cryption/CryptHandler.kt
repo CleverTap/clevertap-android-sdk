@@ -57,7 +57,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
         if (isTextEncrypted(cipherText)) {
             when (encryptionLevel) {
                 EncryptionLevel.MEDIUM -> {
-                    if (key.lowercase() in Constants.MEDIUM_CRYPT_KEYS)
+                    if (key in Constants.MEDIUM_CRYPT_KEYS)
                         return crypt.decryptInternal(cipherText, accountID)
                 }
                 else -> {

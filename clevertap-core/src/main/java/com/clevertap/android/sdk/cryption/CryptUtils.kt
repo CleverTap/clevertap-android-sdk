@@ -2,13 +2,24 @@ package com.clevertap.android.sdk.cryption
 
 import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.Constants.*
+import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
+import com.clevertap.android.sdk.Constants.CLEVERTAP_STORAGE_TAG
+import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_ALL_SUCCESS
+import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_CGK_SUCCESS
+import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_DB_SUCCESS
+import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_FAIL
+import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_KN_SUCCESS
+import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_FLAG_STATUS
+import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
+import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_MIGRATION
+import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_k_n
+import com.clevertap.android.sdk.Constants.piiDBKeys
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 import java.io.File
-import java.util.*
+import java.util.Objects
 
 object CryptUtils {
 
@@ -34,10 +45,6 @@ object CryptUtils {
             StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_LEVEL),
             -1
         )
-        config.logger.verbose(
-            config.accountId,
-            "Migrating encryption level from $storedEncryptionLevel to $configEncryptionLevel"
-        )
 
         encryptionFlagStatus = if (storedEncryptionLevel == -1 && configEncryptionLevel == 0)
             return
@@ -56,14 +63,19 @@ object CryptUtils {
             configEncryptionLevel
         )
 
-        if (encryptionFlagStatus == 7) {
+        if (encryptionFlagStatus == ENCRYPTION_FLAG_ALL_SUCCESS) {
             config.logger.verbose(
                 config.accountId,
-                "Encryption flag status is 7, no need to migrate"
+                "Encryption flag status is 100% success, no need to migrate"
             )
-            cryptHandler.encryptionFlagStatus = 7
+            cryptHandler.encryptionFlagStatus = ENCRYPTION_FLAG_ALL_SUCCESS
             return
         }
+
+        config.logger.verbose(
+            config.accountId,
+            "Migrating encryption level from $storedEncryptionLevel to $configEncryptionLevel"
+        )
 
         // If configEncryptionLevel is one then encrypt otherwise decrypt
         migrateEncryption(
