@@ -148,14 +148,16 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = manifest.getPackageName();
         this.enableCustomCleverTapId = manifest.useCustomId();
         this.beta = manifest.enableBeta();
-        this.encryptionLevel = manifest.getEncryptionLevel();
         /*
          * For default instance, use manifest meta, otherwise use from setter field
          */
         if (isDefaultInstance) {
+            this.encryptionLevel = manifest.getEncryptionLevel();
             identityKeys = manifest.getProfileKeys();
             log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
                     .toString(identityKeys));
+        } else {
+            this.encryptionLevel = 0;
         }
     }
 
