@@ -18,7 +18,7 @@ class AESCryptTest : BaseTestCase() {
 
 
     @Test
-    fun `testEncryptAndDecrypt`() {
+    fun testEncryptAndDecrypt() {
         val plainText = "Test Text!"
 
         val encryptedText = aesCrypt.encryptInternal(plainText, accountID)
@@ -26,6 +26,16 @@ class AESCryptTest : BaseTestCase() {
 
         val decryptedText = aesCrypt.decryptInternal(encryptedText!!, accountID)
         assertEquals(plainText, decryptedText)
+    }
+
+    @Test
+    fun `testEncryptAndDecrypt when key is valid and accountID(password) is different for encryption and decryption`() {
+        val plainText = "Test Text!"
+
+        val encryptedText = aesCrypt.encryptInternal(plainText,accountID)
+        val decryptedText = aesCrypt.decryptInternal(encryptedText!!, "test_account_id2")
+
+        assertNotEquals(plainText, decryptedText)
     }
 
     @Test
