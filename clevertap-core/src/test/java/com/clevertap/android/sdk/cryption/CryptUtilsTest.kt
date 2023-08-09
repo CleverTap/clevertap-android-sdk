@@ -14,12 +14,14 @@ import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.Mock
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
+import org.skyscreamer.jsonassert.JSONAssert
 import kotlin.test.assertEquals
 
 
@@ -282,7 +284,68 @@ class CryptUtilsTest : BaseTestCase() {
             config.encryptionLevel, get(Constants.KEY_ENCRYPTION_LEVEL, -1)
         )
         assertEquals(neexpectedCGK.toString(), actualCGK)
-        verify(mockDBAdapter).storeUserProfile(config.accountId, db)
+
+        val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+        val dbActual = JSONObject()
+        dbActual.put("Email", encryptedIdentifier)
+        verify(mockDBAdapter).storeUserProfile(anyString(), captor.capture())
+        JSONAssert.assertEquals(dbActual, captor.value, true)
+    }
+
+    @Test
+    fun `testMigration when level changes from 1 to 0`() {
+
+        //--------Arrange----------
+        val encryptedIdentifier = "encryptedIdentifier"
+        val originalIdentifier = "originalIdentifier"
+        val originalKey = "originalKey"
+
+        config.setEncryptionLevel(CryptHandler.EncryptionLevel.NONE)
+
+        put(Constants.KEY_ENCRYPTION_LEVEL, 1)
+        put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_FAIL)
+
+        `when`(
+            mockCryptHandler.encrypt(anyString(), anyString())
+        ).thenReturn(encryptedIdentifier)
+        `when`(
+            mockCryptHandler.decrypt(anyString(), anyString())
+        ).thenReturn(originalIdentifier)
+
+        // DB
+        val db = JSONObject()
+        db.put("Email", encryptedIdentifier)
+
+        `when`(
+            mockDBAdapter.fetchUserProfileById(config.accountId)
+        ).thenReturn(db)
+
+        // pref
+        val cachedGuidJsonObj = JSONObject()
+        cachedGuidJsonObj.put("${originalKey}_$encryptedIdentifier", "value")
+
+        put(CACHED_GUIDS_KEY, cachedGuidJsonObj.toString())
+
+        //--------Act----------
+        migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
+        //--------Assert----------
+
+        val neexpectedCGK = JSONObject()
+        neexpectedCGK.put("${originalKey}_$originalIdentifier", "value")
+
+        val actualCGK = get(CACHED_GUIDS_KEY, "null")
+
+        assertEquals(
+            config.encryptionLevel, get(Constants.KEY_ENCRYPTION_LEVEL, -1)
+        )
+        assertEquals(neexpectedCGK.toString(), actualCGK)
+
+        val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+        val dbActual = JSONObject()
+        dbActual.put("Email", originalIdentifier)
+        verify(mockDBAdapter).storeUserProfile(anyString(), captor.capture())
+        JSONAssert.assertEquals(dbActual, captor.value, true)
+
     }
 
     @Test
@@ -373,7 +436,12 @@ class CryptUtilsTest : BaseTestCase() {
         )
         verify(mockCryptHandler).encryptionFlagStatus = 3
         assertEquals(3, get(Constants.KEY_ENCRYPTION_FLAG_STATUS, -1))
-        verify(mockDBAdapter).storeUserProfile(config.accountId, db)
+
+        val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+        val dbActual = JSONObject()
+        dbActual.put("Email", encryptedIdentifier)
+        verify(mockDBAdapter).storeUserProfile(anyString(), captor.capture())
+        JSONAssert.assertEquals(dbActual, captor.value, true)
     }
 
     private fun <T> put(key: String, value: T) {
