@@ -4,19 +4,28 @@ import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.*
 
 
 class CryptHandlerTest : BaseTestCase() {
     private lateinit var accountID: String
     private lateinit var cryptHandlerNone: CryptHandler
     private lateinit var cryptHandlerMedium: CryptHandler
+    private lateinit var aesMock: AESCrypt
 
     @Before
     override fun setUp() {
-        super.setUp()
-        accountID = "test_account_id"
-        cryptHandlerNone = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, accountID)
-        cryptHandlerMedium = CryptHandler(1, CryptHandler.EncryptionAlgorithm.AES, accountID)
+//
+//        super.setUp()
+//        mockStatic(CryptFactory::class.java).use {
+//            `when`(CryptFactory.getCrypt(CryptHandler.EncryptionAlgorithm.AES)).thenReturn(
+//                MockAESCrypt()
+//            )
+//            accountID = "test_account_id"
+//            cryptHandlerNone = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, accountID)
+//            cryptHandlerMedium = CryptHandler(1, CryptHandler.EncryptionAlgorithm.AES, accountID)
+//        }
     }
 
 

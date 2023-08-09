@@ -5,6 +5,7 @@ package com.clevertap.android.sdk.cryption
  */
 class CryptFactory {
     companion object {
+//        @JvmStatic
         fun getCrypt(type: CryptHandler.EncryptionAlgorithm): Crypt {
             return when (type) {
                 CryptHandler.EncryptionAlgorithm.AES -> AESCrypt()
