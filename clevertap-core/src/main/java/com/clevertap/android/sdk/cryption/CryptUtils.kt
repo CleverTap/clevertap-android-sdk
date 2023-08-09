@@ -16,6 +16,9 @@ import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 
+/**
+ * This class is a utils class, mainly used to handle migration when encryption fails or encryption level is changed
+ */
 object CryptUtils {
 
     /**

@@ -11,6 +11,9 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
+/**
+ * This class implements the AES Cryption algorithm
+ */
 class AESCrypt : Crypt() {
     /**
      * This method returns the key-password to be used for encryption/decryption

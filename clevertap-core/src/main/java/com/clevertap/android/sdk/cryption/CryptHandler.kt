@@ -2,6 +2,9 @@ package com.clevertap.android.sdk.cryption
 
 import com.clevertap.android.sdk.Constants
 
+/**
+ * This class handles any encryption-decryption related tasks
+ */
 class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, accountID: String) {
     private var encryptionLevel: EncryptionLevel
     private var encryptionType: EncryptionAlgorithm

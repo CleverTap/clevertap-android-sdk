@@ -189,6 +189,7 @@ public class LoginInfoProvider {
             return cachedGuid;
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error reading guid cache: " + t);
+            // Return as there is no need to search for un-encrypted identifier as it as same as encrypted identifier
             if(Objects.equals(encryptedIdentifier, identifier))
                 return null;
         }
