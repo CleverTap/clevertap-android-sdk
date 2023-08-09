@@ -5,7 +5,6 @@ import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
-import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_MIGRATION
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.cryption.CryptUtils.migrateEncryptionLevel
@@ -243,36 +242,69 @@ class CryptUtilsTest : BaseTestCase() {
         val encryptedIdentifier = "encryptedIdentifier"
         val originalIdentifier = "originalIdentifier"
         val originalKey = "originalKey"
-        val encryptedKey = "encryptedKey"
 
         config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
 
         put(Constants.KEY_ENCRYPTION_LEVEL, 0)
         put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_FAIL)
 
-        // Pref
-        `when`(
-            mockCryptHandler.encrypt(originalIdentifier, originalKey)
-        ).thenReturn(encryptedIdentifier)
-        `when`(
-            mockCryptHandler.decrypt(encryptedIdentifier, KEY_ENCRYPTION_MIGRATION)
-        ).thenReturn(originalIdentifier)
-
-        val db = JSONObject()
-        db.put("Email", originalIdentifier)
-        // DB
-
         `when`(
             mockCryptHandler.encrypt(anyString(), anyString())
         ).thenReturn(encryptedIdentifier)
         `when`(
-            mockCryptHandler.decrypt(encryptedIdentifier, KEY_ENCRYPTION_MIGRATION)
+            mockCryptHandler.decrypt(anyString(), anyString())
         ).thenReturn(originalIdentifier)
+
+        // DB
+        val db = JSONObject()
+        db.put("Email", originalIdentifier)
 
         `when`(
             mockDBAdapter.fetchUserProfileById(config.accountId)
         ).thenReturn(db)
 
+        // pref
+        val cachedGuidJsonObj = JSONObject()
+        cachedGuidJsonObj.put("${originalKey}_$originalIdentifier", "value")
+
+        put(CACHED_GUIDS_KEY, cachedGuidJsonObj.toString())
+
+        //--------Act----------
+        migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
+        //--------Assert----------
+
+        val neexpectedCGK = JSONObject()
+        neexpectedCGK.put("${originalKey}_$encryptedIdentifier", "value")
+
+        val actualCGK = get(Constants.CACHED_GUIDS_KEY, "null")
+
+        assertEquals(
+            config.encryptionLevel, get(Constants.KEY_ENCRYPTION_LEVEL, -1)
+        )
+        assertEquals(neexpectedCGK.toString(), actualCGK)
+        verify(mockDBAdapter).storeUserProfile(config.accountId, db)
+    }
+
+    @Test
+    fun `testMigration when encryptionFlagStatus is 2 then no migration for DB`() {
+
+        //--------Arrange----------
+        val encryptedIdentifier = "encryptedIdentifier"
+        val originalIdentifier = "originalIdentifier"
+        val originalKey = "originalKey"
+
+        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+
+        put(Constants.KEY_ENCRYPTION_LEVEL, CryptHandler.EncryptionLevel.MEDIUM.intValue())
+        put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_DB_SUCCESS)
+
+        // Pref
+        `when`(
+            mockCryptHandler.encrypt(anyString(), anyString())
+        ).thenReturn(encryptedIdentifier)
+        `when`(
+            mockCryptHandler.decrypt(anyString(), anyString())
+        ).thenReturn(originalIdentifier)
 
         val cachedGuidJsonObj = JSONObject()
         cachedGuidJsonObj.put("${originalKey}_$originalIdentifier", "value")
@@ -292,6 +324,55 @@ class CryptUtilsTest : BaseTestCase() {
             config.encryptionLevel, get(Constants.KEY_ENCRYPTION_LEVEL, -1)
         )
         assertEquals(neexpectedCGK.toString(), actualCGK)
+        verifyNoMoreInteractions(mockDBAdapter)
+        verify(mockCryptHandler).encryptionFlagStatus = 3
+        assertEquals(3, get(Constants.KEY_ENCRYPTION_FLAG_STATUS, -1))
+    }
+
+    @Test
+    fun `testMigration when encryptionFlagStatus is 1 then no migration for CGK`() {
+
+        //--------Arrange----------
+        val encryptedIdentifier = "encryptedIdentifier"
+        val originalIdentifier = "originalIdentifier"
+        val originalKey = "originalKey"
+
+        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+
+        put(Constants.KEY_ENCRYPTION_LEVEL, CryptHandler.EncryptionLevel.MEDIUM.intValue())
+        put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_CGK_SUCCESS)
+
+        // Pref
+        `when`(
+            mockCryptHandler.encrypt(anyString(), anyString())
+        ).thenReturn(encryptedIdentifier)
+        `when`(
+            mockCryptHandler.decrypt(anyString(), anyString())
+        ).thenReturn(originalIdentifier)
+
+        val cachedGuidJsonObj = JSONObject()
+        cachedGuidJsonObj.put("${originalKey}_$encryptedIdentifier", "value")
+
+        put(CACHED_GUIDS_KEY, cachedGuidJsonObj.toString())
+
+        // DB
+        val db = JSONObject()
+        db.put("Email", originalIdentifier)
+
+        `when`(
+            mockDBAdapter.fetchUserProfileById(config.accountId)
+        ).thenReturn(db)
+
+        //--------Act----------
+        migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
+        //--------Assert----------
+
+        assertEquals(cachedGuidJsonObj.toString(), get(CACHED_GUIDS_KEY, "null"))
+        assertEquals(
+            config.encryptionLevel, get(Constants.KEY_ENCRYPTION_LEVEL, -1)
+        )
+        verify(mockCryptHandler).encryptionFlagStatus = 3
+        assertEquals(3, get(Constants.KEY_ENCRYPTION_FLAG_STATUS, -1))
         verify(mockDBAdapter).storeUserProfile(config.accountId, db)
     }
 
