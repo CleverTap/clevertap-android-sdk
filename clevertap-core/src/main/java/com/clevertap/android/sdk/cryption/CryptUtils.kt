@@ -3,23 +3,18 @@ package com.clevertap.android.sdk.cryption
 import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
-import com.clevertap.android.sdk.Constants.CLEVERTAP_STORAGE_TAG
 import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_ALL_SUCCESS
 import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_CGK_SUCCESS
 import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_DB_SUCCESS
 import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_FAIL
-import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_KN_SUCCESS
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_FLAG_STATUS
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_MIGRATION
-import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_k_n
 import com.clevertap.android.sdk.Constants.piiDBKeys
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
-import java.io.File
-import java.util.Objects
 
 object CryptUtils {
 
@@ -92,8 +87,8 @@ object CryptUtils {
     }
 
     /**
-     * This method migrates the encryption level. There are currently 3 migrations required.
-     * The migration strategy is such that even if one entry fails in one of the 3 migrations, flag for that migration is set to 0
+     * This method migrates the encryption level. There are currently 2 migrations required.
+     * The migration strategy is such that even if one entry fails in one of the 2 migrations, flag bit for that migration is set to 0
      * and reattempted during the next instance creation
      *
      * @param encrypt - Flag to indicate the task to be either encryption or decryption
@@ -116,15 +111,11 @@ object CryptUtils {
         if (cgkFlag == ENCRYPTION_FLAG_FAIL)
             cgkFlag = migrateCachedGuidsKeyPref(encrypt, config, context, cryptHandler)
 
-        var knFlag = encryptionFlagStatus and ENCRYPTION_FLAG_KN_SUCCESS
-        if (knFlag == ENCRYPTION_FLAG_FAIL)
-            knFlag = migrateARPPreferenceFiles(encrypt, config, context, cryptHandler)
-
         var dbFlag = encryptionFlagStatus and ENCRYPTION_FLAG_DB_SUCCESS
         if (dbFlag == ENCRYPTION_FLAG_FAIL)
             dbFlag = migrateDBProfile(encrypt, config, cryptHandler, dbAdapter)
 
-        val updatedFlagStatus = cgkFlag or knFlag or dbFlag
+        val updatedFlagStatus = cgkFlag or dbFlag
 
         config.logger.verbose(
             config.accountId,
@@ -204,62 +195,6 @@ object CryptUtils {
         return migrationStatus
     }
 
-    /**
-     * This method migrates the encryption level of the value under the key k_n. This data is stored in the ARP related shared preference files
-     *
-     * @param encrypt - Flag to indicate the task to be either encryption or decryption
-     * @param config  - The [CleverTapInstanceConfig] object
-     * @param context - The Android context
-     * @param cryptHandler - The [CryptHandler] object
-     * @return - Returns the status of kn migration
-     */
-    private fun migrateARPPreferenceFiles(
-        encrypt: Boolean,
-        config: CleverTapInstanceConfig,
-        context: Context,
-        cryptHandler: CryptHandler
-    ): Int {
-        config.logger.verbose(config.accountId, "Migrating encryption level for ARP related prefs")
-        var migrationStatus = ENCRYPTION_FLAG_KN_SUCCESS
-        try {
-            // Gets all the files present in the shared_prefs directory
-            val dataDir = context.applicationInfo.dataDir
-            val prefsDir = File(dataDir, "shared_prefs")
-            val path = CLEVERTAP_STORAGE_TAG + "_ARP:" + config.accountId
-            for (prefName in Objects.requireNonNull(prefsDir.list())) {
-
-                //Checks if the file name of the preference is an ARP file for the current accountID
-                if (prefName.startsWith(path)) {
-                    val prefFile = prefName.substring(0, prefName.length - 4)
-                    val prefs = context.getSharedPreferences(prefFile, Context.MODE_PRIVATE)
-                    val value = prefs.getString(KEY_ENCRYPTION_k_n, "")
-
-                    // If key k_n is present then it is encrypted/decrypted and persisted
-                    if (value != "") {
-                        var crypted: String? =
-                            if (encrypt)
-                                cryptHandler.encrypt(value!!, KEY_ENCRYPTION_k_n)
-                            else
-                                cryptHandler.decrypt(value!!, KEY_ENCRYPTION_MIGRATION)
-                        if (crypted == null) {
-                            config.logger.verbose(
-                                config.accountId,
-                                "Error migrating k_n in $prefFile"
-                            )
-                            crypted = value
-                            migrationStatus = ENCRYPTION_FLAG_FAIL
-                        }
-                        val editor = prefs.edit().putString(KEY_ENCRYPTION_k_n, crypted)
-                        StorageHelper.persist(editor)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            config.logger.verbose(config.accountId, "Error migrating ARP Preference Files: $e")
-            migrationStatus = ENCRYPTION_FLAG_FAIL
-        }
-        return migrationStatus
-    }
 
     /**
      * This method migrates the encryption level of the value under cachedGUIDsKey stored in the shared preference file

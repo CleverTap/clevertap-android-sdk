@@ -99,7 +99,7 @@ class CleverTapFactory {
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
                 validationResultStack, controllerManager, baseDatabaseManager,
-                callbackManager, ctLockManager, validator, localDataStore, cryptHandler);
+                callbackManager, ctLockManager, validator, localDataStore);
         coreState.setNetworkManager(networkManager);
 
         EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config,

@@ -79,8 +79,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
          */
         @JvmStatic
         fun isTextEncrypted(plainText: String): Boolean {
-            // value in k_n is of the format [ "....."], hence the additional check is required
-            return plainText.startsWith('[') && plainText.endsWith(']') && !plainText.startsWith("[ \"")
+            return plainText.startsWith('[') && plainText.endsWith(']')
         }
     }
 }

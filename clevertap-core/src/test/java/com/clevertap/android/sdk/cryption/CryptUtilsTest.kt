@@ -39,8 +39,8 @@ class CryptUtilsTest : BaseTestCase() {
     @Test
     fun `test updateEncryptionFlagOnFailure `() {
         val failedFlag = Constants.ENCRYPTION_FLAG_DB_SUCCESS
-        val initialEncryptionFlagStatus = 7
-        val updatedEncryptionFlag = 3
+        val initialEncryptionFlagStatus = 3
+        val updatedEncryptionFlag = 1
 
         `when`(mockCryptHandler.encryptionFlagStatus).thenReturn(initialEncryptionFlagStatus)
         updateEncryptionFlagOnFailure(appCtx, config, failedFlag, mockCryptHandler)
@@ -72,7 +72,7 @@ class CryptUtilsTest : BaseTestCase() {
         )
 
         migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
-        verify(mockCryptHandler).encryptionFlagStatus = 7
+        verify(mockCryptHandler).encryptionFlagStatus = 3
     }
 
     @Test
@@ -87,7 +87,7 @@ class CryptUtilsTest : BaseTestCase() {
 
         migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
 
-        verify(mockCryptHandler).encryptionFlagStatus = 7
+        verify(mockCryptHandler).encryptionFlagStatus = 3
         verify(mockDBAdapter).fetchUserProfileById("id")
     }
 
@@ -102,12 +102,12 @@ class CryptUtilsTest : BaseTestCase() {
         StorageHelper.putInt(
             application,
             StorageHelper.storageKeyWithSuffix(config, Constants.KEY_ENCRYPTION_FLAG_STATUS),
-            7
+            3
         )
 
         migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
 
-        verify(mockCryptHandler).encryptionFlagStatus = 7
+        verify(mockCryptHandler).encryptionFlagStatus = 3
         verifyNoMoreInteractions(mockDBAdapter, mockCryptHandler)
     }
 

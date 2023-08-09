@@ -34,7 +34,7 @@ class CryptHandlerTest : BaseTestCase() {
     @Test
     fun `testEncryptAndDecrypt when encryptionLevelIsMedium and key is valid`() {
         val plainText = "Test Text!"
-        val key = "k_n"
+        val key = "cgk"
 
         val encryptedText = cryptHandlerMedium.encrypt(plainText, key)
         val decryptedText = cryptHandlerMedium.decrypt(encryptedText!!, key)
@@ -57,7 +57,7 @@ class CryptHandlerTest : BaseTestCase() {
     @Test
     fun `testEncryptAndDecrypt when key is valid and accountID(password) is different for encryption and decryption`() {
         val plainText = "Test Text!"
-        val key = "k_n"
+        val key = "cgk"
 
         val cryptHandlerMedium2 =
             CryptHandler(1, CryptHandler.EncryptionAlgorithm.AES, "test_account_id_2")
@@ -77,7 +77,7 @@ class CryptHandlerTest : BaseTestCase() {
         var encryptedText = cryptHandlerNone.encrypt(plainText, key)
         assertEquals(encryptedText, plainText)
 
-        key = "k_n"
+        key = "cgk"
         encryptedText = cryptHandlerNone.encrypt(plainText, key)
         assertEquals(encryptedText, plainText)
     }
@@ -86,7 +86,8 @@ class CryptHandlerTest : BaseTestCase() {
     fun `test Encrypt should only encrypt for required keys when encryptionLevelIsMedium `() {
         val plainText = "Test Text!"
         val key = "dummy_key"
-        val reqKeys = arrayListOf("k_n", "cgk", "encryptionmigration")
+        val reqKeys =
+            arrayListOf("cgk", "encryptionmigration", "Email", "Phone", "Identity", "Name")
 
         var actualEncryptedText = cryptHandlerMedium.encrypt(plainText, key)
         assertEquals(plainText, actualEncryptedText)
@@ -100,22 +101,10 @@ class CryptHandlerTest : BaseTestCase() {
     }
 
     @Test
-    fun `test Encrypt should encrypt when data is of the form of k_n`() {
-        // Data stored in the ARP file under k_n key has a form of [ "....."]
-        val plainText = "[ \"User@gmail.com\"]"
-        val key = "k_n"
-        val expectedEncryptedText =
-            "[-124, -25, 54, 118, -51, -126, -17, 55, 52, 100, 95, -21, 122, -46, -39, -47, -92, 88, 26, -123, 3, 38, 107, 67, 103, -73, 117, -21, -19, -102, -29, 22]"
-
-        val actualEncryptedText = cryptHandlerMedium.encrypt(plainText, key)
-        assertEquals(expectedEncryptedText, actualEncryptedText)
-    }
-
-    @Test
     fun `test Encrypt should return the sameText if already encrypted`() {
         val plainText =
             "[93, 125, -83, 116, -22, 82, -53, -67, 88, -87, -44, -32, 55, 86, 120, -53]"
-        val key = "k_n"
+        val key = "cgk"
 
         val actualEncryptedText = cryptHandlerMedium.encrypt(plainText, key)
         assertEquals(plainText, actualEncryptedText)
@@ -139,7 +128,8 @@ class CryptHandlerTest : BaseTestCase() {
             "[93, 125, -83, 116, -22, 82, -53, -67, 88, -87, -44, -32, 55, 86, 120, -53]"
         val expectedDecryptedText = "Test Text!"
         val dummyKey = "dummy_key"
-        val reqKeys = arrayListOf("k_n", "cgk", "encryptionmigration")
+        val reqKeys =
+            arrayListOf("cgk", "encryptionmigration", "Email", "Phone", "Identity", "Name")
 
         var decryptedText = cryptHandlerMedium.decrypt(cipherText, dummyKey)
         assertEquals(cipherText, decryptedText)
@@ -153,7 +143,7 @@ class CryptHandlerTest : BaseTestCase() {
     @Test
     fun `test Decrypt should return sameText if already decrypted`() {
         val cipherText = "Test Text!"
-        val dummyKey = "k_n"
+        val dummyKey = "cgk"
 
         val decryptedText = cryptHandlerMedium.decrypt(cipherText, dummyKey)
         assertEquals(cipherText, decryptedText)
@@ -163,7 +153,7 @@ class CryptHandlerTest : BaseTestCase() {
     fun `test Decrypt should return null if cipherText is invalid`() {
         // This cipher text will appear to be encrypted and hence decrypt internal will be called
         val cipherText = "[Test Text!]"
-        val dummyKey = "k_n"
+        val dummyKey = "cgk"
 
         val decryptedText = cryptHandlerMedium.decrypt(cipherText, dummyKey)
         assertNull(decryptedText)
