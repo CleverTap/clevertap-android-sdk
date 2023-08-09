@@ -1,5 +1,20 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 5.2.0 (August 9, 2023)
+
+#### New Features
+
+* Adds support for encryption of PII data wiz. Email, Identity, Name and Phone. 
+  Please refer to [EXAMPLES.md](EXAMPLES.md#encryption-of-pii-data) file to read more on how to
+  enable/disable encryption.
+* Adds support for custom KV pairs in AppInbox.
+
+#### Bug Fixes
+* Fixes a bug where addMultiValueForKey and addMultiValuesForKey were overwriting the 
+  current values of the user properties instead of appending it.
+* Fixes [#393](https://github.com/CleverTap/clevertap-android-sdk/issues/393) - push permission flow 
+  crash when context in CoreMetadata is null.
+
 ### Version 5.1.0 (June 28, 2023)
 
 > ⚠️ **NOTE**
