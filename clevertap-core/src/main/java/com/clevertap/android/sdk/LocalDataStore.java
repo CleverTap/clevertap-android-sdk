@@ -531,11 +531,14 @@ public class LocalDataStore {
                     for (String piiKey : piiDBKeys) {
                         if (profile.get(piiKey) != null) {
                             Object value = profile.get(piiKey);
-                            String encrypted = cryptHandler.encrypt((String) value, piiKey);
-                            if (encrypted == null) {
-                                passFlag = false;
+                            if (value instanceof String) {
+                                String encrypted = cryptHandler.encrypt((String) value, piiKey);
+                                if (encrypted == null) {
+                                    passFlag = false;
+                                    continue;
+                                }
+                                profile.put(piiKey, encrypted);
                             }
-                            profile.put(piiKey, encrypted);
                         }
                     }
                     JSONObject jsonObjectEncrypted = new JSONObject(profile);
