@@ -1,11 +1,13 @@
 package com.clevertap.android.sdk.cryption
 
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.mockkObject
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito.*
 
 
 class CryptHandlerTest : BaseTestCase() {
@@ -16,15 +18,15 @@ class CryptHandlerTest : BaseTestCase() {
 
     @Before
     override fun setUp() {
-//
-//        super.setUp()
+
+        super.setUp()
 //        mockStatic(CryptFactory::class.java).use {
-//            `when`(CryptFactory.getCrypt(CryptHandler.EncryptionAlgorithm.AES)).thenReturn(
-//                MockAESCrypt()
-//            )
-//            accountID = "test_account_id"
-//            cryptHandlerNone = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, accountID)
-//            cryptHandlerMedium = CryptHandler(1, CryptHandler.EncryptionAlgorithm.AES, accountID)
+        mockkObject(CryptFactory.Companion)
+        every { CryptFactory.getCrypt(CryptHandler.EncryptionAlgorithm.AES) } answers { MockAESCrypt() }
+
+        accountID = "test_account_id"
+        cryptHandlerNone = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, accountID)
+        cryptHandlerMedium = CryptHandler(1, CryptHandler.EncryptionAlgorithm.AES, accountID)
 //        }
     }
 
