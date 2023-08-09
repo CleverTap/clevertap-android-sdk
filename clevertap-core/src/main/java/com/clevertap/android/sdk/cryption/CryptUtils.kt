@@ -158,8 +158,8 @@ object CryptUtils {
             val i = cachedGuidJsonObj.keys()
             while (i.hasNext()) {
                 val nextJSONObjKey = i.next()
-                val key = nextJSONObjKey.substring(0, nextJSONObjKey.indexOf("_"))
-                val identifier = nextJSONObjKey.substring(nextJSONObjKey.indexOf("_") + 1)
+                val key = nextJSONObjKey.substringBefore("_")
+                val identifier = nextJSONObjKey.substringAfter("_")
                 var crypted: String? =
                     if (encrypt)
                         cryptHandler.encrypt(identifier, key)
@@ -173,7 +173,7 @@ object CryptUtils {
                     crypted = identifier
                     migrationStatus = ENCRYPTION_FLAG_FAIL
                 }
-                val cryptedKey = key + "_" + crypted
+                val cryptedKey = "${key}_$crypted"
                 newGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextJSONObjKey])
             }
             if (cachedGuidJsonObj.length() > 0) {
