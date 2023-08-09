@@ -39,7 +39,7 @@ class AutoCarouselContentView(context: Context, renderer: TemplateRenderer) :
         var imageCounter = 0
         for (index in renderer.imageList!!.indices) {
             val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view)
-            Utils.loadImageURLIntoRemoteView(R.id.fimg, renderer.imageList!![index], tempRemoteView)
+            Utils.loadImageURLIntoRemoteView(R.id.fimg, renderer.imageList!![index], tempRemoteView,context)
             if (!Utils.getFallback()) {
                 remoteView.addView(R.id.view_flipper, tempRemoteView)
                 imageCounter++

@@ -80,10 +80,6 @@ class MockDeviceInfo(
         return "4G"
     }
 
-    override fun getNotificationsEnabledForUser(): Boolean {
-        return true
-    }
-
     override fun getOsName(): String {
         return "Android"
     }

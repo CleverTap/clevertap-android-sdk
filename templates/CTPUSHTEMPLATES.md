@@ -533,6 +533,7 @@ Input Box | 4:3 or 2:1 | .JPG
 Product Catalog | 1:1 | .JPG
 
 * For Auto and Manual Carousel the image dimensions should not exceed more than 840x560 for Android 11 and Android 12 devices and with 3:2 image aspect ratio
+* For images in Basic, Auto/Manual Carousel templates the image dimensions should not exceed more than 400x200 for only Android 13+ devices.
 * For Product Catalog image aspect ratio should be 1:1 and image size should be less than 80kb for Android 11 and Android 12 devices
 * For Zero Bezel it's recommended that if your image has any text it should be present in the middle of the image for Android 12+ devices. 
 * For Android 12+ devices it's recommended that if your image has any text it should be present in the middle of the image.

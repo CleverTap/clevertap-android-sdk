@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
+import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -133,9 +134,11 @@ class CleverTapFactory {
         LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
         coreState.setLocationManager(locationManager);
 
+        CTWorkManager ctWorkManager = new CTWorkManager(context,config);
+
         PushProviders pushProviders = PushProviders
                 .load(context, config, baseDatabaseManager, validationResultStack,
-                        analyticsManager, controllerManager);
+                        analyticsManager, controllerManager,ctWorkManager);
         coreState.setPushProviders(pushProviders);
 
         ActivityLifeCycleManager activityLifeCycleManager = new ActivityLifeCycleManager(context, config,

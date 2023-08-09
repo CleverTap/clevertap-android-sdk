@@ -35,9 +35,21 @@ dependencies {
     compileOnly Libs.material
     compileOnly Libs.fragment
     implementation Libs.installreferrer
+
+    implementation Libs.work_runtime
     // Unit testing dependencies
     testImplementation project(':test_shared')
     testImplementation Libs.firebase_messaging
+
+    androidTestImplementation "androidx.work:work-testing:2.7.1"
+    androidTestImplementation "androidx.test:runner:1.5.2"
+    androidTestImplementation "androidx.test:rules:1.5.0"
+    // Optional -- UI testing with Espresso
+    androidTestImplementation Libs.espresso_core
+    // Optional -- UI testing with UI Automator
+    androidTestImplementation "androidx.test.uiautomator:uiautomator:2.3.0-alpha03"
+    // Optional -- UI testing with Compose
+    androidTestImplementation Libs.androidx_test_ext_junit
 }
 
 sonarqube {

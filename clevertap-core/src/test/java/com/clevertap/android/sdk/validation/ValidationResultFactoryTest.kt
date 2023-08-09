@@ -52,26 +52,106 @@ class ValidationResultFactoryTest : BaseTestCase() {
         val keysArr = arrayOf(key, key2, key3)
 
         return arrayOf(
-            ValidationIO(512, Constants.INVALID_MULTI_VALUE, keysArr, "Invalid multi value for key $key, profile multi value operation aborted."),
-            ValidationIO(512, Constants.INVALID_INCREMENT_DECREMENT_VALUE, keysArr, "Increment/Decrement value for profile key $key, cannot be zero or negative"),
+            ValidationIO(
+                512,
+                Constants.INVALID_MULTI_VALUE,
+                keysArr,
+                "Invalid multi value for key $key, profile multi value operation aborted."
+            ),
+            ValidationIO(
+                512,
+                Constants.INVALID_INCREMENT_DECREMENT_VALUE,
+                keysArr,
+                "Increment/Decrement value for profile key $key, cannot be zero or negative"
+            ),
             ValidationIO(512, Constants.PUSH_KEY_EMPTY, keysArr, "Profile push key is empty"),
-            ValidationIO(512, Constants.OBJECT_VALUE_NOT_PRIMITIVE_PROFILE, keysArr, "Object value wasn't a primitive ($key) for profile field $key2"),
-            ValidationIO(512, Constants.INVALID_COUNTRY_CODE, keysArr, "Device country code not available and profile phone: $key does not appear to start with country code"),
+            ValidationIO(
+                512,
+                Constants.OBJECT_VALUE_NOT_PRIMITIVE_PROFILE,
+                keysArr,
+                "Object value wasn't a primitive ($key) for profile field $key2"
+            ),
+            ValidationIO(
+                512,
+                Constants.INVALID_COUNTRY_CODE,
+                keysArr,
+                "Device country code not available and profile phone: $key does not appear to start with country code"
+            ),
             ValidationIO(512, Constants.INVALID_PHONE, keysArr, "Invalid phone number"),
-            ValidationIO(512, Constants.KEY_EMPTY, keysArr, "Key is empty, profile removeValueForKey aborted."),
-            ValidationIO(512, Constants.PROP_VALUE_NOT_PRIMITIVE, keysArr, "For event \"$key\": Property value for property $key2 wasn't a primitive ($key3)"),
-            ValidationIO(512, Constants.CHANNEL_ID_MISSING_IN_PAYLOAD, keysArr, "Unable to render notification, channelId is required but not provided in the notification payload: $key"),
-            ValidationIO(512, Constants.CHANNEL_ID_NOT_REGISTERED, keysArr, "Unable to render notification, channelId: $key not registered by the app."),
-            ValidationIO(512, Constants.NOTIFICATION_VIEWED_DISABLED, keysArr, "Recording of Notification Viewed is disabled in the CleverTap Dashboard for notification payload: $key"),
-            ValidationIO(521, Constants.VALUE_CHARS_LIMIT_EXCEEDED, keysArr, "$key... exceeds the limit of $key2 characters. Trimmed"),
-            ValidationIO(521, Constants.MULTI_VALUE_CHARS_LIMIT_EXCEEDED, keysArr, "Multi value property for key $key exceeds the limit of $key2 items. Trimmed"),
-            ValidationIO(521, Constants.INVALID_PROFILE_PROP_ARRAY_COUNT, keysArr, "Invalid user profile property array count - $key max is - $key2"),
-            ValidationIO(520, Constants.VALUE_CHARS_LIMIT_EXCEEDED, keysArr, "$key... exceeds the limit of $key2 characters. Trimmed"),
+            ValidationIO(
+                512,
+                Constants.KEY_EMPTY,
+                keysArr,
+                "Key is empty, profile removeValueForKey aborted."
+            ),
+            ValidationIO(
+                512,
+                Constants.PROP_VALUE_NOT_PRIMITIVE,
+                keysArr,
+                "For event \"$key\": Property value for property $key2 wasn't a primitive ($key3)"
+            ),
+            ValidationIO(
+                512,
+                Constants.CHANNEL_ID_MISSING_IN_PAYLOAD,
+                keysArr,
+                "Unable to render notification, channelId is required but not provided in the notification payload: $key"
+            ),
+            ValidationIO(
+                512,
+                Constants.CHANNEL_ID_NOT_REGISTERED,
+                keysArr,
+                "Unable to render notification on channelId: $key as it is not registered by the app."
+            ),
+            ValidationIO(
+                512,
+                Constants.NOTIFICATION_VIEWED_DISABLED,
+                keysArr,
+                "Recording of Notification Viewed is disabled in the CleverTap Dashboard for notification payload: $key"
+            ),
+            ValidationIO(
+                521,
+                Constants.VALUE_CHARS_LIMIT_EXCEEDED,
+                keysArr,
+                "$key... exceeds the limit of $key2 characters. Trimmed"
+            ),
+            ValidationIO(
+                521,
+                Constants.MULTI_VALUE_CHARS_LIMIT_EXCEEDED,
+                keysArr,
+                "Multi value property for key $key exceeds the limit of $key2 items. Trimmed"
+            ),
+            ValidationIO(
+                521,
+                Constants.INVALID_PROFILE_PROP_ARRAY_COUNT,
+                keysArr,
+                "Invalid user profile property array count - $key max is - $key2"
+            ),
+            ValidationIO(
+                520,
+                Constants.VALUE_CHARS_LIMIT_EXCEEDED,
+                keysArr,
+                "$key... exceeds the limit of $key2 characters. Trimmed"
+            ),
             ValidationIO(520, Constants.EVENT_NAME_NULL, keysArr, "Event Name is null"),
-            ValidationIO(510, Constants.VALUE_CHARS_LIMIT_EXCEEDED, keysArr, "$key... exceeds the limit of $key2 characters. Trimmed"),
+            ValidationIO(
+                510,
+                Constants.VALUE_CHARS_LIMIT_EXCEEDED,
+                keysArr,
+                "$key... exceeds the limit of $key2 characters. Trimmed"
+            ),
             ValidationIO(510, Constants.EVENT_NAME_NULL, keysArr, "Event Name is null"),
-            ValidationIO(511, Constants.PROP_VALUE_NOT_PRIMITIVE, keysArr, "For event $key: Property value for property $key2 wasn't a primitive ($key3)"),
-            ValidationIO(511, Constants.OBJECT_VALUE_NOT_PRIMITIVE, keysArr, "An item's object value for key $key wasn't a primitive ($key2)"),
+            ValidationIO(
+                511,
+                Constants.PROP_VALUE_NOT_PRIMITIVE,
+                keysArr,
+                "For event $key: Property value for property $key2 wasn't a primitive ($key3)"
+            ),
+            ValidationIO(
+                511,
+                Constants.OBJECT_VALUE_NOT_PRIMITIVE,
+                keysArr,
+                "An item's object value for key $key wasn't a primitive ($key2)"
+            ),
             ValidationIO(513, Constants.RESTRICTED_EVENT_NAME, keysArr, "$key is a restricted event name. Last event aborted."),
             ValidationIO(513, Constants.DISCARDED_EVENT_NAME, keysArr, "$key is a discarded event name. Last event aborted."),
             ValidationIO(514, Constants.USE_CUSTOM_ID_FALLBACK, keysArr, "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml/Instance Configuration. CleverTap SDK will create a fallback device ID"),

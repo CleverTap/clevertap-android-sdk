@@ -5,9 +5,10 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 
 import android.content.Context;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.INotificationParser;
 import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
@@ -35,6 +36,10 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
      * <br><br>
      * Use this method if you have custom implementation of messaging service and wants to create push-template
      * notification/non push-template notification using CleverTap
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: Starting from v5.1.0, this method runs on the caller's thread. Make sure to call it
+     * in onMessageReceive() of messaging service.
+     * </p>
      */
     @Override
     public boolean createNotification(final Context context, final RemoteMessage message) {
@@ -45,10 +50,11 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
 
         Bundle messageBundle = mParser.toBundle(message);
         if (messageBundle != null) {
-            messageBundle.putString(Constants.NOTIFICATION_HEALTH, Constants.WZRK_HEALTH_STATE_GOOD);
-            if (!messageBundle.containsKey("nh_source")) {
-                messageBundle.putString("nh_source", "FcmMessageListenerService");
-            }
+            /**
+             * Analytics: If FCM alters original priority of a notification
+             */
+            messageBundle = new FcmNotificationBundleManipulation(messageBundle).addPriority(message).build();
+
             isSuccess = PushNotificationHandler.getPushNotificationHandler()
                     .onMessageReceived(context, messageBundle, PushType.FCM.toString());
         }

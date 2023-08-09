@@ -1,12 +1,77 @@
 ## CleverTap Android SDK CHANGE LOG
 
-### Version 5.0.0 (May 5, 2023)
+### Version 5.1.0 (June 28, 2023)
+
+> ⚠️ **NOTE**
+
+```
+Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.1.0
+```
+
 #### New Features
-* Adds support for Remote Config Variables. Please refer to the [Variables.md](Variables.md) file to read more on how to integrate this to your app.
-* Adds new APIs, `markReadInboxMessagesForIDs(ArrayList<String> messageIDs)` and `deleteInboxMessagesForIDs(ArrayList<String> messageIDs)` to mark read and delete an array of Inbox Messages.
+
+* Adds new APIs,
+    * `getNotificationBitmapWithTimeout(
+      Context context, Bundle bundle, String bitmapSrcUrl,
+      boolean fallbackToAppIcon, long timeoutInMillis)`
+        - This API allows you to retrieve a notification bitmap from the specified `bitmapSrcUrl`
+          with a specified timeout. In case the bitmap retrieval fails, you can choose to fallback
+          to the app icon by setting the `fallbackToAppIcon` parameter. This API provides more
+          control over the bitmap retrieval process for custom rendering.
+    * `getNotificationBitmapWithTimeoutAndSize(
+      Context context, Bundle bundle, String bitmapSrcUrl,
+      boolean fallbackToAppIcon, long timeoutInMillis, int sizeInBytes)`
+        - This API extends the functionality of the previous one by additionally allowing you to
+          specify the desired size in bytes for the retrieved bitmap. This is useful when you need
+          to limit the size of the bitmap to optimize memory usage.
+          By utilizing these new APIs, you can enhance the push delivery experience for custom
+          rendering and ensure efficient handling of notification bitmaps in your Android app.
+* Adds support for developer defined default notification channel. Please refer to
+  the [EXAMPLES.md](EXAMPLES.md#push-notifications) file to read more on how to setup default
+  channel in your app.Also please note that this is only supported for clevertap core notifications.
+  Support for push templates will be released soon.
+* RenderMax Push SDK functionality is now supported directly within the CleverTap Core SDK.
+* Adds interface for `Leanplum` APIs. This interface wraps `CleverTapAPI` methods inside `Leanplum`
+  APIs to ensure a smoother migration experience.
 
 #### API Changes
-* **Deprecated:** The following methods and classes related to Product Config and Feature Flags have been marked as deprecated in this release, instead use new remote config variables feature. These methods and classes will be removed in the future versions with prior notice.
+
+* Adds `SCCampaignOptOut` Event to Restricted Events Name List for **internal use**.
+* Adds custom sdk versions to `af` field for **internal use**.
+
+#### Breaking API Changes
+
+* **Behavioral change of `createNotification` methods**:
+    * The following APIs now run on the caller's thread. Make sure to call it
+      in `onMessageReceive()` of messaging service:
+        - `CTFcmMessageHandler().createNotification(getApplicationContext(), message)`
+        - `CleverTapAPI.createNotification(getApplicationContext(), extras)`
+        - `CTXiaomiMessageHandler().createNotification(getApplicationContext(), message)`
+        - `CTHmsMessageHandler().createNotification(getApplicationContext(), message)` - **This API
+          should always be called on a background thread.**
+
+#### Bug Fixes
+
+* Fixes [#428](https://github.com/CleverTap/clevertap-android-sdk/issues/428) - Race-condition when
+  detecting if an in-app message should show.
+* Fixes Push primer alert dialog freeze behavior, which became unresponsive when clicked outside the
+  window.
+
+### Version 5.0.0 (May 5, 2023)
+
+#### New Features
+
+* Adds support for Remote Config Variables. Please refer to the [Variables.md](Variables.md) file to
+  read more on how to integrate this to your app.
+* Adds new APIs, `markReadInboxMessagesForIDs(ArrayList<String> messageIDs)`
+  and `deleteInboxMessagesForIDs(ArrayList<String> messageIDs)` to mark read and delete an array of
+  Inbox Messages.
+
+#### API Changes
+
+* **Deprecated:** The following methods and classes related to Product Config and Feature Flags have
+  been marked as deprecated in this release, instead use new remote config variables feature. These
+  methods and classes will be removed in the future versions with prior notice.
     * Product config
         - `productConfig()`
         - `productConfig().setDefaults()`

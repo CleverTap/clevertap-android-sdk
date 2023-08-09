@@ -30,7 +30,7 @@ class FiveIconSmallContentView constructor(
                 Utils.loadImageURLIntoRemoteView(
                     R.id.cta1,
                     renderer.imageList!![imageKey],
-                    remoteView
+                    remoteView,context
                 )
                 if (Utils.getFallback()) {
                     remoteView.setViewVisibility(R.id.cta1, View.GONE)
@@ -41,7 +41,7 @@ class FiveIconSmallContentView constructor(
                 Utils.loadImageURLIntoRemoteView(
                     R.id.cta2,
                     renderer.imageList!![imageKey],
-                    remoteView
+                    remoteView,context
                 )
                 if (Utils.getFallback()) {
                     imageCounter++
@@ -52,7 +52,7 @@ class FiveIconSmallContentView constructor(
                 Utils.loadImageURLIntoRemoteView(
                     R.id.cta3,
                     renderer.imageList!![imageKey],
-                    remoteView
+                    remoteView,context
                 )
                 if (Utils.getFallback()) {
                     imageCounter++
@@ -63,7 +63,7 @@ class FiveIconSmallContentView constructor(
                 Utils.loadImageURLIntoRemoteView(
                     R.id.cta4,
                     renderer.imageList!![imageKey],
-                    remoteView
+                    remoteView,context
                 )
                 if (Utils.getFallback()) {
                     imageCounter++
@@ -74,7 +74,7 @@ class FiveIconSmallContentView constructor(
                 Utils.loadImageURLIntoRemoteView(
                     R.id.cta5,
                     renderer.imageList!![imageKey],
-                    remoteView
+                    remoteView,context
                 )
                 if (Utils.getFallback()) {
                     imageCounter++
