@@ -56,6 +56,13 @@ Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.
 
 #### Breaking API Changes
 
+* **CTFlushPushImpressionsWork breaks custom WorkerFactory implementation of an App**:
+    * If you are using custom `WorkFactory` implementation of `WorkManager` then make sure that you
+      correctly handle workers defined by CleverTap SDK and other third party dependencies.
+    * You must return `null` from `createWorker()` for any unknown workerClassName. Please check
+      implementation provided in the
+      bolg [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
+
 * **Behavioral change of `createNotification` methods**:
     * The following APIs now run on the caller's thread. Make sure to call it
       in `onMessageReceive()` of messaging service:
