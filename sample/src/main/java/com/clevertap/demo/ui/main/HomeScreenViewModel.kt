@@ -274,6 +274,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Raised Notification Viewed event For Id = $it")
                 } ?: println("inboxMessage Id is null")
             }
+
             "2-14" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Raise Notification Clicked event for Inbox Message. Message id should be a String
@@ -282,6 +283,12 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Raised Notification Clicked event For Id = $it")
                 } ?: println("inboxMessage Id is null")
             }
+
+            "2-15" -> {
+                val customData = cleverTapAPI?.allInboxMessages?.firstOrNull()?.customData
+                println("inboxMessage customData = $customData")
+            }
+
             "3-0" -> {
                 val displayUnitID = cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID
                 //Get DisplayUnit by unit id. unit id should be a String
@@ -290,6 +297,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("DisplayUnit for Id $it = $displayUnitForId")
                 } ?: println("DisplayUnit Id is null")
             }
+
             "3-1" -> println("All Display Units = ${cleverTapAPI?.allDisplayUnits}") // get all display units
             "3-2" -> {
                 val displayUnitID = cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID

@@ -5,12 +5,13 @@ import android.os.Parcelable;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -40,7 +41,7 @@ public class CTInboxMessage implements Parcelable {
 
     private String campaignId;
 
-    private JSONObject customData;
+    private JSONObject customData = new JSONObject();
 
     private JSONObject data;
 
@@ -103,6 +104,24 @@ public class CTInboxMessage implements Parcelable {
                         this.inboxMessageContents.add(ctInboxMessageContent);
                     }
                 }
+
+                JSONArray customKVJsonArray = cellObject.has(Constants.KEY_CUSTOM_KV) ? cellObject
+                        .getJSONArray(Constants.KEY_CUSTOM_KV) : null;
+                if (customKVJsonArray != null) {
+                    for (int i = 0; i < customKVJsonArray.length(); i++) {
+                        JSONObject customKVJSONObject = customKVJsonArray.getJSONObject(i);
+                        if (customKVJSONObject.has(Constants.KEY_KEY)) {
+                            String key = customKVJSONObject.getString(Constants.KEY_KEY);
+                            if (customKVJSONObject.has(Constants.KEY_VALUE)) {
+                                JSONObject value = customKVJSONObject.getJSONObject(Constants.KEY_VALUE);
+                                {
+                                    customData.put(key, value.getString(Constants.KEY_TEXT));
+                                }
+                            }
+                        }
+                    }
+                }
+
                 this.orientation = cellObject.has(Constants.KEY_ORIENTATION) ? cellObject
                         .getString(Constants.KEY_ORIENTATION) : "";
             }
