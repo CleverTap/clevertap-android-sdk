@@ -10,11 +10,14 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * Handles saving and/or providing login related information.
@@ -28,10 +31,18 @@ public class LoginInfoProvider {
 
     private final DeviceInfo deviceInfo;
 
+    private CryptHandler cryptHandler;
+
     public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
         this.context = context;
         this.config = config;
         this.deviceInfo = deviceInfo;
+    }
+    public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo, CryptHandler cryptHandler) {
+        this.context = context;
+        this.config = config;
+        this.deviceInfo = deviceInfo;
+        this.cryptHandler = cryptHandler;
     }
 
     //Profile
@@ -49,14 +60,19 @@ public class LoginInfoProvider {
         if (isErrorDeviceId() || guid == null || key == null || identifier == null) {
             return;
         }
-
-        String cacheKey = key + "_" + identifier;
+        String encryptedIdentifier = cryptHandler.encrypt(identifier, key);
+        if (encryptedIdentifier == null) {
+            // If encrypted is null then fallback to plain text
+            encryptedIdentifier = identifier;
+            CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_CGK_SUCCESS, cryptHandler);
+        }
+        String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
         try {
             cache.put(cacheKey, guid);
             setCachedGUIDs(cache);
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error caching guid: " + t.toString());
+            config.getLogger().verbose(config.getAccountId(), "Error caching guid: " + t);
         }
     }
 
@@ -91,7 +107,7 @@ public class LoginInfoProvider {
                 }
             }
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error removing cached key: " + t.toString());
+            config.getLogger().verbose(config.getAccountId(), "Error removing cached key: " + t);
         }
     }
 
@@ -129,7 +145,7 @@ public class LoginInfoProvider {
             config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                     "setCachedGUIDs:[" + cachedGuid + "]");
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t.toString());
+            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t);
         }
     }
 
@@ -139,7 +155,7 @@ public class LoginInfoProvider {
             config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "removeCachedGUIDs:[]");
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error removing guid cache: " + t.toString());
+            config.getLogger().verbose(config.getAccountId(), "Error removing guid cache: " + t);
         }
     }
 
@@ -154,7 +170,7 @@ public class LoginInfoProvider {
 
     /**
      * Returns the Guid Value corresponding to the given <Key, Value>
-     *
+     * If guid for encrypted identifier is not found, then it tries searching for un-encrypted identifier
      * @param key        - Identity Key e.g Email
      * @param identifier - Value corresponding to the Key e.g abc@gmail.com
      * @return - String value of Guid if any entry is saved with Key_Value
@@ -163,8 +179,8 @@ public class LoginInfoProvider {
         if (key == null || identifier == null) {
             return null;
         }
-
-        String cacheKey = key + "_" + identifier;
+        String encryptedIdentifier = cryptHandler.encrypt(identifier, key);
+        String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
         try {
             String cachedGuid = cache.getString(cacheKey);
@@ -172,9 +188,21 @@ public class LoginInfoProvider {
                     "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "]");
             return cachedGuid;
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error reading guid cache: " + t.toString());
-            return null;
+            config.getLogger().verbose(config.getAccountId(), "Error reading guid cache: " + t);
+            // Return as there is no need to search for un-encrypted identifier as it as same as encrypted identifier
+            if(Objects.equals(encryptedIdentifier, identifier))
+                return null;
         }
+        try {
+            cacheKey = key + "_" + identifier;
+            String cachedGuid = cache.getString(cacheKey);
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                    "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "] after retry");
+            return cachedGuid;
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error reading guid cache after retry: " + t);
+        }
+        return null;
     }
 
     public boolean isAnonymousDevice() {
