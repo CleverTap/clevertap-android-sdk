@@ -664,3 +664,33 @@ From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver 
 #### Remote Config Variables
 
 From CleverTap SDK v5.0.0 onwards, you can use Remote Config Variables in your app. Please refer to the [Remote Config Variables doc](Variables.md) to read more on how to integrate this to your app.
+
+#### Encryption of PII data 
+
+PII data is stored across the SDK and could be sensitive information. 
+From CleverTap SDK v5.2.0 onwards, you can enable encryption for PII data wiz. **Email, Identity, Name and Phone**.  
+  
+Currently 2 levels of encryption are supported i.e None(0) and Medium(1). Encryption level is None by default.  
+**None** - All stored data is in plaintext    
+**Medium** - PII data is encrypted completely. 
+   
+The only way to set encryption level for default instance is from the `AndroidManifest.xml`
+
+* Add the following to `AndroidManifest.xml` file
+```xml
+<meta-data
+    android:name="CLEVERTAP_ENCRYPTION_LEVEL"
+    android:value="1" />
+```
+
+* Different instances can have different encryption levels. To set an encryption level for an additional instance
+```kotlin
+val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
+    applicationContext,
+    "ADDITIONAL_CLEVERTAP_ACCOUNT_ID",
+    "ADDITIONAL_CLEVERTAP_ACCOUNT_TOKEN"
+)
+
+clevertapAdditionalInstanceConfig.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext ,clevertapAdditionalInstanceConfig)
+```

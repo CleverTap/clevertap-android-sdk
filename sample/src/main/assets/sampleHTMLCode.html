@@ -12,6 +12,10 @@
 <br /><br />
 <button onclick='invokePushProfile()'>Push Profile</button>
 <br /><br />
+<button onclick='promptPushPermissionWithFallback()'>Push Primer with fallbackToSettings - true</button>
+<br /><br />
+<button onclick='promptPushPermissionWithoutFallback()'>Push Primer with fallbackToSettings - false</button>
+<br /><br />
 <button onclick='invokeAddProp()'>Add Property</button>
 <br /><br />
 <button onclick='invokeAddMultiProps()'>Add Multivalues</button>
@@ -44,6 +48,12 @@
         console.log('LOG')
         function invokeEvent() {
             CleverTap.pushEvent('WebView button clicked')
+        }
+        function promptPushPermissionWithFallback() {
+            CleverTap.promptPushPermission(true)
+        }
+        function promptPushPermissionWithoutFallback() {
+            CleverTap.promptPushPermission(false)
         }
         function invokeEventWithProps(){
         var props = {foo: 'xyz', lang: 'French'};

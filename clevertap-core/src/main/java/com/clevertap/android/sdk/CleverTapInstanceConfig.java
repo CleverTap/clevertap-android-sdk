@@ -9,14 +9,19 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
 import com.clevertap.android.sdk.Constants.IdentityType;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.login.LoginConstants;
+
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import org.json.JSONObject;
 
 public class CleverTapInstanceConfig implements Parcelable {
 
@@ -72,6 +77,8 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean sslPinning;
 
     private boolean useGoogleAdId;
+    private int encryptionLevel;
+
 
     @SuppressWarnings("unused")
     public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
@@ -116,9 +123,11 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.beta = config.beta;
         this.allowedPushTypes = config.allowedPushTypes;
         this.identityKeys = config.identityKeys;
+        this.encryptionLevel = config.encryptionLevel;
     }
 
-    private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
+    private
+    CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
             boolean isDefault) {
         this.accountId = accountId;
         this.accountToken = accountToken;
@@ -143,9 +152,12 @@ public class CleverTapInstanceConfig implements Parcelable {
          * For default instance, use manifest meta, otherwise use from setter field
          */
         if (isDefaultInstance) {
+            this.encryptionLevel = manifest.getEncryptionLevel();
             identityKeys = manifest.getProfileKeys();
             log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
                     .toString(identityKeys));
+        } else {
+            this.encryptionLevel = 0;
         }
     }
 
@@ -209,6 +221,9 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (configJsonObject.has(Constants.KEY_IDENTITY_TYPES)) {
                 this.identityKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
             }
+            if(configJsonObject.has(Constants.KEY_ENCRYPTION_LEVEL)){
+                this.encryptionLevel = configJsonObject.getInt(Constants.KEY_ENCRYPTION_LEVEL);
+            }
         } catch (Throwable t) {
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
             throw (t);
@@ -236,6 +251,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         allowedPushTypes = new ArrayList<>();
         in.readList(allowedPushTypes, String.class.getClassLoader());
         identityKeys = in.createStringArray();
+        encryptionLevel = in.readInt();
     }
 
     @Override
@@ -366,6 +382,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
         dest.writeList(allowedPushTypes);
         dest.writeStringArray(identityKeys);
+        dest.writeInt(encryptionLevel);
     }
 
     public boolean getEnableCustomCleverTapId() {
@@ -415,6 +432,12 @@ public class CleverTapInstanceConfig implements Parcelable {
     void setCreatedPostAppLaunch() {
         this.createdPostAppLaunch = true;
     }
+    public void setEncryptionLevel(CryptHandler.EncryptionLevel encryptionLevel) {
+        this.encryptionLevel = encryptionLevel.intValue();
+    }
+    public int getEncryptionLevel() {
+        return encryptionLevel;
+    }
 
     String toJSONString() {
         JSONObject configJsonObject = new JSONObject();
@@ -436,6 +459,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_PACKAGE_NAME, getPackageName());
             configJsonObject.put(Constants.KEY_BETA, isBeta());
             configJsonObject.put(Constants.KEY_ALLOWED_PUSH_TYPES, toJsonArray(allowedPushTypes));
+            configJsonObject.put(Constants.KEY_ENCRYPTION_LEVEL , getEncryptionLevel());
             return configJsonObject.toString();
         } catch (Throwable e) {
             Logger.v("Unable to convert config to JSON : ", e.getCause());

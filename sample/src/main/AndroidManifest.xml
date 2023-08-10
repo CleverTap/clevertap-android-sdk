@@ -95,6 +95,9 @@
         <meta-data
             android:name="CLEVERTAP_ACTIVITY_EXCLUDE"
             android:value="HomeScreenActivity" />
+        <meta-data
+            android:name="CLEVERTAP_ENCRYPTION_LEVEL"
+            android:value="1" />
 
         <service
             android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"

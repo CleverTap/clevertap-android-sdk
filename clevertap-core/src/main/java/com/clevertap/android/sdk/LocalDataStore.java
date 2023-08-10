@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.Constants.piiDBKeys;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -8,17 +10,21 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
+import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @SuppressWarnings("unused")
 @RestrictTo(Scope.LIBRARY)
@@ -40,6 +46,8 @@ public class LocalDataStore {
 
     private final Context context;
 
+    private final CryptHandler cryptHandler;
+
     private DBAdapter dbAdapter;
 
     private final ExecutorService es;
@@ -47,10 +55,11 @@ public class LocalDataStore {
     private final String eventNamespace = "local_events";
 
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config) {
+    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
+        this.cryptHandler = cryptHandler;
         inflateLocalProfileAsync(context);
     }
 
@@ -286,8 +295,12 @@ public class LocalDataStore {
 
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
             try {
+                Object property = PROFILE_FIELDS_IN_THIS_SESSION.get(key);
+                if (property instanceof String && CryptHandler.isTextEncrypted((String) property)) {
+                    getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property because it wasn't decrypted");
+                    return null;
+                }
                 return PROFILE_FIELDS_IN_THIS_SESSION.get(key);
-
             } catch (Throwable t) {
                 getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property", t);
                 return null;
@@ -443,7 +456,13 @@ public class LocalDataStore {
                                     JSONArray jsonArray = profile.getJSONArray(key);
                                     PROFILE_FIELDS_IN_THIS_SESSION.put(key, jsonArray);
                                 } else {
-                                    PROFILE_FIELDS_IN_THIS_SESSION.put(key, value);
+                                    Object decrypted = value;
+                                    if (value instanceof String) {
+                                        decrypted = cryptHandler.decrypt((String) value, key);
+                                        if (decrypted == null)
+                                            decrypted = value;
+                                    }
+                                    PROFILE_FIELDS_IN_THIS_SESSION.put(key, decrypted);
                                 }
                             } catch (JSONException e) {
                                 // no-op
@@ -505,8 +524,29 @@ public class LocalDataStore {
             @Override
             public void run() {
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-                    long status = dbAdapter
-                            .storeUserProfile(profileID, new JSONObject(PROFILE_FIELDS_IN_THIS_SESSION));
+                    HashMap<String, Object> profile = PROFILE_FIELDS_IN_THIS_SESSION;
+
+                    boolean passFlag = true;
+                    // Encrypts only the pii keys before storing to DB
+                    for (String piiKey : piiDBKeys) {
+                        if (profile.get(piiKey) != null) {
+                            Object value = profile.get(piiKey);
+                            if (value instanceof String) {
+                                String encrypted = cryptHandler.encrypt((String) value, piiKey);
+                                if (encrypted == null) {
+                                    passFlag = false;
+                                    continue;
+                                }
+                                profile.put(piiKey, encrypted);
+                            }
+                        }
+                    }
+                    JSONObject jsonObjectEncrypted = new JSONObject(profile);
+
+                    if (!passFlag)
+                        CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_DB_SUCCESS, cryptHandler);
+
+                    long status = dbAdapter.storeUserProfile(profileID, jsonObjectEncrypted);
                     getConfigLogger().verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);
                 }
