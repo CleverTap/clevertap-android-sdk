@@ -1,6 +1,6 @@
 ## CHANGE LOG.
 
-### August 9, 2023
+### August 10, 2023
 
 * [CleverTap Android SDK v5.2.0](docs/CTCORECHANGELOG.md)
 * [CleverTap Xiaomi Push SDK v1.5.3](docs/CTXIAOMIPUSHCHANGELOG.md)
