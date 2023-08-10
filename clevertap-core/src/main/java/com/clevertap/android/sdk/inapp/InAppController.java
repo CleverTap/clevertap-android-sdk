@@ -200,8 +200,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             //Checks whether permission request is asked for the first time.
             boolean isFirstTimeRequest = CTPreferenceCache.getInstance(context, config).isFirstTimeRequest();
 
+            Activity currentActivity = CoreMetaData.getCurrentActivity();
+            if (currentActivity == null) {
+                Logger.d("CurrentActivity reference is null. SDK can't process the promptPushPrimer(jsonObject) method! Ensure the following things:\n" +
+                        "1. Calling ActivityLifecycleCallback.register(this) in your custom application class before super.onCreate().\n" +
+                        "   Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n" +
+                        "2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, not onCreate().");
+                return;
+            }
             boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    currentActivity,
                     ANDROID_PERMISSION_STRING);
 
             if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
