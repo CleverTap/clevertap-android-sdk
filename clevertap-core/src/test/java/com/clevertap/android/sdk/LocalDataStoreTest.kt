@@ -1,13 +1,12 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
-import android.os.SystemClock
+import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.events.EventDetail
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.Test;
 import org.junit.runner.RunWith
-import org.mockito.Mock
 import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import java.util.ArrayList
@@ -22,13 +21,15 @@ class LocalDataStoreTest : BaseTestCase() {
     private lateinit var localDataStoreWithDefConfig: LocalDataStore
     private lateinit var localDataStoreWithConfig: LocalDataStore
     private lateinit var localDataStoreWithConfigSpy: LocalDataStore
+    private lateinit var cryptHandler : CryptHandler
 
     override fun setUp() {
         super.setUp()
         defConfig = CleverTapInstanceConfig.createDefaultInstance(appCtx, "id", "token", "region")
-        localDataStoreWithDefConfig = LocalDataStore(appCtx, defConfig)
+        cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
+        localDataStoreWithDefConfig = LocalDataStore(appCtx, defConfig, cryptHandler)
         config = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
-        localDataStoreWithConfig = LocalDataStore(appCtx, config)
+        localDataStoreWithConfig = LocalDataStore(appCtx, config, cryptHandler)
         localDataStoreWithConfigSpy = Mockito.spy(localDataStoreWithConfig)
     }
 

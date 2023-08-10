@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
@@ -41,6 +42,7 @@ public interface Constants {
     String LABEL_INTENT_SERVICE = "CLEVERTAP_INTENT_SERVICE";
     String LABEL_XIAOMI_APP_KEY = "CLEVERTAP_XIAOMI_APP_KEY";
     String LABEL_XIAOMI_APP_ID = "CLEVERTAP_XIAOMI_APP_ID";
+    String LABEL_ENCRYPTION_LEVEL = "CLEVERTAP_ENCRYPTION_LEVEL";
     String LABEL_DEFAULT_CHANNEL_ID = "CLEVERTAP_DEFAULT_CHANNEL_ID";
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_ID = "fcm_fallback_notification_channel";
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Misc";
@@ -184,6 +186,8 @@ public interface Constants {
     String KEY_BG = "bg";
     String KEY_TITLE = "title";
     String KEY_TEXT = "text";
+    String KEY_KEY = "key";
+    String KEY_VALUE = "value";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
     String KEY_HIDE_CLOSE = "close";
@@ -200,6 +204,8 @@ public interface Constants {
     String KEY_PACKAGE_NAME = "packageName";
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
+    String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
+    String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
     String EXTRAS_FROM = "extras_from";
@@ -258,10 +264,20 @@ public interface Constants {
     String KEY_HAS_URL = "hasUrl";
     String KEY_HAS_LINKS = "hasLinks";
     String KEY_LINKS = "links";
+    String KEY_ENCRYPTION_MIGRATION = "encryptionmigration";
+    String KEY_ENCRYPTION_CGK = "cgk";
+    String KEY_ENCRYPTION_NAME = "Name";
+    String KEY_ENCRYPTION_IDENTITY = "Identity";
+    String KEY_ENCRYPTION_PHONE = "Phone";
+    String KEY_ENCRYPTION_EMAIL = "Email";
     String TEST_IDENTIFIER = "0_0";
     String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
     String FEATURE_FLAG_UNIT = "Feature Flag : ";
     String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
+
+    String CRYPTION_SALT = "W1ZRCl3>";
+    String CRYPTION_IV = "__CL3>3Rt#P__1V_";
+
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
     int FETCH_TYPE_VARIABLES = 4;
@@ -292,6 +308,11 @@ public interface Constants {
     int INVALID_MULTI_VALUE_KEY = 23;
     int RESTRICTED_MULTI_VALUE_KEY = 24;
     int INVALID_INCREMENT_DECREMENT_VALUE = 25;
+    int ENCRYPTION_FLAG_FAIL = 0b00;
+    int ENCRYPTION_FLAG_CGK_SUCCESS = 0b01;
+    int ENCRYPTION_FLAG_DB_SUCCESS = 0b10;
+    int ENCRYPTION_FLAG_ALL_SUCCESS = 0b11;
+
     String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
     String SEPARATOR_COMMA = ",";
     String EMPTY_STRING = "";
@@ -301,6 +322,10 @@ public interface Constants {
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
+    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME));
+    HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
+    HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
+
 
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
 
