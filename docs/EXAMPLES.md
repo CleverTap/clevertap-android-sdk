@@ -366,8 +366,9 @@ To specify the default notification channel ID, you can add the following metada
 manifest file:
 
 ```xml
-
-<meta-data android:name="CLEVERTAP_DEFAULT_CHANNEL_ID" android:value="your_default_channel_id" />
+<meta-data
+    android:name="CLEVERTAP_DEFAULT_CHANNEL_ID"
+    android:value="your_default_channel_id" />
 ```
 
 By including this metadata, you can define a specific notification channel that CleverTap will use
@@ -388,14 +389,14 @@ provides more control over the bitmap retrieval process for custom rendering.
 
 ```java
 @Override
-public void onMessageReceived(RemoteMessage message){
-        Bundle messageBundle=mParser.toBundle(message);
+public void onMessageReceived(RemoteMessage message) {
+        Bundle messageBundle = mParser.toBundle(message);
         // this method must be called on background thread
         // context, messageBundle must be non null.
         // timeout must be in range of 1 - 20000 millis.
         CleverTapAPI.getNotificationBitmapWithTimeout(
-        context,messageBundle,"https://www.pushicons.com/icon",
-        true,5000);
+context,messageBundle, "https://www.pushicons.com/icon",
+       true, 5000);
         }
 ```
 
@@ -404,14 +405,14 @@ desired size in bytes for the retrieved bitmap.
 
 ```java
 @Override
-public void onMessageReceived(RemoteMessage message){
-        Bundle messageBundle=mParser.toBundle(message);
+public void onMessageReceived(RemoteMessage message) {
+        Bundle messageBundle = mParser.toBundle(message);
         // this method must be called on background thread
         // context, messageBundle must be non null.
         // timeout must be in range of 1 - 20000 millis and size must be greater than 0.
         CleverTapAPI.getNotificationBitmapWithTimeoutAndSize(
-        context,messageBundle,"https://www.pushicons.com/icon",
-        true,5000,1024);
+context,messageBundle, "https://www.pushicons.com/icon",
+       true, 5000,1024);
         }
 ```
 
@@ -663,3 +664,33 @@ From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver 
 #### Remote Config Variables
 
 From CleverTap SDK v5.0.0 onwards, you can use Remote Config Variables in your app. Please refer to the [Remote Config Variables doc](Variables.md) to read more on how to integrate this to your app.
+
+#### Encryption of PII data 
+
+PII data is stored across the SDK and could be sensitive information. 
+From CleverTap SDK v5.2.0 onwards, you can enable encryption for PII data wiz. **Email, Identity, Name and Phone**.  
+  
+Currently 2 levels of encryption are supported i.e None(0) and Medium(1). Encryption level is None by default.  
+**None** - All stored data is in plaintext    
+**Medium** - PII data is encrypted completely. 
+   
+The only way to set encryption level for default instance is from the `AndroidManifest.xml`
+
+* Add the following to `AndroidManifest.xml` file
+```xml
+<meta-data
+    android:name="CLEVERTAP_ENCRYPTION_LEVEL"
+    android:value="1" />
+```
+
+* Different instances can have different encryption levels. To set an encryption level for an additional instance
+```kotlin
+val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
+    applicationContext,
+    "ADDITIONAL_CLEVERTAP_ACCOUNT_ID",
+    "ADDITIONAL_CLEVERTAP_ACCOUNT_TOKEN"
+)
+
+clevertapAdditionalInstanceConfig.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext ,clevertapAdditionalInstanceConfig)
+```

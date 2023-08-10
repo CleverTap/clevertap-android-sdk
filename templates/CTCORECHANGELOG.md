@@ -7,7 +7,7 @@
 * Adds support for encryption of PII data wiz. Email, Identity, Name and Phone. 
   Please refer to [EXAMPLES.md](EXAMPLES.md#encryption-of-pii-data) file to read more on how to
   enable/disable encryption.
-* Adds support for custom KV pairs in AppInbox.
+* Adds support for custom KV pairs common to all inbox messages in AppInbox.
 
 #### Bug Fixes
 * Fixes a bug where addMultiValueForKey and addMultiValuesForKey were overwriting the 

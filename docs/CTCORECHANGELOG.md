@@ -1,5 +1,20 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 5.2.0 (August 9, 2023)
+
+#### New Features
+
+* Adds support for encryption of PII data wiz. Email, Identity, Name and Phone. 
+  Please refer to [EXAMPLES.md](EXAMPLES.md#encryption-of-pii-data) file to read more on how to
+  enable/disable encryption.
+* Adds support for custom KV pairs common to all inbox messages in AppInbox.
+
+#### Bug Fixes
+* Fixes a bug where addMultiValueForKey and addMultiValuesForKey were overwriting the 
+  current values of the user properties instead of appending it.
+* Fixes [#393](https://github.com/CleverTap/clevertap-android-sdk/issues/393) - push permission flow 
+  crash when context in CoreMetadata is null.
+
 ### Version 5.1.0 (June 28, 2023)
 
 > ⚠️ **NOTE**
@@ -40,6 +55,13 @@ Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.
 * Adds custom sdk versions to `af` field for **internal use**.
 
 #### Breaking API Changes
+
+* **CTFlushPushImpressionsWork breaks custom WorkerFactory implementation of an App**:
+    * If you are using custom `WorkFactory` implementation of `WorkManager` then make sure that you
+      correctly handle workers defined by CleverTap SDK and other third party dependencies.
+    * You must return `null` from `createWorker()` for any unknown workerClassName. Please check
+      implementation provided in the
+      bolg [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
 
 * **Behavioral change of `createNotification` methods**:
     * The following APIs now run on the caller's thread. Make sure to call it
