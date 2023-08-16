@@ -211,6 +211,10 @@ public class NetworkManager extends BaseNetworkManager {
             if (!loadMore) {
                 // network error
                 controllerManager.invokeCallbacksForNetworkError();
+                controllerManager.invokeBatchListener(queue, false);
+            } else {
+                // response was successfully received
+                controllerManager.invokeBatchListener(queue, true);
             }
         }
     }

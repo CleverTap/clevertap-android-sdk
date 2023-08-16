@@ -7,6 +7,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
@@ -64,6 +65,8 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     private FetchVariablesCallback fetchVariablesCallback;
+
+    private BatchListener batchListener;
 
     @Override
     public void _notifyInboxMessagesDidUpdate() {
@@ -327,5 +330,14 @@ public class CallbackManager extends BaseCallbackManager {
     public void setFetchVariablesCallback(
         FetchVariablesCallback fetchVariablesCallback) {
         this.fetchVariablesCallback = fetchVariablesCallback;
+    }
+
+    public BatchListener getBatchListener() {
+        return batchListener;
+    }
+
+    @Override
+    public void setBatchListener(BatchListener batchListener) {
+        this.batchListener = batchListener;
     }
 }

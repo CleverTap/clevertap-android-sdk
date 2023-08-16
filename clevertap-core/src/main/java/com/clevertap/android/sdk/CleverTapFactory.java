@@ -10,6 +10,8 @@ import com.clevertap.android.sdk.events.EventQueueManager;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
+import com.clevertap.android.sdk.network.AppLaunchListener;
+import com.clevertap.android.sdk.network.CompositeBatchListener;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
@@ -119,6 +121,11 @@ class CleverTapFactory {
                 controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo);
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
+
+        // TODO register App Launched listener
+        CompositeBatchListener batchListener = new CompositeBatchListener();
+        batchListener.addListener(new AppLaunchListener(inAppController));
+        callbackManager.setBatchListener(batchListener);
 
         Task<Void> taskInitFeatureFlags = CTExecutorFactory.executors(config).ioTask();
         taskInitFeatureFlags.execute("initFeatureFlags", new Callable<Void>() {
