@@ -519,6 +519,10 @@ public class NetworkManager extends BaseNetworkManager {
             }
             // Add frs (First Request in Session) and update first request flag
             header.put("frs", coreMetaData.isFirstRequestInSession());
+
+            if(config.getDebugLevel() == 3)
+                header.put("debug",true);
+
             coreMetaData.setFirstRequestInSession(false);
 
             //Add ARP (Additional Request Parameters)
