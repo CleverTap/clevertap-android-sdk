@@ -521,7 +521,7 @@ public class NetworkManager extends BaseNetworkManager {
             header.put("frs", coreMetaData.isFirstRequestInSession());
 
             // Add debug flag to show errors and events on the integration-debugger
-            if(config.getDebugLevel() == 3)
+            if(CleverTapAPI.getDebugLevel() == 3)
                 header.put("debug",true);
 
             coreMetaData.setFirstRequestInSession(false);
