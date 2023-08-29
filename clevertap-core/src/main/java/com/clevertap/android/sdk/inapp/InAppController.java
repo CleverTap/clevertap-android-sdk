@@ -740,4 +740,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             }
         }
     }
+
+    public void onAppLaunchedSent() {
+        // TODO invoke EvaluationManager.evaluateOnAppLaunchedClientSide
+    }
 }

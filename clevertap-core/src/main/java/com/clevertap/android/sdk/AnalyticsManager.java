@@ -331,6 +331,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
             event.put("evtName", eventName);
             event.put("evtData", actions);
+            // TODO invoke EvaluationManager.evaluateOnEvent
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
@@ -774,6 +775,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             chargedEvent.put("evtName", Constants.CHARGED_EVENT);
             chargedEvent.put("evtData", evtData);
+            // TODO invoke EvaluationManager.evaluateOnChargedEvent
             baseEventQueueManager.queueEvent(context, chargedEvent, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here

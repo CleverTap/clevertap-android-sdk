@@ -1,0 +1,66 @@
+package com.clevertap.android.sdk.inapp.matchers
+
+import org.json.JSONArray
+import org.json.JSONObject
+
+class TriggersMatcher {
+
+  fun matchEvent(whenTriggers: JSONArray, eventName: String, eventProperties: Map<String, Any>): Boolean {
+    val event = EventAdapter(eventName, eventProperties)
+
+    // events in array are OR-ed
+    for (i in 0 until whenTriggers.length()) {
+      val trigger = TriggerAdapter(whenTriggers[i] as JSONObject)
+      if (match(trigger, event)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  fun matchChargedEvent(
+    whenTriggers: JSONArray,
+    eventName: String,
+    details: Map<String, Any>,
+    items: List<Map<String, Any>>,
+  ): Boolean {
+    // TODO add other fields
+    return false
+  }
+
+  private fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+    // property conditions are AND-ed
+    val propCount = trigger.getPropertyCount()
+    for (i in 0 until propCount) {
+      val condition = trigger.getProperty(i)
+
+      val matched = evaluate(
+        condition.op,
+        condition.value,
+        event.getPropertyValue(condition.propertyName)
+      )
+      if (!matched) {
+        return false
+      }
+    }
+    return true
+  }
+
+  private fun evaluate(op: TriggerOperator, expected: TriggerValue, actual: TriggerValue?): Boolean {
+    if (actual == null) {
+      if (op == TriggerOperator.NotSet) {
+        return true
+      } else {
+        return false
+      }
+    }
+
+    when (op) {
+      TriggerOperator.LessThan -> {
+        return expected.numberValue() < actual.numberValue()
+      }
+      else -> Unit // TODO implement all cases as per the backed evaluation and remove `else` clause
+    }
+    return false
+  }
+}

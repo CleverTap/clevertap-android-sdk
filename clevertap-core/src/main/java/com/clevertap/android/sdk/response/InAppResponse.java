@@ -57,6 +57,9 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return;
             }
 
+            // TODO get all types of inapps from response - ss, cs, applaunched
+            // TODO call EvaluationManager.evaluateOnAppLaunchedServerSide(appLaunchedNotifs)
+
             int perSession = 10;
             int perDay = 10;
             if (response.has(Constants.INAPP_MAX_PER_SESSION) && response
