@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import java.text.SimpleDateFormat;
@@ -32,15 +33,18 @@ public class InAppFCManager {
 
     private final ArrayList<String> mDismissedThisSession = new ArrayList<>();
 
-    private final HashMap<String, Integer> mShownThisSession = new HashMap<>();
+//    private final HashMap<String, Integer> mShownThisSession = new HashMap<>();
+//
+//    private int mShownThisSessionCount = 0;
+//
+    private ImpressionManager impressionManager;
 
-    private int mShownThisSessionCount = 0;
 
-
-    InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId) {
+    InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId/*, ImpressionManager impressionManager*/) {
         this.config = config;
         this.context = context;
         this.deviceId = deviceId;
+        /*this.impressionManager = impressionManager;*/ // TODO
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("initInAppFCManager",new Callable<Void>() {
@@ -68,6 +72,8 @@ public class InAppFCManager {
                 return true;
             }
 
+            // TODO check new flag for exclude from caps
+
             if (!hasSessionCapacityMaxedOut(inapp)
                     && !hasLifetimeCapacityMaxedOut(inapp)
                     && !hasDailyCapacityMaxedOut(inapp)) {
@@ -81,8 +87,9 @@ public class InAppFCManager {
 
     public void changeUser(String deviceId) {
         // reset counters
-        mShownThisSession.clear();
-        mShownThisSessionCount = 0;
+//        mShownThisSession.clear();
+//        mShownThisSessionCount = 0;
+        impressionManager.clearSessionData(); // TODO change deviceId in manager
         mDismissedThisSession.clear();
         this.deviceId = deviceId;
         init(deviceId);
@@ -101,14 +108,15 @@ public class InAppFCManager {
             return;
         }
 
-        mShownThisSessionCount++;
+        impressionManager.recordImpression(id);
+//        mShownThisSessionCount++;
 
-        Integer count = mShownThisSession.get(id);
-        if (count == null) {
-            count = 1;
-        }
+//        Integer count = mShownThisSession.get(id);
+//        if (count == null) {
+//            count = 1;
+//        }
 
-        mShownThisSession.put(id, ++count);
+//        mShownThisSession.put(id, ++count);
 
         incrementInAppCountsInPersistentStore(id);
 
@@ -286,6 +294,8 @@ public class InAppFCManager {
     }
 
     private boolean hasLifetimeCapacityMaxedOut(CTInAppNotification inapp) {
+        // TODO think about migrating data to the new ImpressionManager scheme
+
         final String id = getInAppID(inapp);
         if (id == null) {
             return false;
@@ -313,6 +323,7 @@ public class InAppFCManager {
             return false;
         }
 
+        // TODO mDismissedThisSession should be removed
         // 1. Has this been dismissed?
         if (mDismissedThisSession.contains(id)) {
             return true;
@@ -322,8 +333,9 @@ public class InAppFCManager {
         try {
             final int maxPerSession = inapp.getMaxPerSession() >= 0 ? inapp.getMaxPerSession() : 1000;
 
-            Integer c = mShownThisSession.get(id);
-            if (c != null && c >= maxPerSession) {
+            //Integer c = mShownThisSession.get(id);
+            int c = impressionManager.perSession(id);
+            if (/*c != null && */c >= maxPerSession) {
                 return true;
             }
         } catch (Throwable t) {
@@ -332,7 +344,9 @@ public class InAppFCManager {
 
         // 3. Have we shown enough of in-apps this session?
         final int c = getIntFromPrefs(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION, deviceId), 1);
-        return (mShownThisSessionCount >= c);
+        int sessionTotal = impressionManager.perSessionTotal();
+        return (sessionTotal >= c);
+//        return (mShownThisSessionCount >= c);
     }
 
     private void incrementInAppCountsInPersistentStore(String inappID) {

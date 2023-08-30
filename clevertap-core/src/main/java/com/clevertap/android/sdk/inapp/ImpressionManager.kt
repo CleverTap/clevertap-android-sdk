@@ -11,24 +11,27 @@ class ImpressionManager(
   private val locale: Locale = Locale.US,
 ) {
 
-
-  // TODO whenLimits
-
   // TODO add the offset to shorten the timestamps
 //  private val DATE_OFFSET = ..
 
   private val sessionImpressions: MutableMap<String, MutableList<Long>> = mutableMapOf()
+  private var sessionImpressionsTotal = 0
 
   fun recordImpression(campaignId: String) {
+    sessionImpressionsTotal++
     val now = clock.currentTimeSeconds()
     val records = sessionImpressions.getOrPut(campaignId) { mutableListOf() }
     records.add(now)
 
-    // TODO add to the persistent storage
+    impressionStore.write(campaignId, now)
   }
 
   fun perSession(campaignId: String): Int {
     return sessionImpressions[campaignId]?.size ?: 0
+  }
+
+  fun perSessionTotal(): Int {
+    return sessionImpressionsTotal
   }
 
   fun perSecond(campaignId: String, seconds: Int): Int {
@@ -48,7 +51,7 @@ class ImpressionManager(
     return getImpressionCount(campaignId, now - offset)
   }
 
-  fun perDay(campaignId: String, days: Int): Int {
+  fun perDay(campaignId: String, days: Int): Int { // TODO maybe the perDay could be changed to use the Calendar functionality
     val now = clock.currentTimeSeconds()
     val offset = TimeUnit.DAYS.toSeconds(days.toLong())
     return getImpressionCount(campaignId, now - offset)
@@ -93,6 +96,11 @@ class ImpressionManager(
       count++
     }
     return count
+  }
+
+  fun clearSessionData() {
+    sessionImpressions.clear()
+    sessionImpressionsTotal = 0
   }
 
 }

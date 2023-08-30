@@ -58,6 +58,10 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             // TODO get all types of inapps from response - ss, cs, applaunched
+            // TODO store the inapps (get the old code and move it to some ***Store class)
+            // TODO save the SS/CS mode from the json response
+            //      add onChanged for this SS/CS mode to handle case when switching from SS/CS to CS/SS or
+            //      from none to CS/SS to clear data.
             // TODO call EvaluationManager.evaluateOnAppLaunchedServerSide(appLaunchedNotifs)
 
             int perSession = 10;

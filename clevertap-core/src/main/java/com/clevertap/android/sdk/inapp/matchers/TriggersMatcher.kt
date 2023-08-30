@@ -24,11 +24,23 @@ class TriggersMatcher {
     details: Map<String, Any>,
     items: List<Map<String, Any>>,
   ): Boolean {
-    // TODO add other fields
+    val event = EventAdapter(eventName, details, items)
+
+    // events in array are OR-ed
+    for (i in 0 until whenTriggers.length()) {
+      val trigger = TriggerAdapter(whenTriggers[i] as JSONObject)
+      if (match(trigger, event)) {
+        return true
+      }
+    }
     return false
   }
 
   private fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+    if (event.getEventName() != trigger.getEventName()) {
+      return false
+    }
+
     // property conditions are AND-ed
     val propCount = trigger.getPropertyCount()
     for (i in 0 until propCount) {
@@ -43,6 +55,21 @@ class TriggersMatcher {
         return false
       }
     }
+
+    // (chargedEvent only) property conditions for items are AND-ed
+    val itemsCount = trigger.getItemsCount()
+    if (itemsCount > 0) {
+      for (i in 0 until itemsCount) {
+        val triggerItem = trigger.getItem(i)
+        val eventValues = event.getItemValue(triggerItem.propertyName)
+
+        val matched = evaluate(triggerItem.op, triggerItem.value, eventValues)
+        if (!matched) {
+          return false
+        }
+      }
+    }
+
     return true
   }
 

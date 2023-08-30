@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inapp.matchers
 
-class TriggerValue {
+class TriggerValue(listValue: List<Any> = listOf()) {
 
   fun numberValue(): Double {
     return .0

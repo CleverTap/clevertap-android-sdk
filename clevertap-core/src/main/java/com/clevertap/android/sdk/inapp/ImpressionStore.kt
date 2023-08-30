@@ -27,6 +27,8 @@ class ImpressionStore(context: Context, deviceId: String) {
   }
 
   fun write(campaignId: String, timestamp: Long) {
+    // TODO put some limit on the numbers of impressions written per inapp
+
     val records = read(campaignId).toMutableList()
     records.add(timestamp)
 
@@ -49,4 +51,6 @@ class ImpressionStore(context: Context, deviceId: String) {
     if (serialized.isEmpty()) return emptyList()
     return serialized.split(",").map { it.toLong() }
   }
+
+  // TODO handle inappStale from server to clear data per inapp
 }

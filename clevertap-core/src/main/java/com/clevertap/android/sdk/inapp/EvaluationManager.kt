@@ -33,6 +33,7 @@ class EvaluationManager {
   fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>) {
     val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
     evaluate(event, appLaunchedNotifs)
+    // TODO handle supressed inapps
     // TODO eligibleInapps.sort().first().display();
   }
 
@@ -43,6 +44,8 @@ class EvaluationManager {
 
   private fun evaluateClientSide(event: EventAdapter) {
     // evaluate(event, getClientSideNotifsFromStore())
+    // TODO handle supressed inapps
+    // TODO calculate TTL field and put it in the json based on ttlOffset parameter
     // TODO eligibleInapps.sort().first().display();
   }
 

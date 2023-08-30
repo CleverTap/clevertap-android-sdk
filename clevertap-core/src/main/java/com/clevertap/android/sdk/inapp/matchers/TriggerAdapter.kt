@@ -34,4 +34,12 @@ class TriggerAdapter(triggerJson: JSONObject) {
     return TriggerCondition("", TriggerOperator.Contains, TriggerValue())
   }
 
+  fun getItemsCount(): Int { // for chargedEvent
+    return 0
+  }
+
+  fun getItem(pos: Int): TriggerCondition {
+    return TriggerCondition("", TriggerOperator.Contains, TriggerValue())
+  }
+
 }
