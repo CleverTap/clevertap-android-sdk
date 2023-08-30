@@ -161,7 +161,7 @@ public class CTInboxController {
     // always call async
     @WorkerThread
     public boolean updateMessages(final JSONArray inboxMessages) {
-        Logger.v( "CTInboxController:updateMessages() called");
+        Logger.verbose( "CTInboxController:updateMessages() called");
 
         boolean haveUpdates = false;
         ArrayList<CTMessageDAO> newMessages = new ArrayList<>();
@@ -175,23 +175,23 @@ public class CTInboxController {
                 }
 
                 if (!videoSupported && messageDAO.containsVideoOrAudio()) {
-                    Logger.d(
+                    Logger.debug(
                             "Dropping inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation.");
                     continue;
                 }
 
                 newMessages.add(messageDAO);
 
-                Logger.v("Inbox Message for message id - " + messageDAO.getId() + " added");
+                Logger.verbose("Inbox Message for message id - " + messageDAO.getId() + " added");
             } catch (JSONException e) {
-                Logger.d("Unable to update notification inbox messages - " + e.getLocalizedMessage());
+                Logger.debug("Unable to update notification inbox messages - " + e.getLocalizedMessage());
             }
         }
 
         if (newMessages.size() > 0) {
             this.dbAdapter.upsertMessages(newMessages);
             haveUpdates = true;
-            Logger.v("New Notification Inbox messages added");
+            Logger.verbose("New Notification Inbox messages added");
             synchronized (messagesLock) {
                 this.messages = this.dbAdapter.getMessages(this.userId);
                 trimMessages();
@@ -263,7 +263,7 @@ public class CTInboxController {
         }
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate() );//  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
-        task.addOnFailureListener(e -> Logger.d("Failed to update message read state for id:"+messageId,e));
+        task.addOnFailureListener(e -> Logger.debug("Failed to update message read state for id:"+messageId,e));
 
         task.execute("RunMarkMessageRead", new Callable<Void>() {
             @Override
@@ -295,7 +295,7 @@ public class CTInboxController {
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate());
-        task.addOnFailureListener(e -> Logger.d("Failed to update message read state for ids:" + messageIDs, e));
+        task.addOnFailureListener(e -> Logger.debug("Failed to update message read state for ids:" + messageIDs, e));
 
         task.execute("RunMarkMessagesReadForIDs", new Callable<Void>() {
             @Override
@@ -317,18 +317,18 @@ public class CTInboxController {
                 }
             }
         }
-        Logger.v("Inbox Message for message id - " + id + " not found");
+        Logger.verbose("Inbox Message for message id - " + id + " not found");
         return null;
     }
 
     @AnyThread
     private void trimMessages() {
-        Logger.v( "CTInboxController:trimMessages() called");
+        Logger.verbose( "CTInboxController:trimMessages() called");
         ArrayList<CTMessageDAO> toDelete = new ArrayList<>();
         synchronized (messagesLock) {
             for (CTMessageDAO message : this.messages) {
                 if (!videoSupported && message.containsVideoOrAudio()) {
-                    Logger.d(
+                    Logger.debug(
                             "Removing inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation.");
                     toDelete.add(message);
                     continue;
@@ -336,7 +336,7 @@ public class CTInboxController {
                 long expires = message.getExpires();
                 boolean expired = (expires > 0 && System.currentTimeMillis() / 1000 > expires);
                 if (expired) {
-                    Logger.v("Inbox Message: " + message.getId() + " is expired - removing");
+                    Logger.verbose("Inbox Message: " + message.getId() + " is expired - removing");
                     toDelete.add(message);
                 }
             }

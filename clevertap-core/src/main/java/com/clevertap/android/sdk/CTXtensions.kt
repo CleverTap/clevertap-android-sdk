@@ -28,7 +28,7 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
             val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.getNotificationChannel(channelId).importance != NotificationManager.IMPORTANCE_NONE
         } catch (e: Exception) {
-            Logger.d("Unable to find notification channel with id = $channelId")
+            Logger.debug("Unable to find notification channel with id = $channelId")
             false
         }
     } else {
@@ -38,7 +38,7 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
 fun Context.areAppNotificationsEnabled() = try {
     NotificationManagerCompat.from(this).areNotificationsEnabled()
 } catch (e: Exception) {
-    Logger.d("Unable to query notifications enabled flag, returning true!")
+    Logger.debug("Unable to query notifications enabled flag, returning true!")
     e.printStackTrace()
     true
 }
@@ -77,12 +77,12 @@ fun NotificationManager.getOrCreateChannel(
         }
 
         if (manifestChannel.isNullOrEmpty()) {
-            Logger.d(
+            Logger.debug(
                 Constants.CLEVERTAP_LOG_TAG,
                 "Missing Default CleverTap Notification Channel metadata in AndroidManifest."
             )
         } else {
-            Logger.d(
+            Logger.debug(
                 Constants.CLEVERTAP_LOG_TAG,
                 "Notification Channel set in AndroidManifest.xml has not been created by the app."
             )
@@ -105,7 +105,7 @@ fun NotificationManager.getOrCreateChannel(
                     defaultChannelName,
                     NotificationManager.IMPORTANCE_DEFAULT
                 ).also {
-                    Logger.d(Constants.CLEVERTAP_LOG_TAG, "created default channel: $it")
+                    Logger.debug(Constants.CLEVERTAP_LOG_TAG, "created default channel: $it")
                 }
             )
         }
@@ -132,7 +132,7 @@ fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: S
         try {
             coreState.baseEventQueueManager.flushQueueSync(context, PUSH_NOTIFICATION_VIEWED, caller)
         } catch (e: Exception) {
-            Logger.d(logTag, "failed to flush push impressions on ct instance = " + coreState.config.accountId)
+            Logger.debug(logTag, "failed to flush push impressions on ct instance = " + coreState.config.accountId)
         }
         null
     }

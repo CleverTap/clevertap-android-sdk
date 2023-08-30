@@ -11,7 +11,7 @@ open class BitmapDownloadRequestHandler(private val bitmapDownloader: BitmapDown
     IBitmapDownloadRequestHandler {
 
     override fun handleRequest(bitmapDownloadRequest: BitmapDownloadRequest): DownloadedBitmap {
-        Logger.v("handling bitmap download request in BitmapDownloadRequestHandler....")
+        Logger.verbose("handling bitmap download request in BitmapDownloadRequestHandler....")
 
         var srcUrl = bitmapDownloadRequest.bitmapPath
         val context = bitmapDownloadRequest.context
@@ -30,7 +30,7 @@ open class BitmapDownloadRequestHandler(private val bitmapDownloader: BitmapDown
         context?.run {
             val isNetworkOnline = NetworkManager.isNetworkOnline(this)
             if (!isNetworkOnline) {
-                Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: $srcUrl")
+                Logger.verbose("Network connectivity unavailable. Not downloading bitmap. URL was: $srcUrl")
                 return DownloadedBitmapFactory.nullBitmapWithStatus(NO_NETWORK)
             }
         }

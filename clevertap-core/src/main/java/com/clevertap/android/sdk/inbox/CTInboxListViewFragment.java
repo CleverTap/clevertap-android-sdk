@@ -99,7 +99,7 @@ public class CTInboxListViewFragment extends Fragment {
         final String filter = bundle.getString("filter", null);
         CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(), config);
         if (cleverTapAPI != null) {
-            Logger.v( "CTInboxListViewFragment:onAttach() called with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
+            Logger.verbose( "CTInboxListViewFragment:onAttach() called with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
             ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
             inboxMessages = filter != null ? filterMessages(allMessages, filter) : allMessages;
         }
@@ -232,7 +232,7 @@ public class CTInboxListViewFragment extends Fragment {
     void didShow(Bundle data, int position) {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
-            Logger.v("CTInboxListViewFragment:didShow() called with: data = [" + data + "], position = [" + position + "]");
+            Logger.verbose("CTInboxListViewFragment:didShow() called with: data = [" + data + "], position = [" + position + "]");
             //noinspection ConstantConditions
             listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
         }
@@ -258,7 +258,7 @@ public class CTInboxListViewFragment extends Fragment {
             // no-op
         }
         if (listener == null) {
-            Logger.v("InboxListener is null for messages");
+            Logger.verbose("InboxListener is null for messages");
         }
         return listener;
     }
@@ -317,7 +317,7 @@ public class CTInboxListViewFragment extends Fragment {
             }
             didClick(data, position, viewPagerPosition, keyValuePayload, buttonIndex);
         } catch (Throwable t) {
-            Logger.d("Error handling notification button click: " + t.getCause());
+            Logger.debug("Error handling notification button click: " + t.getCause());
         }
     }
 
@@ -338,7 +338,7 @@ public class CTInboxListViewFragment extends Fragment {
                     .getActionUrl();
             fireUrlThroughIntent(actionUrl);
         } catch (Throwable t) {
-            Logger.d("Error handling notification button click: " + t.getCause());
+            Logger.debug("Error handling notification button click: " + t.getCause());
         }
     }
 

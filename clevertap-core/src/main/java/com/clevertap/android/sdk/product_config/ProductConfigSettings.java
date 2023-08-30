@@ -10,6 +10,7 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.text.TextUtils;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
@@ -64,11 +65,11 @@ public class ProductConfigSettings {
                     try {
                         String fileName = getFullPath();
                         fileUtils.deleteFile(fileName);
-                        config.getLogger()
+                        Logger
                                 .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                        Logger.verbose(ProductConfigUtil.getLogTag(config),
                                 "Error while resetting settings" + e.getLocalizedMessage());
                     }
                     return null;
@@ -105,7 +106,7 @@ public class ProductConfigSettings {
                 return new JSONObject(content);
             } catch (JSONException e) {
                 e.printStackTrace();
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                Logger.verbose(ProductConfigUtil.getLogTag(config),
                         "LoadSettings failed: " + e.getLocalizedMessage());
             }
         }
@@ -121,7 +122,7 @@ public class ProductConfigSettings {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+            Logger.verbose(ProductConfigUtil.getLogTag(config),
                     "GetLastFetchTimeStampInMillis failed: " + e.getLocalizedMessage());
         }
         return lastFetchedTimeStamp;
@@ -147,7 +148,7 @@ public class ProductConfigSettings {
         settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(DEFAULT_WINDOW_LENGTH_MINS));
         settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
         settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(DEFAULT_MIN_FETCH_INTERVAL_SECONDS));
-        config.getLogger()
+        Logger
                 .verbose(ProductConfigUtil.getLogTag(config),
                         "Settings loaded with default values: " + settingsMap);
     }
@@ -166,7 +167,7 @@ public class ProductConfigSettings {
             populateMapWithJson(jsonObject);
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+            Logger.verbose(ProductConfigUtil.getLogTag(config),
                     "LoadSettings failed while reading file: " + e.getLocalizedMessage());
         }
     }
@@ -185,7 +186,7 @@ public class ProductConfigSettings {
                     value = String.valueOf(obj);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                    Logger.verbose(ProductConfigUtil.getLogTag(config),
                             "Failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
                     continue;
                 }
@@ -194,7 +195,7 @@ public class ProductConfigSettings {
                 }
             }
         }
-        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+        Logger.verbose(ProductConfigUtil.getLogTag(config),
                 "LoadSettings completed with settings: " + settingsMap);
     }
 
@@ -223,7 +224,7 @@ public class ProductConfigSettings {
 
                 } catch (Exception e) {
                     e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                    Logger.verbose(ProductConfigUtil.getLogTag(config),
                             "Product Config setARPValue failed " + e.getLocalizedMessage());
                 }
             }
@@ -246,7 +247,7 @@ public class ProductConfigSettings {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+            Logger.verbose(ProductConfigUtil.getLogTag(config),
                     "GetMinFetchIntervalInSeconds failed: " + e.getLocalizedMessage());
         }
         return minInterVal;
@@ -261,7 +262,7 @@ public class ProductConfigSettings {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+            Logger.verbose(ProductConfigUtil.getLogTag(config),
                     "GetNoOfCallsInAllowedWindow failed: " + e.getLocalizedMessage());
         }
         return noCallsAllowedInWindow;
@@ -284,7 +285,7 @@ public class ProductConfigSettings {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+            Logger.verbose(ProductConfigUtil.getLogTag(config),
                     "GetWindowIntervalInMinutes failed: " + e.getLocalizedMessage());
         }
         return windowIntervalInMinutes;
@@ -315,10 +316,10 @@ public class ProductConfigSettings {
             @Override
             public void onSuccess(final Boolean isSuccess) {
                 if (isSuccess) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                    Logger.verbose(ProductConfigUtil.getLogTag(config),
                             "Product Config settings: writing Success " + settingsMap);
                 } else {
-                    config.getLogger()
+                    Logger
                             .verbose(ProductConfigUtil.getLogTag(config),
                                     "Product Config settings: writing Failed");
                 }
@@ -335,7 +336,7 @@ public class ProductConfigSettings {
                             CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                    Logger.verbose(ProductConfigUtil.getLogTag(config),
                             "UpdateConfigToFile failed: " + e.getLocalizedMessage());
                     return false;
                 }

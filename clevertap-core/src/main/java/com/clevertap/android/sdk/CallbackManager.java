@@ -275,7 +275,7 @@ public class CallbackManager extends BaseCallbackManager {
         if (listener != null) {
             displayUnitListenerWeakReference = new WeakReference<>(listener);
         } else {
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Failed to set - DisplayUnitListener can't be null");
         }
     }
@@ -305,11 +305,11 @@ public class CallbackManager extends BaseCallbackManager {
                     }
                 });
             } else {
-                config.getLogger().verbose(config.getAccountId(),
+                Logger.verbose(config.getAccountId(),
                         Constants.FEATURE_DISPLAY_UNIT + "No registered listener, failed to notify");
             }
         } else {
-            config.getLogger()
+            Logger
                     .verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "No Display Units found");
         }
     }

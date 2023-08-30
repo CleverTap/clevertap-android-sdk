@@ -145,7 +145,7 @@ public class InAppFCManager {
 
             header.put("tlc", arr);
         } catch (Throwable t) {
-            Logger.v("Failed to attach FC to header", t);
+            Logger.verbose("Failed to attach FC to header", t);
         }
     }
 
@@ -165,16 +165,16 @@ public class InAppFCManager {
                 final Object o = arr.get(i);
                 if (o instanceof Integer) {
                     editor.remove("" + o);
-                    Logger.d("Purged stale in-app - " + o);
+                    Logger.debug("Purged stale in-app - " + o);
                 } else if (o instanceof String) {
                     editor.remove((String) o);
-                    Logger.d("Purged stale in-app - " + o);
+                    Logger.debug("Purged stale in-app - " + o);
                 }
             }
 
             StorageHelper.persist(editor);
         } catch (Throwable t) {
-            Logger.v("Failed to purge out stale targets", t);
+            Logger.verbose("Failed to purge out stale targets", t);
         }
     }
 
@@ -190,9 +190,9 @@ public class InAppFCManager {
         return this.config.getAccountId();
     }
 
-    private Logger getConfigLogger() {
-        return this.config.getLogger();
-    }
+//    private Logger getConfigLogger() {
+//        return this.config.getLogger();
+//    }
 
     private int[] getInAppCountsFromPersistentStore(String inappID) {
         final SharedPreferences prefs = getPreferences(context,
@@ -350,7 +350,7 @@ public class InAppFCManager {
     }
 
     private void init(String deviceId) {
-        getConfigLogger()
+        Logger
                 .verbose(config.getAccountId() + ":async_deviceID", "InAppFCManager init() called");
         try {
             migrateToNewPrefsKey(deviceId);
@@ -386,7 +386,7 @@ public class InAppFCManager {
                     try {
                         editor.putString(inapp, "0," + oldValues[1]);
                     } catch (Throwable t) {
-                        getConfigLogger()
+                        Logger
                                 .verbose(getConfigAccountId(), "Failed to reset todayCount for inapp " + inapp, t);
                     }
                 }
@@ -394,7 +394,7 @@ public class InAppFCManager {
                 StorageHelper.persist(editor);
             }
         } catch (Exception e) {
-            getConfigLogger()
+            Logger
                     .verbose(getConfigAccountId(), "Failed to init inapp manager " + e.getLocalizedMessage());
         }
     }
@@ -406,7 +406,7 @@ public class InAppFCManager {
             return;
         }
 
-        Logger.v("Migrating InAppFC Prefs");
+        Logger.verbose("Migrating InAppFC Prefs");
 
         String ict_date = getStringFromPrefs("ict_date", "20140428");
         StorageHelper.putString(context, storageKeyWithSuffix(getKeyWithDeviceId("ict_date", deviceId)), ict_date);

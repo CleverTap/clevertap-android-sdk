@@ -93,11 +93,11 @@ public class ManifestInfo {
             }
             else{
                 encryptionLevel = 0;
-                Logger.v("Supported encryption levels are only 0 and 1. Setting it to 0 by default");
+                Logger.verbose("Supported encryption levels are only 0 and 1. Setting it to 0 by default");
             }
         } catch (Throwable t){
             encryptionLevel = 0;
-            Logger.v("Unable to parse encryption level from the Manifest, Setting it to 0 by default", t.getCause());
+            Logger.verbose("Unable to parse encryption level from the Manifest, Setting it to 0 by default", t.getCause());
         }
 
         if (fcmSenderId != null) {
@@ -166,7 +166,7 @@ public class ManifestInfo {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public String getAccountRegion() {
-        Logger.v("ManifestInfo: getAccountRegion called, returning region:"+accountRegion);
+        Logger.verbose("ManifestInfo: getAccountRegion called, returning region:"+accountRegion);
         return accountRegion;
     }
 
@@ -214,7 +214,7 @@ public class ManifestInfo {
 
     static void changeXiaomiCredentials(String xiaomiAppID, String xiaomiAppKey) {
         if (ManifestInfo.xiaomiAppID != null || ManifestInfo.xiaomiAppKey != null) {
-            Logger.i("Xiaomi SDK already initialized with AppID:" + ManifestInfo.xiaomiAppID
+            Logger.info("Xiaomi SDK already initialized with AppID:" + ManifestInfo.xiaomiAppID
                     + " and AppKey:" + ManifestInfo.xiaomiAppKey + ". Cannot change credentials to "
                     + xiaomiAppID + " and " + xiaomiAppKey);
             return;

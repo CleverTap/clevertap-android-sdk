@@ -102,7 +102,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             }
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {
-            Logger.v("Cannot find a valid notification inbox bundle to show!", t);
+            Logger.verbose("Cannot find a valid notification inbox bundle to show!", t);
             return;
         }
 
@@ -280,7 +280,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             List<Fragment> allFragments = getSupportFragmentManager().getFragments();
             for (Fragment fragment : allFragments) {
                 if (fragment instanceof CTInboxListViewFragment) {
-                    Logger.v("Removing fragment - " + fragment.toString());
+                    Logger.verbose("Removing fragment - " + fragment.toString());
                     getSupportFragmentManager().getFragments().remove(fragment);
                 }
             }
@@ -297,7 +297,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
-        Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
+        Logger.verbose("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
         didShow(data, inboxMessage);
     }
 
@@ -309,7 +309,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     void didShow(Bundle data, CTInboxMessage inboxMessage) {
-        Logger.v( "CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage.getMessageId() + "]");
+        Logger.verbose( "CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage.getMessageId() + "]");
         InboxActivityListener listener = getListener();
         if (listener != null) {
             listener.messageDidShow(this, inboxMessage, data);
@@ -324,7 +324,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             // no-op
         }
         if (listener == null) {
-            config.getLogger()
+            Logger
                     .verbose(config.getAccountId(), "InboxActivityListener is null for notification inbox ");
         }
         return listener;

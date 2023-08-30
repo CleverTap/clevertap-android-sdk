@@ -60,7 +60,7 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
 
         if (info.fromCleverTap) {
             if (cleverTapAPI != null) {
-                cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
+                Logger.verbose(cleverTapAPI.getCoreState().getConfig().getAccountId(), LOG_TAG,
                         pushType + "received notification from CleverTap: " + message.toString());
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
                     // render push template
@@ -74,8 +74,8 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
                     //CleverTapAPI.createNotification(applicationContext, message);
                 }
             } else {
-                Logger.d(LOG_TAG, pushType + "received notification from CleverTap: " + message.toString());
-                Logger.d(LOG_TAG, pushType + " not renderning since cleverTapAPI is null");
+                Logger.debug(LOG_TAG, pushType + "received notification from CleverTap: " + message.toString());
+                Logger.debug(LOG_TAG, pushType + " not renderning since cleverTapAPI is null");
             }
             return true;
         }

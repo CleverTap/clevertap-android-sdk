@@ -52,10 +52,10 @@ public final class CloseImageView extends AppCompatImageView {
                         canvasSize, canvasSize, true);
                 canvas.drawBitmap(scaledCloseBitmap, 0, 0, new Paint());
             } else {
-                Logger.v("Unable to find inapp notif close button image");
+                Logger.verbose("Unable to find inapp notif close button image");
             }
         } catch (Throwable t) {
-            Logger.v("Error displaying the inapp notif close button image:", t);
+            Logger.verbose("Error displaying the inapp notif close button image:", t);
         }
     }
 

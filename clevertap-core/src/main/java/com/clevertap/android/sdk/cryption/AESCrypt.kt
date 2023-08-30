@@ -76,7 +76,7 @@ class AESCrypt : Crypt() {
             }
             bytes
         } catch (e: Exception) {
-            Logger.v("Unable to parse cipher text", e)
+            Logger.verbose("Unable to parse cipher text", e)
             null
         }
     }
@@ -102,7 +102,7 @@ class AESCrypt : Crypt() {
             cipher.init(mode, key, ivParams)
             cipher.doFinal(text)
         } catch (e: Exception) {
-            Logger.v("Unable to perform crypt operation", e)
+            Logger.verbose("Unable to perform crypt operation", e)
             null
         }
     }

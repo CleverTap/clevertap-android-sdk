@@ -22,7 +22,7 @@ public final class CTVariableUtils {
     public static final String NUMBER = "number";
 
     private static void log(String msg){
-        Logger.d("variables", msg);
+        Logger.debug("variables", msg);
     }
 
     public static void updateValuesAndKinds(String name, String[] nameComponents, Object value, String kind, Map<String, Object> values, Map<String, String> kinds) {

@@ -54,7 +54,7 @@ public final class StorageHelper {
         try {
             editor.apply();
         } catch (Throwable t) {
-            Logger.v("CRITICAL: Failed to persist shared preferences!", t);
+            Logger.verbose("CRITICAL: Failed to persist shared preferences!", t);
         }
     }
 
@@ -66,7 +66,7 @@ public final class StorageHelper {
         try {
             editor.commit();
         } catch (Throwable t) {
-            Logger.v("CRITICAL: Failed to persist shared preferences!", t);
+            Logger.verbose("CRITICAL: Failed to persist shared preferences!", t);
         }
     }
 

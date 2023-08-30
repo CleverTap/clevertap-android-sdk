@@ -9,7 +9,7 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
 
     val profile = mapOf(Constants.IDENTITY to userId)
 
-    Logger.d("CTWrapper", "setUserId will call onUserLogin with $profile")
+    Logger.debug("CTWrapper", "setUserId will call onUserLogin with $profile")
     ctProvider.getCleverTap()?.onUserLogin(profile)
   }
 
@@ -34,7 +34,7 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
       properties[Constants.INFO_PARAM] = info
     }
 
-    Logger.d("CTWrapper", "track(...) will call pushEvent with $event and $properties")
+    Logger.debug("CTWrapper", "track(...) will call pushEvent with $event and $properties")
     ctProvider.getCleverTap()?.pushEvent(event, properties)
   }
 
@@ -61,7 +61,7 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
 
     val items = arrayListOf<HashMap<String, Any?>>()
 
-    Logger.d("CTWrapper", "trackPurchase will call pushChargedEvent with $details and $items")
+    Logger.debug("CTWrapper", "trackPurchase will call pushChargedEvent with $details and $items")
     ctProvider.getCleverTap()?.pushChargedEvent(details, items)
   }
 
@@ -92,7 +92,7 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
 
     val items = arrayListOf<HashMap<String, Any?>>()
 
-    Logger.d("CTWrapper", "trackGooglePlayPurchase will call pushChargedEvent with $details and $items")
+    Logger.debug("CTWrapper", "trackGooglePlayPurchase will call pushChargedEvent with $details and $items")
     ctProvider.getCleverTap()?.pushChargedEvent(details, items)
   }
 
@@ -111,7 +111,7 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
       properties[Constants.INFO_PARAM] = info
     }
 
-    Logger.d("CTWrapper", "advance(...) will call pushEvent with $event and $properties")
+    Logger.debug("CTWrapper", "advance(...) will call pushEvent with $event and $properties")
     ctProvider.getCleverTap()?.pushEvent(event, properties)
   }
 
@@ -127,13 +127,13 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
       .filterValues { value -> value != null }
       .mapValues(::mapNotSupportedValues)
 
-    Logger.d("CTWrapper", "setUserAttributes will call pushProfile with $profile")
+    Logger.debug("CTWrapper", "setUserAttributes will call pushProfile with $profile")
     ctProvider.getCleverTap()?.pushProfile(profile)
 
     attributes
       .filterValues { value -> value == null}
       .forEach {
-        Logger.d("CTWrapper", "setUserAttributes will call removeValueForKey with ${it.key}")
+        Logger.debug("CTWrapper", "setUserAttributes will call removeValueForKey with ${it.key}")
         ctProvider.getCleverTap()?.removeValueForKey(it.key)
       }
   }
@@ -154,7 +154,7 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
     val source = info["publisherName"]
     val medium = info["publisherSubPublisher"]
     val campaign = info["publisherSubCampaign"]
-    Logger.d("CTWrapper", "setTrafficSourceInfo will call pushInstallReferrer with " +
+    Logger.debug("CTWrapper", "setTrafficSourceInfo will call pushInstallReferrer with " +
         "$source, $medium, and $campaign")
     ctProvider.getCleverTap()?.pushInstallReferrer(source, medium, campaign)
   }

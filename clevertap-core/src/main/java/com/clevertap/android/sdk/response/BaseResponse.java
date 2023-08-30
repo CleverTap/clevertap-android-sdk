@@ -16,8 +16,6 @@ public class BaseResponse extends CleverTapResponseDecorator {
 
     private final LocalDataStore localDataStore;
 
-    private final Logger logger;
-
     private final NetworkManager networkManager;
 
     public BaseResponse(Context context, CleverTapInstanceConfig config,
@@ -25,7 +23,6 @@ public class BaseResponse extends CleverTapResponseDecorator {
             CleverTapResponse cleverTapResponse) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
-        logger = this.config.getLogger();
         this.networkManager = networkManager;
         this.localDataStore = localDataStore;
     }
@@ -34,11 +31,11 @@ public class BaseResponse extends CleverTapResponseDecorator {
     public void processResponse(final JSONObject jsonBody, final String responseStr, final Context context) {
 
         if (responseStr == null) {
-            logger.verbose(config.getAccountId(), "Problem processing queue response, response is null");
+            Logger.verbose(config.getAccountId(), "Problem processing queue response, response is null");
             return;
         }
         try {
-            logger.verbose(config.getAccountId(), "Trying to process response: " + responseStr);
+            Logger.verbose(config.getAccountId(), "Trying to process response: " + responseStr);
 
             JSONObject response = new JSONObject(responseStr);
             // in app
@@ -47,12 +44,12 @@ public class BaseResponse extends CleverTapResponseDecorator {
             try {
                 localDataStore.syncWithUpstream(context, response);
             } catch (Throwable t) {
-                logger.verbose(config.getAccountId(), "Failed to sync local cache with upstream", t);
+                Logger.verbose(config.getAccountId(), "Failed to sync local cache with upstream", t);
             }
 
         } catch (Throwable t) {
             networkManager.incrementResponseFailureCount();
-            logger.verbose(config.getAccountId(), "Problem process send queue response", t);
+            Logger.verbose(config.getAccountId(), "Problem process send queue response", t);
         }
     }
 }

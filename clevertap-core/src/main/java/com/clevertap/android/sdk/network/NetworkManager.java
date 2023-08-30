@@ -84,7 +84,6 @@ public class NetworkManager extends BaseNetworkManager {
     private final BaseDatabaseManager databaseManager;
     private final DeviceInfo deviceInfo;
     private final LocalDataStore localDataStore;
-    private final Logger logger;
     private int networkRetryCount = 0;
     private final ValidationResultStack validationResultStack;
     private int responseFailureCount = 0;
@@ -126,7 +125,6 @@ public class NetworkManager extends BaseNetworkManager {
         this.callbackManager = callbackManager;
         this.validator = validator;
         this.localDataStore = localDataStore;
-        logger = this.config.getLogger();
 
         this.coreMetaData = coreMetaData;
         this.validationResultStack = validationResultStack;
@@ -166,7 +164,7 @@ public class NetworkManager extends BaseNetworkManager {
      */
     @Override
     public void flushDBQueue(final Context context, final EventGroup eventGroup,@Nullable final String caller) {
-        config.getLogger()
+        Logger
                 .verbose(config.getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
         QueueCursor cursor;
@@ -180,7 +178,7 @@ public class NetworkManager extends BaseNetworkManager {
 
             if (cursor == null || cursor.isEmpty()) {
                 // No events in the queue, log and break
-                config.getLogger().verbose(config.getAccountId(), "No events in the queue, failing");
+                Logger.verbose(config.getAccountId(), "No events in the queue, failing");
 
                 if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
                     // Notify listener for push impression sent to the server
@@ -189,7 +187,7 @@ public class NetworkManager extends BaseNetworkManager {
                         try {
                             notifyListenersForPushImpressionSentToServer(previousCursor.getData());
                         } catch (Exception e) {
-                            config.getLogger().verbose(config.getAccountId(),
+                            Logger.verbose(config.getAccountId(),
                                     "met with exception while notifying listeners for PushImpressionSentToServer event");
                         }
                     }
@@ -202,7 +200,7 @@ public class NetworkManager extends BaseNetworkManager {
 
             if (queue == null || queue.length() <= 0) {
                 // No events in the queue, log and break
-                config.getLogger().verbose(config.getAccountId(), "No events in the queue, failing");
+                Logger.verbose(config.getAccountId(), "No events in the queue, failing");
                 break;
             }
 
@@ -220,11 +218,11 @@ public class NetworkManager extends BaseNetworkManager {
     @Override
     public int getDelayFrequency() {
 
-        logger.debug(config.getAccountId(), "Network retry #" + networkRetryCount);
+        Logger.debug(config.getAccountId(), "Network retry #" + networkRetryCount);
 
         //Retry with delay as 1s for first 10 retries
         if (networkRetryCount < 10) {
-            logger.debug(config.getAccountId(),
+            Logger.debug(config.getAccountId(),
                     "Failure count is " + networkRetryCount + ". Setting delay frequency to 1s");
             minDelayFrequency = Constants.PUSH_DELAY_MS; //reset minimum delay to 1s
             return minDelayFrequency;
@@ -232,7 +230,7 @@ public class NetworkManager extends BaseNetworkManager {
 
         if (config.getAccountRegion() == null) {
             //Retry with delay as 1s if region is null in case of eu1
-            logger.debug(config.getAccountId(), "Setting delay frequency to 1s");
+            Logger.debug(config.getAccountId(), "Setting delay frequency to 1s");
             return Constants.PUSH_DELAY_MS;
         } else {
             //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
@@ -240,12 +238,12 @@ public class NetworkManager extends BaseNetworkManager {
             int randomDelay = (randomGen.nextInt(10) + 1) * 1000;
             minDelayFrequency += randomDelay;
             if (minDelayFrequency < Constants.MAX_DELAY_FREQUENCY) {
-                logger.debug(config.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
+                Logger.debug(config.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
                 return minDelayFrequency;
             } else {
                 minDelayFrequency = Constants.PUSH_DELAY_MS;
             }
-            logger.debug(config.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
+            Logger.debug(config.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
             return minDelayFrequency;
         }
     }
@@ -258,7 +256,7 @@ public class NetworkManager extends BaseNetworkManager {
             return null;
         }
 
-        logger.verbose(config.getAccountId(), "New ARP Key = ARP:" + accountId + ":" + deviceInfo.getDeviceID());
+        Logger.verbose(config.getAccountId(), "New ARP Key = ARP:" + accountId + ":" + deviceInfo.getDeviceID());
         return "ARP:" + accountId + ":" + deviceInfo.getDeviceID();
     }
 
@@ -379,14 +377,14 @@ public class NetworkManager extends BaseNetworkManager {
     String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
         String domain = getDomain(defaultToHandshakeURL, eventGroup);
         if (domain == null) {
-            logger.verbose(config.getAccountId(), "Unable to configure endpoint, domain is null");
+            Logger.verbose(config.getAccountId(), "Unable to configure endpoint, domain is null");
             return null;
         }
 
         final String accountId = config.getAccountId();
 
         if (accountId == null) {
-            logger.verbose(config.getAccountId(), "Unable to configure endpoint, accountID is null");
+            Logger.verbose(config.getAccountId(), "Unable to configure endpoint, accountID is null");
             return null;
         }
 
@@ -453,7 +451,7 @@ public class NetworkManager extends BaseNetworkManager {
             if (deviceId != null && !deviceId.equals("")) {
                 header.put("g", deviceId);
             } else {
-                logger.verbose(config.getAccountId(),
+                Logger.verbose(config.getAccountId(),
                         "CRITICAL: Couldn't finalise on a device ID! Using error device ID instead!");
             }
 
@@ -482,7 +480,7 @@ public class NetworkManager extends BaseNetworkManager {
             String token = config.getAccountToken();
 
             if (accountId == null || token == null) {
-                logger
+                Logger
                         .debug(config.getAccountId(),
                                 "Account ID/token not found, unable to configure queue request");
                 return null;
@@ -528,7 +526,7 @@ public class NetworkManager extends BaseNetworkManager {
                     header.put("arp", arp);
                 }
             } catch (Throwable t) {
-                logger.verbose(config.getAccountId(), "Failed to attach ARP", t);
+                Logger.verbose(config.getAccountId(), "Failed to attach ARP", t);
             }
 
             // Add ref (Referrer Information)
@@ -555,7 +553,7 @@ public class NetworkManager extends BaseNetworkManager {
                 }
 
             } catch (Throwable t) {
-                logger.verbose(config.getAccountId(), "Failed to attach ref", t);
+                Logger.verbose(config.getAccountId(), "Failed to attach ref", t);
             }
 
             // Add wzrk_ref (CleverTap-specific Parameters)
@@ -566,10 +564,10 @@ public class NetworkManager extends BaseNetworkManager {
 
             // Attach InAppFC to header if available
             if (controllerManager.getInAppFCManager() != null) {
-                Logger.v("Attaching InAppFC to Header");
+                Logger.verbose("Attaching InAppFC to Header");
                 controllerManager.getInAppFCManager().attachToHeader(context, header);
             } else {
-                logger.verbose(config.getAccountId(),
+                Logger.verbose(config.getAccountId(),
                         "controllerManager.getInAppFCManager() is NULL, not Attaching InAppFC to Header");
             }
 
@@ -578,7 +576,7 @@ public class NetworkManager extends BaseNetworkManager {
             // Resort to string concat for backward compatibility
             return "[" + header + ", " + arr.toString().substring(1);
         } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "CommsManager: Failed to attach header", t);
+            Logger.verbose(config.getAccountId(), "CommsManager: Failed to attach header", t);
             return arr.toString();
         }
     }
@@ -587,30 +585,30 @@ public class NetworkManager extends BaseNetworkManager {
             final Runnable handshakeSuccessCallback) {
         final String endpoint = getEndpoint(true, eventGroup);
         if (endpoint == null) {
-            logger.verbose(config.getAccountId(), "Unable to perform handshake, endpoint is null");
+            Logger.verbose(config.getAccountId(), "Unable to perform handshake, endpoint is null");
         }
-        logger.verbose(config.getAccountId(), "Performing handshake with " + endpoint);
+        Logger.verbose(config.getAccountId(), "Performing handshake with " + endpoint);
 
         HttpsURLConnection conn = null;
         try {
             conn = buildHttpsURLConnection(endpoint);
             final int responseCode = conn.getResponseCode();
             if (responseCode != 200) {
-                logger
+                Logger
                         .verbose(config.getAccountId(),
                                 "Invalid HTTP status code received for handshake - " + responseCode);
                 return;
             }
 
-            logger.verbose(config.getAccountId(), "Received success from handshake :)");
+            Logger.verbose(config.getAccountId(), "Received success from handshake :)");
 
             if (processIncomingHeaders(context, conn)) {
-                logger.verbose(config.getAccountId(), "We are not muted");
+                Logger.verbose(config.getAccountId(), "We are not muted");
                 // We have a new domain, run the callback
                 handshakeSuccessCallback.run();
             }
         } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "Failed to perform handshake!", t);
+            Logger.verbose(config.getAccountId(), "Failed to perform handshake!", t);
         } finally {
             if (conn != null) {
                 try {
@@ -640,17 +638,17 @@ public class NetworkManager extends BaseNetworkManager {
         }
 
         final String domainName = conn.getHeaderField(Constants.HEADER_DOMAIN_NAME);
-        Logger.v("Getting domain from header - " + domainName);
+        Logger.verbose("Getting domain from header - " + domainName);
         if (domainName == null || domainName.trim().length() == 0) {
             return true;
         }
 
         final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
-        Logger.v("Getting spiky domain from header - " + spikyDomainName);
+        Logger.verbose("Getting spiky domain from header - " + spikyDomainName);
 
         setMuted(context, false);
         setDomain(context, domainName);
-        Logger.v("Setting spiky domain from header as -" + spikyDomainName);
+        Logger.verbose("Setting spiky domain from header as -" + spikyDomainName);
         if (spikyDomainName == null) {
             setSpikyDomain(context, domainName);
         } else {
@@ -676,7 +674,7 @@ public class NetworkManager extends BaseNetworkManager {
         }
 
         if (deviceInfo.getDeviceID() == null) {
-            logger.debug(config.getAccountId(), "CleverTap Id not finalized, unable to send queue");
+            Logger.debug(config.getAccountId(), "CleverTap Id not finalized, unable to send queue");
             return false;
         }
 
@@ -687,7 +685,7 @@ public class NetworkManager extends BaseNetworkManager {
             // This is just a safety check, which would only arise
             // if upstream didn't adhere to the protocol (sent nothing during the initial handshake)
             if (endpoint == null) {
-                logger.debug(config.getAccountId(), "Problem configuring queue endpoint, unable to send queue");
+                Logger.debug(config.getAccountId(), "Problem configuring queue endpoint, unable to send queue");
                 return false;
             }
 
@@ -696,12 +694,12 @@ public class NetworkManager extends BaseNetworkManager {
             final String body;
             final String req = insertHeader(context, queue,caller);
             if (req == null) {
-                logger.debug(config.getAccountId(), "Problem configuring queue request, unable to send queue");
+                Logger.debug(config.getAccountId(), "Problem configuring queue request, unable to send queue");
                 return false;
             }
 
-            logger.debug(config.getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
-            logger.debug(config.getAccountId(), "Sending queue to: " + endpoint);
+            Logger.debug(config.getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
+            Logger.debug(config.getAccountId(), "Sending queue to: " + endpoint);
 
             // Enable output for writing data
             conn.setDoOutput(true);
@@ -728,7 +726,7 @@ public class NetworkManager extends BaseNetworkManager {
                 if (hasDomainChanged(newDomain)) {
                     // The domain has changed. Return a status of -1 so that the caller retries
                     setDomain(context, newDomain);
-                    logger.debug(config.getAccountId(),
+                    Logger.debug(config.getAccountId(),
                             "The domain has changed to " + newDomain + ". The request will be retried shortly.");
                     return false;
                 }
@@ -761,13 +759,13 @@ public class NetworkManager extends BaseNetworkManager {
             setLastRequestTimestamp(getCurrentRequestTimestamp());
             setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
 
-            logger.debug(config.getAccountId(), "Queue sent successfully");
+            Logger.debug(config.getAccountId(), "Queue sent successfully");
 
             responseFailureCount = 0;
             networkRetryCount = 0; //reset retry count when queue is sent successfully
             return true;
         } catch (Throwable e) {
-            logger.debug(config.getAccountId(),
+            Logger.debug(config.getAccountId(),
                     "An exception occurred while sending the queue, will retry: ", e);
             responseFailureCount++;
             networkRetryCount++;
@@ -804,7 +802,7 @@ public class NetworkManager extends BaseNetworkManager {
 
                 }
             } catch (JSONException e) {
-                logger.verbose(config.getAccountId(),
+                Logger.verbose(config.getAccountId(),
                         "Encountered an exception while parsing the push notification viewed event queue");
             } catch (Exception e) {
                 e.printStackTrace();
@@ -812,7 +810,7 @@ public class NetworkManager extends BaseNetworkManager {
 
         }
 
-        logger.verbose(config.getAccountId(),
+        Logger.verbose(config.getAccountId(),
                 "push notification viewed event sent successfully");
     }
 
@@ -821,7 +819,7 @@ public class NetworkManager extends BaseNetworkManager {
                 = CleverTapAPI.getNotificationRenderedListener(listenerKey);
 
         if (notificationRenderedListener != null) {
-            logger.verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "notifying listener " + listenerKey + ", that push impression sent successfully");
             notificationRenderedListener.onNotificationRendered(true);
         }
@@ -830,26 +828,26 @@ public class NetworkManager extends BaseNetworkManager {
     private boolean handleVariablesResponseError(int responseCode, HttpsURLConnection conn) {
         switch (responseCode) {
             case 200:
-                logger.info("variables", "Vars synced successfully.");
+                Logger.info("variables", "Vars synced successfully.");
                 return false;
 
             case 400:
                 JSONObject errorStreamJson = getErrorStreamAsJson(conn);
                 if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
                     String errorMessage = errorStreamJson.optString("error");
-                    logger.info("variables", "Error while syncing vars: " + errorMessage);
+                    Logger.info("variables", "Error while syncing vars: " + errorMessage);
                 } else {
-                    logger.info("variables", "Error while syncing vars.");
+                    Logger.info("variables", "Error while syncing vars.");
                 }
                 return true;
 
             case 401:
-                logger.info("variables", "Unauthorized access from a non-test profile. "
+                Logger.info("variables", "Unauthorized access from a non-test profile. "
                     + "Please mark this profile as a test profile from the CleverTap dashboard.");
                 return true;
 
             default:
-                logger.info("variables", "Response code " + responseCode + " while syncing vars.");
+                Logger.info("variables", "Response code " + responseCode + " while syncing vars.");
                 return true;
         }
     }
@@ -873,7 +871,7 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     void setDomain(final Context context, String domainName) {
-        logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
+        Logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
                 domainName);
 
@@ -894,7 +892,7 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     void setSpikyDomain(final Context context, String spikyDomainName) {
-        logger.verbose(config.getAccountId(), "Setting spiky domain to " + spikyDomainName);
+        Logger.verbose(config.getAccountId(), "Setting spiky domain to " + spikyDomainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
                 spikyDomainName);
     }
@@ -936,11 +934,11 @@ public class NetworkManager extends BaseNetworkManager {
                 }
             }
             final JSONObject ret = new JSONObject(all);
-            logger.verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + all);
             return ret;
         } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "Failed to construct ARP object", t);
+            Logger.verbose(config.getAccountId(), "Failed to construct ARP object", t);
             return null;
         }
     }
@@ -962,7 +960,7 @@ public class NetworkManager extends BaseNetworkManager {
             return null;
         }
 
-        logger.verbose(config.getAccountId(), "Old ARP Key = ARP:" + accountId);
+        Logger.verbose(config.getAccountId(), "Old ARP Key = ARP:" + accountId);
         return "ARP:" + accountId;
     }
 
@@ -981,17 +979,17 @@ public class NetworkManager extends BaseNetworkManager {
                 if (((String) o).length() < 100) {
                     editor.putString(kv.getKey(), (String) o);
                 } else {
-                    logger.verbose(config.getAccountId(),
+                    Logger.verbose(config.getAccountId(),
                             "ARP update for key " + kv.getKey() + " rejected (string value too long)");
                 }
             } else if (o instanceof Boolean) {
                 editor.putBoolean(kv.getKey(), (Boolean) o);
             } else {
-                logger.verbose(config.getAccountId(),
+                Logger.verbose(config.getAccountId(),
                         "ARP update for key " + kv.getKey() + " rejected (invalid data type)");
             }
         }
-        logger.verbose(config.getAccountId(), "Completed ARP update for namespace key: " + newKey + "");
+        Logger.verbose(config.getAccountId(), "Completed ARP update for namespace key: " + newKey + "");
         StorageHelper.persist(editor);
         oldPrefs.edit().clear().apply();
         return newPrefs;
@@ -1022,9 +1020,9 @@ public class NetworkManager extends BaseNetworkManager {
         if (sslSocketFactory == null) {
             try {
                 sslSocketFactory = sslContext.getSocketFactory();
-                Logger.d("Pinning SSL session to DigiCertGlobalRoot CA certificate");
+                Logger.debug("Pinning SSL session to DigiCertGlobalRoot CA certificate");
             } catch (Throwable e) {
-                Logger.d("Issue in pinning SSL,", e);
+                Logger.debug("Issue in pinning SSL,", e);
             }
         }
         return sslSocketFactory;

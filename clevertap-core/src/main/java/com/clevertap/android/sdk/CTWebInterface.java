@@ -44,7 +44,7 @@ public class CTWebInterface {
     public void promptPushPermission(boolean shouldShowFallbackSettings) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
             dismissInAppNotification();
@@ -59,7 +59,7 @@ public class CTWebInterface {
     public void dismissInAppNotification() {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
             if (inAppBaseFullFragment != null) {
@@ -78,7 +78,7 @@ public class CTWebInterface {
     public void addMultiValueForKey(String key, String value) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             cleverTapAPI.addMultiValueForKey(key, value);
         }
@@ -94,7 +94,7 @@ public class CTWebInterface {
     public void incrementValue(String key, double value) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             cleverTapAPI.incrementValue(key, value);
         }
@@ -110,7 +110,7 @@ public class CTWebInterface {
     public void decrementValue(String key, double value) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             cleverTapAPI.decrementValue(key, value);
         }
@@ -126,10 +126,10 @@ public class CTWebInterface {
     public void addMultiValuesForKey(String key, String values) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             if (key == null) {
-                Logger.v("Key passed to CTWebInterface is null");
+                Logger.verbose("Key passed to CTWebInterface is null");
                 return;
             }
             if (values != null) {
@@ -137,10 +137,10 @@ public class CTWebInterface {
                     JSONArray valuesArray = new JSONArray(values);
                     cleverTapAPI.addMultiValuesForKey(key, Utils.convertJSONArrayToArrayList(valuesArray));
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse values from WebView " + e.getLocalizedMessage());
+                    Logger.verbose("Unable to parse values from WebView " + e.getLocalizedMessage());
                 }
             } else {
-                Logger.v("values passed to CTWebInterface is null");
+                Logger.verbose("values passed to CTWebInterface is null");
             }
         }
 
@@ -161,7 +161,7 @@ public class CTWebInterface {
     public void pushChargedEvent(String chargeDetails, String items) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             HashMap<String, Object> chargeDetailsHashMap = new HashMap<>();
             if (chargeDetails != null) {
@@ -169,11 +169,11 @@ public class CTWebInterface {
                     JSONObject chargeDetailsObject = new JSONObject(chargeDetails);
                     chargeDetailsHashMap = Utils.convertJSONObjectToHashMap(chargeDetailsObject);
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse chargeDetails for Charged Event from WebView " + e
+                    Logger.verbose("Unable to parse chargeDetails for Charged Event from WebView " + e
                             .getLocalizedMessage());
                 }
             } else {
-                Logger.v("chargeDetails passed to CTWebInterface is null");
+                Logger.verbose("chargeDetails passed to CTWebInterface is null");
                 return;
             }
             ArrayList<HashMap<String, Object>> itemsArrayList = null;
@@ -182,7 +182,7 @@ public class CTWebInterface {
                     JSONArray itemsArray = new JSONArray(items);
                     itemsArrayList = Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(itemsArray);
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse items for Charged Event from WebView " + e.getLocalizedMessage());
+                    Logger.verbose("Unable to parse items for Charged Event from WebView " + e.getLocalizedMessage());
                 }
             } else {
                 return;
@@ -200,7 +200,7 @@ public class CTWebInterface {
     public void pushEvent(String eventName) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             cleverTapAPI.pushEvent(eventName);
         }
@@ -216,17 +216,17 @@ public class CTWebInterface {
     public void pushEvent(String eventName, String eventActions) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             if (eventActions != null) {
                 try {
                     JSONObject eventActionsObject = new JSONObject(eventActions);
                     cleverTapAPI.pushEvent(eventName, Utils.convertJSONObjectToHashMap(eventActionsObject));
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse eventActions from WebView " + e.getLocalizedMessage());
+                    Logger.verbose("Unable to parse eventActions from WebView " + e.getLocalizedMessage());
                 }
             } else {
-                Logger.v("eventActions passed to CTWebInterface is null");
+                Logger.verbose("eventActions passed to CTWebInterface is null");
             }
         }
     }
@@ -240,17 +240,17 @@ public class CTWebInterface {
     public void pushProfile(String profile) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             if (profile != null) {
                 try {
                     JSONObject profileObject = new JSONObject(profile);
                     cleverTapAPI.pushProfile(Utils.convertJSONObjectToHashMap(profileObject));
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse profile from WebView " + e.getLocalizedMessage());
+                    Logger.verbose("Unable to parse profile from WebView " + e.getLocalizedMessage());
                 }
             } else {
-                Logger.v("profile passed to CTWebInterface is null");
+                Logger.verbose("profile passed to CTWebInterface is null");
             }
         }
     }
@@ -265,14 +265,14 @@ public class CTWebInterface {
     public void removeMultiValueForKey(String key, String value) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             if (key == null) {
-                Logger.v("Key passed to CTWebInterface is null");
+                Logger.verbose("Key passed to CTWebInterface is null");
                 return;
             }
             if (value == null) {
-                Logger.v("Value passed to CTWebInterface is null");
+                Logger.verbose("Value passed to CTWebInterface is null");
                 return;
             }
             cleverTapAPI.removeMultiValueForKey(key, value);
@@ -289,10 +289,10 @@ public class CTWebInterface {
     public void removeMultiValuesForKey(String key, String values) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             if (key == null) {
-                Logger.v("Key passed to CTWebInterface is null");
+                Logger.verbose("Key passed to CTWebInterface is null");
                 return;
             }
             if (values != null) {
@@ -300,10 +300,10 @@ public class CTWebInterface {
                     JSONArray valuesArray = new JSONArray(values);
                     cleverTapAPI.removeMultiValuesForKey(key, Utils.convertJSONArrayToArrayList(valuesArray));
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse values from WebView " + e.getLocalizedMessage());
+                    Logger.verbose("Unable to parse values from WebView " + e.getLocalizedMessage());
                 }
             } else {
-                Logger.v("values passed to CTWebInterface is null");
+                Logger.verbose("values passed to CTWebInterface is null");
             }
         }
     }
@@ -317,10 +317,10 @@ public class CTWebInterface {
     public void removeValueForKey(String key) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             if (key == null) {
-                Logger.v("Key passed to CTWebInterface is null");
+                Logger.verbose("Key passed to CTWebInterface is null");
                 return;
             }
             cleverTapAPI.removeValueForKey(key);
@@ -337,10 +337,10 @@ public class CTWebInterface {
     public void setMultiValueForKey(String key, String values) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             if (key == null) {
-                Logger.v("Key passed to CTWebInterface is null");
+                Logger.verbose("Key passed to CTWebInterface is null");
                 return;
             }
             if (values != null) {
@@ -348,10 +348,10 @@ public class CTWebInterface {
                     JSONArray valuesArray = new JSONArray(values);
                     cleverTapAPI.setMultiValuesForKey(key, Utils.convertJSONArrayToArrayList(valuesArray));
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse values from WebView " + e.getLocalizedMessage());
+                    Logger.verbose("Unable to parse values from WebView " + e.getLocalizedMessage());
                 }
             } else {
-                Logger.v("values passed to CTWebInterface is null");
+                Logger.verbose("values passed to CTWebInterface is null");
             }
         }
     }
@@ -366,17 +366,17 @@ public class CTWebInterface {
     public void onUserLogin(String profile) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
+            Logger.debug("CleverTap Instance is null.");
         } else {
             if (profile != null) {
                 try {
                     JSONObject profileObject = new JSONObject(profile);
                     cleverTapAPI.onUserLogin(Utils.convertJSONObjectToHashMap(profileObject));
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse profile from WebView " + e.getLocalizedMessage());
+                    Logger.verbose("Unable to parse profile from WebView " + e.getLocalizedMessage());
                 }
             } else {
-                Logger.v("profile passed to CTWebInterface is null");
+                Logger.verbose("profile passed to CTWebInterface is null");
             }
         }
     }

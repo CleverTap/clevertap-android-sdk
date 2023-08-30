@@ -23,12 +23,12 @@ public final class ActivityLifecycleCallback {
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static synchronized void register(android.app.Application application, final String cleverTapID) {
         if (application == null) {
-            Logger.i("Application instance is null/system API is too old");
+            Logger.info("Application instance is null/system API is too old");
             return;
         }
 
         if (registered) {
-            Logger.v("Lifecycle callbacks have already been registered");
+            Logger.verbose("Lifecycle callbacks have already been registered");
             return;
         }
 
@@ -77,7 +77,7 @@ public final class ActivityLifecycleCallback {
                 }
 
         );
-        Logger.i("Activity Lifecycle Callback successfully registered");
+        Logger.info("Activity Lifecycle Callback successfully registered");
     }
 
     /**

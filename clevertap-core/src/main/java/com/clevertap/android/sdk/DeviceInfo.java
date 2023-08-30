@@ -130,7 +130,7 @@ public class DeviceInfo {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 return packageInfo.versionCode;
             } catch (PackageManager.NameNotFoundException e) {
-                Logger.d("Unable to get app build");
+                Logger.debug("Unable to get app build");
             }
             return 0;
         }
@@ -294,7 +294,7 @@ public class DeviceInfo {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 return packageInfo.versionName;
             } catch (PackageManager.NameNotFoundException e) {
-                Logger.d("Unable to get app version");
+                Logger.debug("Unable to get app version");
             }
             return null;
         }
@@ -460,7 +460,7 @@ public class DeviceInfo {
                 }
             } catch (Exception e) {
                 //uiModeManager or context is null
-                Logger.d("Failed to decide whether device is a TV!");
+                Logger.debug("Failed to decide whether device is a TV!");
                 e.printStackTrace();
             }
 
@@ -468,7 +468,7 @@ public class DeviceInfo {
                 sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
             } catch (Exception e) {
                 // resource not found or context is null
-                Logger.d("Failed to decide whether device is a smart phone or tablet!");
+                Logger.debug("Failed to decide whether device is a smart phone or tablet!");
                 e.printStackTrace();
                 sDeviceType = UNKNOWN;
             }
@@ -484,7 +484,7 @@ public class DeviceInfo {
         this.library = null;
         mCoreMetaData = coreMetaData;
         onInitDeviceInfo(cleverTapID);
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
+        Logger.verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
     }
 
     public void forceNewDeviceID() {
@@ -494,14 +494,14 @@ public class DeviceInfo {
 
     public void forceUpdateCustomCleverTapID(String cleverTapID) {
         if (Utils.validateCTID(cleverTapID)) {
-            getConfigLogger()
+            Logger
                     .info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
             forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID);
         } else {
             setOrGenerateFallbackDeviceID();
             removeDeviceID();
             String error = recordDeviceError(Constants.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
-            getConfigLogger().info(config.getAccountId(), error);
+            Logger.info(config.getAccountId(), error);
         }
     }
 
@@ -515,7 +515,7 @@ public class DeviceInfo {
      */
     @SuppressLint("CommitPrefEdits")
     public void forceUpdateDeviceId(String id) {
-        getConfigLogger().verbose(this.config.getAccountId(), "Force updating the device ID to " + id);
+        Logger.verbose(this.config.getAccountId(), "Force updating the device ID to " + id);
         synchronized (deviceIDLock) {
             StorageHelper.putString(context, getDeviceIdStorageKey(), id);
         }
@@ -532,7 +532,7 @@ public class DeviceInfo {
             return CTJsonConverter.from(this, mCoreMetaData, enableNetworkInfoReporting,
                     deviceIsMultiUser);
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Failed to construct App Launched event", t);
+            Logger.verbose(config.getAccountId(), "Failed to construct App Launched event", t);
             return new JSONObject();
         }
     }
@@ -684,13 +684,13 @@ public class DeviceInfo {
     public void setCurrentUserOptOutStateFromStorage() {
         String key = optOutKey();
         if (key == null) {
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "Unable to set current user OptOut state from storage: storage key is null");
             return;
         }
         boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
         mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
-        config.getLogger().verbose(config.getAccountId(),
+        Logger.verbose(config.getAccountId(),
                 "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
     }
 
@@ -698,7 +698,7 @@ public class DeviceInfo {
         enableNetworkInfoReporting = value;
         StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
                 enableNetworkInfoReporting);
-        config.getLogger()
+        Logger
                 .verbose(config.getAccountId(),
                         "Device Network Information reporting set to " + enableNetworkInfoReporting);
     }
@@ -735,7 +735,7 @@ public class DeviceInfo {
             // callback on main thread
             @Override
             public void onSuccess(final Void aVoid) {
-                getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
+                Logger.verbose(config.getAccountId() + ":async_deviceID",
                         "DeviceID initialized successfully!" + Thread.currentThread());
                 // No need to put getDeviceID() on background thread because prefs already loaded
                 CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
@@ -761,7 +761,7 @@ public class DeviceInfo {
 
     void setDeviceNetworkInfoReportingFromStorage() {
         boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
-        config.getLogger()
+        Logger
                 .verbose(config.getAccountId(),
                         "Setting device network info reporting state from storage to " + enabled);
         enableNetworkInfoReporting = enabled;
@@ -779,7 +779,7 @@ public class DeviceInfo {
     }
 
     private synchronized void fetchGoogleAdID() {
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() called!");
+        Logger.verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() called!");
         if (getGoogleAdID() == null && !adIdRun) {
             String advertisingID = null;
             try {
@@ -792,10 +792,10 @@ public class DeviceInfo {
                 Boolean limitedAdTracking = (Boolean) isLimitAdTracking.invoke(adInfo);
                 synchronized (adIDLock) {
                     limitAdTracking = limitedAdTracking != null && limitedAdTracking;
-                    getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
+                    Logger.verbose(config.getAccountId() + ":async_deviceID",
                             "limitAdTracking = " + limitAdTracking);
                     if (limitAdTracking) {
-                        getConfigLogger().debug(config.getAccountId(),
+                        Logger.debug(config.getAccountId(),
                                 "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation");
                         return;
                     }
@@ -804,17 +804,17 @@ public class DeviceInfo {
                 advertisingID = (String) getAdId.invoke(adInfo);
             } catch (Throwable t) {
                 if (t.getCause() != null) {
-                    getConfigLogger().verbose(config.getAccountId(),
+                    Logger.verbose(config.getAccountId(),
                             "Failed to get Advertising ID: " + t.toString() + t.getCause().toString());
                 } else {
-                    getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString());
+                    Logger.verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString());
                 }
             }
             if (advertisingID != null && advertisingID.trim().length() > 2) {
                 synchronized (adIDLock) {
                     if (advertisingID.contains("00000000")) {
                         //Device has opted out of sharing Google Advertising ID
-                        getConfigLogger().debug(config.getAccountId(),
+                        Logger.debug(config.getAccountId(),
                                 "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation");
                         return;
                     }
@@ -822,12 +822,12 @@ public class DeviceInfo {
                 }
             }
 
-            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() done executing!");
+            Logger.verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() done executing!");
         }
     }
 
     private synchronized void generateDeviceID() {
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() called!");
+        Logger.verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() called!");
         String generatedDeviceID;
         String adId = getGoogleAdID();
         if (adId != null) {
@@ -838,15 +838,11 @@ public class DeviceInfo {
             }
         }
         forceUpdateDeviceId(generatedDeviceID);
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() done executing!");
+        Logger.verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() done executing!");
     }
 
     private String generateGUID() {
         return GUID_PREFIX + UUID.randomUUID().toString().replace("-", "");
-    }
-
-    private Logger getConfigLogger() {
-        return this.config.getLogger();
     }
 
     private DeviceCachedInfo getDeviceCachedInfo() {
@@ -869,28 +865,28 @@ public class DeviceInfo {
     }
 
     private void initDeviceID(String cleverTapID) {
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called initDeviceID()");
+        Logger.verbose(config.getAccountId() + ":async_deviceID", "Called initDeviceID()");
         //Show logging as per Manifest flag
         if (config.getEnableCustomCleverTapId()) {
             if (cleverTapID == null) {
                 String error = recordDeviceError(Constants.USE_CUSTOM_ID_FALLBACK);
-                config.getLogger().info(error);
+                Logger.info(error);
             }
         } else {
             if (cleverTapID != null) {
                 String error = recordDeviceError(Constants.USE_CUSTOM_ID_MISSING_IN_MANIFEST);
-                config.getLogger().info(error);
+                Logger.info(error);
             }
         }
 
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Calling _getDeviceID");
+        Logger.verbose(config.getAccountId() + ":async_deviceID", "Calling _getDeviceID");
         String deviceID = _getDeviceID();
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called _getDeviceID");
+        Logger.verbose(config.getAccountId() + ":async_deviceID", "Called _getDeviceID");
         if (deviceID != null && deviceID.trim().length() > 2) {
-            getConfigLogger().verbose(config.getAccountId(), "CleverTap ID already present for profile");
+            Logger.verbose(config.getAccountId(), "CleverTap ID already present for profile");
             if (cleverTapID != null) {
                 String error = recordDeviceError(Constants.UNABLE_TO_SET_CT_CUSTOM_ID, deviceID, cleverTapID);
-                getConfigLogger().info(config.getAccountId(), error);
+                Logger.info(config.getAccountId(), error);
             }
             return;
         }
@@ -901,9 +897,9 @@ public class DeviceInfo {
         }
 
         if (!this.config.isUseGoogleAdId()) {
-            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Calling generateDeviceID()");
+            Logger.verbose(config.getAccountId() + ":async_deviceID", "Calling generateDeviceID()");
             generateDeviceID();
-            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called generateDeviceID()");
+            Logger.verbose(config.getAccountId() + ":async_deviceID", "Called generateDeviceID()");
             return;
         }
 
@@ -912,7 +908,7 @@ public class DeviceInfo {
         fetchGoogleAdID();
         generateDeviceID();
 
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "initDeviceID() done executing!");
+        Logger.verbose(config.getAccountId() + ":async_deviceID", "initDeviceID() done executing!");
     }
 
     private String recordDeviceError(int messageCode, String... varargs) {
@@ -933,7 +929,7 @@ public class DeviceInfo {
                 if (fallbackDeviceID.trim().length() > 2) {
                     updateFallbackID(fallbackDeviceID);
                 } else {
-                    getConfigLogger()
+                    Logger
                             .verbose(this.config.getAccountId(), "Unable to generate fallback error device ID");
                 }
             }
@@ -941,7 +937,7 @@ public class DeviceInfo {
     }
 
     private void updateFallbackID(String fallbackId) {
-        getConfigLogger().verbose(this.config.getAccountId(), "Updating the fallback id - " + fallbackId);
+        Logger.verbose(this.config.getAccountId(), "Updating the fallback id - " + fallbackId);
         StorageHelper.putString(context, getFallbackIdStorageKey(), fallbackId);
     }
 }

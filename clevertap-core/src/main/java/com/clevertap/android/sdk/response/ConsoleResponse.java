@@ -13,13 +13,9 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig config;
 
-
-    private final Logger logger;
-
     public ConsoleResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
-        logger = this.config.getLogger();
     }
 
     @Override
@@ -34,7 +30,7 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
                 final JSONArray console = (JSONArray) response.get("console");
                 if (console.length() > 0) {
                     for (int i = 0; i < console.length(); i++) {
-                        logger.debug(config.getAccountId(), console.get(i).toString());
+                        Logger.debug(config.getAccountId(), console.get(i).toString());
                     }
                 }
             }
@@ -48,7 +44,7 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
                 final int debugLevel = response.getInt("dbg_lvl");
                 if (debugLevel >= 0) {
                     CleverTapAPI.setDebugLevel(debugLevel);
-                    logger.verbose(config.getAccountId(),
+                    Logger.verbose(config.getAccountId(),
                             "Set debug level to " + debugLevel + " for this session (set by upstream)");
                 }
             }

@@ -29,13 +29,13 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
     }
 
     private  void logD(String m){
-        Logger.d("variables", m);
+        Logger.debug("variables", m);
     }
     private  void logI(String m){
-        Logger.d("variables", m);
+        Logger.debug("variables", m);
     }
     private  void logI(String m,Throwable t){
-        Logger.i("variables", m, t);
+        Logger.info("variables", m, t);
     }
 
     @Override

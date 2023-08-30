@@ -56,6 +56,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean createdPostAppLaunch;
 
+    @Deprecated
     private int debugLevel;
 
     private boolean disableAppLaunchedEvent;
@@ -66,6 +67,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean isDefaultInstance;
 
+    @Deprecated
     private Logger logger;
 
     private String packageName;
@@ -86,7 +88,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
         //noinspection ConstantConditions
         if (accountId == null || accountToken == null) {
-            Logger.i("CleverTap accountId and accountToken cannot be null");
+            Logger.info("CleverTap accountId and accountToken cannot be null");
             return null;
         }
         return new CleverTapInstanceConfig(context, accountId, accountToken, null, false);
@@ -97,7 +99,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             @NonNull String accountToken, String accountRegion) {
         //noinspection ConstantConditions
         if (accountId == null || accountToken == null) {
-            Logger.i("CleverTap accountId and accountToken cannot be null");
+            Logger.info("CleverTap accountId and accountToken cannot be null");
             return null;
         }
         return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, false);
@@ -111,7 +113,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.analyticsOnly = config.analyticsOnly;
         this.personalization = config.personalization;
         this.debugLevel = config.debugLevel;
-        this.logger = config.logger;
         this.useGoogleAdId = config.useGoogleAdId;
         this.disableAppLaunchedEvent = config.disableAppLaunchedEvent;
         this.createdPostAppLaunch = config.createdPostAppLaunch;
@@ -135,8 +136,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.isDefaultInstance = isDefault;
         this.analyticsOnly = false;
         this.personalization = true;
-        this.debugLevel = CleverTapAPI.LogLevel.INFO.intValue();
-        this.logger = new Logger(this.debugLevel);
         this.createdPostAppLaunch = false;
 
         ManifestInfo manifest = ManifestInfo.getInstance(context);
@@ -154,7 +153,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         if (isDefaultInstance) {
             this.encryptionLevel = manifest.getEncryptionLevel();
             identityKeys = manifest.getProfileKeys();
-            log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
+            Logger.verbose(accountId, LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
                     .toString(identityKeys));
         } else {
             this.encryptionLevel = 0;
@@ -225,7 +224,7 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.encryptionLevel = configJsonObject.getInt(Constants.KEY_ENCRYPTION_LEVEL);
             }
         } catch (Throwable t) {
-            Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
+            Logger.verbose("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
             throw (t);
         }
     }
@@ -284,15 +283,18 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
+    @Deprecated
     public int getDebugLevel() {
         return debugLevel;
     }
 
+    @Deprecated
     @SuppressWarnings({"unused"})
     public void setDebugLevel(CleverTapAPI.LogLevel debugLevel) {
         setDebugLevel(debugLevel.intValue());
     }
 
+    @Deprecated
     @SuppressWarnings({"unused"})
     public void setDebugLevel(int debugLevel) {
         this.debugLevel = debugLevel;
@@ -306,6 +308,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return fcmSenderId;
     }
 
+    @Deprecated
     public Logger getLogger() {
         if (logger == null) {
             logger = new Logger(this.debugLevel);
@@ -340,11 +343,13 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @Deprecated
     public void log(@NonNull String tag, @NonNull String message) {
         logger.verbose(getDefaultSuffix(tag), message);
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @Deprecated
     public void log(@NonNull String tag, @NonNull String message, Throwable throwable) {
         logger.verbose(getDefaultSuffix(tag), message, throwable);
     }
@@ -352,7 +357,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     public void setIdentityKeys(@IdentityType String... identityKeys) {
         if (!isDefaultInstance) {
             this.identityKeys = identityKeys;
-            log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
+            Logger.verbose(accountId, LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
                     .toString(this.identityKeys));
         }
     }
@@ -462,7 +467,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_ENCRYPTION_LEVEL , getEncryptionLevel());
             return configJsonObject.toString();
         } catch (Throwable e) {
-            Logger.v("Unable to convert config to JSON : ", e.getCause());
+            Logger.verbose("Unable to convert config to JSON : ", e.getCause());
             return null;
         }
     }

@@ -6,6 +6,7 @@ import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.db.DBAdapter.Table;
 import com.clevertap.android.sdk.events.EventGroup;
@@ -131,10 +132,10 @@ public class DBManager extends BaseDatabaseManager {
     public QueueCursor getQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor,
             final EventGroup eventGroup) {
         if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-            config.getLogger().verbose(config.getAccountId(), "Returning Queued Notification Viewed events");
+            Logger.verbose(config.getAccountId(), "Returning Queued Notification Viewed events");
             return getPushNotificationViewedQueuedEvents(context, batchSize, previousCursor);
         } else {
-            config.getLogger().verbose(config.getAccountId(), "Returning Queued events");
+            Logger.verbose(config.getAccountId(), "Returning Queued events");
             return getQueuedDBEvents(context, batchSize, previousCursor);
         }
     }
@@ -190,8 +191,8 @@ public class DBManager extends BaseDatabaseManager {
             int returnCode = adapter.storeObject(event, table);
 
             if (returnCode > 0) {
-                config.getLogger().debug(config.getAccountId(), "Queued event: " + event.toString());
-                config.getLogger()
+                Logger.debug(config.getAccountId(), "Queued event: " + event.toString());
+                Logger
                         .verbose(config.getAccountId(),
                                 "Queued event to DB table " + table + ": " + event.toString());
             }

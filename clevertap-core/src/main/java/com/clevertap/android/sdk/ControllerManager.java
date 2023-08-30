@@ -171,7 +171,7 @@ public class ControllerManager {
     @AnyThread
     public void initializeInbox() {
         if (config.isAnalyticsOnly()) {
-            config.getLogger()
+            Logger
                     .debug(config.getAccountId(), "Instance is analytics only, not initializing Notification Inbox");
             return;
         }
@@ -201,7 +201,7 @@ public class ControllerManager {
                         Utils.haveVideoPlayerSupport));
                 callbackManager._notifyInboxInitialized();
             } else {
-                config.getLogger().info("CRITICAL : No device ID found!");
+                Logger.info("CRITICAL : No device ID found!");
             }
         }
     }

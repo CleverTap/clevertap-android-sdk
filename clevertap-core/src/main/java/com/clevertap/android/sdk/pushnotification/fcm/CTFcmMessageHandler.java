@@ -72,11 +72,11 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
             PushNotificationHandler.getPushNotificationHandler().onNewToken(applicationContext, token, PushType.FCM
                     .getType());
 
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "New token received from FCM - " + token);
+            Logger.debug(LOG_TAG, FCM_LOG_TAG + "New token received from FCM - " + token);
             isSuccess = true;
         } catch (Throwable t) {
             // do nothing
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "Error onNewToken", t);
+            Logger.debug(LOG_TAG, FCM_LOG_TAG + "Error onNewToken", t);
         }
         return isSuccess;
     }

@@ -19,11 +19,11 @@ class CTFlushPushImpressionsWork(context: Context, workerParams: WorkerParameter
 
     @RequiresApi(api = VERSION_CODES.LOLLIPOP)
     override fun doWork(): Result {
-        Logger.d(
+        Logger.debug(
             tag,
             "hello, this is FlushPushImpressionsWork from CleverTap. I am awake now and ready to flush push impressions:-)"
         )
-        Logger.d(tag, "initiating push impressions flush...")
+        Logger.debug(tag, "initiating push impressions flush...")
 
         val context = applicationContext
         CleverTapAPI.getAvailableInstances(context)
@@ -36,18 +36,18 @@ class CTFlushPushImpressionsWork(context: Context, workerParams: WorkerParameter
                     return Result.success()
 
                 it.apply {
-                    Logger.d(tag, "flushing queue for push impressions on CT instance = $accountId")
+                    Logger.debug(tag, "flushing queue for push impressions on CT instance = $accountId")
                     flushPushImpressionsOnPostAsyncSafely(tag, Constants.D_SRC_PI_WM, context)
                 }
             }
 
-        Logger.d(tag, "flush push impressions work is DONE! going to sleep now...ˁ(-.-)ˀzzZZ")
+        Logger.debug(tag, "flush push impressions work is DONE! going to sleep now...ˁ(-.-)ˀzzZZ")
         return Result.success()
     }
 
     private fun checkIfStopped(): Boolean {
         if (isStopped) {
-            Logger.d(tag, "someone told me to stop flushing and go to sleep again! going to sleep now.ˁ(-.-)ˀzzZZ")
+            Logger.debug(tag, "someone told me to stop flushing and go to sleep again! going to sleep now.ˁ(-.-)ˀzzZZ")
         }
         return isStopped
     }

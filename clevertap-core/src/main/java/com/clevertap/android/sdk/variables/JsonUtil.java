@@ -25,7 +25,7 @@ public class JsonUtil {
     try {
       return mapFromJson(new JSONObject(json));
     } catch (JSONException e) {
-      Logger.v("Error converting " + json + " from JSON", e);
+      Logger.verbose("Error converting " + json + " from JSON", e);
       return null;
     }
   }
@@ -124,7 +124,7 @@ public class JsonUtil {
     try {
       return mapToJsonObject(map).toString();
     } catch (JSONException e) {
-      Logger.v("Error converting " + map + " to JSON", e);
+      Logger.verbose("Error converting " + map + " to JSON", e);
       return null;
     }
   }

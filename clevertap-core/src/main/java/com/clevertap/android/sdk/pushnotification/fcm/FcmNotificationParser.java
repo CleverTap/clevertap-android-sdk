@@ -22,11 +22,11 @@ class FcmNotificationParser implements INotificationParser<RemoteMessage> {
             for (Map.Entry<String, String> entry : message.getData().entrySet()) {
                 extras.putString(entry.getKey(), entry.getValue());
             }
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "Found Valid Notification Message ");
+            Logger.debug(LOG_TAG, FCM_LOG_TAG + "Found Valid Notification Message ");
             return extras;
         } catch (Throwable e) {
             e.printStackTrace();
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "Invalid Notification Message ", e);
+            Logger.debug(LOG_TAG, FCM_LOG_TAG + "Invalid Notification Message ", e);
         }
         return null;
     }

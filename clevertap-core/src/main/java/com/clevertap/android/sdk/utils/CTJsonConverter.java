@@ -28,14 +28,14 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY)
 public class CTJsonConverter {
 
-    public static JSONObject toJsonObject(String json, Logger logger, String accountId) {
+    public static JSONObject toJsonObject(String json, String accountId) {
         JSONObject cache = null;
         if (json != null) {
             try {
                 cache = new JSONObject(json);
             } catch (Throwable t) {
                 // no-op
-                logger.verbose(accountId, "Error reading guid cache: " + t.toString());
+                Logger.verbose(accountId, "Error reading guid cache: " + t.toString());
             }
         }
 
@@ -46,7 +46,7 @@ public class CTJsonConverter {
         JSONObject r = new JSONObject();
 
         String pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY);
-        Logger.v("Received Display Unit via push payload: " + pushJsonPayload);
+        Logger.verbose("Received Display Unit via push payload: " + pushJsonPayload);
         JSONArray displayUnits = new JSONArray();
         r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits);
         JSONObject testPushObject = new JSONObject(pushJsonPayload);
@@ -164,7 +164,7 @@ public class CTJsonConverter {
         String[] pushIds = dbAdapter.fetchPushNotificationIds();
         JSONArray renderedTargets = new JSONArray();
         for (String pushId : pushIds) {
-            Logger.v("RTL IDs -" + pushId);
+            Logger.verbose("RTL IDs -" + pushId);
             renderedTargets.put(pushId);
         }
         return renderedTargets;

@@ -7,6 +7,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.DeviceInfo;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 
 /**
@@ -34,7 +35,7 @@ public class IdentityRepoFactory {
              * -----------------------------------------------------*/
             repo = new ConfigurableIdentityRepo(context, config, deviceInfo, validationResultStack);
         }
-        config.log(LOG_TAG_ON_USER_LOGIN,
+        Logger.verbose(config.getAccountId(), LOG_TAG_ON_USER_LOGIN,
                 "Repo provider: " + repo.getClass().getSimpleName());
         return repo;
     }

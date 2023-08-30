@@ -88,7 +88,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 return;
             }
         } catch (Throwable t) {
-            Logger.v("Cannot find a valid notification bundle to show!", t);
+            Logger.verbose("Cannot find a valid notification bundle to show!", t);
             finish();
             return;
         }
@@ -100,23 +100,23 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         //Allow rotation for all InApps but respect the flags sent from dashboard
         if (inAppNotification.isPortrait() && !inAppNotification.isLandscape()) {
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                Logger.d("App in Landscape, dismissing portrait InApp Notification");
+                Logger.debug("App in Landscape, dismissing portrait InApp Notification");
                 finish();
                 didDismiss(null);
                 return;
             } else {
-                Logger.d("App in Portrait, displaying InApp Notification anyway");
+                Logger.debug("App in Portrait, displaying InApp Notification anyway");
             }
         }
 
         if (!inAppNotification.isPortrait() && inAppNotification.isLandscape()) {
             if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                Logger.d("App in Portrait, dismissing landscape InApp Notification");
+                Logger.debug("App in Portrait, dismissing landscape InApp Notification");
                 finish();
                 didDismiss(null);
                 return;
             } else {
-                Logger.d("App in Landscape, displaying InApp Notification anyway");
+                Logger.debug("App in Landscape, displaying InApp Notification anyway");
             }
         }
 
@@ -264,7 +264,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             // no-op
         }
         if (listener == null) {
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "InAppActivityListener is null for notification: " + inAppNotification.getJsonDescription());
         }
         return listener;
@@ -464,13 +464,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                     isAlertVisible = true;
                     didShow(null);
                 } else {
-                    config.getLogger()
+                    Logger
                             .debug("InAppNotificationActivity: Alert Dialog is null, not showing Alert InApp");
                 }
                 break;
             }
             default: {
-                config.getLogger().verbose("InAppNotificationActivity: Unhandled InApp Type: " + type);
+                Logger.verbose("InAppNotificationActivity: Unhandled InApp Type: " + type);
                 break;
             }
         }

@@ -55,7 +55,7 @@ public class CTMessageDAO {
     }
 
     boolean containsVideoOrAudio() {
-        Logger.d("CTMessageDAO:containsVideoOrAudio() called");
+        Logger.debug("CTMessageDAO:containsVideoOrAudio() called");
         CTInboxMessageContent content = new CTInboxMessage(this.toJSON()).getInboxMessageContents().get(0);
         return (content.mediaIsVideo() || content.mediaIsAudio());
     }
@@ -155,7 +155,7 @@ public class CTMessageDAO {
             jsonObject.put("wzrkParams", wzrkParams);
             return jsonObject;
         } catch (JSONException e) {
-            Logger.v("Unable to convert CTMessageDao to JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to convert CTMessageDao to JSON - " + e.getLocalizedMessage());
             return jsonObject;
         }
     }
@@ -185,7 +185,7 @@ public class CTMessageDAO {
                     : new CTMessageDAO(id, cellObject, false, date, expires, userId, tagsList, campaignId,
                             wzrkParams);
         } catch (JSONException e) {
-            Logger.d("Unable to parse Notification inbox message to CTMessageDao - " + e.getLocalizedMessage());
+            Logger.debug("Unable to parse Notification inbox message to CTMessageDao - " + e.getLocalizedMessage());
             return null;
         }
     }

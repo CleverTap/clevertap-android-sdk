@@ -27,10 +27,10 @@ final class SSLContextBuilder {
             trustManagerFactory.init(keyStore);
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
-            Logger.d("SSL Context built");
+            Logger.debug("SSL Context built");
             return sslContext;
         } catch (Throwable e) {
-            Logger.i("Error building SSL Context", e);
+            Logger.info("Error building SSL Context", e);
         }
         return null;
     }

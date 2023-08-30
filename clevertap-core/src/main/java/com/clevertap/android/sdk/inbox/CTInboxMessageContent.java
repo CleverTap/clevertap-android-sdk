@@ -74,7 +74,7 @@ public class CTInboxMessageContent implements Parcelable {
         try {
             links = in.readByte() == 0x00 ? null : new JSONArray(in.readString());
         } catch (JSONException e) {
-            Logger.v("Unable to init CTInboxMessageContent with Parcel - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to init CTInboxMessageContent with Parcel - " + e.getLocalizedMessage());
         }
         contentType = in.readString();
         posterUrl = in.readString();
@@ -133,7 +133,7 @@ public class CTInboxMessageContent implements Parcelable {
         try {
             return jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
         } catch (JSONException e) {
-            Logger.v("Unable to get Link Text Color with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to get Link Text Color with JSON - " + e.getLocalizedMessage());
             return null;
         }
     }
@@ -151,7 +151,7 @@ public class CTInboxMessageContent implements Parcelable {
         try {
             return jsonObject.has(Constants.KEY_COLOR) ? jsonObject.getString(Constants.KEY_COLOR) : "";
         } catch (JSONException e) {
-            Logger.v("Unable to get Link Text Color with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to get Link Text Color with JSON - " + e.getLocalizedMessage());
             return null;
         }
     }
@@ -175,7 +175,7 @@ public class CTInboxMessageContent implements Parcelable {
                 return "";
             }
         } catch (JSONException e) {
-            Logger.v("Unable to get Link Text with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to get Link Text with JSON - " + e.getLocalizedMessage());
             return "";
         }
     }
@@ -202,7 +202,7 @@ public class CTInboxMessageContent implements Parcelable {
                 return !keyValuesMap.isEmpty() ? keyValuesMap : null;
 
         } catch (JSONException e) {
-            Logger.v("Unable to get Link Key Value with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to get Link Key Value with JSON - " + e.getLocalizedMessage());
             return null;
         }
     }
@@ -220,7 +220,7 @@ public class CTInboxMessageContent implements Parcelable {
         try {
             return jsonObject.has(Constants.KEY_TEXT) ? jsonObject.getString(Constants.KEY_TEXT) : "";
         } catch (JSONException e) {
-            Logger.v("Unable to get Link Text with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to get Link Text with JSON - " + e.getLocalizedMessage());
             return null;
         }
     }
@@ -250,7 +250,7 @@ public class CTInboxMessageContent implements Parcelable {
                 return "";
             }
         } catch (JSONException e) {
-            Logger.v("Unable to get Link URL with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to get Link URL with JSON - " + e.getLocalizedMessage());
             return null;
         }
     }
@@ -282,7 +282,7 @@ public class CTInboxMessageContent implements Parcelable {
         try {
             return jsonObject.has(Constants.KEY_TYPE) ? jsonObject.getString(Constants.KEY_TYPE) : "";
         } catch (JSONException e) {
-            Logger.v("Unable to get Link Type with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to get Link Type with JSON - " + e.getLocalizedMessage());
             return null;
         }
     }
@@ -295,7 +295,7 @@ public class CTInboxMessageContent implements Parcelable {
             return jsonObject.has(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) ?
                     jsonObject.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) : false;
         } catch (JSONException e) {
-            Logger.v("Unable to get fallback settings key with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to get fallback settings key with JSON - " + e.getLocalizedMessage());
             return false;
         }
     }
@@ -499,7 +499,7 @@ public class CTInboxMessageContent implements Parcelable {
             }
 
         } catch (JSONException e) {
-            Logger.v("Unable to init CTInboxMessageContent with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to init CTInboxMessageContent with JSON - " + e.getLocalizedMessage());
         }
         return this;
     }

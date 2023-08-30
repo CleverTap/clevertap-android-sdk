@@ -24,14 +24,11 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     private final ControllerManager controllerManager;
 
-    private final Logger logger;
-
     public DisplayUnitResponse(CleverTapResponse cleverTapResponse,
             CleverTapInstanceConfig config,
             BaseCallbackManager callbackManager, ControllerManager controllerManager) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
-        logger = this.config.getLogger();
         this.callbackManager = callbackManager;
         this.controllerManager = controllerManager;
     }
@@ -41,10 +38,10 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
     @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
 
-        logger.verbose(config.getAccountId(), "Processing Display Unit items...");
+        Logger.verbose(config.getAccountId(), "Processing Display Unit items...");
 
         if (config.isAnalyticsOnly()) {
-            logger.verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing Display Unit response");
             // process feature flag response
             cleverTapResponse.processResponse(response, stringBody, context);
@@ -53,25 +50,25 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
 
         // Adding response null check because this will get processed first in case of analytics
         if (response == null) {
-            logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT
+            Logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT
                     + "Can't parse Display Unit Response, JSON response object is null");
             return;
         }
 
         if (!response.has(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY)) {
-            logger.verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "JSON object doesn't contain the Display Units key");
             // process feature flag response
             cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {
-            logger
+            Logger
                     .verbose(config.getAccountId(),
                             Constants.FEATURE_DISPLAY_UNIT + "Processing Display Unit response");
             parseDisplayUnits(response.getJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY));
         } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to parse response", t);
+            Logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to parse response", t);
         }
 
         // process feature flag response
@@ -85,7 +82,7 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
      */
     private void parseDisplayUnits(JSONArray messages) {
         if (messages == null || messages.length() == 0) {
-            logger.verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is either empty or null");
             return;
         }

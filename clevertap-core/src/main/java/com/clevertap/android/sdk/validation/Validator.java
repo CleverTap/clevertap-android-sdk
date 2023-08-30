@@ -313,7 +313,7 @@ public final class Validator {
                     ValidationResult vr = ValidationResultFactory.create(513, Constants.DISCARDED_EVENT_NAME, name);
                     error.setErrorCode(vr.getErrorCode());
                     error.setErrorDesc(vr.getErrorDesc());
-                    Logger.d(name
+                    Logger.debug(name
                             + " s a discarded event name as per CleverTap. Dropping event at SDK level. Check discarded events in CleverTap Dashboard settings.");
                     return error;
                 }
@@ -343,7 +343,7 @@ public final class Validator {
                 ValidationResult vr = ValidationResultFactory.create(513, Constants.RESTRICTED_EVENT_NAME, name);
                 error.setErrorCode(vr.getErrorCode());
                 error.setErrorDesc(vr.getErrorDesc());
-                Logger.v(vr.getErrorDesc());
+                Logger.verbose(vr.getErrorDesc());
                 return error;
             }
         }

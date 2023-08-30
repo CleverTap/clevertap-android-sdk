@@ -60,8 +60,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private final LocalDataStore localDataStore;
 
-    private final Logger logger;
-
     private LoginInfoProvider loginInfoProvider;
 
     private final MainLooperHandler mainLooperHandler;
@@ -102,7 +100,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         this.validationResultStack = validationResultStack;
         this.networkManager = networkManager;
         this.localDataStore = localDataStore;
-        logger = this.config.getLogger();
         cleverTapMetaData = coreMetaData;
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
@@ -115,7 +112,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void addToQueue(final Context context, final JSONObject event, final int eventType) {
         if (eventType == Constants.NV_EVENT) {
-            config.getLogger()
+            Logger
                     .verbose(config.getAccountId(), "Pushing Notification Viewed event onto separate queue");
             processPushNotificationViewedEvent(context, event);
         } else if(eventType == Constants.DEFINE_VARS_EVENT) {
@@ -146,10 +143,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             @Override
             public Void call() {
                 if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-                    logger.verbose(config.getAccountId(),
+                    Logger.verbose(config.getAccountId(),
                             "Pushing Notification Viewed event onto queue flush sync");
                 } else {
-                    logger.verbose(config.getAccountId(), "Pushing event onto queue flush sync");
+                    Logger.verbose(config.getAccountId(), "Pushing event onto queue flush sync");
                 }
                 flushQueueSync(context, eventGroup);
                 return null;
@@ -182,14 +179,14 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             return;*/
         // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
-            logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
+            Logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             controllerManager.invokeCallbacksForNetworkError();
             return;
         }
 
         // Check if CleverTap instance is set to offline mode
         if (cleverTapMetaData.isOffline()) {
-            logger.debug(config.getAccountId(),
+            Logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
             controllerManager.invokeCallbacksForNetworkError();
             return;
@@ -205,7 +202,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 }
             });
         } else {
-            logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
+            Logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
 
             // No handshake required, directly flush the DB queue
             networkManager.flushDBQueue(context, eventGroup,caller);
@@ -220,12 +217,12 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData) {
         if (!NetworkManager.isNetworkOnline(context)) {
-            logger.verbose(config.getAccountId(), "Network connectivity unavailable. Event won't be sent.");
+            Logger.verbose(config.getAccountId(), "Network connectivity unavailable. Event won't be sent.");
             return;
         }
 
         if (cleverTapMetaData.isOffline()) {
-            logger.debug(config.getAccountId(),
+            Logger.debug(config.getAccountId(),
                 "CleverTap Instance has been set to offline, won't send event");
             return;
         }
@@ -312,7 +309,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 scheduleQueueFlush(context);
 
             } catch (Throwable e) {
-                config.getLogger().verbose(config.getAccountId(), "Failed to queue event: " + event.toString(), e);
+                Logger.verbose(config.getAccountId(), "Failed to queue event: " + event.toString(), e);
             }
         }
     }
@@ -329,13 +326,13 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 if (vr != null) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
-                config.getLogger().verbose(config.getAccountId(), "Pushing Notification Viewed event onto DB");
+                Logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto DB");
                 baseDatabaseManager.queuePushNotificationViewedEventToDB(context, event);
-                config.getLogger()
+                Logger
                         .verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue flush");
                 schedulePushNotificationViewedQueueFlush(context);
             } catch (Throwable t) {
-                config.getLogger()
+                Logger
                         .verbose(config.getAccountId(),
                                 "Failed to queue notification viewed event: " + event.toString(), t);
             }
@@ -412,11 +409,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 event.put("profile", profileEvent);
                 queueEvent(context, event, Constants.PROFILE_EVENT);
             } catch (JSONException e) {
-                config.getLogger()
+                Logger
                         .verbose(config.getAccountId(), "FATAL: Creating basic profile update event failed!");
             }
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Basic profile sync", t);
+            Logger.verbose(config.getAccountId(), "Basic profile sync", t);
         }
     }
 
@@ -428,10 +425,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 @Override
                 public Void call() {
                     try {
-                        config.getLogger().verbose(config.getAccountId(), "Queuing daily events");
+                        Logger.verbose(config.getAccountId(), "Queuing daily events");
                         pushBasicProfile(null, false);
                     } catch (Throwable t) {
-                        config.getLogger().verbose(config.getAccountId(), "Daily profile sync failed", t);
+                        Logger.verbose(config.getAccountId(), "Daily profile sync failed", t);
                     }
                     return null;
                 }
@@ -456,7 +453,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     return null;
                 }
                 if (eventMediator.shouldDeferProcessingEvent(event, eventType)) {
-                    config.getLogger().debug(config.getAccountId(),
+                    Logger.debug(config.getAccountId(),
                             "App Launched not yet processed, re-queuing event " + event + "after 2s");
                     mainLooperHandler.postDelayed(new Runnable() {
                         @Override
@@ -503,7 +500,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
         mainLooperHandler.postDelayed(commsRunnable, networkManager.getDelayFrequency());
 
-        logger.verbose(config.getAccountId(), "Scheduling delayed queue flush on main event loop");
+        Logger.verbose(config.getAccountId(), "Scheduling delayed queue flush on main event loop");
     }
 
     /**
@@ -548,7 +545,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             pushNotificationViewedRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    config.getLogger()
+                    Logger
                         .verbose(config.getAccountId(),
                             "Pushing Notification Viewed event onto queue flush async");
                     flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);

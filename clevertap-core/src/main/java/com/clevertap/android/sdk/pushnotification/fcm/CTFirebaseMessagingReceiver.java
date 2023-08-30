@@ -49,7 +49,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
     @SuppressLint("RestrictedApi")
     @Override
     public void onNotificationRendered(final boolean isRendered) {
-        Logger.v(TAG,
+        Logger.verbose(TAG,
                 "push impression sent successfully by core, i should inform OS to kill receiver. my callback key is "
                         + key);
         finishReceiverAndCancelTimer("push impression sent successfully by core");
@@ -63,7 +63,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
      */
     private void finishReceiverAndCancelTimer(String from) {
         try {
-            Logger.v(TAG, "got a signal to kill receiver and timer because "+from);
+            Logger.verbose(TAG, "got a signal to kill receiver and timer because "+from);
 
             if (!key.trim().isEmpty())
             {
@@ -73,7 +73,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
             long end = System.nanoTime();
             if (pendingResult != null && !isPRFinished) {
 
-                Logger.v(TAG, "informing OS to kill receiver...");
+                Logger.verbose(TAG, "informing OS to kill receiver...");
 
                 pendingResult.finish();
                 isPRFinished = true;
@@ -83,12 +83,12 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                     countDownTimer.cancel();
                 }
 
-                Logger.v(TAG, "informed OS to kill receiver...");
-                Logger.v(TAG,
+                Logger.verbose(TAG, "informed OS to kill receiver...");
+                Logger.verbose(TAG,
                         "receiver was alive for " + TimeUnit.NANOSECONDS.toSeconds(end - start)
                                 + " seconds");
             } else {
-                Logger.v(TAG,
+                Logger.verbose(TAG,
                         "have already informed OS to kill receiver, can not inform again else OS will get angry :-O");
             }
         } catch (Exception e) {
@@ -102,7 +102,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
     public void onReceive(Context context, Intent intent) {
         start = System.nanoTime();
 
-        Logger.d(TAG, "received a message from Firebase");
+        Logger.debug(TAG, "received a message from Firebase");
         if (context == null || intent == null) {
             return;
         }
@@ -115,7 +115,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
         }
 
         if(remoteMessage.getPriority() != RemoteMessage.PRIORITY_NORMAL){
-            Logger.d(TAG, "returning from CTRM because message priority is not normal");
+            Logger.debug(TAG, "returning from CTRM because message priority is not normal");
             return;
         }
 
@@ -165,7 +165,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                         //We are done flushing events
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Logger.v(TAG, "Failed executing CTRM flushQueueSync thread.", e);
+                        Logger.verbose(TAG, "Failed executing CTRM flushQueueSync thread.", e);
                     } finally {
                         finishReceiverAndCancelTimer("flush from receiver is done!");
                     }
@@ -173,11 +173,11 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                 }).start();
 
             } else {
-                Logger.v(TAG, "Notification payload does not have a fallback key.");
+                Logger.verbose(TAG, "Notification payload does not have a fallback key.");
                 finishReceiverAndCancelTimer("isRenderFallback is false");
             }
         } else {
-            Logger.v(TAG, "Notification payload is not from CleverTap.");
+            Logger.verbose(TAG, "Notification payload is not from CleverTap.");
             finishReceiverAndCancelTimer("push is not from CleverTap.");
         }
 

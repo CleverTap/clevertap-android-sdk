@@ -30,13 +30,13 @@ public final class ManifestValidator {
 
     public static void validate(final Context context, DeviceInfo deviceInfo, PushProviders pushProviders) {
         if (!Utils.hasPermission(context, "android.permission.INTERNET")) {
-            Logger.d("Missing Permission: android.permission.INTERNET");
+            Logger.debug("Missing Permission: android.permission.INTERNET");
         }
         checkSDKVersion(deviceInfo);
         validationApplicationLifecyleCallback(context);
         checkReceiversServices(context, pushProviders);
         if (!TextUtils.isEmpty(ManifestInfo.getInstance(context).getFCMSenderId())){
-            Logger.i("We have noticed that your app is using a custom FCM Sender ID, this feature will " +
+            Logger.info("We have noticed that your app is using a custom FCM Sender ID, this feature will " +
                     "be DISCONTINUED from the next version of the CleverTap Android SDK. With the next release, " +
                     "CleverTap Android SDK will only fetch the token using the google-services.json." +
                     " Please reach out to CleverTap Support for any questions.");
@@ -46,14 +46,14 @@ public final class ManifestValidator {
     private static void checkApplicationClass(final Context context) {
         String appName = context.getApplicationInfo().className;
         if (appName == null || appName.isEmpty()) {
-            Logger.i("Unable to determine Application Class");
+            Logger.info("Unable to determine Application Class");
         } else if (appName.equals(ourApplicationClassName)) {
-            Logger.i("AndroidManifest.xml uses the CleverTap Application class, " +
+            Logger.info("AndroidManifest.xml uses the CleverTap Application class, " +
                     "be sure you have properly added the CleverTap Account ID and Token to your AndroidManifest.xml, \n"
                     +
                     "or set them programmatically in the onCreate method of your custom application class prior to calling super.onCreate()");
         } else {
-            Logger.i("Application Class is " + appName);
+            Logger.info("Application Class is " + appName);
         }
     }
 
@@ -81,7 +81,7 @@ public final class ManifestValidator {
             validateServiceInManifest((Application) context.getApplicationContext(),
                     CTBackgroundIntentService.class.getName());
         } catch (Exception e) {
-            Logger.v("Receiver/Service issue : " + e.toString());
+            Logger.verbose("Receiver/Service issue : " + e.toString());
         }
         ArrayList<PushType> enabledPushTypes = pushProviders.getAvailablePushTypes();
         if (enabledPushTypes == null) {
@@ -95,10 +95,10 @@ public final class ManifestValidator {
                     validateServiceInManifest((Application) context.getApplicationContext(),
                             "com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService");
                 } catch (Exception e) {
-                    Logger.v("Receiver/Service issue : " + e.toString());
+                    Logger.verbose("Receiver/Service issue : " + e.toString());
 
                 } catch (Error error) {
-                    Logger.v("FATAL : " + error.getMessage());
+                    Logger.verbose("FATAL : " + error.getMessage());
                 }
             }else if(pushType == PushType.HPS){
                 try {
@@ -106,10 +106,10 @@ public final class ManifestValidator {
                     validateServiceInManifest((Application) context.getApplicationContext(),
                             "com.clevertap.android.hms.CTHmsMessageService");
                 } catch (Exception e) {
-                    Logger.v("Receiver/Service issue : " + e.toString());
+                    Logger.verbose("Receiver/Service issue : " + e.toString());
 
                 } catch (Error error) {
-                    Logger.v("FATAL : " + error.getMessage());
+                    Logger.verbose("FATAL : " + error.getMessage());
                 }
             }else if(pushType == PushType.XPS){
                 try {
@@ -117,10 +117,10 @@ public final class ManifestValidator {
                     validateReceiverInManifest((Application) context.getApplicationContext(),
                             "com.clevertap.android.xps.XiaomiMessageReceiver");
                 } catch (Exception e) {
-                    Logger.v("Receiver/Service issue : " + e.toString());
+                    Logger.verbose("Receiver/Service issue : " + e.toString());
 
                 } catch (Error error) {
-                    Logger.v("FATAL : " + error.getMessage());
+                    Logger.verbose("FATAL : " + error.getMessage());
                 }
             }
         }
@@ -128,7 +128,7 @@ public final class ManifestValidator {
     }
 
     private static void checkSDKVersion(DeviceInfo deviceInfo) {
-        Logger.i("SDK Version Code is " + deviceInfo.getSdkVersion());
+        Logger.info("SDK Version Code is " + deviceInfo.getSdkVersion());
     }
 
     @SuppressWarnings({"SameParameterValue", "rawtypes"})
@@ -142,11 +142,11 @@ public final class ManifestValidator {
         String activityClassName = activityClass.getName();
         for (ActivityInfo activityInfo : activities) {
             if (activityInfo.name.equals(activityClassName)) {
-                Logger.i(activityClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
+                Logger.info(activityClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
                 return;
             }
         }
-        Logger.i(activityClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
+        Logger.info(activityClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
     }
 
     private static void validateReceiverInManifest(Application application, String receiverClassName)
@@ -159,11 +159,11 @@ public final class ManifestValidator {
 
         for (ActivityInfo activityInfo : receivers) {
             if (activityInfo.name.equals(receiverClassName)) {
-                Logger.i(receiverClassName.replaceFirst("com.clevertap.android.", "") + " is present");
+                Logger.info(receiverClassName.replaceFirst("com.clevertap.android.", "") + " is present");
                 return;
             }
         }
-        Logger.i(receiverClassName.replaceFirst("com.clevertap.android.", "") + " not present");
+        Logger.info(receiverClassName.replaceFirst("com.clevertap.android.", "") + " not present");
     }
 
     private static void validateServiceInManifest(Application application, String serviceClassName)
@@ -175,18 +175,18 @@ public final class ManifestValidator {
         ServiceInfo[] services = packageInfo.services;
         for (ServiceInfo serviceInfo : services) {
             if (serviceInfo.name.equals(serviceClassName)) {
-                Logger.i(serviceClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
+                Logger.info(serviceClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
                 return;
             }
         }
-        Logger.i(serviceClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
+        Logger.info(serviceClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
     }
 
     private static void validationApplicationLifecyleCallback(final Context context) {
         // some of the ancillary SDK wrappers have to manage the activity lifecycle manually because they don't have access to the application object or whatever
         // for those cases also consider CleverTapAPI.isAppForeground() as a proxy for the SDK being in sync with the activity lifecycle
         if (!ActivityLifecycleCallback.registered && !CleverTapAPI.isAppForeground()) {
-            Logger.i(
+            Logger.info(
                     "Activity Lifecycle Callback not registered. Either set the android:name in your AndroidManifest.xml application tag to com.clevertap.android.sdk.Application, \n or, "
                             +
                             "if you have a custom Application class, call ActivityLifecycleCallback.register(this); before super.onCreate() in your class");

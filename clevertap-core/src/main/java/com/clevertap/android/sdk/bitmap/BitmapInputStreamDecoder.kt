@@ -16,7 +16,7 @@ class BitmapInputStreamDecoder(private val nextBitmapInputStreamReader: GzipBitm
         connection: HttpURLConnection,
         downloadStartTimeInMilliseconds: Long
     ): DownloadedBitmap? {
-        Logger.v("reading bitmap input stream in BitmapInputStreamDecoder....")
+        Logger.verbose("reading bitmap input stream in BitmapInputStreamDecoder....")
 
         return nextBitmapInputStreamReader?.readInputStream(inputStream,connection, downloadStartTimeInMilliseconds)
             ?: DownloadedBitmapFactory.successBitmap(

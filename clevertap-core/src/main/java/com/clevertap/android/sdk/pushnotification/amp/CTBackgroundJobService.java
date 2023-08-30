@@ -15,7 +15,7 @@ public class CTBackgroundJobService extends JobService {
 
     @Override
     public boolean onStartJob(final JobParameters params) {
-        Logger.v("Job Service is starting");
+        Logger.verbose("Job Service is starting");
         new Thread(new Runnable() {
             @Override
             public void run() {

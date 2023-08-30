@@ -16,8 +16,6 @@ public class MetadataResponse extends CleverTapResponseDecorator {
 
     private final DeviceInfo deviceInfo;
 
-    private final Logger logger;
-
     private final NetworkManager networkManager;
 
     public MetadataResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
@@ -25,7 +23,6 @@ public class MetadataResponse extends CleverTapResponseDecorator {
             NetworkManager networkManager) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
-        logger = this.config.getLogger();
         this.deviceInfo = deviceInfo;
         this.networkManager = networkManager;
     }
@@ -38,10 +35,10 @@ public class MetadataResponse extends CleverTapResponseDecorator {
             if (response.has("g")) {
                 final String deviceID = response.getString("g");
                 deviceInfo.forceUpdateDeviceId(deviceID);
-                logger.verbose(config.getAccountId(), "Got a new device ID: " + deviceID);
+                Logger.verbose(config.getAccountId(), "Got a new device ID: " + deviceID);
             }
         } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "Failed to update device ID!", t);
+            Logger.verbose(config.getAccountId(), "Failed to update device ID!", t);
         }
 
         // Handle i

@@ -61,7 +61,7 @@ public class PushPermissionManager {
 
             Activity currentActivity = CoreMetaData.getCurrentActivity();
             if (currentActivity == null) {
-                Logger.d("CurrentActivity reference is null. SDK can't prompt the user with Notification Permission! Ensure the following things:\n" +
+                Logger.debug("CurrentActivity reference is null. SDK can't prompt the user with Notification Permission! Ensure the following things:\n" +
                         "1. Calling ActivityLifecycleCallback.register(this) in your custom application class before super.onCreate().\n" +
                         "   Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n" +
                         "2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, not onCreate().");

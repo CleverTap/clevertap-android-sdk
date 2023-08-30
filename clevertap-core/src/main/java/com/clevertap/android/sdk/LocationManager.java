@@ -24,15 +24,12 @@ class LocationManager extends BaseLocationManager {
 
     private final CoreMetaData mCoreMetaData;
 
-    private final Logger mLogger;
-
     LocationManager(Context context,
             CleverTapInstanceConfig config,
             CoreMetaData coreMetaData,
             BaseEventQueueManager baseEventQueueManager) {
         mContext = context;
         mConfig = config;
-        mLogger = mConfig.getLogger();
         mCoreMetaData = coreMetaData;
         mBaseEventQueueManager = baseEventQueueManager;
     }
@@ -44,7 +41,7 @@ class LocationManager extends BaseLocationManager {
             android.location.LocationManager lm = (android.location.LocationManager) mContext
                     .getSystemService(Context.LOCATION_SERVICE);
             if (lm == null) {
-                Logger.d("Location Manager is null.");
+                Logger.debug("Location Manager is null.");
                 return null;
             }
             List<String> providers = lm.getProviders(true);
@@ -55,7 +52,7 @@ class LocationManager extends BaseLocationManager {
                     l = lm.getLastKnownLocation(provider);
                 } catch (SecurityException e) {
                     //no-op
-                    Logger.v("Location security exception", e);
+                    Logger.verbose("Location security exception", e);
                 }
 
                 if (l == null) {
@@ -68,7 +65,7 @@ class LocationManager extends BaseLocationManager {
 
             return bestLocation;
         } catch (Throwable t) {
-            Logger.v("Couldn't get user's location", t);
+            Logger.verbose("Couldn't get user's location", t);
             return null;
         }
     }
@@ -80,7 +77,7 @@ class LocationManager extends BaseLocationManager {
         }
 
         mCoreMetaData.setLocationFromUser(location);
-        mLogger.verbose(mConfig.getAccountId(),
+        Logger.verbose(mConfig.getAccountId(),
                 "Location updated (" + location.getLatitude() + ", " + location.getLongitude() + ")");
 
         // only queue the location ping if we are in the foreground
@@ -98,7 +95,7 @@ class LocationManager extends BaseLocationManager {
 
             future = mBaseEventQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
             setLastLocationPingTimeForGeofence(now);
-            mLogger.verbose(mConfig.getAccountId(),
+            Logger.verbose(mConfig.getAccountId(),
                     "Queuing location ping event for geofence location (" + location.getLatitude() + ", " + location
                             .getLongitude() + ")");
 
@@ -107,7 +104,7 @@ class LocationManager extends BaseLocationManager {
 
             future = mBaseEventQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
             setLastLocationPingTime(now);
-            mLogger.verbose(mConfig.getAccountId(),
+            Logger.verbose(mConfig.getAccountId(),
                     "Queuing location ping event for location (" + location.getLatitude() + ", " + location
                             .getLongitude() + ")");
         }
