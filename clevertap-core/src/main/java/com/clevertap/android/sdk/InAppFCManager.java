@@ -190,9 +190,6 @@ public class InAppFCManager {
         return this.config.getAccountId();
     }
 
-//    private Logger getConfigLogger() {
-//        return this.config.getLogger();
-//    }
 
     private int[] getInAppCountsFromPersistentStore(String inappID) {
         final SharedPreferences prefs = getPreferences(context,
