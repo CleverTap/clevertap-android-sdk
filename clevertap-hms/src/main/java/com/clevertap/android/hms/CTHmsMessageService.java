@@ -17,14 +17,14 @@ public class CTHmsMessageService extends HmsMessageService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        Logger.i(LOG_TAG, HMS_LOG_TAG + "onMessageReceived is called");
+        Logger.info(LOG_TAG, HMS_LOG_TAG + "onMessageReceived is called");
         mHandler.createNotification(getApplicationContext(), remoteMessage);
     }
 
     @Override
     public void onNewToken(String token) {
         super.onNewToken(token);
-        Logger.i(LOG_TAG, HMS_LOG_TAG + "onNewToken is called " + token);
+        Logger.info(LOG_TAG, HMS_LOG_TAG + "onNewToken is called " + token);
         mHandler.onNewToken(getApplicationContext(), token);
     }
 }

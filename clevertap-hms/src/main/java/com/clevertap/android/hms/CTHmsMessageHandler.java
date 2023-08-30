@@ -53,7 +53,7 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
                         .getPushNotificationHandler().onMessageReceived(context, messageBundle, HPS.toString());
             } catch (Throwable e) {
                 e.printStackTrace();
-                Logger.d(LOG_TAG, HMS_LOG_TAG + "Error Creating Notification", e);
+                Logger.debug(LOG_TAG, HMS_LOG_TAG + "Error Creating Notification", e);
             }
         }
         return isSuccess;
@@ -68,11 +68,11 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
         try {
             PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, PushType.HPS
                     .getType());
-            Logger.d(LOG_TAG, HMS_LOG_TAG + "onNewToken: " + token);
+            Logger.debug(LOG_TAG, HMS_LOG_TAG + "onNewToken: " + token);
             isSuccess = true;
         } catch (Throwable throwable) {
             // do nothing
-            Logger.d(LOG_TAG, HMS_LOG_TAG + "Error onNewToken: " + token, throwable);
+            Logger.debug(LOG_TAG, HMS_LOG_TAG + "Error onNewToken: " + token, throwable);
         }
         return isSuccess;
     }
@@ -91,7 +91,7 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
                 CleverTapAPI.processPushNotification(context, messageBundle);
             }
         } catch (Throwable t) {
-            Logger.d(LOG_TAG, HMS_LOG_TAG + "Error processing push amp", t);
+            Logger.debug(LOG_TAG, HMS_LOG_TAG + "Error processing push amp", t);
         }
     }
 
