@@ -34,7 +34,6 @@ import androidx.core.content.ContextCompat;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
@@ -107,7 +106,7 @@ public class Utils {
         if (context != null) {
             boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
             if (!isNetworkOnline) {
-                Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: " + srcUrl);
+                PTLog.verbose("Network connectivity unavailable. Not downloading bitmap. URL was: " + srcUrl);
                 return null;
             }
         }

@@ -21,7 +21,6 @@ import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.interfaces.AudibleNotification
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
@@ -252,7 +251,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         try {
                             ptJsonObj = JSONObject(ptJsonStr)
                         } catch (e: Exception) {
-                            Logger.v("Unable to convert JSON to String")
+                            PTLog.verbose("Unable to convert JSON to String")
                         }
                     }
 
@@ -349,7 +348,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 }
             }
         } catch (t: Throwable) {
-            config.logger.debug(config.accountId, "Could not process sound parameter", t)
+            PTLog.debug(config.accountId + " Could not process sound parameter", t)
         }
         return nb
     }
@@ -463,14 +462,14 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 try {
                     clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
                 } catch (ex: ClassNotFoundException) {
-                    Logger.d("No Intent Service found")
+                    PTLog.debug("No Intent Service found")
                 }
             }
         } else {
             try {
                 clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
             } catch (ex: ClassNotFoundException) {
-                Logger.d("No Intent Service found")
+                PTLog.debug("No Intent Service found")
             }
         }
         val isCTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
@@ -484,7 +483,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     val id = action.optString("id")
                     val autoCancel = action.optBoolean("ac", true)
                     if (label.isEmpty() || id.isEmpty()) {
-                        Logger.d("not adding push notification action: action label or id missing")
+                        PTLog.debug("not adding push notification action: action label or id missing")
                         continue
                     }
                     var icon = 0
@@ -492,7 +491,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         try {
                             icon = context.resources.getIdentifier(ico, "drawable", context.packageName)
                         } catch (t: Throwable) {
-                            Logger.d("unable to add notification action icon: " + t.localizedMessage)
+                            PTLog.debug("unable to add notification action icon: " + t.localizedMessage)
                         }
                     }
                     var sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
@@ -570,7 +569,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     }
                     nb.addAction(icon, label, actionIntent)
                 } catch (t: Throwable) {
-                    Logger.d("error adding notification action : " + t.localizedMessage)
+                    PTLog.debug("error adding notification action : " + t.localizedMessage)
                 }
             }
         } // Uncommon - END
