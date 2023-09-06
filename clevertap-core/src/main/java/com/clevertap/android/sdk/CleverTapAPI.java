@@ -2974,6 +2974,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         String accountId = manifest.getAccountId();
         String accountToken = manifest.getAcountToken();
         String accountRegion = manifest.getAccountRegion();
+        String proxyDomain = manifest.getProxyDomain();
+        String spikyProxyDomain = manifest.getSpikeyProxyDomain();
         if (accountId == null || accountToken == null) {
             Logger.i(
                     "Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
@@ -2982,9 +2984,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (accountRegion == null) {
             Logger.i("Account Region not specified in the AndroidManifest - using default region");
         }
+        CleverTapInstanceConfig defaultInstanceConfig = CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
 
-        return CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
-
+        if (proxyDomain != null && proxyDomain.length() > 0) {
+            defaultInstanceConfig.setProxyDomain(proxyDomain);
+        }
+        if (spikyProxyDomain != null && spikyProxyDomain.length() > 0) {
+            defaultInstanceConfig.setSpikyProxyDomain(spikyProxyDomain);
+        }
+        return defaultInstanceConfig;
     }
 
     private static @Nullable

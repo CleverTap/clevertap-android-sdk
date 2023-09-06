@@ -16,6 +16,10 @@ public class ManifestInfo {
 
     private static String accountRegion;
 
+    private static String proxyDomain;
+
+    private static String spikyProxyDomain;
+
     private static boolean useADID;
 
     private static boolean appLaunchedDisabled;
@@ -77,6 +81,12 @@ public class ManifestInfo {
         }
         if (accountRegion == null) {
             accountRegion = _getManifestStringValueForKey(metaData, Constants.LABEL_REGION);
+        }
+        if (proxyDomain == null) {
+            proxyDomain = _getManifestStringValueForKey(metaData, Constants.LABEL_PROXY_DOMAIN);
+        }
+        if (spikyProxyDomain == null) {
+            spikyProxyDomain = _getManifestStringValueForKey(metaData, Constants.LABEL_SPIKY_PROXY_DOMAIN);
         }
         notificationIcon = _getManifestStringValueForKey(metaData, Constants.LABEL_NOTIFICATION_ICON);
         useADID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_USE_GOOGLE_AD_ID));
@@ -172,6 +182,18 @@ public class ManifestInfo {
 
     String getAcountToken() {
         return accountToken;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public String getProxyDomain() {
+        Logger.v("ManifestInfo: getProxyDomain called, returning proxyDomain:" + proxyDomain);
+        return proxyDomain;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public String getSpikeyProxyDomain() {
+        Logger.v("ManifestInfo: getSpikeyProxyDomain called, returning spikeyProxyDomain:" + spikyProxyDomain);
+        return spikyProxyDomain;
     }
 
     String getPackageName() {

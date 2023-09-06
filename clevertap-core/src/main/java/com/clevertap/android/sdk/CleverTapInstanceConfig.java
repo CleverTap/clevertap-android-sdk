@@ -45,6 +45,10 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private String accountToken;
 
+    private String proxyDomain;
+
+    private String spikyProxyDomain;
+
     @NonNull
     private ArrayList<String> allowedPushTypes = getAll();
 
@@ -286,6 +290,22 @@ public class CleverTapInstanceConfig implements Parcelable {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public int getDebugLevel() {
         return debugLevel;
+    }
+
+    public String getProxyDomain() {
+        return proxyDomain;
+    }
+
+    public void setProxyDomain(String proxyDomain) {
+        this.proxyDomain = proxyDomain;
+    }
+
+    public String getSpikyProxyDomain() {
+        return spikyProxyDomain;
+    }
+
+    public void setSpikyProxyDomain(String spikyProxyDomain) {
+        this.spikyProxyDomain = spikyProxyDomain;
     }
 
     @SuppressWarnings({"unused"})
