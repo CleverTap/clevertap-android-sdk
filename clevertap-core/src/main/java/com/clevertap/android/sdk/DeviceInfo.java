@@ -38,6 +38,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.json.JSONObject;
@@ -89,6 +90,8 @@ public class DeviceInfo {
 
         private int localInAppCount;
 
+        private final String locale;
+
         DeviceCachedInfo() {
             versionName = getVersionName();
             osName = getOsName();
@@ -107,6 +110,7 @@ public class DeviceInfo {
             widthPixels = getWidthPixels();
             dpi = getDPI();
             localInAppCount = getLocalInAppCountFromPreference();
+            locale = getLocale();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 appBucket = getAppBucket();
             }
@@ -350,6 +354,18 @@ public class DeviceInfo {
                 wm.getDefaultDisplay().getMetrics(dm);
                 return dm.widthPixels;
             }
+        }
+
+        private String getLocale() {
+            String language = Locale.getDefault().getLanguage();
+            if ("".equals(language)) {
+                language = "xx";
+            }
+            String country = Locale.getDefault().getCountry();
+            if ("".equals(country)) {
+                country = "XX";
+            }
+            return language + "_" + country;
         }
 
         private double toTwoPlaces(double n) {
@@ -617,6 +633,10 @@ public class DeviceInfo {
 
     public void incrementLocalInAppCount() {
         getDeviceCachedInfo().localInAppCount++;
+    }
+
+    public String getLocale() {
+        return getDeviceCachedInfo().locale;
     }
 
     public ArrayList<ValidationResult> getValidationResults() {

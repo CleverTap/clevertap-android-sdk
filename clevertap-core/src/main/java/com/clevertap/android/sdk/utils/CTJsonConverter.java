@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
@@ -90,6 +91,13 @@ public class CTJsonConverter {
             evtData.put("hgt", deviceInfo.getHeight());
             evtData.put("dpi", deviceInfo.getDPI());
             evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
+
+            // If locale is set by the client then use that, otherwise fetch it from the device
+            String locale = CleverTapAPI.getLocale();
+            if(TextUtils.isEmpty(locale))
+                locale = deviceInfo.getLocale();
+            evtData.put("locale", locale);
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 evtData.put("abckt", deviceInfo.getAppBucket());
             }
