@@ -58,9 +58,12 @@
         <meta-data
             android:name="CLEVERTAP_REGION"
             android:value="eu1"/>
-        <meta-data
+        <!--<meta-data
             android:name="CLEVERTAP_PROXY_DOMAIN"
-            android:value="analytics.sdktesting.xyz"/>
+            android:value="analytics.sdktesting.xyz"/>-->
+        <!--<meta-data
+            android:name="CLEVERTAP_SPIKY_PROXY_DOMAIN"
+            android:value="push.sdktesting.xyz"/>-->
 
         <!-- Xiaomi Push -->
         <meta-data

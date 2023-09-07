@@ -3008,10 +3008,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
         CleverTapInstanceConfig defaultInstanceConfig = CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
 
-        if (proxyDomain != null && proxyDomain.length() > 0) {
+        if (proxyDomain != null && proxyDomain.trim().length() > 0) {
             defaultInstanceConfig.setProxyDomain(proxyDomain);
         }
-        if (spikyProxyDomain != null && spikyProxyDomain.length() > 0) {
+        if (spikyProxyDomain != null && spikyProxyDomain.trim().length() > 0) {
             defaultInstanceConfig.setSpikyProxyDomain(spikyProxyDomain);
         }
         return defaultInstanceConfig;

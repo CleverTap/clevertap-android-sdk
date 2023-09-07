@@ -111,6 +111,8 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.accountId = config.accountId;
         this.accountToken = config.accountToken;
         this.accountRegion = config.accountRegion;
+        this.proxyDomain = config.proxyDomain;
+        this.spikyProxyDomain = config.spikyProxyDomain;
         this.isDefaultInstance = config.isDefaultInstance;
         this.analyticsOnly = config.analyticsOnly;
         this.personalization = config.personalization;
@@ -177,6 +179,15 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (configJsonObject.has(Constants.KEY_ACCOUNT_REGION)) {
                 this.accountRegion = configJsonObject.getString(Constants.KEY_ACCOUNT_REGION);
             }
+            if (configJsonObject.has(Constants.KEY_PROXY_DOMAIN)) {
+                this.proxyDomain = configJsonObject.getString(Constants.KEY_PROXY_DOMAIN);
+            }
+            if (configJsonObject.has(Constants.KEY_SPIKY_PROXY_DOMAIN)) {
+                this.spikyProxyDomain = configJsonObject.getString(Constants.KEY_SPIKY_PROXY_DOMAIN);
+            }
+            if (configJsonObject.has(Constants.KEY_ACCOUNT_REGION)) {
+                this.accountRegion = configJsonObject.getString(Constants.KEY_ACCOUNT_REGION);
+            }
             if (configJsonObject.has(Constants.KEY_ANALYTICS_ONLY)) {
                 this.analyticsOnly = configJsonObject.getBoolean(Constants.KEY_ANALYTICS_ONLY);
             }
@@ -238,6 +249,8 @@ public class CleverTapInstanceConfig implements Parcelable {
         accountId = in.readString();
         accountToken = in.readString();
         accountRegion = in.readString();
+        proxyDomain = in.readString();
+        spikyProxyDomain = in.readString();
         analyticsOnly = in.readByte() != 0x00;
         isDefaultInstance = in.readByte() != 0x00;
         useGoogleAdId = in.readByte() != 0x00;
@@ -387,6 +400,8 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeString(accountId);
         dest.writeString(accountToken);
         dest.writeString(accountRegion);
+        dest.writeString(proxyDomain);
+        dest.writeString(spikyProxyDomain);
         dest.writeByte((byte) (analyticsOnly ? 0x01 : 0x00));
         dest.writeByte((byte) (isDefaultInstance ? 0x01 : 0x00));
         dest.writeByte((byte) (useGoogleAdId ? 0x01 : 0x00));
@@ -465,6 +480,8 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_ACCOUNT_ID, getAccountId());
             configJsonObject.put(Constants.KEY_ACCOUNT_TOKEN, getAccountToken());
             configJsonObject.put(Constants.KEY_ACCOUNT_REGION, getAccountRegion());
+            configJsonObject.put(Constants.KEY_PROXY_DOMAIN, getProxyDomain());
+            configJsonObject.put(Constants.KEY_SPIKY_PROXY_DOMAIN, getSpikyProxyDomain());
             configJsonObject.put(Constants.KEY_FCM_SENDER_ID, getFcmSenderId());
             configJsonObject.put(Constants.KEY_ANALYTICS_ONLY, isAnalyticsOnly());
             configJsonObject.put(Constants.KEY_DEFAULT_INSTANCE, isDefaultInstance());

@@ -164,6 +164,8 @@ public interface Constants {
     String KEY_ACCOUNT_ID = "accountId";
     String KEY_ACCOUNT_TOKEN = "accountToken";
     String KEY_ACCOUNT_REGION = "accountRegion";
+    String KEY_PROXY_DOMAIN = "proxyDomain";
+    String KEY_SPIKY_PROXY_DOMAIN = "spikyProxyDomain";
     String KEY_ANALYTICS_ONLY = "analyticsOnly";
     String KEY_DEFAULT_INSTANCE = "isDefaultInstance";
     String KEY_USE_GOOGLE_AD_ID = "useGoogleAdId";
