@@ -96,6 +96,17 @@ public class CTJsonConverter {
             if (deviceInfo.getLibrary() != null) {
                 evtData.put("lib", deviceInfo.getLibrary());
             }
+
+            String proxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getProxyDomain();
+            if (!TextUtils.isEmpty(proxyDomain)) {
+                evtData.put("proxyDomain", proxyDomain);
+            }
+
+            String spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getSpikeyProxyDomain();
+            if (!TextUtils.isEmpty(spikyProxyDomain)) {
+                evtData.put("spikyProxyDomain", spikyProxyDomain);
+            }
+
             boolean sslPinning = ManifestInfo.getInstance(deviceInfo.getContext()).isSSLPinningEnabled();
             if(sslPinning){
                 evtData.put("sslpin", true);
