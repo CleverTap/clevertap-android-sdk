@@ -170,6 +170,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * This method is used to change the credentials of CleverTap account Id, token and region programmatically
+     * Once the SDK is initialized with a default instance, subsequent calls to this method will be ignored.
      *
      * @param accountID CleverTap Account Id
      * @param token     CleverTap Account Token
@@ -185,6 +186,27 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         ManifestInfo.changeCredentials(accountID, token, region);
+    }
+
+    /**
+     * This method is used to change the credentials of CleverTap account Id, token, proxyDomain and spikyProxyDomain programmatically
+     *
+     * @param accountID         CleverTap Account Id
+     * @param token             CleverTap Account Token
+     * @param proxyDomain       CleverTap Proxy Domain
+     * @param spikyProxyDomain  CleverTap Spiky Proxy Domain
+     */
+    public static void changeCredentials(String accountID, String token, String proxyDomain, String spikyProxyDomain) {
+        if (defaultConfig != null) {
+            Logger.i("CleverTap SDK already initialized with accountID:" + defaultConfig.getAccountId()
+                    + ", token:" + defaultConfig.getAccountToken() + ", proxyDomain: " + defaultConfig.getProxyDomain() +
+                    " and spikyDomain: " + defaultConfig.getSpikyProxyDomain() +
+                    ". Cannot change credentials to accountID: " + accountID +
+                    ", token: " + token + ", proxyDomain: " + proxyDomain + "and spikyProxyDomain: " + spikyProxyDomain);
+            return;
+        }
+
+        ManifestInfo.changeCredentials(accountID, token, proxyDomain, spikyProxyDomain);
     }
 
     /**

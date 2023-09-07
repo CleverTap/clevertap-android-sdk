@@ -234,6 +234,13 @@ public class ManifestInfo {
         accountRegion = region;
     }
 
+    static void changeCredentials(String id, String token, String _proxyDomain, String _spikyProxyDomain) {
+        accountId = id;
+        accountToken = token;
+        proxyDomain = _proxyDomain;
+        spikyProxyDomain = _spikyProxyDomain;
+    }
+
     static void changeXiaomiCredentials(String xiaomiAppID, String xiaomiAppKey) {
         if (ManifestInfo.xiaomiAppID != null || ManifestInfo.xiaomiAppKey != null) {
             Logger.i("Xiaomi SDK already initialized with AppID:" + ManifestInfo.xiaomiAppID
