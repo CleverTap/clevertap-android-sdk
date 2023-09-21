@@ -37,14 +37,14 @@ class TriggersMatcher {
   }
 
   private fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean {
-    if (event.getEventName() != trigger.getEventName()) {
+    if (event.eventName != trigger.eventName) {
       return false
     }
 
     // property conditions are AND-ed
-    val propCount = trigger.getPropertyCount()
+    val propCount = trigger.propertyCount
     for (i in 0 until propCount) {
-      val condition = trigger.getProperty(i)
+      val condition = trigger.propertyAtIndex(i) ?: continue
 
       val matched = evaluate(
         condition.op,
@@ -57,10 +57,10 @@ class TriggersMatcher {
     }
 
     // (chargedEvent only) property conditions for items are AND-ed
-    val itemsCount = trigger.getItemsCount()
+    val itemsCount = trigger.itemsCount
     if (itemsCount > 0) {
       for (i in 0 until itemsCount) {
-        val triggerItem = trigger.getItem(i)
+        val triggerItem = trigger.itemAtIndex(i) ?: continue
         val eventValues = event.getItemValue(triggerItem.propertyName)
 
         val matched = evaluate(triggerItem.op, triggerItem.value, eventValues)
@@ -84,7 +84,7 @@ class TriggersMatcher {
 
     when (op) {
       TriggerOperator.LessThan -> {
-        return expected.numberValue() < actual.numberValue()
+        return expected.numberValue().toDouble() < actual.numberValue().toDouble()
       }
       else -> Unit // TODO implement all cases as per the backed evaluation and remove `else` clause
     }

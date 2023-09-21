@@ -103,6 +103,8 @@ public interface Constants {
     String INAPP_MAX_PER_SESSION = "imc";
     String INAPP_WINDOW = "w";
     String INAPP_KEY = "inApp";
+    String INAPP_WZRK_PIVOT = "wzrk_pivot";
+    String INAPP_WZRK_CGID = "wzrk_cgId";
     int INAPP_CLOSE_IV_WIDTH = 40;
     String INAPP_JS_ENABLED = "isJsEnabled";
     String NOTIFICATION_ID_TAG = "wzrk_id";
@@ -226,6 +228,10 @@ public interface Constants {
     String WZRK_COLOR = "wzrk_clr";
     String WZRK_SOUND = "wzrk_sound";
     String WZRK_TIME_TO_LIVE = "wzrk_ttl";
+    String WZRK_TIME_TO_LIVE_OFFSET = "wzrk_ttl_offset";
+    String INAPP_SUPPRESSED = "suppressed";
+    String INAPP_OPERATOR = "operator";
+    String INAPP_PROPERTYNAME = "propertyName";
     String WZRK_RNV = "wzrk_rnv";
     String BLACK = "#000000";
     String WHITE = "#FFFFFF";

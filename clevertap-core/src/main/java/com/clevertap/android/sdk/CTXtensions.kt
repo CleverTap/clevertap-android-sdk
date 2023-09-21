@@ -2,19 +2,18 @@
 
 package com.clevertap.android.sdk
 
-import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.task.CTExecutorFactory
+import org.json.JSONArray
 
 fun Context.isPackageAndOsTargetsAbove(apiLevel: Int) =
     VERSION.SDK_INT > apiLevel && targetSdkVersion > apiLevel
@@ -143,3 +142,8 @@ fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: S
         e.printStackTrace()
     }
 }
+
+fun JSONArray?.isInvalidIndex(index: Int): Boolean {
+    return this == null || index < 0 || index >= this.length()
+}
+
