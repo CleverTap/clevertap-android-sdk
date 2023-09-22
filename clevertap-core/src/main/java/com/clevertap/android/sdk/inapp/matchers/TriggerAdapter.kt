@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.matchers
 
+import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.isInvalidIndex
 import org.json.JSONArray
@@ -100,7 +101,8 @@ class TriggerAdapter(triggerJSON: JSONObject) {
      * @param property The JSON object representing a trigger condition property.
      * @return The corresponding TriggerCondition.
      */
-    private fun triggerConditionFromJSON(property: JSONObject): TriggerCondition {
+    @VisibleForTesting
+    fun triggerConditionFromJSON(property: JSONObject): TriggerCondition {
         val value = TriggerValue(property.opt(Constants.KEY_VALUE))
 
         val operator = property.optTriggerOperator(Constants.INAPP_OPERATOR)
