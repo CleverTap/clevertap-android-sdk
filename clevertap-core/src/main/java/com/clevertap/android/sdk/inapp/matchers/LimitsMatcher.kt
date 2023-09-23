@@ -24,16 +24,17 @@ class LimitsMatcher {
   }
 
   private fun match(
-    limit: LimitAdapter,
+    limitAdapter: LimitAdapter,
     campaignId: String,
     impressionManager: ImpressionManager
   ): Boolean {
-    when (limit.getType()) {
+    when (limitAdapter.limitType) {
       LimitType.Session -> {
-        if (impressionManager.perSession(campaignId) < limit.getLimit()) {
+        if (impressionManager.perSession(campaignId) < limitAdapter.limit) {
           return true
         }
       }
+
       else -> Unit // TODO implement all remaining cases and remove `else` clause
     }
     return false
