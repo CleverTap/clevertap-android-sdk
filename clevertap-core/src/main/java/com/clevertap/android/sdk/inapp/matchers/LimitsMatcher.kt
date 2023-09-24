@@ -1,43 +1,70 @@
 package com.clevertap.android.sdk.inapp.matchers
 
 import com.clevertap.android.sdk.inapp.ImpressionManager
-import org.json.JSONArray
+import com.clevertap.android.sdk.inapp.TriggerManager
 import org.json.JSONObject
 
-class LimitsMatcher {
+/**
+ * A utility class responsible for matching limits against campaign conditions.
+ */
+class LimitsMatcher(
+    private val manager: ImpressionManager,
+    private val triggerManager: TriggerManager
+) {
 
-  fun match(
-    whenLimits: JSONArray,
-    campaignId: String,
-    impressionManager: ImpressionManager
-  ): Boolean {
-    // elements in array are AND-ed
-    // currently only one onEvery or onExactly would be presented
-    for (i in 0 until whenLimits.length()) {
-      val limit = LimitAdapter(whenLimits[i] as JSONObject)
-      val matched = match(limit, campaignId, impressionManager)
-      if (!matched) {
-        return false
-      }
+    /**
+     * Checks if all given limits specified by JSON objects are met for a campaign.
+     *
+     * @param whenLimits The list of JSON objects representing the limits to be checked.
+     * @param campaignId The unique identifier of the campaign.
+     * @param manager The ImpressionManager used to track campaign impressions.
+     * @return `true` if all limits are met, otherwise `false`.
+     */
+    fun matchWhenLimits(
+        whenLimits: List<JSONObject>,
+        campaignId: String,
+    ): Boolean = whenLimits.all {
+        matchLimit(LimitAdapter(it), campaignId)
     }
-    return true
-  }
 
-  private fun match(
-    limitAdapter: LimitAdapter,
-    campaignId: String,
-    impressionManager: ImpressionManager
-  ): Boolean {
-    when (limitAdapter.limitType) {
-      LimitType.Session -> {
-        if (impressionManager.perSession(campaignId) < limitAdapter.limit) {
-          return true
+    /**
+     * Checks if a single limit specified by the [limit] adapter is met for a campaign.
+     *
+     * @param limit The adapter representing the limit condition.
+     * @param campaignId The unique identifier of the campaign.
+     * @param manager The ImpressionManager used to track campaign impressions.
+     * @return `true` if the limit is met, otherwise `false`.
+     */
+    private fun matchLimit(
+        limit: LimitAdapter,
+        campaignId: String
+    ): Boolean {
+        return when (limit.limitType) {
+            LimitType.Session -> manager.perSession(campaignId) < limit.limit
+            LimitType.Seconds -> manager.perSecond(campaignId, limit.frequency) < limit.limit
+            LimitType.Minutes -> manager.perMinute(campaignId, limit.frequency) < limit.limit
+            LimitType.Hours -> manager.perHour(campaignId, limit.frequency) < limit.limit
+            LimitType.Days -> manager.perDay(campaignId, limit.frequency) < limit.limit
+            LimitType.Weeks -> manager.perWeek(campaignId, limit.frequency) < limit.limit
+            LimitType.Ever -> manager.getImpressions(campaignId).size < limit.limit
+            LimitType.OnEvery -> {
+                val triggerCount = triggerManager.getTriggers(campaignId)
+                /*TODO: VERIFY IF WE NEED TO ADD 1 TO TRIGGER COUNT, IF THE IMPRESSION HAS BEEN
+                   ALREADY RECORDED FROM ELSEWHERE
+                val tc = triggerCount + 1
+                tc % limit.limit == 0*/
+                triggerCount % limit.limit == 0
+            }
+
+            LimitType.OnExactly -> {
+                val triggerCount = triggerManager.getTriggers(campaignId)
+                /*TODO: VERIFY IF WE NEED TO ADD 1 TO TRIGGER COUNT, IF THE IMPRESSION HAS BEEN
+                    ALREADY RECORDED FROM ELSEWHERE
+                 val tc = triggerCount + 1
+                tc == limit.limit*/
+                triggerCount == limit.limit
+            }
         }
-      }
-
-      else -> Unit // TODO implement all remaining cases and remove `else` clause
     }
-    return false
-  }
 
 }

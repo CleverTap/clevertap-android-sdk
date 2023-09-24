@@ -103,4 +103,8 @@ class ImpressionManager(
     sessionImpressionsTotal = 0
   }
 
+  fun getImpressions(campaignId: String): List<Long> {
+    TODO("Not yet implemented")
+  }
+
 }
