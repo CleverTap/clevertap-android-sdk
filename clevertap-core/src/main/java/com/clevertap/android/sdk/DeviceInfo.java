@@ -446,6 +446,8 @@ public class DeviceInfo {
 
     private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
+    private static String customLocale;
+
     /**
      * Returns the integer identifier for the default app icon.
      *
@@ -637,6 +639,13 @@ public class DeviceInfo {
 
     public String getLocale() {
         return getDeviceCachedInfo().locale;
+    }
+
+    public static void setCustomLocale(String locale) {
+        customLocale = locale;
+    }
+    public static String getCustomLocale() {
+        return customLocale;
     }
 
     public ArrayList<ValidationResult> getValidationResults() {

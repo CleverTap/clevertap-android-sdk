@@ -136,8 +136,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static int debugLevel = LogLevel.INFO.intValue();
 
-    private static String customLocale = null;
-
     static CleverTapInstanceConfig defaultConfig;
 
     private static HashMap<String, CleverTapAPI> instances;
@@ -739,7 +737,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public static void setLocale(String locale) {
         if(TextUtils.isEmpty(locale))
             Logger.i("Empty Locale provided for setCustomLocale");
-        customLocale = locale;
+        DeviceInfo.setCustomLocale(locale);
     }
 
     /**
@@ -748,7 +746,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return The customLocale string value
      */
     public static String getLocale() {
-        return customLocale;
+        return DeviceInfo.getCustomLocale();
     }
 
     /**
