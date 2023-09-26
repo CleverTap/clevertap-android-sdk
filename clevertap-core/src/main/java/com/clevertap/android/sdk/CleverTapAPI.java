@@ -293,7 +293,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             final boolean showBadge) {
         final CleverTapAPI instance = getDefaultInstanceOrFirstOther(context);
         if (instance == null) {
-            Logger.verbose("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel");
+            Logger.debug("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel");
             return;
         }
         try {
@@ -322,7 +322,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 });
             }
         } catch (Throwable t) {
-            Logger.verbose(instance.getAccountId(), "Failure creating Notification Channel", t);
+            Logger.debug(instance.getAccountId(), "Failure creating Notification Channel", t);
         }
 
     }
@@ -351,7 +351,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             final String groupId, final boolean showBadge) {
         final CleverTapAPI instance = getDefaultInstanceOrFirstOther(context);
         if (instance == null) {
-            Logger.verbose("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel");
+            Logger.debug("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel");
             return;
         }
         try {
@@ -380,7 +380,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 });
             }
         } catch (Throwable t) {
-            Logger.verbose(instance.getAccountId(), "Failure creating Notification Channel", t);
+            Logger.debug(instance.getAccountId(), "Failure creating Notification Channel", t);
         }
 
     }
@@ -406,7 +406,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             final boolean showBadge, final String sound) {
         final CleverTapAPI instance = getDefaultInstanceOrFirstOther(context);
         if (instance == null) {
-            Logger.verbose("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel");
+            Logger.debug("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel");
             return;
         }
         try {
@@ -459,7 +459,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 });
             }
         } catch (Throwable t) {
-            Logger.verbose(instance.getAccountId(), "Failure creating Notification Channel", t);
+            Logger.debug(instance.getAccountId(), "Failure creating Notification Channel", t);
         }
     }
 
@@ -488,7 +488,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             final String groupId, final boolean showBadge, final String sound) {
         final CleverTapAPI instance = getDefaultInstanceOrFirstOther(context);
         if (instance == null) {
-            Logger.verbose("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel");
+            Logger.debug("No CleverTap Instance found in CleverTapAPI#createNotificatonChannel");
             return;
         }
         try {
@@ -541,7 +541,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 });
             }
         } catch (Throwable t) {
-            Logger.verbose(instance.getAccountId(), "Failure creating Notification Channel", t);
+            Logger.debug(instance.getAccountId(), "Failure creating Notification Channel", t);
         }
 
     }
@@ -562,7 +562,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             final CharSequence groupName) {
         final CleverTapAPI instance = getDefaultInstanceOrFirstOther(context);
         if (instance == null) {
-            Logger.verbose("No CleverTap Instance found in CleverTapAPI#createNotificationChannelGroup");
+            Logger.debug("No CleverTap Instance found in CleverTapAPI#createNotificationChannelGroup");
             return;
         }
         try {
@@ -586,8 +586,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 });
             }
         } catch (Throwable t) {
-            Logger
-                    .verbose(instance.getAccountId(), "Failure creating Notification Channel Group", t);
+            Logger.debug(instance.getAccountId(), "Failure creating Notification Channel Group", t);
         }
     }
 
@@ -605,7 +604,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public static void deleteNotificationChannel(final Context context, final String channelId) {
         final CleverTapAPI instance = getDefaultInstanceOrFirstOther(context);
         if (instance == null) {
-            Logger.verbose("No CleverTap Instance found in CleverTapAPI#deleteNotificationChannel");
+            Logger.debug("No CleverTap Instance found in CleverTapAPI#deleteNotificationChannel");
             return;
         }
         try {
@@ -627,7 +626,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 });
             }
         } catch (Throwable t) {
-            Logger.verbose(instance.getAccountId(), "Failure deleting Notification Channel", t);
+            Logger.debug(instance.getAccountId(), "Failure deleting Notification Channel", t);
         }
     }
 
@@ -645,7 +644,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public static void deleteNotificationChannelGroup(final Context context, final String groupId) {
         final CleverTapAPI instance = getDefaultInstanceOrFirstOther(context);
         if (instance == null) {
-            Logger.verbose("No CleverTap Instance found in CleverTapAPI#deleteNotificationChannelGroup");
+            Logger.debug("No CleverTap Instance found in CleverTapAPI#deleteNotificationChannelGroup");
             return;
         }
         try {
@@ -670,7 +669,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         } catch (Throwable t) {
             Logger
-                    .verbose(instance.getAccountId(), "Failure deleting Notification Channel Group", t);
+                    .debug(instance.getAccountId(), "Failure deleting Notification Channel Group", t);
         }
     }
 
@@ -1070,7 +1069,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (isPackageAndOsTargetsAbove(context, 32)) {
             coreState.getInAppController().promptPushPrimer(jsonObject);
         } else {
-            Logger.verbose("Ensure your app supports Android 13 to verify permission access for notifications.");
+            Logger.debug("Ensure your app supports Android 13 to verify permission access for notifications.");
         }
     }
 
@@ -1084,7 +1083,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (isPackageAndOsTargetsAbove(context, 32)) {
             coreState.getInAppController().promptPermission(showFallbackSettings);
         } else {
-            Logger.verbose("Ensure your app supports Android 13 to verify permission access for notifications.");
+            Logger.debug("Ensure your app supports Android 13 to verify permission access for notifications.");
         }
     }
 
@@ -2365,7 +2364,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     public void pushXiaomiRegistrationId(String regId,@NonNull String region, boolean register)  {
         if(TextUtils.isEmpty(region)){
-            Logger.debug("CleverTapApi : region must not be null or empty , use  MiPushClient.getAppRegion(context) to provide appropriate region");
+            Logger.debug("CleverTapAPI : region must not be null or empty , use  MiPushClient.getAppRegion(context) to provide appropriate region");
         }else{
             Logger.debug("CleverTapAPI: client called pushXiaomiRegistrationId called with region:"+region);
             PushType.XPS.setServerRegion(region);
@@ -3312,18 +3311,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Uploads variables to server.
+     * Uploads variables to server.Cl
      */
     public void syncVariables() {
         if (isDevelopmentMode()) {
-            Logger.verbose("variables", "syncVariables: waiting for id to be available");
+            Logger.debug("variables", "syncVariables: waiting for id to be available");
             getCleverTapID(x -> {
                 JSONObject js = coreState.getVarCache().getDefineVarsData();
                 Logger.verbose("variables", "syncVariables: sending following vars to server:" + js);
                 coreState.getAnalyticsManager().pushDefineVarsEvent(js);
             });
         } else {
-            Logger.verbose("variables", "Your app is NOT in development mode, variables data will not be sent to server");
+            Logger.debug("variables", "Your app is NOT in development mode, variables data will not be sent to server");
         }
     }
 

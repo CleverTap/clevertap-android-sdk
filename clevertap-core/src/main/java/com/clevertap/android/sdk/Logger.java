@@ -8,7 +8,24 @@ public final class Logger {
     private int debugLevel;
 
     /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This constructor has been deprecated since v5.2.1 to make logging static across the SDK.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
+    Logger(int level) {
+        this.debugLevel = level;
+    }
+
+    /**
      * Logs to Debug if the debug level is greater than 1.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.debug() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
      */
     @Deprecated
     public static void d(String message) {
@@ -17,18 +34,47 @@ public final class Logger {
         }
     }
 
+    /**
+     * Logs to Debug if the debug level is greater than 1.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.debug() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public static void d(String suffix, String message) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
             Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
         }
     }
+
+    /**
+     * Logs to Debug if the debug level is greater than 1.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.debug() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public static void d(String suffix, String message, Throwable t) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
             Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t);
         }
     }
+
+    /**
+     * Logs to Debug if the debug level is greater than 1.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.debug() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public static void d(String message, Throwable t) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
@@ -38,6 +84,12 @@ public final class Logger {
 
     /**
      * Logs to Info if the debug level is greater than or equal to 1.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.info() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
      */
     @Deprecated
     public static void i(String message) {
@@ -47,6 +99,15 @@ public final class Logger {
     }
 
     @SuppressWarnings("unused")
+    /**
+     * Logs to Info if the debug level is greater than or equal to 1.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.info() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public static void i(String suffix, String message) {
         if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
@@ -55,6 +116,15 @@ public final class Logger {
     }
 
     @SuppressWarnings("unused")
+    /**
+     * Logs to Info if the debug level is greater than or equal to 1.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.info() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public static void i(String suffix, String message, Throwable t) {
         if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
@@ -63,6 +133,15 @@ public final class Logger {
     }
 
     @SuppressWarnings("SameParameterValue")
+    /**
+     * Logs to Info if the debug level is greater than or equal to 1.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.info() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public static void i(String message, Throwable t) {
         if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
@@ -72,6 +151,12 @@ public final class Logger {
 
     /**
      * Logs to Verbose if the debug level is greater than 2.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.verbose() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
      */
     @Deprecated
     public static void v(String message) {
@@ -80,6 +165,15 @@ public final class Logger {
         }
     }
 
+    /**
+     * Logs to Verbose if the debug level is greater than 2.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.verbose() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public static void v(String suffix, String message) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
@@ -87,6 +181,15 @@ public final class Logger {
         }
     }
 
+    /**
+     * Logs to Verbose if the debug level is greater than 2.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.verbose() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public static void v(String suffix, String message, Throwable t) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
@@ -94,16 +197,20 @@ public final class Logger {
         }
     }
 
+    /**
+     * Logs to Verbose if the debug level is greater than 2.
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Use Logger.verbose() instead.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public static void v(String message, Throwable t) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
             Log.v(Constants.CLEVERTAP_LOG_TAG, message, t);
         }
-    }
-
-    @Deprecated
-    Logger(int level) {
-        this.debugLevel = level;
     }
 
     public static void debug(String message) {
@@ -136,7 +243,7 @@ public final class Logger {
         }
     }
 
-    public static void debug(String suffix, String tag,  String message, Throwable t) {
+    public static void debug(String suffix, String tag, String message, Throwable t) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
             Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + tag + ":" + suffix, message, t);
         }
@@ -243,12 +350,12 @@ public final class Logger {
         }
     }
 
-    @Deprecated
-    public void setDebugLevel(int level){
-        this.debugLevel = level;
-    }
-
     private static int getStaticDebugLevel() {
         return CleverTapAPI.getDebugLevel();
+    }
+
+    @Deprecated
+    public void setDebugLevel(int level) {
+        this.debugLevel = level;
     }
 }

@@ -132,7 +132,7 @@ fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: S
         try {
             coreState.baseEventQueueManager.flushQueueSync(context, PUSH_NOTIFICATION_VIEWED, caller)
         } catch (e: Exception) {
-            Logger.debug(logTag, "failed to flush push impressions on ct instance = " + coreState.config.accountId)
+            Logger.debug(logTag, "failed to flush push impressions on CleverTap instance = " + coreState.config.accountId)
         }
         null
     }

@@ -214,7 +214,7 @@ class GifHeaderParser {
             }
         } catch (BufferUnderflowException e) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Logger.debug(TAG, "Format Error Reading Color Table", e);
+            Logger.verbose(TAG, "Format Error Reading Color Table", e);
             //}
             header.status = GifDecoder.STATUS_FORMAT_ERROR;
         }

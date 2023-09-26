@@ -342,14 +342,14 @@ class GifDecoder {
     synchronized Bitmap getNextFrame() {
         if (header.frameCount <= 0 || framePointer < 0) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Logger.debug(TAG, "unable to decode frame, frameCount=" + header.frameCount + " framePointer="
+            Logger.verbose(TAG, "unable to decode frame, frameCount=" + header.frameCount + " framePointer="
                     + framePointer);
             //}
             status = STATUS_FORMAT_ERROR;
         }
         if (status == STATUS_FORMAT_ERROR || status == STATUS_OPEN_ERROR) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Logger.debug(TAG, "Unable to decode frame, status=" + status);
+            Logger.verbose(TAG, "Unable to decode frame, status=" + status);
             //}
             return null;
         }
@@ -366,7 +366,7 @@ class GifDecoder {
         act = currentFrame.lct != null ? currentFrame.lct : header.gct;
         if (act == null) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Logger.debug(TAG, "No Valid Color Table for frame #" + framePointer);
+            Logger.verbose(TAG, "No Valid Color Table for frame #" + framePointer);
             //}
             // No color table defined.
             status = STATUS_FORMAT_ERROR;
@@ -422,7 +422,7 @@ class GifDecoder {
 
                 read(buffer.toByteArray());
             } catch (IOException e) {
-                Logger.debug(TAG, "Error reading data from stream", e);
+                Logger.verbose(TAG, "Error reading data from stream", e);
             }
         } else {
             status = STATUS_OPEN_ERROR;
@@ -433,7 +433,7 @@ class GifDecoder {
                 is.close();
             }
         } catch (IOException e) {
-            Logger.debug(TAG, "Error closing stream", e);
+            Logger.verbose(TAG, "Error closing stream", e);
         }
 
         return status;
@@ -762,7 +762,7 @@ class GifDecoder {
                     status = STATUS_FORMAT_ERROR;
                 }
             } catch (Exception e) {
-                Logger.debug(TAG, "Error Reading Block", e);
+                Logger.verbose(TAG, "Error Reading Block", e);
                 status = STATUS_FORMAT_ERROR;
             }
         }

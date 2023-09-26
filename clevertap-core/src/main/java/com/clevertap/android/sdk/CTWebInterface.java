@@ -18,6 +18,7 @@ public class CTWebInterface {
 
     private final WeakReference<CleverTapAPI> weakReference;
     private CTInAppBaseFullFragment inAppBaseFullFragment;
+    private final static String NULL_INSTANCE_LOG_MESSAGE = "CleverTap Instance is null.";
 
     public CTWebInterface(CleverTapAPI instance) {
         this.weakReference = new WeakReference<>(instance);
@@ -44,7 +45,7 @@ public class CTWebInterface {
     public void promptPushPermission(boolean shouldShowFallbackSettings) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
             dismissInAppNotification();
@@ -59,7 +60,7 @@ public class CTWebInterface {
     public void dismissInAppNotification() {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
             if (inAppBaseFullFragment != null) {
@@ -78,7 +79,7 @@ public class CTWebInterface {
     public void addMultiValueForKey(String key, String value) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             cleverTapAPI.addMultiValueForKey(key, value);
         }
@@ -94,7 +95,7 @@ public class CTWebInterface {
     public void incrementValue(String key, double value) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             cleverTapAPI.incrementValue(key, value);
         }
@@ -110,7 +111,7 @@ public class CTWebInterface {
     public void decrementValue(String key, double value) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             cleverTapAPI.decrementValue(key, value);
         }
@@ -126,7 +127,7 @@ public class CTWebInterface {
     public void addMultiValuesForKey(String key, String values) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             if (key == null) {
                 Logger.verbose("Key passed to CTWebInterface is null");
@@ -161,7 +162,7 @@ public class CTWebInterface {
     public void pushChargedEvent(String chargeDetails, String items) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             HashMap<String, Object> chargeDetailsHashMap = new HashMap<>();
             if (chargeDetails != null) {
@@ -200,7 +201,7 @@ public class CTWebInterface {
     public void pushEvent(String eventName) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             cleverTapAPI.pushEvent(eventName);
         }
@@ -216,7 +217,7 @@ public class CTWebInterface {
     public void pushEvent(String eventName, String eventActions) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             if (eventActions != null) {
                 try {
@@ -240,7 +241,7 @@ public class CTWebInterface {
     public void pushProfile(String profile) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             if (profile != null) {
                 try {
@@ -265,7 +266,7 @@ public class CTWebInterface {
     public void removeMultiValueForKey(String key, String value) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             if (key == null) {
                 Logger.verbose("Key passed to CTWebInterface is null");
@@ -289,7 +290,7 @@ public class CTWebInterface {
     public void removeMultiValuesForKey(String key, String values) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             if (key == null) {
                 Logger.verbose("Key passed to CTWebInterface is null");
@@ -317,7 +318,7 @@ public class CTWebInterface {
     public void removeValueForKey(String key) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             if (key == null) {
                 Logger.verbose("Key passed to CTWebInterface is null");
@@ -337,7 +338,7 @@ public class CTWebInterface {
     public void setMultiValueForKey(String key, String values) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             if (key == null) {
                 Logger.verbose("Key passed to CTWebInterface is null");
@@ -366,7 +367,7 @@ public class CTWebInterface {
     public void onUserLogin(String profile) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
-            Logger.debug("CleverTap Instance is null.");
+            Logger.debug(NULL_INSTANCE_LOG_MESSAGE);
         } else {
             if (profile != null) {
                 try {

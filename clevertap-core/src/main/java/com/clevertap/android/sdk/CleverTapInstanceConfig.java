@@ -282,18 +282,36 @@ public class CleverTapInstanceConfig implements Parcelable {
         return allowedPushTypes;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     @Deprecated
     public int getDebugLevel() {
         return debugLevel;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     @SuppressWarnings({"unused"})
     public void setDebugLevel(CleverTapAPI.LogLevel debugLevel) {
         setDebugLevel(debugLevel.intValue());
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     @SuppressWarnings({"unused"})
     public void setDebugLevel(int debugLevel) {
@@ -308,6 +326,12 @@ public class CleverTapInstanceConfig implements Parcelable {
         return fcmSenderId;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @Deprecated
     public Logger getLogger() {
         if (logger == null) {
@@ -342,12 +366,24 @@ public class CleverTapInstanceConfig implements Parcelable {
         return isDefaultInstance;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     @Deprecated
     public void log(@NonNull String tag, @NonNull String message) {
         logger.verbose(getDefaultSuffix(tag), message);
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * It will be removed in the future versions of this SDK.
+     * </p>
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     @Deprecated
     public void log(@NonNull String tag, @NonNull String message, Throwable throwable) {

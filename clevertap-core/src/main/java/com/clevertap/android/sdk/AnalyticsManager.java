@@ -157,12 +157,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         if (config.isDisableAppLaunchedEvent()) {
             coreMetaData.setAppLaunchPushed(true);
             Logger
-                    .debug(config.getAccountId(), "App Launched Events disabled in the Android Manifest file");
+                    .debug(config.getAccountId(), "App Launched Event disabled in the Android Manifest file");
             return;
         }
         if (coreMetaData.isAppLaunchPushed()) {
             Logger
-                    .verbose(config.getAccountId(), "App Launched has already been triggered. Will not trigger it ");
+                    .verbose(config.getAccountId(), "App Launched Event has already been triggered. Will not trigger it ");
             return;
         } else {
             Logger.verbose(config.getAccountId(), "Firing App Launched event");
