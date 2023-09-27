@@ -19,11 +19,11 @@ public class XiaomiNotificationParser implements INotificationParser<MiPushMessa
     public Bundle toBundle(@NonNull final MiPushMessage message) {
         try {
             Bundle extras = Utils.stringToBundle(message.getContent());
-            Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Found Valid Notification Message ");
+            Logger.debug(LOG_TAG, XIAOMI_LOG_TAG + "Found Valid Notification Message ");
             return extras;
         } catch (Throwable e) {
             e.printStackTrace();
-            Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Invalid Notification Message ", e);
+            Logger.debug(LOG_TAG, XIAOMI_LOG_TAG + "Invalid Notification Message ", e);
         }
         return null;
     }

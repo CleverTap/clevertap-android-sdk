@@ -68,7 +68,7 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
             } catch (Throwable e) {
                 e.printStackTrace();
                 isSuccess = false;
-                Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Error Creating Notification", e);
+                Logger.debug(LOG_TAG, XIAOMI_LOG_TAG + "Error Creating Notification", e);
             }
         }
         return isSuccess;
@@ -81,33 +81,33 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
     public @XpsConstants.CommandResult
     int onReceiveRegisterResult(Context context, MiPushCommandMessage miPushCommandMessage) {
         try {
-            Logger.d(LOG_TAG, "onReceiveRegisterResult() : Message: " + miPushCommandMessage);
+            Logger.debug(LOG_TAG, "onReceiveRegisterResult() : Message: " + miPushCommandMessage);
             String command = miPushCommandMessage.getCommand();
             if (!MiPushClient.COMMAND_REGISTER.equals(command)) {
-                Logger.d(LOG_TAG, "onReceiveRegisterResult() : Received command is not register command.");
+                Logger.debug(LOG_TAG, "onReceiveRegisterResult() : Received command is not register command.");
                 return OTHER_COMMAND;
             }
 
             if (miPushCommandMessage.getResultCode() != ErrorCode.SUCCESS) {
-                Logger.d(LOG_TAG, "onReceiveRegisterResult() : Registration failed.");
+                Logger.debug(LOG_TAG, "onReceiveRegisterResult() : Registration failed.");
                 return TOKEN_FAILURE;
             }
 
             List<String> arguments = miPushCommandMessage.getCommandArguments();
             String token = arguments != null && arguments.size() > 0 ? arguments.get(0) : null;
             if (TextUtils.isEmpty(token)) {
-                Logger.d(LOG_TAG, "onReceiveRegisterResult() : Token is null or empty");
+                Logger.debug(LOG_TAG, "onReceiveRegisterResult() : Token is null or empty");
                 return INVALID_TOKEN;
             }
             String region = MiPushClient.getAppRegion(context);
             region =TextUtils.isEmpty(region)? Region.Global.name() : region;
-            Logger.v("default CTXiaomiMessageHandler: onReceiveRegisterResult | MiPushClient.getAppRegion(context) returns region="+region);
+            Logger.verbose("default CTXiaomiMessageHandler: onReceiveRegisterResult | MiPushClient.getAppRegion(context) returns region="+region);
             XPS.setServerRegion(region);
             PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, XPS.getType());
 
             return TOKEN_SUCCESS;
         } catch (Throwable t) {
-            Logger.d(LOG_TAG, "onReceiveRegisterResult() : Exception: ", t);
+            Logger.debug(LOG_TAG, "onReceiveRegisterResult() : Exception: ", t);
             return FAILED_WITH_EXCEPTION;
         }
     }
@@ -126,7 +126,7 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
                 CleverTapAPI.processPushNotification(context, messageBundle);
             }
         } catch (Throwable t) {
-            Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Error processing push amp", t);
+            Logger.debug(LOG_TAG, XIAOMI_LOG_TAG + "Error processing push amp", t);
         }
     }
 }
