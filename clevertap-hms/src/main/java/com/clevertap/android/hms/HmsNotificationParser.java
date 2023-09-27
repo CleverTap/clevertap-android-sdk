@@ -19,11 +19,11 @@ public class HmsNotificationParser implements INotificationParser<RemoteMessage>
     public Bundle toBundle(@NonNull final RemoteMessage message) {
         try {
             Bundle extras = Utils.stringToBundle(message.getData());
-            Logger.d(LOG_TAG, HMS_LOG_TAG + "Found Valid Notification Message ");
+            Logger.debug(LOG_TAG, HMS_LOG_TAG + "Found Valid Notification Message ");
             return extras;
         } catch (Throwable e) {
             e.printStackTrace();
-            Logger.d(LOG_TAG, HMS_LOG_TAG + "Invalid Notification Message ", e);
+            Logger.debug(LOG_TAG, HMS_LOG_TAG + "Invalid Notification Message ", e);
         }
         return null;
     }
