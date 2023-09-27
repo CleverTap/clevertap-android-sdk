@@ -316,7 +316,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                         notificationChannel.setShowBadge(showBadge);
                         notificationManager.createNotificationChannel(notificationChannel);
                         Logger.info(instance.getAccountId(),
-                                "Notification channel " + channelName.toString() + " has been created");
+                                "Notification channel " + channelName + " has been created");
+                        Logger.debug(instance.getAccountId(),
+                                "Notification channel " + channelName + " has been created with Channel ID = " + channelId);
                         return null;
                     }
                 });
@@ -373,7 +375,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                         notificationChannel.setShowBadge(showBadge);
                         notificationManager.createNotificationChannel(notificationChannel);
                         Logger.info(instance.getAccountId(),
-                                "Notification channel " + channelName.toString() + " has been created");
+                                "Notification channel " + channelName + " has been created");
+                        Logger.debug(instance.getAccountId(),
+                                "Notification channel " + channelName + " has been created with Channel ID = " + channelId);
 
                         return null;
                     }
@@ -453,7 +457,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                         }
                         notificationManager.createNotificationChannel(notificationChannel);
                         Logger.info(instance.getAccountId(),
-                                "Notification channel " + channelName.toString() + " has been created");
+                                "Notification channel " + channelName + " has been created");
+                        Logger.debug(instance.getAccountId(),
+                                "Notification channel " + channelName + " has been created with Channel ID = " + channelId);
                         return null;
                     }
                 });
@@ -535,7 +541,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                         }
                         notificationManager.createNotificationChannel(notificationChannel);
                         Logger.info(instance.getAccountId(),
-                                "Notification channel " + channelName.toString() + " has been created");
+                                "Notification channel " + channelName + " has been created");
+                        Logger.debug(instance.getAccountId(),
+                                "Notification channel " + channelName + " has been created with Channel ID = " + channelId);
                         return null;
                     }
                 });
