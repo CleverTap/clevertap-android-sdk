@@ -284,7 +284,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * It will be removed in the future versions of this SDK.
      * </p>
      */
@@ -296,8 +296,9 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * It will be removed in the future versions of this SDK.
+     * Use CleverTapAPI.setDebugLevel() instead. Loglevel is now common for all instances
      * </p>
      */
     @Deprecated
@@ -308,8 +309,9 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * It will be removed in the future versions of this SDK.
+     * Use CleverTapAPI.setDebugLevel() instead. Log level is now common for all instances
      * </p>
      */
     @Deprecated
@@ -328,7 +330,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * It will be removed in the future versions of this SDK.
      * </p>
      */
@@ -368,7 +370,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * It will be removed in the future versions of this SDK.
      * </p>
      */
@@ -380,7 +382,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * It will be removed in the future versions of this SDK.
      * </p>
      */

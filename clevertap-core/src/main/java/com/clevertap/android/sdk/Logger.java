@@ -9,7 +9,7 @@ public final class Logger {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This constructor has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This constructor has been deprecated since v5.3.0 to make logging static across the SDK.
      * It will be removed in the future versions of this SDK.
      * </p>
      */
@@ -22,7 +22,7 @@ public final class Logger {
      * Logs to Debug if the debug level is greater than 1.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.debug() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -38,7 +38,7 @@ public final class Logger {
      * Logs to Debug if the debug level is greater than 1.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.debug() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -54,7 +54,7 @@ public final class Logger {
      * Logs to Debug if the debug level is greater than 1.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.debug() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -70,7 +70,7 @@ public final class Logger {
      * Logs to Debug if the debug level is greater than 1.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.debug() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -86,7 +86,7 @@ public final class Logger {
      * Logs to Info if the debug level is greater than or equal to 1.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.info() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -103,7 +103,7 @@ public final class Logger {
      * Logs to Info if the debug level is greater than or equal to 1.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.info() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -120,7 +120,7 @@ public final class Logger {
      * Logs to Info if the debug level is greater than or equal to 1.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.info() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -137,7 +137,7 @@ public final class Logger {
      * Logs to Info if the debug level is greater than or equal to 1.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.info() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -153,7 +153,7 @@ public final class Logger {
      * Logs to Verbose if the debug level is greater than 2.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.verbose() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -169,7 +169,7 @@ public final class Logger {
      * Logs to Verbose if the debug level is greater than 2.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.verbose() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -185,7 +185,7 @@ public final class Logger {
      * Logs to Verbose if the debug level is greater than 2.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.verbose() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
@@ -201,7 +201,7 @@ public final class Logger {
      * Logs to Verbose if the debug level is greater than 2.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: This method has been deprecated since v5.2.1 to make logging static across the SDK.
+     * Note: This method has been deprecated since v5.3.0 to make logging static across the SDK.
      * Use Logger.verbose() instead.
      * It will be removed in the future versions of this SDK.
      * </p>
