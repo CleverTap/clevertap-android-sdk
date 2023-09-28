@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.inapp
 
 class TriggerManager {
 
-  fun get(campaignId: String): Int {
+  fun getTriggers(campaignId: String): Int {
     // TODO implement
     return 0
   }

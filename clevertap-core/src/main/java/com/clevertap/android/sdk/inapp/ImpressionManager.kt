@@ -127,8 +127,13 @@ class ImpressionManager(
         return count
     }
 
-    fun clearSessionData() {
-        sessionImpressions.clear()
-        sessionImpressionsTotal = 0
-    }
+  fun clearSessionData() {
+    sessionImpressions.clear()
+    sessionImpressionsTotal = 0
+  }
+
+  fun getImpressions(campaignId: String): List<Long> {
+    TODO("Not yet implemented")
+  }
+
 }
