@@ -446,7 +446,7 @@ public class DeviceInfo {
 
     private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
-    private static String customLocale;
+    private String customLocale;
 
     /**
      * Returns the integer identifier for the default app icon.
@@ -500,6 +500,7 @@ public class DeviceInfo {
         this.context = context;
         this.config = config;
         this.library = null;
+        this.customLocale = null;
         mCoreMetaData = coreMetaData;
         onInitDeviceInfo(cleverTapID);
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
@@ -641,10 +642,11 @@ public class DeviceInfo {
         return getDeviceCachedInfo().locale;
     }
 
-    public static void setCustomLocale(String locale) {
-        customLocale = locale;
+    public void setCustomLocale(String customLocale) {
+        this.customLocale = customLocale;
     }
-    public static String getCustomLocale() {
+
+    public String getCustomLocale() {
         return customLocale;
     }
 

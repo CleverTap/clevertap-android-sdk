@@ -92,7 +92,7 @@ public class CTJsonConverter {
             evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
 
             // If locale is set by the client then use that, otherwise fetch it from the device
-            String locale = DeviceInfo.getCustomLocale();
+            String locale = deviceInfo.getCustomLocale();
             if(TextUtils.isEmpty(locale))
                 locale = deviceInfo.getLocale();
             evtData.put("locale", locale);
