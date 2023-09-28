@@ -691,6 +691,17 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `test  expectedValueEqualsActual when expected string and actual list of numbers`() {
+
+        val triggersMatcher = TriggersMatcher()
+        val expectedValue = TriggerValue("apple")
+        val actualValue = TriggerValue(listOf(1, 2, 3, 4))
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertFalse(result)
+    }
+
+    @Test
     fun `test  expectedValueEqualsActual when actual string does not equals expected null string`() {
 
         val triggersMatcher = TriggersMatcher()
