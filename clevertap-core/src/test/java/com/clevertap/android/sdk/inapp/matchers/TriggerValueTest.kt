@@ -12,7 +12,7 @@ class TriggerValueTest {
     fun testStringValue() {
         val triggerValue = TriggerValue("Hello")
         assertEquals("Hello", triggerValue.stringValue())
-        assertEquals(.0, triggerValue.numberValue())
+        assertNull(triggerValue.numberValue())
         assertFalse(triggerValue.isList())
         assertNull(triggerValue.listValue())
     }
@@ -20,7 +20,7 @@ class TriggerValueTest {
     @Test
     fun testNumberValue() {
         val triggerValue = TriggerValue(42)
-        assertEquals("", triggerValue.stringValue())
+        assertNull(triggerValue.stringValue())
         assertFalse(triggerValue.isList())
         assertNull(triggerValue.listValue())
         assertEquals(42, triggerValue.numberValue())
@@ -30,8 +30,8 @@ class TriggerValueTest {
     fun testListValue() {
         val list = listOf(1, 2, 3)
         val triggerValue = TriggerValue(list)
-        assertEquals("", triggerValue.stringValue())
-        assertEquals(.0, triggerValue.numberValue())
+        assertNull(triggerValue.stringValue())
+        assertNull(triggerValue.numberValue())
         assertTrue(triggerValue.isList())
         assertEquals(list, triggerValue.listValue())
     }
@@ -64,13 +64,13 @@ class TriggerValueTest {
     @Test
     fun testStringValueWithNull() {
         val triggerValue = TriggerValue(null)
-        assertEquals("", triggerValue.stringValue())
+        assertNull(triggerValue.stringValue())
     }
 
     @Test
     fun testNumberValueWithNull() {
         val triggerValue = TriggerValue(null)
-        assertEquals(.0, triggerValue.numberValue())
+        assertNull(triggerValue.numberValue())
     }
 
     @Test
