@@ -41,6 +41,15 @@ class LimitsMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `matchWhenLimits should return true when limits are empty`() {
+        // Define your sample JSON limits here
+        val jsonLimits = listOf<JSONObject>()
+
+        val result = limitsMatcher.matchWhenLimits(jsonLimits, "campaign123")
+        assertTrue(result)
+    }
+
+    @Test
     fun `matchWhenLimits should return false when any limit is not met`() {
         // Define your sample JSON limits here
         val jsonLimits = listOf(
