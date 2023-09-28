@@ -6,6 +6,13 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+/**
+ * Provides functionality for tracking and managing impressions for various campaigns.
+ *
+ * @property impressionStore A storage manager responsible for storing and retrieving impression data.
+ * @property clock           An optional Clock implementation for handling time-related operations.
+ * @property locale          An optional Locale specifying the locale to use for date and time calculations.
+ */
 class ImpressionManager(
     private val impressionStore: ImpressionStore,
     private val clock: Clock = Clock.SYSTEM,
@@ -23,6 +30,11 @@ class ImpressionManager(
         this.sessionImpressions.putAll(sessionImpressions)
     }
 
+    /**
+     * Records an impression for a campaign.
+     *
+     * @param campaignId The identifier of the campaign for which the impression is recorded.
+     */
     fun recordImpression(campaignId: String) {
         sessionImpressionsTotal++
         val now = clock.currentTimeSeconds()
@@ -32,41 +44,81 @@ class ImpressionManager(
         impressionStore.write(campaignId, now)
     }
 
+    /**
+     * Counts the impressions for a specific campaign in the current session.
+     *
+     * @param campaignId The identifier of the campaign.
+     * @return The count of impressions recorded in the current session.
+     */
     fun perSession(campaignId: String): Int {
         return sessionImpressions[campaignId]?.size ?: 0
     }
 
+    /**
+     * Retrieves the total count of impressions recorded in the current session.
+     *
+     * @return The total count of impressions recorded in the current session.
+     */
     fun perSessionTotal(): Int {
         return sessionImpressionsTotal
     }
 
+    /**
+     * Counts the impressions for a campaign within the last N seconds.
+     *
+     * @param campaignId The identifier of the campaign.
+     * @param seconds    The time interval in seconds.
+     * @return The count of impressions within the specified time interval.
+     */
     fun perSecond(campaignId: String, seconds: Int): Int {
         val now = clock.currentTimeSeconds()
         return getImpressionCount(campaignId, now - seconds)
     }
 
+    /**
+     * Counts the impressions for a campaign within the last N minutes.
+     *
+     * @param campaignId The identifier of the campaign.
+     * @param minutes    The time interval in minutes.
+     * @return The count of impressions within the specified time interval.
+     */
     fun perMinute(campaignId: String, minutes: Int): Int {
         val now = clock.currentTimeSeconds()
         val offset = TimeUnit.MINUTES.toSeconds(minutes.toLong())
         return getImpressionCount(campaignId, now - offset)
     }
 
+    /**
+     * Counts the impressions for a campaign within the last N hours.
+     *
+     * @param campaignId The identifier of the campaign.
+     * @param hours      The time interval in hours.
+     * @return The count of impressions within the specified time interval.
+     */
     fun perHour(campaignId: String, hours: Int): Int {
         val now = clock.currentTimeSeconds()
         val offset = TimeUnit.HOURS.toSeconds(hours.toLong())
         return getImpressionCount(campaignId, now - offset)
     }
 
+    /**
+     * Counts the impressions for a campaign within the last N days.
+     *
+     * @param campaignId The identifier of the campaign.
+     * @param days       The time interval in days.
+     * @return The count of impressions within the specified time interval.
+     */
     fun perDay(campaignId: String, days: Int): Int {
-        val calendar = Calendar.getInstance(locale).apply { // TODO reuse instance and just set time?
-            val currentDate = Date()
-            // Set the calendar's time to the current date and time
-            time = currentDate
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
+        val calendar =
+            Calendar.getInstance(locale).apply { // TODO reuse instance and just set time?
+                val currentDate = Date()
+                // Set the calendar's time to the current date and time
+                time = currentDate
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
 
         // Subtract the specified number of days from the current date
         calendar.add(Calendar.DAY_OF_YEAR, -days)
@@ -78,19 +130,27 @@ class ImpressionManager(
         return getImpressionCount(campaignId, startingDayTimestamp)
     }
 
+    /**
+     * Counts the impressions for a campaign within the last N weeks.
+     *
+     * @param campaignId The identifier of the campaign.
+     * @param weeks      The time interval in weeks.
+     * @return The count of impressions within the specified time interval.
+     */
     fun perWeek(
         campaignId: String, weeks: Int
     ): Int {
         // start of week is Monday for some countries and Sunday in others
-        val calendar = Calendar.getInstance(locale).apply { // TODO reuse instance and just set time?
-            val currentDate = Date()
-            // Set the calendar's time to the current date and time
-            time = currentDate
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
+        val calendar =
+            Calendar.getInstance(locale).apply { // TODO reuse instance and just set time?
+                val currentDate = Date()
+                // Set the calendar's time to the current date and time
+                time = currentDate
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
 
         // Get the first weekday based on the user's locale
         val firstWeekday = calendar.firstDayOfWeek
@@ -110,12 +170,25 @@ class ImpressionManager(
         return getImpressionCount(campaignId, startingDayTimestamp)
     }
 
+    /**
+     * Retrieves the total count of impressions for a campaign.
+     *
+     * @param campaignId The identifier of the campaign.
+     * @return The total number of impressions recorded for the campaign.
+     */
     fun getImpressionCount(campaignId: String): Int {
         return impressionStore.read(campaignId).size
     }
 
-    private fun getImpressionCount(campaignId: String, timestampStart: Long): Int {
-        val timestamps = impressionStore.read(campaignId)
+    /**
+     * Retrieves the count of impressions for a campaign within a specific time interval.
+     *
+     * @param campaignId      The identifier of the campaign.
+     * @param timestampStart  The start timestamp of the time interval (in seconds since the Unix epoch).
+     * @return The count of impressions within the specified time interval.
+     */
+    fun getImpressionCount(campaignId: String, timestampStart: Long): Int {
+        val timestamps = getImpressions(campaignId)
 
         var count = 0
         for (i in (0..timestamps.lastIndex).reversed()) {
@@ -127,13 +200,16 @@ class ImpressionManager(
         return count
     }
 
-  fun clearSessionData() {
-    sessionImpressions.clear()
-    sessionImpressionsTotal = 0
-  }
+    fun getImpressions(campaignId: String): List<Long> {
+        return impressionStore.read(campaignId)
+    }
 
-  fun getImpressions(campaignId: String): List<Long> {
-    TODO("Not yet implemented")
-  }
+    /**
+     * Clears session-specific impression data, resetting counts and data.
+     */
+    fun clearSessionData() {
+        sessionImpressions.clear()
+        sessionImpressionsTotal = 0
+    }
 
 }
