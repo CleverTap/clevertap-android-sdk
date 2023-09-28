@@ -183,6 +183,9 @@ public interface Constants {
     String KEY_TYPE = "type";
     String KEY_LIMIT = "limit";
     String KEY_FREQUENCY = "frequency";
+    String KEY_T = "t";
+    String KEY_EVT_NAME = "evtName";
+    String KEY_EVT_DATA = "evtData";
     String KEY_FALLBACK_NOTIFICATION_SETTINGS = "fbSettings";
     String KEY_REQUEST_FOR_NOTIFICATION_PERMISSION = "rfp";
     int NOTIFICATION_PERMISSION_REQUEST_CODE = 102;
@@ -289,8 +292,10 @@ public interface Constants {
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
     int FETCH_TYPE_VARIABLES = 4;
+    int FETCH_TYPE_IN_APPS = 5;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
+    String LOG_TAG_INAPP = "InApp : ";
     // error message codes
     int INVALID_MULTI_VALUE = 1;
     int PUSH_KEY_EMPTY = 2;
