@@ -17,19 +17,19 @@ class EventAdapter(
      * Gets the property value for the specified property name.
      *
      * @param propertyName The name of the property to retrieve.
-     * @return A [TriggerValue] representing the property value, or `null` if the property is not present.
+     * @return A [TriggerValue] representing the property value.
      */
-    fun getPropertyValue(propertyName: String): TriggerValue? =
-        eventProperties[propertyName]?.let { TriggerValue(it) }
+    fun getPropertyValue(propertyName: String): TriggerValue =
+        TriggerValue(eventProperties[propertyName])
 
     /**
      * Gets the item value for the specified property name from the list of items.
      *
      * @param propertyName The name of the property to retrieve from the items.
-     * @return A [TriggerValue] representing the item value, or `null` if no items have the property.
+     * @return A [TriggerValue] representing the item value.
      */
-    fun getItemValue(propertyName: String): TriggerValue? {
+    fun getItemValue(propertyName: String): TriggerValue {
         val itemValues = items.mapNotNull { it[propertyName] }
-        return if (itemValues.isEmpty()) null else TriggerValue(itemValues)
+        return TriggerValue(itemValues)
     }
 }

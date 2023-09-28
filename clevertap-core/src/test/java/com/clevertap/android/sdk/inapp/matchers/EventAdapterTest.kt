@@ -22,7 +22,7 @@ class EventAdapterTest : BaseTestCase() {
         // Assert
         assertNotNull(result)
         assertEquals(expected.stringValue(), result.stringValue())
-        assertEquals(.0, result.numberValue())
+        assertNull(result.numberValue())
         assertNull(result.listValue())
         assertFalse { expected.isList() }
     }
@@ -37,7 +37,11 @@ class EventAdapterTest : BaseTestCase() {
         val result = eventAdapter.getPropertyValue("name")
 
         // Assert
-        assertNull(result)
+        assertNull(result.value)
+        assertNull(result.stringValue())
+        assertNull(result.numberValue())
+        assertNull(result.listValue())
+        assertFalse(result.isList())
     }
 
     @Test
@@ -55,8 +59,8 @@ class EventAdapterTest : BaseTestCase() {
 
         // Assert
         assertNotNull(result)
-        assertEquals("", result.stringValue())
-        assertEquals(.0, result.numberValue())
+        assertNull(result.stringValue())
+        assertNull(result.numberValue())
         assertEquals(listOf(10, 20), result.listValue())
         assertTrue(expected.isList())
 
@@ -75,7 +79,7 @@ class EventAdapterTest : BaseTestCase() {
         val result = eventAdapter.getItemValue("itemPrice")
 
         // Assert
-        assertNull(result)
+        assertEquals(listOf<String>(), result.listValue())
     }
 
     @Test
@@ -87,6 +91,6 @@ class EventAdapterTest : BaseTestCase() {
         val result = eventAdapter.getItemValue("itemPrice")
 
         // Assert
-        assertNull(result)
+        assertEquals(listOf<String>(), result.listValue())
     }
 }
