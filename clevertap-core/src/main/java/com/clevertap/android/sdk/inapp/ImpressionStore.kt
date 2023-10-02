@@ -12,45 +12,49 @@ import java.lang.ref.WeakReference
  *
  *
  */
-class ImpressionStore(context: Context, deviceId: String) {
+class ImpressionStore(
+    context: Context, accountId: String, deviceId: String
+) {
+    companion object {
+        const val PREF_PREFIX = "__impressions"
+    }
 
-  companion object {
-    private const val PREF_PREFIX = "__impressions"
-  }
+    var contextRef = WeakReference(context)
+    val prefName = "${Constants.KEY_COUNTS_PER_INAPP}:$accountId:$deviceId"
 
-  private val contextRef = WeakReference(context)
-  private val prefName = "${Constants.KEY_COUNTS_PER_INAPP}:$deviceId"
+    fun read(campaignId: String): List<Long> {
+        val prefs = sharedPrefs() ?: return listOf()
+        return getLongListFromPrefs(prefs, "${PREF_PREFIX}_$campaignId")
+    }
 
-  fun read(campaignId: String): List<Long> {
-    val prefs = sharedPrefs() ?: return listOf()
-    return getLongListFromPrefs(prefs, "${PREF_PREFIX}_$campaignId")
-  }
+    fun write(campaignId: String, timestamp: Long) {
+        val records = read(campaignId).toMutableList()
+        records.add(timestamp)
 
-  fun write(campaignId: String, timestamp: Long) {
-    // TODO put some limit on the numbers of impressions written per inapp
+        val prefs = sharedPrefs() ?: return
+        saveLongListToPrefs(records, prefs, "${PREF_PREFIX}_$campaignId")
+    }
 
-    val records = read(campaignId).toMutableList()
-    records.add(timestamp)
+    // TODO handle inappStale from server to clear data per inapp
+    fun clear(campaignId: String) {
+        val prefs = sharedPrefs() ?: return
+        prefs.edit().remove("${PREF_PREFIX}_$campaignId").apply()
+    }
 
-    val prefs = sharedPrefs() ?: return
-    saveLongListToPrefs(records, prefs, "${PREF_PREFIX}_$campaignId")
-  }
+    //TODO handle case where contextRef.get() returns null? possibly due to GC collected
+    fun sharedPrefs(): SharedPreferences? {
+        val context = contextRef.get() ?: return null
+        return StorageHelper.getPreferences(context, prefName)
+    }
 
-  private fun sharedPrefs(): SharedPreferences? {
-    val context = contextRef.get() ?: return null
-    return StorageHelper.getPreferences(context, prefName)
-  }
+    private fun saveLongListToPrefs(list: List<Long>, prefs: SharedPreferences, key: String) {
+        val serialized = list.joinToString(",")
+        prefs.edit().putString(key, serialized).apply()
+    }
 
-  private fun saveLongListToPrefs(list: List<Long>, prefs: SharedPreferences, key: String) {
-    val serialized = list.joinToString(",")
-    prefs.edit().putString(key, serialized).apply()
-  }
-
-  private fun getLongListFromPrefs(prefs: SharedPreferences, key: String): List<Long> {
-    val serialized = prefs.getString(key, "") ?: ""
-    if (serialized.isEmpty()) return emptyList()
-    return serialized.split(",").map { it.toLong() }
-  }
-
-  // TODO handle inappStale from server to clear data per inapp
+    private fun getLongListFromPrefs(prefs: SharedPreferences, key: String): List<Long> {
+        val serialized = prefs.getString(key, "") ?: ""
+        if (serialized.isEmpty()) return emptyList()
+        return serialized.split(",").map { it.toLong() }
+    }
 }

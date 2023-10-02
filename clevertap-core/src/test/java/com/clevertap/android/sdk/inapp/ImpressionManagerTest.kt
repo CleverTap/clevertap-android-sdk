@@ -21,10 +21,10 @@ class ImpressionManagerTest : BaseTestCase() {
         MockitoAnnotations.openMocks(this)
 
         impressionManager = ImpressionManager(
-            impressionStore = ImpressionStore(application, "testDeviceId"),
+            impressionStore = ImpressionStore(application, "accountId", "testDeviceId"),
             clock = clock,
             locale = Locale.US
-        );
+        )
     }
 
     @Test
@@ -247,9 +247,9 @@ class ImpressionManagerTest : BaseTestCase() {
         val campaignId = "campaign123"
         val weeksOffset = 1 // Weeks to subtract
         val currentDate = Calendar.getInstance()
-        currentDate.set(
+        /*currentDate.set(
             2023, Calendar.SEPTEMBER, 24
-        ) // Set the currentDate to some past date to fail this test
+        )*/ // Set the currentDate to some past date to fail this test
 
         `when`(clock.currentTimeSeconds()).thenReturn(TimeUnit.MILLISECONDS.toSeconds(currentDate.timeInMillis))
 
