@@ -8,7 +8,7 @@ import java.lang.ref.WeakReference
 
 /**
  * Responsible for storing impressions for a given campaign ID.
- * It stores impressions the shared preferences name "WizRocket_counts_per_inapp:<<device_id>>"
+ * It stores impressions the shared preferences name "WizRocket_counts_per_inapp:<<account_id>>:<<device_id>>"
  * with keys in the format "__impression_<<campaign_id>>".
  */
 class ImpressionStore(
@@ -38,7 +38,7 @@ class ImpressionStore(
      * @param campaignId The campaign ID for which to write the impression.
      * @param timestamp The timestamp of the impression.
      */
-    fun write(campaignId: String, timestamp: Long) {
+    fun write(campaignId: String, timestamp: Long) { //TODO Migrate inAppFcManager's count per device key to new prefName key?
         val records = read(campaignId).toMutableList()
         records.add(timestamp)
 
@@ -61,7 +61,7 @@ class ImpressionStore(
      *
      * @return The SharedPreferences instance, or null if the context reference is null.
      */
-    fun sharedPrefs(): SharedPreferences? { //TODO handle case where contextRef.get() returns null? possibly due to GC collected
+    fun sharedPrefs(): SharedPreferences? {
         val context = contextRef.get() ?: return null
         return StorageHelper.getPreferences(context, prefName)
     }

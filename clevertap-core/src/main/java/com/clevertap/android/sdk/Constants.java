@@ -92,6 +92,10 @@ public interface Constants {
     String INAPP_NOTIF_DARKEN_SCREEN = "dk";
     String INAPP_NOTIF_SHOW_CLOSE = "sc";
     String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
+
+    String PREFS_INAPP_KEY_CS = "inapp_notifs_cs";
+    String PREFS_INAPP_KEY_SS = "inapp_notifs_ss";
+
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
@@ -274,6 +278,10 @@ public interface Constants {
     String KEY_LINKS = "links";
     String KEY_ENCRYPTION_MIGRATION = "encryptionmigration";
     String KEY_ENCRYPTION_CGK = "cgk";
+    String KEY_ENCRYPTION_INAPP_CS = "cs";
+
+    String KEY_ENCRYPTION_INAPP_SS = "ss";
+
     String KEY_ENCRYPTION_NAME = "Name";
     String KEY_ENCRYPTION_IDENTITY = "Identity";
     String KEY_ENCRYPTION_PHONE = "Phone";
@@ -330,7 +338,8 @@ public interface Constants {
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
-    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME));
+    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME,
+            KEY_ENCRYPTION_INAPP_CS, KEY_ENCRYPTION_INAPP_SS));
     HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
     HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
 
