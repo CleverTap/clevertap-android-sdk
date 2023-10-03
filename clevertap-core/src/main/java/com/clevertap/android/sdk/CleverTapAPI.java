@@ -3289,6 +3289,33 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Fetches In Apps from server.
+     */
+    public void fetchInApps() {
+        if (coreState.getConfig().isAnalyticsOnly()) {
+            return;
+        }
+        Logger.v(Constants.LOG_TAG_INAPP + " Fetching In Apps...");
+
+        JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS);
+        coreState.getAnalyticsManager().sendFetchEvent(event);
+    }
+
+    @NonNull
+    private JSONObject getFetchRequestAsJson(int fetchType) {
+        JSONObject event = new JSONObject();
+        JSONObject notif = new JSONObject();
+        try {
+            notif.put(Constants.KEY_T, fetchType);
+            event.put(Constants.KEY_EVT_NAME, Constants.WZRK_FETCH);
+            event.put(Constants.KEY_EVT_DATA, notif);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return event;
+    }
+
+    /**
      * Fetches variable values from server.
      * Note that SDK keeps only one registered callback, if you call that method again it would
      * override the callback.
@@ -3304,15 +3331,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             coreState.getCallbackManager().setFetchVariablesCallback(callback);
         }
 
-        JSONObject event = new JSONObject();
-        JSONObject notif = new JSONObject();
-        try {
-            notif.put("t", Constants.FETCH_TYPE_VARIABLES);
-            event.put("evtName", Constants.WZRK_FETCH);
-            event.put("evtData", notif);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_VARIABLES);
         coreState.getAnalyticsManager().sendFetchEvent(event);
     }
 
