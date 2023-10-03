@@ -19,7 +19,7 @@ class ImpressionStore(
     }
 
     var contextRef = WeakReference(context)
-    val prefName = "${Constants.KEY_COUNTS_PER_INAPP}:$accountId:$deviceId"
+    val prefName = "${Constants.KEY_COUNTS_PER_INAPP}:$deviceId:$accountId"
 
     /**
      * Reads the impressions for a given campaign ID.

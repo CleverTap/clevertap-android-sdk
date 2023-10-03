@@ -41,7 +41,7 @@ class InAppStore(
 
     var contextRef = WeakReference(context)
     val prefName =
-        "$INAPP_KEY:$accountId:$deviceId" //TODO Reuse of old INAPP_KEY with combo of accountId & deviceId??
+        "$INAPP_KEY:$deviceId:$accountId" //TODO Reuse of old INAPP_KEY with combo of accountId & deviceId??
 
     /**
      * The mode in which In-App messages are stored. Set to either [CLIENT_SIDE_MODE] or [SERVER_SIDE_MODE].

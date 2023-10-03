@@ -19,7 +19,7 @@ class TriggerManager(
     }
 
     var contextRef = WeakReference(context)
-    val prefName = "${Constants.KEY_TRIGGERS_PER_INAPP}:$accountId:$deviceId"
+    val prefName = "${Constants.KEY_TRIGGERS_PER_INAPP}:$deviceId:$accountId"
 
     /**
      * Retrieves the trigger count for a given campaign ID.

@@ -4,12 +4,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert.*
-import org.mockito.Mock
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.mock
+import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
