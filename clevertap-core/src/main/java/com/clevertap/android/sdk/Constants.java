@@ -147,6 +147,8 @@ public interface Constants {
     String KEY_MAX_PER_DAY = "istmcd_inapp";
     String KEY_COUNTS_SHOWN_TODAY = "istc_inapp";
     String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
+
+    String KEY_TRIGGERS_PER_INAPP = "triggers_per_inapp";
     String INAPP_ID_IN_PAYLOAD = "ti";
     int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
     String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
@@ -338,8 +340,7 @@ public interface Constants {
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
-    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME,
-            KEY_ENCRYPTION_INAPP_CS, KEY_ENCRYPTION_INAPP_SS));
+    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME));
     HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
     HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
 

@@ -7,8 +7,8 @@ import com.clevertap.android.sdk.StorageHelper
 import java.lang.ref.WeakReference
 
 /**
- * Responsible for storing impressions for a given campaign ID.
- * It stores impressions the shared preferences name "WizRocket_counts_per_inapp:<<account_id>>:<<device_id>>"
+ * Responsible for storing impressions count for a given campaign ID.
+ * It stores impressions in the shared preferences named "WizRocket_counts_per_inapp:<<account_id>>:<<device_id>>"
  * with keys in the format "__impression_<<campaign_id>>".
  */
 class ImpressionStore(

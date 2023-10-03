@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.cryption.CryptHandler
 import org.json.JSONArray
+import java.lang.ref.WeakReference
 
 /**
  * The `InAppStore` class manages the storage and retrieval of In-App messages.
@@ -37,6 +38,7 @@ class InAppStore(
         const val SERVER_SIDE_MODE = "SS"
     }
 
+    var contextRef = WeakReference(context)
     val prefName =
         "$INAPP_KEY:$accountId:$deviceId" //TODO Reuse of old INAPP_KEY with combo of accountId & deviceId??
 
@@ -69,14 +71,16 @@ class InAppStore(
      * Removes Client-side In-App messages.
      */
     private fun removeClientSideInApps() {
-        sharedPrefs().edit().remove(PREFS_INAPP_KEY_CS).apply()
+        val prefs = sharedPrefs() ?: return
+        prefs.edit().remove(PREFS_INAPP_KEY_CS).apply()
     }
 
     /**
      * Removes Server-side In-App messages.
      */
     private fun removeServerSideInApps() {
-        sharedPrefs().edit().remove(PREFS_INAPP_KEY_SS).apply()
+        val prefs = sharedPrefs() ?: return
+        prefs.edit().remove(PREFS_INAPP_KEY_SS).apply()
     }
 
     /**
@@ -85,9 +89,10 @@ class InAppStore(
      * @param clientSideInApps The array of Client-side In-App messages.
      */
     fun storeClientSideInApps(clientSideInApps: JSONArray) {
+        val prefs = sharedPrefs() ?: return
         val encryptedString =
             cryptHandler.encrypt(clientSideInApps.toString(), KEY_ENCRYPTION_INAPP_CS)
-        sharedPrefs().edit().putString(PREFS_INAPP_KEY_CS, encryptedString).apply()
+        prefs.edit().putString(PREFS_INAPP_KEY_CS, encryptedString).apply()
     }
 
     /**
@@ -96,9 +101,10 @@ class InAppStore(
      * @param serverSideInApps The array of Server-side In-App messages.
      */
     fun storeServerSideInApps(serverSideInApps: JSONArray) {
+        val prefs = sharedPrefs() ?: return
         val encryptedString =
             cryptHandler.encrypt(serverSideInApps.toString(), KEY_ENCRYPTION_INAPP_SS)
-        sharedPrefs().edit().putString(PREFS_INAPP_KEY_SS, encryptedString).apply()
+        prefs.edit().putString(PREFS_INAPP_KEY_SS, encryptedString).apply()
     }
 
     /**
@@ -107,8 +113,9 @@ class InAppStore(
      * @return An array of Client-side In-App messages.
      */
     fun readClientSideInApps(): JSONArray {
-        val encryptedString =
-            sharedPrefs().getString(PREFS_INAPP_KEY_CS, null) ?: return JSONArray()
+        val prefs = sharedPrefs() ?: return JSONArray()
+        val encryptedString = prefs.getString(PREFS_INAPP_KEY_CS, null) ?: return JSONArray()
+
         return JSONArray(cryptHandler.decrypt(encryptedString, KEY_ENCRYPTION_INAPP_CS))
     }
 
@@ -118,8 +125,8 @@ class InAppStore(
      * @return An array of Server-side In-App messages.
      */
     fun readServerSideInApps(): JSONArray {
-        val encryptedString =
-            sharedPrefs().getString(PREFS_INAPP_KEY_SS, null) ?: return JSONArray()
+        val prefs = sharedPrefs() ?: return JSONArray()
+        val encryptedString = prefs.getString(PREFS_INAPP_KEY_SS, null) ?: return JSONArray()
 
         return JSONArray(cryptHandler.decrypt(encryptedString, KEY_ENCRYPTION_INAPP_SS))
     }
@@ -129,7 +136,8 @@ class InAppStore(
      *
      * @return The shared preferences for In-App messages, or `null` if unavailable.
      */
-    fun sharedPrefs(): SharedPreferences {
+    fun sharedPrefs(): SharedPreferences? {
+        val context = contextRef.get() ?: return null
         return StorageHelper.getPreferences(context, prefName)
     }
 }
