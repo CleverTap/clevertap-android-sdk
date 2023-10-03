@@ -7,7 +7,6 @@ import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
@@ -22,6 +21,9 @@ class ImpressionStoreTest : BaseTestCase() {
     @Mock
     private lateinit var sharedPreferences: SharedPreferences
 
+    @Mock
+    private lateinit var editor: SharedPreferences.Editor
+
     private lateinit var impressionStore: ImpressionStore
 
     override fun setUp() {
@@ -30,15 +32,18 @@ class ImpressionStoreTest : BaseTestCase() {
 
         // Initialize ImpressionStore with the mocked context
         impressionStore = ImpressionStore(context, "accountId", "deviceId")
+
+        // Mock the sharedPrefs method to return the SharedPreferences instance
+        `when`(impressionStore.sharedPrefs()).thenReturn(sharedPreferences)
+
+        // Mock the SharedPreferences.Editor and its methods
+        `when`(sharedPreferences.edit()).thenReturn(editor)
     }
 
     @Test
     fun testRead_WhenKeyExists_ShouldReturnListOfTimestamps() {
         val campaignId = "campaign123"
         val serializedData = "12345,67890" // Serialized data for testing
-
-        // Mock the sharedPrefs method to return the SharedPreferences instance
-        `when`(impressionStore.sharedPrefs()).thenReturn(sharedPreferences)
 
         // Mock SharedPreferences to return serializedData when getString is called
         `when`(
@@ -47,7 +52,6 @@ class ImpressionStoreTest : BaseTestCase() {
             )
         ).thenReturn(serializedData)
 
-        // Call the read method
         val result = impressionStore.read(campaignId)
 
         // Assert that the result matches the expected list
@@ -58,9 +62,6 @@ class ImpressionStoreTest : BaseTestCase() {
     fun testRead_WhenKeyDoesNotExist_ShouldReturnEmptyList() {
         val campaignId = "campaign456"
 
-        // Mock sharedPrefs to return the SharedPreferences instance
-        `when`(impressionStore.sharedPrefs()).thenReturn(sharedPreferences)
-
         // Mock SharedPreferences to return an empty string when getString is called
         `when`(
             sharedPreferences.getString(
@@ -68,7 +69,6 @@ class ImpressionStoreTest : BaseTestCase() {
             )
         ).thenReturn("")
 
-        // Call the read method
         val result = impressionStore.read(campaignId)
 
         // Assert that the result is an empty list
@@ -81,19 +81,12 @@ class ImpressionStoreTest : BaseTestCase() {
         val timestamp = 123456789L
         val serializedData = "98765,123456789" // Serialized data for testing
 
-        // Mock sharedPrefs to return the SharedPreferences instance
-        `when`(impressionStore.sharedPrefs()).thenReturn(sharedPreferences)
-
         // Mock SharedPreferences to return serializedData when getString is called
         `when`(
             sharedPreferences.getString(
                 "${ImpressionStore.PREF_PREFIX}_$campaignId", ""
             )
         ).thenReturn(serializedData)
-
-        // Mock the SharedPreferences.Editor
-        val editor = mock(SharedPreferences.Editor::class.java)
-        `when`(sharedPreferences.edit()).thenReturn(editor)
 
         // Mock the editor's putString method
         `when`(editor.putString(anyString(), anyString())).thenReturn(editor)
@@ -115,19 +108,12 @@ class ImpressionStoreTest : BaseTestCase() {
         val campaignId = "campaign1011"
         val timestamp = 123456789L
 
-        // Mock sharedPrefs to return the SharedPreferences instance
-        `when`(impressionStore.sharedPrefs()).thenReturn(sharedPreferences)
-
         // Mock SharedPreferences to return an empty string when getString is called
         `when`(
             sharedPreferences.getString(
                 "${ImpressionStore.PREF_PREFIX}_$campaignId", ""
             )
         ).thenReturn("")
-
-        // Mock the SharedPreferences.Editor
-        val editor = mock(SharedPreferences.Editor::class.java)
-        `when`(sharedPreferences.edit()).thenReturn(editor)
 
         // Mock the editor's putString method
         `when`(editor.putString(anyString(), anyString())).thenReturn(editor)
@@ -147,13 +133,6 @@ class ImpressionStoreTest : BaseTestCase() {
     @Test
     fun testClear_ShouldRemoveKeyFromSharedPreferences() {
         val campaignId = "campaign1011"
-
-        // Mock sharedPrefs to return the SharedPreferences instance
-        `when`(impressionStore.sharedPrefs()).thenReturn(sharedPreferences)
-
-        // Mock the SharedPreferences.Editor
-        val editor = mock(SharedPreferences.Editor::class.java)
-        `when`(sharedPreferences.edit()).thenReturn(editor)
 
         // Mock the editor's remove method
         `when`(editor.remove(anyString())).thenReturn(editor)

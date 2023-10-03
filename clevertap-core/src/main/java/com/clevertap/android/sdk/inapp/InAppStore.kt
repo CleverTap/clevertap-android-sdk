@@ -36,6 +36,7 @@ class InAppStore(
     companion object {
         const val CLIENT_SIDE_MODE = "CS"
         const val SERVER_SIDE_MODE = "SS"
+        const val NO_MODE = "NO_MODE"
     }
 
     var contextRef = WeakReference(context)
@@ -48,7 +49,7 @@ class InAppStore(
      * <p>
      * If the mode changes from Server-side (SS) to Client-side (CS), all Server-side In-App messages
      * are cleaned. If the mode changes from Client-side (CS) to Server-side (SS), all Client-side In-App
-     * messages are cleaned. If no flag is returned (null), all Client-side and Server-side In-App messages
+     * messages are cleaned. If no flag(null) is returned (i.e. NO_MODE case), all Client-side and Server-side In-App messages
      * are cleaned.
      * </p>
      */
@@ -60,7 +61,7 @@ class InAppStore(
             when (value) {
                 CLIENT_SIDE_MODE -> removeServerSideInApps()
                 SERVER_SIDE_MODE -> removeClientSideInApps()
-                else -> {
+                NO_MODE -> {
                     removeServerSideInApps()
                     removeClientSideInApps()
                 }
