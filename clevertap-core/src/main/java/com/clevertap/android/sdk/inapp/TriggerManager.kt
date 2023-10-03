@@ -92,7 +92,7 @@ class TriggerManager(
      * @param campaignId The identifier of the In-App campaign.
      * @return The generated storage key in the format "__triggers_campaignId".
      */
-    private fun getTriggersKey(campaignId: String): String {
+    fun getTriggersKey(campaignId: String): String {
         return "${PREF_PREFIX}_$campaignId"
     }
 }

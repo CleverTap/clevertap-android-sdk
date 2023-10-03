@@ -36,7 +36,7 @@ class ImpressionStoreTest : BaseTestCase() {
         // Mock the sharedPrefs method to return the SharedPreferences instance
         `when`(impressionStore.sharedPrefs()).thenReturn(sharedPreferences)
 
-        // Mock the SharedPreferences.Editor and its methods
+        // Mock the SharedPreferences.Editor
         `when`(sharedPreferences.edit()).thenReturn(editor)
     }
 
@@ -118,7 +118,6 @@ class ImpressionStoreTest : BaseTestCase() {
         // Mock the editor's putString method
         `when`(editor.putString(anyString(), anyString())).thenReturn(editor)
 
-        // Call the write method
         impressionStore.write(campaignId, timestamp)
 
         // Verify that SharedPreferences is updated with the new serialized data
@@ -137,7 +136,6 @@ class ImpressionStoreTest : BaseTestCase() {
         // Mock the editor's remove method
         `when`(editor.remove(anyString())).thenReturn(editor)
 
-        // Call the clear method
         impressionStore.clear(campaignId)
 
         // Verify that apply method is called on the editor
@@ -151,7 +149,6 @@ class ImpressionStoreTest : BaseTestCase() {
             sharedPreferences
         )
 
-        // Call the sharedPrefs method
         val result = impressionStore.sharedPrefs()
 
         // Assert that the result is not null

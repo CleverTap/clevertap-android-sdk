@@ -43,7 +43,7 @@ class InAppStoreTest : BaseTestCase() {
         // Mock the sharedPrefs method to return the SharedPreferences instance
         `when`(inAppStore.sharedPrefs()).thenReturn(sharedPreferences)
 
-        // Mock the SharedPreferences.Editor and its methods
+        // Mock the SharedPreferences.Editor
         `when`(sharedPreferences.edit()).thenReturn(editor)
     }
 
@@ -181,7 +181,6 @@ class InAppStoreTest : BaseTestCase() {
             sharedPreferences
         )
 
-        // Call the sharedPrefs method
         val result = inAppStore.sharedPrefs()
 
         // Assert that the result is not null
