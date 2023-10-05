@@ -35,30 +35,35 @@ class InstantDemoActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    Ui(::sendEvent, ::upgradeApp)
                 }
             }
         }
     }
 
-    fun sendEvent() {
+    private fun sendEvent() {
         CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.VERBOSE)
-        CleverTapAPI.getDefaultInstance(this)?.pushEvent("Instant app")
+        val map = buildMap<String, String> {
+            "time" to System.currentTimeMillis().toString()
+        }
+        CleverTapAPI.getDefaultInstance(this)?.pushEvent("Instant app", map)
     }
 
-    fun upgradeApp() {
+    private fun upgradeApp() {
         val postInstall = Intent(Intent.ACTION_MAIN)
             .addCategory(Intent.CATEGORY_DEFAULT)
             .setPackage(BuildConfig.APPLICATION_ID)
 
         // The request code is passed to startActivityForResult().
         InstantApps.showInstallPrompt(this, postInstall, REQUEST_CODE, null)
+        CleverTapAPI.getDefaultInstance(this)?.pushEvent("Instant app upgrading")
     }
 }
 
 @Composable
 fun Ui(
-    sendEvent: () -> Unit
+    sendEvent: () -> Unit,
+    upgradeApp: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -76,6 +81,7 @@ fun Ui(
         }
 
         Button(onClick = {
+            upgradeApp.invoke()
         }) {
             Text(
                 text = "Upgrade"
@@ -84,26 +90,10 @@ fun Ui(
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ClevertapandroidsdkTheme {
-        Greeting("Android")
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun UiPreview() {
     ClevertapandroidsdkTheme {
-        Ui({})
+        Ui({}, {})
     }
 }
