@@ -49,3 +49,4 @@ gradleEnterprise {
         termsOfServiceAgree = "yes"
     }
 }
+include ':instantapp'
