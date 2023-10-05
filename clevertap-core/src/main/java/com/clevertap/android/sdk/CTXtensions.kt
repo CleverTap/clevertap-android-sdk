@@ -6,6 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
+import android.content.SharedPreferences
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
@@ -145,5 +146,13 @@ fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: S
 
 fun JSONArray?.isInvalidIndex(index: Int): Boolean {
     return this == null || index < 0 || index >= this.length()
+}
+
+/**
+ * Extension function to check if a SharedPreferences file has data.
+ * @return `true` if the SharedPreferences file has data, `false` otherwise.
+ */
+fun SharedPreferences.hasData(): Boolean {
+    return all.isNotEmpty()
 }
 
