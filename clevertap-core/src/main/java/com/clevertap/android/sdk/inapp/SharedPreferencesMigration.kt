@@ -20,19 +20,23 @@ class SharedPreferencesMigration<T>(
             if (valueType.isInstance(value) && condition(value as T)
             ) {
                 when (valueType) {
-                    Boolean::class.java -> editor.putBoolean(key, value as Boolean)
-                    Int::class.java -> editor.putInt(key, value as Int)
-                    Long::class.java -> editor.putLong(key, value as Long)
-                    Float::class.java -> editor.putFloat(key, value as Float)
-                    String::class.java -> editor.putString(key, value as String)
-                    else -> {
-                        // Remove values of other types
-                        editor.remove(key)
+                    Boolean::class.javaObjectType -> editor.putBoolean(key, value as Boolean)
+                    Int::class.javaObjectType ->
+                        editor.putInt(key, value as Int)
+
+                    Long::class.javaObjectType -> editor.putLong(key, value as Long)
+                    Float::class.javaObjectType -> editor.putFloat(key, value as Float)
+                    String::class.javaObjectType -> editor.putString(key, value as String)
+                    else -> {// case when valueType is Any
+                        when (value) {
+                            is Boolean -> editor.putBoolean(key, value)
+                            is Int -> editor.putInt(key, value)
+                            is Long -> editor.putLong(key, value)
+                            is Float -> editor.putFloat(key, value)
+                            is String -> editor.putString(key, value)
+                        }
                     }
                 }
-            } else {
-                // Remove values of other types
-                editor.remove(key)
             }
         }
 
