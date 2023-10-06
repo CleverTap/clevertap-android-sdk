@@ -4,6 +4,7 @@
     <!-- Add Permissions needed for CleverTap -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <!--Enable below line to test for Android GO devices-->
     <!--<uses-feature android:name="android.hardware.ram.low" android:required="true"/>-->
@@ -51,10 +52,10 @@
         <!-- Add meta data for CleverTap Account Id and Account Token -->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="YOUR ACCT ID" />
+            android:value="6Z8-894-496Z" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="YOUR ACCT TOKEN" />
+            android:value="4cb-b16" />
         <meta-data
             android:name="CLEVERTAP_REGION"
             android:value="eu1"/>

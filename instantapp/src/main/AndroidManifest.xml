@@ -6,6 +6,10 @@
 
     <dist:module dist:instant="true" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -24,6 +28,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="6Z8-894-496Z" />
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="4cb-b16" />
+        <meta-data
+            android:name="CLEVERTAP_REGION"
+            android:value="eu1"/>
+
     </application>
 
 </manifest>

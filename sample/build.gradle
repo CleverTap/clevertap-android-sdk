@@ -17,7 +17,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 10407
-        versionName "1.4.7-instant-test"
+        versionName "1.4.7-full"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
