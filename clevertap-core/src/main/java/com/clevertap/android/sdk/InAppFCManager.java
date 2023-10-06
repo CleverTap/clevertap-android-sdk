@@ -471,7 +471,7 @@ public class InAppFCManager {
             Logger.d("Finished migrating shared preference countsPerInApp from V1 to V3.");
         }
 
-        if (getStringFromPrefs(storageKeyWithSuffix(getKeyWithDeviceId("ict_date", deviceId)), null) != null//F
+        if (getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), null) != null//F
                 || getStringFromPrefs("ict_date", null) == null)/*T | F*/ {
             return;
         }
