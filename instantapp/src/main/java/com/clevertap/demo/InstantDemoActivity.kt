@@ -2,6 +2,7 @@ package com.clevertap.demo
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +36,10 @@ class InstantDemoActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Ui(::sendEvent, ::upgradeApp)
+                    Ui(
+                        sendEvent = ::sendEvent,
+                        upgradeApp = ::upgradeApp
+                    )
                 }
             }
         }
@@ -43,10 +47,18 @@ class InstantDemoActivity : ComponentActivity() {
 
     private fun sendEvent() {
         CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.VERBOSE)
-        val map = buildMap<String, String> {
+        val map = buildMap<String, Any> {
             "time" to System.currentTimeMillis().toString()
         }
-        CleverTapAPI.getDefaultInstance(this)?.pushEvent("Instant app", map)
+        CleverTapAPI.getDefaultInstance(this)?.apply {
+            Log.i("InstantDemoActivity", "logging on user login")
+            onUserLogin(mapOf(
+                "Email" to "abc@abc@abc@abc",
+                "Identity" to 1234,
+                "Name" to "Instant App User"
+            ))
+            pushEvent("Instant app", map)
+        }
     }
 
     private fun upgradeApp() {
