@@ -27,6 +27,7 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueCursor;
 import com.clevertap.android.sdk.events.EventGroup;
@@ -84,6 +85,7 @@ public class NetworkManager extends BaseNetworkManager {
     private final BaseDatabaseManager databaseManager;
     private final DeviceInfo deviceInfo;
     private final LocalDataStore localDataStore;
+    private final CryptHandler cryptHandler;
     private final Logger logger;
     private int networkRetryCount = 0;
     private final ValidationResultStack validationResultStack;
@@ -119,13 +121,15 @@ public class NetworkManager extends BaseNetworkManager {
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
-            LocalDataStore localDataStore) {
+            LocalDataStore localDataStore,
+            CryptHandler cryptHandler) {
         this.context = context;
         this.config = config;
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
         this.validator = validator;
         this.localDataStore = localDataStore;
+        this.cryptHandler = cryptHandler;
         logger = this.config.getLogger();
 
         this.coreMetaData = coreMetaData;
@@ -149,7 +153,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new ConsoleResponse(cleverTapResponse, config);
         cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator, controllerManager);
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
-        cleverTapResponse = new InAppResponse(cleverTapResponse, config, controllerManager, false);
+        cleverTapResponse = new InAppResponse(cleverTapResponse, config, deviceInfo, controllerManager, cryptHandler, false);
 
         cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore, cleverTapResponse);
 

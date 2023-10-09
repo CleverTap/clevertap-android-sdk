@@ -7,7 +7,7 @@ import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONObject
 import java.util.Locale
 
-class EvaluationManager {
+object EvaluationManager {
 
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
@@ -30,12 +30,19 @@ class EvaluationManager {
     }
 
     // onBatchSent with App Launched event in batch
+    @JvmStatic
     fun evaluateOnAppLaunchedClientSide() {
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
         evaluateClientSide(event)
     }
 
+    @JvmStatic
     fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>) {
+        // BE returns applaunch_notifs [0, 1, 2]
+        // record trigger counts
+        // evaluate limits [2]
+        // show first based on priority (2)
+
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
         evaluate(event, appLaunchedNotifs)
         // TODO handle supressed inapps

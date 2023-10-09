@@ -32,7 +32,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT = AnalyticsManager(application,cleverTapInstanceConfig,
             baseEventQueueManager,validator,coreState.validationResultStack,
             coreState.coreMetaData, coreState.localDataStore,coreState.deviceInfo,
-            coreState.callbackManager,coreState.controllerManager,coreState.ctLockManager)
+            coreState.callbackManager,coreState.controllerManager,coreState.ctLockManager, coreState.cryptHandler)
     }
 
     @Test
