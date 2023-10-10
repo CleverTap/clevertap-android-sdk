@@ -3391,8 +3391,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void setLocale(String locale) {
-        if(TextUtils.isEmpty(locale))
-            Logger.i("Empty Locale provided for setCustomLocale");
+        if(TextUtils.isEmpty(locale)) {
+            Logger.i("Empty Locale provided for setLocale, not setting it");
+            return;
+        }
         coreState.getDeviceInfo().setCustomLocale(locale);
     }
 

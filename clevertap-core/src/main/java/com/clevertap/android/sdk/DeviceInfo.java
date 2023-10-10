@@ -18,6 +18,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.WindowInsets;
 import android.view.WindowManager;
@@ -110,7 +111,7 @@ public class DeviceInfo {
             widthPixels = getWidthPixels();
             dpi = getDPI();
             localInAppCount = getLocalInAppCountFromPreference();
-            locale = getLocale();
+            locale = getDeviceLocale();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 appBucket = getAppBucket();
             }
@@ -356,7 +357,7 @@ public class DeviceInfo {
             }
         }
 
-        private String getLocale() {
+        private String getDeviceLocale() {
             String language = Locale.getDefault().getLanguage();
             if ("".equals(language)) {
                 language = "xx";
@@ -638,7 +639,7 @@ public class DeviceInfo {
         getDeviceCachedInfo().localInAppCount++;
     }
 
-    public String getLocale() {
+    public String getDeviceLocale() {
         return getDeviceCachedInfo().locale;
     }
 
@@ -648,6 +649,11 @@ public class DeviceInfo {
 
     public String getCustomLocale() {
         return customLocale;
+    }
+
+    public String getLocale() {
+        // If locale is set by the client then use that, otherwise fetch it from the device
+        return TextUtils.isEmpty(getCustomLocale()) ? getDeviceLocale() : getCustomLocale();
     }
 
     public ArrayList<ValidationResult> getValidationResults() {
