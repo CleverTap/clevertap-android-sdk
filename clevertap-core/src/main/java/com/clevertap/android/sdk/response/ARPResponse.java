@@ -92,12 +92,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
                     final int update = ((Number) o).intValue();
                     editor.putInt(key, update);
                 } else if (o instanceof String) {
-                    if (((String) o).length() < 100) {
-                        editor.putString(key, (String) o);
-                    } else {
-                        logger.verbose(config.getAccountId(),
-                                "ARP update for key " + key + " rejected (string value too long)");
-                    }
+                    editor.putString(key, (String) o);
                 } else if (o instanceof Boolean) {
                     editor.putBoolean(key, (Boolean) o);
                 } else {
