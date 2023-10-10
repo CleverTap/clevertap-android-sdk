@@ -176,9 +176,6 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (configJsonObject.has(Constants.KEY_ACCOUNT_TOKEN)) {
                 this.accountToken = configJsonObject.getString(Constants.KEY_ACCOUNT_TOKEN);
             }
-            if (configJsonObject.has(Constants.KEY_ACCOUNT_REGION)) {
-                this.accountRegion = configJsonObject.getString(Constants.KEY_ACCOUNT_REGION);
-            }
             if (configJsonObject.has(Constants.KEY_PROXY_DOMAIN)) {
                 this.proxyDomain = configJsonObject.getString(Constants.KEY_PROXY_DOMAIN);
             }
