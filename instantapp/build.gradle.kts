@@ -11,8 +11,8 @@ android {
         applicationId = "com.clevertap.demo"
         minSdk = 21
         targetSdk = 33
-        versionCode = 10555
-        versionName = "1.6.0-instant"
+        versionCode = 555
+        versionName = "1.6.2-instant"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

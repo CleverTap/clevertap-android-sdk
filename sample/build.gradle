@@ -16,8 +16,8 @@ android {
         applicationId "com.clevertap.demo"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 200000
-        versionName "1.6.0-full"
+        versionCode 200005
+        versionName "1.6.2-full"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
