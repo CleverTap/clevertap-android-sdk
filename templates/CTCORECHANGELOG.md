@@ -6,6 +6,9 @@
 
 - Adds Custom Proxy Domain functionality for Push Impressions and Events raised from CleverTap SDK. Please refer to [EXAMPLES.md](EXAMPLES.md#integrate-custom-proxy-domain) file to read more on how to
   configure custom proxy domains.
+- Adds new API,
+  * `setLocale(String locale)`
+      - This API allows you to set a custom locale for the required clevertap instance. Different instances can have different locales
 
 ### Version 5.2.0 (August 10, 2023)
 
