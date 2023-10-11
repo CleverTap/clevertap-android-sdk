@@ -1,5 +1,11 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 5.2.1 (October 11, 2023)
+
+#### New Features
+- Adds Custom Proxy Domain functionality for Push Impressions and Events raised from CleverTap SDK. Please refer to [EXAMPLES.md](EXAMPLES.md#integrate-custom-proxy-domain) file to read more on how to
+  configure custom proxy domains.
+
 ### Version 5.2.0 (August 10, 2023)
 
 #### New Features

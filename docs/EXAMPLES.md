@@ -143,6 +143,57 @@ Use `onUserLogin` to maintain multiple distinct user profiles on the same device
 
     cleverTapAPI.onUserLogin(profileUpdate);
 ```
+### Integrate Custom Proxy Domain
+The custom proxy domain feature allows to proxy all events raised from the CleverTap SDK through your required domain,
+ideal for handling or relaying CleverTap events and Push Impression events with your application server.
+Following ways can be used to configure custom proxy domain(s):
+
+#### Using Manifest file
+1. Add your CleverTap Account credentials in the Manifest file against the `CLEVERTAP_ACCOUNT_ID` and `CLEVERTAP_TOKEN` keys.
+2. Add the **CLEVERTAP_PROXY_DOMAIN** key with the proxy domain value for handling events through the custom proxy domain.
+3. Add the **CLEVERTAP_SPIKY_PROXY_DOMAIN** key with proxy domain value for handling push impression events.
+
+```xml
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="YOUR ACCOUNT ID" />
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="YOUR ACCOUNT TOKEN" />
+        <meta-data
+            android:name="CLEVERTAP_PROXY_DOMAIN"
+            android:value="YOUR PROXY DOMAIN"/>
+        <meta-data
+            android:name="CLEVERTAP_SPIKY_PROXY_DOMAIN"
+            android:value="YOUR SPIKY PROXY DOMAIN"/>
+```
+
+#### Using `changeCredentials` API
+
+```java
+CleverTapAPI.changeCredentials(
+                "YOUR CLEVERTAP ACCOUNT ID",
+                "YOUR CLEVERTAP ACCOUNT TOKEN",
+                "YOUR PROXY DOMAIN",
+                "YOUR SPIKY PROXY DOMAIN"
+        );
+```
+
+#### Using CleverTap's Additional Instance
+
+```java
+        CleverTapInstanceConfig cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(
+                applicationContext,
+                "YOUR CLEVERTAP ACCOUNT ID",
+                "YOUR CLEVERTAP ACCOUNT TOKEN"
+        );
+        
+        cleverTapInstanceConfig.setProxyDomain("YOUR PROXY DOMAIN");
+        cleverTapInstanceConfig.setSpikyProxyDomain("YOUR SPIKY PROXY DOMAIN");
+
+        CleverTapAPI.instanceWithConfig(applicationContext, cleverTapInstanceConfig);
+```
+
 ### Using App Inbox
 
 #### Adding Inbox Dependencies
