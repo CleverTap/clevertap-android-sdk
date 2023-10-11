@@ -3414,4 +3414,27 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getCTVariables().removeAllOneTimeVariablesChangedCallbacks();
     }
 
+    /**
+     * Use this method to set a custom locale for the current CleverTap instance
+     *
+     * @param locale - The custom locale to be set
+     */
+    @SuppressWarnings({"unused"})
+    public void setLocale(String locale) {
+        if(TextUtils.isEmpty(locale)) {
+            Logger.i("Empty Locale provided for setLocale, not setting it");
+            return;
+        }
+        coreState.getDeviceInfo().setCustomLocale(locale);
+    }
+
+    /**
+     * Returns the custom locale set for the current CleverTap instance
+     *
+     * @return The customLocale string value
+     */
+    @SuppressWarnings({"unused"})
+    public String getLocale() {
+        return coreState.getDeviceInfo().getCustomLocale();
+    }
 }
