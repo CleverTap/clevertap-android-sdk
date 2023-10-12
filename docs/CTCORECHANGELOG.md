@@ -1,6 +1,6 @@
 ## CleverTap Android SDK CHANGE LOG
 
-### Version 5.2.1 (October 11, 2023)
+### Version 5.2.1 (October 12, 2023)
 
 #### New Features
 
@@ -9,6 +9,7 @@
 - Adds new API,
   * `setLocale(String locale)`
       - This API allows you to set a custom locale for the required clevertap instance. Different instances can have different locales
+- Adds support for Integration Debugger
 
 ### Version 5.2.0 (August 10, 2023)
 
