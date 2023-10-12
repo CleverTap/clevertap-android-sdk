@@ -353,27 +353,30 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     public String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
-
         try {
+            // Always set this to 0 so that the handshake is not performed during a HTTP failure
+            setResponseFailureCount(0);
+
             final String region = config.getAccountRegion();
+            final String proxyDomain = config.getProxyDomain();
+            final String spikyProxyDomain = config.getSpikyProxyDomain();
+
             if (region != null && region.trim().length() > 0) {
-                // Always set this to 0 so that the handshake is not performed during a HTTP failure
-                setResponseFailureCount(0);
-                if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-                    return region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN;
-                } else {
-                    return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
-                }
+                return (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) ?
+                        region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN :
+                        region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
+            } else if (eventGroup.equals(EventGroup.REGULAR) && proxyDomain != null && proxyDomain.trim().length() > 0) {
+                return proxyDomain;
+            } else if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED) && spikyProxyDomain != null && spikyProxyDomain.trim().length() > 0) {
+                return spikyProxyDomain;
             }
         } catch (Throwable t) {
             // Ignore
         }
-        if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-            return StorageHelper.getStringFromPrefs(context, config, Constants.SPIKY_KEY_DOMAIN_NAME, null);
-        } else {
-            return StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
-        }
 
+        return (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) ?
+                StorageHelper.getStringFromPrefs(context, config, Constants.SPIKY_KEY_DOMAIN_NAME, null) :
+                StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
     }
 
     String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
@@ -519,6 +522,11 @@ public class NetworkManager extends BaseNetworkManager {
             }
             // Add frs (First Request in Session) and update first request flag
             header.put("frs", coreMetaData.isFirstRequestInSession());
+
+            // Add debug flag to show errors and events on the integration-debugger
+            if(CleverTapAPI.getDebugLevel() == 3)
+                header.put("debug",true);
+
             coreMetaData.setFirstRequestInSession(false);
 
             //Add ARP (Additional Request Parameters)

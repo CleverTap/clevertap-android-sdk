@@ -170,6 +170,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * This method is used to change the credentials of CleverTap account Id, token and region programmatically
+     * Once the SDK is initialized with a default instance, subsequent calls to this method will be ignored.
      *
      * @param accountID CleverTap Account Id
      * @param token     CleverTap Account Token
@@ -185,6 +186,27 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         ManifestInfo.changeCredentials(accountID, token, region);
+    }
+
+    /**
+     * This method is used to change the credentials of CleverTap account Id, token, proxyDomain and spikyProxyDomain programmatically
+     *
+     * @param accountID         CleverTap Account Id
+     * @param token             CleverTap Account Token
+     * @param proxyDomain       CleverTap Proxy Domain
+     * @param spikyProxyDomain  CleverTap Spiky Proxy Domain
+     */
+    public static void changeCredentials(String accountID, String token, String proxyDomain, String spikyProxyDomain) {
+        if (defaultConfig != null) {
+            Logger.i("CleverTap SDK already initialized with accountID:" + defaultConfig.getAccountId()
+                    + ", token:" + defaultConfig.getAccountToken() + ", proxyDomain: " + defaultConfig.getProxyDomain() +
+                    " and spikyDomain: " + defaultConfig.getSpikyProxyDomain() +
+                    ". Cannot change credentials to accountID: " + accountID +
+                    ", token: " + token + ", proxyDomain: " + proxyDomain + "and spikyProxyDomain: " + spikyProxyDomain);
+            return;
+        }
+
+        ManifestInfo.changeCredentials(accountID, token, proxyDomain, spikyProxyDomain);
     }
 
     /**
@@ -2974,6 +2996,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         String accountId = manifest.getAccountId();
         String accountToken = manifest.getAcountToken();
         String accountRegion = manifest.getAccountRegion();
+        String proxyDomain = manifest.getProxyDomain();
+        String spikyProxyDomain = manifest.getSpikeyProxyDomain();
         if (accountId == null || accountToken == null) {
             Logger.i(
                     "Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
@@ -2982,9 +3006,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (accountRegion == null) {
             Logger.i("Account Region not specified in the AndroidManifest - using default region");
         }
+        CleverTapInstanceConfig defaultInstanceConfig = CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
 
-        return CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
-
+        if (proxyDomain != null && proxyDomain.trim().length() > 0) {
+            defaultInstanceConfig.setProxyDomain(proxyDomain);
+        }
+        if (spikyProxyDomain != null && spikyProxyDomain.trim().length() > 0) {
+            defaultInstanceConfig.setSpikyProxyDomain(spikyProxyDomain);
+        }
+        return defaultInstanceConfig;
     }
 
     private static @Nullable
@@ -3384,4 +3414,27 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getCTVariables().removeAllOneTimeVariablesChangedCallbacks();
     }
 
+    /**
+     * Use this method to set a custom locale for the current CleverTap instance
+     *
+     * @param locale - The custom locale to be set
+     */
+    @SuppressWarnings({"unused"})
+    public void setLocale(String locale) {
+        if(TextUtils.isEmpty(locale)) {
+            Logger.i("Empty Locale provided for setLocale, not setting it");
+            return;
+        }
+        coreState.getDeviceInfo().setCustomLocale(locale);
+    }
+
+    /**
+     * Returns the custom locale set for the current CleverTap instance
+     *
+     * @return The customLocale string value
+     */
+    @SuppressWarnings({"unused"})
+    public String getLocale() {
+        return coreState.getDeviceInfo().getCustomLocale();
+    }
 }
