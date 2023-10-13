@@ -2,7 +2,8 @@
 <FrameLayout android:id="@+id/header_frame_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="170dp">
+    android:layout_height="170dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <RelativeLayout
         android:id="@+id/header_relative_layout"
@@ -12,7 +13,7 @@
         <LinearLayout
             android:id="@+id/header_linear_layout_1"
             android:layout_width="match_parent"
-            android:layout_height="118dp"
+            android:layout_height="@dimen/footer_linear_layout_height"
             android:orientation="horizontal">
 
             <ImageView
@@ -20,35 +21,37 @@
                 android:layout_width="78dp"
                 android:layout_height="78dp"
                 android:layout_marginLeft="20dp"
-                android:layout_marginStart="20dp"
                 android:layout_marginTop="20dp"
                 android:scaleType="fitCenter" />
 
             <LinearLayout
                 android:id="@+id/header_linear_layout_2"
                 android:layout_width="match_parent"
-                android:layout_height="118dp"
+                android:layout_height="@dimen/footer_linear_layout_height"
+                android:paddingStart="20dp"
+                android:paddingEnd="5dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/header_title"
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginTop="20dp"
-                    android:textSize="16sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/footer_title_height"
+                    android:layout_marginTop="14dp"
+                    android:maxLines="1"
+                    android:textSize="@dimen/txt_size_inapp_footer_title"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/header_message"
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginStart="20dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/footer_message_height"
                     android:layout_marginTop="4dp"
-                    android:maxLines="3"
-                    android:textSize="14sp" />
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="@dimen/txt_size_min_inapp_footer_message"
+                    app:autoSizeMaxTextSize="@dimen/txt_size_max_inapp_footer_message"
+                    app:autoSizeStepGranularity="@dimen/size_granularity_footer_message"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -66,7 +69,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:padding="2dp"
-                android:textSize="14sp"
+                android:textSize="@dimen/txt_size_inapp_footer_button"
                 android:visibility="gone" />
 
             <Button
@@ -75,7 +78,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:padding="2dp"
-                android:textSize="14sp"
+                android:textSize="@dimen/txt_size_inapp_footer_button"
                 android:visibility="gone" />
         </LinearLayout>
     </RelativeLayout>
