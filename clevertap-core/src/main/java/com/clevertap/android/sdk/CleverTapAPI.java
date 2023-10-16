@@ -3291,6 +3291,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Fetches In Apps from server.
+     *
+     * @param callback Callback instance {@link FetchInAppsCallback} to be invoked when fetching is done.
      */
     public void fetchInApps(FetchInAppsCallback callback) {
         if (coreState.getConfig().isAnalyticsOnly()) {
