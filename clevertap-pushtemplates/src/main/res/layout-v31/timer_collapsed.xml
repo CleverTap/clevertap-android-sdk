@@ -8,6 +8,9 @@
 
     <include
         android:id="@+id/rel_lyt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@id/chronometer"
         layout="@layout/content_view_small_single_line_msg" />
 
     <Chronometer

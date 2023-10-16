@@ -37,6 +37,7 @@ open class TimerSmallContentView(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             remoteView.setChronometerCountDown(R.id.chronometer, true)
         }
+        setCustomContentViewLargeIcon(null)
         setCustomContentViewSmallIcon()
     }
 
