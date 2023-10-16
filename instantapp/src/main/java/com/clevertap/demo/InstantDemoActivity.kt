@@ -3,6 +3,7 @@ package com.clevertap.demo
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +59,7 @@ class InstantDemoActivity : ComponentActivity() {
                 "Name" to "Instant App User"
             ))
             pushEvent("Instant app", map)
+            Toast.makeText(this@InstantDemoActivity, "Event recorded, check dashboard", Toast.LENGTH_SHORT).show()
         }
     }
 
