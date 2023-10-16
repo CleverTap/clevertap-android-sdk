@@ -2,9 +2,10 @@ package com.clevertap.android.sdk;
 
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.network.BatchListener;
-import com.clevertap.android.sdk.interfaces.SCDomainListener;
+import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
+import com.clevertap.android.sdk.interfaces.SCDomainListener;
+import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -112,6 +113,10 @@ public abstract class BaseCallbackManager {
     public abstract FetchVariablesCallback getFetchVariablesCallback();
 
     public abstract void setFetchVariablesCallback(FetchVariablesCallback fetchVariablesCallback);
+
+    public abstract FetchInAppsCallback getFetchInAppsCallback();
+
+    public abstract void setFetchInAppsCallback(FetchInAppsCallback fetchInAppsCallback);
 
     public abstract BatchListener getBatchListener();
 
