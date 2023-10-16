@@ -1,17 +1,23 @@
 package com.clevertap.android.sdk.response;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
+import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.inapp.EvaluationManager;
+import com.clevertap.android.sdk.inapp.ImpressionStore;
+import com.clevertap.android.sdk.inapp.InAppStore;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class InAppResponse extends CleverTapResponseDecorator {
@@ -20,16 +26,23 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig config;
 
+    private final DeviceInfo deviceInfo;
+
     private final ControllerManager controllerManager;
+
+    private final CryptHandler cryptHandler;
 
     private final boolean isSendTest;
 
     private final Logger logger;
 
     public InAppResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
-            ControllerManager controllerManager, final boolean isSendTest) {
+                         DeviceInfo deviceInfo, ControllerManager controllerManager,
+                         CryptHandler cryptHandler, final boolean isSendTest) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
+        this.deviceInfo = deviceInfo;
+        this.cryptHandler = cryptHandler;
         logger = this.config.getLogger();
         this.controllerManager = controllerManager;
         this.isSendTest = isSendTest;
@@ -57,12 +70,48 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return;
             }
 
-            // TODO get all types of inapps from response - ss, cs, applaunched
-            // TODO store the inapps (get the old code and move it to some ***Store class)
-            // TODO save the SS/CS mode from the json response
+            // TODO get all types of inapps from response - ss, cs, applaunched - DONE
+            // TODO store the inapps (get the old code and move it to some ***Store class) - DONE
+            // TODO save the SS/CS mode from the json response - DONE
             //      add onChanged for this SS/CS mode to handle case when switching from SS/CS to CS/SS or
-            //      from none to CS/SS to clear data.
-            // TODO call EvaluationManager.evaluateOnAppLaunchedServerSide(appLaunchedNotifs)
+            //      from none to CS/SS to clear data. - DONE
+            // TODO call EvaluationManager.evaluateOnAppLaunchedServerSide(appLaunchedNotifs) - DONE
+
+            JSONArray inappNotifsToDisplay = response.optJSONArray("inapp_notifs");
+            if (inappNotifsToDisplay != null && inappNotifsToDisplay.length() > 0) {
+                // Send array of "inapp_notifs" to InAppController for display
+                displayInApp(context, inappNotifsToDisplay);
+            }
+
+            JSONArray inappNotifsApplaunched = response.optJSONArray("inapp_notifs_applaunched");
+            if (inappNotifsApplaunched != null && inappNotifsApplaunched.length() > 0) {
+                //inapp_notifs_applaunched is received during SS mode only
+                handleAppLaunchServerSide(inappNotifsApplaunched);
+            }
+
+            InAppStore inAppStore = new InAppStore(context, cryptHandler, config.getAccountId(), deviceInfo.getDeviceID());
+
+            JSONArray inappNotifsClientSide = response.optJSONArray("inapp_notifs_cs");
+            if (inappNotifsClientSide != null && inappNotifsClientSide.length() > 0) {
+                inAppStore.storeClientSideInApps(inappNotifsClientSide);
+            }
+
+            JSONArray inappNotifsServerSide = response.optJSONArray("inapp_notifs_ss");
+            if (inappNotifsServerSide != null) {
+                inAppStore.storeServerSideInApps(inappNotifsServerSide);
+            }
+
+            String inappDeliveryMode = response.optString("inapp_delivery_mode", "");
+            if (!inappDeliveryMode.isEmpty()) {
+                //TODO: Mode will be received with every request but do we need to persist it?
+                inAppStore.setMode(inappDeliveryMode);
+            }
+
+            JSONArray inappStaleList = response.optJSONArray("inapp_stale");
+            if (inappStaleList != null) {
+                ImpressionStore impressionStore = new ImpressionStore(context, config.getAccountId(), deviceInfo.getDeviceID());
+                clearStaleInAppImpressions(inappStaleList, impressionStore);
+            }
 
             int perSession = 10;
             int perDay = 10;
@@ -82,56 +131,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             } else {
                 logger.verbose(config.getAccountId(),
                         "controllerManager.getInAppFCManager() is NULL, not Updating InAppFC Limits");
-
             }
-
-            JSONArray inappNotifs;
-            try {
-                inappNotifs = response.getJSONArray(Constants.INAPP_JSON_RESPONSE_KEY);
-            } catch (JSONException e) {
-                logger.debug(config.getAccountId(), "InApp: In-app key didn't contain a valid JSON array");
-                // process metadata response
-                cleverTapResponse.processResponse(response, stringBody, context);
-                return;
-            }
-
-            // Add all the new notifications to the queue
-            SharedPreferences prefs = StorageHelper.getPreferences(context);
-            SharedPreferences.Editor editor = prefs.edit();
-            try {
-                JSONArray inappsFromPrefs = new JSONArray(
-                        StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));
-
-                // Now add the rest of them :)
-                if (inappNotifs != null && inappNotifs.length() > 0) {
-                    for (int i = 0; i < inappNotifs.length(); i++) {
-                        try {
-                            JSONObject inappNotif = inappNotifs.getJSONObject(i);
-                            inappsFromPrefs.put(inappNotif);
-                        } catch (JSONException e) {
-                            Logger.v("InAppManager: Malformed inapp notification");
-                        }
-                    }
-                }
-
-                // Commit all the changes
-                editor.putString(StorageHelper.storageKeyWithSuffix(config, Constants.INAPP_KEY),
-                        inappsFromPrefs.toString());
-                StorageHelper.persist(editor);
-            } catch (Throwable e) {
-                logger.verbose(config.getAccountId(), "InApp: Failed to parse the in-app notifications properly");
-                logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
-            }
-            // Fire the first notification, if any
-            Task<Void> task = CTExecutorFactory.executors(config)
-                    .postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-            task.execute("InAppResponse#processResponse", new Callable<Void>() {
-                @Override
-                public Void call() {
-                    controllerManager.getInAppController().showNotificationIfAvailable(context);
-                    return null;
-                }
-            });
         } catch (Throwable t) {
             Logger.v("InAppManager: Failed to parse response", t);
         }
@@ -139,5 +139,40 @@ public class InAppResponse extends CleverTapResponseDecorator {
         // process metadata response
         cleverTapResponse.processResponse(response, stringBody, context);
 
+    }
+
+    private void clearStaleInAppImpressions(JSONArray inappStaleList, ImpressionStore impressionStore) {
+        //Stale in-app ids used to remove in-app counts from impressionStore
+        for (int i = 0; i < inappStaleList.length(); i++) {
+            String inappStaleId = inappStaleList.optString(i);
+            impressionStore.clear(inappStaleId);
+        }
+    }
+
+    private void handleAppLaunchServerSide(JSONArray inappNotifsApplaunched) {
+        List<JSONObject> inappNotifsApplaunchedList = new ArrayList<>();
+        try {
+            for (int index = 0; index < inappNotifsApplaunched.length(); index++) {
+                inappNotifsApplaunchedList.add(inappNotifsApplaunched.getJSONObject(index));
+            }
+            EvaluationManager.evaluateOnAppLaunchedServerSide(inappNotifsApplaunchedList);
+        } catch (Throwable e) {
+            logger.verbose(config.getAccountId(), "InAppManager: Malformed AppLaunched ServerSide inApps");
+            logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
+        }
+    }
+
+    private void displayInApp(Context context, JSONArray inappNotifsArray) {
+        // Fire the first notification, if any
+        Task<Void> task = CTExecutorFactory.executors(config)
+                .postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+        task.execute("InAppResponse#processResponse", new Callable<Void>() {
+            @Override
+            public Void call() {
+                //TODO: send inappNotifsArray for display
+                controllerManager.getInAppController().showNotificationIfAvailable(context);
+                return null;
+            }
+        });
     }
 }

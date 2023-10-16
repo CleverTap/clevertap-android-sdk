@@ -103,7 +103,7 @@ class CleverTapFactory {
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
                 validationResultStack, controllerManager, baseDatabaseManager,
-                callbackManager, ctLockManager, validator, localDataStore);
+                callbackManager, ctLockManager, validator, localDataStore, cryptHandler);
         coreState.setNetworkManager(networkManager);
 
         EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config,
@@ -115,7 +115,7 @@ class CleverTapFactory {
 
         AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
                 validationResultStack, coreMetaData, localDataStore, deviceInfo,
-                callbackManager, controllerManager, ctLockManager);
+                callbackManager, controllerManager, ctLockManager, cryptHandler);
         coreState.setAnalyticsManager(analyticsManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,

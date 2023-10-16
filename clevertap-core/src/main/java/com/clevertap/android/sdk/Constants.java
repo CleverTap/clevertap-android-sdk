@@ -183,6 +183,7 @@ public interface Constants {
     String KEY_CONFIG = "config";
     String KEY_C2A = "wzrk_c2a";
     String KEY_EFC = "efc";
+    String KEY_EXCLUDE_GLOBAL_CAPS = "excludeGlobalFCaps";
     String KEY_TLC = "tlc";
     String KEY_TDC = "tdc";
     String KEY_KV = "kv";

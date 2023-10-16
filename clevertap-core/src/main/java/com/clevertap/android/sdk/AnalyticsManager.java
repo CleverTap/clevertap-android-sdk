@@ -10,6 +10,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
@@ -55,6 +56,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final ControllerManager controllerManager;
 
+    private final CryptHandler cryptHandler;
+
     private final CoreMetaData coreMetaData;
 
     private final DeviceInfo deviceInfo;
@@ -78,15 +81,16 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     AnalyticsManager(Context context,
-            CleverTapInstanceConfig config,
-            BaseEventQueueManager baseEventQueueManager,
-            Validator validator,
-            ValidationResultStack validationResultStack,
-            CoreMetaData coreMetaData,
-            LocalDataStore localDataStore,
-            DeviceInfo deviceInfo,
-            BaseCallbackManager callbackManager, ControllerManager controllerManager,
-            final CTLockManager ctLockManager) {
+                     CleverTapInstanceConfig config,
+                     BaseEventQueueManager baseEventQueueManager,
+                     Validator validator,
+                     ValidationResultStack validationResultStack,
+                     CoreMetaData coreMetaData,
+                     LocalDataStore localDataStore,
+                     DeviceInfo deviceInfo,
+                     BaseCallbackManager callbackManager, ControllerManager controllerManager,
+                     final CTLockManager ctLockManager,
+                     CryptHandler cryptHandler) {
         this.context = context;
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
@@ -98,6 +102,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.callbackManager = callbackManager;
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
+        this.cryptHandler = cryptHandler;
     }
 
     @Override
@@ -498,8 +503,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         r.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
                         inappNotifs.put(new JSONObject(extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)));
                         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
-                        cleverTapResponse = new InAppResponse(cleverTapResponse, config,
-                                controllerManager, true);
+                        cleverTapResponse = new InAppResponse(cleverTapResponse, config, deviceInfo,
+                                controllerManager, cryptHandler, true);
                         cleverTapResponse.processResponse(r, null, context);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
