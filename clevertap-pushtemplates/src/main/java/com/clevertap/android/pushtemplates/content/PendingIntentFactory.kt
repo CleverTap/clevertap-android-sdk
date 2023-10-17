@@ -180,7 +180,7 @@ internal object PendingIntentFactory {
 
             RATING_CLICK1_PENDING_INTENT, RATING_CLICK2_PENDING_INTENT, RATING_CLICK3_PENDING_INTENT,
             RATING_CLICK4_PENDING_INTENT, RATING_CLICK5_PENDING_INTENT -> {
-                val clickedStar = identifier - RATING_CLICK1_PENDING_INTENT + 1
+                val clickedStar = getRatingStarNumber(identifier)
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra("click$clickedStar", true)
                 launchIntent!!.putExtra(KEY_CLICKED_STAR, clickedStar)
@@ -352,4 +352,15 @@ internal object PendingIntentFactory {
             LaunchPendingIntentFactory.getActivityIntent(extras, context)
         }
     }
+
+    /**
+     * This function returns the number(1 to 5) of the concerned star for rating PT based on the identifier.
+     * The identifiers for the stars are consecutive integers.
+     * Hence the specific star number can be derived by subtracting the first identifier
+     */
+    @JvmStatic
+    private fun getRatingStarNumber(identifier: Int): Int {
+        return identifier - RATING_CLICK1_PENDING_INTENT + 1;
+    }
+
 }

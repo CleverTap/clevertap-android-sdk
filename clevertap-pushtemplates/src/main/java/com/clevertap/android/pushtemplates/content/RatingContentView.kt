@@ -13,7 +13,6 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.*
-import kotlin.math.abs
 
 class RatingContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
     BigImageContentView(context, renderer, R.layout.rating) {
@@ -28,7 +27,7 @@ class RatingContentView(context: Context, renderer: TemplateRenderer, extras: Bu
 
         // Request Codes for all stars are passed as an extra to cancel all pending intents when any of the star is clicked
         extras.putIntArray(PTConstants.KEY_REQUEST_CODES, IntArray(5) {
-            abs(Random().nextInt())
+            Random().nextInt()
         })
 
         remoteView.setOnClickPendingIntent(
