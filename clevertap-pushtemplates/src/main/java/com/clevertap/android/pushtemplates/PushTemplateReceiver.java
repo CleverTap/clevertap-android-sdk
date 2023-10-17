@@ -6,11 +6,6 @@ import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT;
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT;
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.PRODUCT_DISPLAY_CONTENT_PENDING_INTENT;
-import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK1_PENDING_INTENT;
-import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK2_PENDING_INTENT;
-import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK3_PENDING_INTENT;
-import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK4_PENDING_INTENT;
-import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.RATING_CLICK5_PENDING_INTENT;
 import static com.clevertap.android.sdk.pushnotification.CTNotificationIntentService.TYPE_BUTTON_CLICK;
 
 import android.annotation.SuppressLint;
@@ -38,7 +33,6 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory;
@@ -582,26 +576,20 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     /**
      * This method cancels all pending intents fired on click of rating. Allows the user to
-     * click only once for Android 11+ devices.
+     * click only once for Android 11+ devices and prevents collisions for future rating push-templates
      * @param context Context required for cancelling pending intents
      * @param intent Intent required for cancelling pending intents
      */
-    private void cancelRatingClickIntents(Context context, Intent intent){
-        if (VERSION.SDK_INT > VERSION_CODES.S) {
-            int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+    private void cancelRatingClickIntents(Context context, Intent intent) {
+        int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (VERSION.SDK_INT >= VERSION_CODES.M) {
             flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-
-            PendingIntent.getBroadcast(context,
-                    RATING_CLICK5_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
-            PendingIntent.getBroadcast(context,
-                    RATING_CLICK4_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
-            PendingIntent.getBroadcast(context,
-                    RATING_CLICK3_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
-            PendingIntent.getBroadcast(context,
-                    RATING_CLICK2_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
-            PendingIntent.getBroadcast(context,
-                    RATING_CLICK1_PENDING_INTENT, intent, flagsLaunchPendingIntent).cancel();
         }
+        int[] requestCodes = intent.getIntArrayExtra(PTConstants.KEY_REQUEST_CODES);
+
+        for (int requestCode : requestCodes)
+            PendingIntent.getBroadcast(context,
+                    requestCode, intent, flagsLaunchPendingIntent).cancel();
     }
 
     @SuppressLint("MissingPermission")
