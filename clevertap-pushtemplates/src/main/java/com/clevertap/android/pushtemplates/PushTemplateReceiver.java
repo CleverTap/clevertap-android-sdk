@@ -38,7 +38,6 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory;
@@ -77,8 +76,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     private ArrayList<String> smallTextList = new ArrayList<>();
 
     private ArrayList<String> priceList = new ArrayList<>();
-
-    private String channelId;
 
     private int smallIcon = 0;
 
@@ -125,7 +122,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             priceList = Utils.getPriceFromExtras(extras);
             pt_product_display_linear = extras.getString(PTConstants.PT_PRODUCT_DISPLAY_LINEAR);
             notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-            channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
             pt_big_img_alt = extras.getString(PTConstants.PT_BIG_IMG_ALT);
             pt_small_icon_clr = extras.getString(PTConstants.PT_SMALL_ICON_COLOUR);
             requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
@@ -133,23 +129,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             pt_rating_toast = extras.getString(PTConstants.PT_RATING_TOAST);
             pt_subtitle = extras.getString(PTConstants.PT_SUBTITLE);
             setKeysFromDashboard(extras);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                String channelIdError = null;
-                if (channelId.isEmpty()) {
-                    channelIdError =
-                            "Unable to render notification, channelId is required but not provided in the notification payload: "
-                                    + extras.toString();
-                } else if (notificationManager != null
-                        && notificationManager.getNotificationChannel(channelId) == null) {
-                    channelIdError = "Unable to render notification, channelId: " + channelId
-                            + " not registered by the app.";
-                }
-                if (channelIdError != null) {
-                    PTLog.verbose(channelIdError);
-                    return;
-                }
-            }
 
             if (pt_id != null) {
                 templateType = TemplateType.fromString(pt_id);
