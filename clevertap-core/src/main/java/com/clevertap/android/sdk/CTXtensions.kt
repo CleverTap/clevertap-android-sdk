@@ -15,6 +15,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import org.json.JSONArray
+import org.json.JSONObject
 
 fun Context.isPackageAndOsTargetsAbove(apiLevel: Int) =
     VERSION.SDK_INT > apiLevel && targetSdkVersion > apiLevel
@@ -156,3 +157,14 @@ fun SharedPreferences.hasData(): Boolean {
     return all.isNotEmpty()
 }
 
+fun JSONArray?.orEmptyArray(): JSONArray {
+    return this ?: JSONArray()
+}
+
+fun JSONArray.toList(): List<JSONObject> {
+    val jsonObjectList = mutableListOf<JSONObject>()
+    for (index in 0 until length()) {
+        jsonObjectList.add(getJSONObject(index))
+    }
+    return jsonObjectList
+}

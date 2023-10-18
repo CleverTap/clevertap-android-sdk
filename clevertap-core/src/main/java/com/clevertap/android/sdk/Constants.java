@@ -244,6 +244,9 @@ public interface Constants {
     String INAPP_SUPPRESSED = "suppressed";
     String INAPP_OPERATOR = "operator";
     String INAPP_PROPERTYNAME = "propertyName";
+    String INAPP_WHEN_TRIGGERS = "whenTriggers";
+    String INAPP_FC_LIMITS = "frequencyLimits";
+    String INAPP_OCCURRENCE_LIMITS = "occurrenceLimits";
     String WZRK_RNV = "wzrk_rnv";
     String BLACK = "#000000";
     String WHITE = "#FFFFFF";

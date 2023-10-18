@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.events.EventQueueManager;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory;
+import com.clevertap.android.sdk.inapp.EvaluationManager;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.AppLaunchListener;
@@ -122,9 +123,13 @@ class CleverTapFactory {
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
+        EvaluationManager evaluationManager = new EvaluationManager(context, config.getAccountId(),
+                deviceInfo.getDeviceID(), inAppController, cryptHandler);
+        coreState.setEvaluationManager(evaluationManager);
+
         // TODO register App Launched listener
         CompositeBatchListener batchListener = new CompositeBatchListener();
-        batchListener.addListener(new AppLaunchListener(inAppController));
+        batchListener.addListener(new AppLaunchListener(evaluationManager));
         callbackManager.setBatchListener(batchListener);
 
         Task<Void> taskInitFeatureFlags = CTExecutorFactory.executors(config).ioTask();

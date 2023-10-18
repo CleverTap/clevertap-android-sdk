@@ -402,6 +402,34 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         showInAppNotificationIfAny();
     }
 
+    public void addInAppNotificationsToQueue(JSONArray inappNotifs) {
+        try {
+            JSONArray storedInApps = new JSONArray(
+                    StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));
+
+            for (int i = 0; i < inappNotifs.length(); i++) {
+                try {
+                    storedInApps.put(inappNotifs.get(i));
+                } catch (Exception e) {
+                    logger.debug(config.getAccountId(), "InAppController: Malformed InApp notification: " + e.getMessage());
+                }
+            }
+
+            //TODO: should this be putStringImmediate()?
+            // Commit all the changes
+            StorageHelper.putString(context,
+                    config, Constants.INAPP_KEY,
+                    storedInApps.toString()
+            );
+
+            // Fire the first notification, if any
+            showNotificationIfAvailable(context);
+        } catch (Exception e) {
+            logger.debug(config.getAccountId(), "InAppController: : InApp notification handling error: " + e.getMessage());
+        }
+    }
+
+
     //InApp
     public void showNotificationIfAvailable(final Context context) {
         if (!config.isAnalyticsOnly()) {
@@ -739,9 +767,5 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 Logger.v(config.getAccountId(), "Fragment not able to render", t);
             }
         }
-    }
-
-    public void onAppLaunchedSent() {
-        EvaluationManager.evaluateOnAppLaunchedClientSide();
     }
 }

@@ -564,4 +564,12 @@ public final class Utils {
         }
         return false;
     }
+
+    public static List<JSONObject> toJSONObjectList(JSONArray jsonArray) throws JSONException {
+        List<JSONObject> jsonObjectList = new ArrayList<>();
+        for (int index = 0; index < jsonArray.length(); index++) {
+            jsonObjectList.add(jsonArray.getJSONObject(index));
+        }
+        return jsonObjectList;
+    }
 }

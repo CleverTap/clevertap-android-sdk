@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventMediator;
+import com.clevertap.android.sdk.inapp.EvaluationManager;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.BaseNetworkManager;
@@ -47,6 +48,8 @@ public class CoreState extends CleverTapState {
     private ControllerManager controllerManager;
 
     private InAppController inAppController;
+
+    private EvaluationManager evaluationManager;
 
     private LoginController loginController;
 
@@ -187,6 +190,14 @@ public class CoreState extends CleverTapState {
 
     public void setInAppController(final InAppController inAppController) {
         this.inAppController = inAppController;
+    }
+
+    public EvaluationManager getEvaluationManager() {
+        return evaluationManager;
+    }
+
+    public void setEvaluationManager(final EvaluationManager evaluationManager) {
+        this.evaluationManager = evaluationManager;
     }
 
     public LocalDataStore getLocalDataStore() {

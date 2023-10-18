@@ -1,15 +1,36 @@
 package com.clevertap.android.sdk.inapp
 
+import android.content.Context
 import android.icu.text.SimpleDateFormat
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.inapp.matchers.EventAdapter
+import com.clevertap.android.sdk.inapp.matchers.LimitsMatcher
+import com.clevertap.android.sdk.inapp.matchers.TriggersMatcher
+import com.clevertap.android.sdk.orEmptyArray
+import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Locale
 
-object EvaluationManager {
-
+class EvaluationManager(
+    context: Context,
+    accountId: String,
+    deviceId: String,
+    private val inappController: InAppController,
+    cryptHandler: CryptHandler
+) {
+    val evaluatedServerSideInAppIds: MutableList<String>
+        get() = evaluatedServerSideInAppIds
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
+
+    private val triggersMatcher = TriggersMatcher()
+    private val triggersManager = TriggerManager(context, accountId, deviceId)
+    private val impressionStore = ImpressionStore(context, accountId, deviceId)
+    private val impressionManager = ImpressionManager(impressionStore)
+    private val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
+    private val inAppStore = InAppStore(context, cryptHandler, accountId, deviceId)
 
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>) {
         if (eventName != "App Launched") {
@@ -30,34 +51,48 @@ object EvaluationManager {
     }
 
     // onBatchSent with App Launched event in batch
-    @JvmStatic
-    fun evaluateOnAppLaunchedClientSide() {
+    private fun evaluateOnAppLaunchedClientSide() {
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
         evaluateClientSide(event)
     }
 
-    @JvmStatic
     fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>) {
         // BE returns applaunch_notifs [0, 1, 2]
         // record trigger counts
         // evaluate limits [2]
         // show first based on priority (2)
-
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
-        evaluate(event, appLaunchedNotifs)
-        // TODO handle supressed inapps
-        // TODO eligibleInapps.sort().first().display();
+        val eligibleInApps = evaluate(event, appLaunchedNotifs)
+        sortByPriority(eligibleInApps)
+
+        val inAppNotificationsToQueue: MutableList<JSONObject> = mutableListOf()
+        for (inApp in eligibleInApps) {
+            if (!shouldSuppress(inApp)) {
+                inAppNotificationsToQueue.add(inApp)
+                break
+            }
+
+            suppress(inApp)
+        }
+
+        inappController.addInAppNotificationsToQueue(JSONArray(inAppNotificationsToQueue))
+        // TODO handle supressed inapps - DONE
+        // TODO eligibleInapps.sort().first().display(); - DONE
     }
 
     private fun evaluateServerSide(event: EventAdapter) {
-        // evaluate(event, getServerSideNotifsFromStore())
+        val eligibleInApps = evaluate(event, inAppStore.readServerSideInApps().toList())
         // TODO add to meta inapp_evals : eligibleInapps.addToMeta();
+        for (inApp in eligibleInApps) {
+            val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+            if (campaignId.isNotEmpty()) {
+                evaluatedServerSideInAppIds.add(campaignId)
+            }
+        }
     }
 
     private fun evaluateClientSide(event: EventAdapter) {
-        // evaluate(event, getClientSideNotifsFromStore())
-
-        val eligibleInApps = evaluate(event, ArrayList())// TODO replace with actual implementation
+        val eligibleInApps = evaluate(event, inAppStore.readClientSideInApps().toList()) // TODO replace with actual implementation -DONE
         val sortedInApps = sortByPriority(eligibleInApps)
         if (sortedInApps.isNotEmpty()) {
             val inApp = sortedInApps[0]
@@ -65,18 +100,39 @@ object EvaluationManager {
                 suppress(inApp)
                 return
             }
+            inappController.addInAppNotificationsToQueue(JSONArray(inApp))
             updateTTL(inApp)
         }
         // TODO handle supressed inapps -> DONE
         // TODO calculate TTL field and put it in the json based on ttlOffset parameter -> DONE
-        // TODO eligibleInapps.sort().first().display();
+        // TODO eligibleInapps.sort().first().display(); - DONE
     }
 
     private fun evaluate(event: EventAdapter, inappNotifs: List<JSONObject>): List<JSONObject> {
-        // TODO: whenTriggers
-        // TODO: record trigger
-        // TODO: whenLimits
-        return listOf() // returns eligible inapps
+        // TODO: whenTriggers - DONE
+        // TODO: record trigger - DONE
+        // TODO: whenLimits - DONE
+        val eligibleInApps: MutableList<JSONObject> = mutableListOf()
+        for (inApp in inappNotifs) {
+            val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+            val whenTriggers = inApp.optJSONArray(Constants.INAPP_WHEN_TRIGGERS).orEmptyArray()
+            val matchesTrigger = triggersMatcher.matchEvent(whenTriggers, event.eventName, event.eventProperties)
+            if (matchesTrigger) {
+                triggersManager.increment(campaignId)
+                val frequencyLimits = inApp.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
+                val occurrenceLimits = inApp.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
+
+                val whenLimits: MutableList<JSONObject> = mutableListOf()
+                whenLimits.addAll(frequencyLimits.toList())
+                whenLimits.addAll(occurrenceLimits.toList())
+
+                val matchesLimits = limitsMatcher.matchWhenLimits(whenLimits, campaignId)
+                if (matchesLimits) {
+                    eligibleInApps.add(inApp)
+                }
+            }
+        }
+        return eligibleInApps //// returns eligible inapps
     }
 
     /**
@@ -94,7 +150,6 @@ object EvaluationManager {
         }
         // Sort by priority descending and then by timestamp ascending
         return inApps.sortedWith(compareByDescending<JSONObject> { priority(it) }.thenBy { ti(it) })
-
     }
 
     private fun shouldSuppress(inApp: JSONObject): Boolean {
@@ -135,4 +190,7 @@ object EvaluationManager {
         }
     }
 
+    fun onAppLaunchedSent() {
+        evaluateOnAppLaunchedClientSide()
+    }
 }
