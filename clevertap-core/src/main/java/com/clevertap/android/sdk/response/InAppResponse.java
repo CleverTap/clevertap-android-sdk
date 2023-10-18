@@ -5,7 +5,6 @@ import android.content.Context;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
-import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.cryption.CryptHandler;
@@ -22,29 +21,31 @@ import org.json.JSONObject;
 public class InAppResponse extends CleverTapResponseDecorator {
 
     private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
-
-    private final DeviceInfo deviceInfo;
-
     private final ControllerManager controllerManager;
-
     private final CryptHandler cryptHandler;
-
     private final boolean isSendTest;
-
     private final Logger logger;
+    private final InAppStore inAppStore;
+    private final ImpressionStore impressionStore;
 
-    public InAppResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
-                         DeviceInfo deviceInfo, ControllerManager controllerManager,
-                         CryptHandler cryptHandler, final boolean isSendTest) {
+    public InAppResponse(
+            CleverTapResponse cleverTapResponse,
+            CleverTapInstanceConfig config,
+            ControllerManager controllerManager,
+            CryptHandler cryptHandler,
+            final boolean isSendTest,
+            InAppStore inAppStore,
+            ImpressionStore impressionStore
+    ) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
-        this.deviceInfo = deviceInfo;
         this.cryptHandler = cryptHandler;
         logger = this.config.getLogger();
         this.controllerManager = controllerManager;
         this.isSendTest = isSendTest;
+        this.inAppStore = inAppStore;
+        this.impressionStore = impressionStore;
     }
 
     @Override
@@ -89,8 +90,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 handleAppLaunchServerSide(inappNotifsApplaunched);
             }
 
-            InAppStore inAppStore = new InAppStore(context, cryptHandler, config.getAccountId(), deviceInfo.getDeviceID());
-
             JSONArray inappNotifsClientSide = response.optJSONArray("inapp_notifs_cs");
             if (inappNotifsClientSide != null && inappNotifsClientSide.length() > 0) {
                 inAppStore.storeClientSideInApps(inappNotifsClientSide);
@@ -109,7 +108,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             JSONArray inappStaleList = response.optJSONArray("inapp_stale");
             if (inappStaleList != null) {
-                ImpressionStore impressionStore = new ImpressionStore(context, config.getAccountId(), deviceInfo.getDeviceID());
                 clearStaleInAppImpressions(inappStaleList, impressionStore);
             }
 

@@ -14,6 +14,8 @@ import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.inapp.ImpressionStore;
+import com.clevertap.android.sdk.inapp.InAppStore;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.CleverTapResponseHelper;
@@ -503,8 +505,18 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         r.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
                         inappNotifs.put(new JSONObject(extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)));
                         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
-                        cleverTapResponse = new InAppResponse(cleverTapResponse, config, deviceInfo,
-                                controllerManager, cryptHandler, true);
+                        InAppStore store = new InAppStore(context, cryptHandler, config.getAccountId(), deviceInfo.getDeviceID());
+                        ImpressionStore impStore = new ImpressionStore(context, config.getAccountId(), deviceInfo.getDeviceID());
+
+                        cleverTapResponse = new InAppResponse(
+                                cleverTapResponse,
+                                config,
+                                controllerManager,
+                                cryptHandler,
+                                true,
+                                store,
+                                impStore
+                        );
                         cleverTapResponse.processResponse(r, null, context);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);

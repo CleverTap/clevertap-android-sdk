@@ -31,6 +31,8 @@ import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueCursor;
 import com.clevertap.android.sdk.events.EventGroup;
+import com.clevertap.android.sdk.inapp.ImpressionStore;
+import com.clevertap.android.sdk.inapp.InAppStore;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
@@ -153,7 +155,18 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new ConsoleResponse(cleverTapResponse, config);
         cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator, controllerManager);
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
-        cleverTapResponse = new InAppResponse(cleverTapResponse, config, deviceInfo, controllerManager, cryptHandler, false);
+
+        InAppStore store = new InAppStore(context, cryptHandler, config.getAccountId(), deviceInfo.getDeviceID());
+        ImpressionStore impStore = new ImpressionStore(context, config.getAccountId(), deviceInfo.getDeviceID());
+        cleverTapResponse = new InAppResponse(
+                cleverTapResponse,
+                config,
+                controllerManager,
+                cryptHandler,
+                false,
+                store,
+                impStore
+        );
 
         cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore, cleverTapResponse);
 

@@ -100,32 +100,77 @@ class CleverTapFactory {
             }
         });
 
-
-
-        NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
-                validationResultStack, controllerManager, baseDatabaseManager,
-                callbackManager, ctLockManager, validator, localDataStore, cryptHandler);
+        NetworkManager networkManager = new NetworkManager(
+                context,
+                config,
+                deviceInfo,
+                coreMetaData,
+                validationResultStack,
+                controllerManager,
+                baseDatabaseManager,
+                callbackManager,
+                ctLockManager,
+                validator,
+                localDataStore,
+                cryptHandler
+        );
         coreState.setNetworkManager(networkManager);
 
-        EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config,
+        EventQueueManager baseEventQueueManager = new EventQueueManager(
+                baseDatabaseManager,
+                context,
+                config,
                 eventMediator,
-                sessionManager, callbackManager,
-                mainLooperHandler, deviceInfo, validationResultStack,
-                networkManager, coreMetaData, ctLockManager, localDataStore, controllerManager, cryptHandler);
+                sessionManager,
+                callbackManager,
+                mainLooperHandler,
+                deviceInfo,
+                validationResultStack,
+                networkManager,
+                coreMetaData,
+                ctLockManager,
+                localDataStore,
+                controllerManager,
+                cryptHandler
+        );
         coreState.setBaseEventQueueManager(baseEventQueueManager);
 
-        AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
-                validationResultStack, coreMetaData, localDataStore, deviceInfo,
-                callbackManager, controllerManager, ctLockManager, cryptHandler);
+        AnalyticsManager analyticsManager = new AnalyticsManager(
+                context,
+                config,
+                baseEventQueueManager,
+                validator,
+                validationResultStack,
+                coreMetaData,
+                localDataStore,
+                deviceInfo,
+                callbackManager,
+                controllerManager,
+                ctLockManager,
+                cryptHandler
+        );
         coreState.setAnalyticsManager(analyticsManager);
 
-        InAppController inAppController = new InAppController(context, config, mainLooperHandler,
-                controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo);
+        InAppController inAppController = new InAppController(
+                context,
+                config,
+                mainLooperHandler,
+                controllerManager,
+                callbackManager,
+                analyticsManager,
+                coreMetaData,
+                deviceInfo
+        );
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
-        EvaluationManager evaluationManager = new EvaluationManager(context, config.getAccountId(),
-                deviceInfo.getDeviceID(), inAppController, cryptHandler);
+        EvaluationManager evaluationManager = new EvaluationManager(
+                context,
+                config.getAccountId(),
+                deviceInfo.getDeviceID(),
+                inAppController,
+                cryptHandler
+        );
         coreState.setEvaluationManager(evaluationManager);
 
         // TODO register App Launched listener
