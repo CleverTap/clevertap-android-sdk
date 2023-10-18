@@ -192,10 +192,13 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             if (VERSION.SDK_INT >= VERSION_CODES.M) {
                 int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
                 Notification notification = Utils.getNotificationById(context, notificationId);
-                if (notification != null) {
-                    contentViewManualCarousel = notification.bigContentView;
-                    contentViewSmall = notification.contentView;
+                if (notification == null) {
+                    PTLog.verbose("Manual Carousel Notification is null, returning");
+                    return;
                 }
+                contentViewManualCarousel = notification.bigContentView;
+                contentViewSmall = notification.contentView;
+
                 setCustomContentViewBasicKeys(contentViewManualCarousel, context);
 
                 final boolean rightSwipe = extras.getBoolean(PTConstants.PT_RIGHT_SWIPE);
@@ -253,13 +256,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                         MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, null
                 );
 
-                NotificationCompat.Builder notificationBuilder;
-                if (notification != null) {
-                    notificationBuilder = new Builder(context, notification);
-                } else {
-                    notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId,
-                            PTConstants.PT_SILENT_CHANNEL_ID, context);
-                }
+                NotificationCompat.Builder notificationBuilder = new Builder(context, notification);
 
                 PendingIntent dIntent = PendingIntentFactory.getPendingIntent(context, notificationId, extras, false,
                         MANUAL_CAROUSEL_DISMISS_PENDING_INTENT, null);
@@ -460,10 +457,12 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
             if (VERSION.SDK_INT >= VERSION_CODES.M) {
                 Notification notification = Utils.getNotificationById(context, notificationId);
-                if (notification != null) {
-                    contentViewRating = notification.bigContentView;
-                    contentViewSmall = notification.contentView;
-                } // why null check just return if no notification exist in drawer
+                if (notification == null) {
+                    PTLog.verbose("Rating Notification is null, returning");
+                    return;
+                }
+                contentViewRating = notification.bigContentView;
+                contentViewSmall = notification.contentView;
 
                 if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                     contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
@@ -512,13 +511,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                 setSmallIcon(context);
 
-                NotificationCompat.Builder notificationBuilder;
-                if (notification != null) {
-                    notificationBuilder = new Builder(context, notification);
-                } else {
-                    notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId,
-                            PTConstants.PT_SILENT_CHANNEL_ID, context);
-                }
+                NotificationCompat.Builder notificationBuilder = new Builder(context, notification);
                 Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
                 PendingIntent dIntent;
                 dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
@@ -619,10 +612,13 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             if (VERSION.SDK_INT >= VERSION_CODES.M) {
                 int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
                 Notification notification = Utils.getNotificationById(context, notificationId);
-                if (notification != null) {
-                    contentViewBig = notification.bigContentView;
-                    contentViewSmall = notification.contentView;
+                if (notification == null) {
+                    PTLog.verbose("Product Display Notification is null, returning");
+                    return;
                 }
+                contentViewBig = notification.bigContentView;
+                contentViewSmall = notification.contentView;
+
                 boolean isLinear = false;
                 if (pt_product_display_linear == null || pt_product_display_linear.isEmpty()) {
                 } else {
@@ -663,13 +659,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                         PendingIntentFactory.getCtaLaunchPendingIntent(context,
                                 bundleBuyNow, dl, notificationId));
 
-                NotificationCompat.Builder notificationBuilder;
-                if (notification != null) {
-                    notificationBuilder = new Builder(context, notification);
-                } else {
-                    notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId,
-                            PTConstants.PT_SILENT_CHANNEL_ID, context);
-                }
+                NotificationCompat.Builder notificationBuilder = new Builder(context, notification);
 
                 PendingIntent pIntent;
                 Bundle bundleLaunchIntent = (Bundle) extras.clone();
@@ -729,16 +719,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 .setContentIntent(pIntent).setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
                 .setWhen(System.currentTimeMillis())
                 .setAutoCancel(true);
-    }
-
-
-    private NotificationCompat.Builder setBuilderWithChannelIDCheck(boolean requiresChannelId, String channelId,
-            Context context) {
-        if (requiresChannelId) {
-            return new NotificationCompat.Builder(context, channelId);
-        } else {
-            return new NotificationCompat.Builder(context);
-        }
     }
 
     private void setCustomContentViewBasicKeys(RemoteViews contentView, Context context) {
