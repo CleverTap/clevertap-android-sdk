@@ -5,12 +5,14 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.network.BatchListener;
-import com.clevertap.android.sdk.interfaces.SCDomainListener;
+import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
+import com.clevertap.android.sdk.interfaces.SCDomainListener;
+import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -58,6 +60,7 @@ public class CallbackManager extends BaseCallbackManager {
     private CTPushNotificationListener pushNotificationListener = null;
 
     private SyncListener syncListener = null;
+    private FetchInAppsCallback fetchInAppsCallback;
 
     public CallbackManager(CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
         this.config = config;
@@ -328,8 +331,18 @@ public class CallbackManager extends BaseCallbackManager {
 
     @Override
     public void setFetchVariablesCallback(
-        FetchVariablesCallback fetchVariablesCallback) {
+            FetchVariablesCallback fetchVariablesCallback) {
         this.fetchVariablesCallback = fetchVariablesCallback;
+    }
+
+    @Override
+    public FetchInAppsCallback getFetchInAppsCallback() {
+        return fetchInAppsCallback;
+    }
+
+    @Override
+    public void setFetchInAppsCallback(FetchInAppsCallback fetchInAppsCallback) {
+        this.fetchInAppsCallback = fetchInAppsCallback;
     }
 
     public BatchListener getBatchListener() {

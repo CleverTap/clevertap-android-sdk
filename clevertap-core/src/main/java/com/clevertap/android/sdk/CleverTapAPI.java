@@ -38,6 +38,7 @@ import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
+import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
@@ -3290,12 +3291,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Fetches In Apps from server.
+     *
+     * @param callback Callback instance {@link FetchInAppsCallback} to be invoked when fetching is done.
      */
-    public void fetchInApps() {
+    public void fetchInApps(FetchInAppsCallback callback) {
         if (coreState.getConfig().isAnalyticsOnly()) {
             return;
         }
         Logger.v(Constants.LOG_TAG_INAPP + " Fetching In Apps...");
+
+        if (callback != null) {
+            coreState.getCallbackManager().setFetchInAppsCallback(callback);
+        }
 
         JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS);
         coreState.getAnalyticsManager().sendFetchEvent(event);

@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.AppLaunchListener;
 import com.clevertap.android.sdk.network.CompositeBatchListener;
+import com.clevertap.android.sdk.network.FetchInAppListener;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
@@ -130,6 +131,7 @@ class CleverTapFactory {
         // TODO register App Launched listener
         CompositeBatchListener batchListener = new CompositeBatchListener();
         batchListener.addListener(new AppLaunchListener(evaluationManager));
+        batchListener.addListener(new FetchInAppListener(callbackManager));
         callbackManager.setBatchListener(batchListener);
 
         Task<Void> taskInitFeatureFlags = CTExecutorFactory.executors(config).ioTask();

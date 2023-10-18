@@ -184,6 +184,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             controllerManager.invokeCallbacksForNetworkError();
+            controllerManager.invokeBatchListener(new JSONArray(), false);
             return;
         }
 
@@ -192,6 +193,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
             controllerManager.invokeCallbacksForNetworkError();
+            controllerManager.invokeBatchListener(new JSONArray(), false);
             return;
         }
 
