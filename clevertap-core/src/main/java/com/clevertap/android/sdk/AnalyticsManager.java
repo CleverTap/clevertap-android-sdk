@@ -109,6 +109,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.controllerManager = controllerManager;
         this.cryptHandler = cryptHandler;
         this.inAppResponse = inAppResponse;
+        this.inAppResponse.setTesting(true); // we are testing here
     }
 
     @Override

@@ -32,7 +32,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
     private final CleverTapInstanceConfig config;
     private final ControllerManager controllerManager;
     private final CryptHandler cryptHandler;
-    private final boolean isSendTest;
+    private boolean isSendTest;
     private final Logger logger;
     private final InAppStore inAppStore;
     private final ImpressionStore impressionStore;
@@ -59,6 +59,10 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     public void setCleverTapResponse(CleverTapResponse cleverTapResponse) {
         this.cleverTapResponse = cleverTapResponse;
+    }
+
+    public void setTesting(Boolean isTest) {
+        this.isSendTest = isTest;
     }
 
     @Override
