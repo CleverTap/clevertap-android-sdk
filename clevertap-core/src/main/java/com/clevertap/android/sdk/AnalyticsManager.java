@@ -70,6 +70,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final Validator validator;
 
+    private final InAppResponse inAppResponse;
+
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
 
     private final Object notificationMapLock = new Object();
@@ -92,7 +94,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                      DeviceInfo deviceInfo,
                      BaseCallbackManager callbackManager, ControllerManager controllerManager,
                      final CTLockManager ctLockManager,
-                     CryptHandler cryptHandler) {
+                     CryptHandler cryptHandler,
+                     InAppResponse inAppResponse) {
         this.context = context;
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
@@ -105,6 +108,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
         this.cryptHandler = cryptHandler;
+        this.inAppResponse = inAppResponse;
     }
 
     @Override
@@ -504,20 +508,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         JSONArray inappNotifs = new JSONArray();
                         r.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
                         inappNotifs.put(new JSONObject(extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)));
-                        CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
-                        InAppStore store = new InAppStore(context, cryptHandler, config.getAccountId(), deviceInfo.getDeviceID());
-                        ImpressionStore impStore = new ImpressionStore(context, config.getAccountId(), deviceInfo.getDeviceID());
-
-                        cleverTapResponse = new InAppResponse(
-                                cleverTapResponse,
-                                config,
-                                controllerManager,
-                                cryptHandler,
-                                true,
-                                store,
-                                impStore
-                        );
-                        cleverTapResponse.processResponse(r, null, context);
+                        inAppResponse.processResponse(r, null, context);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
                     }
@@ -561,8 +552,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG)
-                == null)) {
+        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             config.getLogger().debug(config.getAccountId(),
                     "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras
                             .toString());
@@ -570,8 +560,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (5 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationIdTagMap,
-                Constants.NOTIFICATION_ID_TAG_INTERVAL);
+        boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationIdTagMap, Constants.NOTIFICATION_ID_TAG_INTERVAL);
         if (isDuplicate) {
             config.getLogger().debug(config.getAccountId(),
                     "Already processed Notification Clicked event for " + extras.toString()

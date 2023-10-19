@@ -9,7 +9,13 @@ import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.events.EventQueueManager;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory;
 import com.clevertap.android.sdk.inapp.EvaluationManager;
+import com.clevertap.android.sdk.inapp.ImpressionManager;
+import com.clevertap.android.sdk.inapp.ImpressionStore;
 import com.clevertap.android.sdk.inapp.InAppController;
+import com.clevertap.android.sdk.inapp.InAppStore;
+import com.clevertap.android.sdk.inapp.TriggerManager;
+import com.clevertap.android.sdk.inapp.matchers.LimitsMatcher;
+import com.clevertap.android.sdk.inapp.matchers.TriggersMatcher;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.AppLaunchListener;
 import com.clevertap.android.sdk.network.CompositeBatchListener;
@@ -17,6 +23,7 @@ import com.clevertap.android.sdk.network.FetchInAppListener;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
+import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -100,6 +107,18 @@ class CleverTapFactory {
             }
         });
 
+        InAppStore store = new InAppStore(context, cryptHandler, deviceInfo, config.getAccountId());
+        ImpressionStore impStore = new ImpressionStore(context, config.getAccountId(), deviceInfo);
+        InAppResponse inAppResponse = new InAppResponse(
+                config,
+                controllerManager,
+                cryptHandler,
+                false,
+                store,
+                impStore,
+                deviceInfo
+        );
+
         NetworkManager networkManager = new NetworkManager(
                 context,
                 config,
@@ -112,7 +131,8 @@ class CleverTapFactory {
                 ctLockManager,
                 validator,
                 localDataStore,
-                cryptHandler
+                cryptHandler,
+                inAppResponse
         );
         coreState.setNetworkManager(networkManager);
 
@@ -147,7 +167,8 @@ class CleverTapFactory {
                 callbackManager,
                 controllerManager,
                 ctLockManager,
-                cryptHandler
+                cryptHandler,
+                inAppResponse
         );
         coreState.setAnalyticsManager(analyticsManager);
 
@@ -164,12 +185,21 @@ class CleverTapFactory {
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
+        TriggersMatcher triggersMatcher = new TriggersMatcher();
+        TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
+        ImpressionStore impressionStore = new ImpressionStore(context, config.getAccountId(), deviceInfo);
+        ImpressionManager impressionManager = new ImpressionManager(impressionStore);
+        LimitsMatcher limitsMatcher = new LimitsMatcher(impressionManager, triggersManager);
+        InAppStore inAppStore = new InAppStore(context, cryptHandler, deviceInfo, config.getAccountId());
+
         EvaluationManager evaluationManager = new EvaluationManager(
-                context,
-                config.getAccountId(),
-                deviceInfo.getDeviceID(),
                 inAppController,
-                cryptHandler
+                triggersMatcher,
+                triggersManager,
+                impressionStore,
+                impressionManager,
+                limitsMatcher,
+                inAppStore
         );
         coreState.setEvaluationManager(evaluationManager);
 
@@ -187,8 +217,6 @@ class CleverTapFactory {
                 return null;
             }
         });
-
-
 
         LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
         coreState.setLocationManager(locationManager);

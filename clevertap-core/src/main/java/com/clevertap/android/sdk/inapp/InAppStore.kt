@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_INAPP_CS
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_INAPP_SS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
+import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.cryption.CryptHandler
 import org.json.JSONArray
@@ -29,8 +30,8 @@ import java.lang.ref.WeakReference
 class InAppStore(
     private val context: Context,
     private val cryptHandler: CryptHandler,
+    private val deviceInfo: DeviceInfo,
     accountId: String,
-    deviceId: String
 ) {
 
     companion object {
@@ -41,7 +42,7 @@ class InAppStore(
 
     var contextRef = WeakReference(context)
     val prefName =
-        "$INAPP_KEY:$deviceId:$accountId" //TODO Reuse of old INAPP_KEY with combo of accountId & deviceId??
+        "$INAPP_KEY:${deviceInfo.deviceID}:$accountId" //TODO Reuse of old INAPP_KEY with combo of accountId & deviceId??
 
     /**
      * The mode in which In-App messages are stored. Set to either [CLIENT_SIDE_MODE] or [SERVER_SIDE_MODE].

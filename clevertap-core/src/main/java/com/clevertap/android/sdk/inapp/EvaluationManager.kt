@@ -14,23 +14,18 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Locale
 
-class EvaluationManager(
-    context: Context,
-    accountId: String,
-    deviceId: String,
+class EvaluationManager constructor(
     private val inappController: InAppController,
-    cryptHandler: CryptHandler
+    private val triggersMatcher: TriggersMatcher,
+    private val triggersManager: TriggerManager,
+    private val impressionStore: ImpressionStore,
+    private val impressionManager: ImpressionManager,
+    private val limitsMatcher: LimitsMatcher,
+    private val inAppStore: InAppStore,
 ) {
     val evaluatedServerSideInAppIds: MutableList<String>
         get() = evaluatedServerSideInAppIds
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
-
-    private val triggersMatcher = TriggersMatcher()
-    private val triggersManager = TriggerManager(context, accountId, deviceId)
-    private val impressionStore = ImpressionStore(context, accountId, deviceId)
-    private val impressionManager = ImpressionManager(impressionStore)
-    private val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
-    private val inAppStore = InAppStore(context, cryptHandler, accountId, deviceId)
 
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>) {
         if (eventName != "App Launched") {

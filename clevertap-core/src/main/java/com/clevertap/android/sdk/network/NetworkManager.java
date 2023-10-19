@@ -124,7 +124,8 @@ public class NetworkManager extends BaseNetworkManager {
             CTLockManager ctLockManager,
             Validator validator,
             LocalDataStore localDataStore,
-            CryptHandler cryptHandler) {
+            CryptHandler cryptHandler,
+            InAppResponse inAppResponse) {
         this.context = context;
         this.config = config;
         this.deviceInfo = deviceInfo;
@@ -156,17 +157,10 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator, controllerManager);
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
 
-        InAppStore store = new InAppStore(context, cryptHandler, config.getAccountId(), deviceInfo.getDeviceID());
-        ImpressionStore impStore = new ImpressionStore(context, config.getAccountId(), deviceInfo.getDeviceID());
-        cleverTapResponse = new InAppResponse(
-                cleverTapResponse,
-                config,
-                controllerManager,
-                cryptHandler,
-                false,
-                store,
-                impStore
-        );
+        // todo hacky - we do not need chaining here
+        CleverTapResponse temp = cleverTapResponse;
+        cleverTapResponse = inAppResponse;
+        inAppResponse.setCleverTapResponse(temp);
 
         cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore, cleverTapResponse);
 

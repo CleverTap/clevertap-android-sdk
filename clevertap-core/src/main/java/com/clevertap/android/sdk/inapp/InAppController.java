@@ -48,6 +48,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+// inapp db handle // glovbal dn
 public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener,
         InAppNotificationActivity.PushPermissionResultCallback {
 
@@ -464,8 +465,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
 
-            checkPendingNotifications(context,
-                    config, this);  // see if we have any pending notifications
+            checkPendingNotifications(context, config, this);  // see if we have any pending notifications
 
             JSONArray inapps = new JSONArray(
                     StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));

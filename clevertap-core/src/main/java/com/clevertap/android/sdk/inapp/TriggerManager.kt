@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp
 import android.content.Context
 import android.content.SharedPreferences
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.StorageHelper
 import java.lang.ref.WeakReference
 
@@ -12,14 +13,16 @@ import java.lang.ref.WeakReference
  * with keys in the format "__triggers_<<campaign_id>>".
  */
 class TriggerManager(
-    context: Context, accountId: String, deviceId: String
+    context: Context,
+    accountId: String,
+    deviceInfo: DeviceInfo
 ) {
     companion object {
         const val PREF_PREFIX = "__triggers"
     }
 
     var contextRef = WeakReference(context)
-    val prefName = "${Constants.KEY_TRIGGERS_PER_INAPP}:$deviceId:$accountId"
+    val prefName = "${Constants.KEY_TRIGGERS_PER_INAPP}:${deviceInfo.deviceID}:$accountId"
 
     /**
      * Retrieves the trigger count for a given campaign ID.

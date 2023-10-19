@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp
 import android.content.Context
 import android.content.SharedPreferences
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.StorageHelper
 import java.lang.ref.WeakReference
 
@@ -12,14 +13,16 @@ import java.lang.ref.WeakReference
  * with keys in the format "__impression_<<campaign_id>>".
  */
 class ImpressionStore(
-    context: Context, accountId: String, deviceId: String
+    context: Context,
+    accountId: String,
+    deviceInfo: DeviceInfo
 ) {
     companion object {
         const val PREF_PREFIX = "__impressions"
     }
 
     var contextRef = WeakReference(context)
-    val prefName = "${Constants.KEY_COUNTS_PER_INAPP}:$deviceId:$accountId"
+    val prefName = "${Constants.KEY_COUNTS_PER_INAPP}:${deviceInfo.deviceID}:$accountId"
 
     /**
      * Reads the impressions for a given campaign ID.
