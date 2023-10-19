@@ -18,6 +18,7 @@ import androidx.core.app.NotificationCompat.Builder;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
 
@@ -74,7 +75,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                     throw new Exception("Failed to fetch big picture!");
                 }
                 long pift = downloadedBitmap.getDownloadTime();
-                config.getLogger()
+                Logger
                         .verbose("Fetched big picture in " + pift + " millis");
 
                 extras.putString(Constants.WZRK_BPDS,downloadedBitmap.getStatus().getStatusValue());
@@ -93,7 +94,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                 style = new NotificationCompat.BigTextStyle()
                         .bigText(notifMessage);
                 extras.putString(Constants.WZRK_BPDS, downloadedBitmap.getStatus().getStatusValue());
-                config.getLogger()
+                Logger
                         .verbose(config.getAccountId(),
                                 "Falling back to big text notification, couldn't fetch big picture",
                                 t);
@@ -135,7 +136,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
             try {
                 actions = new JSONArray(actionsString);
             } catch (Throwable t) {
-                config.getLogger()
+                Logger
                         .debug(config.getAccountId(),
                                 "error parsing notification actions: " + t.getLocalizedMessage());
             }
@@ -189,7 +190,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                 }
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Could not process sound parameter", t);
+            Logger.debug(config.getAccountId(), "Could not process sound parameter", t);
         }
 
         return nb;

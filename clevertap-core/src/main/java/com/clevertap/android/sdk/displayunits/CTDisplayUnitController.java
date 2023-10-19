@@ -27,7 +27,7 @@ public class CTDisplayUnitController {
         if (!items.isEmpty()) {
             return new ArrayList<>(items.values());
         } else {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Failed to return Display Units, nothing found in the cache");
+            Logger.debug(Constants.FEATURE_DISPLAY_UNIT, "Failed to return Display Units, nothing found in the cache");
             return null;
         }
     }
@@ -43,7 +43,7 @@ public class CTDisplayUnitController {
         if (!TextUtils.isEmpty(unitId)) {
             return items.get(unitId);
         } else {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Can't return Display Unit, id was null");
+            Logger.debug(Constants.FEATURE_DISPLAY_UNIT, "Can't return Display Unit, id was null");
             return null;
         }
     }
@@ -53,7 +53,7 @@ public class CTDisplayUnitController {
      */
     public synchronized void reset() {
         items.clear();
-        Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Cleared Display Units Cache");
+        Logger.debug(Constants.FEATURE_DISPLAY_UNIT, "Cleared Display Units Cache");
     }
 
     /**
@@ -78,19 +78,19 @@ public class CTDisplayUnitController {
                         items.put(item.getUnitID(), item);
                         list.add(item);
                     } else {
-                        Logger.d(Constants.FEATURE_DISPLAY_UNIT,
+                        Logger.debug(Constants.FEATURE_DISPLAY_UNIT,
                                 "Failed to convert JsonArray item at index:" + i + " to Display Unit");
                     }
                 }
             } catch (Exception e) {
-                Logger.d(Constants.FEATURE_DISPLAY_UNIT,
+                Logger.debug(Constants.FEATURE_DISPLAY_UNIT,
                         "Failed while parsing Display Unit:" + e.getLocalizedMessage());
                 return null;
             }
 
             return !list.isEmpty() ? list : null;
         } else {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Null json array response can't parse Display Units ");
+            Logger.debug(Constants.FEATURE_DISPLAY_UNIT, "Null json array response can't parse Display Units ");
             return null;
         }
     }

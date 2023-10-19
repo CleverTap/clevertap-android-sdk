@@ -17,11 +17,10 @@ import com.clevertap.android.sdk.Utils
 class CTWorkManager(private val context: Context, config: CleverTapInstanceConfig) {
 
     private val accountId: String = config.accountId
-    private val logger: Logger = config.logger
 
     private fun schedulePushImpressionsFlushWork() {
 
-        logger.verbose(accountId, "scheduling one time work request to flush push impressions...")
+        Logger.verbose(accountId, "scheduling one time work request to flush push impressions...")
 
         try {
             val constraints = Constraints.Builder()
@@ -40,9 +39,9 @@ class CTWorkManager(private val context: Context, config: CleverTapInstanceConfi
                 flushPushImpressionsWorkRequest
             )
 
-            logger.verbose(accountId, "Finished scheduling one time work request to flush push impressions...")
+            Logger.verbose(accountId, "Finished scheduling one time work request to flush push impressions...")
         } catch (t: Throwable) {
-            logger.verbose(accountId, "Failed to schedule one time work request to flush push impressions.", t)
+            Logger.verbose(accountId, "Failed to schedule one time work request to flush push impressions.", t)
             t.printStackTrace()
         }
     }

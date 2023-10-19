@@ -14,13 +14,13 @@ class BitmapDownloadRequestHandlerWithTimeLimit(
 
     override fun handleRequest(bitmapDownloadRequest: BitmapDownloadRequest): DownloadedBitmap {
 
-        Logger.v("handling bitmap download request in BitmapDownloadRequestHandlerWithTimeLimit....")
+        Logger.verbose("handling bitmap download request in BitmapDownloadRequestHandlerWithTimeLimit....")
 
         val (_, fallbackToAppIcon, context, instanceConfig, downloadTimeLimitInMillis) = bitmapDownloadRequest
 
         if (instanceConfig == null || downloadTimeLimitInMillis == -1L) {
-            Logger.v("either config is null or downloadTimeLimitInMillis is negative.")
-            Logger.v("will download bitmap without time limit")
+            Logger.verbose("either config is null or downloadTimeLimitInMillis is negative.")
+            Logger.verbose("will download bitmap without time limit")
             return iBitmapDownloadRequestHandler.handleRequest(bitmapDownloadRequest)
         }
 

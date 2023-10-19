@@ -8,6 +8,8 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Logger;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,14 +43,14 @@ public class FileUtils {
                     String[] children = file.list();
                     for (String child : children) {
                         boolean deleted = new File(file, child).delete();
-                        config.getLogger().verbose(config.getAccountId(),
+                        Logger.verbose(config.getAccountId(),
                                 "File" + child + " isDeleted:" + deleted);
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "writeFileOnInternalStorage: failed" + dirName + " Error:" + e.getLocalizedMessage());
         }
     }
@@ -62,15 +64,15 @@ public class FileUtils {
                 File file = new File(context.getFilesDir(), fileName);
                 if (file.exists()) {
                     if (file.delete()) {
-                        config.getLogger().verbose(config.getAccountId(), "File Deleted:" + fileName);
+                        Logger.verbose(config.getAccountId(), "File Deleted:" + fileName);
                     } else {
-                        config.getLogger().verbose(config.getAccountId(), "Failed to delete file" + fileName);
+                        Logger.verbose(config.getAccountId(), "Failed to delete file" + fileName);
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "writeFileOnInternalStorage: failed" + fileName + " Error:" + e.getLocalizedMessage());
         }
     }
@@ -104,7 +106,7 @@ public class FileUtils {
             inputStream.close();
             content = stringBuilder.toString();
         } catch (Exception e) {
-            config.getLogger()
+            Logger
                     .verbose(config.getAccountId(), "[Exception While Reading: " + e.getLocalizedMessage());
             //Log your error with Log.e
         }finally {
@@ -143,7 +145,7 @@ public class FileUtils {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
         }finally {
             if(writer != null){

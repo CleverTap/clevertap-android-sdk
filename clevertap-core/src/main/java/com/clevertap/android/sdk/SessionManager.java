@@ -34,7 +34,7 @@ public class SessionManager extends BaseSessionManager {
         }
         long now = System.currentTimeMillis();
         if ((now - appLastSeen) > Constants.SESSION_LENGTH_MINS * 60 * 1000) {
-            config.getLogger().verbose(config.getAccountId(), "Session Timed Out");
+            Logger.verbose(config.getAccountId(), "Session Timed Out");
             destroySession();
         }
     }
@@ -46,7 +46,7 @@ public class SessionManager extends BaseSessionManager {
         if (cleverTapMetaData.isFirstSession()) {
             cleverTapMetaData.setFirstSession(false);
         }
-        config.getLogger().verbose(config.getAccountId(), "Session destroyed; Session ID is now 0");
+        Logger.verbose(config.getAccountId(), "Session destroyed; Session ID is now 0");
         cleverTapMetaData.clearSource();
         cleverTapMetaData.clearMedium();
         cleverTapMetaData.clearCampaign();
@@ -90,7 +90,7 @@ public class SessionManager extends BaseSessionManager {
         int sessionId = getNow();
         cleverTapMetaData.setCurrentSessionId(sessionId);
 
-        config.getLogger().verbose(config.getAccountId(),
+        Logger.verbose(config.getAccountId(),
                 "Session created with ID: " + cleverTapMetaData.getCurrentSessionId());
 
         SharedPreferences prefs = StorageHelper.getPreferences(context);
@@ -101,7 +101,7 @@ public class SessionManager extends BaseSessionManager {
             cleverTapMetaData.setLastSessionLength(lastSessionTime - lastSessionID);
         }
 
-        config.getLogger().verbose(config.getAccountId(),
+        Logger.verbose(config.getAccountId(),
                 "Last session length: " + cleverTapMetaData.getLastSessionLength() + " seconds");
 
         if (lastSessionID == 0) {

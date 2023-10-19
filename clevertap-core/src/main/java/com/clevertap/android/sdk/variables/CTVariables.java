@@ -45,7 +45,7 @@ public class CTVariables {
     private final VarCache varCache;
 
     private static void logD(String msg){
-        Logger.d("variables", msg);
+        Logger.debug("variables", msg);
     }
 
     public CTVariables(final VarCache varCache) {

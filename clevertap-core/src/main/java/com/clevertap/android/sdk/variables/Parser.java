@@ -27,11 +27,11 @@ public class Parser {
   private final CTVariables ctVariables;
 
   private static void log(String msg){
-    Logger.v("variables",msg);
+    Logger.verbose("variables",msg);
   }
 
   private static void log(String msg,Throwable t){
-    Logger.v("variables",msg,t);
+    Logger.verbose("variables",msg,t);
   }
 
   public Parser(final CTVariables ctVariables) {

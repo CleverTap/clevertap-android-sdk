@@ -44,7 +44,7 @@ public class Var<T> {
     }
 
     private static void log(String msg){
-        Logger.v("variable", msg);
+        Logger.verbose("variable", msg);
     }
 
     public static <T> Var<T> define(String name, T defaultValue, CTVariables ctVariables) {

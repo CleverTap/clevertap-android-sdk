@@ -20,7 +20,7 @@ class BitmapDownloader(
     private lateinit var srcUrl: String
 
     fun downloadBitmap(srcUrl: String): DownloadedBitmap {
-        Logger.v("initiating bitmap download in BitmapDownloader....")
+        Logger.verbose("initiating bitmap download in BitmapDownloader....")
 
         this.srcUrl = srcUrl
         downloadStartTimeInMilliseconds = Utils.getNowInMillis()
@@ -31,11 +31,11 @@ class BitmapDownloader(
 
                 // expect HTTP 200 OK, so we don't mistakenly save error report instead of the file
                 if (responseCode != HttpURLConnection.HTTP_OK) {
-                    Logger.d("File not loaded completely not going forward. URL was: $srcUrl")
+                    Logger.debug("File not loaded completely not going forward. URL was: $srcUrl")
                     return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
                 }
 
-                Logger.v("Downloading $srcUrl....")
+                Logger.verbose("Downloading $srcUrl....")
 
                 // might be -1: server did not report the length
                 val fileLength = contentLength
@@ -43,7 +43,7 @@ class BitmapDownloader(
 
                 // Check if the size limit is exceeded
                 if (isSizeConstrained && fileLength > size) {
-                    Logger.v("Image size is larger than $size bytes. Cancelling download!")
+                    Logger.verbose("Image size is larger than $size bytes. Cancelling download!")
                     return DownloadedBitmapFactory.nullBitmapWithStatus(SIZE_LIMIT_EXCEEDED)
                 }
 
@@ -51,14 +51,14 @@ class BitmapDownloader(
                     ?: DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
             }
         } catch (e: Throwable) {
-            Logger.v("Couldn't download the notification icon. URL was: $srcUrl")
+            Logger.verbose("Couldn't download the notification icon. URL was: $srcUrl")
             e.printStackTrace()
             return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
         } finally {
             try {
                 connection.disconnect()
             } catch (t: Throwable) {
-                Logger.v("Couldn't close connection!", t)
+                Logger.verbose("Couldn't close connection!", t)
             }
         }
     }

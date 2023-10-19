@@ -110,7 +110,7 @@ public interface PushConstants {
          * @param region   The Server Room region
          */
         public void  setServerRegion(@NonNull String region){
-            Logger.v("PushConstants: setServerRegion called with region:"+region);
+            Logger.verbose("PushConstants: setServerRegion called with region:"+region);
 
             this.serverRegion = region;
         }
@@ -118,7 +118,7 @@ public interface PushConstants {
          * Get Server Room Region for various push providers
          */
         public String getServerRegion(){
-            Logger.v("PushConstants: getServerRegion called, returning region:"+serverRegion);
+            Logger.verbose("PushConstants: getServerRegion called, returning region:"+serverRegion);
             return  this.serverRegion;
         }
 

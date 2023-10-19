@@ -12,7 +12,7 @@ object LeanplumCT {
   private var wrapper: CTWrapper? = null
     get() {
       if (field == null) {
-        Logger.i("LeanplumCT", "Please initialize LeanplumCT before using it.")
+        Logger.info("LeanplumCT", "Please initialize LeanplumCT before using it.")
       }
       return field
     }
@@ -174,7 +174,7 @@ object LeanplumCT {
     params: Map<String, Any?>?
   ) {
     if (eventName.isNullOrEmpty()) {
-      Logger.i("LeanplumCT", "Failed to call trackGooglePlayPurchase, event name is null");
+      Logger.info("LeanplumCT", "Failed to call trackGooglePlayPurchase, event name is null");
       return
     }
 

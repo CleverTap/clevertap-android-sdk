@@ -302,7 +302,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
                     actionUrl, null);
 
         } catch (Exception e) {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT,
+            Logger.debug(Constants.FEATURE_DISPLAY_UNIT,
                     "Unable to init CleverTapDisplayUnitContent with JSON - " + e.getLocalizedMessage());
             return new CleverTapDisplayUnitContent("", "", "", "", "", "", "", "", "",
                     "Error Creating DisplayUnit Content from JSON : " + e.getLocalizedMessage());

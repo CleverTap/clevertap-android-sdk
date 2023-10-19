@@ -23,20 +23,20 @@ public class XiaomiMessageReceiver extends PushMessageReceiver {
     @Override
     public void onNotificationMessageArrived(Context context, MiPushMessage miPushMessage) {
         super.onNotificationMessageArrived(context, miPushMessage);
-        Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "onNotificationMessageArrived is called");
+        Logger.debug(LOG_TAG, XIAOMI_LOG_TAG + "onNotificationMessageArrived is called");
         pushNotificationViewedEvent(context,miPushMessage,xpsParser);
     }
 
     @Override
     public void onReceivePassThroughMessage(Context context, MiPushMessage miPushMessage) {
-        Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "onReceivePassThroughMessage is called");
+        Logger.debug(LOG_TAG, XIAOMI_LOG_TAG + "onReceivePassThroughMessage is called");
         handler.createNotification(context, miPushMessage);
     }
 
     @Override
     public void onReceiveRegisterResult(Context context, MiPushCommandMessage miPushCommandMessage) {
         super.onReceiveRegisterResult(context, miPushCommandMessage);
-        Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "onReceiveRegisterResult is called");
+        Logger.debug(LOG_TAG, XIAOMI_LOG_TAG + "onReceiveRegisterResult is called");
         handler.onReceiveRegisterResult(context, miPushCommandMessage);
     }
 
@@ -61,7 +61,7 @@ public class XiaomiMessageReceiver extends PushMessageReceiver {
             ct.pushNotificationViewedEvent(data);
         }
         catch (Throwable t){
-            Logger.i("XiaomiMessageReceiver|onNotificationMessageArrived : something went wrong",t);
+            Logger.info("XiaomiMessageReceiver|onNotificationMessageArrived : something went wrong",t);
         }
     }
 

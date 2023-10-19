@@ -44,125 +44,125 @@ public class DBAdapter {
         @SuppressLint("SQLiteString")
         @Override
         public void onCreate(SQLiteDatabase db) {
-            Logger.v("Creating CleverTap DB");
+            Logger.verbose("Creating CleverTap DB");
             SQLiteStatement sqLiteStatement;
             sqLiteStatement = db.compileStatement(CREATE_EVENTS_TABLE);
-            Logger.v("Executing - " + CREATE_EVENTS_TABLE);
+            Logger.verbose("Executing - " + CREATE_EVENTS_TABLE);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(CREATE_PROFILE_EVENTS_TABLE);
-            Logger.v("Executing - " + CREATE_PROFILE_EVENTS_TABLE);
+            Logger.verbose("Executing - " + CREATE_PROFILE_EVENTS_TABLE);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(CREATE_USER_PROFILES_TABLE);
-            Logger.v("Executing - " + CREATE_USER_PROFILES_TABLE);
+            Logger.verbose("Executing - " + CREATE_USER_PROFILES_TABLE);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(CREATE_INBOX_MESSAGES_TABLE);
-            Logger.v("Executing - " + CREATE_INBOX_MESSAGES_TABLE);
+            Logger.verbose("Executing - " + CREATE_INBOX_MESSAGES_TABLE);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(CREATE_PUSH_NOTIFICATIONS_TABLE);
-            Logger.v("Executing - " + CREATE_PUSH_NOTIFICATIONS_TABLE);
+            Logger.verbose("Executing - " + CREATE_PUSH_NOTIFICATIONS_TABLE);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(CREATE_UNINSTALL_TS_TABLE);
-            Logger.v("Executing - " + CREATE_UNINSTALL_TS_TABLE);
+            Logger.verbose("Executing - " + CREATE_UNINSTALL_TS_TABLE);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(CREATE_NOTIFICATION_VIEWED_TABLE);
-            Logger.v("Executing - " + CREATE_NOTIFICATION_VIEWED_TABLE);
+            Logger.verbose("Executing - " + CREATE_NOTIFICATION_VIEWED_TABLE);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(EVENTS_TIME_INDEX);
-            Logger.v("Executing - " + EVENTS_TIME_INDEX);
+            Logger.verbose("Executing - " + EVENTS_TIME_INDEX);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(PROFILE_EVENTS_TIME_INDEX);
-            Logger.v("Executing - " + PROFILE_EVENTS_TIME_INDEX);
+            Logger.verbose("Executing - " + PROFILE_EVENTS_TIME_INDEX);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(UNINSTALL_TS_INDEX);
-            Logger.v("Executing - " + UNINSTALL_TS_INDEX);
+            Logger.verbose("Executing - " + UNINSTALL_TS_INDEX);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(PUSH_NOTIFICATIONS_TIME_INDEX);
-            Logger.v("Executing - " + PUSH_NOTIFICATIONS_TIME_INDEX);
+            Logger.verbose("Executing - " + PUSH_NOTIFICATIONS_TIME_INDEX);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
-            Logger.v("Executing - " + INBOX_MESSAGES_COMP_ID_USERID_INDEX);
+            Logger.verbose("Executing - " + INBOX_MESSAGES_COMP_ID_USERID_INDEX);
             sqLiteStatement.execute();
 
             sqLiteStatement = db.compileStatement(NOTIFICATION_VIEWED_INDEX);
-            Logger.v("Executing - " + NOTIFICATION_VIEWED_INDEX);
+            Logger.verbose("Executing - " + NOTIFICATION_VIEWED_INDEX);
             sqLiteStatement.execute();
         }
 
         @SuppressLint("SQLiteString")
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            Logger.v("Upgrading CleverTap DB to version " + newVersion);
+            Logger.verbose("Upgrading CleverTap DB to version " + newVersion);
             SQLiteStatement sqLiteStatement;
             switch (oldVersion) {
                 case 1:
                     // For DB Version 2, just adding Push Notifications, Uninstall TS and Inbox Messages tables and related indices
                     sqLiteStatement = db.compileStatement(DROP_TABLE_UNINSTALL_TS);
-                    Logger.v("Executing - " + DROP_TABLE_UNINSTALL_TS);
+                    Logger.verbose("Executing - " + DROP_TABLE_UNINSTALL_TS);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(DROP_TABLE_INBOX_MESSAGES);
-                    Logger.v("Executing - " + DROP_TABLE_INBOX_MESSAGES);
+                    Logger.verbose("Executing - " + DROP_TABLE_INBOX_MESSAGES);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
-                    Logger.v("Executing - " + DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
+                    Logger.verbose("Executing - " + DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(CREATE_INBOX_MESSAGES_TABLE);
-                    Logger.v("Executing - " + CREATE_INBOX_MESSAGES_TABLE);
+                    Logger.verbose("Executing - " + CREATE_INBOX_MESSAGES_TABLE);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(CREATE_PUSH_NOTIFICATIONS_TABLE);
-                    Logger.v("Executing - " + CREATE_PUSH_NOTIFICATIONS_TABLE);
+                    Logger.verbose("Executing - " + CREATE_PUSH_NOTIFICATIONS_TABLE);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(CREATE_UNINSTALL_TS_TABLE);
-                    Logger.v("Executing - " + CREATE_UNINSTALL_TS_TABLE);
+                    Logger.verbose("Executing - " + CREATE_UNINSTALL_TS_TABLE);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(CREATE_NOTIFICATION_VIEWED_TABLE);
-                    Logger.v("Executing - " + CREATE_NOTIFICATION_VIEWED_TABLE);
+                    Logger.verbose("Executing - " + CREATE_NOTIFICATION_VIEWED_TABLE);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(UNINSTALL_TS_INDEX);
-                    Logger.v("Executing - " + UNINSTALL_TS_INDEX);
+                    Logger.verbose("Executing - " + UNINSTALL_TS_INDEX);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(PUSH_NOTIFICATIONS_TIME_INDEX);
-                    Logger.v("Executing - " + PUSH_NOTIFICATIONS_TIME_INDEX);
+                    Logger.verbose("Executing - " + PUSH_NOTIFICATIONS_TIME_INDEX);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
-                    Logger.v("Executing - " + INBOX_MESSAGES_COMP_ID_USERID_INDEX);
+                    Logger.verbose("Executing - " + INBOX_MESSAGES_COMP_ID_USERID_INDEX);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(NOTIFICATION_VIEWED_INDEX);
-                    Logger.v("Executing - " + NOTIFICATION_VIEWED_INDEX);
+                    Logger.verbose("Executing - " + NOTIFICATION_VIEWED_INDEX);
                     sqLiteStatement.execute();
                     break;
                 case 2:
                     // For DB Version 3, just adding Push Notification Viewed table and index
                     sqLiteStatement = db.compileStatement(DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
-                    Logger.v("Executing - " + DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
+                    Logger.verbose("Executing - " + DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(CREATE_NOTIFICATION_VIEWED_TABLE);
-                    Logger.v("Executing - " + CREATE_NOTIFICATION_VIEWED_TABLE);
+                    Logger.verbose("Executing - " + CREATE_NOTIFICATION_VIEWED_TABLE);
                     sqLiteStatement.execute();
 
                     sqLiteStatement = db.compileStatement(NOTIFICATION_VIEWED_INDEX);
-                    Logger.v("Executing - " + NOTIFICATION_VIEWED_INDEX);
+                    Logger.verbose("Executing - " + NOTIFICATION_VIEWED_INDEX);
                     sqLiteStatement.execute();
                     break;
             }
@@ -346,7 +346,7 @@ public class DBAdapter {
             db.delete(tName, _ID + " = ? AND " + USER_ID + " = ?", new String[]{messageId, userId});
             return true;
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing stale records from " + tName, e);
+            Logger.verbose("Error removing stale records from " + tName, e);
             return false;
         } finally {
             dbHelper.close();
@@ -384,7 +384,7 @@ public class DBAdapter {
             db.delete(tName, _ID + " IN ( " + questionMarksBuilder + " ) AND " + USER_ID + " = ?", whereArgs);
             return true;
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing stale records from " + tName, e);
+            Logger.verbose("Error removing stale records from " + tName, e);
             return false;
         } finally {
             dbHelper.close();
@@ -409,13 +409,13 @@ public class DBAdapter {
             cursor = db.query(tName, null, IS_READ + " =?", new String[]{"0"}, null, null, null);
             if (cursor != null) {
                 while (cursor.moveToNext()) {
-                    Logger.v("Fetching PID - " + cursor.getString(cursor.getColumnIndex(KEY_DATA)));
+                    Logger.verbose("Fetching PID - " + cursor.getString(cursor.getColumnIndex(KEY_DATA)));
                     pushIds.add(cursor.getString(cursor.getColumnIndex(KEY_DATA)));
                 }
                 cursor.close();
             }
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+            Logger.verbose("Could not fetch records out of database " + tName + ".", e);
         } finally {
             dbHelper.close();
             if (cursor != null) {
@@ -448,7 +448,7 @@ public class DBAdapter {
                 }
             }
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+            Logger.verbose("Could not fetch records out of database " + tName + ".", e);
         } finally {
             dbHelper.close();
             if (cursor != null) {
@@ -471,7 +471,7 @@ public class DBAdapter {
                 timestamp = cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT));
             }
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+            Logger.verbose("Could not fetch records out of database " + tName + ".", e);
         } finally {
             dbHelper.close();
             if (cursor != null) {
@@ -514,10 +514,10 @@ public class DBAdapter {
             }
             return messageDAOArrayList;
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error retrieving records from " + tName, e);
+            Logger.verbose("Error retrieving records from " + tName, e);
             return null;
         } catch (JSONException e) {
-            getConfigLogger().verbose("Error retrieving records from " + tName, e.getMessage());
+            Logger.verbose("Error retrieving records from " + tName, e.getMessage());
             return null;
         } finally {
             dbHelper.close();
@@ -546,7 +546,7 @@ public class DBAdapter {
                     new String[]{messageId, userId});
             return true;
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing stale records from " + tName, e);
+            Logger.verbose("Error removing stale records from " + tName, e);
             return false;
         } finally {
             dbHelper.close();
@@ -589,7 +589,7 @@ public class DBAdapter {
             db.update(Table.INBOX_MESSAGES.getName(), cv, _ID + " IN ( " + questionMarksBuilder + " ) AND " + USER_ID + " = ?", whereArgs);
             return true;
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing stale records from " + tName, e);
+            Logger.verbose("Error removing stale records from " + tName, e);
             return false;
         } finally {
             dbHelper.close();
@@ -609,7 +609,7 @@ public class DBAdapter {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             db.delete(tableName, "_id = ?", new String[]{id});
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing user profile from " + tableName + " Recreating DB");
+            Logger.verbose("Error removing user profile from " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
         } finally {
             dbHelper.close();
@@ -622,7 +622,7 @@ public class DBAdapter {
     public synchronized void storeUninstallTimestamp() {
 
         if (!this.belowMemThreshold()) {
-            getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
+            Logger.verbose("There is not enough space left on the device to store data, data discarded");
             return;
         }
         final String tableName = Table.UNINSTALL_TS.getName();
@@ -633,7 +633,7 @@ public class DBAdapter {
             cv.put(KEY_CREATED_AT, System.currentTimeMillis());
             db.insert(tableName, null, cv);
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            Logger.verbose("Error adding data to table " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
         } finally {
             dbHelper.close();
@@ -655,7 +655,7 @@ public class DBAdapter {
         }
 
         if (!this.belowMemThreshold()) {
-            getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
+            Logger.verbose("There is not enough space left on the device to store data, data discarded");
             return DB_OUT_OF_MEMORY_ERROR;
         }
 
@@ -670,7 +670,7 @@ public class DBAdapter {
             cv.put("_id", id);
             ret = db.insertWithOnConflict(tableName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            Logger.verbose("Error adding data to table " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
         } finally {
             dbHelper.close();
@@ -686,7 +686,7 @@ public class DBAdapter {
     @WorkerThread
     public synchronized void upsertMessages(ArrayList<CTMessageDAO> inboxMessages) {
         if (!this.belowMemThreshold()) {
-            Logger.v("There is not enough space left on the device to store data, data discarded");
+            Logger.verbose("There is not enough space left on the device to store data, data discarded");
             return;
         }
 
@@ -706,7 +706,7 @@ public class DBAdapter {
                 db.insertWithOnConflict(Table.INBOX_MESSAGES.getName(), null, cv, SQLiteDatabase.CONFLICT_REPLACE);
             }
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName());
+            Logger.verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName());
         } finally {
             dbHelper.close();
         }
@@ -732,7 +732,7 @@ public class DBAdapter {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             db.delete(tName, "_id <= " + lastId, null);
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing sent data from table " + tName + " Recreating DB");
+            Logger.verbose("Error removing sent data from table " + tName + " Recreating DB");
             deleteDB();
         } finally {
             dbHelper.close();
@@ -746,7 +746,7 @@ public class DBAdapter {
         }
 
         if (!this.belowMemThreshold()) {
-            getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
+            Logger.verbose("There is not enough space left on the device to store data, data discarded");
             return;
         }
         final String tableName = Table.PUSH_NOTIFICATIONS.getName();
@@ -763,9 +763,9 @@ public class DBAdapter {
             cv.put(IS_READ, 0);
             db.insert(tableName, null, cv);
             rtlDirtyFlag = true;
-            Logger.v("Stored PN - " + id + " with TTL - " + ttl);
+            Logger.verbose("Stored PN - " + id + " with TTL - " + ttl);
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            Logger.verbose("Error adding data to table " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
         } finally {
             dbHelper.close();
@@ -811,7 +811,7 @@ public class DBAdapter {
                 }
             }
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+            Logger.verbose("Could not fetch records out of database " + tName + ".", e);
             lastId = null;
         } finally {
             dbHelper.close();
@@ -840,7 +840,7 @@ public class DBAdapter {
         }
 
         if (!this.belowMemThreshold()) {
-            Logger.v("There is not enough space left on the device to store data, data discarded");
+            Logger.verbose("There is not enough space left on the device to store data, data discarded");
             return;
         }
 
@@ -857,7 +857,7 @@ public class DBAdapter {
                     KEY_DATA + " IN ( " + questionMarksBuilder.toString() + " )", ids);
             rtlDirtyFlag = false;
         } catch (final SQLiteException e) {
-            getConfigLogger()
+            Logger
                     .verbose("Error adding data to table " + Table.PUSH_NOTIFICATIONS.getName() + " Recreating DB");
             dbHelper.deleteDatabase();
         } finally {
@@ -875,7 +875,7 @@ public class DBAdapter {
     @WorkerThread
     synchronized int storeObject(JSONObject obj, Table table) {
         if (!this.belowMemThreshold()) {
-            Logger.v("There is not enough space left on the device to store data, data discarded");
+            Logger.verbose("There is not enough space left on the device to store data, data discarded");
             return DB_OUT_OF_MEMORY_ERROR;
         }
 
@@ -895,7 +895,7 @@ public class DBAdapter {
             SQLiteStatement statement = db.compileStatement(sql);
             count = statement.simpleQueryForLong();
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            Logger.verbose("Error adding data to table " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
         } finally {
             dbHelper.close();
@@ -915,7 +915,7 @@ public class DBAdapter {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             db.delete(tName, null, null);
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing all events from table " + tName + " Recreating DB");
+            Logger.verbose("Error removing all events from table " + tName + " Recreating DB");
             deleteDB();
         } finally {
             dbHelper.close();
@@ -937,7 +937,7 @@ public class DBAdapter {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             db.delete(tName, KEY_CREATED_AT + " <= " + time, null);
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing stale event records from " + tName + ". Recreating DB.", e);
+            Logger.verbose("Error removing stale event records from " + tName + ". Recreating DB.", e);
             deleteDB();
         } finally {
             dbHelper.close();
@@ -960,9 +960,9 @@ public class DBAdapter {
             if (cursor != null && cursor.moveToFirst()) {
                 pushId = cursor.getString(cursor.getColumnIndex(KEY_DATA));
             }
-            Logger.v("Fetching PID for check - " + pushId);
+            Logger.verbose("Fetching PID for check - " + pushId);
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+            Logger.verbose("Could not fetch records out of database " + tName + ".", e);
         } finally {
             dbHelper.close();
             if (cursor != null) {
@@ -970,10 +970,6 @@ public class DBAdapter {
             }
         }
         return pushId;
-    }
-
-    private Logger getConfigLogger() {
-        return this.config.getLogger();
     }
 
     private static String getDatabaseName(CleverTapInstanceConfig config) {

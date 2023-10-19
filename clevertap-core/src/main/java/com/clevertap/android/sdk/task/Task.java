@@ -189,7 +189,7 @@ public class Task<TResult> {
                 tResultFuture.cancel(true);
             }
         }
-        Logger.v("submitAndGetResult :: " + logTag + " task timed out");
+        Logger.verbose("submitAndGetResult :: " + logTag + " task timed out");
         return null;
     }
 
@@ -228,17 +228,17 @@ public class Task<TResult> {
             @Override
             public void run() {
                 try {
-                    config.getLogger()
+                    Logger
                             .verbose(taskName + " Task: " + logTag + " starting on..." + Thread.currentThread()
                                     .getName());
                     TResult result = callable.call();
-                    config.getLogger().verbose(
+                    Logger.verbose(
                             taskName + " Task: " + logTag + " executed successfully on..." + Thread.currentThread()
                                     .getName());
                     onSuccess(result);
                 } catch (Exception e) {
                     onFailure(e);
-                    config.getLogger().verbose(
+                    Logger.verbose(
                             taskName + " Task: " + logTag + " failed to execute on..." + Thread.currentThread()
                                     .getName(), e);
                     e.printStackTrace();

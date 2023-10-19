@@ -81,7 +81,7 @@ public class LocalDataStore {
             }
             return decodeEventDetails(eventName, getStringFromPrefs(eventName, null, namespace));
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local event detail", t);
+            Logger.verbose(getConfigAccountId(), "Failed to retrieve local event detail", t);
             return null;
         }
     }
@@ -103,7 +103,7 @@ public class LocalDataStore {
             }
             return out;
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local event history", t);
+            Logger.verbose(getConfigAccountId(), "Failed to retrieve local event history", t);
             return null;
         }
     }
@@ -128,7 +128,7 @@ public class LocalDataStore {
                 persistEvent(context, event);
             }
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to sync with upstream", t);
+            Logger.verbose(getConfigAccountId(), "Failed to sync with upstream", t);
         }
     }
 
@@ -159,7 +159,7 @@ public class LocalDataStore {
             if ("event".equals(eventType)) {
                 final String evtName = event.getString("evtName");
                 if (Constants.APP_LAUNCHED_EVENT.equals(evtName)) {
-                    getConfigLogger().verbose(getConfigAccountId(),
+                    Logger.verbose(getConfigAccountId(),
                             "Local cache needs to be updated (triggered by App Launched)");
                     event.put("dsync", true);
                     return;
@@ -169,7 +169,7 @@ public class LocalDataStore {
             // If a profile event, then blindly set it to true
             if ("profile".equals(eventType)) {
                 event.put("dsync", true);
-                getConfigLogger().verbose(getConfigAccountId(), "Local cache needs to be updated (profile event)");
+                Logger.verbose(getConfigAccountId(), "Local cache needs to be updated (profile event)");
                 return;
             }
 
@@ -182,13 +182,13 @@ public class LocalDataStore {
 
             if (lastUpdate + expiresIn < now) {
                 event.put("dsync", true);
-                getConfigLogger().verbose(getConfigAccountId(), "Local cache needs to be updated");
+                Logger.verbose(getConfigAccountId(), "Local cache needs to be updated");
             } else {
                 event.put("dsync", false);
-                getConfigLogger().verbose(getConfigAccountId(), "Local cache doesn't need to be updated");
+                Logger.verbose(getConfigAccountId(), "Local cache doesn't need to be updated");
             }
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to sync with upstream", t);
+            Logger.verbose(getConfigAccountId(), "Failed to sync with upstream", t);
         }
     }
 
@@ -278,12 +278,12 @@ public class LocalDataStore {
                     try {
                         syncListener.profileDataUpdated(updates);
                     } catch (Throwable t) {
-                        getConfigLogger().verbose(getConfigAccountId(), "Execution of sync listener failed", t);
+                        Logger.verbose(getConfigAccountId(), "Execution of sync listener failed", t);
                     }
                 }
             }
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to sync with upstream", t);
+            Logger.verbose(getConfigAccountId(), "Failed to sync with upstream", t);
         }
     }
 
@@ -297,12 +297,12 @@ public class LocalDataStore {
             try {
                 Object property = PROFILE_FIELDS_IN_THIS_SESSION.get(key);
                 if (property instanceof String && CryptHandler.isTextEncrypted((String) property)) {
-                    getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property because it wasn't decrypted");
+                    Logger.verbose(getConfigAccountId(), "Failed to retrieve local profile property because it wasn't decrypted");
                     return null;
                 }
                 return PROFILE_FIELDS_IN_THIS_SESSION.get(key);
             } catch (Throwable t) {
-                getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property", t);
+                Logger.verbose(getConfigAccountId(), "Failed to retrieve local profile property", t);
                 return null;
             }
         }
@@ -319,7 +319,7 @@ public class LocalDataStore {
                 PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
 
             } catch (Throwable t) {
-                getConfigLogger()
+                Logger
                         .verbose(getConfigAccountId(), "Failed to remove local profile value for key " + key, t);
             }
         }
@@ -353,7 +353,7 @@ public class LocalDataStore {
             }
 
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to create profile changed values object", t);
+            Logger.verbose(getConfigAccountId(), "Failed to create profile changed values object", t);
             return null;
         }
 
@@ -381,10 +381,6 @@ public class LocalDataStore {
 
     private String getConfigAccountId() {
         return this.config.getAccountId();
-    }
-
-    private Logger getConfigLogger() {
-        return this.config.getLogger();
     }
 
     private int getIntFromPrefs(String rawKey, int defaultValue) {
@@ -469,7 +465,7 @@ public class LocalDataStore {
                             }
                         }
 
-                        getConfigLogger().verbose(getConfigAccountId(),
+                        Logger.verbose(getConfigAccountId(),
                                 "Local Data Store - Inflated local profile " + PROFILE_FIELDS_IN_THIS_SESSION
                                         .toString());
 
@@ -512,7 +508,7 @@ public class LocalDataStore {
             editor.putString(storageKeyWithSuffix(evtName), updateEncoded);
             StorageHelper.persist(editor);
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to persist event locally", t);
+            Logger.verbose(getConfigAccountId(), "Failed to persist event locally", t);
         }
     }
 
@@ -547,7 +543,7 @@ public class LocalDataStore {
                         CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_DB_SUCCESS, cryptHandler);
 
                     long status = dbAdapter.storeUserProfile(profileID, jsonObjectEncrypted);
-                    getConfigLogger().verbose(getConfigAccountId(),
+                    Logger.verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);
                 }
             }
@@ -566,18 +562,18 @@ public class LocalDataStore {
                     public void run() {
                         EXECUTOR_THREAD_ID = Thread.currentThread().getId();
                         try {
-                            getConfigLogger().verbose(getConfigAccountId(),
+                            Logger.verbose(getConfigAccountId(),
                                     "Local Data Store Executor service: Starting task - " + name);
                             runnable.run();
                         } catch (Throwable t) {
-                            getConfigLogger().verbose(getConfigAccountId(),
+                            Logger.verbose(getConfigAccountId(),
                                     "Executor service: Failed to complete the scheduled task", t);
                         }
                     }
                 });
             }
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to submit task to the executor service", t);
+            Logger.verbose(getConfigAccountId(), "Failed to submit task to the executor service", t);
         }
     }
 
@@ -706,7 +702,7 @@ public class LocalDataStore {
             persistLocalProfileAsync();
 
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to set profile fields", t);
+            Logger.verbose(getConfigAccountId(), "Failed to set profile fields", t);
         }
     }
 
@@ -747,7 +743,7 @@ public class LocalDataStore {
 
                 JSONArray upstream = events.getJSONArray(event);
                 if (upstream == null || upstream.length() < 3) {
-                    getConfigLogger().verbose(getConfigAccountId(), "Corrupted upstream event detail");
+                    Logger.verbose(getConfigAccountId(), "Corrupted upstream event detail");
                     continue;
                 }
 
@@ -757,14 +753,14 @@ public class LocalDataStore {
                     first = upstream.getInt(1);
                     last = upstream.getInt(2);
                 } catch (Throwable t) {
-                    getConfigLogger().verbose(getConfigAccountId(),
+                    Logger.verbose(getConfigAccountId(),
                             "Failed to parse upstream event message: " + upstream.toString());
                     continue;
                 }
 
                 if (upstreamCount > ed.getCount()) {
                     editor.putString(storageKeyWithSuffix(event), encodeEventDetails(first, last, upstreamCount));
-                    getConfigLogger()
+                    Logger
                             .verbose(getConfigAccountId(), "Accepted update for event " + event + " from upstream");
 
                     try {
@@ -792,18 +788,18 @@ public class LocalDataStore {
                         eventUpdates.put(event, evUpdate);
 
                     } catch (Throwable t) {
-                        getConfigLogger().verbose(getConfigAccountId(), "Couldn't set event updates", t);
+                        Logger.verbose(getConfigAccountId(), "Couldn't set event updates", t);
                     }
 
                 } else {
-                    getConfigLogger()
+                    Logger
                             .verbose(getConfigAccountId(), "Rejected update for event " + event + " from upstream");
                 }
             }
             StorageHelper.persist(editor);
             return eventUpdates;
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Couldn't sync events from upstream", t);
+            Logger.verbose(getConfigAccountId(), "Couldn't sync events from upstream", t);
             return null;
         }
     }
@@ -838,7 +834,7 @@ public class LocalDataStore {
                     if (shouldPreferLocalProfileUpdateForKeyForTime(key, now)) {
                         // We shouldn't accept the upstream value, as our map
                         // forces us to use the local
-                        getConfigLogger()
+                        Logger
                                 .verbose(getConfigAccountId(), "Rejecting upstream value for key " + key + " " +
                                         "because our local cache prohibits it");
                         continue;
@@ -875,12 +871,12 @@ public class LocalDataStore {
                             }
 
                         } catch (Throwable t) {
-                            getConfigLogger().verbose(getConfigAccountId(), "Failed to set profile updates", t);
+                            Logger.verbose(getConfigAccountId(), "Failed to set profile updates", t);
                         }
                     }
 
                 } catch (Throwable t) {
-                    getConfigLogger().verbose(getConfigAccountId(), "Failed to update profile field", t);
+                    Logger.verbose(getConfigAccountId(), "Failed to update profile field", t);
                 }
             }
 
@@ -892,7 +888,7 @@ public class LocalDataStore {
             return profileUpdates;
 
         } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to sync remote profile", t);
+            Logger.verbose(getConfigAccountId(), "Failed to sync remote profile", t);
             return null;
         }
     }

@@ -128,7 +128,7 @@ public class CTInboxMessage implements Parcelable {
             this.wzrkParams = jsonObject.has(Constants.KEY_WZRK_PARAMS) ? jsonObject
                     .getJSONObject(Constants.KEY_WZRK_PARAMS) : null;
         } catch (JSONException e) {
-            Logger.v("Unable to init CTInboxMessage with JSON - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to init CTInboxMessage with JSON - " + e.getLocalizedMessage());
         }
     }
 
@@ -162,7 +162,7 @@ public class CTInboxMessage implements Parcelable {
             campaignId = in.readString();
             wzrkParams = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
         } catch (JSONException e) {
-            Logger.v("Unable to parse CTInboxMessage from parcel - " + e.getLocalizedMessage());
+            Logger.verbose("Unable to parse CTInboxMessage from parcel - " + e.getLocalizedMessage());
         }
     }
 

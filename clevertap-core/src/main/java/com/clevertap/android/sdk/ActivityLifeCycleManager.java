@@ -61,7 +61,7 @@ class ActivityLifeCycleManager {
     public void activityPaused() {
         CoreMetaData.setAppForeground(false);
         sessionManager.setAppLastSeen(System.currentTimeMillis());
-        config.getLogger().verbose(config.getAccountId(), "App in background");
+        Logger.verbose(config.getAccountId(), "App in background");
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute(
                 "activityPaused",
@@ -72,9 +72,9 @@ class ActivityLifeCycleManager {
                         if (coreMetaData.inCurrentSession()) {
                             try {
                                 StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.LAST_SESSION_EPOCH), now);
-                                config.getLogger().verbose(config.getAccountId(), "Updated session time: " + now);
+                                Logger.verbose(config.getAccountId(), "Updated session time: " + now);
                             } catch (Throwable t) {
-                                config.getLogger().verbose(config.getAccountId(), "Failed to update session time time: " + t.getMessage());
+                                Logger.verbose(config.getAccountId(), "Failed to update session time time: " + t.getMessage());
                             }
                         }
                         return null;
@@ -85,7 +85,7 @@ class ActivityLifeCycleManager {
 
     //Lifecycle
     public void activityResumed(Activity activity) {
-        config.getLogger().verbose(config.getAccountId(), "App in foreground");
+        Logger.verbose(config.getAccountId(), "App in foreground");
         sessionManager.checkTimeoutSession();
 
         //Anything in this If block will run once per App Launch.
@@ -111,9 +111,9 @@ class ActivityLifeCycleManager {
                     callbackManager.getGeofenceCallback().triggerLocation();
                 }
             } catch (IllegalStateException e) {
-                config.getLogger().verbose(config.getAccountId(), e.getLocalizedMessage());
+                Logger.verbose(config.getAccountId(), e.getLocalizedMessage());
             } catch (Exception e) {
-                config.getLogger().verbose(config.getAccountId(), "Failed to trigger location");
+                Logger.verbose(config.getAccountId(), "Failed to trigger location");
             }
         }
         baseEventQueueManager.pushInitialEventsAsync();
@@ -140,12 +140,12 @@ class ActivityLifeCycleManager {
                 }
             }
         } catch (Throwable t) {
-            Logger.v("Throwable - " + t.getLocalizedMessage());
+            Logger.verbose("Throwable - " + t.getLocalizedMessage());
         }
     }
 
     private void handleInstallReferrerOnFirstInstall() {
-        config.getLogger().verbose(config.getAccountId(), "Starting to handle install referrer");
+        Logger.verbose(config.getAccountId(), "Starting to handle install referrer");
         try {
             final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
             referrerClient.startConnection(new InstallReferrerStateListener() {
@@ -172,10 +172,10 @@ class ActivityLifeCycleManager {
                                             .setAppInstallTime(response.getInstallBeginTimestampSeconds());
                                     analyticsManager.pushInstallReferrer(referrerUrl);
                                     coreMetaData.setInstallReferrerDataSent(true);
-                                    config.getLogger().debug(config.getAccountId(),
+                                    Logger.debug(config.getAccountId(),
                                             "Install Referrer data set [Referrer URL-" + referrerUrl + "]");
                                 } catch (NullPointerException npe) {
-                                    config.getLogger().debug(config.getAccountId(),
+                                    Logger.debug(config.getAccountId(),
                                             "Install referrer client null pointer exception caused by Google Play Install Referrer library - "
                                                     + npe
                                                     .getMessage());
@@ -189,7 +189,7 @@ class ActivityLifeCycleManager {
                                 try {
                                     response = referrerClient.getInstallReferrer();
                                 } catch (RemoteException e) {
-                                    config.getLogger().debug(config.getAccountId(),
+                                    Logger.debug(config.getAccountId(),
                                             "Remote exception caused by Google Play Install Referrer library - " + e
                                                     .getMessage());
                                     referrerClient.endConnection();
@@ -201,19 +201,19 @@ class ActivityLifeCycleManager {
                             break;
                         case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
                             // API not available on the current Play Store app.
-                            config.getLogger().debug(config.getAccountId(),
+                            Logger.debug(config.getAccountId(),
                                     "Install Referrer data not set, API not supported by Play Store on device");
                             break;
                         case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
                             // Connection couldn't be established.
-                            config.getLogger().debug(config.getAccountId(),
+                            Logger.debug(config.getAccountId(),
                                     "Install Referrer data not set, connection to Play Store unavailable");
                             break;
                     }
                 }
             });
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "Google Play Install Referrer's InstallReferrerClient Class not found - " + t
                             .getLocalizedMessage()
                             + " \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle");

@@ -4,6 +4,7 @@ import static com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOG
 
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Logger;
 
 /**
  * Legacy class which handles old static identity logic.
@@ -30,14 +31,14 @@ public class LegacyIdentityRepo implements IdentityRepo {
     @Override
     public boolean hasIdentity(@NonNull final String Key) {
         boolean hasIdentity = identities.contains(Key);
-        config.log(LOG_TAG_ON_USER_LOGIN,
+        Logger.verbose(config.getAccountId(), LOG_TAG_ON_USER_LOGIN,
                 "isIdentity [Key: " + Key + " , Value: " + hasIdentity + "]");
         return hasIdentity;
     }
 
     private void loadIdentitySet() {
         this.identities = IdentitySet.getDefault();
-        config.log(LOG_TAG_ON_USER_LOGIN,
+        Logger.verbose(config.getAccountId(), LOG_TAG_ON_USER_LOGIN,
                 TAG + " Setting the default IdentitySet[" + identities + "]");
     }
 }

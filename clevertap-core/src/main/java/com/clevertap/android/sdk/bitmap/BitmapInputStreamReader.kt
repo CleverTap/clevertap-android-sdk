@@ -22,7 +22,7 @@ class BitmapInputStreamReader(
         downloadStartTimeInMilliseconds: Long
     ): DownloadedBitmap? {
 
-        Logger.v("reading bitmap input stream in BitmapInputStreamReader....")
+        Logger.verbose("reading bitmap input stream in BitmapInputStreamReader....")
         val bufferForHttpInputStream = ByteArray(16384)
         val finalDataFromHttpInputStream = ByteArrayOutputStream()
 
@@ -33,15 +33,15 @@ class BitmapInputStreamReader(
         while (inputStream.read(bufferForHttpInputStream).also { bytesRead = it } != -1) {
             totalBytesRead += bytesRead
             finalDataFromHttpInputStream.write(bufferForHttpInputStream, 0, bytesRead)
-            Logger.v("Downloaded $totalBytesRead bytes")
+            Logger.verbose("Downloaded $totalBytesRead bytes")
         }
-        Logger.v("Total download size for bitmap = $totalBytesRead")
+        Logger.verbose("Total download size for bitmap = $totalBytesRead")
 
         if (checkDownloadCompleteness) {
             // might be -1: server did not report the length
             val fileLength = connection.contentLength
             if (fileLength != -1 && fileLength != totalBytesRead) {
-                Logger.d("File not loaded completely not going forward. URL was: ${connection.url}")
+                Logger.debug("File not loaded completely not going forward. URL was: ${connection.url}")
                 return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
             }
         }

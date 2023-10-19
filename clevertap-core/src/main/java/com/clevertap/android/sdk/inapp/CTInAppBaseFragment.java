@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.InAppNotificationActivity;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import java.lang.ref.WeakReference;
@@ -127,7 +128,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             // no-op
         }
         if (listener == null) {
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "InAppListener is null for notification: " + inAppNotification.getJsonDescription());
         }
         return listener;
@@ -177,7 +178,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             didDismiss(data);
 
         } catch (Throwable t) {
-            config.getLogger().debug("Error handling notification button click: " + t.getCause());
+            Logger.debug("Error handling notification button click: " + t.getCause());
             didDismiss(null);
         }
     }

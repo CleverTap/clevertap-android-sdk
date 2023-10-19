@@ -18,7 +18,7 @@ class GzipBitmapInputStreamReader : IBitmapInputStreamReader {
         downloadStartTimeInMilliseconds: Long
     ): DownloadedBitmap? {
 
-        Logger.v("reading bitmap input stream in GzipBitmapInputStreamReader....")
+        Logger.verbose("reading bitmap input stream in GzipBitmapInputStreamReader....")
 
         val isGZipEncoded = connection.contentEncoding?.contains("gzip") ?: false
 
@@ -37,7 +37,7 @@ class GzipBitmapInputStreamReader : IBitmapInputStreamReader {
                 decompressedFile.write(bufferForGzipInputStream, 0, bytesRead)
             }
 
-            Logger.v("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")
+            Logger.verbose("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")
 
             return getDownloadedBitmapFromStream(decompressedFile, downloadStartTimeInMilliseconds)
         } else null

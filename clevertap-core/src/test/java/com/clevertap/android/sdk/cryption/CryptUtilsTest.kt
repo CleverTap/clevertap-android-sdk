@@ -5,7 +5,6 @@ import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.cryption.CryptUtils.migrateEncryptionLevel
 import com.clevertap.android.sdk.cryption.CryptUtils.updateEncryptionFlagOnFailure
@@ -35,11 +34,7 @@ class CryptUtilsTest : BaseTestCase() {
 
 
     private lateinit var config: CleverTapInstanceConfig
-
-    @Mock
-    lateinit var logger: Logger
-
-
+    
     @Before
     override fun setUp() {
         super.setUp()

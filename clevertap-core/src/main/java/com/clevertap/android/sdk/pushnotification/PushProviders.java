@@ -150,7 +150,7 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         if (config.isAnalyticsOnly()) {
-            config.getLogger()
+            Logger
                     .debug(config.getAccountId(),
                             "Instance is set for Analytics only, cannot create notification");
             return;
@@ -164,7 +164,7 @@ public class PushProviders implements CTPushProviderListener {
             }
             String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
             if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
-                config.getLogger()
+                Logger
                         .debug(config.getAccountId(),
                                 "Handling notification: " + extras);
 
@@ -172,7 +172,7 @@ public class PushProviders implements CTPushProviderListener {
                     if (baseDatabaseManager.loadDBAdapter(context)
                             .doesPushNotificationIdExist(
                                     extras.getString(Constants.WZRK_PUSH_ID))) {
-                        config.getLogger().debug(config.getAccountId(),
+                        Logger.debug(config.getAccountId(),
                                 "Push Notification already rendered, not showing again");
                         return;
                     }
@@ -181,7 +181,7 @@ public class PushProviders implements CTPushProviderListener {
                 notifMessage = (notifMessage != null) ? notifMessage : "";
                 if (notifMessage.isEmpty()) {
                     //silent notification
-                    config.getLogger()
+                    Logger
                             .verbose(config.getAccountId(),
                                     "Push notification message is empty, not rendering");
                     baseDatabaseManager.loadDBAdapter(context)
@@ -203,7 +203,7 @@ public class PushProviders implements CTPushProviderListener {
             // Occurs if the notification image was null
             // Let's return, as we couldn't get a handle on the app's icon
             // Some devices throw a PackageManager* exception too
-            config.getLogger()
+            Logger
                     .debug(config.getAccountId(), "Couldn't render notification: ", t);
         }
     }
@@ -233,13 +233,13 @@ public class PushProviders implements CTPushProviderListener {
                     }
                     StorageHelper
                             .putStringImmediate(context, StorageHelper.storageKeyWithSuffix(config, key), token);
-                    config.log(PushConstants.LOG_TAG, pushType + "Cached New Token successfully " + token);
+                    Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, pushType + "Cached New Token successfully " + token);
                     return null;
                 }
             });
 
         } catch (Throwable t) {
-            config.log(PushConstants.LOG_TAG, pushType + "Unable to cache token " + token, t);
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, pushType + "Unable to cache token " + token, t);
         }
     }
 
@@ -299,12 +299,12 @@ public class PushProviders implements CTPushProviderListener {
             @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
             if (!TextUtils.isEmpty(key)) {
                 String cachedToken = StorageHelper.getStringFromPrefs(context, config, key, null);
-                config.log(PushConstants.LOG_TAG, pushType + "getting Cached Token - " + cachedToken);
+                Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, pushType + "getting Cached Token - " + cachedToken);
                 return cachedToken;
             }
         }
         if (pushType != null) {
-            config.log(PushConstants.LOG_TAG, pushType + " Unable to find cached Token for type ");
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, pushType + " Unable to find cached Token for type ");
         }
         return null;
     }
@@ -375,7 +375,7 @@ public class PushProviders implements CTPushProviderListener {
                 notifMessage = (notifMessage != null) ? notifMessage : "";
                 if (notifMessage.isEmpty()) {
                     //silent notification
-                    config.getLogger()
+                    Logger
                             .verbose(config.getAccountId(), "Push notification message is empty, not rendering");
                     baseDatabaseManager.loadDBAdapter(context).storeUninstallTimestamp();
                     String pingFreq = extras.getString("pf", "");
@@ -388,7 +388,7 @@ public class PushProviders implements CTPushProviderListener {
                             (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
                     long wzrk_ttl = Long.parseLong(ttl);
                     DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-                    config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
+                    Logger.verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
                     dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
                 }
                 return null;
@@ -411,8 +411,8 @@ public class PushProviders implements CTPushProviderListener {
      * updates the ping frequency if there is a change & reschedules existing ping tasks.
      */
     public void updatePingFrequencyIfNeeded(final Context context, int frequency) {
-        config.getLogger().verbose("Ping frequency received - " + frequency);
-        config.getLogger().verbose("Stored Ping Frequency - " + getPingFrequency(context));
+        Logger.verbose("Ping frequency received - " + frequency);
+        Logger.verbose("Stored Ping Frequency - " + getPingFrequency(context));
         if (frequency != getPingFrequency(context)) {
             setPingFrequency(context, frequency);
             if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
@@ -421,10 +421,10 @@ public class PushProviders implements CTPushProviderListener {
                     @Override
                     public Void call() {
                         if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-                            config.getLogger().verbose("Creating job");
+                            Logger.verbose("Creating job");
                             createOrResetJobScheduler(context);
                         } else {
-                            config.getLogger().verbose("Resetting alarm");
+                            Logger.verbose("Resetting alarm");
                             resetAlarmScheduler(context);
                         }
                         return null;
@@ -438,7 +438,7 @@ public class PushProviders implements CTPushProviderListener {
         boolean alreadyAvailable = !TextUtils.isEmpty(newToken) && pushType != null && newToken
                 .equalsIgnoreCase(getCachedToken(pushType));
         if (pushType != null) {
-            config.log(PushConstants.LOG_TAG, pushType + "Token Already available value: " + alreadyAvailable);
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, pushType + "Token Already available value: " + alreadyAvailable);
         }
         return alreadyAvailable;
     }
@@ -449,7 +449,7 @@ public class PushProviders implements CTPushProviderListener {
             @Override
             public Void call() {
                 if (!isNotificationSupported()) {
-                    Logger.v(config.getAccountId(), "Token is not present, not running the Job");
+                    Logger.verbose(config.getAccountId(), "Token is not present, not running the Job");
                     return null;
                 }
 
@@ -463,7 +463,7 @@ public class PushProviders implements CTPushProviderListener {
                 Date endTime = parseTimeToDate(Constants.DND_STOP);
 
                 if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
-                    Logger.v(config.getAccountId(), "Job Service won't run in default DND hours");
+                    Logger.verbose(config.getAccountId(), "Job Service won't run in default DND hours");
                     return null;
                 }
 
@@ -507,7 +507,7 @@ public class PushProviders implements CTPushProviderListener {
                             }
                         }
                     } catch (JSONException e) {
-                        Logger.v("Unable to raise background Ping event");
+                        Logger.verbose("Unable to raise background Ping event");
                     }
 
                 }
@@ -530,7 +530,7 @@ public class PushProviders implements CTPushProviderListener {
                 StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
             }
 
-            config.getLogger()
+            Logger
                     .debug(config.getAccountId(), "Push Amplification feature is not supported below Oreo");
             return;
         }
@@ -578,10 +578,10 @@ public class PushProviders implements CTPushProviderListener {
             JobInfo jobInfo = builder.build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
-                Logger.d(config.getAccountId(), "Job scheduled - " + jobid);
+                Logger.debug(config.getAccountId(), "Job scheduled - " + jobid);
                 StorageHelper.putInt(context, Constants.PF_JOB_ID, jobid);
             } else {
-                Logger.d(config.getAccountId(), "Job not scheduled - " + jobid);
+                Logger.debug(config.getAccountId(), "Job not scheduled - " + jobid);
             }
         }
     }
@@ -616,7 +616,7 @@ public class PushProviders implements CTPushProviderListener {
 
                     if (pushProvider instanceof UnregistrableCTPushProvider) {
                         ((UnregistrableCTPushProvider) pushProvider).unregisterPush(context);
-                        config.log(PushConstants.LOG_TAG, "unregistering existing token for disabled " + pushType);
+                        Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "unregistering existing token for disabled " + pushType);
                     }
                 }
             }
@@ -649,15 +649,15 @@ public class PushProviders implements CTPushProviderListener {
                                 Boolean.class);
                 pushProvider = (CTPushProvider) constructor.newInstance(this, context, config, false);
             }
-            config.log(PushConstants.LOG_TAG, "Found provider:" + className);
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Found provider:" + className);
         } catch (InstantiationException e) {
-            config.log(PushConstants.LOG_TAG, "Unable to create provider InstantiationException" + className);
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Unable to create provider InstantiationException" + className);
         } catch (IllegalAccessException e) {
-            config.log(PushConstants.LOG_TAG, "Unable to create provider IllegalAccessException" + className);
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Unable to create provider IllegalAccessException" + className);
         } catch (ClassNotFoundException e) {
-            config.log(PushConstants.LOG_TAG, "Unable to create provider ClassNotFoundException" + className);
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Unable to create provider ClassNotFoundException" + className);
         } catch (Exception e) {
-            config.log(PushConstants.LOG_TAG,
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG,
                     "Unable to create provider " + className + " Exception:" + e.getClass().getName());
         }
         return pushProvider;
@@ -667,34 +667,34 @@ public class PushProviders implements CTPushProviderListener {
     @SuppressWarnings("SameParameterValue")
     private void deviceTokenDidRefresh(String token, PushType type) {
         if (tokenRefreshListener != null) {
-            config.getLogger().debug(config.getAccountId(), "Notifying devicePushTokenDidRefresh: " + token);
+            Logger.debug(config.getAccountId(), "Notifying devicePushTokenDidRefresh: " + token);
             tokenRefreshListener.devicePushTokenDidRefresh(token, type);
         }
     }
 
     private void findCTPushProviders(List<CTPushProvider> providers) {
         if (providers.isEmpty()) {
-            config.log(PushConstants.LOG_TAG,
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG,
                     "No push providers found!. Make sure to install at least one push provider");
             return;
         }
 
         for (CTPushProvider provider : providers) {
             if (!isValid(provider)) {
-                config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass());
+                Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass());
                 continue;
             }
 
             if (!provider.isSupported()) {
-                config.log(PushConstants.LOG_TAG, "Unsupported Provider: " + provider.getClass());
+                Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Unsupported Provider: " + provider.getClass());
                 continue;
             }
 
             if (provider.isAvailable()) {
-                config.log(PushConstants.LOG_TAG, "Available Provider: " + provider.getClass());
+                Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Available Provider: " + provider.getClass());
                 availableCTPushProviders.add(provider);
             } else {
-                config.log(PushConstants.LOG_TAG, "Unavailable Provider: " + provider.getClass());
+                Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Unavailable Provider: " + provider.getClass());
             }
         }
     }
@@ -714,13 +714,13 @@ public class PushProviders implements CTPushProviderListener {
             try {
                 Class.forName(className);
                 allEnabledPushTypes.add(pushType);
-                config.log(PushConstants.LOG_TAG, "SDK Class Available :" + className);
+                Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "SDK Class Available :" + className);
 
                 // if push is off on all devices then remove xps
                 if (pushType.getRunningDevices() == PushConstants.NO_DEVICES) {
                     allEnabledPushTypes.remove(pushType);
                     allDisabledPushTypes.add(pushType);
-                    config.log(PushConstants.LOG_TAG,
+                    Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG,
                             "disabling " + pushType + " due to flag set as PushConstants.NO_DEVICES");
                 }
                 // if push is off for non-xiaomi devices then remove xps
@@ -728,13 +728,13 @@ public class PushProviders implements CTPushProviderListener {
                     if (!PackageUtils.isXiaomiDeviceRunningMiui(context)) {
                         allEnabledPushTypes.remove(pushType);
                         allDisabledPushTypes.add(pushType);
-                        config.log(PushConstants.LOG_TAG,
+                        Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG,
                                 "disabling " + pushType + " due to flag set as PushConstants.XIAOMI_MIUI_DEVICES");
                     }
                 }
 
             } catch (Exception e) {
-                config.log(PushConstants.LOG_TAG,
+                Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG,
                         "SDK class Not available " + className + " Exception:" + e.getClass().getName());
             }
         }
@@ -803,7 +803,7 @@ public class PushProviders implements CTPushProviderListener {
     private boolean isValid(CTPushProvider provider) {
 
         if (VERSION_CODE < provider.minSDKSupportVersionCode()) {
-            config.log(PushConstants.LOG_TAG,
+            Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG,
                     "Provider: %s version %s does not match the SDK version %s. Make sure all CleverTap dependencies are the same version.");
             return false;
         }
@@ -813,14 +813,14 @@ public class PushProviders implements CTPushProviderListener {
             case XPS:
             case BPS:
                 if (provider.getPlatform() != PushConstants.ANDROID_PLATFORM) {
-                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() +
+                    Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() +
                             " delivery is only available for Android platforms." + provider.getPushType());
                     return false;
                 }
                 break;
             case ADM:
                 if (provider.getPlatform() != PushConstants.AMAZON_PLATFORM) {
-                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " +
+                    Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Invalid Provider: " +
                             provider.getClass() +
                             " ADM delivery is only available for Amazon platforms." + provider.getPushType());
                     return false;
@@ -859,15 +859,15 @@ public class PushProviders implements CTPushProviderListener {
                 data.put("id", token);
                 data.put("type", pushType.getType());
                 if (pushType == PushType.XPS) {
-                    config.getLogger().verbose("PushProviders: pushDeviceTokenEvent requesting device region");
+                    Logger.verbose("PushProviders: pushDeviceTokenEvent requesting device region");
                     data.put("region", pushType.getServerRegion());
                 }
                 event.put("data", data);
-                config.getLogger().verbose(config.getAccountId(), pushType + action + " device token " + token);
+                Logger.verbose(config.getAccountId(), pushType + action + " device token " + token);
                 analyticsManager.sendDataEvent(event);
             } catch (Throwable t) {
                 // we won't get here
-                config.getLogger().verbose(config.getAccountId(), pushType + action + " device token failed", t);
+                Logger.verbose(config.getAccountId(), pushType + action + " device token failed", t);
             }
         }
     }
@@ -896,7 +896,7 @@ public class PushProviders implements CTPushProviderListener {
                 pushProvider.requestToken();
             } catch (Throwable t) {
                 //no-op
-                config.log(PushConstants.LOG_TAG, "Token Refresh error " + pushProvider, t);
+                Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Token Refresh error " + pushProvider, t);
             }
         }
     }
@@ -906,7 +906,7 @@ public class PushProviders implements CTPushProviderListener {
             try {
                 pushDeviceTokenEvent(getCachedToken(pushType), true, pushType);
             } catch (Throwable t) {
-                config.log(PushConstants.LOG_TAG, "Token Refresh error " + pushType, t);
+                Logger.verbose(config.getAccountId(), PushConstants.LOG_TAG, "Token Refresh error " + pushType, t);
             }
         }
     }
@@ -999,7 +999,7 @@ public class PushProviders implements CTPushProviderListener {
 
         if (notificationManager == null) {
             String notificationManagerError = "Unable to render notification, Notification Manager is null.";
-            config.getLogger().debug(config.getAccountId(), notificationManagerError);
+            Logger.debug(config.getAccountId(), notificationManagerError);
             return;
         }
 
@@ -1020,7 +1020,7 @@ public class PushProviders implements CTPushProviderListener {
             }
             if (messageCode != -1) {
                 ValidationResult channelIdError = ValidationResultFactory.create(512, messageCode, value);
-                config.getLogger().debug(config.getAccountId(), channelIdError.getErrorDesc());
+                Logger.debug(config.getAccountId(), channelIdError.getErrorDesc());
                 validationResultStack.pushValidationResult(channelIdError);
             }
 
@@ -1029,20 +1029,20 @@ public class PushProviders implements CTPushProviderListener {
 
             // if no channel gets created then do not render push
             if (updatedChannelId == null || updatedChannelId.trim().isEmpty()) {
-                config.getLogger()
+                Logger
                         .debug(config.getAccountId(), "Not rendering Push since channel id is null or blank.");
                 return;
             }
 
             // if channel is blocked by user then do not render push
             if (!CTXtensions.isNotificationChannelEnabled(context,updatedChannelId)) {
-                config.getLogger()
+                Logger
                         .verbose(config.getAccountId(),
                                 "Not rendering push notification as channel = " + updatedChannelId + " is blocked by user");
                 return;
             }
 
-            config.getLogger().debug(config.getAccountId(), "Rendering Push on channel = " + updatedChannelId);
+            Logger.debug(config.getAccountId(), "Rendering Push on channel = " + updatedChannelId);
         }
 
         int smallIcon;
@@ -1083,18 +1083,18 @@ public class PushProviders implements CTPushProviderListener {
                     } else if (collapse_key instanceof String) {
                         try {
                             notificationId = Integer.parseInt(collapse_key.toString());
-                            config.getLogger().verbose(config.getAccountId(),
+                            Logger.verbose(config.getAccountId(),
                                     "Converting collapse_key: " + collapse_key + " to notificationId int: "
                                             + notificationId);
                         } catch (NumberFormatException e) {
                             notificationId = (collapse_key.toString().hashCode());
-                            config.getLogger().verbose(config.getAccountId(),
+                            Logger.verbose(config.getAccountId(),
                                     "Converting collapse_key: " + collapse_key + " to notificationId int: "
                                             + notificationId);
                         }
                     }
                     notificationId = Math.abs(notificationId); //Notification Id always needs to be positive
-                    config.getLogger().debug(config.getAccountId(),
+                    Logger.debug(config.getAccountId(),
                             "Creating the notification id: " + notificationId + " from collapse_key: "
                                     + collapse_key);
                 }
@@ -1102,14 +1102,14 @@ public class PushProviders implements CTPushProviderListener {
                 // no-op
             }
         } else {
-            config.getLogger().debug(config.getAccountId(), "Have user provided notificationId: " + notificationId
+            Logger.debug(config.getAccountId(), "Have user provided notificationId: " + notificationId
                     + " won't use collapse_key (if any) as basis for notificationId");
         }
 
         // if after trying collapse_key notification is still empty set to random int
         if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
             notificationId = (int) (Math.random() * 100);
-            config.getLogger().debug(config.getAccountId(), "Setting random notificationId: " + notificationId);
+            Logger.debug(config.getAccountId(), "Setting random notificationId: " + notificationId);
         }
 
         NotificationCompat.Builder nb;
@@ -1162,7 +1162,7 @@ public class PushProviders implements CTPushProviderListener {
 
         Notification n = nb.build();
         notificationManager.notify(notificationId, n);
-        config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());//cb
+        Logger.debug(config.getAccountId(), "Rendered notification: " + n.toString());//cb
 
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
@@ -1171,14 +1171,14 @@ public class PushProviders implements CTPushProviderListener {
             long wzrk_ttl = Long.parseLong(ttl);
             String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
             DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-            config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
+            Logger.verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
             dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
 
             boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
             if (!notificationViewedEnabled) {
                 ValidationResult notificationViewedError = ValidationResultFactory
                         .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
-                config.getLogger().debug(notificationViewedError.getErrorDesc());
+                Logger.debug(notificationViewedError.getErrorDesc());
                 validationResultStack.pushValidationResult(notificationViewedError);
                 return;
             }
@@ -1186,7 +1186,7 @@ public class PushProviders implements CTPushProviderListener {
             long omrStart = extras.getLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, -1);
             if (omrStart >= 0) {
                 long prt = System.currentTimeMillis() - omrStart;
-                config.getLogger()
+                Logger
                         .verbose("Rendered Push Notification in " + prt + " millis");
             }
 

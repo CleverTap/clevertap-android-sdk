@@ -51,10 +51,10 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                 }
 
                 didClick(formData, null);
-                Logger.d("Executing call to action for in-app: " + url);
+                Logger.debug("Executing call to action for in-app: " + url);
                 fireUrlThroughIntent(url, formData);
             } catch (Throwable t) {
-                Logger.v("Error parsing the in-app notification action!", t);
+                Logger.verbose("Error parsing the in-app notification action!", t);
             }
             return true;
         }
@@ -157,7 +157,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             }
 
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Fragment view not created", t);
+            Logger.verbose(config.getAccountId(), "Fragment view not created", t);
             return null;
         }
         return inAppView;
@@ -209,7 +209,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             String style = "<style>body{width:" + mWidth + "px; height: " + mHeight
                     + "px; margin: 0; padding:0;}</style>";
             html = html.replaceFirst("<head>", "<head>" + style);
-            Logger.v("Density appears to be " + d);
+            Logger.verbose("Density appears to be " + d);
 
             webView.setInitialScale((int) (d * 100));
             webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);

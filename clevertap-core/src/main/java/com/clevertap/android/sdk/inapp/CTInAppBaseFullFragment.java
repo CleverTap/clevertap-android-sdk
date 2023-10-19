@@ -54,7 +54,7 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
             return getResources().getBoolean(R.bool.ctIsTablet);
         } catch (Exception e) {
             // resource not found
-            Logger.d("Failed to decide whether device is a smart phone or tablet!");
+            Logger.debug("Failed to decide whether device is a smart phone or tablet!");
             e.printStackTrace();
             return false;
         }

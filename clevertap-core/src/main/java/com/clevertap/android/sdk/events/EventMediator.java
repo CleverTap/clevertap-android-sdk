@@ -4,6 +4,7 @@ import android.content.Context;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import java.util.Arrays;
 import org.json.JSONException;
@@ -50,13 +51,13 @@ public class EventMediator {
 
         if (cleverTapMetaData.isCurrentUserOptedOut()) {
             String eventString = event == null ? "null" : event.toString();
-            config.getLogger()
+            Logger
                     .debug(config.getAccountId(), "Current user is opted out dropping event: " + eventString);
             return true;
         }
 
         if (isMuted()) {
-            config.getLogger()
+            Logger
                     .verbose(config.getAccountId(), "CleverTap is muted, dropping event - " + event.toString());
             return true;
         }

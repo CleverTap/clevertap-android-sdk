@@ -88,7 +88,7 @@ public final class Utils {
                 try {
                     hashMapArrayList.add(convertJSONObjectToHashMap(jsonArray.getJSONObject(i)));
                 } catch (JSONException e) {
-                    Logger.v("Could not convert JSONArray of JSONObjects to ArrayList of HashMaps - " + e
+                    Logger.verbose("Could not convert JSONArray of JSONObjects to ArrayList of HashMaps - " + e
                             .getMessage());
                 }
             }
@@ -103,7 +103,7 @@ public final class Utils {
                 try {
                     listdata.add(array.getString(i));
                 } catch (JSONException e) {
-                    Logger.v("Could not convert JSONArray to ArrayList - " + e.getMessage());
+                    Logger.verbose("Could not convert JSONArray to ArrayList - " + e.getMessage());
                 }
             }
         }
@@ -182,7 +182,7 @@ public final class Utils {
             }
             return baos.toByteArray();
         } catch (IOException e) {
-            Logger.v("Error processing image bytes from url: " + srcUrl);
+            Logger.verbose("Error processing image bytes from url: " + srcUrl);
             return null;
         } finally {
             try {
@@ -190,7 +190,7 @@ public final class Utils {
                     connection.disconnect();
                 }
             } catch (Throwable t) {
-                Logger.v("Couldn't close connection!", t);
+                Logger.verbose("Couldn't close connection!", t);
             }
         }
     }
@@ -233,10 +233,10 @@ public final class Utils {
                 try {
                     networkType = teleMan.getDataNetworkType();
                 } catch (SecurityException se) {
-                    Logger.d("Security Exception caught while fetch network type" + se.getMessage());
+                    Logger.debug("Security Exception caught while fetch network type" + se.getMessage());
                 }
             } else {
-                Logger.d("READ_PHONE_STATE permission not asked by the app or not granted by the user");
+                Logger.debug("READ_PHONE_STATE permission not asked by the app or not granted by the user");
             }
         } else {
             networkType = teleMan.getNetworkType();
@@ -351,12 +351,12 @@ public final class Utils {
             ServiceInfo[] services = packageInfo.services;
             for (ServiceInfo serviceInfo : services) {
                 if (serviceInfo.name.equals(clazz.getName())) {
-                    Logger.v("Service " + serviceInfo.name + " found");
+                    Logger.verbose("Service " + serviceInfo.name + " found");
                     return true;
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
-            Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
+            Logger.debug("Intent Service name not found exception - " + e.getLocalizedMessage());
         }
         return false;
     }
@@ -426,21 +426,21 @@ public final class Utils {
 
     public static boolean validateCTID(String cleverTapID) {
         if (cleverTapID == null) {
-            Logger.i(
+            Logger.info(
                     "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL.");
             return false;
         }
         if (cleverTapID.isEmpty()) {
-            Logger.i(
+            Logger.info(
                     "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty.");
             return false;
         }
         if (cleverTapID.length() > 64) {
-            Logger.i("Custom CleverTap ID passed is greater than 64 characters. ");
+            Logger.info("Custom CleverTap ID passed is greater than 64 characters. ");
             return false;
         }
         if (!cleverTapID.matches("[=|<>;+.A-Za-z0-9()!:$@_-]*")) {
-            Logger.i(
+            Logger.info(
                     "Custom CleverTap ID cannot contain special characters apart from : =,(,),_,!,@,$,|<,>,;,+,. and - ");
             return false;
         }
@@ -475,16 +475,16 @@ public final class Utils {
             className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
             className = Class.forName("com.google.android.exoplayer2.ui.StyledPlayerView");
 
-            Logger.d("ExoPlayer is present");
+            Logger.debug("ExoPlayer is present");
             exoPlayerPresent = true;
         } catch (Throwable t) {
-            Logger.d("ExoPlayer library files are missing!!!");
-            Logger.d(
+            Logger.debug("ExoPlayer library files are missing!!!");
+            Logger.debug(
                     "Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.");
             if (className != null) {
-                Logger.d("ExoPlayer classes not found " + className.getName());
+                Logger.debug("ExoPlayer classes not found " + className.getName());
             } else {
-                Logger.d("ExoPlayer classes not found");
+                Logger.debug("ExoPlayer classes not found");
             }
         }
         return exoPlayerPresent;

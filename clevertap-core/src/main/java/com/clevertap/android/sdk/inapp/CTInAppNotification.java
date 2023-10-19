@@ -44,15 +44,15 @@ public class CTInAppNotification implements Parcelable {
                 synchronized (GifCache.class) {
                     int arraySize = getByteArraySizeInKB(byteArray);
                     int available = getAvailableMemory();
-                    Logger.v(
+                    Logger.verbose(
                             "CTInAppNotification.GifCache: gif size: " + arraySize + "KB. Available mem: " + available
                                     + "KB.");
                     if (arraySize > getAvailableMemory()) {
-                        Logger.v("CTInAppNotification.GifCache: insufficient memory to add gif: " + key);
+                        Logger.verbose("CTInAppNotification.GifCache: insufficient memory to add gif: " + key);
                         return false;
                     }
                     mMemoryCache.put(key, byteArray);
-                    Logger.v("CTInAppNotification.GifCache: added gif for key: " + key);
+                    Logger.verbose("CTInAppNotification.GifCache: added gif for key: " + key);
                 }
             }
             return true;
@@ -67,7 +67,7 @@ public class CTInAppNotification implements Parcelable {
         static void init() {
             synchronized (GifCache.class) {
                 if (mMemoryCache == null) {
-                    Logger.v("CTInAppNotification.GifCache: init with max device memory: " + maxMemory
+                    Logger.verbose("CTInAppNotification.GifCache: init with max device memory: " + maxMemory
                             + "KB and allocated cache size: " + cacheSize + "KB");
                     try {
                         mMemoryCache = new LruCache<String, byte[]>(cacheSize) {
@@ -76,13 +76,13 @@ public class CTInAppNotification implements Parcelable {
                                 // The cache size will be measured in kilobytes rather than
                                 // number of items.
                                 int size = getByteArraySizeInKB(byteArray);
-                                Logger.v("CTInAppNotification.GifCache: have gif of size: " + size + "KB for key: "
+                                Logger.verbose("CTInAppNotification.GifCache: have gif of size: " + size + "KB for key: "
                                         + key);
                                 return size;
                             }
                         };
                     } catch (Throwable t) {
-                        Logger.v("CTInAppNotification.GifCache: unable to initialize cache: ", t.getCause());
+                        Logger.verbose("CTInAppNotification.GifCache: unable to initialize cache: ", t.getCause());
                     }
                 }
             }
@@ -94,7 +94,7 @@ public class CTInAppNotification implements Parcelable {
                     return;
                 }
                 mMemoryCache.remove(key);
-                Logger.v("CTInAppNotification.GifCache: removed gif for key: " + key);
+                Logger.verbose("CTInAppNotification.GifCache: removed gif for key: " + key);
                 cleanup();
             }
         }
@@ -102,7 +102,7 @@ public class CTInAppNotification implements Parcelable {
         private static void cleanup() {
             synchronized (GifCache.class) {
                 if (isEmpty()) {
-                    Logger.v("CTInAppNotification.GifCache: cache is empty, removing it");
+                    Logger.verbose("CTInAppNotification.GifCache: cache is empty, removing it");
                     mMemoryCache = null;
                 }
             }
@@ -552,10 +552,10 @@ public class CTInAppNotification implements Parcelable {
                 }
 
                 if (media.getMediaUrl() != null) {
-                    Logger.v("CTInAppNotification: downloading GIF :" + media.getMediaUrl());
+                    Logger.verbose("CTInAppNotification: downloading GIF :" + media.getMediaUrl());
                     byte[] gifByteArray = Utils.getByteArrayFromImageURL(media.getMediaUrl());
                     if (gifByteArray != null) {
-                        Logger.v("GIF Downloaded from url: " + media.getMediaUrl());
+                        Logger.verbose("GIF Downloaded from url: " + media.getMediaUrl());
                         if (!GifCache.addByteArray(media.getCacheKey(), gifByteArray)) {
                             this.error = "Error processing GIF";
                         }
@@ -569,15 +569,15 @@ public class CTInAppNotification implements Parcelable {
                 }
 
                 if (media.getMediaUrl() != null) {
-                    Logger.v("CTInAppNotification: downloading Image :" + media.getMediaUrl());
+                    Logger.verbose("CTInAppNotification: downloading Image :" + media.getMediaUrl());
                     Bitmap imageBitmap = Utils.getBitmapFromURL(media.getMediaUrl());
                     if (imageBitmap != null) {
-                        Logger.v("Image Downloaded from url: " + media.getMediaUrl());
+                        Logger.verbose("Image Downloaded from url: " + media.getMediaUrl());
                         if (!ImageCache.addBitmap(media.getCacheKey(), imageBitmap)) {
                             this.error = "Error processing image";
                         }
                     } else {
-                        Logger.d("Image Bitmap is null");
+                        Logger.debug("Image Bitmap is null");
                         this.error = "Error processing image as bitmap was NULL";
                     }
                 }
@@ -669,7 +669,7 @@ public class CTInAppNotification implements Parcelable {
                     for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
                         if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo()) {
                             inAppMedia.setMediaUrl(null);
-                            Logger.d("Unable to download to media. Wrong media type for template");
+                            Logger.debug("Unable to download to media. Wrong media type for template");
                         }
                     }
                     break;
@@ -771,10 +771,10 @@ public class CTInAppNotification implements Parcelable {
             if (inAppMedia.getMediaUrl() != null && inAppMedia.getCacheKey() != null) {
                 if (!inAppMedia.getContentType().equals("image/gif")) {
                     ImageCache.removeBitmap(inAppMedia.getCacheKey(), false);
-                    Logger.v("Deleted image - " + inAppMedia.getCacheKey());
+                    Logger.verbose("Deleted image - " + inAppMedia.getCacheKey());
                 } else {
                     GifCache.removeByteArray(inAppMedia.getCacheKey());
-                    Logger.v("Deleted GIF - " + inAppMedia.getCacheKey());
+                    Logger.verbose("Deleted GIF - " + inAppMedia.getCacheKey());
                 }
             }
         }
@@ -841,7 +841,7 @@ public class CTInAppNotification implements Parcelable {
 
             return true;
         } catch (Throwable t) {
-            Logger.v("Failed to parse in-app notification!", t);
+            Logger.verbose("Failed to parse in-app notification!", t);
             return false;
         }
     }
@@ -872,7 +872,7 @@ public class CTInAppNotification implements Parcelable {
                     b.putBundle(key, getBundleFromJsonObject((JSONObject) value));
                 }
             } catch (JSONException e) {
-                Logger.v("Key had unknown object. Discarding");
+                Logger.verbose("Key had unknown object. Discarding");
             }
         }
         return b;

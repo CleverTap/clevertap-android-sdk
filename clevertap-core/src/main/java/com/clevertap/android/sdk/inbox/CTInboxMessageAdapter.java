@@ -28,7 +28,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     private ArrayList<CTInboxMessage> inboxMessages;
 
     CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, CTInboxListViewFragment fragment) {
-        Logger.v("CTInboxMessageAdapter: messages="+inboxMessages);
+        Logger.verbose("CTInboxMessageAdapter: messages="+inboxMessages);
         this.inboxMessages = inboxMessages;
         this.fragment = fragment;
     }

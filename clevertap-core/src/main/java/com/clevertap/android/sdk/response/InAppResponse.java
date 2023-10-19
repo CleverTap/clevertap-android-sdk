@@ -24,13 +24,10 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final boolean isSendTest;
 
-    private final Logger logger;
-
     public InAppResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
             ControllerManager controllerManager, final boolean isSendTest) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
-        logger = this.config.getLogger();
         this.controllerManager = controllerManager;
         this.isSendTest = isSendTest;
     }
@@ -40,17 +37,17 @@ public class InAppResponse extends CleverTapResponseDecorator {
         try {
 
             if (config.isAnalyticsOnly()) {
-                logger.verbose(config.getAccountId(),
+                Logger.verbose(config.getAccountId(),
                         "CleverTap instance is configured to analytics only, not processing inapp messages");
                 // process metadata response
                 cleverTapResponse.processResponse(response, stringBody, context);
                 return;
             }
 
-            logger.verbose(config.getAccountId(), "InApp: Processing response");
+            Logger.verbose(config.getAccountId(), "InApp: Processing response");
 
             if (!response.has("inapp_notifs")) {
-                logger.verbose(config.getAccountId(),
+                Logger.verbose(config.getAccountId(),
                         "InApp: Response JSON object doesn't contain the inapp key, failing");
                 // process metadata response
                 cleverTapResponse.processResponse(response, stringBody, context);
@@ -69,11 +66,11 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             if (!isSendTest && controllerManager.getInAppFCManager() != null) {
-                Logger.v("Updating InAppFC Limits");
+                Logger.verbose("Updating InAppFC Limits");
                 controllerManager.getInAppFCManager().updateLimits(context, perDay, perSession);
                 controllerManager.getInAppFCManager().processResponse(context, response);// Handle stale_inapp
             } else {
-                logger.verbose(config.getAccountId(),
+                Logger.verbose(config.getAccountId(),
                         "controllerManager.getInAppFCManager() is NULL, not Updating InAppFC Limits");
 
             }
@@ -82,7 +79,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             try {
                 inappNotifs = response.getJSONArray(Constants.INAPP_JSON_RESPONSE_KEY);
             } catch (JSONException e) {
-                logger.debug(config.getAccountId(), "InApp: In-app key didn't contain a valid JSON array");
+                Logger.debug(config.getAccountId(), "InApp: In-app key didn't contain a valid JSON array");
                 // process metadata response
                 cleverTapResponse.processResponse(response, stringBody, context);
                 return;
@@ -102,7 +99,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                             JSONObject inappNotif = inappNotifs.getJSONObject(i);
                             inappsFromPrefs.put(inappNotif);
                         } catch (JSONException e) {
-                            Logger.v("InAppManager: Malformed inapp notification");
+                            Logger.verbose("InAppManager: Malformed inapp notification");
                         }
                     }
                 }
@@ -112,8 +109,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
                         inappsFromPrefs.toString());
                 StorageHelper.persist(editor);
             } catch (Throwable e) {
-                logger.verbose(config.getAccountId(), "InApp: Failed to parse the in-app notifications properly");
-                logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
+                Logger.verbose(config.getAccountId(), "InApp: Failed to parse the in-app notifications properly");
+                Logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
             }
             // Fire the first notification, if any
             Task<Void> task = CTExecutorFactory.executors(config)
@@ -126,7 +123,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 }
             });
         } catch (Throwable t) {
-            Logger.v("InAppManager: Failed to parse response", t);
+            Logger.verbose("InAppManager: Failed to parse response", t);
         }
 
         // process metadata response

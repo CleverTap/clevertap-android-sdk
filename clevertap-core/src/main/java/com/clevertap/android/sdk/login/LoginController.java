@@ -104,7 +104,7 @@ public class LoginController {
             @Override
             public Void call() {
                 try {
-                    config.getLogger().verbose(config.getAccountId(), "asyncProfileSwitchUser:[profile " + profile
+                    Logger.verbose(config.getAccountId(), "asyncProfileSwitchUser:[profile " + profile
                             + " with Cached GUID " + ((cacheGuid != null) ? cachedGUID
                             : "NULL" + " and cleverTapID " + cleverTapID));
                     //set optOut to false on the current user to unregister the device token
@@ -150,7 +150,7 @@ public class LoginController {
                     resetDisplayUnits();
                     controllerManager.getInAppFCManager().changeUser(deviceInfo.getDeviceID());
                 } catch (Throwable t) {
-                    config.getLogger().verbose(config.getAccountId(), "Reset Profile error", t);
+                    Logger.verbose(config.getAccountId(), "Reset Profile error", t);
                 }
                 return null;
             }
@@ -161,12 +161,12 @@ public class LoginController {
     public void onUserLogin(final Map<String, Object> profile, final String cleverTapID) {
         if (config.getEnableCustomCleverTapId()) {
             if (cleverTapID == null) {
-                Logger.i(
+                Logger.info(
                         "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml Please call onUserlogin() and pass a custom CleverTap ID");
             }
         } else {
             if (cleverTapID != null) {
-                Logger.i(
+                Logger.info(
                         "CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID");
             }
         }
@@ -222,7 +222,7 @@ public class LoginController {
             // if no valid identifier provided or there are no identified users on the device; just push on the current profile
             if (!deviceInfo.isErrorDeviceId()) {
                 if (!haveIdentifier || loginInfoProvider.isAnonymousDevice()) {
-                    config.getLogger().debug(config.getAccountId(),
+                    Logger.debug(config.getAccountId(),
                             "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile");
                     analyticsManager.pushProfile(profile);
                     return;
@@ -231,7 +231,7 @@ public class LoginController {
 
             // if identifier maps to current guid, push on current profile
             if (cachedGUID != null && cachedGUID.equals(currentGUID)) {
-                config.getLogger().debug(config.getAccountId(),
+                Logger.debug(config.getAccountId(),
                         "onUserLogin: " + profile.toString() + " maps to current device id " + currentGUID
                                 + " pushing on current profile");
                 analyticsManager.pushProfile(profile);
@@ -243,7 +243,7 @@ public class LoginController {
 
             // as processing happens async block concurrent onUserLogin requests with the same profile, as our cache is set async
             if (isProcessUserLoginWithIdentifier(profileToString)) {
-                config.getLogger()
+                Logger
                         .debug(config.getAccountId(), "Already processing onUserLogin for " + profileToString);
                 return;
             }
@@ -254,14 +254,14 @@ public class LoginController {
                 processingUserLoginIdentifier = profileToString;
             }
 
-            config.getLogger()
+            Logger
                     .verbose(config.getAccountId(), "onUserLogin: queuing reset profile for " + profileToString
                             + " with Cached GUID " + ((cachedGUID != null) ? cachedGUID : "NULL"));
 
             asyncProfileSwitchUser(profile, cachedGUID, cleverTapID);
 
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "onUserLogin failed", t);
+            Logger.verbose(config.getAccountId(), "onUserLogin failed", t);
         }
     }
 
@@ -278,7 +278,7 @@ public class LoginController {
         if (controllerManager.getCTDisplayUnitController() != null) {
             controllerManager.getCTDisplayUnitController().reset();
         } else {
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null");
         }
     }
@@ -290,7 +290,7 @@ public class LoginController {
             ctFeatureFlagsController.resetWithGuid(deviceInfo.getDeviceID());
             ctFeatureFlagsController.fetchFeatureFlags();
         }else {
-            config.getLogger().verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, CTFeatureFlagsController is null");
         }
     }
@@ -306,7 +306,7 @@ public class LoginController {
 
     private void resetProductConfigs() {
         if (config.isAnalyticsOnly()) {
-            config.getLogger().debug(config.getAccountId(), "Product Config is not enabled for this instance");
+            Logger.debug(config.getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
         if (controllerManager.getCTProductConfigController() != null) {
@@ -316,7 +316,7 @@ public class LoginController {
                 CTProductConfigFactory.getInstance(context, deviceInfo, config, analyticsManager, coreMetaData,
                         callbackManager);
         controllerManager.setCTProductConfigController(ctProductConfigController);
-        config.getLogger().verbose(config.getAccountId(), "Product Config reset");
+        Logger.verbose(config.getAccountId(), "Product Config reset");
     }
 
     private void resetVariables() {

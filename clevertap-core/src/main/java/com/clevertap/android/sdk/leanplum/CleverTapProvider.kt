@@ -23,7 +23,7 @@ internal class CleverTapProvider {
     } else if (defaultInstance != null) {
       return defaultInstance
     }
-    Logger.i("CTWrapper", "Please initialize LeanplumCT, because CleverTap instance is missing.")
+    Logger.info("CTWrapper", "Please initialize LeanplumCT, because CleverTap instance is missing.")
     return null
   }
 

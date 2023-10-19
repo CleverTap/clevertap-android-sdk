@@ -12,7 +12,7 @@ class NotificationBitmapDownloadRequestHandler(
 ) : IBitmapDownloadRequestHandler {
 
     override fun handleRequest(bitmapDownloadRequest: BitmapDownloadRequest): DownloadedBitmap {
-        Logger.v("handling bitmap download request in NotificationBitmapDownloadRequestHandler....")
+        Logger.verbose("handling bitmap download request in NotificationBitmapDownloadRequestHandler....")
 
         val (srcUrl, fallbackToAppIcon, context) = bitmapDownloadRequest
 

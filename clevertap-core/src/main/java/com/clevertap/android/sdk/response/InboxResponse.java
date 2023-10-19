@@ -21,8 +21,6 @@ public class InboxResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig config;
 
-    private final Logger logger;
-
     private final ControllerManager controllerManager;
 
     public InboxResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
@@ -31,7 +29,6 @@ public class InboxResponse extends CleverTapResponseDecorator {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
         this.callbackManager = callbackManager;
-        logger = this.config.getLogger();
         inboxControllerLock = ctLockManager.getInboxControllerLock();
         this.controllerManager = controllerManager;
     }
@@ -42,7 +39,7 @@ public class InboxResponse extends CleverTapResponseDecorator {
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
 
         if (config.isAnalyticsOnly()) {
-            logger.verbose(config.getAccountId(),
+            Logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing inbox messages");
 
             // process PushAmp response
@@ -51,10 +48,10 @@ public class InboxResponse extends CleverTapResponseDecorator {
             return;
         }
 
-        logger.verbose(config.getAccountId(), "Inbox: Processing response");
+        Logger.verbose(config.getAccountId(), "Inbox: Processing response");
 
         if (!response.has(Constants.INBOX_JSON_RESPONSE_KEY)) {
-            logger.verbose(config.getAccountId(), "Inbox: Response JSON object doesn't contain the inbox key");
+            Logger.verbose(config.getAccountId(), "Inbox: Response JSON object doesn't contain the inbox key");
             // process PushAmp response
             cleverTapResponse.processResponse(response, stringBody, context);
             return;
@@ -62,7 +59,7 @@ public class InboxResponse extends CleverTapResponseDecorator {
         try {
             _processInboxMessages(response.getJSONArray(Constants.INBOX_JSON_RESPONSE_KEY));
         } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "InboxResponse: Failed to parse response", t);
+            Logger.verbose(config.getAccountId(), "InboxResponse: Failed to parse response", t);
         }
 
         // process PushAmp response

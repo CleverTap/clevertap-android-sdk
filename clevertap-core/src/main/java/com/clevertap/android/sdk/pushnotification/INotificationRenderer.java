@@ -49,14 +49,14 @@ public interface INotificationRenderer {
                 try {
                     clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
                 } catch (ClassNotFoundException ex) {
-                    Logger.d("No Intent Service found");
+                    Logger.debug("No Intent Service found");
                 }
             }
         } else {
             try {
                 clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
             } catch (ClassNotFoundException ex) {
-                Logger.d("No Intent Service found");
+                Logger.debug("No Intent Service found");
             }
         }
 
@@ -72,7 +72,7 @@ public interface INotificationRenderer {
                     String id = action.optString("id");
                     boolean autoCancel = action.optBoolean("ac", true);
                     if (label.isEmpty() || id.isEmpty()) {
-                        Logger.d("not adding push notification action: action label or id missing");
+                        Logger.debug("not adding push notification action: action label or id missing");
                         continue;
                     }
                     int icon = 0;
@@ -80,7 +80,7 @@ public interface INotificationRenderer {
                         try {
                             icon = context.getResources().getIdentifier(ico, "drawable", context.getPackageName());
                         } catch (Throwable t) {
-                           Logger.d("unable to add notification action icon: " + t.getLocalizedMessage());
+                           Logger.debug("unable to add notification action icon: " + t.getLocalizedMessage());
                         }
                     }
 
@@ -153,7 +153,7 @@ public interface INotificationRenderer {
                     nb.addAction(icon, label, actionIntent);
 
                 } catch (Throwable t) {
-                    Logger.d("error adding notification action : " + t.getLocalizedMessage());
+                    Logger.debug("error adding notification action : " + t.getLocalizedMessage());
                 }
             }
         }// Uncommon - END

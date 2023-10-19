@@ -8,6 +8,7 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import android.content.Context;
 import android.text.TextUtils;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Logger;
 import com.huawei.agconnect.AGConnectOptions;
 import com.huawei.agconnect.AGConnectOptionsBuilder;
 import com.huawei.hms.aaid.HmsInstanceId;
@@ -46,7 +47,7 @@ class HmsSdkHandler implements IHmsSdkHandler {
         try {
             appId = options.getString(APP_ID_KEY);
         } catch (Throwable t) {
-            mConfig.log(LOG_TAG, HMS_LOG_TAG + "HMS availability check failed.");
+            Logger.verbose(mConfig.getAccountId(), LOG_TAG, HMS_LOG_TAG + "HMS availability check failed.");
         }
         return appId;
     }
@@ -61,7 +62,7 @@ class HmsSdkHandler implements IHmsSdkHandler {
         try {
             return HuaweiApiAvailability.getInstance().isHuaweiMobileNoticeAvailable(context) == 0;
         } catch (Throwable e) {
-            mConfig.log(LOG_TAG, HMS_LOG_TAG + "HMS is supported check failed.");
+            Logger.verbose(mConfig.getAccountId(), LOG_TAG, HMS_LOG_TAG + "HMS is supported check failed.");
             return false;
         }
     }
@@ -75,7 +76,7 @@ class HmsSdkHandler implements IHmsSdkHandler {
                 token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE);
             }
         } catch (Throwable t) {
-            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Error requesting HMS token", t);
+            Logger.verbose(mConfig.getAccountId(), LOG_TAG, HMS_LOG_TAG + "Error requesting HMS token", t);
         }
         return token;
     }

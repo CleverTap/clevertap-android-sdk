@@ -72,9 +72,9 @@ public class CTPushNotificationReceiver extends BroadcastReceiver {
 
             context.startActivity(launchIntent);
 
-            Logger.d("CTPushNotificationReceiver: handled notification: " + extras.toString());
+            Logger.debug("CTPushNotificationReceiver: handled notification: " + extras.toString());
         } catch (Throwable t) {
-            Logger.v("CTPushNotificationReceiver: error handling notification", t);
+            Logger.verbose("CTPushNotificationReceiver: error handling notification", t);
         }
     }
 }

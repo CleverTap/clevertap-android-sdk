@@ -66,7 +66,7 @@ public final class UriHelper {
                 referrer.put("wm", wm);
             }
 
-            Logger.d("Referrer data: " + referrer.toString(4));
+            Logger.debug("Referrer data: " + referrer.toString(4));
         } catch (Throwable ignore) {
             // Won't happen
         }
@@ -105,7 +105,7 @@ public final class UriHelper {
                 return value;
             }
         } catch (Throwable t) {
-            Logger.v("Couldn't parse the URI", t);
+            Logger.verbose("Couldn't parse the URI", t);
             return null;
         }
     }

@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_FLAG_STATUS
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_MIGRATION
 import com.clevertap.android.sdk.Constants.piiDBKeys
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.utils.CTJsonConverter
@@ -65,7 +66,7 @@ object CryptUtils {
         )
 
         if (encryptionFlagStatus == ENCRYPTION_FLAG_ALL_SUCCESS) {
-            config.logger.verbose(
+            Logger.verbose(
                 config.accountId,
                 "Encryption flag status is 100% success, no need to migrate"
             )
@@ -73,7 +74,7 @@ object CryptUtils {
             return
         }
 
-        config.logger.verbose(
+        Logger.verbose(
             config.accountId,
             "Migrating encryption level from $storedEncryptionLevel to $configEncryptionLevel with current flag status $encryptionFlagStatus"
         )
@@ -120,7 +121,7 @@ object CryptUtils {
 
         val updatedFlagStatus = cgkFlag or dbFlag
 
-        config.logger.verbose(
+        Logger.verbose(
             config.accountId,
             "Updating encryption flag status to $updatedFlagStatus"
         )
@@ -148,13 +149,13 @@ object CryptUtils {
         context: Context,
         cryptHandler: CryptHandler
     ): Int {
-        config.logger.verbose(
+        Logger.verbose(
             config.accountId,
             "Migrating encryption level for cachedGUIDsKey prefs"
         )
         val json =
             StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)
-        val cachedGuidJsonObj = CTJsonConverter.toJsonObject(json, config.logger, config.accountId)
+        val cachedGuidJsonObj = CTJsonConverter.toJsonObject(json, config.accountId)
         val newGuidJsonObj = JSONObject()
         var migrationStatus = ENCRYPTION_FLAG_CGK_SUCCESS
         try {
@@ -169,7 +170,7 @@ object CryptUtils {
                     else
                         cryptHandler.decrypt(identifier, KEY_ENCRYPTION_MIGRATION)
                 if (crypted == null) {
-                    config.logger.verbose(
+                    Logger.verbose(
                         config.accountId,
                         "Error migrating $identifier in Cached Guid Key Pref"
                     )
@@ -186,13 +187,13 @@ object CryptUtils {
                     StorageHelper.storageKeyWithSuffix(config, CACHED_GUIDS_KEY),
                     cachedGuid
                 )
-                config.logger.verbose(
+                Logger.verbose(
                     config.accountId,
                     "setCachedGUIDs after migration:[$cachedGuid]"
                 )
             }
         } catch (t: Throwable) {
-            config.logger.verbose(config.accountId, "Error migrating cached guids: $t")
+            Logger.verbose(config.accountId, "Error migrating cached guids: $t")
             migrationStatus = ENCRYPTION_FLAG_FAIL
         }
         return migrationStatus
@@ -215,7 +216,7 @@ object CryptUtils {
         cryptHandler: CryptHandler,
         dbAdapter: DBAdapter
     ): Int {
-        config.logger.verbose(config.accountId, "Migrating encryption level for user profile in DB")
+        Logger.verbose(config.accountId, "Migrating encryption level for user profile in DB")
         var migrationStatus = ENCRYPTION_FLAG_DB_SUCCESS
         val profile =
             dbAdapter.fetchUserProfileById(config.accountId) ?: return ENCRYPTION_FLAG_DB_SUCCESS
@@ -229,7 +230,7 @@ object CryptUtils {
                         else
                             cryptHandler.decrypt(value, KEY_ENCRYPTION_MIGRATION)
                         if (crypted == null) {
-                            config.logger.verbose(
+                            Logger.verbose(
                                 config.accountId,
                                 "Error migrating $piiKey entry in db profile"
                             )
@@ -243,7 +244,7 @@ object CryptUtils {
             if (dbAdapter.storeUserProfile(config.accountId, profile) == -1L)
                 migrationStatus = ENCRYPTION_FLAG_FAIL
         } catch (e: Exception) {
-            config.logger.verbose(config.accountId, "Error migrating local DB profile: $e")
+            Logger.verbose(config.accountId, "Error migrating local DB profile: $e")
             migrationStatus = ENCRYPTION_FLAG_FAIL
         }
         return migrationStatus
@@ -270,7 +271,7 @@ object CryptUtils {
         // This operation sets the bit for the required encryption fail to 0
         val updatedEncryptionFlag =
             (failedFlag xor cryptHandler.encryptionFlagStatus) and cryptHandler.encryptionFlagStatus
-        config.logger.verbose(
+        Logger.verbose(
             config.accountId,
             "Updating encryption flag status after error in $failedFlag to $updatedEncryptionFlag"
         )

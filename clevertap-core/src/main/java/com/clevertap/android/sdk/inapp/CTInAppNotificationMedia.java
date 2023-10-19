@@ -93,7 +93,7 @@ public class CTInAppNotificationMedia implements Parcelable {
                 }
             }
         } catch (JSONException e) {
-            Logger.v("Error parsing Media JSONObject - " + e.getLocalizedMessage());
+            Logger.verbose("Error parsing Media JSONObject - " + e.getLocalizedMessage());
         }
         if (contentType.isEmpty()) {
             return null;

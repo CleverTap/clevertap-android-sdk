@@ -96,7 +96,7 @@ public class CleverTapDisplayUnit implements Parcelable {
             return new CleverTapDisplayUnit(jsonObject, unitID, displayUnitType, bgColor, contentArrayList, customKV,
                     null);
         } catch (Exception e) {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT,
+            Logger.debug(Constants.FEATURE_DISPLAY_UNIT,
                     "Unable to init CleverTapDisplayUnit with JSON - " + e.getLocalizedMessage());
             return new CleverTapDisplayUnit(null, "", null, null, null, null,
                     "Error Creating Display Unit from JSON : " + e.getLocalizedMessage());
@@ -135,7 +135,7 @@ public class CleverTapDisplayUnit implements Parcelable {
             this.error = in.readString();
         } catch (Exception e) {
             error = "Error Creating Display Unit from parcel : " + e.getLocalizedMessage();
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, error);
+            Logger.debug(Constants.FEATURE_DISPLAY_UNIT, error);
         }
     }
 
@@ -226,7 +226,7 @@ public class CleverTapDisplayUnit implements Parcelable {
             }
         } catch (Exception e) {
             //no op
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Error in getting WiZRK fields " + e.getLocalizedMessage());
+            Logger.debug(Constants.FEATURE_DISPLAY_UNIT, "Error in getting WiZRK fields " + e.getLocalizedMessage());
         }
         return null;
     }
@@ -257,7 +257,7 @@ public class CleverTapDisplayUnit implements Parcelable {
             stringBuilder.append(" ]");
             return stringBuilder.toString();
         } catch (Exception e) {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Exception in toString:" + e);
+            Logger.debug(Constants.FEATURE_DISPLAY_UNIT, "Exception in toString:" + e);
         }
         return super.toString();
     }
@@ -312,7 +312,7 @@ public class CleverTapDisplayUnit implements Parcelable {
             }
         } catch (Exception e) {
             //no op
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Error in getting Key Value Pairs " + e.getLocalizedMessage());
+            Logger.debug(Constants.FEATURE_DISPLAY_UNIT, "Error in getting Key Value Pairs " + e.getLocalizedMessage());
         }
         return null;
     }

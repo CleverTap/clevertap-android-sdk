@@ -24,11 +24,11 @@ import org.json.JSONObject;
  */
 public class VarCache {
     private static void log(String msg){
-        Logger.d("variables", msg);
+        Logger.debug("variables", msg);
     }
 
     private static void log(String msg,Throwable t){
-        Logger.d("variables", msg, t);
+        Logger.debug("variables", msg, t);
     }
 
     private final Map<String, Object> valuesFromClient = new HashMap<>();
