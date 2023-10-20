@@ -355,12 +355,15 @@ internal object PendingIntentFactory {
 
     /**
      * This function returns the number(1 to 5) of the concerned star for rating PT based on the identifier.
-     * The identifiers for the stars are consecutive integers.
-     * Hence the specific star number can be derived by subtracting the first identifier
      */
     @JvmStatic
     private fun getRatingStarNumber(identifier: Int): Int {
-        return identifier - RATING_CLICK1_PENDING_INTENT + 1;
+        return when (identifier) {
+            RATING_CLICK1_PENDING_INTENT -> 1
+            RATING_CLICK2_PENDING_INTENT -> 2
+            RATING_CLICK3_PENDING_INTENT -> 3
+            RATING_CLICK4_PENDING_INTENT -> 4
+            else -> 5
+        }
     }
-
 }
