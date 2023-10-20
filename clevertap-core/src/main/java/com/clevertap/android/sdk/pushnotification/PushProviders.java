@@ -476,7 +476,7 @@ public class PushProviders implements CTPushProviderListener {
                         analyticsManager.sendPingEvent(eventObject);
 
                         int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-                        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+                        if (VERSION.SDK_INT >= VERSION_CODES.M) {
                             flagsAlarmPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
                         }
 
@@ -937,7 +937,7 @@ public class PushProviders implements CTPushProviderListener {
             intent.setPackage(context.getPackageName());
 
             int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-            if (VERSION.SDK_INT >= VERSION_CODES.S) {
+            if (VERSION.SDK_INT >= VERSION_CODES.M) {
                 flagsAlarmPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
             }
             PendingIntent alarmPendingIntent = PendingIntent
@@ -955,7 +955,7 @@ public class PushProviders implements CTPushProviderListener {
         Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
         cancelIntent.setPackage(context.getPackageName());
         int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+        if (VERSION.SDK_INT >= VERSION_CODES.M) {
             flagsAlarmPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
         }
         PendingIntent alarmPendingIntent = PendingIntent
