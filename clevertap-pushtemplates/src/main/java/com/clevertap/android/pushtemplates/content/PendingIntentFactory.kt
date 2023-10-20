@@ -14,7 +14,6 @@ import com.clevertap.android.pushtemplates.PTPushNotificationReceiver
 import com.clevertap.android.pushtemplates.PushTemplateReceiver
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory

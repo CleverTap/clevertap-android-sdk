@@ -348,7 +348,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 }
             }
         } catch (t: Throwable) {
-            PTLog.debug(config.accountId + " Could not process sound parameter", t)
+            PTLog.debug("Could not process sound parameter for ${config.accountId}", t)
         }
         return nb
     }
@@ -578,18 +578,20 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
 
     companion object {
         /**
-         * Returns the log level set for PushTemplates
-         *
-         * @return The int value
-         */
-        /**
          * Enables or disables debugging. If enabled, see debug messages in Android's logcat utility.
-         * Debug messages are tagged as PTLog.
+         * Debug messages are tagged as CleverTap:PT.
          *
          * @param level Can be one of the following:  -1 (disables all debugging), 0 (default, shows minimal SDK integration related logging),
          * 2(shows debug output)
          */
+        @Deprecated
+            (
+            message = "This method has been deprecated since v1.x to make logging static across the SDK and will be removed in the future versions of the SDK. " +
+                    "In the future all clevertap modules will have one global debugLevel. " +
+                    "Use CleverTapAPI.setDebugLevel() to set the same",
+            level = DeprecationLevel.WARNING
+        )
         @JvmStatic
-        var debugLevel = LogLevel.INFO.intValue()
+        var debugLevel = -2
     }
 }

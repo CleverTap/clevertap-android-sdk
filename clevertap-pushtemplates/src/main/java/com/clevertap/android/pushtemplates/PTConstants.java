@@ -4,7 +4,7 @@ package com.clevertap.android.pushtemplates;
 //Using common keys from core-sdk constants
 public class PTConstants {
 
-    public static final String LOG_TAG = "PTLog";
+    public static final String LOG_TAG = "PT";
 
     public static final String PT_MANUAL_CAROUSEL_CURRENT = "pt_manual_carousel_current";
 
