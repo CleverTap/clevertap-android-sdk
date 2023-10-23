@@ -85,6 +85,14 @@ public class CTGeofenceAPI implements GeofenceCallback {
         return ctGeofenceAPI;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     * Note: This method has been deprecated since v1.3.0 to make logging static across the SDK.
+     * It will be removed in the future versions of this SDK.
+     * Use Logger class of the core-sdk instead"
+     * </p>
+     */
+    @Deprecated
     public static Logger getLogger() {
         return logger;
     }
@@ -536,6 +544,6 @@ public class CTGeofenceAPI implements GeofenceCallback {
     }
 
     static {
-        logger = new Logger(Logger.DEBUG);
+        logger = new Logger(Logger.UNSET);
     }
 }

@@ -1,7 +1,6 @@
 package com.clevertap.android.geofence;
 
-import static com.clevertap.android.geofence.Logger.DEBUG;
-
+import static com.clevertap.android.geofence.Logger.UNSET;
 import com.clevertap.android.geofence.Logger.LogLevel;
 import com.clevertap.android.sdk.CleverTapAPI;
 
@@ -34,8 +33,9 @@ public class CTGeofenceSettings {
 
         private byte locationFetchMode = FETCH_LAST_LOCATION_PERIODIC;
 
+        @Deprecated
         private @LogLevel
-        int logLevel = DEBUG;
+        int logLevel = UNSET;
 
         private float smallestDisplacement = GoogleLocationAdapter.SMALLEST_DISPLACEMENT_IN_METERS;
 
@@ -180,11 +180,16 @@ public class CTGeofenceSettings {
 
         /**
          * Set log level
-         *
+         * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+         * Note: This method has been deprecated since v1.3.0 to make logging static across the SDK.
+         * It will be removed in the future versions of this SDK.
+         * In the future all clevertap modules will have one global debugLevel. Use ClevertapAPI.setDebugLevel() to set the same"
+         * </p>
          * @param logLevel can be one of {@link Logger#DEBUG}, {@link Logger#INFO}, {@link Logger#VERBOSE} or
-         *                 {@link Logger#OFF}. Default value is {@link Logger#DEBUG}
+         *                 {@link Logger#OFF}. Default value is {@link Logger#UNSET}
          * @return {@link CTGeofenceSettings.Builder}
          */
+        @Deprecated
         public CTGeofenceSettings.Builder setLogLevel(@LogLevel int logLevel) {
             this.logLevel = logLevel;
             return this;
@@ -348,6 +353,7 @@ public class CTGeofenceSettings {
         return locationFetchMode;
     }
 
+    @Deprecated
     public @LogLevel
     int getLogLevel() {
         return logLevel;
