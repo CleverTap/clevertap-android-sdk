@@ -168,3 +168,11 @@ fun JSONArray.toList(): List<JSONObject> {
     }
     return jsonObjectList
 }
+
+fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
+    return if (this != null && other != null) {
+        this + separator + other
+    } else {
+        this ?: other
+    }
+}

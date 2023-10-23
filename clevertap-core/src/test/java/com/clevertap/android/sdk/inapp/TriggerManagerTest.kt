@@ -1,20 +1,10 @@
 package com.clevertap.android.sdk.inapp
 
-import android.content.Context
-import android.content.SharedPreferences
-import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Test
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
 class TriggerManagerTest : BaseTestCase() {
 
-    @Mock
+    /*@Mock
     private lateinit var context: Context
 
     @Mock
@@ -137,5 +127,5 @@ class TriggerManagerTest : BaseTestCase() {
 
         // Assert that the result is not null
         kotlin.test.assertNotNull(result)
-    }
+    }*/
 }

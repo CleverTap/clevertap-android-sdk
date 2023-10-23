@@ -2,15 +2,14 @@ package com.clevertap.android.sdk
 
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventQueueManager
+import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Mockito
+import org.junit.*
+import org.junit.runner.*
+import org.mockito.*
 import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.skyscreamer.jsonassert.JSONAssert
@@ -26,13 +25,25 @@ class AnalyticsManagerTest : BaseTestCase() {
     @Before
     override fun setUp() {
         super.setUp()
-        validator = Mockito.mock(Validator::class.java)
-        baseEventQueueManager= Mockito.mock(EventQueueManager::class.java)
+        validator = mock(Validator::class.java)
+        baseEventQueueManager = mock(EventQueueManager::class.java)
+        val inAppResponse = mock(InAppResponse::class.java)
         coreState = MockCoreState(application, cleverTapInstanceConfig)
-        analyticsManagerSUT = AnalyticsManager(application,cleverTapInstanceConfig,
-            baseEventQueueManager,validator,coreState.validationResultStack,
-            coreState.coreMetaData, coreState.localDataStore,coreState.deviceInfo,
-            coreState.callbackManager,coreState.controllerManager,coreState.ctLockManager, coreState.cryptHandler)
+        analyticsManagerSUT = AnalyticsManager(
+            application,
+            cleverTapInstanceConfig,
+            baseEventQueueManager,
+            validator,
+            coreState.validationResultStack,
+            coreState.coreMetaData,
+            coreState.localDataStore,
+            coreState.deviceInfo,
+            coreState.callbackManager,
+            coreState.controllerManager,
+            coreState.ctLockManager,
+            coreState.cryptHandler,
+            inAppResponse
+        )
     }
 
     @Test

@@ -7,7 +7,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Looper;
@@ -124,11 +123,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final MainLooperHandler mainLooperHandler;
 
+    private final InAppQueue inAppQueue;
+
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
+
     public final static String IS_HARD_PERMISSION_REQUEST = "isHardPermissionRequest";
 
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
+
     public final static String DISPLAY_HARD_PERMISSION_BUNDLE_KEY = "displayHardPermissionDialog";
+
     public final static String SHOW_FALLBACK_SETTINGS_BUNDLE_KEY = "shouldShowFallbackSettings";
 
     public InAppController(Context context,
@@ -137,7 +141,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             ControllerManager controllerManager,
             BaseCallbackManager callbackManager,
             AnalyticsManager analyticsManager,
-            CoreMetaData coreMetaData, final DeviceInfo deviceInfo) {
+            CoreMetaData coreMetaData, final DeviceInfo deviceInfo,
+            InAppQueue inAppQueue) {
 
         this.context = context;
         this.config = config;
@@ -149,6 +154,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
         this.deviceInfo = deviceInfo;
+        this.inAppQueue = inAppQueue;
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -405,23 +411,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     public void addInAppNotificationsToQueue(JSONArray inappNotifs) {
         try {
-            JSONArray storedInApps = new JSONArray(
-                    StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));
-
-            for (int i = 0; i < inappNotifs.length(); i++) {
-                try {
-                    storedInApps.put(inappNotifs.get(i));
-                } catch (Exception e) {
-                    logger.debug(config.getAccountId(), "InAppController: Malformed InApp notification: " + e.getMessage());
-                }
-            }
-
-            //TODO: should this be putStringImmediate()?
-            // Commit all the changes
-            StorageHelper.putString(context,
-                    config, Constants.INAPP_KEY,
-                    storedInApps.toString()
-            );
+            inAppQueue.enqueueAll(inappNotifs);
 
             // Fire the first notification, if any
             showNotificationIfAvailable(context);
@@ -452,7 +442,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     //InApp
     private void _showNotificationIfAvailable(Context context) {
-        SharedPreferences prefs = StorageHelper.getPreferences(context);
         try {
             if (!canShowInAppOnActivity()) {
                 Logger.v("Not showing notification on blacklisted activity");
@@ -467,33 +456,17 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
             checkPendingNotifications(context, config, this);  // see if we have any pending notifications
 
-            JSONArray inapps = new JSONArray(
-                    StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));
-            if (inapps.length() < 1) {
+            JSONObject inapp = inAppQueue.dequeue();
+            if (inapp == null) {
                 return;
             }
 
             if (this.inAppState != InAppState.DISCARDED) {
-                JSONObject inapp = inapps.getJSONObject(0);
                 prepareNotificationForDisplay(inapp);
             } else {
                 logger.debug(config.getAccountId(),
                         "InApp Notifications are set to be discarded, dropping the InApp Notification");
             }
-
-            // JSON array doesn't have the feature to remove a single element,
-            // so we have to copy over the entire array, but the first element
-            JSONArray inappsUpdated = new JSONArray();
-            for (int i = 0; i < inapps.length(); i++) {
-                if (i == 0) {
-                    continue;
-                }
-                inappsUpdated.put(inapps.get(i));
-            }
-            SharedPreferences.Editor editor = prefs.edit()
-                    .putString(StorageHelper.storageKeyWithSuffix(config, Constants.INAPP_KEY),
-                            inappsUpdated.toString());
-            StorageHelper.persist(editor);
         } catch (Throwable t) {
             // We won't get here
             logger.verbose(config.getAccountId(), "InApp: Couldn't parse JSON array string from prefs", t);

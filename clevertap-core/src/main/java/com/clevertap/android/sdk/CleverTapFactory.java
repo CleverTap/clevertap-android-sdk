@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
-
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.DBManager;
@@ -12,6 +11,7 @@ import com.clevertap.android.sdk.inapp.EvaluationManager;
 import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.ImpressionStore;
 import com.clevertap.android.sdk.inapp.InAppController;
+import com.clevertap.android.sdk.inapp.InAppQueue;
 import com.clevertap.android.sdk.inapp.InAppStore;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.matchers.LimitsMatcher;
@@ -32,7 +32,6 @@ import com.clevertap.android.sdk.validation.Validator;
 import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.Parser;
 import com.clevertap.android.sdk.variables.VarCache;
-
 import java.util.concurrent.Callable;
 
 class CleverTapFactory {
@@ -99,22 +98,27 @@ class CleverTapFactory {
                         && controllerManager.getInAppFCManager() == null) {
                     coreState.getConfig().getLogger()
                             .verbose(config.getAccountId() + ":async_deviceID",
-                                    "Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
+                                    "Initializing InAppFC with device Id = " + coreState.getDeviceInfo()
+                                            .getDeviceID());
                     controllerManager
-                            .setInAppFCManager(new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
+                            .setInAppFCManager(
+                                    new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
                 }
                 return null;
             }
         });
 
-        InAppStore store = new InAppStore(context, cryptHandler, deviceInfo, config.getAccountId());
-        ImpressionStore impStore = new ImpressionStore(context, config.getAccountId(), deviceInfo);
+        final StoreProvider storeProvider = StoreProvider.getInstance();
+        InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                config.getAccountId());
+        ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo, config.getAccountId());
+
         InAppResponse inAppResponse = new InAppResponse(
                 config,
                 controllerManager,
                 cryptHandler,
                 false,
-                store,
+                inAppStore,
                 impStore,
                 deviceInfo
         );
@@ -172,31 +176,24 @@ class CleverTapFactory {
         );
         coreState.setAnalyticsManager(analyticsManager);
 
-        InAppController inAppController = new InAppController(
-                context,
-                config,
-                mainLooperHandler,
-                controllerManager,
-                callbackManager,
-                analyticsManager,
-                coreMetaData,
-                deviceInfo
+        InAppController inAppController = new InAppController(context, config, mainLooperHandler,
+                controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo, new InAppQueue(config,
+                storeProvider.provideLegacyInAppStore(context, config))
         );
+
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
         TriggersMatcher triggersMatcher = new TriggersMatcher();
         TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
-        ImpressionStore impressionStore = new ImpressionStore(context, config.getAccountId(), deviceInfo);
-        ImpressionManager impressionManager = new ImpressionManager(impressionStore);
+        ImpressionManager impressionManager = new ImpressionManager(impStore);
         LimitsMatcher limitsMatcher = new LimitsMatcher(impressionManager, triggersManager);
-        InAppStore inAppStore = new InAppStore(context, cryptHandler, deviceInfo, config.getAccountId());
 
         EvaluationManager evaluationManager = new EvaluationManager(
                 inAppController,
                 triggersMatcher,
                 triggersManager,
-                impressionStore,
+                impStore,
                 impressionManager,
                 limitsMatcher,
                 inAppStore
