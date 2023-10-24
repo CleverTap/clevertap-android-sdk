@@ -242,6 +242,8 @@ public interface Constants {
     String WZRK_TIME_TO_LIVE = "wzrk_ttl";
     String WZRK_TIME_TO_LIVE_OFFSET = "wzrk_ttl_offset";
     String INAPP_SUPPRESSED = "suppressed";
+    String INAPP_SS_EVAL_META = "inapps_eval";
+    String INAPP_SUPPRESSED_META = "inapps_suppressed";
     String INAPP_OPERATOR = "operator";
     String INAPP_PROPERTYNAME = "propertyName";
     String INAPP_WHEN_TRIGGERS = "whenTriggers";

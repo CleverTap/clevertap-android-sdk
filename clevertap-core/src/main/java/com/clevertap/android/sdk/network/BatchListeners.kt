@@ -30,7 +30,7 @@ class AppLaunchListener(private val evaluationManager: EvaluationManager) : Batc
     override fun onBatchSent(batch: JSONArray, success: Boolean) {
         for (i in 0 until batch.length()) {
             val item = batch.getJSONObject(i)
-            if (item.has("evtName") && Constants.APP_LAUNCHED_EVENT == item.get("evtName")) { // TODO check success?
+            if (item.optString("evtName") == Constants.APP_LAUNCHED_EVENT && success) { // TODO check success?
                 onAppLaunchedFound()
                 return
             }
@@ -38,7 +38,7 @@ class AppLaunchListener(private val evaluationManager: EvaluationManager) : Batc
     }
 
   private fun onAppLaunchedFound() {
-    evaluationManager.onAppLaunchedSent()
+    evaluationManager.onAppLaunchedWithSuccess()
   }
 }
 
@@ -52,7 +52,7 @@ class FetchInAppListener(private val callbackManager: BaseCallbackManager) : Bat
         }
         for (i in 0 until batch.length()) {
             val item = batch.getJSONObject(i)
-            if (item.has(Constants.KEY_EVT_NAME) && Constants.WZRK_FETCH == item.get(Constants.KEY_EVT_NAME)
+            if (item.optString(Constants.KEY_EVT_NAME) == Constants.WZRK_FETCH
                 && item.get(Constants.KEY_T) == Constants.FETCH_TYPE_IN_APPS
             ) {
                 callbackManager.fetchInAppsCallback?.onInAppsFetched(success)

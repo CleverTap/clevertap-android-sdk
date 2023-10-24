@@ -1,12 +1,11 @@
 package com.clevertap.android.sdk.inapp
 
-import android.content.Context
 import android.icu.text.SimpleDateFormat
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.inapp.matchers.EventAdapter
 import com.clevertap.android.sdk.inapp.matchers.LimitsMatcher
 import com.clevertap.android.sdk.inapp.matchers.TriggersMatcher
+import com.clevertap.android.sdk.network.BatchListener
 import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
@@ -22,7 +21,7 @@ class EvaluationManager constructor(
     private val impressionManager: ImpressionManager,
     private val limitsMatcher: LimitsMatcher,
     private val inAppStore: InAppStore,
-) {
+): BatchListener {
     val evaluatedServerSideInAppIds: MutableList<String>
         get() = evaluatedServerSideInAppIds
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
@@ -58,10 +57,10 @@ class EvaluationManager constructor(
         // show first based on priority (2)
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
         val eligibleInApps = evaluate(event, appLaunchedNotifs)
-        sortByPriority(eligibleInApps)
+        val sortedInApps = sortByPriority(eligibleInApps)
 
         val inAppNotificationsToQueue: MutableList<JSONObject> = mutableListOf()
-        for (inApp in eligibleInApps) {
+        for (inApp in sortedInApps) {
             if (!shouldSuppress(inApp)) {
                 inAppNotificationsToQueue.add(inApp)
                 break
@@ -95,8 +94,9 @@ class EvaluationManager constructor(
                 suppress(inApp)
                 return
             }
-            inappController.addInAppNotificationsToQueue(JSONArray(inApp))
+
             updateTTL(inApp)
+            inappController.addInAppNotificationsToQueue(JSONArray(inApp))
         }
         // TODO handle supressed inapps -> DONE
         // TODO calculate TTL field and put it in the json based on ttlOffset parameter -> DONE
@@ -185,7 +185,39 @@ class EvaluationManager constructor(
         }
     }
 
-    fun onAppLaunchedSent() {
+    fun onAppLaunchedWithSuccess() {
         evaluateOnAppLaunchedClientSide()
+    }
+
+    override fun onBatchSent(batch: JSONArray, success: Boolean) {
+        if (success) {
+            val header = batch[0] as JSONObject
+            removeSentEvaluatedServerSideInAppIds(header)
+            removeSentSuppressedClientSideInApps(header)
+        }
+    }
+
+    private fun removeSentEvaluatedServerSideInAppIds(header: JSONObject) {
+        val inAppsEval = header.optJSONArray(Constants.INAPP_SS_EVAL_META)
+        inAppsEval?.let {
+            for (i in 0 until it.length()) {
+                val inAppId = it.optString(i)
+                evaluatedServerSideInAppIds.remove(inAppId)
+            }
+        }
+    }
+
+    private fun removeSentSuppressedClientSideInApps(header: JSONObject) {
+        val inAppsEval = header.optJSONArray(Constants.INAPP_SUPPRESSED_META)
+        inAppsEval?.let {
+            val iterator = suppressedClientSideInApps.iterator()
+            while (iterator.hasNext()) {
+                val suppressedInApp = iterator.next()
+                val inAppId = suppressedInApp[Constants.NOTIFICATION_ID_TAG] as? String
+                if (inAppId != null && inAppsEval.toString().contains(inAppId)) {
+                    iterator.remove()
+                }
+            }
+        }
     }
 }
