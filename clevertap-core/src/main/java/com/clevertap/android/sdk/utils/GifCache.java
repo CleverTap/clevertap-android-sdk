@@ -58,8 +58,7 @@ public class GifCache {
                             // The cache size will be measured in kilobytes rather than
                             // number of items.
                             int size = getByteArraySizeInKB(byteArray);
-                            Logger.v("CTInAppNotification.GifCache: have gif of size: " + size + "KB for key: "
-                                    + key);
+                            Logger.v("CTInAppNotification.GifCache: have gif of size: " + size + "KB for key: " + key);
                             return size;
                         }
                     };
