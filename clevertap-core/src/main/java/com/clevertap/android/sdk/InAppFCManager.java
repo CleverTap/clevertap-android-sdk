@@ -196,7 +196,7 @@ public class InAppFCManager {
         StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_MAX_PER_DAY, deviceId)),
                 perDay);
         StorageHelper
-                .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION, deviceId)),
+                .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION_KEY, deviceId)),
                         perSession);
     }
 
@@ -349,7 +349,7 @@ public class InAppFCManager {
         }
 
         // 3. Have we shown enough of in-apps this session?
-        final int c = getIntFromPrefs(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION, deviceId), 1);
+        final int c = getIntFromPrefs(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION_KEY, deviceId), 1);
         int sessionTotal = impressionManager.perSessionTotal();
         return (sessionTotal >= c);
 //        return (mShownThisSessionCount >= c);

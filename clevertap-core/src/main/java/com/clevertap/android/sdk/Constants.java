@@ -93,8 +93,13 @@ public interface Constants {
     String INAPP_NOTIF_SHOW_CLOSE = "sc";
     String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
 
-    String PREFS_INAPP_KEY_CS = "inapp_notifs_cs";
-    String PREFS_INAPP_KEY_SS = "inapp_notifs_ss";
+    String INAPP_NOTIFS_APP_LAUNCHED_KEY = "inapp_notifs_applaunched";
+
+    String INAPP_NOTIFS_KEY_CS = "inapp_notifs_cs";
+    String INAPP_NOTIFS_KEY_SS = "inapp_notifs_ss";
+
+    String PREFS_INAPP_KEY_CS = INAPP_NOTIFS_KEY_CS;
+    String PREFS_INAPP_KEY_SS = INAPP_NOTIFS_KEY_SS;
 
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
@@ -104,7 +109,8 @@ public interface Constants {
     String GEOFENCES_JSON_RESPONSE_KEY = "geofences";
     String DISCARDED_EVENT_JSON_KEY = "d_e";
     String INAPP_MAX_DISPLAY_COUNT = "mdc";
-    String INAPP_MAX_PER_SESSION = "imc";
+    String INAPP_MAX_PER_SESSION_KEY = "imc";
+    String INAPP_MAX_PER_DAY_KEY = "imp";
     String INAPP_WINDOW = "w";
     String INAPP_KEY = "inApp";
     String INAPP_WZRK_PIVOT = "wzrk_pivot";

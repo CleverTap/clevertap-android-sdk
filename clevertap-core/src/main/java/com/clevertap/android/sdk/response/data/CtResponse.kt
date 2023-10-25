@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.response.data
 
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.safeGetJSONArray
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -14,8 +16,8 @@ data class CtResponse(
         private const val IN_APP_DEFAULT_DAILY = 10
         private const val IN_APP_DEFAULT_SESSION = 10
 
-        private const val IN_APP_SESSION_KEY = "imc"
-        private const val IN_APP_DAILY_KEY = "imp"
+        private const val IN_APP_SESSION_KEY = Constants.INAPP_MAX_PER_SESSION_KEY
+        private const val IN_APP_DAILY_KEY = Constants.INAPP_MAX_PER_DAY_KEY
     }
 
     fun inApps(): InApps {
@@ -28,42 +30,27 @@ data class CtResponse(
         )
     }
 
-    fun inAppsPerSession(): Int =
-        if (response.has(IN_APP_SESSION_KEY) && response[IN_APP_SESSION_KEY] is Int) {
-            response.getInt(IN_APP_SESSION_KEY)
-        } else {
-            IN_APP_DEFAULT_SESSION
-        }
+    fun inAppsPerSession(): Int = response.optInt(IN_APP_SESSION_KEY, IN_APP_DEFAULT_SESSION)
 
-    fun inAppsPerDay(): Int = if (response.has(IN_APP_DAILY_KEY) && response[IN_APP_DAILY_KEY] is Int) {
-        response.getInt(IN_APP_DAILY_KEY)
-    } else {
-        IN_APP_DEFAULT_DAILY
-    }
+    fun inAppsPerDay(): Int = response.optInt(IN_APP_DAILY_KEY, IN_APP_DEFAULT_DAILY)
 
-    fun legacyInApps(): Pair<Boolean, JSONArray?> = inAppsPair("inapp_notifs")
+    fun legacyInApps(): Pair<Boolean, JSONArray?> = response.safeGetJSONArray(Constants.INAPP_JSON_RESPONSE_KEY)
 
-    fun appLaunchInApps(): Pair<Boolean, JSONArray?> = inAppsPair("inapp_notifs_applaunched")
+    fun appLaunchInApps(): Pair<Boolean, JSONArray?> = response.safeGetJSONArray(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
 
-    fun clientSideInApps(): Pair<Boolean, JSONArray?> = inAppsPair("inapp_notifs_cs")
+    fun clientSideInApps(): Pair<Boolean, JSONArray?> = response.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
 
-    fun serverSideInApps(): Pair<Boolean, JSONArray?> = inAppsPair("inapp_notifs_cs")
+    fun serverSideInApps(): Pair<Boolean, JSONArray?> = response.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
 
-    private fun inAppsPair(key: String): Pair<Boolean, JSONArray?> {
-        val has = response.has(key)
-
-        if (has.not()) {
-            return Pair(false, null)
-        }
-
-        val list: JSONArray = response.getJSONArray(key)
-
-        return if (list.length() > 0) {
-            Pair(true, list)
-        } else {
-            Pair(false, null)
-        }
-    }
+//    fun clientSideInApps(): List<InAppClientSide> {
+//        val jsonArray = response.safeGetJSONArray("inapp_notifs_cs").second ?: return emptyList()
+//        return jsonArray.toList().mapNotNull { InAppClientSide.fromJSONObject(it) }
+//    }
+//
+//    fun serverSideInApps(): List<InAppServerSide> {
+//        val jsonArray = response.safeGetJSONArray("inapp_notifs_cs").second ?: return emptyList()
+//        return jsonArray.toList().mapNotNull { InAppServerSide.fromJSONObject(it) }
+//    }
 }
 
 data class InApps(

@@ -169,6 +169,23 @@ fun JSONArray.toList(): List<JSONObject> {
     return jsonObjectList
 }
 
+fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
+    val has = has(key)
+
+    if (has.not()) {
+        return Pair(false, null)
+    }
+
+    val list: JSONArray = getJSONArray(key)
+
+    return if (list.length() > 0) {
+        Pair(true, list)
+    } else {
+        Pair(false, null)
+    }
+}
+
+
 fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
     return if (this != null && other != null) {
         this + separator + other
