@@ -10,7 +10,7 @@ import kotlin.math.max
  */
 class CTCaches private constructor(
     val config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
-    val logger: ILogger
+    val logger: ILogger? = null
 ) {
 
     companion object {
@@ -52,7 +52,7 @@ class CTCaches private constructor(
     private fun imageCacheSize(): Int {
         val selected = max(config.optimistic, config.minImageCacheKb).toInt()
 
-        logger.verbose("Image cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minImageCacheKb}, selected = $selected")
+        logger?.verbose("Image cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minImageCacheKb}, selected = $selected")
 
         return selected
     }
@@ -60,7 +60,7 @@ class CTCaches private constructor(
     private fun gifCacheSize(): Int {
         val selected = max(config.optimistic, config.minImageCacheKb).toInt()
 
-        logger.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minImageCacheKb}, selected = $selected")
+        logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minImageCacheKb}, selected = $selected")
 
         return selected
     }
