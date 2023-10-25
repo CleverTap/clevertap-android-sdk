@@ -551,7 +551,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         actionLaunchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     }
                     var actionIntent: PendingIntent?
-                    val requestCode = System.currentTimeMillis().toInt() + i
+                    val requestCode = Random().nextInt()
                     var flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
                     if (VERSION.SDK_INT >= VERSION_CODES.M) {
                         flagsActionLaunchPendingIntent =
