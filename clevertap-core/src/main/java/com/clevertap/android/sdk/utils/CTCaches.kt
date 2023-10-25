@@ -88,7 +88,7 @@ data class CTCachesConfig(
             minGifCacheKb = 5 * 1024,
             minImageCacheDiskKb = 5 * 1024 * 1024,
             minGifCacheDiskKb = 5 * 1024 * 1024,
-            optimistic = Runtime.getRuntime().maxMemory() / 1024
+            optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32)
         )
     }
 }
