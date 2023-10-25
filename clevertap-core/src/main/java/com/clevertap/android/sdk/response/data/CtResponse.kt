@@ -36,7 +36,8 @@ data class CtResponse(
 
     fun legacyInApps(): Pair<Boolean, JSONArray?> = response.safeGetJSONArray(Constants.INAPP_JSON_RESPONSE_KEY)
 
-    fun appLaunchInApps(): Pair<Boolean, JSONArray?> = response.safeGetJSONArray(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    fun appLaunchServerSideInApps(): Pair<Boolean, JSONArray?> =
+        response.safeGetJSONArray(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
 
     fun clientSideInApps(): Pair<Boolean, JSONArray?> = response.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
 

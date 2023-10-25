@@ -116,11 +116,9 @@ class CleverTapFactory {
         InAppResponse inAppResponse = new InAppResponse(
                 config,
                 controllerManager,
-                cryptHandler,
                 false,
                 inAppStore,
-                impStore,
-                deviceInfo
+                impStore
         );
 
         NetworkManager networkManager = new NetworkManager(
