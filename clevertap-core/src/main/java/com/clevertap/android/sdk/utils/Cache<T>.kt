@@ -28,11 +28,11 @@ class Cache<T : Any>(
         return true
     }
 
-    fun get(key: String): T {
+    fun get(key: String): T? {
         return memoryCache.get(key)
     }
 
-    fun remove(key: String): T {
+    fun remove(key: String): T? {
         return memoryCache.remove(key)
     }
 
