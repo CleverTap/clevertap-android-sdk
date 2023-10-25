@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.utils
 
 import android.graphics.Bitmap
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Logger
 import kotlin.math.max
 
@@ -9,7 +10,7 @@ import kotlin.math.max
  */
 class CTCaches private constructor(
     val config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
-    val logger: Logger
+    val logger: ILogger
 ) {
 
     companion object {
