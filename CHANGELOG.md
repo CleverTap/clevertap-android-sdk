@@ -1,5 +1,9 @@
 ## CHANGE LOG.
 
+### October 26, 2023
+
+* [CleverTap Push Templates SDK v1.2.0](docs/CTPUSHTEMPLATESCHANGELOG.md).
+
 ### October 12, 2023
 
 * [CleverTap Android SDK v5.2.1](docs/CTCORECHANGELOG.md)
