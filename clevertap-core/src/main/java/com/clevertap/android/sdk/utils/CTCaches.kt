@@ -20,8 +20,8 @@ class CTCaches private constructor(
         private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
     }
 
-    private var imageCache: Cache<Bitmap>? = null
-    private var gifCache: Cache<ByteArray>? = null
+    private var imageCache: LruCache<Bitmap>? = null
+    private var gifCache: LruCache<ByteArray>? = null
 
     fun instance(
         logger: Logger
@@ -34,19 +34,19 @@ class CTCaches private constructor(
         }
     }
 
-    fun imageCache(): Cache<Bitmap> {
+    fun imageCache(): LruCache<Bitmap> {
         synchronized(this) {
             if (imageCache == null) {
-                imageCache = Cache(maxSize = imageCacheSize())
+                imageCache = LruCache(maxSize = imageCacheSize())
             }
             return imageCache!!
         }
     }
 
-    fun gifCache(): Cache<ByteArray> {
+    fun gifCache(): LruCache<ByteArray> {
         synchronized(this) {
             if (gifCache == null) {
-                gifCache = Cache(maxSize = gifCacheSize())
+                gifCache = LruCache(maxSize = gifCacheSize())
             }
             return gifCache!!
         }
