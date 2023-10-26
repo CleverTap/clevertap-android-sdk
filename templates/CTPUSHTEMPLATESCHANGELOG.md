@@ -7,7 +7,7 @@
   channel in your app.
 #### Bug Fixes
 * Fixes a bug in the Rating PushTemplate where clicking of a star resulted in no action.
-* Fixes [#488](https://github.com/CleverTap/clevertap-android-sdk/issues/488) - a bug related to the image sequence in Manual Carosuel PushTemplate.
+* Fixes [#488](https://github.com/CleverTap/clevertap-android-sdk/issues/488) - a bug related to the image sequence in Manual Carousel PushTemplate.
 
 ### Version 1.1.0 (June 28, 2023)
 
