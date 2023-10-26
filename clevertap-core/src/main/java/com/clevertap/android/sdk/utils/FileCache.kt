@@ -1,16 +1,14 @@
 package com.clevertap.android.sdk.utils
 
-import android.content.Context
 import com.clevertap.android.sdk.ILogger
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.Exception
 
 class FileCache(
-    private val context: Context,
-    private val directory: File = context.getDir("directoryName", Context.MODE_PRIVATE),
+    private val directory: File,
     private val maxFileSizeKb: Int,
-    private val logger: ILogger
+    private val logger: ILogger?
 ) {
 
     companion object {
@@ -33,7 +31,7 @@ class FileCache(
             os.write(value)
             os.close()
         } catch (e: Exception) {
-            logger.verbose("Error in saving data to file", e)
+            logger?.verbose("Error in saving data to file", e)
             return false
         }
 

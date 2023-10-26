@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.utils
 
+import android.content.Context
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Logger
@@ -8,6 +9,7 @@ import kotlin.math.max
 /**
  * We have 2 caches in CT, image cache and a gif cache with different size configs
  */
+// todo locking should be individual cache based
 class CTCaches private constructor(
     val config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
     val logger: ILogger? = null
@@ -22,6 +24,9 @@ class CTCaches private constructor(
 
     private var imageCache: LruCache<Bitmap>? = null
     private var gifCache: LruCache<ByteArray>? = null
+
+    private var imageFileCache: FileCache? = null
+    private var gifFileCache: FileCache? = null
 
     fun instance(
         logger: Logger
@@ -49,6 +54,32 @@ class CTCaches private constructor(
                 gifCache = LruCache(maxSize = gifCacheSize())
             }
             return gifCache!!
+        }
+    }
+
+    fun imageCacheDisk(context: Context): FileCache {
+        synchronized(this) {
+            if (imageFileCache == null) {
+                imageFileCache = FileCache(
+                    directory = context.getDir("directoryName", Context.MODE_PRIVATE),
+                    maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
+                    logger = logger
+                )
+            }
+            return imageFileCache!!
+        }
+    }
+
+    fun gifCacheDisk(context: Context): FileCache {
+        synchronized(this) {
+            if (gifFileCache == null) {
+                gifFileCache = FileCache(
+                    directory = context.getDir("directoryName", Context.MODE_PRIVATE),
+                    maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
+                    logger = logger
+                )
+            }
+            return gifFileCache!!
         }
     }
 
@@ -82,17 +113,15 @@ class CTCaches private constructor(
 data class CTCachesConfig(
     val minImageCacheKb: Long,
     val minGifCacheKb: Long,
-    val minImageCacheDiskKb: Long,
-    val minGifCacheDiskKb: Long,
-    val optimistic: Long
+    val optimistic: Long,
+    val maxImageSizeDiskKb: Long
 ) {
     companion object {
         val DEFAULT_CONFIG = CTCachesConfig(
             minImageCacheKb = 20 * 1024,
             minGifCacheKb = 5 * 1024,
-            minImageCacheDiskKb = 5 * 1024 * 1024,
-            minGifCacheDiskKb = 5 * 1024 * 1024,
-            optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32)
+            optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32),
+            maxImageSizeDiskKb = 5 * 1024
         )
     }
 }
