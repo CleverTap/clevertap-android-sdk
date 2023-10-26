@@ -49,7 +49,7 @@ internal object PendingIntentFactory {
 
     @JvmStatic
     fun setPendingIntent(
-        context: Context, notificationId: Int, extras: Bundle, launchIntent: Intent?
+        context: Context, notificationId: Int, extras: Bundle, launchIntent: Intent?, requestCode : Int
     ): PendingIntent {
         val dl = extras[Constants.DEEP_LINK_KEY]
         extras.putInt(PTConstants.PT_NOTIF_ID, notificationId)
@@ -73,7 +73,7 @@ internal object PendingIntentFactory {
                 flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
             }
             return PendingIntent.getBroadcast(
-                context, System.currentTimeMillis().toInt(),
+                context, requestCode,
                 launchIntent, flagsLaunchPendingIntent
             )
         }
@@ -89,7 +89,7 @@ internal object PendingIntentFactory {
             flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
         }
         return PendingIntent.getBroadcast(
-            context, System.currentTimeMillis().toInt(),
+            context, Random().nextInt(),
             intent, flagsLaunchPendingIntent
         )
     }
@@ -112,6 +112,7 @@ internal object PendingIntentFactory {
             flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
         }
 
+        val requestCode = Random().nextInt()
         when (identifier) {
             BASIC_CONTENT_PENDING_INTENT, AUTO_CAROUSEL_CONTENT_PENDING_INTENT,
             MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, ZERO_BEZEL_CONTENT_PENDING_INTENT,
@@ -123,13 +124,14 @@ internal object PendingIntentFactory {
                         context,
                         notificationId,
                         extras,
-                        launchIntent
+                        launchIntent,
+                        requestCode
                     )
                 } else {
                     if (extras[Constants.DEEP_LINK_KEY] == null) {
                         extras.putString(Constants.DEEP_LINK_KEY, null)
                     }
-                    setPendingIntent(context, notificationId, extras, launchIntent)
+                    setPendingIntent(context, notificationId, extras, launchIntent, requestCode)
                 }
             }
 
@@ -142,7 +144,8 @@ internal object PendingIntentFactory {
                     context,
                     notificationId,
                     extras,
-                    launchIntent
+                    launchIntent,
+                    requestCode
                 )
             }
 
@@ -152,7 +155,7 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtras(extras)
 
                 return setPendingIntent(
-                    context, notificationId, extras, launchIntent
+                    context, notificationId, extras, launchIntent, requestCode
                 )
             }
 
@@ -171,7 +174,8 @@ internal object PendingIntentFactory {
                         context,
                         notificationId,
                         extras,
-                        launchIntent
+                        launchIntent,
+                        requestCode
                     )
                 } else {
                     LaunchPendingIntentFactory.getActivityIntent(extras, context)
@@ -196,19 +200,17 @@ internal object PendingIntentFactory {
 
             FIVE_ICON_CONTENT_PENDING_INTENT -> {
                 extras.putString(Constants.DEEP_LINK_KEY, null)
-                return setPendingIntent(context, notificationId, extras, launchIntent)
+                return setPendingIntent(context, notificationId, extras, launchIntent, requestCode)
             }
 
             FIVE_ICON_CLOSE_PENDING_INTENT -> {
-                val reqCode = Random().nextInt()
                 launchIntent!!.putExtra("close", true)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent!!.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent!!, flagsLaunchPendingIntent)
+                return PendingIntent.getBroadcast(context, requestCode, launchIntent!!, flagsLaunchPendingIntent)
             }
 
             PRODUCT_DISPLAY_DL1_PENDING_INTENT -> {
-                val requestCode = Random().nextInt()
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra(PTConstants.PT_CURRENT_POSITION, 0)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -217,7 +219,6 @@ internal object PendingIntentFactory {
             }
 
             PRODUCT_DISPLAY_DL2_PENDING_INTENT -> {
-                val requestCode = Random().nextInt()
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra(PTConstants.PT_CURRENT_POSITION, 1)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -226,7 +227,6 @@ internal object PendingIntentFactory {
             }
 
             PRODUCT_DISPLAY_DL3_PENDING_INTENT -> {
-                val requestCode = Random().nextInt()
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra(PTConstants.PT_CURRENT_POSITION, 2)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -243,7 +243,8 @@ internal object PendingIntentFactory {
                     context,
                     notificationId,
                     extras,
-                    launchIntent
+                    launchIntent,
+                    requestCode
                 )
             }
 
@@ -256,7 +257,8 @@ internal object PendingIntentFactory {
                     context,
                     notificationId,
                     extras,
-                    launchIntent
+                    launchIntent,
+                    requestCode
                 )
             }
 
@@ -269,7 +271,8 @@ internal object PendingIntentFactory {
                     context,
                     notificationId,
                     extras,
-                    launchIntent
+                    launchIntent,
+                    requestCode
                 )
             }
 
@@ -287,7 +290,7 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtras(extras)
                 return PendingIntent.getBroadcast(
                     context,
-                    Random().nextInt(),
+                    requestCode,
                     launchIntent!!,
                     flagsLaunchPendingIntent
                 )
@@ -306,11 +309,12 @@ internal object PendingIntentFactory {
                         context,
                         notificationId,
                         extras,
-                        launchIntent
+                        launchIntent,
+                        requestCode
                     )
                 } else {
                     extras.putString(Constants.DEEP_LINK_KEY, null)
-                    setPendingIntent(context, notificationId, extras, launchIntent)
+                    setPendingIntent(context, notificationId, extras, launchIntent, requestCode)
                 }
             }
             else -> throw IllegalArgumentException("invalid pendingIntentType")
@@ -343,7 +347,7 @@ internal object PendingIntentFactory {
             }
             PendingIntent.getService(
                 context,
-                System.currentTimeMillis().toInt(),
+                Random().nextInt(),
                 launchIntent!!,
                 flagsLaunchPendingIntent
             )
