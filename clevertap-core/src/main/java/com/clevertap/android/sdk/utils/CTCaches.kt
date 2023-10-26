@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.utils
 import android.content.Context
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.Logger
 import kotlin.math.max
 
 /**
@@ -22,7 +21,7 @@ class CTCaches private constructor(
         private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
 
         fun instance(
-            logger: Logger
+            logger: ILogger?
         ) : CTCaches {
             synchronized(this) {
                 if (ctCaches == null) {
