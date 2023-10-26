@@ -15,6 +15,9 @@ class CTCaches private constructor(
 
     companion object {
         private var ctCaches: CTCaches? = null
+
+        private const val IMAGE_DIRECTORY_NAME = "CleverTap.Images."
+        private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
     }
 
     private var imageCache: Cache<Bitmap>? = null
