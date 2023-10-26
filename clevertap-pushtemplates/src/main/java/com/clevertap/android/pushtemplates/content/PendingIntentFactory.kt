@@ -7,18 +7,13 @@ import android.os.Build
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
-import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.*
 import com.clevertap.android.pushtemplates.PTConstants.KEY_CLICKED_STAR
-import com.clevertap.android.pushtemplates.PTLog
-import com.clevertap.android.pushtemplates.PTPushNotificationReceiver
-import com.clevertap.android.pushtemplates.PushTemplateReceiver
-import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
-import java.util.Random
+import java.util.*
 
 const val BASIC_CONTENT_PENDING_INTENT = 1
 const val AUTO_CAROUSEL_CONTENT_PENDING_INTENT = 2
@@ -183,71 +178,17 @@ internal object PendingIntentFactory {
                 }
             }
 
-            RATING_CLICK1_PENDING_INTENT -> {
+            RATING_CLICK1_PENDING_INTENT, RATING_CLICK2_PENDING_INTENT, RATING_CLICK3_PENDING_INTENT,
+            RATING_CLICK4_PENDING_INTENT, RATING_CLICK5_PENDING_INTENT -> {
+                val clickedStar = getRatingStarNumber(identifier)
                 launchIntent!!.putExtras(extras)
-                launchIntent!!.putExtra("click1", true)
-                launchIntent!!.putExtra(KEY_CLICKED_STAR, 1)
+                launchIntent!!.putExtra("click$clickedStar", true)
+                launchIntent!!.putExtra(KEY_CLICKED_STAR, clickedStar)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
                     context,
-                    RATING_CLICK1_PENDING_INTENT,
-                    launchIntent!!,
-                    flagsLaunchPendingIntent
-                )
-            }
-
-            RATING_CLICK2_PENDING_INTENT -> {
-                launchIntent!!.putExtras(extras)
-                launchIntent!!.putExtra("click2", true)
-                launchIntent!!.putExtra(KEY_CLICKED_STAR, 2)
-                launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtra("config", renderer?.config)
-                return PendingIntent.getBroadcast(
-                    context,
-                    RATING_CLICK2_PENDING_INTENT,
-                    launchIntent!!,
-                    flagsLaunchPendingIntent
-                )
-            }
-
-            RATING_CLICK3_PENDING_INTENT -> {
-                launchIntent!!.putExtras(extras)
-                launchIntent!!.putExtra("click3", true)
-                launchIntent!!.putExtra(KEY_CLICKED_STAR, 3)
-                launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtra("config", renderer?.config)
-                return PendingIntent.getBroadcast(
-                    context,
-                    RATING_CLICK3_PENDING_INTENT,
-                    launchIntent!!,
-                    flagsLaunchPendingIntent
-                )
-            }
-
-            RATING_CLICK4_PENDING_INTENT -> {
-                launchIntent!!.putExtras(extras)
-                launchIntent!!.putExtra("click4", true)
-                launchIntent!!.putExtra(KEY_CLICKED_STAR, 4)
-                launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtra("config", renderer?.config)
-                return PendingIntent.getBroadcast(
-                    context,
-                    RATING_CLICK4_PENDING_INTENT,
-                    launchIntent!!,
-                    flagsLaunchPendingIntent
-                )
-            }
-
-            RATING_CLICK5_PENDING_INTENT -> {
-                launchIntent!!.putExtras(extras)
-                launchIntent!!.putExtra("click5", true)
-                launchIntent!!.putExtra(KEY_CLICKED_STAR, 5)
-                launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtra("config", renderer?.config)
-                return PendingIntent.getBroadcast(
-                    context,
-                    RATING_CLICK5_PENDING_INTENT,
+                    extras.getIntArray(PTConstants.KEY_REQUEST_CODES)?.get(clickedStar - 1)!!,
                     launchIntent!!,
                     flagsLaunchPendingIntent
                 )
@@ -409,6 +350,20 @@ internal object PendingIntentFactory {
         } else {
             extras.putString(Constants.DEEP_LINK_KEY, dl)
             LaunchPendingIntentFactory.getActivityIntent(extras, context)
+        }
+    }
+
+    /**
+     * This function returns the number(1 to 5) of the concerned star for rating PT based on the identifier.
+     */
+    @JvmStatic
+    private fun getRatingStarNumber(identifier: Int): Int {
+        return when (identifier) {
+            RATING_CLICK1_PENDING_INTENT -> 1
+            RATING_CLICK2_PENDING_INTENT -> 2
+            RATING_CLICK3_PENDING_INTENT -> 3
+            RATING_CLICK4_PENDING_INTENT -> 4
+            else -> 5
         }
     }
 }
