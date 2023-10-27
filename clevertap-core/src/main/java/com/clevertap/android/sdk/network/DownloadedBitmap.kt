@@ -9,10 +9,10 @@ import android.graphics.Bitmap
  * @property status The status of the downloaded bitmap.
  * @property downloadTime The time taken to download the bitmap, in milliseconds.
  */
-data class DownloadedBitmap(
-    var bitmap: Bitmap?,
-    var status: Status,
-    var downloadTime: Long
+data class DownloadedBitmap constructor(
+    val bitmap: Bitmap?,
+    val status: Status,
+    val downloadTime: Long
 ) {
 
     /**
