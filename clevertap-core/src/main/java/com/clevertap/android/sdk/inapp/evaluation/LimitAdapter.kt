@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp.matchers
+package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
 import org.json.JSONObject

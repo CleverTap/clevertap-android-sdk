@@ -1,11 +1,10 @@
-package com.clevertap.android.sdk.inapp.matchers
+package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import org.junit.*
+import org.junit.Assert.*
 
 class TriggerAdapterTest {
 

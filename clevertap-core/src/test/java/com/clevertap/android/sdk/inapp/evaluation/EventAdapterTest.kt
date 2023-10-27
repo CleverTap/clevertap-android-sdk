@@ -1,7 +1,7 @@
-package com.clevertap.android.sdk.inapp.matchers
+package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Test
+import org.junit.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull

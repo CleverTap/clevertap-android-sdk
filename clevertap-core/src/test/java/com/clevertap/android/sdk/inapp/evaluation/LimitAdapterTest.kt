@@ -1,9 +1,9 @@
-package com.clevertap.android.sdk.inapp.matchers
+package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
-import org.junit.Test
+import org.junit.*
 import kotlin.test.assertEquals
 
 class LimitAdapterTest : BaseTestCase() {

@@ -2,9 +2,9 @@ package com.clevertap.android.sdk.inapp
 
 import android.icu.text.SimpleDateFormat
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.inapp.matchers.EventAdapter
-import com.clevertap.android.sdk.inapp.matchers.LimitsMatcher
-import com.clevertap.android.sdk.inapp.matchers.TriggersMatcher
+import com.clevertap.android.sdk.inapp.evaluation.EventAdapter
+import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
+import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.network.BatchListener

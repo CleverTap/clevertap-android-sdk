@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp.matchers
+package com.clevertap.android.sdk.inapp.evaluation
 
 /**
  * The `TriggerValue` class represents a value used in trigger conditions for in-app messages.

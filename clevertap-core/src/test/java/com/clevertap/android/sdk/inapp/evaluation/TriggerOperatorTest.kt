@@ -1,7 +1,7 @@
-package com.clevertap.android.sdk.inapp.matchers
+package com.clevertap.android.sdk.inapp.evaluation
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.*
+import org.junit.Assert.*
 
 class TriggerOperatorTest {
 

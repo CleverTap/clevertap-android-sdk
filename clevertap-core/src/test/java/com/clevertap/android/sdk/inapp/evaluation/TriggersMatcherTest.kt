@@ -1,14 +1,11 @@
-package com.clevertap.android.sdk.inapp.matchers
+package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
+import org.junit.*
+import org.junit.Assert.*
+import org.mockito.*
 
 class TriggersMatcherTest : BaseTestCase() {
 

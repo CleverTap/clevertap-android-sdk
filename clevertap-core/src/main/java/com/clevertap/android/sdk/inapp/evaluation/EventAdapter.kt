@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp.matchers
+package com.clevertap.android.sdk.inapp.evaluation
 
 /**
  * Represents an event and its associated properties.
