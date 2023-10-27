@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp
 
-import android.icu.text.SimpleDateFormat
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.evaluation.EventAdapter
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
@@ -13,6 +12,7 @@ import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.util.Locale
 
 class EvaluationManager constructor(
