@@ -22,12 +22,12 @@ object HttpBitmapLoader {
         doInput = true
     )
 
-
     enum class HttpBitmapOperation {
         DOWNLOAD_NOTIFICATION_BITMAP,
         DOWNLOAD_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,
         DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP,
-        DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT, DOWNLOAD_INAPP_BITMAP
+        DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,
+        DOWNLOAD_INAPP_BITMAP
     }
 
     @JvmStatic
@@ -56,9 +56,7 @@ object HttpBitmapLoader {
                         iBitmapDownloadRequestHandler = BitmapDownloadRequestHandler(
                             bitmapDownloader = BitmapDownloader(
                                 httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
-                                bitmapInputStreamReader = BitmapInputStreamDecoder(
-                                    nextBitmapInputStreamReader = GzipBitmapInputStreamReader()
-                                )
+                                bitmapInputStreamReader = GzipBitmapInputStreamReader()
                             )
                         )
                     )
@@ -72,9 +70,7 @@ object HttpBitmapLoader {
                     iBitmapDownloadRequestHandler = BitmapDownloadRequestHandler(
                         bitmapDownloader = BitmapDownloader(
                             httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
-                            bitmapInputStreamReader = BitmapInputStreamDecoder(
-                                nextBitmapInputStreamReader = GzipBitmapInputStreamReader()
-                            ),
+                            bitmapInputStreamReader = GzipBitmapInputStreamReader(),
                             sizeConstrainedPair = Pair(true, bitmapDownloadRequest.downloadSizeLimitInBytes)
                         )
                     )
@@ -89,14 +85,14 @@ object HttpBitmapLoader {
                         iBitmapDownloadRequestHandler = BitmapDownloadRequestHandler(
                             bitmapDownloader = BitmapDownloader(
                                 httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
-                                bitmapInputStreamReader = BitmapInputStreamDecoder(
-                                    nextBitmapInputStreamReader = GzipBitmapInputStreamReader()
-                                ),
+                                bitmapInputStreamReader = GzipBitmapInputStreamReader(),
                                 sizeConstrainedPair = Pair(true, bitmapDownloadRequest.downloadSizeLimitInBytes)
                             )
                         )
                     )
-                ).handleRequest(bitmapDownloadRequest)
+                ).handleRequest(
+                    bitmapDownloadRequest = bitmapDownloadRequest
+                )
             }
 
             DOWNLOAD_INAPP_BITMAP -> {

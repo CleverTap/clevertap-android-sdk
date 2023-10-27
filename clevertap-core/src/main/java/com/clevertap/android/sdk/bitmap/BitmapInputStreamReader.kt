@@ -20,7 +20,7 @@ class BitmapInputStreamReader(
         inputStream: InputStream,
         connection: HttpURLConnection,
         downloadStartTimeInMilliseconds: Long
-    ): DownloadedBitmap? {
+    ): DownloadedBitmap {
 
         Logger.v("reading bitmap input stream in BitmapInputStreamReader....")
         val bufferForHttpInputStream = ByteArray(16384)

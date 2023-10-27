@@ -8,24 +8,19 @@ import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 import java.io.InputStream
 import java.net.HttpURLConnection
 
-class BitmapInputStreamDecoder(
-    private val nextBitmapInputStreamReader: GzipBitmapInputStreamReader? = null
-) : IBitmapInputStreamReader {
+open class BitmapInputStreamDecoder : IBitmapInputStreamReader {
 
     override fun readInputStream(
         inputStream: InputStream,
         connection: HttpURLConnection,
         downloadStartTimeInMilliseconds: Long
-    ): DownloadedBitmap? {
+    ): DownloadedBitmap {
         Logger.v("reading bitmap input stream in BitmapInputStreamDecoder....")
 
-        return nextBitmapInputStreamReader?.readInputStream(
-            inputStream = inputStream,
-            connection = connection,
-            downloadStartTimeInMilliseconds = downloadStartTimeInMilliseconds
-        ) ?: DownloadedBitmapFactory.successBitmap(
-                bitmap = BitmapFactory.decodeStream(inputStream),
-                downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds
-            )
+        // todo we always assume success
+        return DownloadedBitmapFactory.successBitmap(
+            bitmap = BitmapFactory.decodeStream(inputStream),
+            downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds
+        )
     }
 }

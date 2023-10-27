@@ -10,13 +10,13 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.zip.GZIPInputStream
 
-class GzipBitmapInputStreamReader : IBitmapInputStreamReader {
+class GzipBitmapInputStreamReader : BitmapInputStreamDecoder() {
 
     override fun readInputStream(
         inputStream: InputStream,
         connection: HttpURLConnection,
         downloadStartTimeInMilliseconds: Long
-    ): DownloadedBitmap? {
+    ): DownloadedBitmap {
 
         Logger.v("reading bitmap input stream in GzipBitmapInputStreamReader....")
 
@@ -44,7 +44,11 @@ class GzipBitmapInputStreamReader : IBitmapInputStreamReader {
                 downloadStartTimeInMilliseconds = downloadStartTimeInMilliseconds
             )
         } else {
-            null
+            super.readInputStream(
+                inputStream = inputStream,
+                connection = connection,
+                downloadStartTimeInMilliseconds = downloadStartTimeInMilliseconds
+            )
         }
     }
 
