@@ -40,7 +40,9 @@ class GzipBitmapInputStreamReader : IBitmapInputStreamReader {
             Logger.v("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")
 
             return getDownloadedBitmapFromStream(decompressedFile, downloadStartTimeInMilliseconds)
-        } else null
+        } else {
+            null
+        }
     }
 
     private fun getDownloadedBitmapFromStream(
