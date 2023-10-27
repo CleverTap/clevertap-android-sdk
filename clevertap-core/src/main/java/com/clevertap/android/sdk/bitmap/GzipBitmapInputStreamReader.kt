@@ -39,14 +39,18 @@ class GzipBitmapInputStreamReader : IBitmapInputStreamReader {
 
             Logger.v("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")
 
-            return getDownloadedBitmapFromStream(decompressedFile, downloadStartTimeInMilliseconds)
+            return getDownloadedBitmapFromStream(
+                dataReadFromStream = decompressedFile,
+                downloadStartTimeInMilliseconds = downloadStartTimeInMilliseconds
+            )
         } else {
             null
         }
     }
 
     private fun getDownloadedBitmapFromStream(
-        dataReadFromStream: ByteArrayOutputStream, downloadStartTimeInMilliseconds: Long
+        dataReadFromStream: ByteArrayOutputStream,
+        downloadStartTimeInMilliseconds: Long
     ): DownloadedBitmap {
 
         val dataReadFromStreamInByteArray = dataReadFromStream.toByteArray()
@@ -54,7 +58,8 @@ class GzipBitmapInputStreamReader : IBitmapInputStreamReader {
         val bitmap =
             BitmapFactory.decodeByteArray(dataReadFromStreamInByteArray, 0, dataReadFromStreamInByteArray.size)
         return DownloadedBitmapFactory.successBitmap(
-            bitmap, Utils.getNowInMillis() - downloadStartTimeInMilliseconds
+            bitmap = bitmap,
+            downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds
         )
     }
 }
