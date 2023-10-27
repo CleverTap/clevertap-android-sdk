@@ -3,9 +3,9 @@ package com.clevertap.android.sdk
 import org.json.JSONArray
 import org.json.JSONException
 
-class LegacyInAppStore(private val ctPreference: ICTPreference, config: CleverTapInstanceConfig) {
+class LegacyInAppStore(private val ctPreference: ICTPreference, accountId: String) {
 
-    private val inAppKey = Constants.INAPP_KEY.concatIfNotNull(config.accountId, ":")
+    private val inAppKey = Constants.INAPP_KEY.concatIfNotNull(accountId, ":")
 
     fun storeInApps(inApps: JSONArray) {
         ctPreference.writeStringImmediate(inAppKey!!, inApps.toString())

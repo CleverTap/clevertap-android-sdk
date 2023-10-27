@@ -176,7 +176,7 @@ class CleverTapFactory {
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,
                 controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo, new InAppQueue(config,
-                storeProvider.provideLegacyInAppStore(context, config))
+                storeProvider.provideLegacyInAppStore(context, config.getAccountId()))
         );
 
         coreState.setInAppController(inAppController);

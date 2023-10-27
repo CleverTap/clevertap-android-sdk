@@ -40,9 +40,9 @@ class StoreProvider {
         return ImpressionStore(getCTPreference(context, prefName))
     }
 
-    fun provideLegacyInAppStore(context: Context, config: CleverTapInstanceConfig): LegacyInAppStore {
+    fun provideLegacyInAppStore(context: Context, accountId: String): LegacyInAppStore {
         val prefName = Constants.CLEVERTAP_STORAGE_TAG
-        return LegacyInAppStore(getCTPreference(context, prefName), config)
+        return LegacyInAppStore(getCTPreference(context, prefName), accountId)
     }
 
     @VisibleForTesting
