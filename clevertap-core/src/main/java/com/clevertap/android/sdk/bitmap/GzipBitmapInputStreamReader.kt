@@ -10,7 +10,10 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.zip.GZIPInputStream
 
-class GzipBitmapInputStreamReader : BitmapInputStreamDecoder() {
+class GzipBitmapInputStreamReader(
+    saveBytes: Boolean = false,
+    logger: Logger? = null
+) : BitmapInputStreamDecoder(saveBytes, logger) {
 
     override fun readInputStream(
         inputStream: InputStream,
@@ -37,7 +40,7 @@ class GzipBitmapInputStreamReader : BitmapInputStreamDecoder() {
                 decompressedFile.write(bufferForGzipInputStream, 0, bytesRead)
             }
 
-            Logger.v("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")
+            logger?.verbose("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")
 
             return getDownloadedBitmapFromStream(
                 dataReadFromStream = decompressedFile,
@@ -59,8 +62,11 @@ class GzipBitmapInputStreamReader : BitmapInputStreamDecoder() {
 
         val dataReadFromStreamInByteArray = dataReadFromStream.toByteArray()
         // Decode the bitmap from decompressed data
-        val bitmap =
-            BitmapFactory.decodeByteArray(dataReadFromStreamInByteArray, 0, dataReadFromStreamInByteArray.size)
+        val bitmap = BitmapFactory.decodeByteArray(
+            dataReadFromStreamInByteArray,
+            0,
+            dataReadFromStreamInByteArray.size
+        )
         return DownloadedBitmapFactory.successBitmap(
             bitmap = bitmap,
             downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds

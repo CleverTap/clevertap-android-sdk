@@ -47,22 +47,31 @@ class BitmapInputStreamReader(
         }
 
         return nextBitmapInputStreamReader?.readInputStream(
-            ByteArrayInputStream(finalDataFromHttpInputStream.toByteArray()),
-            connection,
-            downloadStartTimeInMilliseconds
-        ) ?: getDownloadedBitmapFromStream(finalDataFromHttpInputStream, downloadStartTimeInMilliseconds)
+            inputStream = ByteArrayInputStream(finalDataFromHttpInputStream.toByteArray()),
+            connection = connection,
+            downloadStartTimeInMilliseconds = downloadStartTimeInMilliseconds
+        ) ?: getDownloadedBitmapFromStream(
+            dataReadFromStream = finalDataFromHttpInputStream,
+            downloadStartTimeInMilliseconds = downloadStartTimeInMilliseconds
+        )
     }
 
     private fun getDownloadedBitmapFromStream(
-        dataReadFromStream: ByteArrayOutputStream, downloadStartTimeInMilliseconds: Long
+        dataReadFromStream: ByteArrayOutputStream,
+        downloadStartTimeInMilliseconds: Long
     ): DownloadedBitmap {
 
         val dataReadFromStreamInByteArray = dataReadFromStream.toByteArray()
         // Decode the bitmap from decompressed data
-        val bitmap =
-            BitmapFactory.decodeByteArray(dataReadFromStreamInByteArray, 0, dataReadFromStreamInByteArray.size)
+        val bitmap = BitmapFactory.decodeByteArray(
+            dataReadFromStreamInByteArray,
+            0,
+            dataReadFromStreamInByteArray.size
+        )
+
         return DownloadedBitmapFactory.successBitmap(
-            bitmap, Utils.getNowInMillis() - downloadStartTimeInMilliseconds
+            bitmap = bitmap,
+            downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds
         )
     }
 }
