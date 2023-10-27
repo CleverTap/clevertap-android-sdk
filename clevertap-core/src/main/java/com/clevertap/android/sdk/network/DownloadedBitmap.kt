@@ -12,7 +12,8 @@ import android.graphics.Bitmap
 data class DownloadedBitmap constructor(
     val bitmap: Bitmap?,
     val status: Status,
-    val downloadTime: Long
+    val downloadTime: Long,
+    val array: ByteArray? = null
 ) {
 
     /**
@@ -27,5 +28,27 @@ data class DownloadedBitmap constructor(
         NO_NETWORK("NO_NETWORK"),
         INIT_ERROR("INIT_ERROR"),
         SIZE_LIMIT_EXCEEDED("SIZE_LIMIT_EXCEEDED")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DownloadedBitmap
+
+        if (bitmap != other.bitmap) return false
+        if (status != other.status) return false
+        if (downloadTime != other.downloadTime) return false
+        if (!array.contentEquals(other.array)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = bitmap?.hashCode() ?: 0
+        result = 31 * result + status.hashCode()
+        result = 31 * result + downloadTime.hashCode()
+        result = 31 * result + array.contentHashCode()
+        return result
     }
 }

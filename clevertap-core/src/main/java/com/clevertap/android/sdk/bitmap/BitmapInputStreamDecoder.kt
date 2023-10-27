@@ -51,7 +51,12 @@ open class BitmapInputStreamDecoder(
 
         return DownloadedBitmapFactory.successBitmap(
             bitmap = bitmap,
-            downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds
+            downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds,
+            data = if (saveBytes) {
+                dataReadFromStreamInByteArray
+            } else {
+                null
+            }
         )
     }
 }
