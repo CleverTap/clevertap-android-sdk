@@ -20,7 +20,7 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:1.1.0"
+implementation "com.clevertap.android:push-templates:1.2.0"
 implementation "com.clevertap.android:clevertap-android-sdk:5.2.1" // 4.4.0 and above
 ```
 
@@ -259,7 +259,7 @@ Template Key | Required | Value
 pt_event_name | Required | for e.g. `Remind Later`,
 pt_event_property_<property_name_1> | Optional | for e.g. `<property_value>`,
 pt_event_property_<property_name_2> | Required | future epoch timestamp. For e.g., `$D_1592503813`
-pt_dismiss_on_click | Required | Value should be `true`. It dismisses the notification without opening the app and raises a required event to the user profile, needed to send a reminder notification.
+pt_dismiss_on_click | Optional | Dismisses the notification without opening the app
 
 ![Input_Box_CTA_Remind](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/inputCtaRemind.gif)
 
