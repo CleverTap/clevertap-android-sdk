@@ -1,6 +1,6 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
-### Version 1.2.0 (October 26, 2023)
+### Version 1.2.0 (October 27, 2023)
 #### New features
 * Adds support for developer defined default notification channel for PushTemplates. Please refer to
   the [EXAMPLES.md](EXAMPLES.md#push-notifications) file to read more on how to setup default
