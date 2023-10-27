@@ -2,8 +2,8 @@ package com.clevertap.android.sdk.inapp
 
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.LegacyInAppStore
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import org.json.JSONArray
 import org.json.JSONObject
 

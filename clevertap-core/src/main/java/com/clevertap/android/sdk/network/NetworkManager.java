@@ -9,12 +9,10 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CTXtensions;
@@ -31,8 +29,6 @@ import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueCursor;
 import com.clevertap.android.sdk.events.EventGroup;
-import com.clevertap.android.sdk.inapp.ImpressionStore;
-import com.clevertap.android.sdk.inapp.InAppStore;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
@@ -54,11 +50,6 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -68,10 +59,12 @@ import java.security.SecureRandom;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class NetworkManager extends BaseNetworkManager {

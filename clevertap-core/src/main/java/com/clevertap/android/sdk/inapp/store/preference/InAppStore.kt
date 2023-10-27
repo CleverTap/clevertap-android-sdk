@@ -1,11 +1,11 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_INAPP_CS
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_INAPP_SS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
-import com.clevertap.android.sdk.ICTPreference
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.store.preference.ICTPreference
 import org.json.JSONArray
 
 /**

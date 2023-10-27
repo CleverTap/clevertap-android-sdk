@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk
+package com.clevertap.android.sdk.store.preference
 
 interface ICTPreference {
 

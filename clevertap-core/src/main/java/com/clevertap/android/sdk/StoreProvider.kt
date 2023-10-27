@@ -3,8 +3,10 @@ package com.clevertap.android.sdk
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.inapp.ImpressionStore
-import com.clevertap.android.sdk.inapp.InAppStore
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
+import com.clevertap.android.sdk.store.preference.CTPreference
 
 class StoreProvider {
 

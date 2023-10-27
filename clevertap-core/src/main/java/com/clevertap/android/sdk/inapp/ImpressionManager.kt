@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.utils.Clock
 import java.util.Calendar
 import java.util.Date
