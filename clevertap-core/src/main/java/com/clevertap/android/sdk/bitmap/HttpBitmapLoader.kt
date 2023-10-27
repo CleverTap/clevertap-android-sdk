@@ -99,7 +99,7 @@ object HttpBitmapLoader {
                 BitmapDownloadRequestHandler(
                     bitmapDownloader = BitmapDownloader(
                         httpUrlConnectionParams = inAppStandardHttpUrlConnectionParams,
-                        bitmapInputStreamReader = BitmapInputStreamDecoder()
+                        bitmapInputStreamReader = BitmapInputStreamDecoder(saveBytes = true)
                     )
                 ).handleRequest(
                     bitmapDownloadRequest = bitmapDownloadRequest
