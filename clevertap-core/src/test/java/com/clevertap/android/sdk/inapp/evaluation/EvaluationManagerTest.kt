@@ -1,8 +1,9 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
-import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
+import com.clevertap.android.sdk.inapp.ImpressionManager
+import com.clevertap.android.sdk.inapp.InAppController
+import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.utils.Clock

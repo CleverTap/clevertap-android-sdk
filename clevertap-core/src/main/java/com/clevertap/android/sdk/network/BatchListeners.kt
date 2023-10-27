@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.inapp.EvaluationManager
+import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import org.json.JSONArray
 
 interface BatchListener {
