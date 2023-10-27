@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation
+import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.utils.CTCaches
 
 class InAppImageProvider(
@@ -13,14 +14,35 @@ class InAppImageProvider(
     private val logger: ILogger? = null
 ) {
 
-    fun saveImage(cacheKey: String, bitmap: Bitmap) {
-        val ctCaches = CTCaches.instance(logger = logger)
+    private val ctCaches = CTCaches.instance(logger = logger)
+
+    fun saveImage(cacheKey: String, bitmap: Bitmap, bytes: ByteArray) {
+
+        val imageMemoryCache = ctCaches.imageCache()
+        imageMemoryCache.add(cacheKey, bitmap)
 
         val imageDiskCache = ctCaches.imageCacheDisk(context = context)
-        val imageMemoryCache = ctCaches.imageCache()
+        imageDiskCache.add(cacheKey, bytes)
+    }
 
-        imageMemoryCache.add(cacheKey, bitmap)
-        //imageDiskCache.add(cacheKey, bitmap)
+    fun cachedImage(cacheKey: String) {
+
+        // Try in memory
+        val imageMemoryCache = ctCaches.imageCache()
+        val bitmap = imageMemoryCache.get(cacheKey)
+
+        if (bitmap != null) {
+            return
+        }
+
+        // Try disk
+        val imageDiskCache = ctCaches.imageCacheDisk(context = context)
+        val file = imageDiskCache.get(cacheKey)
+
+        if (file != null) {
+            return
+        }
+
     }
 
     /**
@@ -29,16 +51,20 @@ class InAppImageProvider(
      */
     fun fetchImage(url: String) {
         val request = BitmapDownloadRequest(url)
-        val downloadedBitmap = HttpBitmapLoader.getHttpBitmap(
+        val downloadedBitmap: DownloadedBitmap = HttpBitmapLoader.getHttpBitmap(
             bitmapOperation = HttpBitmapOperation.DOWNLOAD_INAPP_BITMAP,
             bitmapDownloadRequest = request
         )
 
+        when (downloadedBitmap.status) {
+
+            DownloadedBitmap.Status.SUCCESS -> {
+                saveImage(url, downloadedBitmap.bitmap!!, downloadedBitmap.bytes!!)
+            }
+            else -> {
+                logger?.verbose("There was a problem fetching data for bitmap")
+            }
+        }
     }
-
-
-}
-
-fun Bitmap.toByteArray() {
 
 }
