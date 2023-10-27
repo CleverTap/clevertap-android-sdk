@@ -1,5 +1,14 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.2.0 (October 27, 2023)
+#### New features
+* Adds support for developer defined default notification channel for PushTemplates. Please refer to
+  the [EXAMPLES.md](EXAMPLES.md#push-notifications) file to read more on how to setup default
+  channel in your app.
+#### Bug Fixes
+* Fixes a bug in the Rating PushTemplate where clicking of a star resulted in no action.
+* Fixes [#488](https://github.com/CleverTap/clevertap-android-sdk/issues/488) - a bug related to the image sequence in Manual Carousel PushTemplate.
+
 ### Version 1.1.0 (June 28, 2023)
 
 * Supports CleverTap Android SDK v5.1.0.
