@@ -33,7 +33,7 @@ open class BitmapInputStreamDecoder(
             finalDataFromHttpInputStream.write(bufferForHttpInputStream, 0, bytesRead)
             logger?.verbose("Downloaded $totalBytesRead bytes")
         }
-        Logger.v("Total download size for bitmap = $totalBytesRead")
+        logger?.verbose("Total download size for bitmap = $totalBytesRead")
 
         val dataReadFromStreamInByteArray = finalDataFromHttpInputStream.toByteArray()
         // Decode the bitmap from decompressed data
