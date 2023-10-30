@@ -174,14 +174,6 @@ class CleverTapFactory {
         );
         coreState.setAnalyticsManager(analyticsManager);
 
-        InAppController inAppController = new InAppController(context, config, mainLooperHandler,
-                controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo, new InAppQueue(config,
-                storeProvider.provideLegacyInAppStore(context, config.getAccountId()))
-        );
-
-        coreState.setInAppController(inAppController);
-        coreState.getControllerManager().setInAppController(inAppController);
-
         TriggersMatcher triggersMatcher = new TriggersMatcher();
         TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
         ImpressionManager impressionManager = new ImpressionManager(impStore);
@@ -196,6 +188,14 @@ class CleverTapFactory {
                 inAppStore
         );
         coreState.setEvaluationManager(evaluationManager);
+
+        InAppController inAppController = new InAppController(context, config, mainLooperHandler,
+                controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo, new InAppQueue(config,
+                storeProvider.provideLegacyInAppStore(context, config.getAccountId())), evaluationManager
+        );
+
+        coreState.setInAppController(inAppController);
+        coreState.getControllerManager().setInAppController(inAppController);
 
         // TODO register App Launched listener
         CompositeBatchListener batchListener = new CompositeBatchListener();
