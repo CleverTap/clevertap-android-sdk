@@ -754,12 +754,18 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @WorkerThread
     public void onQueueEvent(final String eventName, Map<String, Object> eventProperties) {
-        evaluationManager.evaluateOnEvent(eventName, eventProperties);
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnEvent(eventName, eventProperties);
+        if (clientSideInAppsToDisplay.length() > 0) {
+            addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+        }
     }
 
     @WorkerThread
     public void onQueueChargedEvent(Map<String, Object> chargeDetails,
             List<Map<String, Object>> items) {
-        evaluationManager.evaluateOnChargedEvent(chargeDetails, items);
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(chargeDetails, items);
+        if (clientSideInAppsToDisplay.length() > 0) {
+            addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+        }
     }
 }

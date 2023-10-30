@@ -23,25 +23,24 @@ class EvaluationManager constructor(
     private val limitsMatcher: LimitsMatcher,
     private val inAppStore: InAppStore,
 ): BatchListener {
+
     val evaluatedServerSideInAppIds: MutableList<String>
         get() = evaluatedServerSideInAppIds
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
-    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>) {
-        if (eventName != "App Launched") {
-            val event = EventAdapter(eventName, eventProperties)
-            evaluateServerSide(event)
-            evaluateClientSide(event)
-        }
+    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>): JSONArray {
+        val event = EventAdapter(eventName, eventProperties)
+        evaluateServerSide(event)
+        return evaluateClientSide(event)
     }
 
     fun evaluateOnChargedEvent(
         details: Map<String, Any>,
         items: List<Map<String, Any>>
-    ) {
+    ): JSONArray {
         val event = EventAdapter(Constants.CHARGED_EVENT, details, items)
         evaluateServerSide(event)
-        evaluateClientSide(event)
+        return evaluateClientSide(event)
     }
 
     // onBatchSent with App Launched event in batch
@@ -85,22 +84,20 @@ class EvaluationManager constructor(
         }
     }
 
-    private fun evaluateClientSide(event: EventAdapter) {
-        val eligibleInApps = evaluate(event, inAppStore.readClientSideInApps().toList()) // TODO replace with actual implementation -DONE
-        val sortedInApps = sortByPriority(eligibleInApps)
-        if (sortedInApps.isNotEmpty()) {
-            val inApp = sortedInApps[0]
-            if (shouldSuppress(inApp)) {
-                suppress(inApp)
-                return
+    private fun evaluateClientSide(event: EventAdapter): JSONArray {
+        val eligibleInApps = evaluate(
+            event,
+            inAppStore.readClientSideInApps().toList()
+        )
+        sortByPriority(eligibleInApps).forEach {
+            if (!shouldSuppress(it)) {
+                updateTTL(it)
+                return JSONArray(it)
+            } else {
+                suppress(it)
             }
-
-            updateTTL(inApp)
-            //inappController.addInAppNotificationsToQueue(JSONArray(inApp))
         }
-        // TODO handle supressed inapps -> DONE
-        // TODO calculate TTL field and put it in the json based on ttlOffset parameter -> DONE
-        // TODO eligibleInapps.sort().first().display(); - DONE
+        return JSONArray()
     }
 
     private fun evaluate(event: EventAdapter, inappNotifs: List<JSONObject>): List<JSONObject> {
