@@ -13,6 +13,7 @@ import android.os.Looper;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -44,6 +45,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import org.json.JSONArray;
@@ -748,5 +750,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 Logger.v(config.getAccountId(), "Fragment not able to render", t);
             }
         }
+    }
+
+    @WorkerThread
+    public void onQueueEvent(final String eventName, Map<String, Object> eventProperties) {
+        evaluationManager.evaluateOnEvent(eventName, eventProperties);
+    }
+
+    @WorkerThread
+    public void onQueueChargedEvent(Map<String, Object> chargeDetails,
+            List<Map<String, Object>> items) {
+        evaluationManager.evaluateOnChargedEvent(chargeDetails, items);
     }
 }
