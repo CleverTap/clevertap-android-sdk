@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.ImpressionManager
-import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
@@ -16,7 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class EvaluationManager constructor(
-    private val inappController: InAppController,
+    //private val inappController: InAppController,
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
     private val impressionStore: ImpressionStore,
@@ -70,7 +69,7 @@ class EvaluationManager constructor(
             suppress(inApp)
         }
 
-        inappController.addInAppNotificationsToQueue(JSONArray(inAppNotificationsToQueue))
+        //inappController.addInAppNotificationsToQueue(JSONArray(inAppNotificationsToQueue))
         // TODO handle supressed inapps - DONE
         // TODO eligibleInapps.sort().first().display(); - DONE
     }
@@ -97,7 +96,7 @@ class EvaluationManager constructor(
             }
 
             updateTTL(inApp)
-            inappController.addInAppNotificationsToQueue(JSONArray(inApp))
+            //inappController.addInAppNotificationsToQueue(JSONArray(inApp))
         }
         // TODO handle supressed inapps -> DONE
         // TODO calculate TTL field and put it in the json based on ttlOffset parameter -> DONE

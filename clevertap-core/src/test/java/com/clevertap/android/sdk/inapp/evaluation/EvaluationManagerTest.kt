@@ -29,7 +29,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val limitsMatcher = Mockito.mock(LimitsMatcher::class.java)
         val inAppStore = Mockito.mock(InAppStore::class.java)
         evaluationManager = EvaluationManager(
-            inAppController,
+//            inAppController,
             triggersMatcher,
             triggerManager,
             impressionStore,

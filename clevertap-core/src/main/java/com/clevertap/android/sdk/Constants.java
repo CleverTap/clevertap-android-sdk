@@ -3,7 +3,6 @@ package com.clevertap.android.sdk;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
@@ -148,6 +147,7 @@ public interface Constants {
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";
     String CHARGED_EVENT = "Charged";
+    String KEY_ITEMS = "Items";
     String KEY_MUTED = "comms_mtd";
     int EMPTY_NOTIFICATION_ID = -1000;
     String KEY_MAX_PER_DAY = "istmcd_inapp";

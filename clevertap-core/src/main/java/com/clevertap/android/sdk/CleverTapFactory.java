@@ -188,7 +188,6 @@ class CleverTapFactory {
         LimitsMatcher limitsMatcher = new LimitsMatcher(impressionManager, triggersManager);
 
         EvaluationManager evaluationManager = new EvaluationManager(
-                inAppController,
                 triggersMatcher,
                 triggersManager,
                 impStore,
