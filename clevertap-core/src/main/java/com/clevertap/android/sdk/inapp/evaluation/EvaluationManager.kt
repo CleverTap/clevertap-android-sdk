@@ -37,17 +37,16 @@ class EvaluationManager constructor(
     }
 
     fun evaluateOnChargedEvent(
-        eventName: String,
         details: Map<String, Any>,
         items: List<Map<String, Any>>
     ) {
-        val event = EventAdapter(eventName, details, items)
+        val event = EventAdapter(Constants.CHARGED_EVENT, details, items)
         evaluateServerSide(event)
         evaluateClientSide(event)
     }
 
     // onBatchSent with App Launched event in batch
-    private fun evaluateOnAppLaunchedClientSide() {
+    fun evaluateOnAppLaunchedClientSide() {
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
         evaluateClientSide(event)
     }
