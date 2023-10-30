@@ -497,14 +497,14 @@ public final class Utils {
             if (logo == null) {
                 throw new Exception("Logo is null");
             }
-            return DownloadedBitmapFactory.INSTANCE.successBitmap(drawableToBitmap(logo), 0);
+            return DownloadedBitmapFactory.INSTANCE.successBitmap(drawableToBitmap(logo), 0, null);
         } catch (Exception e) {
             e.printStackTrace();
             // Try to get the app icon now
             // No error handling here - handle upstream
             return DownloadedBitmapFactory.INSTANCE.successBitmap(
                     drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo())),
-                    0);
+                    0, null);
         }
     }
 
