@@ -3,9 +3,7 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
-
 import androidx.annotation.Nullable;
-
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -30,15 +28,13 @@ import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class EventQueueManager extends BaseEventQueueManager implements FailureFlushListener {
 
@@ -454,6 +450,16 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         return task.submit("queueEvent", new Callable<Void>() {
             @Override
             public Void call() {
+
+                if (eventMediator.isChargedEvent(event)) {
+                    controllerManager.getInAppController()
+                            .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
+                                    eventMediator.getChargedEventItemDetails(event));
+                } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
+                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
+                            eventMediator.getEventProperties(event));
+                }
+
                 if (eventMediator.shouldDropEvent(event, eventType)) {
                     return null;
                 }
