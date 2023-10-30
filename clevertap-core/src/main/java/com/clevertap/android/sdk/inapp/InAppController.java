@@ -11,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Looper;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -48,6 +50,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 // inapp db handle // glovbal dn
+@RestrictTo(Scope.LIBRARY_GROUP)
 public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener,
         InAppNotificationActivity.PushPermissionResultCallback {
 
