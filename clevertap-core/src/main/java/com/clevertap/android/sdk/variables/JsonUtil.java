@@ -73,7 +73,7 @@ public class JsonUtil {
     return result;
   }
 
-  private static <T> List<T> listFromJson(JSONArray json) {
+  public static <T> List<T> listFromJson(JSONArray json) {
     if (json == null) {
       return null;
     }
