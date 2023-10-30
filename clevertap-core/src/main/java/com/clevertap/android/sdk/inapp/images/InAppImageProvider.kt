@@ -27,6 +27,14 @@ internal class InAppImageProvider(
         imageDiskCache.add(cacheKey, bytes)
     }
 
+    fun saveGif(cacheKey: String, bytes: ByteArray) {
+        val gifMemoryCache = ctCaches.gifCache()
+        gifMemoryCache.add(cacheKey, bytes)
+
+        val gifDiskCache = ctCaches.gifCacheDisk(context = context)
+        gifDiskCache.add(cacheKey, bytes)
+    }
+
     fun cachedImage(cacheKey: String): Bitmap? {
 
         // Try in memory
@@ -58,11 +66,25 @@ internal class InAppImageProvider(
         return null
     }
 
+    fun cachedGif(cacheKey: String): ByteArray? {
+        // Try in memory
+        val gifMemoryCache = ctCaches.gifCache()
+        val gifStream = gifMemoryCache.get(cacheKey)
+
+        if (gifStream != null) {
+            return gifStream
+        }
+
+        val gifDiskCache = ctCaches.gifCacheDisk(context = context)
+
+        return gifDiskCache.get(cacheKey)?.readBytes()
+    }
+
     /**
      * Function that would fetch and cache bitmap image into Memory and File cache and return it.
      * If image is found in cache, the cached image is returned.
      */
-    inline fun <reified T> fetchImage(url: String): T? {
+    inline fun <reified T> fetchInAppImage(url: String): T? {
 
         val cachedImage: Bitmap? = cachedImage(url)
         val clazz = T::class.java
@@ -85,7 +107,11 @@ internal class InAppImageProvider(
         when (downloadedBitmap.status) {
 
             DownloadedBitmap.Status.SUCCESS -> {
-                saveImage(url, downloadedBitmap.bitmap!!, downloadedBitmap.bytes!!)
+                saveImage(
+                    cacheKey = url,
+                    bitmap = downloadedBitmap.bitmap!!,
+                    bytes = downloadedBitmap.bytes!!
+                )
             }
             else -> {
                 logger?.verbose("There was a problem fetching data for bitmap")
@@ -100,6 +126,32 @@ internal class InAppImageProvider(
         } else {
             null
         }
+    }
+
+    fun fetchInAppGif(url: String) : ByteArray? {
+        val cachedGif = cachedGif(url)
+
+        if (cachedGif != null) {
+            logger?.verbose("Returning requested $url gif from cache with size ${cachedGif.size}")
+            return cachedGif
+        }
+
+        val downloadedGif = makeApiCallForInAppBitmap(url = url)
+
+        return when (downloadedGif.status) {
+
+            DownloadedBitmap.Status.SUCCESS -> {
+                saveGif(cacheKey = url, bytes = downloadedGif.bytes!!)
+                logger?.verbose("Returning requested $url gif with network, saved in cache")
+                downloadedGif.bytes
+            }
+
+            else -> {
+                logger?.verbose("There was a problem fetching data for bitmap, status:${downloadedGif.status}")
+                null
+            }
+        }
+
     }
 
     fun makeApiCallForInAppBitmap(url: String): DownloadedBitmap {
