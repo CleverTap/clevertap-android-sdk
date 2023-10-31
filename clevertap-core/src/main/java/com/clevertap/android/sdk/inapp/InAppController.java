@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Looper;
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -777,6 +778,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(chargeDetails, items);
         if (clientSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+        }
+    }
+
+    public void onAppLaunchServerSideInAppsResponse(@NonNull List<JSONObject> appLaunchServerSideInApps) {
+        final JSONArray serverSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedServerSide(
+                appLaunchServerSideInApps);
+        if (serverSideInAppsToDisplay.length() > 0) {
+            addInAppNotificationsToQueue(serverSideInAppsToDisplay);
         }
     }
 }
