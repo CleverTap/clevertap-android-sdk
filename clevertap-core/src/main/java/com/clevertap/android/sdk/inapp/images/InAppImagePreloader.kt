@@ -2,10 +2,11 @@ package com.clevertap.android.sdk.inapp.images
 
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.utils.CtDefaultDispatchers
+import com.clevertap.android.sdk.utils.DispatcherProvider
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
 
 internal class InAppImagePreloader(
     private val inAppImageProvider: InAppImageProvider,
+    private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
     val logger: ILogger? = null,
     val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
 ) {
@@ -21,10 +23,10 @@ internal class InAppImagePreloader(
 
     fun preloadImages(urls: List<String>) {
 
-        val handler = CoroutineExceptionHandler { coroutineContext, throwable ->
-            logger?.verbose("Cancelled image pre fetch")
+        val handler = CoroutineExceptionHandler { _, throwable ->
+            logger?.verbose("Cancelled image pre fetch \n ${throwable.stackTrace}")
         }
-        val scope = CoroutineScope(Dispatchers.IO)
+        val scope = CoroutineScope(dispatchers.io())
         job = scope.launch(context = handler) {
             val list = mutableListOf<Deferred<Bitmap?>>()
             urls.chunked(
