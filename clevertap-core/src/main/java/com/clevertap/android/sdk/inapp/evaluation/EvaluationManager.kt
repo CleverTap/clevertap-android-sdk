@@ -48,28 +48,25 @@ class EvaluationManager constructor(
         return evaluateClientSide(event)
     }
 
-    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>) {
+    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>): JSONArray {
         // BE returns applaunch_notifs [0, 1, 2]
         // record trigger counts
         // evaluate limits [2]
         // show first based on priority (2)
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
-        val eligibleInApps = evaluate(event, appLaunchedNotifs)
-        val sortedInApps = sortByPriority(eligibleInApps)
 
-        val inAppNotificationsToQueue: MutableList<JSONObject> = mutableListOf()
-        for (inApp in sortedInApps) {
-            if (!shouldSuppress(inApp)) {
-                inAppNotificationsToQueue.add(inApp)
-                break
+        val eligibleInApps = evaluate(
+            event,
+            appLaunchedNotifs
+        )
+        sortByPriority(eligibleInApps).forEach {
+            if (!shouldSuppress(it)) {
+                return JSONArray(it)
+            } else {
+                suppress(it)
             }
-
-            suppress(inApp)
         }
-
-        //inappController.addInAppNotificationsToQueue(JSONArray(inAppNotificationsToQueue))
-        // TODO handle supressed inapps - DONE
-        // TODO eligibleInapps.sort().first().display(); - DONE
+        return JSONArray()
     }
 
     private fun evaluateServerSide(event: EventAdapter) {
