@@ -10,6 +10,9 @@ import com.clevertap.android.sdk.network.DownloadedBitmap
 
 object HttpBitmapLoader {
 
+    private const val RESOURCE_CONNECTION_TIMEOUT = 5000
+    private const val RESOURCE_READ_TIMEOUT = 15000
+
     private val standardGzipHttpUrlConnectionParams = HttpUrlConnectionParams(
         connectTimeout = Constants.PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS,
         readTimeout = Constants.PN_IMAGE_READ_TIMEOUT_IN_MILLIS,
@@ -18,6 +21,8 @@ object HttpBitmapLoader {
         requestMap = mapOf("Accept-Encoding" to "gzip, deflate")
     )
     private val inAppStandardHttpUrlConnectionParams = HttpUrlConnectionParams(
+        connectTimeout = RESOURCE_CONNECTION_TIMEOUT,
+        readTimeout = RESOURCE_READ_TIMEOUT,
         useCaches = true,
         doInput = true
     )
