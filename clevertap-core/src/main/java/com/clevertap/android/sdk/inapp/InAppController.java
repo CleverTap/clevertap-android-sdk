@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -133,6 +135,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final InAppQueue inAppQueue;
 
+    public final Function0<Unit> onAppLaunchEventSent;
+
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
 
     public final static String IS_HARD_PERMISSION_REQUEST = "isHardPermissionRequest";
@@ -165,6 +169,13 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.deviceInfo = deviceInfo;
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
+        onAppLaunchEventSent = () -> {
+            final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedClientSide();
+            if (clientSideInAppsToDisplay.length() > 0) {
+                addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+            }
+            return null;
+        };
     }
 
     public void checkExistingInAppNotifications(Activity activity) {

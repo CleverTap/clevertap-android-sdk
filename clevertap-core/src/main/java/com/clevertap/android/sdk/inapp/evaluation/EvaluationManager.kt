@@ -15,7 +15,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class EvaluationManager constructor(
-    //private val inappController: InAppController,
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
     private val impressionStore: ImpressionStore,
@@ -44,9 +43,9 @@ class EvaluationManager constructor(
     }
 
     // onBatchSent with App Launched event in batch
-    fun evaluateOnAppLaunchedClientSide() {
+    fun evaluateOnAppLaunchedClientSide(): JSONArray {
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
-        evaluateClientSide(event)
+        return evaluateClientSide(event)
     }
 
     fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>) {
@@ -180,10 +179,6 @@ class EvaluationManager constructor(
             // The default TTL will be set in CTInAppNotification
             inApp.remove(Constants.WZRK_TIME_TO_LIVE)
         }
-    }
-
-    fun onAppLaunchedWithSuccess() {
-        evaluateOnAppLaunchedClientSide()
     }
 
     override fun onBatchSent(batch: JSONArray, success: Boolean) {

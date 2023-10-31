@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import org.json.JSONArray
 
 interface BatchListener {
@@ -25,7 +24,17 @@ class CompositeBatchListener : BatchListener {
     }
 }
 
-class AppLaunchListener(private val evaluationManager: EvaluationManager) : BatchListener {
+class AppLaunchListener : BatchListener {
+
+    private val listeners = mutableListOf<() -> Unit>()
+
+    fun addListener(listener: () -> Unit) {
+        listeners.add(listener)
+    }
+
+    fun removeListener(listener: () -> Unit) {
+        listeners.remove(listener)
+    }
 
     override fun onBatchSent(batch: JSONArray, success: Boolean) {
         for (i in 0 until batch.length()) {
@@ -37,9 +46,9 @@ class AppLaunchListener(private val evaluationManager: EvaluationManager) : Batc
         }
     }
 
-  private fun onAppLaunchedFound() {
-    evaluationManager.onAppLaunchedWithSuccess()
-  }
+    private fun onAppLaunchedFound() {
+        listeners.forEach { listener -> listener() }
+    }
 }
 
 class FetchInAppListener(private val callbackManager: BaseCallbackManager) : BatchListener {

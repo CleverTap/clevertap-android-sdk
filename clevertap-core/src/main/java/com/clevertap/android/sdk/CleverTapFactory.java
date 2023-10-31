@@ -198,9 +198,12 @@ class CleverTapFactory {
         coreState.getControllerManager().setInAppController(inAppController);
 
         // TODO register App Launched listener
+        final AppLaunchListener appLaunchListener = new AppLaunchListener();
+        appLaunchListener.addListener(inAppController.onAppLaunchEventSent);
+
         CompositeBatchListener batchListener = new CompositeBatchListener();
         batchListener.addListener(evaluationManager);
-        batchListener.addListener(new AppLaunchListener(evaluationManager));
+        batchListener.addListener(appLaunchListener);
         batchListener.addListener(new FetchInAppListener(callbackManager));
         callbackManager.setBatchListener(batchListener);
 
