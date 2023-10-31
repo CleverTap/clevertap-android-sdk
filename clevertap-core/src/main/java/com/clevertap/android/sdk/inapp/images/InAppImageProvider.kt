@@ -4,9 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest
-import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
-import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation
+import com.clevertap.android.sdk.inapp.images.InAppImageFetchApi.makeApiCallForInAppBitmap
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.ByteArrayOutputStream
@@ -33,6 +31,19 @@ internal class InAppImageProvider(
 
         val gifDiskCache = ctCaches.gifCacheDisk(context = context)
         gifDiskCache.add(cacheKey, bytes)
+    }
+
+    fun isCached(url: String) : Boolean {
+        val imageMemoryCache = ctCaches.imageCache()
+
+        if (imageMemoryCache.get(url) != null) {
+            return true
+        }
+
+        val imageDiskCache = ctCaches.imageCacheDisk(context = context)
+        val file = imageDiskCache.get(url)
+
+        return (file != null)
     }
 
     fun cachedImage(cacheKey: String): Bitmap? {
@@ -152,14 +163,6 @@ internal class InAppImageProvider(
             }
         }
 
-    }
-
-    fun makeApiCallForInAppBitmap(url: String): DownloadedBitmap {
-        val request = BitmapDownloadRequest(url)
-        return HttpBitmapLoader.getHttpBitmap(
-            bitmapOperation = HttpBitmapOperation.DOWNLOAD_INAPP_BITMAP,
-            bitmapDownloadRequest = request
-        )
     }
 
 }
