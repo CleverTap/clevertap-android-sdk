@@ -15,8 +15,8 @@ import kotlinx.coroutines.launch
 internal class InAppImagePreloader(
     private val inAppImageProvider: InAppImageProvider,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
-    val logger: ILogger? = null,
-    val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
+    private val logger: ILogger? = null,
+    private val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
 ) {
 
     private var job: Job? = null
