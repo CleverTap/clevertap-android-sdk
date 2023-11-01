@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Looper;
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -48,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -133,6 +136,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final InAppQueue inAppQueue;
 
+    public final Function0<Unit> onAppLaunchEventSent;
+
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
 
     public final static String IS_HARD_PERMISSION_REQUEST = "isHardPermissionRequest";
@@ -165,6 +170,13 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.deviceInfo = deviceInfo;
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
+        onAppLaunchEventSent = () -> {
+            final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedClientSide();
+            if (clientSideInAppsToDisplay.length() > 0) {
+                addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+            }
+            return null;
+        };
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -766,6 +778,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(chargeDetails, items);
         if (clientSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+        }
+    }
+
+    public void onAppLaunchServerSideInAppsResponse(@NonNull List<JSONObject> appLaunchServerSideInApps) {
+        final JSONArray serverSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedServerSide(
+                appLaunchServerSideInApps);
+        if (serverSideInAppsToDisplay.length() > 0) {
+            addInAppNotificationsToQueue(serverSideInAppsToDisplay);
         }
     }
 }

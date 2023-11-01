@@ -16,7 +16,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class EvaluationManager constructor(
-    //private val inappController: InAppController,
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
     private val impressionStore: ImpressionStore,
@@ -44,33 +43,30 @@ class EvaluationManager constructor(
     }
 
     // onBatchSent with App Launched event in batch
-    fun evaluateOnAppLaunchedClientSide() {
+    fun evaluateOnAppLaunchedClientSide(): JSONArray {
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
-        evaluateClientSide(event)
+        return evaluateClientSide(event)
     }
 
-    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<InAppServerSide>) {
+    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<InAppServerSide>): JSONArray {
         // BE returns applaunch_notifs [0, 1, 2]
         // record trigger counts
         // evaluate limits [2]
         // show first based on priority (2)
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
-        val eligibleInApps = evaluate(event, appLaunchedNotifs)
-        val sortedInApps = sortByPriority(eligibleInApps)
 
-        val inAppNotificationsToQueue: MutableList<JSONObject> = mutableListOf()
-        for (inApp in sortedInApps) {
-            if (!inApp.shouldSuppress) {
-                inAppNotificationsToQueue.add(((inApp as InAppServerSide).toJsonObject())) //TODO check this
-                break
+        val eligibleInApps = evaluate(
+            event,
+            appLaunchedNotifs
+        )
+        sortByPriority(eligibleInApps).forEach {
+            if (!it.shouldSuppress) {
+                return JSONArray(it)
+            } else {
+                suppress(it)
             }
-
-            suppress(inApp)
         }
-
-        //inappController.addInAppNotificationsToQueue(JSONArray(inAppNotificationsToQueue))
-        // TODO handle supressed inapps - DONE
-        // TODO eligibleInapps.sort().first().display(); - DONE
+        return JSONArray()
     }
 
     private fun evaluateServerSide(event: EventAdapter) {
@@ -167,10 +163,6 @@ class EvaluationManager constructor(
             inApp.remove(Constants.WZRK_TIME_TO_LIVE)
         }
     }*/
-
-    fun onAppLaunchedWithSuccess() {
-        evaluateOnAppLaunchedClientSide()
-    }
 
     override fun onBatchSent(batch: JSONArray, success: Boolean) {
         if (success) {
