@@ -36,6 +36,7 @@ import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
+import com.clevertap.android.sdk.response.data.InAppServerSide;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -781,9 +782,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
-    public void onAppLaunchServerSideInAppsResponse(@NonNull List<JSONObject> appLaunchServerSideInApps) {
+    public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps) {
         final JSONArray serverSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedServerSide(
-                appLaunchServerSideInApps);
+                InAppServerSide.Companion.getListFromJsonArray(appLaunchServerSideInApps));
         if (serverSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(serverSideInAppsToDisplay);
         }

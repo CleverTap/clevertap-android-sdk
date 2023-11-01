@@ -143,8 +143,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return;
             }
 
-            List<JSONObject> inAppNotifsAppLaunchedList = Utils.toJSONObjectList(inappNotifsApplaunched);
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inAppNotifsAppLaunchedList);
+            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched);
         } catch (Throwable e) {
             logger.verbose(config.getAccountId(), "InAppManager: Malformed AppLaunched ServerSide inApps");
             logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
