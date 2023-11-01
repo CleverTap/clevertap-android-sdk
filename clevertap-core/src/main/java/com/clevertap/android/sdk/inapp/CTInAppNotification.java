@@ -12,7 +12,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.utils.GifCache;
 import com.clevertap.android.sdk.utils.ImageCache;
 import java.util.ArrayList;
@@ -440,45 +440,23 @@ public class CTInAppNotification implements Parcelable {
         return isTablet;
     }
 
-    void prepareForDisplay() {
+    void prepareForDisplay(InAppResourceProvider inAppResourceProvider) {
 
         for (CTInAppNotificationMedia media : this.mediaList) {
             if (media.isGIF()) {
-                GifCache.init();
-                if (this.getGifByteArray(media) != null) {
+                byte[] bytes = inAppResourceProvider.fetchInAppGif(media.getMediaUrl());
+                if (bytes != null && bytes.length > 0) {
                     listener.notificationReady(this);
-                    return;
-                }
-
-                if (media.getMediaUrl() != null) {
-                    Logger.v("CTInAppNotification: downloading GIF :" + media.getMediaUrl());
-                    byte[] gifByteArray = Utils.getByteArrayFromImageURL(media.getMediaUrl());
-                    if (gifByteArray != null) {
-                        Logger.v("GIF Downloaded from url: " + media.getMediaUrl());
-                        if (!GifCache.addByteArray(media.getCacheKey(), gifByteArray)) {
-                            this.error = "Error processing GIF";
-                        }
-                    }
+                } else {
+                    this.error = "Error processing GIF";
                 }
             } else if (media.isImage()) {
-                ImageCache.init();
-                if (this.getImage(media) != null) {
-                    listener.notificationReady(this);
-                    return;
-                }
 
-                if (media.getMediaUrl() != null) {
-                    Logger.v("CTInAppNotification: downloading Image :" + media.getMediaUrl());
-                    Bitmap imageBitmap = Utils.getBitmapFromURL(media.getMediaUrl());
-                    if (imageBitmap != null) {
-                        Logger.v("Image Downloaded from url: " + media.getMediaUrl());
-                        if (!ImageCache.addBitmap(media.getCacheKey(), imageBitmap)) {
-                            this.error = "Error processing image";
-                        }
-                    } else {
-                        Logger.d("Image Bitmap is null");
-                        this.error = "Error processing image as bitmap was NULL";
-                    }
+                Bitmap bitmap = inAppResourceProvider.fetchInAppImage(media.getMediaUrl(), Bitmap.class);
+                if (bitmap != null) {
+                    listener.notificationReady(this);
+                } else {
+                    this.error = "Error processing image as bitmap was NULL";
                 }
             } else if (media.isVideo() || media.isAudio()) {
                 if (!this.videoSupported) {

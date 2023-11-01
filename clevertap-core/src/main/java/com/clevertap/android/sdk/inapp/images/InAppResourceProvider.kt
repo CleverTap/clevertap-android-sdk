@@ -85,10 +85,9 @@ internal class InAppResourceProvider(
      * Function that would fetch and cache bitmap image into Memory and File cache and return it.
      * If image is found in cache, the cached image is returned.
      */
-    inline fun <reified T> fetchInAppImage(url: String): T? {
+    fun <T> fetchInAppImage(url: String, clazz: Class<T>): T? {
 
         val cachedImage: Bitmap? = cachedImage(url)
-        val clazz = T::class.java
 
         if (cachedImage != null) {
             return if (clazz.isAssignableFrom(Bitmap::class.java)) {

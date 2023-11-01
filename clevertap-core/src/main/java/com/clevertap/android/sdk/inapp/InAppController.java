@@ -32,6 +32,7 @@ import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -75,8 +76,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                                 "Unable to parse inapp notification " + inAppNotification.getError());
                 return;
             }
+            InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay();
+            inAppNotification.prepareForDisplay(inAppResourceProvider);
         }
     }
 
