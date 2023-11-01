@@ -13,7 +13,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 
 internal class InAppImagePreloader(
-    private val inAppImageProvider: InAppImageProvider,
+    private val inAppImageProvider: InAppResourceProvider,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
     private val logger: ILogger? = null,
     private val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()

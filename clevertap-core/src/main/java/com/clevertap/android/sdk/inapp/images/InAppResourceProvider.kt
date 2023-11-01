@@ -9,7 +9,7 @@ import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.ByteArrayOutputStream
 
-internal class InAppImageProvider(
+internal class InAppResourceProvider(
     val context: Context,
     val logger: ILogger? = null
 ) {
