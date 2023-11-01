@@ -61,7 +61,7 @@ class EvaluationManager constructor(
         )
         sortByPriority(eligibleInApps).forEach {
             if (!it.shouldSuppress) {
-                return JSONArray(it)
+                return JSONArray((it as InAppServerSide).toJsonObject())
             } else {
                 suppress(it)
             }
