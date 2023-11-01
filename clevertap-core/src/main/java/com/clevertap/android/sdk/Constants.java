@@ -253,8 +253,11 @@ public interface Constants {
     String INAPP_OPERATOR = "operator";
     String INAPP_PROPERTYNAME = "propertyName";
     String INAPP_WHEN_TRIGGERS = "whenTriggers";
+    String INAPP_WHEN_LIMITS = "whenLimit";
     String INAPP_FC_LIMITS = "frequencyLimits";
     String INAPP_OCCURRENCE_LIMITS = "occurrenceLimits";
+
+    String INAPP_PRIORITY = "priority";
     String WZRK_RNV = "wzrk_rnv";
     String BLACK = "#000000";
     String WHITE = "#FFFFFF";
