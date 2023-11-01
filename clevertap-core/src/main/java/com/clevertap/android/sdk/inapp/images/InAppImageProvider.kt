@@ -154,4 +154,20 @@ internal class InAppImageProvider(
         }
 
     }
+
+    fun deleteImage(cacheKey: String) {
+        val imageMemoryCache = ctCaches.imageCache()
+        imageMemoryCache.remove(cacheKey)
+
+        val imageDiskCache = ctCaches.imageCacheDisk(context = context)
+        imageDiskCache.remove(cacheKey)
+    }
+
+    fun deleteGif(cacheKey: String) {
+        val imageMemoryCache = ctCaches.gifCache()
+        imageMemoryCache.remove(cacheKey)
+
+        val imageDiskCache = ctCaches.gifCacheDisk(context = context)
+        imageDiskCache.remove(cacheKey)
+    }
 }
