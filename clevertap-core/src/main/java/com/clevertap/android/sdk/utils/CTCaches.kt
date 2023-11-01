@@ -60,7 +60,7 @@ class CTCaches private constructor(
         synchronized(this) {
             if (imageFileCache == null) {
                 imageFileCache = FileCache(
-                    directory = context.getDir("directoryName", Context.MODE_PRIVATE),
+                    directory = context.getDir("images", Context.MODE_PRIVATE),
                     maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
                     logger = logger
                 )
@@ -73,7 +73,7 @@ class CTCaches private constructor(
         synchronized(this) {
             if (gifFileCache == null) {
                 gifFileCache = FileCache(
-                    directory = context.getDir("directoryName", Context.MODE_PRIVATE),
+                    directory = context.getDir("gifs", Context.MODE_PRIVATE),
                     maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
                     logger = logger
                 )
