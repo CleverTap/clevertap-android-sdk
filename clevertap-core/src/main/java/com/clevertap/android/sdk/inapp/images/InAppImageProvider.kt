@@ -60,20 +60,10 @@ internal class InAppImageProvider(
         val imageDiskCache = ctCaches.imageCacheDisk(context = context)
         val file = imageDiskCache.get(cacheKey)
 
-        if (file != null) {
-            val options = BitmapFactory.Options()
-            options.inJustDecodeBounds = true
-            // use options to scale down/optimise bitmap if needed
-            val op = BitmapFactory.decodeFile(file.absolutePath)
-            return op
-            /*val clazz = T::class.java
-            if (clazz.isAssignableFrom(Bitmap::class.java)) {
-                val op = BitmapFactory.decodeFile(file.absolutePath, null)
-                return op as T
-            } else if (clazz.isAssignableFrom(ByteArray::class.java)) {
-                file.inputStream()
-            }*/
+        if (file != null && file.hasValidBitmap()) {
+            return BitmapFactory.decodeFile(file.absolutePath)
         }
+        logger?.verbose("cached image not present for url : $cacheKey")
         return null
     }
 
@@ -164,5 +154,4 @@ internal class InAppImageProvider(
         }
 
     }
-
 }
