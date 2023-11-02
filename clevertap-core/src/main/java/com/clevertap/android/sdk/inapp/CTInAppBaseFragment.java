@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
@@ -46,7 +47,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     private DidClickForHardPermissionListener didClickForHardPermissionListener;
 
-    private InAppResourceProvider provider = new InAppResourceProvider(context, config.getLogger());
+    private InAppResourceProvider provider;
 
     @Override
     public void onAttach(Context context) {
@@ -56,6 +57,11 @@ public abstract class CTInAppBaseFragment extends Fragment {
         if (bundle != null) {
             inAppNotification = bundle.getParcelable(Constants.INAPP_KEY);
             config = bundle.getParcelable(Constants.KEY_CONFIG);
+            Logger logger = null;
+            if (config != null) {
+                logger = config.getLogger();
+            }
+            provider = new InAppResourceProvider(context, logger);
             currentOrientation = getResources().getConfiguration().orientation;
             generateListener();
             /*Initialize the below listener only when in app has InAppNotification activity as their host activity
