@@ -159,15 +159,14 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                 if (image != null) {
                     ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
                     imageView.setVisibility(View.VISIBLE);
-                    imageView.setImageBitmap(
-                            inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
+                    imageView.setImageBitmap(image);
                 }
             } else if (inAppNotification.getMediaList().get(0).isGIF()) {
-                if (inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)) != null) {
+                byte[] gifByteArray = inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0));
+                if (gifByteArray != null) {
                     gifImageView = relativeLayout.findViewById(R.id.gifImage);
                     gifImageView.setVisibility(View.VISIBLE);
-                    gifImageView.setBytes(
-                            inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
+                    gifImageView.setBytes(gifByteArray);
                     gifImageView.startAnimation();
                 }
             } else if (inAppNotification.getMediaList().get(0).isVideo()) {
