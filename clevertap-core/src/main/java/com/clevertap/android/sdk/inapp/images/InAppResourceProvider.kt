@@ -46,7 +46,12 @@ internal class InAppResourceProvider(
         return (file != null)
     }
 
-    fun cachedImage(cacheKey: String): Bitmap? {
+    fun cachedImage(cacheKey: String?): Bitmap? {
+
+        if (cacheKey == null) {
+            logger?.verbose("Bitmap for null key requested")
+            return null
+        }
 
         // Try in memory
         val imageMemoryCache = ctCaches.imageCache()
@@ -67,7 +72,11 @@ internal class InAppResourceProvider(
         return null
     }
 
-    fun cachedGif(cacheKey: String): ByteArray? {
+    fun cachedGif(cacheKey: String?): ByteArray? {
+        if (cacheKey == null) {
+            logger?.verbose("GIF for null key requested")
+            return null
+        }
         // Try in memory
         val gifMemoryCache = ctCaches.gifCache()
         val gifStream = gifMemoryCache.get(cacheKey)
