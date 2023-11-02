@@ -37,7 +37,7 @@ internal class InAppImagePreloader(
                     if (inAppImageProvider.isCached(url = url).not()) {
                         // start async download if not found in cache
                         val async: Deferred<Bitmap?> = async {
-                            val bitmap = inAppImageProvider.fetchInAppImage<Bitmap>(url)
+                            val bitmap = inAppImageProvider.fetchInAppImage<Bitmap>(url, Bitmap::class.java)
                             bitmap
                         }
                         list.add(async)
