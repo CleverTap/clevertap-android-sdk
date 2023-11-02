@@ -13,8 +13,6 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
-import com.clevertap.android.sdk.utils.GifCache;
-import com.clevertap.android.sdk.utils.ImageCache;
 import java.util.ArrayList;
 import java.util.Iterator;
 import org.json.JSONArray;
@@ -308,10 +306,6 @@ public class CTInAppNotification implements Parcelable {
         return fallBackToNotificationSettings;
     }
 
-    byte[] getGifByteArray(CTInAppNotificationMedia inAppMedia) {
-        return GifCache.getByteArray(inAppMedia.getCacheKey());
-    }
-
     int getHeight() {
         return height;
     }
@@ -322,10 +316,6 @@ public class CTInAppNotification implements Parcelable {
 
     String getHtml() {
         return html;
-    }
-
-    Bitmap getImage(CTInAppNotificationMedia inAppMedia) {
-        return ImageCache.getBitmap(inAppMedia.getCacheKey());
     }
 
     CTInAppNotificationMedia getInAppMediaForOrientation(int orientation) {
