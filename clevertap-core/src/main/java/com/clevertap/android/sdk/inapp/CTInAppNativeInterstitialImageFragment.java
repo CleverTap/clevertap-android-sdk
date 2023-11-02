@@ -5,6 +5,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -92,7 +93,7 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
 
         CTInAppNotificationMedia mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation);
         if (mediaForOrientation != null) {
-            Bitmap bitmap = inAppNotification.getImage(mediaForOrientation);
+            Bitmap bitmap = resourceProvider().cachedImage(mediaForOrientation.getMediaUrl());
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap);
                 imageView.setTag(0);

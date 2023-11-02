@@ -41,7 +41,7 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
 
         CTInAppNotificationMedia mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation);
         if (mediaForOrientation != null) {
-            Bitmap bitmap = inAppNotification.getImage(mediaForOrientation);
+            Bitmap bitmap = resourceProvider().cachedImage(mediaForOrientation.getMediaUrl());
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap);
                 imageView.setTag(0);

@@ -6,15 +6,15 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
-import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.customviews.CloseImageView;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Set;
@@ -45,6 +45,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
     private WeakReference<InAppListener> listenerWeakReference;
 
     private DidClickForHardPermissionListener didClickForHardPermissionListener;
+
+    private InAppResourceProvider provider = new InAppResourceProvider(context, config.getLogger());
 
     @Override
     public void onAttach(Context context) {
@@ -180,6 +182,10 @@ public abstract class CTInAppBaseFragment extends Fragment {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
             didDismiss(null);
         }
+    }
+
+    public InAppResourceProvider resourceProvider() {
+        return provider;
     }
 
 }

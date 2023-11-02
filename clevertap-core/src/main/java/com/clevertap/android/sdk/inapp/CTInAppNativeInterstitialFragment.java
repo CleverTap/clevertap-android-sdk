@@ -154,26 +154,27 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         }
 
         if (!inAppNotification.getMediaList().isEmpty()) {
-            if (inAppNotification.getMediaList().get(0).isImage()) {
-                Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
+            CTInAppNotificationMedia media = inAppNotification.getMediaList().get(0);
+            if (media.isImage()) {
+                Bitmap image = resourceProvider().cachedImage(media.getMediaUrl());
                 if (image != null) {
                     ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
                     imageView.setVisibility(View.VISIBLE);
                     imageView.setImageBitmap(image);
                 }
-            } else if (inAppNotification.getMediaList().get(0).isGIF()) {
-                byte[] gifByteArray = inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0));
+            } else if (media.isGIF()) {
+                byte[] gifByteArray = resourceProvider().cachedGif(media.getMediaUrl());
                 if (gifByteArray != null) {
                     gifImageView = relativeLayout.findViewById(R.id.gifImage);
                     gifImageView.setVisibility(View.VISIBLE);
                     gifImageView.setBytes(gifByteArray);
                     gifImageView.startAnimation();
                 }
-            } else if (inAppNotification.getMediaList().get(0).isVideo()) {
+            } else if (media.isVideo()) {
                 initFullScreenDialog();
                 prepareMedia();
                 playMedia();
-            } else if (inAppNotification.getMediaList().get(0).isAudio()) {
+            } else if (media.isAudio()) {
                 prepareMedia();
                 playMedia();
                 disableFullScreenButton();
@@ -237,7 +238,8 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     public void onStart() {
         super.onStart();
         if (gifImageView != null) {
-            gifImageView.setBytes(inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
+            CTInAppNotificationMedia inAppMedia = inAppNotification.getMediaList().get(0);
+            gifImageView.setBytes(resourceProvider().cachedGif(inAppMedia.getMediaUrl()));
             gifImageView.startAnimation();
         }
     }
