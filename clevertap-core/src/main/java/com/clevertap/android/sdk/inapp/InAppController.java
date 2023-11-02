@@ -76,9 +76,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                                 "Unable to parse inapp notification " + inAppNotification.getError());
                 return;
             }
-            InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay(inAppResourceProvider);
+            inAppNotification.prepareForDisplay(resourceProvider);
         }
     }
 
@@ -123,6 +122,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final Logger logger;
 
+    private InAppResourceProvider resourceProvider;
+
     private final MainLooperHandler mainLooperHandler;
 
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
@@ -150,6 +151,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
         this.deviceInfo = deviceInfo;
+        this.resourceProvider = new InAppResourceProvider(context, logger);
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -296,7 +298,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     @Override
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
             final Bundle formData) {
-        inAppNotification.didDismiss();
+        inAppNotification.didDismiss(resourceProvider);
+
         if (controllerManager.getInAppFCManager() != null) {
             controllerManager.getInAppFCManager().didDismiss(inAppNotification);
             logger.verbose(config.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());

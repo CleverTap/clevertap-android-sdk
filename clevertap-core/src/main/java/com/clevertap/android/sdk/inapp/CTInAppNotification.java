@@ -268,8 +268,8 @@ public class CTInAppNotification implements Parcelable {
         dest.writeLong(timeToLive);
     }
 
-    void didDismiss() {
-        removeImageOrGif();
+    void didDismiss(InAppResourceProvider resourceProvider) {
+        removeImageOrGif(resourceProvider);
     }
 
     String getBackgroundColor() {
@@ -643,15 +643,16 @@ public class CTInAppNotification implements Parcelable {
         }
     }
 
-    private void removeImageOrGif() {
+    private void removeImageOrGif(InAppResourceProvider resourceProvider) {
         for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
-            if (inAppMedia.getMediaUrl() != null && inAppMedia.getCacheKey() != null) {
-                if (!inAppMedia.getContentType().equals("image/gif")) {
-                    ImageCache.removeBitmap(inAppMedia.getCacheKey(), false);
-                    Logger.v("Deleted image - " + inAppMedia.getCacheKey());
+            String mediaUrl = inAppMedia.getMediaUrl();
+            if (mediaUrl != null) {
+                if (inAppMedia.isImage()) {
+                    resourceProvider.deleteImage(mediaUrl);
+                    Logger.v("Deleted image - " + mediaUrl);
                 } else {
-                    GifCache.removeByteArray(inAppMedia.getCacheKey());
-                    Logger.v("Deleted GIF - " + inAppMedia.getCacheKey());
+                    resourceProvider.deleteGif(mediaUrl);
+                    Logger.v("Deleted GIF - " + mediaUrl);
                 }
             }
         }
