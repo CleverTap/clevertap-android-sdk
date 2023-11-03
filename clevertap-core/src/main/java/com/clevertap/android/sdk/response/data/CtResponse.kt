@@ -26,16 +26,6 @@ data class CtResponse(
         private const val IN_APP_DAILY_KEY = Constants.INAPP_MAX_PER_DAY_KEY
     }
 
-    fun inApps(): InApps {
-
-        return InApps(
-            inAppPerDay = inAppsPerDay(),
-            inAppPerSession = inAppsPerSession(),
-            inAppClientSide = clientSideInApps().second,
-            inAppServerSide = serverSideInApps().second
-        )
-    }
-
     fun inAppsPerSession(): Int = response.optInt(IN_APP_SESSION_KEY, IN_APP_DEFAULT_SESSION)
 
     fun inAppsPerDay(): Int = response.optInt(IN_APP_DAILY_KEY, IN_APP_DEFAULT_DAILY)
@@ -62,15 +52,6 @@ data class CtResponse(
 //        return jsonArray.toList().mapNotNull { InAppServerSide.fromJSONObject(it) }
 //    }
 }
-
-data class InApps(
-    val inAppPerDay: Int = 10,
-    val inAppPerSession: Int = 10,
-    val inAppClientSide: JSONArray?,
-    val inAppServerSide: JSONArray?,
-//    val inAppClientSide: List<InAppClientSide>,
-//    val inAppServerSide: List<InAppServerSide>,
-)
 
 // Define a common interface for the properties that are common to both data classes
 interface InAppBase {
@@ -111,12 +92,12 @@ data class InAppClientSide(
     val wzrk_ttl_offset: Long?,
     var wzrk_ttl: Long?,
     override val campaignId: String,
-    override val whenTriggers: JSONArray,
     override val shouldSuppress: Boolean,
     override val excludeGlobalFCaps: Int,
     override val priority: Int,
     override val wzrk_pivot: String?,
     override val wzrk_cgId: Int?,
+    override val whenTriggers: JSONArray,
     override val whenLimits: List<WhenLimit>
 ) : InAppBase {
     fun toJsonObject(): JSONObject {
@@ -178,12 +159,12 @@ data class InAppClientSide(
 
 data class InAppServerSide(
     override val campaignId: String,
-    override val whenTriggers: JSONArray,
     override val excludeGlobalFCaps: Int,
     override val priority: Int,
     override val shouldSuppress: Boolean,
     override val wzrk_pivot: String = "wzrk_default",
     override val wzrk_cgId: Int?,
+    override val whenTriggers: JSONArray,
     override val whenLimits: List<WhenLimit>,
 ) : InAppBase {
 
