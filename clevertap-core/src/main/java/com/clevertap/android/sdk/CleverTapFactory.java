@@ -188,6 +188,7 @@ class CleverTapFactory {
                 inAppStore
         );
         coreState.setEvaluationManager(evaluationManager);
+        networkManager.addNetworkHeadersListener(evaluationManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,
                 controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo, new InAppQueue(config,

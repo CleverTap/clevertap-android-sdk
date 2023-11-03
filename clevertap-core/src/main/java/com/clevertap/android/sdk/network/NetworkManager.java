@@ -56,7 +56,9 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.net.ssl.HttpsURLConnection;
@@ -77,16 +79,36 @@ public class NetworkManager extends BaseNetworkManager {
     private final ControllerManager controllerManager;
     private final CoreMetaData coreMetaData;
     private int currentRequestTimestamp = 0;
+
     private final BaseDatabaseManager databaseManager;
+
     private final DeviceInfo deviceInfo;
+
     private final LocalDataStore localDataStore;
+
     private final CryptHandler cryptHandler;
+
     private final Logger logger;
+
     private int networkRetryCount = 0;
+
     private final ValidationResultStack validationResultStack;
+
     private int responseFailureCount = 0;
+
     private final Validator validator;
+
     private int minDelayFrequency = 0;
+
+    private final List<NetworkHeadersListener> mNetworkHeadersListeners = new ArrayList<>();
+
+    public void addNetworkHeadersListener(NetworkHeadersListener listener) {
+        mNetworkHeadersListeners.add(listener);
+    }
+
+    public void removeNetworkHeadersListener(NetworkHeadersListener listener) {
+        mNetworkHeadersListeners.remove(listener);
+    }
 
     public static boolean isNetworkOnline(Context context) {
 
@@ -442,11 +464,10 @@ public class NetworkManager extends BaseNetworkManager {
      * Constructs a header JSON object and inserts it into a new JSON array along with the given JSON array.
      *
      * @param context The Context object.
-     * @param arr     The JSON array to include in the resulting array.
      * @param caller  The optional caller identifier.
      * @return A new JSON array as a string with the constructed header and the given JSON array.
      */
-    String insertHeader(Context context, JSONArray arr,@Nullable final String caller) {//[{}]
+    JSONObject getHeader(Context context, @Nullable final String caller) {//[{}]
         try {
             // Construct the header JSON object
             final JSONObject header = new JSONObject();
@@ -584,10 +605,10 @@ public class NetworkManager extends BaseNetworkManager {
             // Create a new JSON array with the header and the given JSON array
             // Return the new JSON array as a string
             // Resort to string concat for backward compatibility
-            return "[" + header + ", " + arr.toString().substring(1);
+            return header;
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "CommsManager: Failed to attach header", t);
-            return arr.toString();
+            return null;
         }
     }
 
@@ -702,7 +723,22 @@ public class NetworkManager extends BaseNetworkManager {
             conn = buildHttpsURLConnection(endpoint);
 
             final String body;
-            final String req = insertHeader(context, queue,caller);
+//            final String req = insertHeader(context, queue,caller);
+            final JSONObject header = getHeader(context, caller);
+            final EndpointId endpointId = EndpointId.fromString(endpoint);
+            String req;
+            if (header == null) {
+                req = queue.toString();
+            } else {
+                for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
+                    final JSONObject headersToAttach = listener.onAttachHeaders(endpointId);
+                    if (headersToAttach != null) {
+                        CTXtensions.copyFrom(header, headersToAttach);
+                    }
+                }
+                req = "[" + header + ", " + queue.toString().substring(1);
+            }
+
             if (req == null) {
                 logger.debug(config.getAccountId(), "Problem configuring queue request, unable to send queue");
                 return false;
@@ -739,6 +775,12 @@ public class NetworkManager extends BaseNetworkManager {
                     logger.debug(config.getAccountId(),
                             "The domain has changed to " + newDomain + ". The request will be retried shortly.");
                     return false;
+                }
+            }
+
+            for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
+                if (header != null) {
+                    listener.onSentHeaders(header, endpointId);
                 }
             }
 

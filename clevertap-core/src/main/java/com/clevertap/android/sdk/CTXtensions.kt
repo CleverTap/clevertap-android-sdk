@@ -185,6 +185,13 @@ fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
     }
 }
 
+fun JSONObject.copyFrom(other: JSONObject) {
+    for (key in other.keys()) {
+        this.put(key, other.opt(key))
+    }
+}
+
+fun JSONObject?.isNotNullAndEmpty() = this != null && this.length() > 0
 
 fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
     return if (this != null && other != null) {
