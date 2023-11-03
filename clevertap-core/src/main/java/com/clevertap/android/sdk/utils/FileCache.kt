@@ -4,11 +4,15 @@ import com.clevertap.android.sdk.ILogger
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.Exception
+import java.util.UUID
 
 class FileCache(
     private val directory: File,
     private val maxFileSizeKb: Int,
-    private val logger: ILogger?
+    private val logger: ILogger? = null,
+    private val hashFunction: (key: String) -> String = { key ->
+        UUID.nameUUIDFromBytes(key.toByteArray()).toString()
+    }
 ) {
 
     companion object {
@@ -63,7 +67,7 @@ class FileCache(
     }
 
     private fun fetchFile(key: String) : File {
-        val filePath = "${directory}${FILE_PREFIX}_$key"
+        val filePath = "${directory}/${FILE_PREFIX}_${hashFunction(key)}"
         return File(filePath)
     }
 }
