@@ -5,13 +5,11 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.response.data.CtResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import java.util.List;
 import java.util.concurrent.Callable;
 import kotlin.Pair;
 import org.json.JSONArray;
@@ -89,6 +87,10 @@ public class InAppResponse extends CleverTapResponseDecorator {
             //      from none to CS/SS to clear data. - DONE
             // TODO call EvaluationManager.evaluateOnAppLaunchedServerSide(appLaunchedNotifs) - DONE
 
+            JSONArray inappStaleList = response.optJSONArray("inapp_stale");
+            if (inappStaleList != null) {
+                clearStaleInAppImpressions(inappStaleList, impressionStore);
+            }
 
             Pair<Boolean, JSONArray> legacyInApps = res.legacyInApps();
             if (legacyInApps.getFirst()) {
@@ -116,10 +118,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 inAppStore.setMode(inappDeliveryMode);
             }
 
-            JSONArray inappStaleList = response.optJSONArray("inapp_stale");
-            if (inappStaleList != null) {
-                clearStaleInAppImpressions(inappStaleList, impressionStore);
-            }
         } catch (Throwable t) {
             Logger.v("InAppManager: Failed to parse response", t);
         }
