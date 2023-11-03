@@ -5,11 +5,16 @@ import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
+import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.BatchListener
+import com.clevertap.android.sdk.network.EndpointId
+import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
+import com.clevertap.android.sdk.network.NetworkHeadersListener
 import com.clevertap.android.sdk.response.data.InAppBase
 import com.clevertap.android.sdk.response.data.InAppClientSide
 import com.clevertap.android.sdk.response.data.InAppServerSide
 import com.clevertap.android.sdk.utils.Clock
+import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -22,10 +27,9 @@ class EvaluationManager constructor(
     private val impressionManager: ImpressionManager,
     private val limitsMatcher: LimitsMatcher,
     private val inAppStore: InAppStore,
-) : BatchListener {
+) : BatchListener, NetworkHeadersListener {
 
-    val evaluatedServerSideInAppIds: MutableList<String>
-        get() = evaluatedServerSideInAppIds
+    private val evaluatedServerSideInAppIds: MutableList<String> = ArrayList()
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>): JSONArray {
@@ -165,11 +169,12 @@ class EvaluationManager constructor(
     }*/
 
     override fun onBatchSent(batch: JSONArray, success: Boolean) {
-        if (success) {
+        //TODO: remove later as replaced by NetworkHeadersListener
+        /*if (success) {
             val header = batch[0] as JSONObject
             removeSentEvaluatedServerSideInAppIds(header)
             removeSentSuppressedClientSideInApps(header)
-        }
+        }*/
     }
 
     private fun removeSentEvaluatedServerSideInAppIds(header: JSONObject) {
@@ -193,6 +198,29 @@ class EvaluationManager constructor(
                     iterator.remove()
                 }
             }
+        }
+    }
+
+    override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
+        val header = JSONObject()
+        if (endpointId == ENDPOINT_A1) {
+            if (evaluatedServerSideInAppIds.isNotEmpty()) {
+                header.put(Constants.INAPP_SS_EVAL_META, JsonUtil.listToJsonArray(evaluatedServerSideInAppIds))
+            }
+            if (suppressedClientSideInApps.isNotEmpty()) {
+                header.put(Constants.INAPP_SUPPRESSED_META, JsonUtil.listToJsonArray(suppressedClientSideInApps))
+            }
+        }
+        if (header.isNotNullAndEmpty())
+            return header
+
+        return null
+    }
+
+    override fun onSentHeaders(allHeaders: JSONObject, endpointId: EndpointId) {
+        if (endpointId == ENDPOINT_A1) {
+            removeSentEvaluatedServerSideInAppIds(allHeaders)
+            removeSentSuppressedClientSideInApps(allHeaders)
         }
     }
 }
