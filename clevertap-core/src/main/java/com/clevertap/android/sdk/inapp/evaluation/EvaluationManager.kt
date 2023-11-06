@@ -3,16 +3,15 @@ package com.clevertap.android.sdk.inapp.evaluation
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore
-import com.clevertap.android.sdk.isNotNullAndEmpty
-import com.clevertap.android.sdk.network.BatchListener
-import com.clevertap.android.sdk.network.EndpointId
-import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
-import com.clevertap.android.sdk.network.NetworkHeadersListener
 import com.clevertap.android.sdk.inapp.data.InAppBase
 import com.clevertap.android.sdk.inapp.data.InAppClientSide
 import com.clevertap.android.sdk.inapp.data.InAppServerSide
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore
+import com.clevertap.android.sdk.isNotNullAndEmpty
+import com.clevertap.android.sdk.network.EndpointId
+import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
+import com.clevertap.android.sdk.network.NetworkHeadersListener
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray
@@ -27,7 +26,7 @@ class EvaluationManager constructor(
     private val impressionManager: ImpressionManager,
     private val limitsMatcher: LimitsMatcher,
     private val inAppStore: InAppStore,
-) : BatchListener, NetworkHeadersListener {
+) : NetworkHeadersListener {
 
     private val evaluatedServerSideInAppIds: MutableList<String> = ArrayList()
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
@@ -164,15 +163,6 @@ class EvaluationManager constructor(
             inApp.remove(Constants.WZRK_TIME_TO_LIVE)
         }
     }*/
-
-    override fun onBatchSent(batch: JSONArray, success: Boolean) {
-        //TODO: remove later as replaced by NetworkHeadersListener
-        /*if (success) {
-            val header = batch[0] as JSONObject
-            removeSentEvaluatedServerSideInAppIds(header)
-            removeSentSuppressedClientSideInApps(header)
-        }*/
-    }
 
     private fun removeSentEvaluatedServerSideInAppIds(header: JSONObject) {
         val inAppsEval = header.optJSONArray(Constants.INAPP_SS_EVAL_META)

@@ -203,7 +203,6 @@ class CleverTapFactory {
         appLaunchListener.addListener(inAppController.onAppLaunchEventSent);
 
         CompositeBatchListener batchListener = new CompositeBatchListener();
-        batchListener.addListener(evaluationManager);
         batchListener.addListener(appLaunchListener);
         batchListener.addListener(new FetchInAppListener(callbackManager));
         callbackManager.setBatchListener(batchListener);
