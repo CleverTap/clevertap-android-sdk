@@ -37,6 +37,7 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
@@ -727,6 +728,9 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void initPushAmp() {
+        if(!Utils.isMainProcess(context, context.getPackageName()))
+            return;
+
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("createOrResetWorker", new Callable<Void>() {
             @Override
