@@ -14,7 +14,7 @@ import org.json.JSONObject
 /**
  * Class that wraps functionality for response and return relevant methods to get data
  */
-data class CtResponse(
+data class InAppResponseAdapter(
     val response: JSONObject
 ) {
 

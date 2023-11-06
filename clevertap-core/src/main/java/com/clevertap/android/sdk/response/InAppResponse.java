@@ -7,7 +7,7 @@ import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
-import com.clevertap.android.sdk.inapp.data.CtResponse;
+import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import java.util.concurrent.Callable;
@@ -56,7 +56,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
     ) {
         try {
 
-            CtResponse res = new CtResponse(response);
+            InAppResponseAdapter res = new InAppResponseAdapter(response);
 
             if (config.isAnalyticsOnly()) {
                 logger.verbose(config.getAccountId(),
