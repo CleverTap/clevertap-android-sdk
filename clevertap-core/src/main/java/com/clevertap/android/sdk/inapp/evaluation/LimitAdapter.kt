@@ -30,5 +30,14 @@ class LimitAdapter(limitJSON: JSONObject) {
 
     val frequency: Int = limitJSON.optInt(Constants.KEY_FREQUENCY)
 
+    fun toJsonObject(): JSONObject {
+        val limitJson = JSONObject()
+
+        limitJson.put(Constants.KEY_TYPE, limitType.toString())
+        limitJson.put(Constants.KEY_LIMIT, limit)
+        limitJson.put(Constants.KEY_FREQUENCY, frequency)
+
+        return limitJson
+    }
 }
 

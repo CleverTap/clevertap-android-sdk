@@ -98,11 +98,11 @@ data class InAppClientSide(
         wzrk_ttl?.let { jsonObject.put(Constants.WZRK_TIME_TO_LIVE, it) }
         jsonObject.put(Constants.INAPP_WZRK_CGID, wzrk_cgId)
 
-        //TODO: add toJsonObject() to LimitAdapter
-        //jsonObject.put(Constants.INAPP_WHEN_TRIGGERS, JSONArray(whenTriggers.map { it.toJsonObject() }))
+        //TODO: add toJsonObject() to LimitAdapter - DONE
+        jsonObject.put(Constants.INAPP_WHEN_TRIGGERS, JSONArray(whenTriggers.map { it.toJsonObject() }))
 
-        //TODO: add toJsonObject() to TriggerAdapter
-        //jsonObject.put(Constants.INAPP_WHEN_LIMITS, JSONArray(whenLimits.map { it.toJsonObject() }))
+        //TODO: add toJsonObject() to TriggerAdapter - DONE
+        jsonObject.put(Constants.INAPP_WHEN_LIMITS, JSONArray(whenLimits.map { it.toJsonObject() }))
         return jsonObject
     }
 
@@ -133,10 +133,9 @@ data class InAppClientSide(
                 val now = Clock.SYSTEM.currentTimeSeconds()
                 now + offset
             } else {
-                // Remove/nullify TTL since it cannot be calculated based on the TTL offset
-                // The default TTL will be set in CTInAppNotification
-                //inApp.remove(Constants.WZRK_TIME_TO_LIVE)
-                null;
+                // return TTL as null since it cannot be calculated due to null offset value
+                // The default TTL will be set in the CTInAppNotification
+                null
             }
         }
 
@@ -168,11 +167,11 @@ data class InAppServerSide(
         jsonObject.put(Constants.INAPP_WZRK_CGID, wzrk_cgId)
         jsonObject.put(Constants.KEY_EXCLUDE_GLOBAL_CAPS, excludeGlobalFCaps)
 
-        //TODO: add toJsonObject() to LimitAdapter
-        //jsonObject.put(Constants.INAPP_WHEN_TRIGGERS, JSONArray(whenTriggers.map { it.toJsonObject() }))
+        //TODO: add toJsonObject() to LimitAdapter - DONE
+        jsonObject.put(Constants.INAPP_WHEN_TRIGGERS, JSONArray(whenTriggers.map { it.toJsonObject() }))
 
-        //TODO: add toJsonObject() to TriggerAdapter
-        //jsonObject.put(Constants.INAPP_WHEN_LIMITS, JSONArray(whenLimits.map { it.toJsonObject() }))
+        //TODO: add toJsonObject() to TriggerAdapter - DONE
+        jsonObject.put(Constants.INAPP_WHEN_LIMITS, JSONArray(whenLimits.map { it.toJsonObject() }))
         return jsonObject
     }
 

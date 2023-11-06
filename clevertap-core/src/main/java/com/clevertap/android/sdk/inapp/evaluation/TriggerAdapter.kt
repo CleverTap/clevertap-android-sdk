@@ -147,4 +147,21 @@ class TriggerAdapter(triggerJSON: JSONObject) {
         return triggerConditionFromJSON(itemJSONObject)
     }
 
+    //TODO: move key names to constants
+    fun toJsonObject(): JSONObject {
+        val triggerJson = JSONObject()
+
+        triggerJson.put("eventName", eventName)
+
+        if (properties != null) {
+            triggerJson.put("eventProperties", properties)
+        }
+
+        if (items != null) {
+            triggerJson.put("itemProperties", items)
+        }
+
+        return triggerJson
+    }
+
 }
