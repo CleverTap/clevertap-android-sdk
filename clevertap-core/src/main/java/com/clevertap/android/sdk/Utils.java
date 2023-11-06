@@ -36,16 +36,11 @@ import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation;
 import com.clevertap.android.sdk.network.DownloadedBitmap;
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
 import com.google.firebase.messaging.RemoteMessage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import javax.net.ssl.HttpsURLConnection;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -162,37 +157,6 @@ public final class Utils {
 
     public static long getNowInMillis() {
         return System.currentTimeMillis();
-    }
-
-    public static byte[] getByteArrayFromImageURL(String srcUrl) {
-        srcUrl = srcUrl.replace("///", "/");
-        srcUrl = srcUrl.replace("//", "/");
-        srcUrl = srcUrl.replace("http:/", "http://");
-        srcUrl = srcUrl.replace("https:/", "https://");
-        HttpsURLConnection connection = null;
-        try {
-            URL url = new URL(srcUrl);
-            connection = (HttpsURLConnection) url.openConnection();
-            InputStream is = connection.getInputStream();
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            while ((bytesRead = is.read(buffer)) != -1) {
-                baos.write(buffer, 0, bytesRead);
-            }
-            return baos.toByteArray();
-        } catch (IOException e) {
-            Logger.v("Error processing image bytes from url: " + srcUrl);
-            return null;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            } catch (Throwable t) {
-                Logger.v("Couldn't close connection!", t);
-            }
-        }
     }
 
     @SuppressLint("MissingPermission")
