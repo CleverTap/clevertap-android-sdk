@@ -92,10 +92,13 @@ public interface Constants {
     String INAPP_NOTIF_SHOW_CLOSE = "sc";
     String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
 
+    String INAPP_NOTIFS_STALE_KEY = "inapp_stale";
     String INAPP_NOTIFS_APP_LAUNCHED_KEY = "inapp_notifs_applaunched";
 
     String INAPP_NOTIFS_KEY_CS = "inapp_notifs_cs";
     String INAPP_NOTIFS_KEY_SS = "inapp_notifs_ss";
+
+    String INAPP_DELIVERY_MODE_KEY = "inapp_delivery_mode";
 
     String PREFS_INAPP_KEY_CS = INAPP_NOTIFS_KEY_CS;
     String PREFS_INAPP_KEY_SS = INAPP_NOTIFS_KEY_SS;
