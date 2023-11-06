@@ -78,10 +78,7 @@ class EvaluationManager constructor(
             evaluate(event, InAppServerSide.getListFromJsonArray(inAppStore.readServerSideInApps()))
         // TODO add to meta inapp_evals : eligibleInapps.addToMeta();
         for (inApp in eligibleInApps) {
-            val campaignId = inApp.campaignId
-            if (campaignId.isNotEmpty()) {
-                evaluatedServerSideInAppIds.add(campaignId)
-            }
+            evaluatedServerSideInAppIds.add(inApp.campaignId)
         }
     }
 
@@ -143,7 +140,7 @@ class EvaluationManager constructor(
         suppressedClientSideInApps.add(
             mapOf(
                 Constants.NOTIFICATION_ID_TAG to wzrkId,
-                Constants.INAPP_WZRK_PIVOT to (inApp.wzrk_pivot ?: "wzrk_default"),
+                Constants.INAPP_WZRK_PIVOT to inApp.wzrk_pivot,
                 Constants.INAPP_WZRK_CGID to inApp.wzrk_cgId
             )
         )

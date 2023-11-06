@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.data.WhenLimit
 
 /**
  * A utility class responsible for matching limits against campaign conditions.
@@ -21,7 +20,7 @@ class LimitsMatcher(
      * @return `true` if all limits are met, otherwise `false`.
      */
     fun matchWhenLimits(
-        whenLimits: List<WhenLimit>,
+        whenLimits: List<LimitAdapter>,
         campaignId: String,
     ): Boolean = whenLimits.all {
         matchLimit(it, campaignId)
@@ -36,7 +35,7 @@ class LimitsMatcher(
      * @return `true` if the limit is met, otherwise `false`.
      */
     private fun matchLimit(
-        limit: WhenLimit,
+        limit: LimitAdapter,
         campaignId: String
     ): Boolean {
         return when (limit.limitType) {

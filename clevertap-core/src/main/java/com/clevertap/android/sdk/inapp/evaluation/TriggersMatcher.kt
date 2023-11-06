@@ -18,10 +18,10 @@ class TriggersMatcher {
      *
      * This function evaluates the trigger conditions for a standard event and returns `true`
      * if all conditions within any of the events are met. The events in the `whenTriggers`
-     * array are checked in an OR-ed manner, meaning that if any event matches, and all conditions
+     * list are checked in an OR-ed manner, meaning that if any event matches, and all conditions
      * within that event are met, the function returns `true`.
      *
-     * @param whenTriggers A JSON array of event triggers with conditions to match against the event.
+     * @param whenTriggers A list of event triggers with conditions to match against the event.
      * @param eventName The name of the event to be matched.
      * @param eventProperties A map of event properties where keys are property names and
      *        values are property values.
@@ -29,18 +29,15 @@ class TriggersMatcher {
      * within that event are met, `false` otherwise.
      */
     fun matchEvent(
-        whenTriggers: JSONArray,
+        whenTriggers: List<TriggerAdapter>,
         eventName: String,
         eventProperties: Map<String, Any>
     ): Boolean {
 
         // events in array are OR-ed
         val event = EventAdapter(eventName, eventProperties)
-        return (0 until whenTriggers.length())
-            .map { TriggerAdapter(whenTriggers[it] as JSONObject) }
-            .any { match(it, event) }
-
-
+        // Check if any TriggerAdapter in the list matches the event
+        return whenTriggers.any { match(it, event) }
     }
 
     /**

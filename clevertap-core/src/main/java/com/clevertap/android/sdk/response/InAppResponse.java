@@ -68,8 +68,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             logger.verbose(config.getAccountId(), "InApp: Processing response");
 
-            int perSession = res.inAppsPerSession();
-            int perDay = res.inAppsPerDay();
+            int perSession = res.getInAppsPerSession();
+            int perDay = res.getInAppsPerDay();
 
             if (!isSendTest && controllerManager.getInAppFCManager() != null) {
                 Logger.v("Updating InAppFC Limits");
@@ -87,35 +87,35 @@ public class InAppResponse extends CleverTapResponseDecorator {
             //      from none to CS/SS to clear data. - DONE
             // TODO call EvaluationManager.evaluateOnAppLaunchedServerSide(appLaunchedNotifs) - DONE
 
-            JSONArray inappStaleList = response.optJSONArray("inapp_stale");
-            if (inappStaleList != null) {
-                clearStaleInAppImpressions(inappStaleList, impressionStore);
+            Pair<Boolean, JSONArray> inappStaleList = res.getStaleInApps();
+            if (inappStaleList.getFirst()) {
+                clearStaleInAppImpressions(inappStaleList.getSecond(), impressionStore);
             }
 
-            Pair<Boolean, JSONArray> legacyInApps = res.legacyInApps();
+            Pair<Boolean, JSONArray> legacyInApps = res.getLegacyInApps();
             if (legacyInApps.getFirst()) {
                 displayInApp(legacyInApps.getSecond());
             }
 
-            Pair<Boolean, JSONArray> appLaunchInApps = res.appLaunchServerSideInApps();
+            Pair<Boolean, JSONArray> appLaunchInApps = res.getAppLaunchServerSideInApps();
             if (appLaunchInApps.getFirst()) {
                 handleAppLaunchServerSide(appLaunchInApps.getSecond());
             }
 
-            Pair<Boolean, JSONArray> csInApps = res.clientSideInApps();
+            Pair<Boolean, JSONArray> csInApps = res.getClientSideInApps();
             if (csInApps.getFirst()) {
                 inAppStore.storeClientSideInApps(csInApps.getSecond());
             }
 
-            Pair<Boolean, JSONArray> ssInApps = res.serverSideInApps();
+            Pair<Boolean, JSONArray> ssInApps = res.getServerSideInApps();
             if (ssInApps.getFirst()) {
                 inAppStore.storeServerSideInApps(ssInApps.getSecond());
             }
 
-            String inappDeliveryMode = response.optString("inapp_delivery_mode", "");
-            if (!inappDeliveryMode.isEmpty()) {
+            String inappMode = res.getInAppMode();
+            if (!inappMode.isEmpty()) {
                 //TODO: Mode will be received with every request but do we need to persist it?
-                inAppStore.setMode(inappDeliveryMode);
+                inAppStore.setMode(inappMode);
             }
 
         } catch (Throwable t) {
