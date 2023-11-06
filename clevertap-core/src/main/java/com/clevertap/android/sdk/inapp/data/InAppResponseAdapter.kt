@@ -25,6 +25,13 @@ class InAppResponseAdapter(
 
         private const val IN_APP_SESSION_KEY = Constants.INAPP_MAX_PER_SESSION_KEY
         private const val IN_APP_DAILY_KEY = Constants.INAPP_MAX_PER_DAY_KEY
+
+        @JvmStatic
+        fun getListOfWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
+            val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
+
+            return frequencyLimits.toList().map { LimitAdapter(it) }.toMutableList()
+        }
     }
 
     val inAppsPerSession: Int = responseJson.optInt(IN_APP_SESSION_KEY, IN_APP_DEFAULT_SESSION)
