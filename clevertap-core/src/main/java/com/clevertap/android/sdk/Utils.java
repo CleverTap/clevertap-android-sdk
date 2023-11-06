@@ -293,11 +293,7 @@ public final class Utils {
         if (activity == null) {
             return true;
         }
-        boolean isActivityDead = activity.isFinishing();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            isActivityDead = isActivityDead || activity.isDestroyed();
-        }
-        return isActivityDead;
+        return activity.isFinishing() || activity.isDestroyed();
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
