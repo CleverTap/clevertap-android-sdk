@@ -36,7 +36,7 @@ import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
-import com.clevertap.android.sdk.response.data.InAppServerSide;
+import com.clevertap.android.sdk.inapp.data.InAppServerSide;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;

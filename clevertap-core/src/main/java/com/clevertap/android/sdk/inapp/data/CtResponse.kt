@@ -1,9 +1,9 @@
-package com.clevertap.android.sdk.response.data
+package com.clevertap.android.sdk.inapp.data
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.evaluation.LimitType
 import com.clevertap.android.sdk.orEmptyArray
-import com.clevertap.android.sdk.response.data.InAppBase.Companion.getListOfWhenLimits
+import com.clevertap.android.sdk.inapp.data.InAppBase.Companion.getListOfWhenLimits
 import com.clevertap.android.sdk.safeGetJSONArray
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock

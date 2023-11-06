@@ -10,9 +10,9 @@ import com.clevertap.android.sdk.network.BatchListener
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
 import com.clevertap.android.sdk.network.NetworkHeadersListener
-import com.clevertap.android.sdk.response.data.InAppBase
-import com.clevertap.android.sdk.response.data.InAppClientSide
-import com.clevertap.android.sdk.response.data.InAppServerSide
+import com.clevertap.android.sdk.inapp.data.InAppBase
+import com.clevertap.android.sdk.inapp.data.InAppClientSide
+import com.clevertap.android.sdk.inapp.data.InAppServerSide
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray

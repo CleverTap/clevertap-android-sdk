@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.response.data.WhenLimit
+import com.clevertap.android.sdk.inapp.data.WhenLimit
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
