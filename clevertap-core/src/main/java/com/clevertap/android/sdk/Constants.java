@@ -150,6 +150,7 @@ public interface Constants {
             GEOFENCE_EXITED_EVENT_NAME};
     long DEFAULT_PUSH_TTL = 1000L * 60 * 60 * 24 * 4;// 4 days
     String PF_JOB_ID = "pfjobid";
+    String PF_WORK_ID = "pfworkid";
     int PING_FREQUENCY_VALUE = 240;
     String PING_FREQUENCY = "pf";
     long ONE_MIN_IN_MILLIS = 60 * 1000L;
