@@ -165,4 +165,6 @@ public class PTConstants {
     public static final int PT_FLIP_INTERVAL_TIME = 4 * ONE_SECOND;
 
     public static final String KEY_CLICKED_STAR = "clickedStar";
+
+    public static final String KEY_REQUEST_CODES = "requestCodes";
 }

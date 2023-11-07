@@ -35,10 +35,7 @@ import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
-import com.clevertap.android.sdk.inapp.data.InAppServerSide;
-import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
-import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -89,7 +86,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay();
+            inAppNotification.prepareForDisplay(resourceProvider);
         }
     }
 
@@ -136,6 +133,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final Logger logger;
 
+    private InAppResourceProvider resourceProvider;
+
     private final MainLooperHandler mainLooperHandler;
 
     private final InAppQueue inAppQueue;
@@ -181,6 +180,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             }
             return null;
         };
+        this.resourceProvider = new InAppResourceProvider(context, logger);
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -327,7 +327,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     @Override
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
             final Bundle formData) {
-        inAppNotification.didDismiss();
+        inAppNotification.didDismiss(resourceProvider);
+
         if (controllerManager.getInAppFCManager() != null) {
             controllerManager.getInAppFCManager().didDismiss(inAppNotification);
             logger.verbose(config.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());

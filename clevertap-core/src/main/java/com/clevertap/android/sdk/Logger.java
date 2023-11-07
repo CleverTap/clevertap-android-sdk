@@ -2,7 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.util.Log;
 
-public final class Logger {
+public final class Logger implements ILogger {
 
     private int debugLevel;
 
@@ -94,12 +94,14 @@ public final class Logger {
         this.debugLevel = level;
     }
 
+    @Override
     public void debug(String message) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
             Log.d(Constants.CLEVERTAP_LOG_TAG, message);
         }
     }
 
+    @Override
     public void debug(String suffix, String message) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
             if (message.length() > 4000) {
@@ -111,12 +113,14 @@ public final class Logger {
         }
     }
 
+    @Override
     public void debug(String suffix, String message, Throwable t) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
             Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t);
         }
     }
 
+    @Override
     @SuppressWarnings("unused")
     public void debug(String message, Throwable t) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
@@ -124,6 +128,7 @@ public final class Logger {
         }
     }
 
+    @Override
     @SuppressWarnings("unused")
     public void info(String message) {
         if (getDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
@@ -131,12 +136,14 @@ public final class Logger {
         }
     }
 
+    @Override
     public void info(String suffix, String message) {
         if (getDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
             Log.i(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
         }
     }
 
+    @Override
     @SuppressWarnings("unused")
     public void info(String suffix, String message, Throwable t) {
         if (getDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
@@ -144,6 +151,7 @@ public final class Logger {
         }
     }
 
+    @Override
     @SuppressWarnings("unused")
     public void info(String message, Throwable t) {
         if (getDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
@@ -151,12 +159,14 @@ public final class Logger {
         }
     }
 
+    @Override
     public void verbose(String message) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
             Log.v(Constants.CLEVERTAP_LOG_TAG, message);
         }
     }
 
+    @Override
     public void verbose(String suffix, String message) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
             if (message.length() > 4000) {
@@ -168,12 +178,14 @@ public final class Logger {
         }
     }
 
+    @Override
     public void verbose(String suffix, String message, Throwable t) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
             Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t);
         }
     }
 
+    @Override
     public void verbose(String message, Throwable t) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
             Log.v(Constants.CLEVERTAP_LOG_TAG, message, t);
