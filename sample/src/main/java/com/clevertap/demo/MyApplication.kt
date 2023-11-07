@@ -64,6 +64,23 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             }
         })
 
+        /*val cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(
+            applicationContext,
+            "YOUR CLEVERTAP ACCOUNT ID",
+            "YOUR CLEVERTAP TOKEN"
+        )
+        cleverTapInstanceConfig.proxyDomain = "YOUR PROXY DOMAIN"
+        cleverTapInstanceConfig.spikyProxyDomain = "YOUR SPIKY PROXY DOMAIN"
+
+        CleverTapAPI.instanceWithConfig(this, cleverTapInstanceConfig)*/
+
+        /*CleverTapAPI.changeCredentials(
+            "YOUR CLEVERTAP ACCOUNT ID",
+            "YOUR CLEVERTAP TOKEN",
+            "YOUR PROXY DOMAIN",
+            "YOUR SPIKY PROXY DOMAIN"
+        )*/
+
         val defaultInstance = CleverTapAPI.getDefaultInstance(this)
         defaultInstance?.syncListener = object : SyncListener {
             override fun profileDataUpdated(updates: JSONObject?) {//no op

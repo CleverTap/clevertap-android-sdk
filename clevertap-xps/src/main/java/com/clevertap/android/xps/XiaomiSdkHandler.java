@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.xiaomi.channel.commonutils.android.Region;
@@ -134,7 +135,7 @@ class XiaomiSdkHandler implements IMiSdkHandler {
 
     private void init() {
         String packageName = context.getPackageName();
-        if (shouldInit(packageName)) {
+        if (CoreMetaData.isAppForeground() && shouldInit(packageName)) {
             String appId = appId();
             String appKey = appKey();
             try {
