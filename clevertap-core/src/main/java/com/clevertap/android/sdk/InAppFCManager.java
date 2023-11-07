@@ -4,27 +4,22 @@ import static com.clevertap.android.sdk.StorageHelper.getPreferences;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.SharedPreferencesMigration;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
-
 import kotlin.jvm.functions.Function1;
+import kotlin.jvm.functions.Function2;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class InAppFCManager {
@@ -37,14 +32,7 @@ public class InAppFCManager {
 
     private String deviceId;
 
-    private final ArrayList<String> mDismissedThisSession = new ArrayList<>();
-
-//    private final HashMap<String, Integer> mShownThisSession = new HashMap<>();
-//
-//    private int mShownThisSessionCount = 0;
-//
     private ImpressionManager impressionManager;
-
 
     InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId/*, ImpressionManager impressionManager*/) {
         this.config = config;
@@ -53,7 +41,7 @@ public class InAppFCManager {
         /*this.impressionManager = impressionManager;*/ // TODO
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("initInAppFCManager",new Callable<Void>() {
+        task.execute("initInAppFCManager", new Callable<Void>() {
             @Override
             public Void call() {
                 init(InAppFCManager.this.deviceId);
@@ -62,7 +50,9 @@ public class InAppFCManager {
         });
     }
 
-    public boolean canShow(CTInAppNotification inapp) {
+
+    public boolean canShow(CTInAppNotification inapp,
+            Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut) {
         try {
             if (inapp == null) {
                 return false;
@@ -73,12 +63,19 @@ public class InAppFCManager {
                 return true;
             }
 
+
+            /* Evaluate frequency limits again (without Nth triggers)
+               in case the message was added multiple times before being displayed,
+               or queue was paused and the message was added multiple times in the meantime
+            */
+            if (hasInAppFrequencyLimitsMaxedOut.invoke(inapp.getJsonDescription(), id)) {
+                return false;
+            }
+
             // Exclude from all caps?
             if (inapp.isExcludeFromCaps()) {
                 return true;
             }
-
-            // TODO check new flag for exclude from caps
 
             if (!hasSessionCapacityMaxedOut(inapp)
                     && !hasLifetimeCapacityMaxedOut(inapp)
@@ -93,19 +90,13 @@ public class InAppFCManager {
 
     public void changeUser(String deviceId) {
         // reset counters
-//        mShownThisSession.clear();
-//        mShownThisSessionCount = 0;
         impressionManager.clearSessionData(); // TODO change deviceId in manager
-        mDismissedThisSession.clear();
         this.deviceId = deviceId;
         init(deviceId);
     }
 
     public void didDismiss(CTInAppNotification inapp) {
-        final Object id = inapp.getId();
-        if (id != null) {
-            mDismissedThisSession.add(id.toString());
-        }
+        // NO-OP
     }
 
     public void didShow(final Context context, CTInAppNotification inapp) {
@@ -115,14 +106,6 @@ public class InAppFCManager {
         }
 
         impressionManager.recordImpression(id);
-//        mShownThisSessionCount++;
-
-//        Integer count = mShownThisSession.get(id);
-//        if (count == null) {
-//            count = 1;
-//        }
-
-//        mShownThisSession.put(id, ++count);
 
         incrementInAppCountsInPersistentStore(id);
 
@@ -229,7 +212,7 @@ public class InAppFCManager {
         }
     }
 
-    private String getInAppID(CTInAppNotification inapp) {
+    public String getInAppID(CTInAppNotification inapp) {
         if (inapp.getId() == null) {
             return null;
         }
@@ -329,19 +312,12 @@ public class InAppFCManager {
             return false;
         }
 
-        // TODO mDismissedThisSession should be removed
-        // 1. Has this been dismissed?
-        if (mDismissedThisSession.contains(id)) {
-            return true;
-        }
-
         // 2. Has the session max count for this inapp been breached?
         try {
             final int maxPerSession = inapp.getMaxPerSession() >= 0 ? inapp.getMaxPerSession() : 1000;
 
-            //Integer c = mShownThisSession.get(id);
             int c = impressionManager.perSession(id);
-            if (/*c != null && */c >= maxPerSession) {
+            if (c >= maxPerSession) {
                 return true;
             }
         } catch (Throwable t) {
@@ -352,7 +328,6 @@ public class InAppFCManager {
         final int c = getIntFromPrefs(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION_KEY, deviceId), 1);
         int sessionTotal = impressionManager.perSessionTotal();
         return (sessionTotal >= c);
-//        return (mShownThisSessionCount >= c);
     }
 
     private void incrementInAppCountsInPersistentStore(String inappID) {

@@ -35,8 +35,10 @@ import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
+import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.data.InAppServerSide;
+import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
+import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -52,6 +54,7 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function2;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -523,7 +526,13 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
 
         if (controllerManager.getInAppFCManager() != null) {
-            if (!controllerManager.getInAppFCManager().canShow(inAppNotification)) {
+
+            final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
+                final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
+                return evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
+            };
+
+            if (!controllerManager.getInAppFCManager().canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {
                 logger.verbose(config.getAccountId(),
                         "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
                 showInAppNotificationIfAny();

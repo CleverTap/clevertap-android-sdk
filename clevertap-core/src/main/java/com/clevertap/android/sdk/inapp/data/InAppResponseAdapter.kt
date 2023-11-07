@@ -25,6 +25,13 @@ class InAppResponseAdapter(
 
         private const val IN_APP_SESSION_KEY = Constants.INAPP_MAX_PER_SESSION_KEY
         private const val IN_APP_DAILY_KEY = Constants.INAPP_MAX_PER_DAY_KEY
+
+        @JvmStatic
+        fun getListOfWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
+            val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
+
+            return frequencyLimits.toList().map { LimitAdapter(it) }.toMutableList()
+        }
     }
 
     val inAppsPerSession: Int = responseJson.optInt(IN_APP_SESSION_KEY, IN_APP_DEFAULT_SESSION)
@@ -60,7 +67,7 @@ interface InAppBase {
     companion object {
 
         @Throws(JSONException::class)
-        fun getListOfWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
+        fun getListOfWhenLimitsAndOccurrenceLimits(limitJSON: JSONObject): List<LimitAdapter> {
             val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
             val occurrenceLimits = limitJSON.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
 
@@ -118,7 +125,7 @@ data class InAppClientSide(
                     shouldSuppress = jsonObject.optBoolean(Constants.INAPP_SUPPRESSED),
                     wzrk_ttl = getTtl(jsonObject),
                     wzrk_cgId = jsonObject.optInt(Constants.INAPP_WZRK_CGID),
-                    whenLimits = InAppBase.getListOfWhenLimits(jsonObject),
+                    whenLimits = InAppBase.getListOfWhenLimitsAndOccurrenceLimits(jsonObject),
                     whenTriggers = InAppBase.getListOfWhenTriggers(jsonObject),
                 )
             } catch (e: Exception) {
@@ -188,7 +195,7 @@ data class InAppServerSide(
                     shouldSuppress = jsonObject.optBoolean(Constants.INAPP_SUPPRESSED),
                     wzrk_cgId = jsonObject.optInt(Constants.INAPP_WZRK_CGID),
                     excludeGlobalFCaps = jsonObject.optBoolean(Constants.KEY_EXCLUDE_GLOBAL_CAPS),
-                    whenLimits = InAppBase.getListOfWhenLimits(jsonObject),
+                    whenLimits = InAppBase.getListOfWhenLimitsAndOccurrenceLimits(jsonObject),
                     whenTriggers = InAppBase.getListOfWhenTriggers(jsonObject),
                 )
             } catch (e: Exception) {

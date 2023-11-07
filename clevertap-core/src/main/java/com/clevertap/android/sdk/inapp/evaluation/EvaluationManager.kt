@@ -72,6 +72,10 @@ class EvaluationManager constructor(
         return JSONArray()
     }
 
+    fun matchWhenLimitsBeforeDisplay(listOfLimitAdapter: List<LimitAdapter>, campaignId: String): Boolean {
+        return limitsMatcher.matchWhenLimits(listOfLimitAdapter, campaignId)
+    }
+
     private fun evaluateServerSide(event: EventAdapter) {
         val eligibleInApps = evaluate(event, getInApps<InAppServerSide>())
 
