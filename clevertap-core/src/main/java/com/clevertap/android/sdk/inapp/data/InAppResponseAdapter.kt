@@ -34,6 +34,8 @@ class InAppResponseAdapter(
         }
     }
 
+    val preloadImage: List<String> = emptyList() // todo provide images
+
     val inAppsPerSession: Int = responseJson.optInt(IN_APP_SESSION_KEY, IN_APP_DEFAULT_SESSION)
 
     val inAppsPerDay: Int = responseJson.optInt(IN_APP_DAILY_KEY, IN_APP_DEFAULT_DAILY)
