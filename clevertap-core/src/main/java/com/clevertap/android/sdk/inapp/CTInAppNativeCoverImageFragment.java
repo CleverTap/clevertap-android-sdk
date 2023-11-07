@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -26,11 +27,11 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
         RelativeLayout relativeLayout = fl.findViewById(R.id.cover_image_relative_layout);
         ImageView imageView = relativeLayout.findViewById(R.id.cover_image);
 
-        if (inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
-            if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))
-                    != null) {
-                imageView.setImageBitmap(inAppNotification
-                        .getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+        CTInAppNotificationMedia mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation);
+        if (mediaForOrientation != null) {
+            Bitmap bitmap = resourceProvider().cachedImage(mediaForOrientation.getMediaUrl());
+            if (bitmap != null) {
+                imageView.setImageBitmap(bitmap);
                 imageView.setTag(0);
                 imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
             }

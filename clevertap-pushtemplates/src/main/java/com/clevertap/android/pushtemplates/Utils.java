@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -27,33 +26,31 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.widget.RemoteViews;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
+
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest;
+import com.clevertap.android.sdk.bitmap.HttpBitmapLoader;
+import com.clevertap.android.sdk.network.DownloadedBitmap;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.zip.GZIPInputStream;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 @SuppressWarnings("WeakerAccess")
 public class Utils {
@@ -104,91 +101,25 @@ public class Utils {
     }
 
     private static Bitmap getBitmapFromURL(String srcUrl, @Nullable Context context) {
-        if (context != null) {
-            boolean isNetworkOnline = NetworkManager.isNetworkOnline(context);
-            if (!isNetworkOnline) {
-                Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: " + srcUrl);
-                return null;
-            }
-        }
 
-        // Safe bet, won't have more than three /s
-        srcUrl = srcUrl.replace("///", "/");
-        srcUrl = srcUrl.replace("//", "/");
-        srcUrl = srcUrl.replace("http:/", "http://");
-        srcUrl = srcUrl.replace("https:/", "https://");
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(srcUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setDoInput(true);
-            connection.setUseCaches(true);
-            connection.addRequestProperty("Content-Type", "application/json");
-            connection.addRequestProperty("Accept-Encoding", "gzip, deflate");
-            connection.setConnectTimeout(Constants.PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS);
-            connection.setReadTimeout(Constants.PN_IMAGE_READ_TIMEOUT_IN_MILLIS);
-            connection.connect();
-            // expect HTTP 200 OK, so we don't mistakenly save error report
-            // instead of the file
-            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                PTLog.debug("File not loaded completely not going forward. URL was: " + srcUrl);
-                return null;
-            }
+        BitmapDownloadRequest request = new BitmapDownloadRequest(srcUrl,
+                false,
+                context,
+                null,
+                -1,
+                -1
+        );
 
-            // might be -1: server did not report the length
-            long fileLength = connection.getContentLength();
-            boolean isGZipEncoded = (connection.getContentEncoding() != null &&
-                    connection.getContentEncoding().contains("gzip"));
+        DownloadedBitmap db = HttpBitmapLoader.getHttpBitmap(
+                HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
+                request
+        );
 
-            // download the file
-            InputStream input = connection.getInputStream();
-
-            byte[] data = new byte[16384];
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-            long total = 0;
-            int count;
-            while ((count = input.read(data)) != -1) {
-                total += count;
-                buffer.write(data, 0, count);
-            }
-
-            byte[] tmpByteArray = new byte[16384];
-            long totalDownloaded = total;
-
-            if (isGZipEncoded) {
-                InputStream is = new ByteArrayInputStream(buffer.toByteArray());
-                ByteArrayOutputStream decompressedFile = new ByteArrayOutputStream();
-                GZIPInputStream gzipInputStream = new GZIPInputStream(is);
-                total = 0;
-                int counter;
-                while ((counter = gzipInputStream.read(tmpByteArray)) != -1) {
-                    total += counter;
-                    decompressedFile.write(tmpByteArray, 0, counter);
-                }
-                if (fileLength != -1 && fileLength != totalDownloaded) {
-                    PTLog.debug("File not loaded completely not going forward. URL was: " + srcUrl);
-                    return null;
-                }
-                return BitmapFactory.decodeByteArray(decompressedFile.toByteArray(), 0, (int) total);
-            }
-
-            if (fileLength != -1 && fileLength != totalDownloaded) {
-                PTLog.debug("File not loaded completely not going forward. URL was: " + srcUrl);
-                return null;
-            }
-            return BitmapFactory.decodeByteArray(buffer.toByteArray(), 0, (int) totalDownloaded);
-        } catch (IOException e) {
-            PTLog.verbose("Couldn't download the file. URL was: " + srcUrl);
+        if (db.getStatus() == DownloadedBitmap.Status.SUCCESS) {
+            return db.getBitmap();
+        } else {
+            Logger.v("network call for bitmap download failed with url : " + srcUrl + " http status: " + db.getStatus());
             return null;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            } catch (Throwable t) {
-                PTLog.verbose("Couldn't close connection!", t);
-            }
         }
     }
 

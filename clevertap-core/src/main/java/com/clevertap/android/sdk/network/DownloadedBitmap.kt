@@ -9,10 +9,11 @@ import android.graphics.Bitmap
  * @property status The status of the downloaded bitmap.
  * @property downloadTime The time taken to download the bitmap, in milliseconds.
  */
-data class DownloadedBitmap(
-    var bitmap: Bitmap?,
-    var status: Status,
-    var downloadTime: Long
+data class DownloadedBitmap constructor(
+    val bitmap: Bitmap?,
+    val status: Status,
+    val downloadTime: Long,
+    val bytes: ByteArray? = null
 ) {
 
     /**
@@ -27,5 +28,27 @@ data class DownloadedBitmap(
         NO_NETWORK("NO_NETWORK"),
         INIT_ERROR("INIT_ERROR"),
         SIZE_LIMIT_EXCEEDED("SIZE_LIMIT_EXCEEDED")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DownloadedBitmap
+
+        if (bitmap != other.bitmap) return false
+        if (status != other.status) return false
+        if (downloadTime != other.downloadTime) return false
+        if (!bytes.contentEquals(other.bytes)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = bitmap?.hashCode() ?: 0
+        result = 31 * result + status.hashCode()
+        result = 31 * result + downloadTime.hashCode()
+        result = 31 * result + bytes.contentHashCode()
+        return result
     }
 }

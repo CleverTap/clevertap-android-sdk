@@ -282,21 +282,6 @@ class UtilsTest : BaseTestCase() {
     //------------------------------------------------------------------------------------
 
     @Test
-    fun test_getByteArrayFromImageURL_when_CorrectImageLinkArePassed_should_ReturnImageByteArray() {
-        val url2 = "https://www.freedesktop.org/wiki/logo1.png"
-        val array2: ByteArray? = Utils.getByteArrayFromImageURL(url2)
-        println(" downloaded an array2 of size  ${array2?.size} bytes ")
-        assertNull(array2)
-
-        val url = "https://www.freedesktop.org/wiki/logo.png"
-        val array: ByteArray? = Utils.getByteArrayFromImageURL(url)
-        println(" downloaded an array of size  ${array?.size} bytes ,")
-        assertNotNull(array)
-    }
-
-    //------------------------------------------------------------------------------------
-
-    @Test
     fun test_getCurrentNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType() {
         // if context is null, network type will be unavailable
         var networkType: String? = Utils.getCurrentNetworkType(null)

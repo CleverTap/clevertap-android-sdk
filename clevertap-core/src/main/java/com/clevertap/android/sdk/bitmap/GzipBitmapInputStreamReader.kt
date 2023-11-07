@@ -10,13 +10,16 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.zip.GZIPInputStream
 
-class GzipBitmapInputStreamReader : IBitmapInputStreamReader {
+class GzipBitmapInputStreamReader(
+    saveBytes: Boolean = false,
+    logger: Logger? = null
+) : BitmapInputStreamDecoder(saveBytes, logger) {
 
     override fun readInputStream(
         inputStream: InputStream,
         connection: HttpURLConnection,
         downloadStartTimeInMilliseconds: Long
-    ): DownloadedBitmap? {
+    ): DownloadedBitmap {
 
         Logger.v("reading bitmap input stream in GzipBitmapInputStreamReader....")
 
@@ -37,22 +40,36 @@ class GzipBitmapInputStreamReader : IBitmapInputStreamReader {
                 decompressedFile.write(bufferForGzipInputStream, 0, bytesRead)
             }
 
-            Logger.v("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")
+            logger?.verbose("Total decompressed download size for bitmap from output stream = ${decompressedFile.size()}")
 
-            return getDownloadedBitmapFromStream(decompressedFile, downloadStartTimeInMilliseconds)
-        } else null
+            return getDownloadedBitmapFromStream(
+                dataReadFromStream = decompressedFile,
+                downloadStartTimeInMilliseconds = downloadStartTimeInMilliseconds
+            )
+        } else {
+            super.readInputStream(
+                inputStream = inputStream,
+                connection = connection,
+                downloadStartTimeInMilliseconds = downloadStartTimeInMilliseconds
+            )
+        }
     }
 
     private fun getDownloadedBitmapFromStream(
-        dataReadFromStream: ByteArrayOutputStream, downloadStartTimeInMilliseconds: Long
+        dataReadFromStream: ByteArrayOutputStream,
+        downloadStartTimeInMilliseconds: Long
     ): DownloadedBitmap {
 
         val dataReadFromStreamInByteArray = dataReadFromStream.toByteArray()
         // Decode the bitmap from decompressed data
-        val bitmap =
-            BitmapFactory.decodeByteArray(dataReadFromStreamInByteArray, 0, dataReadFromStreamInByteArray.size)
+        val bitmap = BitmapFactory.decodeByteArray(
+            dataReadFromStreamInByteArray,
+            0,
+            dataReadFromStreamInByteArray.size
+        )
         return DownloadedBitmapFactory.successBitmap(
-            bitmap, Utils.getNowInMillis() - downloadStartTimeInMilliseconds
+            bitmap = bitmap,
+            downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds
         )
     }
 }
