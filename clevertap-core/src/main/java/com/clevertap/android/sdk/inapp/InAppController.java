@@ -378,6 +378,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     //InApp
     @Override
     public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
+        controllerManager.getInAppFCManager().didShow(context, inAppNotification);
         analyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData);
 
         //Fire onShow() callback when InApp is shown.
@@ -543,8 +544,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 showInAppNotificationIfAny();
                 return;
             }
-
-            controllerManager.getInAppFCManager().didShow(context, inAppNotification);
         } else {
             logger.verbose(config.getAccountId(),
                     "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
