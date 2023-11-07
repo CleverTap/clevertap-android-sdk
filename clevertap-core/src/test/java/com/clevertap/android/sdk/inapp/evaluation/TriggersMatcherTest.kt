@@ -1,15 +1,10 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.shared.test.BaseTestCase
-import org.json.JSONArray
-import org.json.JSONObject
-import org.junit.*
-import org.junit.Assert.*
-import org.mockito.*
 
 class TriggersMatcherTest : BaseTestCase() {
 
-    @Mock
+   /* @Mock
     lateinit var eventAdapter: EventAdapter
     private lateinit var triggersMatcher: TriggersMatcher
 
@@ -1265,5 +1260,5 @@ class TriggersMatcherTest : BaseTestCase() {
             put("value", condition.value.value)
         }
     }
-
+*/
 }

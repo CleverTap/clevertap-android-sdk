@@ -1,23 +1,12 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
-import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.inapp.ImpressionManager
-import com.clevertap.android.sdk.inapp.InAppController
-import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore
-import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
-import org.hamcrest.CoreMatchers.*
-import org.hamcrest.MatcherAssert.*
-import org.json.JSONObject
 import org.junit.*
-import org.mockito.*
 
 @Ignore
 class EvaluationManagerTest : BaseTestCase() {
 
-    private lateinit var evaluationManager: EvaluationManager
+    /*private lateinit var evaluationManager: EvaluationManager
 
     override fun setUp() {
         super.setUp()
@@ -212,5 +201,5 @@ class EvaluationManagerTest : BaseTestCase() {
         val sortedList = evaluationManager.sortByPriority(inApps)
 
         assertThat(sortedList, `is`(inApps))
-    }
+    }*/
 }

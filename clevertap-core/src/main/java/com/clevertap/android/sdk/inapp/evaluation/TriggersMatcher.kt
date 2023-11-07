@@ -135,18 +135,8 @@ class TriggersMatcher {
 
         return when (op) {
             TriggerOperator.Set -> true
-            TriggerOperator.LessThan ->
-                expected.numberValue()
-                    ?.takeIf { actual.numberValue() != null }
-                    ?.let { it.toDouble() < actual.numberValue()!!.toDouble() } ?: false
-
-
-            TriggerOperator.GreaterThan ->
-                expected.numberValue()
-                    ?.takeIf { actual.numberValue() != null }
-                    ?.let { it.toDouble() > actual.numberValue()!!.toDouble() } ?: false
-
-
+            TriggerOperator.LessThan -> expectedValueLessThanActual(expected, actual)
+            TriggerOperator.GreaterThan -> expectedValueGreaterThanActual(expected, actual)
             TriggerOperator.Equals -> expectedValueEqualsActual(expected, actual)
             TriggerOperator.NotEquals -> !expectedValueEqualsActual(expected, actual)
             TriggerOperator.Between -> actualIsInRangeOfExpected(expected, actual)
@@ -192,6 +182,34 @@ class TriggersMatcher {
             actual.stringValue() != null -> expected.stringValue() == actual.stringValue()
             else -> false
         }
+    }
+
+    @VisibleForTesting
+    internal fun expectedValueLessThanActual(expected: TriggerValue, actual: TriggerValue): Boolean {
+
+        val expectedNumber =
+            expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
+            ?: return false
+
+        val actualNumber =
+            actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()
+            ?: return false
+
+        return expectedNumber < actualNumber
+    }
+
+    @VisibleForTesting
+    internal fun expectedValueGreaterThanActual(expected: TriggerValue, actual: TriggerValue): Boolean {
+
+        val expectedNumber =
+            expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
+            ?: return false
+
+        val actualNumber =
+            actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()
+            ?: return false
+
+        return expectedNumber > actualNumber
     }
 
     /**
@@ -246,9 +264,31 @@ class TriggersMatcher {
         actual: TriggerValue
     ): Boolean {
         return (expected.listValue()
-            ?.takeIf { it.size >= 2 && it[0] is Double && it[1] is Double }
-            ?.takeIf { !actual.isList() && actual.numberValue() != null }
-            ?.let { actual.numberValue()!!.toDouble() in it[0] as Double..it[1] as Double })
+            ?.takeIf { it.size >= 2 }
+            ?.take(2)
+            ?.map {
+                when (it) {
+                    is String -> {
+                        it.toDoubleOrNull()
+                    }
+
+                    is Double -> {
+                        it
+                    }
+
+                    else -> null
+                }
+            }
+            ?.let {
+                if (it.contains(null))
+                    return false
+
+                val actualNumber =
+                    actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()
+                    ?: return false
+
+                actualNumber in it[0]!!..it[1]!!
+            })
             ?: false
     }
 }
