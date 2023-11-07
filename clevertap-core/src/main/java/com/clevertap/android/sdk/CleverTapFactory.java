@@ -235,12 +235,14 @@ class CleverTapFactory {
                 validationResultStack, baseEventQueueManager, analyticsManager,
                 coreMetaData, controllerManager, sessionManager,
                 localDataStore, callbackManager, baseDatabaseManager, ctLockManager, cryptHandler);
+        loginController.addChangeUserCallback(inAppStore);
+        loginController.addChangeUserCallback(impStore);
         coreState.setLoginController(loginController);
 
-        VarCache varCache = new VarCache(config,context);
+        VarCache varCache = new VarCache(config, context);
         coreState.setVarCache(varCache);
 
-        CTVariables ctVariables = new CTVariables(varCache );
+        CTVariables ctVariables = new CTVariables(varCache);
         coreState.setCTVariables(ctVariables);
         coreState.getControllerManager().setCtVariables(ctVariables);
 

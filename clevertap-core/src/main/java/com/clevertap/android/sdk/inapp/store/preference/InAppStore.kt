@@ -4,7 +4,10 @@ import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_INAPP_CS
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_INAPP_SS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
+import com.clevertap.android.sdk.STORE_TYPE_INAPP
+import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.store.preference.ICTPreference
 import org.json.JSONArray
 
@@ -25,7 +28,7 @@ import org.json.JSONArray
 class InAppStore(
     private val ctPreference: ICTPreference,
     private val cryptHandler: CryptHandler
-) {
+) : ChangeUserCallback {
 
     companion object {
 
@@ -117,5 +120,11 @@ class InAppStore(
         if (csInAppsEncrypted.isNullOrBlank()) return JSONArray()
 
         return JSONArray(cryptHandler.decrypt(csInAppsEncrypted, KEY_ENCRYPTION_INAPP_SS))
+    }
+
+    override fun onChangeUser(deviceId: String, accountId: String) {
+        val newPrefName =
+            StoreProvider.getInstance().constructStorePreferenceName(STORE_TYPE_INAPP, deviceId, accountId)
+        ctPreference.changePreferenceName(newPrefName)
     }
 }

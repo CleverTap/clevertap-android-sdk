@@ -1,5 +1,8 @@
 package com.clevertap.android.sdk.inapp.store.preference
 
+import com.clevertap.android.sdk.STORE_TYPE_IMPRESSION
+import com.clevertap.android.sdk.StoreProvider
+import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.store.preference.ICTPreference
 
 /**
@@ -9,8 +12,10 @@ import com.clevertap.android.sdk.store.preference.ICTPreference
  */
 class ImpressionStore(
     private val ctPreference: ICTPreference,
-) {
+) : ChangeUserCallback {
+
     companion object {
+
         const val PREF_PREFIX = "__impressions"
     }
 
@@ -69,5 +74,11 @@ class ImpressionStore(
         val serialized = ctPreference.readString(key, "")
         if (serialized.isNullOrBlank()) return emptyList()
         return serialized.split(",").map { it.toLong() }
+    }
+
+    override fun onChangeUser(deviceId: String, accountId: String) {
+        val newPrefName =
+            StoreProvider.getInstance().constructStorePreferenceName(STORE_TYPE_IMPRESSION, deviceId, accountId)
+        ctPreference.changePreferenceName(newPrefName)
     }
 }
