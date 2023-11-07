@@ -27,7 +27,16 @@ object DownloadedBitmapFactory {
      * @param downloadTime The time taken for the download operation in millis.
      * @return The DownloadedBitmap object with the specified bitmap, success status, and download time.
      */
-    fun successBitmap(bitmap: Bitmap, downloadTime: Long): DownloadedBitmap {
-        return DownloadedBitmap(bitmap, SUCCESS, downloadTime)
+    fun successBitmap(
+        bitmap: Bitmap,
+        downloadTime: Long,
+        data: ByteArray? = null
+    ): DownloadedBitmap {
+        return DownloadedBitmap(
+            bitmap = bitmap,
+            status = SUCCESS,
+            downloadTime = downloadTime,
+            bytes = data
+        )
     }
 }

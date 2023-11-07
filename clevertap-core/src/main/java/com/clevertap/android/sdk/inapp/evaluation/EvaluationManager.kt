@@ -25,7 +25,7 @@ class EvaluationManager constructor(
     private val impressionStore: ImpressionStore,
     private val impressionManager: ImpressionManager,
     private val limitsMatcher: LimitsMatcher,
-    private val inAppStore: InAppStore,
+    val inAppStore: InAppStore,
 ) : NetworkHeadersListener {
 
     private val evaluatedServerSideInAppIds: MutableList<String> = ArrayList()
@@ -77,17 +77,16 @@ class EvaluationManager constructor(
     }
 
     private fun evaluateServerSide(event: EventAdapter) {
-        val eligibleInApps =
-            evaluate(event, InAppServerSide.getListFromJsonArray(inAppStore.readServerSideInApps()))
+        val eligibleInApps = evaluate(event, getInApps<InAppServerSide>())
+
         for (inApp in eligibleInApps) {
             evaluatedServerSideInAppIds.add(inApp.campaignId)
         }
     }
 
     private fun evaluateClientSide(event: EventAdapter): JSONArray {
-        val eligibleInApps = evaluate(
-            event, InAppClientSide.getListFromJsonArray(inAppStore.readClientSideInApps())
-        )
+        val eligibleInApps = evaluate(event, getInApps<InAppClientSide>())
+
         sortByPriority(eligibleInApps).forEach {
             if (!it.shouldSuppress) {
                 //updateTTL(it)
@@ -166,6 +165,14 @@ class EvaluationManager constructor(
             inApp.remove(Constants.WZRK_TIME_TO_LIVE)
         }
     }*/
+
+    private inline fun <reified T> getInApps(): List<InAppBase> {
+        return when (T::class) {
+            InAppClientSide::class -> InAppClientSide.getListFromJsonArray(inAppStore.readClientSideInApps())
+            InAppServerSide::class -> InAppServerSide.getListFromJsonArray(inAppStore.readServerSideInApps())
+            else -> emptyList()
+        }
+    }
 
     private fun removeSentEvaluatedServerSideInAppIds(header: JSONObject) {
         val inAppsEval = header.optJSONArray(Constants.INAPP_SS_EVAL_META)

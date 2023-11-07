@@ -18,6 +18,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.WindowInsets;
 import android.view.WindowManager;
@@ -38,6 +39,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.json.JSONObject;
@@ -89,6 +91,8 @@ public class DeviceInfo {
 
         private int localInAppCount;
 
+        private final String locale;
+
         DeviceCachedInfo() {
             versionName = getVersionName();
             osName = getOsName();
@@ -107,6 +111,7 @@ public class DeviceInfo {
             widthPixels = getWidthPixels();
             dpi = getDPI();
             localInAppCount = getLocalInAppCountFromPreference();
+            locale = getDeviceLocale();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 appBucket = getAppBucket();
             }
@@ -352,6 +357,18 @@ public class DeviceInfo {
             }
         }
 
+        private String getDeviceLocale() {
+            String language = Locale.getDefault().getLanguage();
+            if ("".equals(language)) {
+                language = "xx";
+            }
+            String country = Locale.getDefault().getCountry();
+            if ("".equals(country)) {
+                country = "XX";
+            }
+            return language + "_" + country;
+        }
+
         private double toTwoPlaces(double n) {
             double result = n * 100;
             result = Math.round(result);
@@ -430,6 +447,8 @@ public class DeviceInfo {
 
     private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
+    private String customLocale;
+
     /**
      * Returns the integer identifier for the default app icon.
      *
@@ -482,6 +501,7 @@ public class DeviceInfo {
         this.context = context;
         this.config = config;
         this.library = null;
+        this.customLocale = null;
         mCoreMetaData = coreMetaData;
         onInitDeviceInfo(cleverTapID);
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
@@ -617,6 +637,23 @@ public class DeviceInfo {
 
     public void incrementLocalInAppCount() {
         getDeviceCachedInfo().localInAppCount++;
+    }
+
+    public String getDeviceLocale() {
+        return getDeviceCachedInfo().locale;
+    }
+
+    public void setCustomLocale(String customLocale) {
+        this.customLocale = customLocale;
+    }
+
+    public String getCustomLocale() {
+        return customLocale;
+    }
+
+    public String getLocale() {
+        // If locale is set by the client then use that, otherwise fetch it from the device
+        return TextUtils.isEmpty(getCustomLocale()) ? getDeviceLocale() : getCustomLocale();
     }
 
     public ArrayList<ValidationResult> getValidationResults() {
