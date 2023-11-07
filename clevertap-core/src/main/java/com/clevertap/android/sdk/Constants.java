@@ -30,6 +30,8 @@ public interface Constants {
     String LABEL_NOTIFICATION_ICON = "CLEVERTAP_NOTIFICATION_ICON";
     String LABEL_INAPP_EXCLUDE = "CLEVERTAP_INAPP_EXCLUDE";
     String LABEL_REGION = "CLEVERTAP_REGION";
+    String LABEL_PROXY_DOMAIN = "CLEVERTAP_PROXY_DOMAIN";
+    String LABEL_SPIKY_PROXY_DOMAIN = "CLEVERTAP_SPIKY_PROXY_DOMAIN";
     String LABEL_DISABLE_APP_LAUNCH = "CLEVERTAP_DISABLE_APP_LAUNCHED";
     String LABEL_SSL_PINNING = "CLEVERTAP_SSL_PINNING";
     String LABEL_BACKGROUND_SYNC = "CLEVERTAP_BACKGROUND_SYNC";
@@ -179,6 +181,8 @@ public interface Constants {
     String KEY_ACCOUNT_ID = "accountId";
     String KEY_ACCOUNT_TOKEN = "accountToken";
     String KEY_ACCOUNT_REGION = "accountRegion";
+    String KEY_PROXY_DOMAIN = "proxyDomain";
+    String KEY_SPIKY_PROXY_DOMAIN = "spikyProxyDomain";
     String KEY_ANALYTICS_ONLY = "analyticsOnly";
     String KEY_DEFAULT_INSTANCE = "isDefaultInstance";
     String KEY_USE_GOOGLE_AD_ID = "useGoogleAdId";

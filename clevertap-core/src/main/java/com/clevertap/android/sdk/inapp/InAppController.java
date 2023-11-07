@@ -39,6 +39,7 @@ import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.data.InAppServerSide;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -89,7 +90,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay();
+            inAppNotification.prepareForDisplay(resourceProvider);
         }
     }
 
@@ -136,6 +137,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final Logger logger;
 
+    private InAppResourceProvider resourceProvider;
+
     private final MainLooperHandler mainLooperHandler;
 
     private final InAppQueue inAppQueue;
@@ -172,6 +175,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
         this.deviceInfo = deviceInfo;
+        this.resourceProvider = new InAppResourceProvider(context, logger);
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
         onAppLaunchEventSent = () -> {
@@ -327,7 +331,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     @Override
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
             final Bundle formData) {
-        inAppNotification.didDismiss();
+        inAppNotification.didDismiss(resourceProvider);
+
         if (controllerManager.getInAppFCManager() != null) {
             controllerManager.getInAppFCManager().didDismiss(inAppNotification);
             logger.verbose(config.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());

@@ -47,8 +47,11 @@ class BitmapDownloader(
                     return DownloadedBitmapFactory.nullBitmapWithStatus(SIZE_LIMIT_EXCEEDED)
                 }
 
-                return bitmapInputStreamReader.readInputStream(inputStream, this, downloadStartTimeInMilliseconds)
-                    ?: DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
+                return bitmapInputStreamReader.readInputStream(
+                    inputStream = inputStream,
+                    connection = this,
+                    downloadStartTimeInMilliseconds = downloadStartTimeInMilliseconds
+                )
             }
         } catch (e: Throwable) {
             Logger.v("Couldn't download the notification icon. URL was: $srcUrl")
