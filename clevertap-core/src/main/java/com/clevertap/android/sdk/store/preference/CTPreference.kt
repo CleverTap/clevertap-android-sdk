@@ -7,7 +7,7 @@ import android.content.SharedPreferences.Editor
 import androidx.annotation.WorkerThread
 import java.lang.ref.WeakReference
 
-class CTPreference(context: Context, private val prefName: String? = null) : ICTPreference {
+class CTPreference(context: Context, private var prefName: String? = null) : ICTPreference {
 
     private val contextRef = WeakReference(context)
 
@@ -170,6 +170,10 @@ class CTPreference(context: Context, private val prefName: String? = null) : ICT
     override fun removeImmediate(key: String) {
         val prefs = sharedPrefs() ?: return
         prefs.edit().remove(key).commit()
+    }
+
+    override fun changePreferenceName(prefName: String) {
+        this.prefName = prefName
     }
 
     private fun sharedPrefs(): SharedPreferences? {

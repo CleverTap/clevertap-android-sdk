@@ -27,4 +27,5 @@ interface ICTPreference {
     fun size(): Int
     fun remove(key: String)
     fun removeImmediate(key: String)
+    fun changePreferenceName(prefName: String)
 }

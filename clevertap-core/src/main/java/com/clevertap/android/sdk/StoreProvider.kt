@@ -8,6 +8,10 @@ import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import com.clevertap.android.sdk.store.preference.CTPreference
 
+const val STORE_TYPE_INAPP = 1
+const val STORE_TYPE_IMPRESSION = 2
+const val STORE_TYPE_LEGACY_INAPP = 3
+
 class StoreProvider {
 
     companion object {
@@ -29,7 +33,7 @@ class StoreProvider {
         deviceInfo: DeviceInfo,
         accountId: String
     ): InAppStore {
-        val prefName = "${Constants.INAPP_KEY}:${deviceInfo.deviceID}:$accountId"
+        val prefName = constructStorePreferenceName(STORE_TYPE_INAPP, deviceInfo.deviceID, accountId)
         return InAppStore(getCTPreference(context, prefName), cryptHandler)
     }
 
@@ -38,16 +42,24 @@ class StoreProvider {
         deviceInfo: DeviceInfo,
         accountId: String
     ): ImpressionStore {
-        val prefName = "${Constants.KEY_COUNTS_PER_INAPP}:${deviceInfo.deviceID}:$accountId"
+        val prefName = constructStorePreferenceName(STORE_TYPE_IMPRESSION, deviceInfo.deviceID, accountId)
         return ImpressionStore(getCTPreference(context, prefName))
     }
 
     fun provideLegacyInAppStore(context: Context, accountId: String): LegacyInAppStore {
-        val prefName = Constants.CLEVERTAP_STORAGE_TAG
+        val prefName = constructStorePreferenceName(STORE_TYPE_LEGACY_INAPP)
         return LegacyInAppStore(getCTPreference(context, prefName), accountId)
     }
 
     @VisibleForTesting
     fun getCTPreference(context: Context, prefName: String) = CTPreference(context, prefName)
+
+    fun constructStorePreferenceName(storeType: Int, deviceId: String = "", accountId: String = ""): String =
+        when (storeType) {
+            STORE_TYPE_INAPP -> "${Constants.INAPP_KEY}:$deviceId:$accountId"
+            STORE_TYPE_IMPRESSION -> "${Constants.KEY_COUNTS_PER_INAPP}:$deviceId:$accountId"
+            STORE_TYPE_LEGACY_INAPP -> Constants.CLEVERTAP_STORAGE_TAG
+            else -> Constants.CLEVERTAP_STORAGE_TAG
+        }
 }
 

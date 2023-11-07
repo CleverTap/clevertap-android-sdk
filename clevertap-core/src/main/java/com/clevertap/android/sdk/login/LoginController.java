@@ -25,6 +25,8 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -65,6 +67,8 @@ public class LoginController {
     private final CryptHandler cryptHandler;
 
     private static final Object processingUserLoginLock = new Object();
+
+    private final List<ChangeUserCallback> changeUserCallbackList = new ArrayList<>();
 
     public LoginController(Context context,
             CleverTapInstanceConfig config,
@@ -148,6 +152,9 @@ public class LoginController {
                     resetProductConfigs();
                     recordDeviceIDErrors();
                     resetDisplayUnits();
+                    for (ChangeUserCallback callback : changeUserCallbackList) {
+                        callback.onChangeUser(deviceInfo.getDeviceID(), config.getAccountId());
+                    }
                     controllerManager.getInAppFCManager().changeUser(deviceInfo.getDeviceID());
                 } catch (Throwable t) {
                     config.getLogger().verbose(config.getAccountId(), "Reset Profile error", t);
@@ -323,5 +330,13 @@ public class LoginController {
         if (controllerManager.getCtVariables() != null) {
             controllerManager.getCtVariables().clearUserContent();
         }
+    }
+
+    public void addChangeUserCallback(ChangeUserCallback callback) {
+        changeUserCallbackList.add(callback);
+    }
+
+    public void removeChangeUserCallback(ChangeUserCallback callback) {
+        changeUserCallbackList.remove(callback);
     }
 }
