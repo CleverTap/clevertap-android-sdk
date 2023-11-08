@@ -54,7 +54,7 @@ internal class InAppResourceProvider constructor(
         gifDiskCache.add(cacheKey, bytes)
     }
 
-    fun isCached(url: String) : Boolean {
+    fun isImageCached(url: String) : Boolean {
         val imageMemoryCache = ctCaches.imageCache()
 
         if (imageMemoryCache.get(url) != null) {

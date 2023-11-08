@@ -99,7 +99,7 @@ class InAppResourceProviderTest {
         val savedImage = Mockito.mock(File::class.java)
 
         Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmap)
-        val res1 = provider.isCached(url = url)
+        val res1 = provider.isImageCached(url = url)
         assertEquals(true, res1)
 
         val op1 = provider.cachedImage(cacheKey = url)
@@ -113,7 +113,7 @@ class InAppResourceProviderTest {
         Mockito.`when`(savedImage.exists()).thenReturn(true)
 
         // assert
-        val res2 = provider.isCached(url = url)
+        val res2 = provider.isImageCached(url = url)
         assertEquals(true, res2)
 
         val op2 = provider.cachedImage(cacheKey = url)
@@ -129,13 +129,13 @@ class InAppResourceProviderTest {
         val savedGif = Mockito.mock(File::class.java)
 
         Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(bytes)
-        val res1 = provider.isCached(url = url)
+        val res1 = provider.isImageCached(url = url)
         assertEquals(true, res1)
 
         // reset gif cache
         Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(null)
 
-        val resNone = provider.isCached(url = url)
+        val resNone = provider.isImageCached(url = url)
         assertEquals(false, resNone)
 
         // setup
@@ -143,7 +143,7 @@ class InAppResourceProviderTest {
         Mockito.`when`(savedGif.exists()).thenReturn(true)
 
         // assert
-        val res2 = provider.isCached(url = url)
+        val res2 = provider.isImageCached(url = url)
         assertEquals(true, res2)
     }
 

@@ -34,7 +34,7 @@ internal class InAppImagePreloader @JvmOverloads constructor(
             ).forEach { chunks ->
                 logger?.verbose("Downloading image chunk with size ${chunks.size}")
                 chunks.forEach { url ->
-                    if (inAppImageProvider.isCached(url = url).not()) {
+                    if (inAppImageProvider.isImageCached(url = url).not()) {
                         // start async download if not found in cache
                         val async: Deferred<Bitmap?> = async {
                             val bitmap = inAppImageProvider.fetchInAppImage<Bitmap>(url, Bitmap::class.java)
