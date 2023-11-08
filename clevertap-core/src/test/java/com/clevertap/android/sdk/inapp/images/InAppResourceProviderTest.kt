@@ -186,6 +186,33 @@ class InAppResourceProviderTest {
         assertEquals(mockBitmap, bitmap)
     }
 
+    @Test
+    fun `fetchInAppGif returns from cache when data exists in cache`() {
+
+        // setup - warm up cache
+        val url = "key"
+        Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(bytes)
+
+        // invocation
+        val opBytes = provider.fetchInAppGif(url = url)
+
+        // assertions
+        assertEquals(bytes, opBytes)
+    }
+
+    @Test
+    fun `fetchInAppGif returns gif from remote service when data does not exist in cache`() {
+
+        // setup
+        val url = "key"
+
+        // invocation
+        val opBytes = provider.fetchInAppGif(url = url)
+
+        // assertions
+        assertEquals(bytes, opBytes)
+    }
+
     // TODO : test api failure cases
 
 }
