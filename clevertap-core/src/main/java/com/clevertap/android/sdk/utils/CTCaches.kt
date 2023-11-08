@@ -116,11 +116,15 @@ data class CTCachesConfig(
     val maxImageSizeDiskKb: Long
 ) {
     companion object {
+        const val IMAGE_CACHE_MIN_KB : Long = 20 * 1024
+        const val GIF_CACHE_MIN_KB : Long = 5 * 1024
+        const val IMAGE_SIZE_MAX_DISK : Long = 5 * 1024
+
         val DEFAULT_CONFIG = CTCachesConfig(
-            minImageCacheKb = 20 * 1024,
-            minGifCacheKb = 5 * 1024,
+            minImageCacheKb = IMAGE_CACHE_MIN_KB,
+            minGifCacheKb = GIF_CACHE_MIN_KB,
             optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32),
-            maxImageSizeDiskKb = 5 * 1024
+            maxImageSizeDiskKb = IMAGE_SIZE_MAX_DISK
         )
     }
 }
