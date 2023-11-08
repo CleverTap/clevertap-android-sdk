@@ -22,4 +22,8 @@ class LegacyInAppStore(private val ctPreference: ICTPreference, accountId: Strin
             JSONArray()
         }
     }
+
+    fun removeInApps() {
+        ctPreference.remove(inAppKey!!)
+    }
 }

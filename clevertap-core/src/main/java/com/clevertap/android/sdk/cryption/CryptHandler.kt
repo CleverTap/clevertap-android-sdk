@@ -45,8 +45,15 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
             EncryptionLevel.MEDIUM ->
                 if (key in Constants.MEDIUM_CRYPT_KEYS && !isTextEncrypted(plainText))
                     return crypt.encryptInternal(plainText, accountID)
+
             else -> return plainText
         }
+        return plainText
+    }
+
+    fun encrypt(plainText: String): String? {
+        if (!isTextEncrypted(plainText))
+            return crypt.encryptInternal(plainText, accountID)
         return plainText
     }
 
@@ -65,6 +72,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
                     if (key in Constants.MEDIUM_CRYPT_KEYS)
                         return crypt.decryptInternal(cipherText, accountID)
                 }
+
                 else -> {
                     return crypt.decryptInternal(cipherText, accountID)
                 }
@@ -73,7 +81,14 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
         return cipherText
     }
 
+    fun decrypt(cipherText: String): String? {
+        if (isTextEncrypted(cipherText))
+            return crypt.decryptInternal(cipherText, accountID)
+        return cipherText
+    }
+
     companion object {
+
         /**
          * This method checks if text is already encrypted. Encrypted text is always of the format [.....]
          *

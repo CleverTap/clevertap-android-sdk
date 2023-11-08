@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
@@ -68,8 +69,14 @@ public class CoreState extends CleverTapState {
 
     private CryptHandler cryptHandler;
 
+    private StoreRegistry storeRegistry;
+
     public CTVariables getCTVariables() {
         return ctVariables;
+    }
+
+    public StoreRegistry getStoreRegistry() {
+        return storeRegistry;
     }
 
     public void setCTVariables(final CTVariables CTVariables) {
@@ -108,6 +115,10 @@ public class CoreState extends CleverTapState {
 
     public BaseEventQueueManager getBaseEventQueueManager() {
         return baseEventQueueManager;
+    }
+
+    public void setStoreRegistry(final StoreRegistry storeRegistry) {
+        this.storeRegistry = storeRegistry;
     }
 
     void setBaseEventQueueManager(final BaseEventQueueManager baseEventQueueManager) {

@@ -3,13 +3,13 @@ package com.clevertap.android.sdk.inapp
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import org.json.JSONArray
 import org.json.JSONObject
 
 class InAppQueue(
     private val config: CleverTapInstanceConfig,
-    private val legacyInAppStore: LegacyInAppStore
+    private val storeRegistry: StoreRegistry
 ) {
 
     @WorkerThread
@@ -56,7 +56,10 @@ class InAppQueue(
         return currentQueue.length()
     }
 
-    private fun getQueue(): JSONArray = legacyInAppStore.readInApps()
+    private fun getQueue(): JSONArray {
+        val inAppStore = storeRegistry.inAppStore ?: return JSONArray()
+        return inAppStore.readLegacyInApps()
+    }
 
-    private fun saveQueue(queue: JSONArray) = legacyInAppStore.storeInApps(queue)
+    private fun saveQueue(queue: JSONArray) = storeRegistry.inAppStore?.storeLegacyInApps(queue)
 }

@@ -16,6 +16,7 @@ import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.AppLaunchListener;
 import com.clevertap.android.sdk.network.CompositeBatchListener;
@@ -39,6 +40,11 @@ class CleverTapFactory {
     static CoreState getCoreState(Context context, CleverTapInstanceConfig cleverTapInstanceConfig,
             String cleverTapID) {
         CoreState coreState = new CoreState(context);
+
+        StoreRegistry storeRegistry = new StoreRegistry();
+        storeRegistry.setLegacyInAppStore(
+                StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
+        coreState.setStoreRegistry(storeRegistry);
 
         CoreMetaData coreMetaData = new CoreMetaData();
         coreState.setCoreMetaData(coreMetaData);
@@ -89,7 +95,31 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
+        final StoreProvider storeProvider = StoreProvider.getInstance();
+        /*InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                config.getAccountId());*/
+        //ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo, config.getAccountId());
+
         //Get device id should be async to avoid strict mode policy.
+        Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
+        taskInitStores.execute("initStores", () -> {
+            if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
+                if (storeRegistry.getInAppStore() == null) {
+                    InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                            config.getAccountId());
+                    storeRegistry.setInAppStore(inAppStore);
+                    callbackManager.addChangeUserCallback(inAppStore);
+                }
+                if (storeRegistry.getImpressionStore() == null) {
+                    ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo,
+                            config.getAccountId());
+                    storeRegistry.setImpressionStore(impStore);
+                    callbackManager.addChangeUserCallback(impStore);
+                }
+            }
+            return null;
+        });
+
         Task<Void> taskInitFCManager = CTExecutorFactory.executors(config).ioTask();
         taskInitFCManager.execute("initFCManager", new Callable<Void>() {
             @Override
@@ -102,23 +132,18 @@ class CleverTapFactory {
                                             .getDeviceID());
                     controllerManager
                             .setInAppFCManager(
-                                    new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
+                                    new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID(),
+                                            storeRegistry));
                 }
                 return null;
             }
         });
 
-        final StoreProvider storeProvider = StoreProvider.getInstance();
-        InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
-                config.getAccountId());
-        ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo, config.getAccountId());
-
         InAppResponse inAppResponse = new InAppResponse(
                 config,
                 controllerManager,
                 false,
-                inAppStore,
-                impStore
+                storeRegistry
         );
 
         NetworkManager networkManager = new NetworkManager(
@@ -176,23 +201,21 @@ class CleverTapFactory {
 
         TriggersMatcher triggersMatcher = new TriggersMatcher();
         TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
-        ImpressionManager impressionManager = new ImpressionManager(impStore);
+        ImpressionManager impressionManager = new ImpressionManager(storeRegistry);
         LimitsMatcher limitsMatcher = new LimitsMatcher(impressionManager, triggersManager);
 
         EvaluationManager evaluationManager = new EvaluationManager(
                 triggersMatcher,
                 triggersManager,
-                impStore,
-                impressionManager,
                 limitsMatcher,
-                inAppStore
+                storeRegistry
         );
         coreState.setEvaluationManager(evaluationManager);
         networkManager.addNetworkHeadersListener(evaluationManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,
                 controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo, new InAppQueue(config,
-                storeProvider.provideLegacyInAppStore(context, config.getAccountId())), evaluationManager
+                storeRegistry), evaluationManager
         );
 
         coreState.setInAppController(inAppController);
@@ -235,8 +258,6 @@ class CleverTapFactory {
                 validationResultStack, baseEventQueueManager, analyticsManager,
                 coreMetaData, controllerManager, sessionManager,
                 localDataStore, callbackManager, baseDatabaseManager, ctLockManager, cryptHandler);
-        loginController.addChangeUserCallback(inAppStore);
-        loginController.addChangeUserCallback(impStore);
         coreState.setLoginController(loginController);
 
         VarCache varCache = new VarCache(config, context);

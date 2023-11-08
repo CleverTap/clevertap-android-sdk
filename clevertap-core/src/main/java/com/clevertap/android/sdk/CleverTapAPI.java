@@ -24,14 +24,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -39,6 +38,9 @@ import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
@@ -68,11 +70,6 @@ import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,6 +77,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 /**
@@ -2782,6 +2782,24 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
+        StoreRegistry storeRegistry = coreState.getStoreRegistry();
+        DeviceInfo deviceInfo = coreState.getDeviceInfo();
+        CryptHandler cryptHandler = coreState.getCryptHandler();
+        StoreProvider storeProvider = StoreProvider.getInstance();
+
+        if (storeRegistry.getInAppStore() == null) {
+            InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                    accountId);
+            storeRegistry.setInAppStore(inAppStore);
+            coreState.getCallbackManager().addChangeUserCallback(inAppStore);
+        }
+        if (storeRegistry.getImpressionStore() == null) {
+            ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo,
+                    accountId);
+            storeRegistry.setImpressionStore(impStore);
+            coreState.getCallbackManager().addChangeUserCallback(impStore);
+        }
+
         /**
          * Reinitialising InAppFCManager with device id, if it's null
          * during first initialisation from CleverTapFactory.getCoreState()
@@ -2790,7 +2808,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfigLogger().verbose(accountId + ":async_deviceID",
                     "Initializing InAppFC after Device ID Created = " + deviceId);
             coreState.getControllerManager()
-                    .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId));
+                    .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId,
+                            coreState.getStoreRegistry()));
         }
 
         //todo : replace with variables

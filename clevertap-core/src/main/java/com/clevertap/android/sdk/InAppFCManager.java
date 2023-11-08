@@ -9,6 +9,9 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.SharedPreferencesMigration;
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import java.text.SimpleDateFormat;
@@ -34,10 +37,14 @@ public class InAppFCManager {
 
     private ImpressionManager impressionManager;
 
-    InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId/*, ImpressionManager impressionManager*/) {
+    private final StoreRegistry storeRegistry;
+
+    InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId,
+            StoreRegistry storeRegistry/*, ImpressionManager impressionManager*/) {
         this.config = config;
         this.context = context;
         this.deviceId = deviceId;
+        this.storeRegistry = storeRegistry;
         /*this.impressionManager = impressionManager;*/ // TODO
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
@@ -444,6 +451,18 @@ public class InAppFCManager {
 
             countsPerInAppMigrationV1ToV3.migrate();
             Logger.d("Finished migrating shared preference countsPerInApp from V1 to V3.");
+        }
+
+        final InAppStore inAppStore = storeRegistry.getInAppStore();
+        final LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
+        if (inAppStore != null && legacyInAppStore != null) {
+            final JSONArray accountBasedInApps = legacyInAppStore.readInApps();
+            if (accountBasedInApps.length() > 0) {
+                Logger.d("migrating in-apps from account id to device id based preference.");
+                inAppStore.storeLegacyInApps(accountBasedInApps);
+                legacyInAppStore.removeInApps();
+                Logger.d("Finished migrating in-apps from account id to device id based preference.");
+            }
         }
 
         if (getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), null) != null//F

@@ -25,7 +25,6 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -67,8 +66,6 @@ public class LoginController {
     private final CryptHandler cryptHandler;
 
     private static final Object processingUserLoginLock = new Object();
-
-    private final List<ChangeUserCallback> changeUserCallbackList = new ArrayList<>();
 
     public LoginController(Context context,
             CleverTapInstanceConfig config,
@@ -152,6 +149,9 @@ public class LoginController {
                     resetProductConfigs();
                     recordDeviceIDErrors();
                     resetDisplayUnits();
+
+                    final List<ChangeUserCallback> changeUserCallbackList
+                            = callbackManager.getChangeUserCallbackList();
                     for (ChangeUserCallback callback : changeUserCallbackList) {
                         callback.onChangeUser(deviceInfo.getDeviceID(), config.getAccountId());
                     }
@@ -332,11 +332,4 @@ public class LoginController {
         }
     }
 
-    public void addChangeUserCallback(ChangeUserCallback callback) {
-        changeUserCallbackList.add(callback);
-    }
-
-    public void removeChangeUserCallback(ChangeUserCallback callback) {
-        changeUserCallbackList.remove(callback);
-    }
 }

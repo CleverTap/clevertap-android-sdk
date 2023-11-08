@@ -1,13 +1,11 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.data.InAppBase
 import com.clevertap.android.sdk.inapp.data.InAppClientSide
 import com.clevertap.android.sdk.inapp.data.InAppServerSide
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
@@ -22,10 +20,8 @@ import java.util.Locale
 class EvaluationManager constructor(
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
-    private val impressionStore: ImpressionStore,
-    private val impressionManager: ImpressionManager,
     private val limitsMatcher: LimitsMatcher,
-    val inAppStore: InAppStore,
+    private val storeRegistry: StoreRegistry,
 ) : NetworkHeadersListener {
 
     private val evaluatedServerSideInAppIds: MutableList<String> = ArrayList()
@@ -167,6 +163,8 @@ class EvaluationManager constructor(
     }*/
 
     private inline fun <reified T> getInApps(): List<InAppBase> {
+        val inAppStore = storeRegistry.inAppStore ?: return emptyList()
+
         return when (T::class) {
             InAppClientSide::class -> InAppClientSide.getListFromJsonArray(inAppStore.readClientSideInApps())
             InAppServerSide::class -> InAppServerSide.getListFromJsonArray(inAppStore.readServerSideInApps())

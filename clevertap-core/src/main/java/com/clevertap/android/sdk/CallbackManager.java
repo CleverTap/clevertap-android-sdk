@@ -5,19 +5,18 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
+import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +59,10 @@ public class CallbackManager extends BaseCallbackManager {
     private CTPushNotificationListener pushNotificationListener = null;
 
     private SyncListener syncListener = null;
+
     private FetchInAppsCallback fetchInAppsCallback;
+
+    private final List<ChangeUserCallback> changeUserCallbackList = new ArrayList<>();
 
     public CallbackManager(CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
         this.config = config;
@@ -83,6 +85,21 @@ public class CallbackManager extends BaseCallbackManager {
                 }
             });
         }
+    }
+
+    @Override
+    public List<ChangeUserCallback> getChangeUserCallbackList() {
+        return changeUserCallbackList;
+    }
+
+    @Override
+    public void addChangeUserCallback(ChangeUserCallback callback) {
+        changeUserCallbackList.add(callback);
+    }
+
+    @Override
+    public void removeChangeUserCallback(ChangeUserCallback callback) {
+        changeUserCallbackList.remove(callback);
     }
 
     @Override

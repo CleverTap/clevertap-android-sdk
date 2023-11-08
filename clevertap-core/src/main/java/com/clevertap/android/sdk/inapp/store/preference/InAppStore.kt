@@ -1,8 +1,7 @@
 package com.clevertap.android.sdk.inapp.store.preference
 
-import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_INAPP_CS
-import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_INAPP_SS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
+import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_LEGACY
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.STORE_TYPE_INAPP
 import com.clevertap.android.sdk.StoreProvider
@@ -29,6 +28,9 @@ class InAppStore(
     private val ctPreference: ICTPreference,
     private val cryptHandler: CryptHandler
 ) : ChangeUserCallback {
+
+    private var clientSideInApps: JSONArray? = null
+    private var legacyInApps: JSONArray? = null
 
     companion object {
 
@@ -67,6 +69,7 @@ class InAppStore(
      */
     private fun removeClientSideInApps() {
         ctPreference.remove(PREFS_INAPP_KEY_CS)
+        clientSideInApps = null
     }
 
     /**
@@ -82,9 +85,12 @@ class InAppStore(
      * @param clientSideInApps The array of Client-side In-App messages.
      */
     fun storeClientSideInApps(clientSideInApps: JSONArray) {
+        this.clientSideInApps = clientSideInApps
         val encryptedString =
-            cryptHandler.encrypt(clientSideInApps.toString(), KEY_ENCRYPTION_INAPP_CS)
-        encryptedString?.apply { ctPreference.writeString(PREFS_INAPP_KEY_CS, this) }
+            cryptHandler.encrypt(clientSideInApps.toString())
+        encryptedString?.apply {
+            ctPreference.writeString(PREFS_INAPP_KEY_CS, this)
+        }
     }
 
     /**
@@ -93,9 +99,14 @@ class InAppStore(
      * @param serverSideInApps The array of Server-side In-App messages.
      */
     fun storeServerSideInApps(serverSideInApps: JSONArray) {
+        ctPreference.writeString(PREFS_INAPP_KEY_SS, serverSideInApps.toString())
+    }
+
+    fun storeLegacyInApps(legacyInApps: JSONArray) {
+        this.legacyInApps = legacyInApps
         val encryptedString =
-            cryptHandler.encrypt(serverSideInApps.toString(), KEY_ENCRYPTION_INAPP_SS)
-        encryptedString?.apply { ctPreference.writeString(PREFS_INAPP_KEY_SS, this) }
+            cryptHandler.encrypt(legacyInApps.toString())
+        encryptedString?.apply { ctPreference.writeString(PREFS_INAPP_KEY_LEGACY, this) }
     }
 
     /**
@@ -104,10 +115,13 @@ class InAppStore(
      * @return An array of Client-side In-App messages.
      */
     fun readClientSideInApps(): JSONArray {
+        if (clientSideInApps != null)
+            return clientSideInApps as JSONArray
+
         val csInAppsEncrypted = ctPreference.readString(PREFS_INAPP_KEY_CS, "")
         if (csInAppsEncrypted.isNullOrBlank()) return JSONArray()
 
-        return JSONArray(cryptHandler.decrypt(csInAppsEncrypted, KEY_ENCRYPTION_INAPP_CS))
+        return JSONArray(cryptHandler.decrypt(csInAppsEncrypted))
     }
 
     /**
@@ -116,10 +130,21 @@ class InAppStore(
      * @return An array of Server-side In-App messages.
      */
     fun readServerSideInApps(): JSONArray {
-        val csInAppsEncrypted = ctPreference.readString(PREFS_INAPP_KEY_SS, "")
-        if (csInAppsEncrypted.isNullOrBlank()) return JSONArray()
+        val ssInAppsMetaData = ctPreference.readString(PREFS_INAPP_KEY_SS, "")
 
-        return JSONArray(cryptHandler.decrypt(csInAppsEncrypted, KEY_ENCRYPTION_INAPP_SS))
+        if (ssInAppsMetaData.isNullOrBlank()) return JSONArray()
+
+        return JSONArray(ssInAppsMetaData)
+    }
+
+    fun readLegacyInApps(): JSONArray {
+        if (legacyInApps != null)
+            return legacyInApps as JSONArray
+
+        val legacyEncryptedInApps = ctPreference.readString(PREFS_INAPP_KEY_LEGACY, "")
+        if (legacyEncryptedInApps.isNullOrBlank()) return JSONArray()
+
+        return JSONArray(cryptHandler.decrypt(legacyEncryptedInApps))
     }
 
     override fun onChangeUser(deviceId: String, accountId: String) {

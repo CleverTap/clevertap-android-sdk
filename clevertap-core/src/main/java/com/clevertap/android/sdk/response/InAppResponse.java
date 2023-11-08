@@ -5,11 +5,12 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.InAppImagePreloader;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
-import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import java.util.concurrent.Callable;
@@ -20,26 +21,28 @@ import org.json.JSONObject;
 public class InAppResponse extends CleverTapResponseDecorator {
 
     private CleverTapResponse cleverTapResponse;
+
     private final CleverTapInstanceConfig config;
+
     private final ControllerManager controllerManager;
+
     private boolean isSendTest;
+
     private final Logger logger;
-    private final InAppStore inAppStore;
-    private final ImpressionStore impressionStore;
+
+    private final StoreRegistry storeRegistry;
 
     public InAppResponse(
             CleverTapInstanceConfig config,
             ControllerManager controllerManager,
             final boolean isSendTest,
-            InAppStore inAppStore,
-            ImpressionStore impressionStore
+            StoreRegistry storeRegistry
     ) {
         this.config = config;
         logger = this.config.getLogger();
         this.controllerManager = controllerManager;
         this.isSendTest = isSendTest;
-        this.inAppStore = inAppStore;
-        this.impressionStore = impressionStore;
+        this.storeRegistry = storeRegistry;
     }
 
     public void setCleverTapResponse(CleverTapResponse cleverTapResponse) {
@@ -59,6 +62,12 @@ public class InAppResponse extends CleverTapResponseDecorator {
         try {
 
             InAppResponseAdapter res = new InAppResponseAdapter(response);
+            final ImpressionStore impressionStore = storeRegistry.getImpressionStore();
+            final InAppStore inAppStore = storeRegistry.getInAppStore();
+
+            if (impressionStore == null || inAppStore == null) {
+                return;
+            }
 
             if (config.isAnalyticsOnly()) {
                 logger.verbose(config.getAccountId(),

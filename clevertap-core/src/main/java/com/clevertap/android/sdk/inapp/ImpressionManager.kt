@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.utils.Clock
 import java.util.Calendar
 import java.util.Date
@@ -10,12 +10,12 @@ import java.util.concurrent.TimeUnit
 /**
  * Provides functionality for tracking and managing impressions for various campaigns.
  *
- * @property impressionStore A storage manager responsible for storing and retrieving impression data.
+ * @property storeRegistry A storage manager responsible for storing and retrieving impression data.
  * @property clock           An optional Clock implementation for handling time-related operations.
  * @property locale          An optional Locale specifying the locale to use for date and time calculations.
  */
 class ImpressionManager @JvmOverloads constructor(
-    private val impressionStore: ImpressionStore,
+    private val storeRegistry: StoreRegistry,
     private val clock: Clock = Clock.SYSTEM,
     private val locale: Locale = Locale.US,
 ) {
@@ -42,7 +42,7 @@ class ImpressionManager @JvmOverloads constructor(
         val records = sessionImpressions.getOrPut(campaignId) { mutableListOf() }
         records.add(now)
 
-        impressionStore.write(campaignId, now)
+        storeRegistry.impressionStore?.write(campaignId, now)
     }
 
     /**
@@ -178,7 +178,7 @@ class ImpressionManager @JvmOverloads constructor(
      * @return The total number of impressions recorded for the campaign.
      */
     fun getImpressionCount(campaignId: String): Int {
-        return impressionStore.read(campaignId).size
+        return storeRegistry.impressionStore?.read(campaignId)?.size ?: 0
     }
 
     /**
@@ -202,7 +202,7 @@ class ImpressionManager @JvmOverloads constructor(
     }
 
     fun getImpressions(campaignId: String): List<Long> {
-        return impressionStore.read(campaignId)
+        return storeRegistry.impressionStore?.read(campaignId) ?: emptyList()
     }
 
     /**
