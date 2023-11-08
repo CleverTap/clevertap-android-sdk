@@ -21,6 +21,9 @@ internal class InAppResourceProvider constructor(
         } else {
             null
         }
+    },
+    private val fileToBytes: (file: File?) -> ByteArray? = { file ->
+        file?.readBytes()
     }
 ) {
     constructor(
@@ -67,6 +70,19 @@ internal class InAppResourceProvider constructor(
         return (file != null)
     }
 
+    fun isGifCached(url: String) : Boolean {
+        val gifMemoryCache = ctCaches.gifCache()
+
+        if (gifMemoryCache.get(url) != null) {
+            return true
+        }
+
+        val gifDiskCache = ctCaches.gifCacheDisk(dir = images)
+        val file = gifDiskCache.get(url)
+
+        return (file != null)
+    }
+
     fun cachedImage(cacheKey: String?): Bitmap? {
 
         if (cacheKey == null) {
@@ -106,7 +122,7 @@ internal class InAppResourceProvider constructor(
 
         val gifDiskCache = ctCaches.gifCacheDisk(dir = gifs)
 
-        return gifDiskCache.get(cacheKey)?.readBytes()
+        return fileToBytes(gifDiskCache.get(cacheKey))
     }
 
     /**

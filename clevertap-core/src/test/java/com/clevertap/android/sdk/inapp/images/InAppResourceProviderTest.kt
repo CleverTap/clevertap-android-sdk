@@ -27,12 +27,15 @@ class InAppResourceProviderTest {
     private val images = File("")
     private val gifs = File("")
 
+    private val bytes = byteArrayOf(0)
+
     private val provider = InAppResourceProvider(
             images = images,
             gifs = gifs,
             logger = TestLogger(),
             ctCaches = mockCache,
-            fileToBitmap = ::fileToBitmap
+            fileToBitmap = ::fileToBitmap,
+            fileToBytes = ::fileToBytes
     )
 
     private fun fileToBitmap(file: File?) : Bitmap? {
@@ -40,6 +43,14 @@ class InAppResourceProviderTest {
             null
         } else {
             mockBitmap
+        }
+    }
+
+    private fun fileToBytes(file: File?) : ByteArray? {
+        return if (file == null) {
+            null
+        } else {
+            bytes // we return random array
         }
     }
 
@@ -56,7 +67,6 @@ class InAppResourceProviderTest {
     fun `save image dumps image in memory and disk cache`() {
 
         val key = "key"
-        val bytes = byteArrayOf(0)
 
         provider.saveImage(
             cacheKey = key,
@@ -76,7 +86,6 @@ class InAppResourceProviderTest {
     fun `save gif dumps gif in memory and disk cache`() {
 
         val key = "key"
-        val bytes = byteArrayOf(0)
 
         provider.saveGif(
             cacheKey = key,
@@ -95,7 +104,6 @@ class InAppResourceProviderTest {
     fun `image isCached and cached image returns true and bitmap if image is present in either memory or disk cache`() {
 
         val url = "key"
-        val bytes = byteArrayOf(0)
         val savedImage = Mockito.mock(File::class.java)
 
         Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmap)
@@ -120,22 +128,23 @@ class InAppResourceProviderTest {
         assertEquals(mockBitmap, op2)
     }
 
-    @Ignore("we did not create a method to check if gif is cached - provider.isCached is only for files")
     @Test
     fun `gif isCached returns true if gif is present in either memory or disk cache`() {
 
         val url = "key"
-        val bytes = byteArrayOf(0)
         val savedGif = Mockito.mock(File::class.java)
 
         Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(bytes)
-        val res1 = provider.isImageCached(url = url)
+        val res1 = provider.isGifCached(url = url)
         assertEquals(true, res1)
+
+        val op1 = provider.cachedGif(cacheKey = url)
+        assertEquals(bytes, op1)
 
         // reset gif cache
         Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(null)
 
-        val resNone = provider.isImageCached(url = url)
+        val resNone = provider.isGifCached(url = url)
         assertEquals(false, resNone)
 
         // setup
@@ -143,8 +152,11 @@ class InAppResourceProviderTest {
         Mockito.`when`(savedGif.exists()).thenReturn(true)
 
         // assert
-        val res2 = provider.isImageCached(url = url)
+        val res2 = provider.isGifCached(url = url)
         assertEquals(true, res2)
+
+        val op2 = provider.cachedGif(cacheKey = url)
+        assertEquals(bytes, op2)
     }
 
     @Test
