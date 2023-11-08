@@ -8,20 +8,34 @@ import com.clevertap.android.sdk.inapp.images.InAppImageFetchApi.makeApiCallForI
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.ByteArrayOutputStream
+import java.io.File
 
-internal class InAppResourceProvider(
-    val context: Context,
-    val logger: ILogger? = null
+internal class InAppResourceProvider constructor(
+    val images: File,
+    val gifs: File,
+    val logger: ILogger? = null,
+    private val ctCaches: CTCaches = CTCaches.instance(logger = logger)
 ) {
-
-    private val ctCaches = CTCaches.instance(logger = logger)
+    constructor(
+            context: Context,
+            logger: ILogger? = null
+    ) : this(
+            images = context.getDir(IMAGE_DIRECTORY_NAME, Context.MODE_PRIVATE),
+            gifs = context.getDir(GIF_DIRECTORY_NAME, Context.MODE_PRIVATE),
+            logger = logger,
+            ctCaches = CTCaches.instance(logger = logger)
+    )
+    companion object {
+        private const val IMAGE_DIRECTORY_NAME = "CleverTap.Images."
+        private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
+    }
 
     fun saveImage(cacheKey: String, bitmap: Bitmap, bytes: ByteArray) {
 
         val imageMemoryCache = ctCaches.imageCache()
         imageMemoryCache.add(cacheKey, bitmap)
 
-        val imageDiskCache = ctCaches.imageCacheDisk(context = context)
+        val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
         imageDiskCache.add(cacheKey, bytes)
     }
 
@@ -29,7 +43,7 @@ internal class InAppResourceProvider(
         val gifMemoryCache = ctCaches.gifCache()
         gifMemoryCache.add(cacheKey, bytes)
 
-        val gifDiskCache = ctCaches.gifCacheDisk(context = context)
+        val gifDiskCache = ctCaches.gifCacheDisk(dir = gifs)
         gifDiskCache.add(cacheKey, bytes)
     }
 
@@ -40,7 +54,7 @@ internal class InAppResourceProvider(
             return true
         }
 
-        val imageDiskCache = ctCaches.imageCacheDisk(context = context)
+        val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
         val file = imageDiskCache.get(url)
 
         return (file != null)
@@ -62,7 +76,7 @@ internal class InAppResourceProvider(
         }
 
         // Try disk
-        val imageDiskCache = ctCaches.imageCacheDisk(context = context)
+        val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
         val file = imageDiskCache.get(cacheKey)
 
         if (file != null && file.hasValidBitmap()) {
@@ -85,7 +99,7 @@ internal class InAppResourceProvider(
             return gifStream
         }
 
-        val gifDiskCache = ctCaches.gifCacheDisk(context = context)
+        val gifDiskCache = ctCaches.gifCacheDisk(dir = gifs)
 
         return gifDiskCache.get(cacheKey)?.readBytes()
     }
@@ -167,7 +181,7 @@ internal class InAppResourceProvider(
         val imageMemoryCache = ctCaches.imageCache()
         imageMemoryCache.remove(cacheKey)
 
-        val imageDiskCache = ctCaches.imageCacheDisk(context = context)
+        val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
         imageDiskCache.remove(cacheKey)
     }
 
@@ -175,7 +189,7 @@ internal class InAppResourceProvider(
         val imageMemoryCache = ctCaches.gifCache()
         imageMemoryCache.remove(cacheKey)
 
-        val imageDiskCache = ctCaches.gifCacheDisk(context = context)
+        val imageDiskCache = ctCaches.gifCacheDisk(dir = gifs)
         imageDiskCache.remove(cacheKey)
     }
 }

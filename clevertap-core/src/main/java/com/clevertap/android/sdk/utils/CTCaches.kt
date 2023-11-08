@@ -1,8 +1,8 @@
 package com.clevertap.android.sdk.utils
 
-import android.content.Context
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
+import java.io.File
 import kotlin.math.max
 
 /**
@@ -16,9 +16,6 @@ class CTCaches private constructor(
 
     companion object {
         private var ctCaches: CTCaches? = null
-
-        private const val IMAGE_DIRECTORY_NAME = "CleverTap.Images."
-        private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
 
         fun instance(
             config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
@@ -62,11 +59,11 @@ class CTCaches private constructor(
         }
     }
 
-    fun imageCacheDisk(context: Context): FileCache {
+    fun imageCacheDisk(dir: File): FileCache {
         synchronized(this) {
             if (imageFileCache == null) {
                 imageFileCache = FileCache(
-                    directory = context.getDir("images", Context.MODE_PRIVATE),
+                    directory = dir,
                     maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
                     logger = logger
                 )
@@ -75,11 +72,11 @@ class CTCaches private constructor(
         }
     }
 
-    fun gifCacheDisk(context: Context): FileCache {
+    fun gifCacheDisk(dir: File): FileCache {
         synchronized(this) {
             if (gifFileCache == null) {
                 gifFileCache = FileCache(
-                    directory = context.getDir("gifs", Context.MODE_PRIVATE),
+                    directory = dir,
                     maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
                     logger = logger
                 )
