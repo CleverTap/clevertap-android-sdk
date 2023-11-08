@@ -14,7 +14,14 @@ internal class InAppResourceProvider constructor(
     val images: File,
     val gifs: File,
     val logger: ILogger? = null,
-    private val ctCaches: CTCaches = CTCaches.instance(logger = logger)
+    private val ctCaches: CTCaches = CTCaches.instance(logger = logger),
+    private val fileToBitmap : (file: File?) -> Bitmap? = { file ->
+        if (file != null && file.hasValidBitmap()) {
+            BitmapFactory.decodeFile(file.absolutePath)
+        } else {
+            null
+        }
+    }
 ) {
     constructor(
             context: Context,
@@ -79,11 +86,9 @@ internal class InAppResourceProvider constructor(
         val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
         val file = imageDiskCache.get(cacheKey)
 
-        if (file != null && file.hasValidBitmap()) {
-            return BitmapFactory.decodeFile(file.absolutePath)
-        }
-        logger?.verbose("cached image not present for url : $cacheKey")
-        return null
+        val bitmapFromFile = fileToBitmap(file)
+        logger?.verbose("cached image for url : $cacheKey, bitmap : ${bitmapFromFile.hashCode()}")
+        return bitmapFromFile
     }
 
     fun cachedGif(cacheKey: String?): ByteArray? {
