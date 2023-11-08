@@ -6,7 +6,6 @@ import com.clevertap.android.sdk.utils.CTCaches
 import com.clevertap.android.sdk.utils.FileCache
 import com.clevertap.android.sdk.utils.LruCache
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.mockito.Mockito
 import java.io.File
@@ -30,12 +29,13 @@ class InAppResourceProviderTest {
     private val bytes = byteArrayOf(0)
 
     private val provider = InAppResourceProvider(
-            images = images,
-            gifs = gifs,
-            logger = TestLogger(),
-            ctCaches = mockCache,
-            fileToBitmap = ::fileToBitmap,
-            fileToBytes = ::fileToBytes
+        images = images,
+        gifs = gifs,
+        logger = TestLogger(),
+        ctCaches = mockCache,
+        fileToBitmap = ::fileToBitmap,
+        fileToBytes = ::fileToBytes,
+        inAppRemoteSource = TestInAppFetchApi.success(bitmap = mockBitmap, bytes = bytes)
     )
 
     private fun fileToBitmap(file: File?) : Bitmap? {
@@ -160,8 +160,32 @@ class InAppResourceProviderTest {
     }
 
     @Test
-    fun `cachedImage returns `() {
+    fun `fetchInAppImage returns from cache when data exists in cache`() {
 
+        // setup - warm up cache
+        val url = "key"
+        Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmap)
+
+        // invocation
+        val bitmap = provider.fetchInAppImage(url = url, Bitmap::class.java)
+
+        // assertions
+        assertEquals(mockBitmap, bitmap)
     }
+
+    @Test
+    fun `fetchInAppImage returns from remote service (http api) when data does not exist in cache`() {
+
+        // setup
+        val url = "key"
+
+        // invocation
+        val bitmap = provider.fetchInAppImage(url = url, Bitmap::class.java)
+
+        // assertions
+        assertEquals(mockBitmap, bitmap)
+    }
+
+    // TODO : test api failure cases
 
 }

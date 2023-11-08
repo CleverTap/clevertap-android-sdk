@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.inapp.images.InAppImageFetchApi.makeApiCallForInAppBitmap
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.ByteArrayOutputStream
@@ -24,7 +23,8 @@ internal class InAppResourceProvider constructor(
     },
     private val fileToBytes: (file: File?) -> ByteArray? = { file ->
         file?.readBytes()
-    }
+    },
+    private val inAppRemoteSource: InAppImageFetchApiContract = InAppImageFetchApi()
 ) {
     constructor(
             context: Context,
@@ -146,7 +146,7 @@ internal class InAppResourceProvider constructor(
             }
         }
 
-        val downloadedBitmap = makeApiCallForInAppBitmap(url = url)
+        val downloadedBitmap = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
 
         when (downloadedBitmap.status) {
 
@@ -180,7 +180,7 @@ internal class InAppResourceProvider constructor(
             return cachedGif
         }
 
-        val downloadedGif = makeApiCallForInAppBitmap(url = url)
+        val downloadedGif = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
 
         return when (downloadedGif.status) {
 
