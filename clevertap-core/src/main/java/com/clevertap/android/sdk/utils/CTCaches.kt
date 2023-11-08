@@ -21,13 +21,19 @@ class CTCaches private constructor(
         private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
 
         fun instance(
+            config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
             logger: ILogger?
         ) : CTCaches {
             synchronized(this) {
                 if (ctCaches == null) {
-                    ctCaches = CTCaches(logger = logger)
+                    ctCaches = CTCaches(config = config, logger = logger)
                 }
                 return ctCaches!!
+            }
+        }
+        fun clear() {
+            synchronized(this) {
+                ctCaches = null
             }
         }
     }
@@ -82,7 +88,7 @@ class CTCaches private constructor(
         }
     }
 
-    private fun imageCacheSize(): Int {
+    fun imageCacheSize(): Int {
         val selected = max(config.optimistic, config.minImageCacheKb).toInt()
 
         logger?.verbose("Image cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minImageCacheKb}, selected = $selected")
@@ -90,10 +96,10 @@ class CTCaches private constructor(
         return selected
     }
 
-    private fun gifCacheSize(): Int {
-        val selected = max(config.optimistic, config.minImageCacheKb).toInt()
+    fun gifCacheSize(): Int {
+        val selected = max(config.optimistic, config.minGifCacheKb).toInt()
 
-        logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minImageCacheKb}, selected = $selected")
+        logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minGifCacheKb}, selected = $selected")
 
         return selected
     }
