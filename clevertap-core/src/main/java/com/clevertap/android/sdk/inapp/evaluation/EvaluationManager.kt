@@ -27,15 +27,10 @@ class EvaluationManager constructor(
     storeRegistry: StoreRegistry,
 ) : NetworkHeadersListener {
 
-    private var _inAppStore: InAppStore? = null
-    private val inAppStore get() = _inAppStore!!
+    private var inAppStore: InAppStore? = storeRegistry.inAppStore
 
     private val evaluatedServerSideInAppIds: MutableList<String> = ArrayList()
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
-
-    init {
-        _inAppStore = storeRegistry.inAppStore
-    }
 
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>): JSONArray {
         val event = EventAdapter(eventName, eventProperties)
@@ -77,27 +72,30 @@ class EvaluationManager constructor(
     }
 
     private fun evaluateServerSide(event: EventAdapter) {
-        val eligibleInApps = evaluate(event, inAppStore.readServerSideInApps().toList())
+        inAppStore?.let { store ->
+            val eligibleInApps = evaluate(event, store.readServerSideInApps().toList())
 
-        for (inApp in eligibleInApps) {
-            val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+            eligibleInApps.forEach { inApp ->
+                val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
 
-            evaluatedServerSideInAppIds.add(campaignId)
+                evaluatedServerSideInAppIds.add(campaignId)
+            }
         }
     }
 
     private fun evaluateClientSide(event: EventAdapter): JSONArray {
-        val eligibleInApps = evaluate(event, inAppStore.readClientSideInApps().toList())
+        inAppStore?.let { store ->
+            val eligibleInApps = evaluate(event, store.readClientSideInApps().toList())
 
-        sortByPriority(eligibleInApps).forEach { inApp ->
-            if (shouldSuppress(inApp)) {
-                updateTTL(inApp)
-                return JSONArray(inApp)
-            } else {
-                suppress(inApp)
+            sortByPriority(eligibleInApps).forEach { inApp ->
+                if (shouldSuppress(inApp)) {
+                    updateTTL(inApp)
+                    return JSONArray(inApp)
+                } else {
+                    suppress(inApp)
+                }
             }
-        }
-        return JSONArray()
+        }.run { return JSONArray() }
     }
 
     private fun evaluate(event: EventAdapter, inappNotifs: List<JSONObject>): List<JSONObject> {
