@@ -26,7 +26,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final ControllerManager controllerManager;
 
-    private boolean isSendTest;
+    private final boolean isSendTest;
 
     private final Logger logger;
 
@@ -47,10 +47,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     public void setCleverTapResponse(CleverTapResponse cleverTapResponse) {
         this.cleverTapResponse = cleverTapResponse;
-    }
-
-    public void setTesting(Boolean isTest) {
-        this.isSendTest = isTest;
     }
 
     @Override

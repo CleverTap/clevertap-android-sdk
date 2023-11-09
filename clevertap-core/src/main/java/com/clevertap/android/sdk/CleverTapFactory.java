@@ -24,6 +24,7 @@ import com.clevertap.android.sdk.network.FetchInAppListener;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
+import com.clevertap.android.sdk.response.CleverTapResponseHelper;
 import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
@@ -100,7 +101,6 @@ class CleverTapFactory {
                 config.getAccountId());*/
         //ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo, config.getAccountId());
 
-        //Get device id should be async to avoid strict mode policy.
         Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
         taskInitStores.execute("initStores", () -> {
             if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
@@ -120,6 +120,7 @@ class CleverTapFactory {
             return null;
         });
 
+        //Get device id should be async to avoid strict mode policy.
         Task<Void> taskInitFCManager = CTExecutorFactory.executors(config).ioTask();
         taskInitFCManager.execute("initFCManager", new Callable<Void>() {
             @Override
@@ -182,6 +183,14 @@ class CleverTapFactory {
         );
         coreState.setBaseEventQueueManager(baseEventQueueManager);
 
+        InAppResponse inAppResponseForSendTestInApp = new InAppResponse(
+                config,
+                controllerManager,
+                true,
+                storeRegistry
+        );
+        inAppResponseForSendTestInApp.setCleverTapResponse(new CleverTapResponseHelper());
+
         AnalyticsManager analyticsManager = new AnalyticsManager(
                 context,
                 config,
@@ -195,7 +204,7 @@ class CleverTapFactory {
                 controllerManager,
                 ctLockManager,
                 cryptHandler,
-                inAppResponse
+                inAppResponseForSendTestInApp
         );
         coreState.setAnalyticsManager(analyticsManager);
 
