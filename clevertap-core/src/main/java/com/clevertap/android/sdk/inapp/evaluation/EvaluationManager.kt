@@ -5,11 +5,14 @@ import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.data.InAppBase
 import com.clevertap.android.sdk.inapp.data.InAppClientSide
 import com.clevertap.android.sdk.inapp.data.InAppServerSide
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
 import com.clevertap.android.sdk.network.NetworkHeadersListener
+import com.clevertap.android.sdk.orEmptyArray
+import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray
@@ -21,11 +24,18 @@ class EvaluationManager constructor(
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
     private val limitsMatcher: LimitsMatcher,
-    private val storeRegistry: StoreRegistry,
+    storeRegistry: StoreRegistry,
 ) : NetworkHeadersListener {
+
+    private var _inAppStore: InAppStore? = null
+    private val inAppStore get() = _inAppStore!!
 
     private val evaluatedServerSideInAppIds: MutableList<String> = ArrayList()
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
+
+    init {
+        _inAppStore = storeRegistry.inAppStore
+    }
 
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>): JSONArray {
         val event = EventAdapter(eventName, eventProperties)
@@ -47,22 +57,16 @@ class EvaluationManager constructor(
         return evaluateClientSide(event)
     }
 
-    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<InAppServerSide>): JSONArray {
-        // BE returns applaunch_notifs [0, 1, 2]
-        // record trigger counts
-        // evaluate limits [2]
-        // show first based on priority (2)
+    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>): JSONArray {
         val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
 
-        val eligibleInApps = evaluate(
-            event,
-            appLaunchedNotifs
-        )
-        sortByPriority(eligibleInApps).forEach {
-            if (!it.shouldSuppress) {
-                return JSONArray((it as InAppServerSide).toJsonObject())
+        val eligibleInApps = evaluate(event, appLaunchedNotifs)
+
+        sortByPriority(eligibleInApps).forEach { inApp ->
+            if (shouldSuppress(inApp)) {
+                return JSONArray(inApp)
             } else {
-                suppress(it)
+                suppress(inApp)
             }
         }
         return JSONArray()
@@ -73,72 +77,92 @@ class EvaluationManager constructor(
     }
 
     private fun evaluateServerSide(event: EventAdapter) {
-        val eligibleInApps = evaluate(event, getInApps<InAppServerSide>())
+        val eligibleInApps = evaluate(event, inAppStore.readServerSideInApps().toList())
 
         for (inApp in eligibleInApps) {
-            evaluatedServerSideInAppIds.add(inApp.campaignId)
+            val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+
+            evaluatedServerSideInAppIds.add(campaignId)
         }
     }
 
     private fun evaluateClientSide(event: EventAdapter): JSONArray {
-        val eligibleInApps = evaluate(event, getInApps<InAppClientSide>())
+        val eligibleInApps = evaluate(event, inAppStore.readClientSideInApps().toList())
 
-        sortByPriority(eligibleInApps).forEach {
-            if (!it.shouldSuppress) {
-                //updateTTL(it)
-                return JSONArray(it)
+        sortByPriority(eligibleInApps).forEach { inApp ->
+            if (shouldSuppress(inApp)) {
+                updateTTL(inApp)
+                return JSONArray(inApp)
             } else {
-                suppress(it)
+                suppress(inApp)
             }
         }
         return JSONArray()
     }
 
-    private fun evaluate(event: EventAdapter, inappNotifs: List<InAppBase>): List<InAppBase> {
-        // TODO: whenTriggers - DONE
-        // TODO: record trigger - DONE
-        // TODO: whenLimits - DONE
-        val eligibleInApps: MutableList<InAppBase> = mutableListOf()
+    private fun evaluate(event: EventAdapter, inappNotifs: List<JSONObject>): List<JSONObject> {
+        val eligibleInApps: MutableList<JSONObject> = mutableListOf()
+
         for (inApp in inappNotifs) {
-            val campaignId = inApp.campaignId
-            val matchesTrigger = triggersMatcher.matchEvent(
-                inApp.whenTriggers, event.eventName, event.eventProperties
-            )
+            val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+
+            val matchesTrigger =
+                triggersMatcher.matchEvent(getWhenTriggers(inApp), event.eventName, event.eventProperties)
             if (matchesTrigger) {
                 triggersManager.increment(campaignId)
 
-                val matchesLimits = limitsMatcher.matchWhenLimits(inApp.whenLimits, campaignId)
+                val matchesLimits = limitsMatcher.matchWhenLimits(getWhenLimits(inApp), campaignId)
                 if (matchesLimits) {
                     eligibleInApps.add(inApp)
                 }
             }
         }
-        return eligibleInApps //// returns eligible inapps
+        return eligibleInApps
+    }
+
+    private fun getWhenTriggers(triggerJson: JSONObject): List<TriggerAdapter> {
+        val whenTriggers = triggerJson.optJSONArray(Constants.INAPP_WHEN_TRIGGERS).orEmptyArray()
+        return (0 until whenTriggers.length()).map { TriggerAdapter(whenTriggers[it] as JSONObject) }
+    }
+
+    private fun getWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
+        val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
+        val occurrenceLimits = limitJSON.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
+
+        return (frequencyLimits.toList() + occurrenceLimits.toList()).map { LimitAdapter(it) }.toMutableList()
     }
 
     /**
      * Sorts list of InApp objects with priority(100 highest - 1 lowest) and if equal priority
      * then then the one created earliest
      */
-    fun sortByPriority(inApps: List<InAppBase>): List<InAppBase> {
-        val priority: (InAppBase) -> Int = { inApp ->
-            inApp.priority as? Int ?: 1
+    private fun sortByPriority(inApps: List<JSONObject>): List<JSONObject> {
+        val priority: (JSONObject) -> Int = { inApp ->
+            inApp.optInt(Constants.INAPP_PRIORITY, 1)
         }
 
-        val ti: (InAppBase) -> String = { inApp ->
-            inApp.campaignId as? String ?: (Clock.SYSTEM.newDate().time / 1000).toString()
+        val ti: (JSONObject) -> String = { inApp ->
+            inApp.optString(Constants.INAPP_ID_IN_PAYLOAD, (Clock.SYSTEM.newDate().time / 1000).toString())
         }
         // Sort by priority descending and then by timestamp ascending
-        return inApps.sortedWith(compareByDescending<InAppBase> { priority(it) }.thenBy { ti(it) })
+        return inApps.sortedWith(compareByDescending<JSONObject> { priority(it) }.thenBy { ti(it) })
     }
 
-    private fun suppress(inApp: InAppBase) {
-        val wzrkId = generateWzrkId(inApp.campaignId)
+    private fun shouldSuppress(inApp: JSONObject): Boolean {
+        return inApp.optBoolean(Constants.INAPP_SUPPRESSED)
+    }
+
+    private fun suppress(inApp: JSONObject) {
+        val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+        val wzrkId = generateWzrkId(campaignId)
+        val wzrkPivot = inApp.optString(Constants.INAPP_WZRK_PIVOT, "wzrk_default")
+        val wzrkCgId = inApp.optInt(Constants.INAPP_WZRK_CGID)
+
         suppressedClientSideInApps.add(
             mapOf(
                 Constants.NOTIFICATION_ID_TAG to wzrkId,
-                Constants.INAPP_WZRK_PIVOT to inApp.wzrk_pivot,
-                Constants.INAPP_WZRK_CGID to inApp.wzrk_cgId
+                Constants.INAPP_WZRK_PIVOT to wzrkPivot,
+                Constants.INAPP_WZRK_CGID to wzrkCgId
             )
         )
     }
@@ -149,26 +173,16 @@ class EvaluationManager constructor(
         return "${ti}_$date"
     }
 
-    /*private fun updateTTL(inApp: JSONObject) {
-        val offset = inApp[Constants.WZRK_TIME_TO_LIVE_OFFSET] as? Long
+    private fun updateTTL(inApp: JSONObject) {
+        val offset = inApp.opt(Constants.WZRK_TIME_TO_LIVE_OFFSET) as? Long
         if (offset != null) {
             val now = Clock.SYSTEM.currentTimeSeconds()
             val ttl = now + offset
             inApp.put(Constants.WZRK_TIME_TO_LIVE, ttl)
         } else {
-            // Remove TTL since it cannot be calculated based on the TTL offset
-            // The default TTL will be set in CTInAppNotification
+            // return TTL as null since it cannot be calculated due to null offset value
+            // The default TTL will be set in the CTInAppNotification
             inApp.remove(Constants.WZRK_TIME_TO_LIVE)
-        }
-    }*/
-
-    private inline fun <reified T> getInApps(): List<InAppBase> {
-        val inAppStore = storeRegistry.inAppStore ?: return emptyList()
-
-        return when (T::class) {
-            InAppClientSide::class -> InAppClientSide.getListFromJsonArray(inAppStore.readClientSideInApps())
-            InAppServerSide::class -> InAppServerSide.getListFromJsonArray(inAppStore.readServerSideInAppsMetaData())
-            else -> emptyList()
         }
     }
 

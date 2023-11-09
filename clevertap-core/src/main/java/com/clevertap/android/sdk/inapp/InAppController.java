@@ -795,9 +795,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
-    public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps) {
+    public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps)
+            throws JSONException {
+        List<JSONObject> appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps);
         final JSONArray serverSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedServerSide(
-                InAppServerSide.Companion.getListFromJsonArray(appLaunchServerSideInApps));
+                appLaunchSsInAppList);
+
         if (serverSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(serverSideInAppsToDisplay);
         }
