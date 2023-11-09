@@ -62,7 +62,7 @@ class FetchInAppListener(private val callbackManager: BaseCallbackManager) : Bat
         for (i in 0 until batch.length()) {
             val item = batch.getJSONObject(i)
             if (item.optString(Constants.KEY_EVT_NAME) == Constants.WZRK_FETCH
-                && item.get(Constants.KEY_T) == Constants.FETCH_TYPE_IN_APPS
+                && item.optInt(Constants.KEY_T) == Constants.FETCH_TYPE_IN_APPS
             ) {
                 callbackManager.fetchInAppsCallback?.onInAppsFetched(success)
                 return
