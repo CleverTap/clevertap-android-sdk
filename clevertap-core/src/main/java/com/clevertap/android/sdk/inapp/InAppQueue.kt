@@ -58,8 +58,8 @@ class InAppQueue(
 
     private fun getQueue(): JSONArray {
         val inAppStore = storeRegistry.inAppStore ?: return JSONArray()
-        return inAppStore.readLegacyInApps()
+        return inAppStore.readServerSideInApps()
     }
 
-    private fun saveQueue(queue: JSONArray) = storeRegistry.inAppStore?.storeLegacyInApps(queue)
+    private fun saveQueue(queue: JSONArray) = storeRegistry.inAppStore?.storeServerSideInApps(queue)
 }

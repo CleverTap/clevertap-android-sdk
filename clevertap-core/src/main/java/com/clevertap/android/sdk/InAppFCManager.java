@@ -459,7 +459,7 @@ public class InAppFCManager {
             final JSONArray accountBasedInApps = legacyInAppStore.readInApps();
             if (accountBasedInApps.length() > 0) {
                 Logger.d("migrating in-apps from account id to device id based preference.");
-                inAppStore.storeLegacyInApps(accountBasedInApps);
+                inAppStore.storeServerSideInApps(accountBasedInApps);
                 legacyInAppStore.removeInApps();
                 Logger.d("Finished migrating in-apps from account id to device id based preference.");
             }

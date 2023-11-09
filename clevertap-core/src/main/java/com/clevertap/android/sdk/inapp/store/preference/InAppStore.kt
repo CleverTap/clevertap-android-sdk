@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inapp.store.preference
 
+import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
-import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_LEGACY
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.STORE_TYPE_INAPP
 import com.clevertap.android.sdk.StoreProvider
@@ -30,7 +30,7 @@ class InAppStore(
 ) : ChangeUserCallback {
 
     private var clientSideInApps: JSONArray? = null
-    private var legacyInApps: JSONArray? = null
+    private var serverSideInApps: JSONArray? = null
 
     companion object {
 
@@ -55,10 +55,10 @@ class InAppStore(
             field = value
 
             when (value) {
-                CLIENT_SIDE_MODE -> removeServerSideInApps()
+                CLIENT_SIDE_MODE -> removeServerSideInAppsMetaData()
                 SERVER_SIDE_MODE -> removeClientSideInApps()
                 NO_MODE -> {
-                    removeServerSideInApps()
+                    removeServerSideInAppsMetaData()
                     removeClientSideInApps()
                 }
             }
@@ -75,7 +75,7 @@ class InAppStore(
     /**
      * Removes Server-side In-App messages.
      */
-    private fun removeServerSideInApps() {
+    private fun removeServerSideInAppsMetaData() {
         ctPreference.remove(PREFS_INAPP_KEY_SS)
     }
 
@@ -96,17 +96,17 @@ class InAppStore(
     /**
      * Stores Server-side In-App messages in encrypted format.
      *
-     * @param serverSideInApps The array of Server-side In-App messages.
+     * @param serverSideInAppsMetaData The array of Server-side In-App messages.
      */
-    fun storeServerSideInApps(serverSideInApps: JSONArray) {
-        ctPreference.writeString(PREFS_INAPP_KEY_SS, serverSideInApps.toString())
+    fun storeServerSideInAppsMetaData(serverSideInAppsMetaData: JSONArray) {
+        ctPreference.writeString(PREFS_INAPP_KEY_SS, serverSideInAppsMetaData.toString())
     }
 
-    fun storeLegacyInApps(legacyInApps: JSONArray) {
-        this.legacyInApps = legacyInApps
+    fun storeServerSideInApps(serverSideInApps: JSONArray) {
+        this.serverSideInApps = serverSideInApps
         val encryptedString =
-            cryptHandler.encrypt(legacyInApps.toString())
-        encryptedString?.apply { ctPreference.writeString(PREFS_INAPP_KEY_LEGACY, this) }
+            cryptHandler.encrypt(serverSideInApps.toString())
+        encryptedString?.apply { ctPreference.writeString(INAPP_KEY, this) }
     }
 
     /**
@@ -119,9 +119,12 @@ class InAppStore(
             return clientSideInApps as JSONArray
 
         val csInAppsEncrypted = ctPreference.readString(PREFS_INAPP_KEY_CS, "")
-        if (csInAppsEncrypted.isNullOrBlank()) return JSONArray()
-
-        return JSONArray(cryptHandler.decrypt(csInAppsEncrypted))
+        clientSideInApps = if (csInAppsEncrypted.isNullOrBlank()) {
+            JSONArray()
+        } else {
+            JSONArray(cryptHandler.decrypt(csInAppsEncrypted))
+        }
+        return clientSideInApps as JSONArray
     }
 
     /**
@@ -129,7 +132,7 @@ class InAppStore(
      *
      * @return An array of Server-side In-App messages.
      */
-    fun readServerSideInApps(): JSONArray {
+    fun readServerSideInAppsMetaData(): JSONArray {
         val ssInAppsMetaData = ctPreference.readString(PREFS_INAPP_KEY_SS, "")
 
         if (ssInAppsMetaData.isNullOrBlank()) return JSONArray()
@@ -137,14 +140,18 @@ class InAppStore(
         return JSONArray(ssInAppsMetaData)
     }
 
-    fun readLegacyInApps(): JSONArray {
-        if (legacyInApps != null)
-            return legacyInApps as JSONArray
+    fun readServerSideInApps(): JSONArray {
+        if (serverSideInApps != null)
+            return serverSideInApps as JSONArray
 
-        val legacyEncryptedInApps = ctPreference.readString(PREFS_INAPP_KEY_LEGACY, "")
-        if (legacyEncryptedInApps.isNullOrBlank()) return JSONArray()
+        val ssEncryptedInApps = ctPreference.readString(INAPP_KEY, "")
+        serverSideInApps = if (ssEncryptedInApps.isNullOrBlank()) {
+            JSONArray()
+        } else {
+            JSONArray(cryptHandler.decrypt(ssEncryptedInApps))
+        }
 
-        return JSONArray(cryptHandler.decrypt(legacyEncryptedInApps))
+        return serverSideInApps as JSONArray
     }
 
     override fun onChangeUser(deviceId: String, accountId: String) {
