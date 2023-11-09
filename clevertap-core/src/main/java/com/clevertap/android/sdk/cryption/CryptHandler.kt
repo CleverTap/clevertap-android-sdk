@@ -52,9 +52,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
     }
 
     fun encrypt(plainText: String): String? {
-        if (!isTextEncrypted(plainText))
-            return crypt.encryptInternal(plainText, accountID)
-        return plainText
+        return crypt.encryptInternal(plainText, accountID)
     }
 
     /**
@@ -82,9 +80,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
     }
 
     fun decrypt(cipherText: String): String? {
-        if (isTextEncrypted(cipherText))
-            return crypt.decryptInternal(cipherText, accountID)
-        return cipherText
+        return crypt.decryptInternal(cipherText, accountID)
     }
 
     companion object {
