@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.network
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
+import org.json.JSONObject
 
 interface BatchListener {
     fun onBatchSent(batch: JSONArray, success: Boolean)
@@ -51,7 +52,7 @@ class AppLaunchListener : BatchListener {
     }
 }
 
-class FetchInAppListener(private val callbackManager: BaseCallbackManager) : BatchListener {
+open class FetchInAppListener(private val callbackManager: BaseCallbackManager) : BatchListener {
 
     override fun onBatchSent(batch: JSONArray, success: Boolean) {
 
@@ -60,9 +61,11 @@ class FetchInAppListener(private val callbackManager: BaseCallbackManager) : Bat
             return
         }
         for (i in 0 until batch.length()) {
-            val item = batch.getJSONObject(i)
-            if (item.optString(Constants.KEY_EVT_NAME) == Constants.WZRK_FETCH
-                && item.get(Constants.KEY_T) == Constants.FETCH_TYPE_IN_APPS
+            val batchItem = batch.optJSONObject(i) ?: JSONObject()
+            val batchItemEvtData = batchItem.optJSONObject(Constants.KEY_EVT_DATA) ?: JSONObject()
+
+            if (batchItem.optString(Constants.KEY_EVT_NAME) == Constants.WZRK_FETCH
+                && batchItemEvtData.optInt(Constants.KEY_T) == Constants.FETCH_TYPE_IN_APPS
             ) {
                 callbackManager.fetchInAppsCallback?.onInAppsFetched(success)
                 return
