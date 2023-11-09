@@ -167,7 +167,7 @@ class EvaluationManager constructor(
 
         return when (T::class) {
             InAppClientSide::class -> InAppClientSide.getListFromJsonArray(inAppStore.readClientSideInApps())
-            InAppServerSide::class -> InAppServerSide.getListFromJsonArray(inAppStore.readServerSideInApps())
+            InAppServerSide::class -> InAppServerSide.getListFromJsonArray(inAppStore.readServerSideInAppsMetaData())
             else -> emptyList()
         }
     }

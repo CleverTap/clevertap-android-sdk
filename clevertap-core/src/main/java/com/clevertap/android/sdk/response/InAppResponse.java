@@ -120,7 +120,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             Pair<Boolean, JSONArray> ssInApps = res.getServerSideInApps();
             if (ssInApps.getFirst()) {
-                inAppStore.storeServerSideInApps(ssInApps.getSecond());
+                inAppStore.storeServerSideInAppsMetaData(ssInApps.getSecond());
             }
 
             InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
