@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
 import java.util.concurrent.Callable;
 import kotlin.Pair;
@@ -120,7 +121,9 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-            InAppImagePreloader preloader = new InAppImagePreloader(inAppResourceProvider, logger);
+
+            CTExecutors executor = CTExecutorFactory.executors(config);
+            InAppImagePreloader preloader = new InAppImagePreloader(inAppResourceProvider, executor, logger);
 
             preloader.preloadImages(res.getPreloadImage());
 

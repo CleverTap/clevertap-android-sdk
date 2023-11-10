@@ -174,6 +174,7 @@ public class Task<TResult> {
      * @param timeoutMillis - timeout for piece of code to run
      * @return result of callable or null
      */
+    // TODO This method does not set state of the task correctly.
     public @Nullable TResult submitAndGetResult(final String logTag, final Callable<TResult> callable, long timeoutMillis) {
         if (!(executor instanceof ExecutorService)) {
             throw new UnsupportedOperationException(
@@ -228,6 +229,7 @@ public class Task<TResult> {
             @Override
             public void run() {
                 try {
+                    setState(STATE.RUNNING);
                     config.getLogger()
                             .verbose(taskName + " Task: " + logTag + " starting on..." + Thread.currentThread()
                                     .getName());

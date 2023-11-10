@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.images
 
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import com.clevertap.android.sdk.utils.DispatcherProvider
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 
 internal class InAppImagePreloader @JvmOverloads constructor(
     private val inAppImageProvider: InAppResourceProvider,
+    private val executor: CTExecutors,
     private val logger: ILogger? = null,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
     private val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
@@ -37,7 +39,7 @@ internal class InAppImagePreloader @JvmOverloads constructor(
                     if (inAppImageProvider.isImageCached(url = url).not()) {
                         // start async download if not found in cache
                         val async: Deferred<Bitmap?> = async {
-                            val bitmap = inAppImageProvider.fetchInAppImage<Bitmap>(url, Bitmap::class.java)
+                            val bitmap = inAppImageProvider.fetchInAppImage(url, Bitmap::class.java)
                             bitmap
                         }
                         list.add(async)
@@ -46,6 +48,20 @@ internal class InAppImagePreloader @JvmOverloads constructor(
                     }
                 }
                 list.awaitAll()
+            }
+        }
+    }
+
+    fun preloadImagesExec(urls: List<String>) {
+
+        for (url in urls) {
+            val task = executor.ioTaskNonUi<Void>()
+
+            task.execute("tag") {
+                if (inAppImageProvider.isImageCached(url = url).not()) {
+                    val bitmap = inAppImageProvider.fetchInAppImage(url, Bitmap::class.java)
+                }
+                null
             }
         }
     }
