@@ -1,8 +1,8 @@
 package com.clevertap.android.sdk.utils
 
-import android.content.Context
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
+import java.io.File
 import kotlin.math.max
 
 /**
@@ -17,17 +17,20 @@ class CTCaches private constructor(
     companion object {
         private var ctCaches: CTCaches? = null
 
-        private const val IMAGE_DIRECTORY_NAME = "CleverTap.Images."
-        private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
-
         fun instance(
+            config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
             logger: ILogger?
         ) : CTCaches {
             synchronized(this) {
                 if (ctCaches == null) {
-                    ctCaches = CTCaches(logger = logger)
+                    ctCaches = CTCaches(config = config, logger = logger)
                 }
                 return ctCaches!!
+            }
+        }
+        fun clear() {
+            synchronized(this) {
+                ctCaches = null
             }
         }
     }
@@ -56,11 +59,11 @@ class CTCaches private constructor(
         }
     }
 
-    fun imageCacheDisk(context: Context): FileCache {
+    fun imageCacheDisk(dir: File): FileCache {
         synchronized(this) {
             if (imageFileCache == null) {
                 imageFileCache = FileCache(
-                    directory = context.getDir("images", Context.MODE_PRIVATE),
+                    directory = dir,
                     maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
                     logger = logger
                 )
@@ -69,11 +72,11 @@ class CTCaches private constructor(
         }
     }
 
-    fun gifCacheDisk(context: Context): FileCache {
+    fun gifCacheDisk(dir: File): FileCache {
         synchronized(this) {
             if (gifFileCache == null) {
                 gifFileCache = FileCache(
-                    directory = context.getDir("gifs", Context.MODE_PRIVATE),
+                    directory = dir,
                     maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
                     logger = logger
                 )
@@ -82,7 +85,7 @@ class CTCaches private constructor(
         }
     }
 
-    private fun imageCacheSize(): Int {
+    fun imageCacheSize(): Int {
         val selected = max(config.optimistic, config.minImageCacheKb).toInt()
 
         logger?.verbose("Image cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minImageCacheKb}, selected = $selected")
@@ -90,10 +93,10 @@ class CTCaches private constructor(
         return selected
     }
 
-    private fun gifCacheSize(): Int {
-        val selected = max(config.optimistic, config.minImageCacheKb).toInt()
+    fun gifCacheSize(): Int {
+        val selected = max(config.optimistic, config.minGifCacheKb).toInt()
 
-        logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minImageCacheKb}, selected = $selected")
+        logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minGifCacheKb}, selected = $selected")
 
         return selected
     }
@@ -116,11 +119,15 @@ data class CTCachesConfig(
     val maxImageSizeDiskKb: Long
 ) {
     companion object {
+        const val IMAGE_CACHE_MIN_KB : Long = 20 * 1024
+        const val GIF_CACHE_MIN_KB : Long = 5 * 1024
+        const val IMAGE_SIZE_MAX_DISK : Long = 5 * 1024
+
         val DEFAULT_CONFIG = CTCachesConfig(
-            minImageCacheKb = 20 * 1024,
-            minGifCacheKb = 5 * 1024,
+            minImageCacheKb = IMAGE_CACHE_MIN_KB,
+            minGifCacheKb = GIF_CACHE_MIN_KB,
             optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32),
-            maxImageSizeDiskKb = 5 * 1024
+            maxImageSizeDiskKb = IMAGE_SIZE_MAX_DISK
         )
     }
 }
