@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
-import com.clevertap.android.sdk.inapp.images.InAppImagePreloader;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderCoroutine;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
@@ -123,7 +123,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
 
             CTExecutors executor = CTExecutorFactory.executorResourceDownloader();
-            InAppImagePreloader preloader = new InAppImagePreloader(inAppResourceProvider, executor, logger);
+            InAppImagePreloaderCoroutine preloader = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
 
             preloader.preloadImages(res.getPreloadImage());
 
