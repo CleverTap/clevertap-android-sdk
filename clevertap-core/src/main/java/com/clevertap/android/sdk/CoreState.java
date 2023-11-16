@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventMediator;
+import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
@@ -51,6 +52,8 @@ public class CoreState extends CleverTapState {
 
     private EvaluationManager evaluationManager;
 
+    private ImpressionManager impressionManager;
+
     private LoginController loginController;
 
     private SessionManager sessionManager;
@@ -75,6 +78,10 @@ public class CoreState extends CleverTapState {
         return ctVariables;
     }
 
+    public ImpressionManager getImpressionManager() {
+        return impressionManager;
+    }
+
     public StoreRegistry getStoreRegistry() {
         return storeRegistry;
     }
@@ -87,6 +94,10 @@ public class CoreState extends CleverTapState {
 
     public Parser getParser() {
         return parser;
+    }
+
+    public void setImpressionManager(final ImpressionManager impressionManager) {
+        this.impressionManager = impressionManager;
     }
 
     public void setParser(final Parser parser) {

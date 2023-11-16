@@ -120,6 +120,21 @@ class CleverTapFactory {
             return null;
         });
 
+        TriggersMatcher triggersMatcher = new TriggersMatcher();
+        TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
+        ImpressionManager impressionManager = new ImpressionManager(storeRegistry);
+        LimitsMatcher limitsMatcher = new LimitsMatcher(impressionManager, triggersManager);
+
+        coreState.setImpressionManager(impressionManager);
+
+        EvaluationManager evaluationManager = new EvaluationManager(
+                triggersMatcher,
+                triggersManager,
+                limitsMatcher,
+                storeRegistry
+        );
+        coreState.setEvaluationManager(evaluationManager);
+
         //Get device id should be async to avoid strict mode policy.
         Task<Void> taskInitFCManager = CTExecutorFactory.executors(config).ioTask();
         taskInitFCManager.execute("initFCManager", new Callable<Void>() {
@@ -134,7 +149,7 @@ class CleverTapFactory {
                     controllerManager
                             .setInAppFCManager(
                                     new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID(),
-                                            storeRegistry));
+                                            storeRegistry, impressionManager));
                 }
                 return null;
             }
@@ -208,18 +223,6 @@ class CleverTapFactory {
         );
         coreState.setAnalyticsManager(analyticsManager);
 
-        TriggersMatcher triggersMatcher = new TriggersMatcher();
-        TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
-        ImpressionManager impressionManager = new ImpressionManager(storeRegistry);
-        LimitsMatcher limitsMatcher = new LimitsMatcher(impressionManager, triggersManager);
-
-        EvaluationManager evaluationManager = new EvaluationManager(
-                triggersMatcher,
-                triggersManager,
-                limitsMatcher,
-                storeRegistry
-        );
-        coreState.setEvaluationManager(evaluationManager);
         networkManager.addNetworkHeadersListener(evaluationManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,

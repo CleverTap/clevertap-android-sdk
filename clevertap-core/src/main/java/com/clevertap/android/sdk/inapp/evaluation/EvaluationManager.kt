@@ -1,11 +1,8 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.data.InAppBase
-import com.clevertap.android.sdk.inapp.data.InAppClientSide
-import com.clevertap.android.sdk.inapp.data.InAppServerSide
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
@@ -24,10 +21,8 @@ class EvaluationManager constructor(
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
     private val limitsMatcher: LimitsMatcher,
-    storeRegistry: StoreRegistry,
+    private val storeRegistry: StoreRegistry,
 ) : NetworkHeadersListener {
-
-    private var inAppStore: InAppStore? = storeRegistry.inAppStore
 
     private val evaluatedServerSideInAppIds: MutableList<String> = ArrayList()
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
@@ -58,7 +53,7 @@ class EvaluationManager constructor(
         val eligibleInApps = evaluate(event, appLaunchedNotifs)
 
         sortByPriority(eligibleInApps).forEach { inApp ->
-            if (shouldSuppress(inApp)) {
+            if (!shouldSuppress(inApp)) {
                 return JSONArray(inApp)
             } else {
                 suppress(inApp)
@@ -72,7 +67,7 @@ class EvaluationManager constructor(
     }
 
     private fun evaluateServerSide(event: EventAdapter) {
-        inAppStore?.let { store ->
+        storeRegistry.inAppStore?.let { store ->
             val eligibleInApps = evaluate(event, store.readServerSideInApps().toList())
 
             eligibleInApps.forEach { inApp ->
@@ -84,13 +79,13 @@ class EvaluationManager constructor(
     }
 
     private fun evaluateClientSide(event: EventAdapter): JSONArray {
-        inAppStore?.let { store ->
+        storeRegistry.inAppStore?.let { store ->
             val eligibleInApps = evaluate(event, store.readClientSideInApps().toList())
 
             sortByPriority(eligibleInApps).forEach { inApp ->
-                if (shouldSuppress(inApp)) {
+                if (!shouldSuppress(inApp)) {
                     updateTTL(inApp)
-                    return JSONArray(inApp)
+                    return JSONArray().also { it.put(inApp) }
                 } else {
                     suppress(inApp)
                 }
@@ -107,12 +102,18 @@ class EvaluationManager constructor(
             val matchesTrigger =
                 triggersMatcher.matchEvent(getWhenTriggers(inApp), event.eventName, event.eventProperties)
             if (matchesTrigger) {
+                Logger.v("INAPP", "Triggers matched for event ${event.eventName} against inApp $campaignId")
                 triggersManager.increment(campaignId)
 
                 val matchesLimits = limitsMatcher.matchWhenLimits(getWhenLimits(inApp), campaignId)
                 if (matchesLimits) {
+                    Logger.v("INAPP", "Limits matched for event ${event.eventName} against inApp $campaignId")
                     eligibleInApps.add(inApp)
+                } else {
+                    Logger.v("INAPP", "Limits did not matched for event ${event.eventName} against inApp $campaignId")
                 }
+            } else {
+                Logger.v("INAPP", "Triggers did not matched for event ${event.eventName} against inApp $campaignId")
             }
         }
         return eligibleInApps

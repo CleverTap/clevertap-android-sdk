@@ -36,7 +36,6 @@ import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
-import com.clevertap.android.sdk.inapp.data.InAppServerSide;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
@@ -535,7 +534,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
             final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
                 final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
-                return evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
+                return !evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
             };
 
             if (!controllerManager.getInAppFCManager().canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {

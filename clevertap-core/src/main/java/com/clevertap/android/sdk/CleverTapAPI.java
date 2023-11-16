@@ -2809,7 +2809,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                     "Initializing InAppFC after Device ID Created = " + deviceId);
             coreState.getControllerManager()
                     .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId,
-                            coreState.getStoreRegistry()));
+                            coreState.getStoreRegistry(), coreState.getImpressionManager()));
         }
 
         //todo : replace with variables
