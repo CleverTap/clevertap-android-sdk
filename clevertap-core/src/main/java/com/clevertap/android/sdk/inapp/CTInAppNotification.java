@@ -89,7 +89,7 @@ public class CTInAppNotification implements Parcelable {
 
     private String landscapeImageUrl;
 
-    private int maxPerSession;
+    private int maxPerSession = -1;
 
     private ArrayList<CTInAppNotificationMedia> mediaList = new ArrayList<>();
 
