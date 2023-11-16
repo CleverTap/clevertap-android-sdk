@@ -14,15 +14,14 @@ import java.lang.ref.WeakReference
  */
 class TriggerManager(
     context: Context,
-    accountId: String,
-    deviceInfo: DeviceInfo
+    private val accountId: String,
+    private val deviceInfo: DeviceInfo
 ) {
     companion object {
         const val PREF_PREFIX = "__triggers"
     }
 
-    var contextRef = WeakReference(context)
-    val prefName = "${Constants.KEY_TRIGGERS_PER_INAPP}:${deviceInfo.deviceID}:$accountId"
+    private var contextRef = WeakReference(context)
 
     /**
      * Retrieves the trigger count for a given campaign ID.
@@ -85,6 +84,7 @@ class TriggerManager(
      * @return The SharedPreferences instance, or null if the context reference is null.
      */
     fun sharedPrefs(): SharedPreferences? {
+        val prefName = "${Constants.KEY_TRIGGERS_PER_INAPP}:${deviceInfo.deviceID}:$accountId"
         val context = contextRef.get() ?: return null
         return StorageHelper.getPreferences(context, prefName)
     }
