@@ -41,7 +41,7 @@ public class CTExecutorFactory {
             synchronized (CTExecutorFactory.class) {
                 executorForAccount = executorMap.get(TAG_RESOURCE_DOWNLOADER);
                 if (executorForAccount == null) {
-                    executorForAccount = new CTExecutors(null, ioPoolSize);
+                    executorForAccount = new CTExecutors(ioPoolSize);
                     executorMap.put(TAG_RESOURCE_DOWNLOADER, executorForAccount);
                 }
             }

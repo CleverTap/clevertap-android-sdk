@@ -2,6 +2,8 @@ package com.clevertap.android.sdk.task;
 
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.utils.UrlHashGenerator;
+
 import java.util.HashMap;
 import java.util.concurrent.Executor;
 
@@ -22,6 +24,8 @@ public class CTExecutors {
 
     protected final CleverTapInstanceConfig config;
 
+    protected String singleThreadExecutorTag;
+
     private final HashMap<String, PostAsyncSafelyExecutor> postAsyncSafelyTasks = new HashMap<>();
 
     CTExecutors(CleverTapInstanceConfig config) {
@@ -29,9 +33,10 @@ public class CTExecutors {
         IO_EXECUTOR = new IOExecutor();
     }
 
-    CTExecutors(CleverTapInstanceConfig config, int ioPoolSize) {
-        this.config = config;
+    CTExecutors(int ioPoolSize) {
+        this.config = null;
         IO_EXECUTOR = new IOExecutor(ioPoolSize);
+        singleThreadExecutorTag = UrlHashGenerator.INSTANCE.hashWithTsSeed();
     }
 
     /**
@@ -88,7 +93,13 @@ public class CTExecutors {
      * @return
      */
     public <TResult> Task<TResult> postAsyncSafelyTask() {
-        return postAsyncSafelyTask(config.getAccountId());
+        String key;
+        if (config != null) {
+            key = config.getAccountId();
+        } else {
+            key = singleThreadExecutorTag;
+        }
+        return postAsyncSafelyTask(key);
     }
 
     /**

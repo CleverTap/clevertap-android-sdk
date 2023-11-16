@@ -17,4 +17,7 @@ object UrlHashGenerator {
         }
         nameUUIDFromBytes?.toString()?: key.hashCode().toString()
     }
+
+    fun hashWithTsSeed(): String =
+            hash().invoke(java.lang.String.valueOf(System.currentTimeMillis()))
 }

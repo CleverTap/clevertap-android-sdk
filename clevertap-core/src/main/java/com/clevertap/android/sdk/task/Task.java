@@ -230,22 +230,24 @@ public class Task<TResult> {
             public void run() {
                 try {
                     setState(STATE.RUNNING);
-                    config.getLogger()
-                            .verbose(taskName + " Task: " + logTag + " starting on..." + Thread.currentThread()
-                                    .getName());
+                    logProperly(taskName + " Task: " + logTag + " starting on..." + Thread.currentThread().getName(), null);
                     TResult result = callable.call();
-                    config.getLogger().verbose(
-                            taskName + " Task: " + logTag + " executed successfully on..." + Thread.currentThread()
-                                    .getName());
+                    logProperly(taskName + " Task: " + logTag + " executed successfully on..." + Thread.currentThread().getName(), null);
                     onSuccess(result);
                 } catch (Exception e) {
                     onFailure(e);
-                    config.getLogger().verbose(
-                            taskName + " Task: " + logTag + " failed to execute on..." + Thread.currentThread()
-                                    .getName(), e);
+                    logProperly(taskName + " Task: " + logTag + " failed to execute on..." + Thread.currentThread().getName(), e);
                     e.printStackTrace();
                 }
             }
         };
+    }
+
+    private void logProperly(String log, Exception e) {
+        if (config != null) {
+            config.getLogger().verbose(log, e);
+        } else {
+            Logger.v(log, e);
+        }
     }
 }

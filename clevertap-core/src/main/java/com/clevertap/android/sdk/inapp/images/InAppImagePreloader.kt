@@ -64,6 +64,7 @@ internal class InAppImagePreloader @JvmOverloads constructor(
 
     fun cleanup() {
         job?.cancel()
+        //executor?.shutdown
     }
 }
 
