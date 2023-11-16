@@ -9,7 +9,6 @@ import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.job.JobInfo;
-import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.os.Build.VERSION;
@@ -438,7 +437,7 @@ public class PushProviders implements CTPushProviderListener {
         return alreadyAvailable;
     }
 
-    public void runInstanceJobWork(final Context context, final JobParameters parameters) {
+    public void runInstanceJobWork(final Context context) {
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         Future future = task.submit("runningPushAmpWork", new Callable<Void>() {
             @Override

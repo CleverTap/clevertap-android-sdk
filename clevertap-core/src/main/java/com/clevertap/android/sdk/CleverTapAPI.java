@@ -1007,42 +1007,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @RestrictTo(Scope.LIBRARY)
-    public static void runBackgroundIntentService(Context context) {
+    public static void runJobWork(Context context) {
         if (instances == null) {
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
             if (instance != null) {
                 if (instance.getConfig().isBackgroundSync()) {
-                    instance.coreState.getPushProviders().runInstanceJobWork(context, null);
-                } else {
-                    Logger.d("Instance doesn't allow Background sync, not running the Job");
-                }
-            }
-            return;
-        }
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            if (instance == null) {
-                continue;
-            }
-            if (instance.getConfig().isAnalyticsOnly()) {
-                Logger.d(accountId, "Instance is Analytics Only not processing device token");
-                continue;
-            }
-            if (!instance.getConfig().isBackgroundSync()) {
-                Logger.d(accountId, "Instance doesn't allow Background sync, not running the Job");
-                continue;
-            }
-            instance.coreState.getPushProviders().runInstanceJobWork(context, null);
-        }
-    }
-
-    @RestrictTo(Scope.LIBRARY)
-    public static void runJobWork(Context context, JobParameters parameters) {
-        if (instances == null) {
-            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
-            if (instance != null) {
-                if (instance.getConfig().isBackgroundSync()) {
-                    instance.coreState.getPushProviders().runInstanceJobWork(context, parameters);
+                    instance.coreState.getPushProviders().runInstanceJobWork(context);
                 } else {
                     Logger.d("Instance doesn't allow Background sync, not running the Job");
                 }
@@ -1059,7 +1029,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.d(accountId, "Instance doesn't allow Background sync, not running the Job");
                 continue;
             }
-            instance.coreState.getPushProviders().runInstanceJobWork(context, parameters);
+            instance.coreState.getPushProviders().runInstanceJobWork(context);
         }
     }
 
