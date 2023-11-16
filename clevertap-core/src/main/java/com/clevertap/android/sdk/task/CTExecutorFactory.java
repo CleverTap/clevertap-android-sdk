@@ -34,6 +34,10 @@ public class CTExecutorFactory {
         return executorForAccount;
     }
 
+    public static CTExecutors executorResourceDownloader() {
+        return executorResourceDownloader(8);
+    }
+
     public static CTExecutors executorResourceDownloader(int ioPoolSize) {
 
         CTExecutors executorForAccount = executorMap.get(TAG_RESOURCE_DOWNLOADER);

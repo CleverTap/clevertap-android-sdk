@@ -122,7 +122,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
 
-            CTExecutors executor = CTExecutorFactory.executors(config);
+            CTExecutors executor = CTExecutorFactory.executorResourceDownloader();
             InAppImagePreloader preloader = new InAppImagePreloader(inAppResourceProvider, executor, logger);
 
             preloader.preloadImages(res.getPreloadImage());
