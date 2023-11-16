@@ -58,7 +58,7 @@ class EvaluationManager constructor(
         val eligibleInApps = evaluate(event, appLaunchedNotifs)
 
         sortByPriority(eligibleInApps).forEach { inApp ->
-            if (shouldSuppress(inApp)) {
+            if (!shouldSuppress(inApp)) {
                 return JSONArray(inApp)
             } else {
                 suppress(inApp)
@@ -88,7 +88,7 @@ class EvaluationManager constructor(
             val eligibleInApps = evaluate(event, store.readClientSideInApps().toList())
 
             sortByPriority(eligibleInApps).forEach { inApp ->
-                if (shouldSuppress(inApp)) {
+                if (!shouldSuppress(inApp)) {
                     updateTTL(inApp)
                     return JSONArray(inApp)
                 } else {
