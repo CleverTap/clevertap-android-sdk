@@ -90,7 +90,7 @@ class EvaluationManager constructor(
             sortByPriority(eligibleInApps).forEach { inApp ->
                 if (!shouldSuppress(inApp)) {
                     updateTTL(inApp)
-                    return JSONArray(inApp)
+                    return JSONArray().also { it.put(inApp) }
                 } else {
                     suppress(inApp)
                 }
