@@ -2,12 +2,12 @@ package com.clevertap.android.sdk.inapp;
 
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.IS_LOCAL_INAPP;
+
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
-
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
@@ -437,6 +437,7 @@ public class CTInAppNotification implements Parcelable {
                 byte[] bytes = inAppResourceProvider.fetchInAppGif(media.getMediaUrl());
                 if (bytes != null && bytes.length > 0) {
                     listener.notificationReady(this);
+                    return;
                 } else {
                     this.error = "Error processing GIF";
                 }
@@ -445,6 +446,7 @@ public class CTInAppNotification implements Parcelable {
                 Bitmap bitmap = inAppResourceProvider.fetchInAppImage(media.getMediaUrl(), Bitmap.class);
                 if (bitmap != null) {
                     listener.notificationReady(this);
+                    return;
                 } else {
                     this.error = "Error processing image as bitmap was NULL";
                 }
