@@ -13,7 +13,6 @@ import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpWorker
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.*
@@ -40,7 +39,6 @@ class CTPushAmpWorkerInstrumentationTest {
         CleverTapAPI.setDebugLevel(VERBOSE)
         val myContext = ApplicationProvider.getApplicationContext<Context>()
         val defaultInstance = CleverTapAPI.getDefaultInstance(myContext)
-        defaultInstance!!.coreState.pushProviders.handleToken("xyz", FCM, true)
 
         val constraints = Builder()
             .setRequiredNetworkType(CONNECTED)
@@ -59,7 +57,7 @@ class CTPushAmpWorkerInstrumentationTest {
         testDriver.setAllConstraintsMet(request.id)
         testDriver.setPeriodDelayMet(request.id)
         val workInfo = workManager.getWorkInfoById(request.id).get()
-        Log.i("AnushX", "WorkInfo $workInfo")
+        println("workInfo = $workInfo")
         // Assert
         assertThat(workInfo.state, `is`(WorkInfo.State.ENQUEUED))
     }
