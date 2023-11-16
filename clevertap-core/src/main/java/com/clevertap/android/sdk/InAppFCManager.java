@@ -40,12 +40,12 @@ public class InAppFCManager {
     private final StoreRegistry storeRegistry;
 
     InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId,
-            StoreRegistry storeRegistry/*, ImpressionManager impressionManager*/) {
+            StoreRegistry storeRegistry, ImpressionManager impressionManager) {
         this.config = config;
         this.context = context;
         this.deviceId = deviceId;
         this.storeRegistry = storeRegistry;
-        /*this.impressionManager = impressionManager;*/ // TODO
+        this.impressionManager = impressionManager;
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("initInAppFCManager", new Callable<Void>() {

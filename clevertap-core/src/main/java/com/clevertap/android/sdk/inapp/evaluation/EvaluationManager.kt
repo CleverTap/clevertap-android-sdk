@@ -1,11 +1,8 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.data.InAppBase
-import com.clevertap.android.sdk.inapp.data.InAppClientSide
-import com.clevertap.android.sdk.inapp.data.InAppServerSide
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
