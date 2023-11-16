@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp.images
 
-import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
@@ -30,7 +29,7 @@ internal class InAppImagePreloader @JvmOverloads constructor(
         }
         val scope = CoroutineScope(dispatchers.io())
         job = scope.launch(context = handler) {
-            val list = mutableListOf<Deferred<Bitmap?>>()
+            val list = mutableListOf<Deferred<Unit?>>()
             urls.chunked(
                 config.parallelDownloads
             ).forEach { chunks ->
@@ -38,9 +37,8 @@ internal class InAppImagePreloader @JvmOverloads constructor(
                 chunks.forEach { url ->
                     if (inAppImageProvider.isImageCached(url = url).not()) {
                         // start async download if not found in cache
-                        val async: Deferred<Bitmap?> = async {
-                            val bitmap = inAppImageProvider.fetchInAppImage(url, Bitmap::class.java)
-                            bitmap
+                        val async: Deferred<Unit> = async {
+                            inAppImageProvider.fetchInAppImage(url)
                         }
                         list.add(async)
                     } else {
@@ -58,9 +56,7 @@ internal class InAppImagePreloader @JvmOverloads constructor(
             val task = executor.ioTaskNonUi<Void>()
 
             task.execute("tag") {
-                if (inAppImageProvider.isImageCached(url = url).not()) {
-                    val bitmap = inAppImageProvider.fetchInAppImage(url, Bitmap::class.java)
-                }
+                inAppImageProvider.fetchInAppImage(url)
                 null
             }
         }

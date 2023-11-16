@@ -125,6 +125,10 @@ internal class InAppResourceProvider constructor(
         return fileToBytes(gifDiskCache.get(cacheKey))
     }
 
+    fun fetchInAppImage(url: String): Bitmap? {
+        return fetchInAppImage(url = url, clazz = Bitmap::class.java)
+    }
+
     /**
      * Function that would fetch and cache bitmap image into Memory and File cache and return it.
      * If image is found in cache, the cached image is returned.

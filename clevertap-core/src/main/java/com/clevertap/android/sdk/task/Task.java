@@ -81,7 +81,7 @@ public class Task<TResult> {
     public Task<TResult> addOnSuccessListener(@NonNull final Executor executor,
             final OnSuccessListener<TResult> listener) {
         if (listener != null) {
-            successExecutables.add(new SuccessExecutable<>(executor, listener, config));
+            successExecutables.add(new SuccessExecutable<>(executor, listener));
         }
         return this;
     }
