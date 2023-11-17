@@ -100,15 +100,16 @@ class TriggersMatcher {
         // (chargedEvent only) property conditions for items are AND-ed
         return (0 until trigger.itemsCount)
             .mapNotNull { trigger.itemAtIndex(it) }
-            .all {
-                evaluate(
-                    it.op,
-                    it.value,
-                    event.getItemValue(it.propertyName)
-                )
+            .all { condition ->
+                event.getItemValue(condition.propertyName)
+                    .any {
+                        evaluate(
+                            condition.op,
+                            condition.value,
+                            it
+                        )
+                    }
             }
-
-
     }
 
     /**

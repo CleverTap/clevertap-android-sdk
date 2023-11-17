@@ -10,7 +10,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 class EventAdapter(
     val eventName: String,
     val eventProperties: Map<String, Any>,
-    val items: List<Map<String, Any>> = listOf(), // for chargedEvent only
+    val items: List<Map<String, Any>?> = listOf(), // for chargedEvent only
 ) {
 
     /**
@@ -28,8 +28,7 @@ class EventAdapter(
      * @param propertyName The name of the property to retrieve from the items.
      * @return A [TriggerValue] representing the item value.
      */
-    fun getItemValue(propertyName: String): TriggerValue {
-        val itemValues = items.mapNotNull { it[propertyName] }
-        return TriggerValue(itemValues)
+    fun getItemValue(propertyName: String): List<TriggerValue> {
+        return items.filterNotNull().map { TriggerValue(it[propertyName]) }
     }
 }
