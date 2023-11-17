@@ -68,7 +68,7 @@ class EvaluationManager constructor(
 
     private fun evaluateServerSide(event: EventAdapter) {
         storeRegistry.inAppStore?.let { store ->
-            val eligibleInApps = evaluate(event, store.readServerSideInApps().toList())
+            val eligibleInApps = evaluate(event, store.readServerSideInAppsMetaData().toList())
 
             eligibleInApps.forEach { inApp ->
                 val campaignId = inApp.optLong(Constants.INAPP_ID_IN_PAYLOAD)
