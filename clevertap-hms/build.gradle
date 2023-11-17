@@ -1,4 +1,6 @@
-apply plugin: 'com.huawei.agconnect'
+plugins {
+    id("com.huawei.agconnect")
+}
 
 ext {
     libraryName = 'HuaweiPushSDK'

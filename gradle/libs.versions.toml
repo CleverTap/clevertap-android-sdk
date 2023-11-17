@@ -96,7 +96,6 @@ catch_exception = "2.0"
 # Project
 android_gradle_plugin = { module = "com.android.tools.build:gradle", version.ref = "android_gradle_plugin" }
 kotlin_gradle_plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin_plugin" }
-sonarqube_gradle_plugin = { module = "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin", version.ref = "sonarqube_plugin" }
 
 # AndroidX
 androidx_annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
@@ -187,4 +186,6 @@ catch_exception = { module = "eu.codearte.catch-exception:catch-exception", vers
 
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]
-#Move Exoplayer to bundles
+
+[plugins]
+sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }
