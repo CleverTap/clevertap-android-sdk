@@ -11,10 +11,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
-        override val inAppImageProvider: InAppResourceProvider,
-        override val logger: ILogger? = null,
-        private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
-        override val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
+    override val inAppImageProvider: InAppResourceProvider,
+    override val logger: ILogger? = null,
+    private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
+    override val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
 ) : InAppImagePreloaderStrategy {
 
     private val jobs: MutableList<Job> = mutableListOf()
