@@ -3,12 +3,12 @@ ext {
     artifact = 'clevertap-xiaomi-sdk'
     libraryDescription = 'The CleverTap Android Xiaomi Push SDK'
 
-    libraryVersion = AndroidVersion.clevertapXiaomiSdk
+    libraryVersion = libs.versions.clevertap.xiaomi.sdk.get()
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
-    minSdkVersionVal = AndroidVersion.minSdkVersion
+    minSdkVersionVal = libs.versions.android.minSdk.get().toInteger()
 }
 
 apply from: "../gradle-scripts/commons.gradle"

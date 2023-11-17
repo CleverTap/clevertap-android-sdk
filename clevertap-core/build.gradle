@@ -3,12 +3,12 @@ ext {
     artifact = 'clevertap-android-sdk'
     libraryDescription = 'The CleverTap Android SDK'
 
-    libraryVersion = AndroidVersion.clevertapAndroidSdk
+    libraryVersion = libs.versions.clevertap.android.sdk.get()
 
     licenseName = 'The Apache Software License, Version 2.0'
     licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = ["Apache-2.0"]
-    minSdkVersionVal = AndroidVersion.minSdkVersion
+    minSdkVersionVal = libs.versions.android.minSdk.get().toInteger()
 }
 
 apply from: "../gradle-scripts/commons.gradle"
@@ -22,23 +22,32 @@ android {
 
 dependencies {
     compileOnly(libs.firebase.messaging)
-    compileOnly(libs.exoplayer)
-    compileOnly(libs.exoplayer.hls)
-    compileOnly(libs.exoplayer.ui)
+    compileOnly(libs.bundles.exoplayer)
     compileOnly(libs.glide)
     //for notification
-    compileOnly(libs.androidx.core)
+    compileOnly(libs.androidx.core.core)
     compileOnly(libs.androidx.viewpager)
     compileOnly(libs.android.material)
     compileOnly(libs.androidx.fragment)
-
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.recyclerview)
     implementation(libs.installreferrer)
 
+    implementation(libs.androidx.work.runtime)
     // Unit testing dependencies
     testImplementation(project(":test_shared"))
     testImplementation(libs.firebase.messaging)
+
+    testImplementation(libs.test.mockk)
+    androidTestImplementation(libs.test.work.testing)
+    androidTestImplementation(libs.test.runner)
+    androidTestImplementation(libs.test.rules)
+    // Optional -- UI testing with Espresso
+    androidTestImplementation(libs.test.espresso.core)
+    // Optional -- UI testing with UI Automator
+    androidTestImplementation(libs.test.uiautomator)
+    // Optional -- UI testing with Compose
+    androidTestImplementation(libs.test.ext.junit)
 }
 
 sonarqube {

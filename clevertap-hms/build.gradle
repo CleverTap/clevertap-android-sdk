@@ -5,13 +5,13 @@ ext {
     artifact = 'clevertap-hms-sdk'
     libraryDescription = 'The CleverTap Android Huawei Push SDK'
 
-    libraryVersion = AndroidVersion.clevertapHmsSdk
+    libraryVersion = libs.versions.clevertap.hms.sdk.get()
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
 
-    minSdkVersionVal = AndroidVersion.minSdkVersion
+    minSdkVersionVal = libs.versions.android.minSdk.get().toInteger()
 }
 
 apply from: "../gradle-scripts/commons.gradle"

@@ -2,12 +2,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion AndroidVersion.compileSdkVersion
-    buildToolsVersion AndroidVersion.buildToolsVersion
+    compileSdkVersion libs.versions.android.compileSdk.get().toInteger()
+    buildToolsVersion libs.versions.android.buildTools.get()
 
     defaultConfig {
-        minSdkVersion AndroidVersion.minSdkVersion
-        targetSdkVersion AndroidVersion.targetSdkVersion
+        minSdkVersion libs.versions.android.minSdk.get().toInteger()
+        targetSdkVersion libs.versions.android.targetSdk.get().toInteger()
         versionCode 1
         versionName "1.0"
 
@@ -32,9 +32,8 @@ dependencies {
     api (libs.kotlin.stdlib.jdk7)
     api (libs.test.jsonassert)
     api (libs.gson)
-    def mockito_version = '3.5.11'
     api (libs.test.mockito.core)
-    api "org.mockito:mockito-inline:$mockito_version"
+    api (libs.test.mockito.inline)
     api (libs.test.robolectric)
     api (libs.test.opentest4j)
 
@@ -48,7 +47,7 @@ dependencies {
     api (libs.test.espresso.core)
 
     api (libs.catch.exception)
-    api (libs.androidx.core)
+    api (libs.androidx.core.core)
 
     api (libs.test.kotlin.test)
     api (libs.test.truth)

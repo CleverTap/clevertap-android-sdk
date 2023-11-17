@@ -3,12 +3,12 @@ ext {
     artifact = 'push-templates'
     libraryDescription = 'The CleverTap Android Push Templates SDK'
 
-    libraryVersion = AndroidVersion.clevertapPushTemplates
+    libraryVersion = libs.versions.clevertap.push.templates.sdk.get()
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
-    minSdkVersionVal = AndroidVersion.minSdkVersion
+    minSdkVersionVal = libs.versions.android.minSdk.get().toInteger()
 }
 
 apply from: "../gradle-scripts/commons.gradle"
