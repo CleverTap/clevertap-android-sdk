@@ -126,7 +126,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             String inappMode = res.getInAppMode();
             if (!inappMode.isEmpty()) {
-                //TODO: Mode will be received with every request but do we need to persist it?
                 inAppStore.setMode(inappMode);
             }
 
@@ -162,7 +161,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
         task.execute("InAppResponse#processResponse", new Callable<Void>() {
             @Override
             public Void call() {
-                //TODO: send inappNotifsArray for display
                 controllerManager.getInAppController().addInAppNotificationsToQueue(inappNotifsArray);
                 return null;
             }

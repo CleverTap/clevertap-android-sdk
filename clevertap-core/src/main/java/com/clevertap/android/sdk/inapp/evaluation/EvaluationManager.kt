@@ -24,6 +24,7 @@ class EvaluationManager constructor(
     private val storeRegistry: StoreRegistry,
 ) : NetworkHeadersListener {
 
+    //TODO: make it a set instead of a list??
     private val evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
