@@ -103,7 +103,7 @@ class EvaluationManager constructor(
             val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
 
             val matchesTrigger =
-                triggersMatcher.matchEvent(getWhenTriggers(inApp), event.eventName, event.eventProperties)
+                triggersMatcher.matchEvent(getWhenTriggers(inApp), event)
             if (matchesTrigger) {
                 Logger.v("INAPP", "Triggers matched for event ${event.eventName} against inApp $campaignId")
                 triggersManager.increment(campaignId)

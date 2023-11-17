@@ -30,12 +30,11 @@ class TriggersMatcher {
      */
     fun matchEvent(
         whenTriggers: List<TriggerAdapter>,
-        eventName: String,
-        eventProperties: Map<String, Any>
+        event: EventAdapter
     ): Boolean {
 
         // events in array are OR-ed
-        val event = EventAdapter(eventName, eventProperties)
+        //val event = EventAdapter(eventName, eventProperties)
         // Check if any TriggerAdapter in the list matches the event
         return whenTriggers.any { match(it, event) }
     }
