@@ -69,7 +69,7 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 * Add the CleverTap Xiaomi Push dependency and Mi Push Dependency in your app’s `build.gradle`
 
 ```groovy
-    implementation "${ext.clevertap_xiaomi_sdk}${ext['version.com.clevertap.android..clevertap-xiaomi-sdk']}"
+    implementation "${ext.clevertap_xiaomi_sdk}"
     implementation fileTree(include: ["*.jar", "*.aar"], dir: "libs")// or implementation files("libs/MiPush_SDK_Client_5_0_6-G_3rd.aar") for including only MiPush_SDK_Client_5_0_6 aar file
 ```
 

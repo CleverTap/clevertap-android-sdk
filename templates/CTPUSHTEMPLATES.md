@@ -20,8 +20,8 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "${ext.push_templates}${ext['version.com.clevertap.android..push-templates']}"
-implementation "${ext.clevertap_android_sdk}${ext['version.com.clevertap.android..clevertap-android-sdk']}" // 4.4.0 and above
+implementation "${ext.push_templates}"
+implementation "${ext.clevertap_android_sdk}" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
