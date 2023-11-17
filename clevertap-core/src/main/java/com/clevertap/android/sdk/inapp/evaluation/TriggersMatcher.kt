@@ -135,8 +135,8 @@ class TriggersMatcher {
 
         return when (op) {
             TriggerOperator.Set -> true
-            TriggerOperator.LessThan -> expectedValueLessThanActual(expected, actual)
-            TriggerOperator.GreaterThan -> expectedValueGreaterThanActual(expected, actual)
+            TriggerOperator.LessThan -> expectedValueLessThanGreaterThanActual(expected, actual, true)
+            TriggerOperator.GreaterThan -> expectedValueLessThanGreaterThanActual(expected, actual, false)
             TriggerOperator.Equals -> expectedValueEqualsActual(expected, actual)
             TriggerOperator.NotEquals -> !expectedValueEqualsActual(expected, actual)
             TriggerOperator.Between -> actualIsInRangeOfExpected(expected, actual)
@@ -185,31 +185,35 @@ class TriggersMatcher {
     }
 
     @VisibleForTesting
-    internal fun expectedValueLessThanActual(expected: TriggerValue, actual: TriggerValue): Boolean {
-
-        val expectedNumber =
-            expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
-            ?: return false
-
-        val actualNumber =
-            actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()
-            ?: return false
-
-        return expectedNumber < actualNumber
-    }
-
-    @VisibleForTesting
-    internal fun expectedValueGreaterThanActual(expected: TriggerValue, actual: TriggerValue): Boolean {
-
-        val expectedNumber =
-            expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
-            ?: return false
+    internal fun expectedValueLessThanGreaterThanActual(
+        expected: TriggerValue,
+        actual: TriggerValue,
+        isLessThan: Boolean
+    ): Boolean {
 
         val actualNumber =
             actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()
             ?: return false
 
-        return expectedNumber > actualNumber
+        expected.listValue()?.firstOrNull()?.let {
+            when (it) {
+                is String -> {
+                    it.toDoubleOrNull()
+                }
+
+                is Number -> {
+                    it.toDouble()
+                }
+
+                else -> null
+            }
+        }?.also { return if (isLessThan) it < actualNumber else it > actualNumber }
+
+        val expectedNumber =
+            expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
+            ?: return false
+
+        return if (isLessThan) expectedNumber < actualNumber else expectedNumber > actualNumber
     }
 
     /**
