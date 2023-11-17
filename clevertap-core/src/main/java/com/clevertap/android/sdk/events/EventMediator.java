@@ -114,7 +114,8 @@ public class EventMediator {
 
     public List<Map<String, Object>> getChargedEventItemDetails(JSONObject event) {
         try {
-            return JsonUtil.listFromJson(event.getJSONArray(Constants.KEY_ITEMS));
+            return JsonUtil.listFromJson(
+                    event.getJSONObject(Constants.KEY_EVT_DATA).getJSONArray(Constants.KEY_ITEMS));
         } catch (JSONException e) {
             return new ArrayList<>();
         }
@@ -122,9 +123,10 @@ public class EventMediator {
 
     public Map<String, Object> getChargedEventDetails(JSONObject event) {
         try {
-            final Object items = event.remove(Constants.KEY_ITEMS);
-            final Map<String, Object> chargedDetails = JsonUtil.mapFromJson(event);
-            event.put(Constants.KEY_ITEMS, items);
+            final Object items = event.getJSONObject(Constants.KEY_EVT_DATA).remove(Constants.KEY_ITEMS);
+            final Map<String, Object> chargedDetails = JsonUtil.mapFromJson(
+                    event.getJSONObject(Constants.KEY_EVT_DATA));
+            event.getJSONObject(Constants.KEY_EVT_DATA).put(Constants.KEY_ITEMS, items);
             return chargedDetails;
         } catch (JSONException e) {
             return new HashMap<>();

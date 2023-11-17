@@ -30,12 +30,11 @@ class TriggersMatcher {
      */
     fun matchEvent(
         whenTriggers: List<TriggerAdapter>,
-        eventName: String,
-        eventProperties: Map<String, Any>
+        event: EventAdapter
     ): Boolean {
 
         // events in array are OR-ed
-        val event = EventAdapter(eventName, eventProperties)
+        //val event = EventAdapter(eventName, eventProperties)
         // Check if any TriggerAdapter in the list matches the event
         return whenTriggers.any { match(it, event) }
     }
@@ -101,15 +100,16 @@ class TriggersMatcher {
         // (chargedEvent only) property conditions for items are AND-ed
         return (0 until trigger.itemsCount)
             .mapNotNull { trigger.itemAtIndex(it) }
-            .all {
-                evaluate(
-                    it.op,
-                    it.value,
-                    event.getItemValue(it.propertyName)
-                )
+            .all { condition ->
+                event.getItemValue(condition.propertyName)
+                    .any {
+                        evaluate(
+                            condition.op,
+                            condition.value,
+                            it
+                        )
+                    }
             }
-
-
     }
 
     /**
@@ -135,8 +135,8 @@ class TriggersMatcher {
 
         return when (op) {
             TriggerOperator.Set -> true
-            TriggerOperator.LessThan -> expectedValueLessThanActual(expected, actual)
-            TriggerOperator.GreaterThan -> expectedValueGreaterThanActual(expected, actual)
+            TriggerOperator.LessThan -> expectedValueLessThanGreaterThanActual(expected, actual, true)
+            TriggerOperator.GreaterThan -> expectedValueLessThanGreaterThanActual(expected, actual, false)
             TriggerOperator.Equals -> expectedValueEqualsActual(expected, actual)
             TriggerOperator.NotEquals -> !expectedValueEqualsActual(expected, actual)
             TriggerOperator.Between -> actualIsInRangeOfExpected(expected, actual)
@@ -185,31 +185,35 @@ class TriggersMatcher {
     }
 
     @VisibleForTesting
-    internal fun expectedValueLessThanActual(expected: TriggerValue, actual: TriggerValue): Boolean {
-
-        val expectedNumber =
-            expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
-            ?: return false
-
-        val actualNumber =
-            actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()
-            ?: return false
-
-        return expectedNumber < actualNumber
-    }
-
-    @VisibleForTesting
-    internal fun expectedValueGreaterThanActual(expected: TriggerValue, actual: TriggerValue): Boolean {
-
-        val expectedNumber =
-            expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
-            ?: return false
+    internal fun expectedValueLessThanGreaterThanActual(
+        expected: TriggerValue,
+        actual: TriggerValue,
+        isLessThan: Boolean
+    ): Boolean {
 
         val actualNumber =
             actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()
             ?: return false
 
-        return expectedNumber > actualNumber
+        expected.listValue()?.firstOrNull()?.let {
+            when (it) {
+                is String -> {
+                    it.toDoubleOrNull()
+                }
+
+                is Number -> {
+                    it.toDouble()
+                }
+
+                else -> null
+            }
+        }?.also { return if (isLessThan) it < actualNumber else it > actualNumber }
+
+        val expectedNumber =
+            expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
+            ?: return false
+
+        return if (isLessThan) expectedNumber < actualNumber else expectedNumber > actualNumber
     }
 
     /**

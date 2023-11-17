@@ -24,7 +24,8 @@ class EvaluationManager constructor(
     private val storeRegistry: StoreRegistry,
 ) : NetworkHeadersListener {
 
-    private val evaluatedServerSideInAppIds: MutableList<String> = ArrayList()
+    //TODO: make it a set instead of a list??
+    private val evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>): JSONArray {
@@ -54,7 +55,7 @@ class EvaluationManager constructor(
 
         sortByPriority(eligibleInApps).forEach { inApp ->
             if (!shouldSuppress(inApp)) {
-                return JSONArray(inApp)
+                return JSONArray().also { it.put(inApp) }
             } else {
                 suppress(inApp)
             }
@@ -68,12 +69,14 @@ class EvaluationManager constructor(
 
     private fun evaluateServerSide(event: EventAdapter) {
         storeRegistry.inAppStore?.let { store ->
-            val eligibleInApps = evaluate(event, store.readServerSideInApps().toList())
+            val eligibleInApps = evaluate(event, store.readServerSideInAppsMetaData().toList())
 
             eligibleInApps.forEach { inApp ->
-                val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+                val campaignId = inApp.optLong(Constants.INAPP_ID_IN_PAYLOAD)
 
-                evaluatedServerSideInAppIds.add(campaignId)
+                if (campaignId != 0L) {
+                    evaluatedServerSideCampaignIds.add(campaignId)
+                }
             }
         }
     }
@@ -100,7 +103,7 @@ class EvaluationManager constructor(
             val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
 
             val matchesTrigger =
-                triggersMatcher.matchEvent(getWhenTriggers(inApp), event.eventName, event.eventProperties)
+                triggersMatcher.matchEvent(getWhenTriggers(inApp), event)
             if (matchesTrigger) {
                 Logger.v("INAPP", "Triggers matched for event ${event.eventName} against inApp $campaignId")
                 triggersManager.increment(campaignId)
@@ -185,12 +188,15 @@ class EvaluationManager constructor(
         }
     }
 
-    private fun removeSentEvaluatedServerSideInAppIds(header: JSONObject) {
+    private fun removeSentEvaluatedServerSideCampaignIds(header: JSONObject) {
         val inAppsEval = header.optJSONArray(Constants.INAPP_SS_EVAL_META)
         inAppsEval?.let {
             for (i in 0 until it.length()) {
-                val inAppId = it.optString(i)
-                evaluatedServerSideInAppIds.remove(inAppId)
+                val campaignId = it.optLong(i)
+
+                if (campaignId != 0L) {
+                    evaluatedServerSideCampaignIds.remove(campaignId)
+                }
             }
         }
     }
@@ -212,8 +218,8 @@ class EvaluationManager constructor(
     override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
         val header = JSONObject()
         if (endpointId == ENDPOINT_A1) {
-            if (evaluatedServerSideInAppIds.isNotEmpty()) {
-                header.put(Constants.INAPP_SS_EVAL_META, JsonUtil.listToJsonArray(evaluatedServerSideInAppIds))
+            if (evaluatedServerSideCampaignIds.isNotEmpty()) {
+                header.put(Constants.INAPP_SS_EVAL_META, JsonUtil.listToJsonArray(evaluatedServerSideCampaignIds))
             }
             if (suppressedClientSideInApps.isNotEmpty()) {
                 header.put(Constants.INAPP_SUPPRESSED_META, JsonUtil.listToJsonArray(suppressedClientSideInApps))
@@ -227,7 +233,7 @@ class EvaluationManager constructor(
 
     override fun onSentHeaders(allHeaders: JSONObject, endpointId: EndpointId) {
         if (endpointId == ENDPOINT_A1) {
-            removeSentEvaluatedServerSideInAppIds(allHeaders)
+            removeSentEvaluatedServerSideCampaignIds(allHeaders)
             removeSentSuppressedClientSideInApps(allHeaders)
         }
     }

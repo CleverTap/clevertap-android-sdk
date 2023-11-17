@@ -103,7 +103,7 @@ class TriggerAdapter(triggerJSON: JSONObject) {
      */
     @VisibleForTesting
     fun triggerConditionFromJSON(property: JSONObject): TriggerCondition {
-        val value = TriggerValue(property.opt(Constants.KEY_VALUE))
+        val value = TriggerValue(property.opt(Constants.KEY_PROPERTY_VALUE))
 
         val operator = property.optTriggerOperator(Constants.INAPP_OPERATOR)
 
