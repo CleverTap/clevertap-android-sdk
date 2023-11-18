@@ -160,26 +160,30 @@ class TriggersMatcher {
     internal fun expectedValueEqualsActual(expected: TriggerValue, actual: TriggerValue): Boolean {
         return when {
             expected.isList() && actual.isList() -> {
-                expected.listValue()!!.toHashSet() == actual.listValue()!!.toHashSet()
-
+                expected.listValueWithCleanedStringIfPresent()!!
+                    .toHashSet() == actual.listValueWithCleanedStringIfPresent()!!.toHashSet()
             }
 
-            actual.isList() -> expected.stringValue() in (actual.listValue() ?: listOf<String>())
-            expected.isList() -> actual.stringValue() in (expected.listValue() ?: listOf<String>())
+            actual.isList() -> expected.stringValueCleaned() in (actual.listValueWithCleanedStringIfPresent()
+                ?: listOf<String>())
+
+            expected.isList() -> actual.stringValueCleaned() in (expected.listValueWithCleanedStringIfPresent()
+                ?: listOf<String>())
+
             expected.numberValue() != null -> {
                 val actualNumber =
-                    actual.numberValue()?.toDouble() ?: actual.stringValue()?.toDoubleOrNull()
+                    actual.numberValue()?.toDouble() ?: actual.stringValueCleaned()?.toDoubleOrNull()
                     ?: return false
                 expected.numberValue()!!.toDouble() == actualNumber
             }
 
             actual.numberValue() != null -> {
                 val expectedNumber =
-                    expected.stringValue()?.toDoubleOrNull() ?: return false
+                    expected.stringValueCleaned()?.toDoubleOrNull() ?: return false
                 actual.numberValue()!!.toDouble() == expectedNumber
             }
 
-            actual.stringValue() != null -> expected.stringValue() == actual.stringValue()
+            actual.stringValue() != null -> expected.stringValueCleaned() == actual.stringValueCleaned()
             else -> false
         }
     }
@@ -228,28 +232,28 @@ class TriggersMatcher {
     @VisibleForTesting
     internal fun actualContainsExpected(expected: TriggerValue, actual: TriggerValue): Boolean {
         return when {
-            actual.stringValue() != null && expected.stringValue() != null -> actual.stringValue()!!
-                .contains(expected.stringValue()!!)
+            actual.stringValue() != null && expected.stringValue() != null -> actual.stringValueCleaned()!!
+                .contains(expected.stringValueCleaned()!!)
 
-            expected.isList() && actual.stringValue() != null -> expected.listValue()!!.asSequence()
+            expected.isList() && actual.stringValue() != null -> expected.listValueWithCleanedStringIfPresent()!!
+                .asSequence()
                 .filterNotNull()
                 .filterIsInstance<String>()
-                .any { actual.stringValue()!!.contains(it) }
+                .any { actual.stringValueCleaned()!!.contains(it) }
 
             expected.isList() && actual.isList() -> {
-                val actualSet = actual.listValue()!!.filterIsInstance<String>().toSet()
-                expected.listValue()!!.filterIsInstance<String>().any {
+                val actualSet = actual.listValueWithCleanedStringIfPresent()!!.filterIsInstance<String>().toSet()
+                expected.listValueWithCleanedStringIfPresent()!!.filterIsInstance<String>().any {
                     actualSet.contains(it)
                 }
             }
 
             actual.isList() && expected.stringValue() != null ->
-                actual.listValue()!!.filterIsInstance<String>().toSet()
-                    .contains(expected.stringValue())
+                actual.listValueWithCleanedStringIfPresent()!!.filterIsInstance<String>().toSet()
+                    .contains(expected.stringValueCleaned())
 
             else -> false
         }
-
     }
 
     /**
