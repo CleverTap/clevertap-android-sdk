@@ -13,6 +13,8 @@ import org.json.JSONArray
 class TriggerValue(val value: Any? = null, private var listValue: List<Any?>? = null) {
 
     private var stringValue: String? = null
+    private var stringValueCleaned: String? = null
+    private var listValueWithCleanedStringIfPresent: List<Any?>? = null
     private var numberValue: Number? = null
 
     /**
@@ -21,10 +23,22 @@ class TriggerValue(val value: Any? = null, private var listValue: List<Any?>? = 
      */
     init {
         when (value) {
-            is String -> stringValue = value
+            is String -> {
+                stringValue = value
+                stringValueCleaned = value.trim().lowercase()
+            }
+
             is Number -> numberValue = value
-            is List<*> -> listValue = value
-            is JSONArray -> listValue = JsonUtil.listFromJson<Any>(value)
+            is List<*> -> {
+                listValue = value
+                listValueWithCleanedStringIfPresent = value.map { if (it is String) it.trim().lowercase() else it }
+            }
+
+            is JSONArray -> {
+                listValue = JsonUtil.listFromJson<Any>(value)
+                listValueWithCleanedStringIfPresent =
+                    listValue?.map { if (it is String) it.trim().lowercase() else it }
+            }
         }
     }
 
@@ -41,6 +55,7 @@ class TriggerValue(val value: Any? = null, private var listValue: List<Any?>? = 
      * @return The encapsulated string value, or null if the value is not a string.
      */
     fun stringValue(): String? = stringValue
+    fun stringValueCleaned(): String? = stringValueCleaned
 
     /**
      * Retrieve the encapsulated list value.
@@ -48,6 +63,7 @@ class TriggerValue(val value: Any? = null, private var listValue: List<Any?>? = 
      * @return The encapsulated list value, or null if the value is not a list.
      */
     fun listValue(): List<*>? = listValue
+    fun listValueWithCleanedStringIfPresent(): List<*>? = listValueWithCleanedStringIfPresent
 
     /**
      * Check if the encapsulated value is a list.
