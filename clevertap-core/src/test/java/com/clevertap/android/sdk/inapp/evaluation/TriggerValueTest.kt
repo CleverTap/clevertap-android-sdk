@@ -10,8 +10,9 @@ class TriggerValueTest {
 
     @Test
     fun testStringValue() {
-        val triggerValue = TriggerValue("Hello")
-        assertEquals("Hello", triggerValue.stringValue())
+        val triggerValue = TriggerValue(" HellO ")
+        assertEquals(" HellO ", triggerValue.stringValue())
+        assertEquals("hello", triggerValue.stringValueCleaned())
         assertNull(triggerValue.numberValue())
         assertFalse(triggerValue.isList())
         assertNull(triggerValue.listValue())
@@ -34,6 +35,45 @@ class TriggerValueTest {
         assertNull(triggerValue.numberValue())
         assertTrue(triggerValue.isList())
         assertEquals(list, triggerValue.listValue())
+    }
+
+    @Test
+    fun testListValueWithUpperCase() {
+        val list = listOf("APPLE", "Banana", "Cherry")
+        val triggerValue = TriggerValue(list)
+        assertNull(triggerValue.stringValue())
+        assertNull(triggerValue.numberValue())
+        assertTrue(triggerValue.isList())
+
+        val expected = listOf("apple", "banana", "cherry")
+        assertEquals(expected, triggerValue.listValueWithCleanedStringIfPresent())
+        assertEquals(list, triggerValue.listValue())
+    }
+
+    @Test
+    fun testListValueWithUpperCaseAndExtraLeadingAndTrailingSpace() {
+        val list = listOf("  APPLE  ", "  Banana  ", "Cherry")
+        val triggerValue = TriggerValue(list)
+        assertNull(triggerValue.stringValue())
+        assertNull(triggerValue.numberValue())
+        assertTrue(triggerValue.isList())
+
+        val expected = listOf("apple", "banana", "cherry")
+        assertEquals(list, triggerValue.listValue())
+        assertEquals(expected, triggerValue.listValueWithCleanedStringIfPresent())
+    }
+
+    @Test
+    fun `testListValueWith Number And String With UpperCase And Extra Leading And Trailing Space`() {
+        val list = listOf(1, "  Banana  ", "Cherry", 2, 4.44)
+        val triggerValue = TriggerValue(list)
+        assertNull(triggerValue.stringValue())
+        assertNull(triggerValue.numberValue())
+        assertTrue(triggerValue.isList())
+
+        val expected = listOf(1, "banana", "cherry", 2, 4.44)
+        assertEquals(list, triggerValue.listValue())
+        assertEquals(expected, triggerValue.listValueWithCleanedStringIfPresent())
     }
 
     @Test
