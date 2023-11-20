@@ -68,7 +68,6 @@ class TriggersMatcher {
         return (0 until whenTriggers.length())
             .map { TriggerAdapter(whenTriggers[it] as JSONObject) }
             .any { match(it, event) }
-
     }
 
     /**
@@ -95,7 +94,6 @@ class TriggersMatcher {
                 )
             }
             .takeIf { it }) ?: return false
-
 
         // (chargedEvent only) property conditions for items are AND-ed
         return (0 until trigger.itemsCount)
@@ -164,11 +162,16 @@ class TriggersMatcher {
                     .toHashSet() == actual.listValueWithCleanedStringIfPresent()!!.toHashSet()
             }
 
-            actual.isList() -> expected.stringValueCleaned() in (actual.listValueWithCleanedStringIfPresent()
-                ?: listOf<String>())
+            actual.isList() ->
+                checkGivenElementEqualsAnyElementInList(
+                    actual.listValueWithCleanedStringIfPresent()!!,
+                    expected.value
+                )
 
-            expected.isList() -> actual.stringValueCleaned() in (expected.listValueWithCleanedStringIfPresent()
-                ?: listOf<String>())
+            expected.isList() -> checkGivenElementEqualsAnyElementInList(
+                expected.listValueWithCleanedStringIfPresent()!!,
+                actual.value
+            )
 
             expected.numberValue() != null -> {
                 val actualNumber =
@@ -298,5 +301,30 @@ class TriggersMatcher {
                 actualNumber in it[0]!!..it[1]!!
             })
             ?: false
+    }
+
+    private fun checkGivenElementEqualsAnyElementInList(list: List<*>, elementToCheckForEquality: Any?): Boolean {
+        when (elementToCheckForEquality) {
+            is String -> {
+                // Check for equality in strings
+                return list.asSequence().filterIsInstance<String>()
+                    .any { it == elementToCheckForEquality.trim().lowercase() }
+                        || list.asSequence().filterIsInstance<Number>()
+                    .any { it.toDouble() == elementToCheckForEquality.trim().lowercase().toDoubleOrNull() }
+            }
+
+            is Number -> {
+                // Check for equality in numbers
+                val numberToCheck = elementToCheckForEquality.toDouble()
+                return list.asSequence().filterIsInstance<Number>().any { it.toDouble() == numberToCheck }
+                        || list.asSequence().filterIsInstance<String>()
+                    .any { it.trim().lowercase().toDoubleOrNull() == numberToCheck }
+            }
+
+            else -> {
+                // Handle other cases or return false if the type is not supported
+                return false
+            }
+        }
     }
 }
