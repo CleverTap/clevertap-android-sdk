@@ -691,6 +691,28 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `test expectedValueEqualsActual when expected string having 0s prefix equals actual number`() {
+        // Test when both the expected and actual values are numbers (doubles), and they are equal.
+        // Expects a positive result, indicating that the numbers are equal.
+        val expectedValue = TriggerValue("005")
+        val actualValue = TriggerValue(5.0)
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when actual string having 0s prefix equals expected number`() {
+        // Test when both the expected and actual values are numbers (doubles), and they are equal.
+        // Expects a positive result, indicating that the numbers are equal.
+        val expectedValue = TriggerValue(5.0)
+        val actualValue = TriggerValue("005")
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
     fun `test expectedValueEqualsActual when expected number does not equal actual number`() {
         // Test when both the expected and actual values are numbers (doubles), but they are not equal.
         // Expects a negative result, indicating that the numbers are not equal.
