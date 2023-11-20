@@ -443,7 +443,7 @@ public class CTInAppNotification implements Parcelable {
                 }
             } else if (media.isImage()) {
 
-                Bitmap bitmap = inAppResourceProvider.fetchInAppImage(media.getMediaUrl(), Bitmap.class);
+                Bitmap bitmap = inAppResourceProvider.fetchInAppImage(media.getMediaUrl());
                 if (bitmap != null) {
                     listener.notificationReady(this);
                     return;
