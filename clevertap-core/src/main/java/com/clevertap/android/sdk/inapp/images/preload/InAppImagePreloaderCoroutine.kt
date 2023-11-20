@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlin.system.measureTimeMillis
 
 internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
     override val inAppImageProvider: InAppResourceProvider,
@@ -29,7 +30,13 @@ internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
 
         urls.forEach { url ->
             val job = scope.launch(handler) {
-                inAppImageProvider.fetchInAppImage(url)
+                logger?.verbose("started image url fetch $url")
+
+                val mils = measureTimeMillis {
+                    inAppImageProvider.fetchInAppImage(url)
+                }
+
+                logger?.verbose("finished image url fetch $url in $mils ms")
             }
             jobs.add(job)
         }
