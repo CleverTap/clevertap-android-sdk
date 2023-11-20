@@ -138,15 +138,13 @@ internal class InAppResourceProvider constructor(
         val cachedImage: Bitmap? = cachedImage(url)
 
         if (cachedImage != null) {
-            return if (clazz.isAssignableFrom(Bitmap::class.java)) {
-                cachedImage as? T
+            if (clazz.isAssignableFrom(Bitmap::class.java)) {
+                return cachedImage as? T
             } else if (clazz.isAssignableFrom(ByteArray::class.java)) {
                 val stream = ByteArrayOutputStream()
                 cachedImage.compress(Bitmap.CompressFormat.PNG, 100, stream)
                 val byteArray = stream.toByteArray()
-                byteArray as? T
-            } else {
-                null
+                return byteArray as? T
             }
         }
 
