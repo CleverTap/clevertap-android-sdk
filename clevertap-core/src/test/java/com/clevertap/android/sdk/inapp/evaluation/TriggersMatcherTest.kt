@@ -221,7 +221,6 @@ class TriggersMatcherTest : BaseTestCase() {
         )
     }
 
-
     @Test
     fun `test actualIsInRangeOfExpected when actual value within the expected range`() {
         val expectedValue = TriggerValue(listOf(5.0, 10.0))
@@ -232,9 +231,27 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `test actualIsInRangeOfExpected when actual int value within the expected int range`() {
+        val expectedValue = TriggerValue(listOf(5, 10))
+        val actualValue = TriggerValue(7)
+
+        val result = triggersMatcher.actualIsInRangeOfExpected(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
     fun `test actualIsInRangeOfExpected when actual value outside the expected range`() {
         val expectedValue = TriggerValue(listOf(5.0, 10.0))
         val actualValue = TriggerValue(15.0)
+
+        val result = triggersMatcher.actualIsInRangeOfExpected(expectedValue, actualValue)
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test actualIsInRangeOfExpected when actual int value outside the expected int range`() {
+        val expectedValue = TriggerValue(listOf(5, 10))
+        val actualValue = TriggerValue(15)
 
         val result = triggersMatcher.actualIsInRangeOfExpected(expectedValue, actualValue)
         assertFalse(result)
@@ -691,6 +708,28 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `test expectedValueEqualsActual when expected string having 0s prefix equals actual number`() {
+        // Test when both the expected and actual values are numbers (doubles), and they are equal.
+        // Expects a positive result, indicating that the numbers are equal.
+        val expectedValue = TriggerValue("005")
+        val actualValue = TriggerValue(5.0)
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when actual string having 0s prefix equals expected number`() {
+        // Test when both the expected and actual values are numbers (doubles), and they are equal.
+        // Expects a positive result, indicating that the numbers are equal.
+        val expectedValue = TriggerValue(5.0)
+        val actualValue = TriggerValue("005")
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
     fun `test expectedValueEqualsActual when expected number does not equal actual number`() {
         // Test when both the expected and actual values are numbers (doubles), but they are not equal.
         // Expects a negative result, indicating that the numbers are not equal.
@@ -764,6 +803,160 @@ class TriggersMatcherTest : BaseTestCase() {
 
         val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
         assertFalse(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when expected list of int has actual int in string form`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(listOf(1, 2, 3))
+        val actualValue = TriggerValue("2")
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when expected list of int has actual int in string form with padded zeros`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(listOf(1, 2, 3))
+        val actualValue = TriggerValue("00002")
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when expected list of double has actual double in string form`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(listOf(1.1, 2.2, 3.3))
+        val actualValue = TriggerValue("   00002.2   ")
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when expected list of double has actual double`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(listOf(1.1, 2.2, 3.3))
+        val actualValue = TriggerValue(2.2)
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when actual list of int has expected int in string form`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue("2")
+        val actualValue = TriggerValue(listOf(1, 2, 3))
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when actual list of int has expected int in string form with padded zeros`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue("00002")
+        val actualValue = TriggerValue(listOf(1, 2, 3))
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when actual list of double has expected double in string form`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue("  2.2  ")
+        val actualValue = TriggerValue(listOf(1.1, 2.2, 3.3))
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when expected list of int in string form has actual int`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(listOf("1", "2", "3"))
+        val actualValue = TriggerValue(2)
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when expected list of int in string form with padded zeros has actual int`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(listOf("1", "00002", "3"))
+        val actualValue = TriggerValue(2)
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when expected list of double in string form with padded zeros has actual double`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(listOf("1.1", "   00002.2   ", "3.3"))
+        val actualValue = TriggerValue(2.2)
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when actual list of int in string form has expected int`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(2)
+        val actualValue = TriggerValue(listOf("1", "2", "3"))
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when actual list of int in string form with padded zeros has expected int`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(2)
+        val actualValue = TriggerValue(listOf("1", "00002", "3"))
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when actual list of double in string form has expected double`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(2.2)
+        val actualValue = TriggerValue(listOf("1.1", "  2.2  ", "3.3"))
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when actual list of double has expected double`() {
+        // Test when the expected value is a non-empty list, and the actual value is an empty list.
+        // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
+        val expectedValue = TriggerValue(2.2)
+        val actualValue = TriggerValue(listOf(1.1, 2.2, 3.3))
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
     }
 
     @Test
