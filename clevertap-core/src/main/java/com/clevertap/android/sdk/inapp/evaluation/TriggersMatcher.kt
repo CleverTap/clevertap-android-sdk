@@ -280,8 +280,8 @@ class TriggersMatcher {
                         it.toDoubleOrNull()
                     }
 
-                    is Double -> {
-                        it
+                    is Number -> {
+                        it.toDouble()
                     }
 
                     else -> null

@@ -221,7 +221,6 @@ class TriggersMatcherTest : BaseTestCase() {
         )
     }
 
-
     @Test
     fun `test actualIsInRangeOfExpected when actual value within the expected range`() {
         val expectedValue = TriggerValue(listOf(5.0, 10.0))
@@ -232,9 +231,27 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `test actualIsInRangeOfExpected when actual int value within the expected int range`() {
+        val expectedValue = TriggerValue(listOf(5, 10))
+        val actualValue = TriggerValue(7)
+
+        val result = triggersMatcher.actualIsInRangeOfExpected(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
     fun `test actualIsInRangeOfExpected when actual value outside the expected range`() {
         val expectedValue = TriggerValue(listOf(5.0, 10.0))
         val actualValue = TriggerValue(15.0)
+
+        val result = triggersMatcher.actualIsInRangeOfExpected(expectedValue, actualValue)
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test actualIsInRangeOfExpected when actual int value outside the expected int range`() {
+        val expectedValue = TriggerValue(listOf(5, 10))
+        val actualValue = TriggerValue(15)
 
         val result = triggersMatcher.actualIsInRangeOfExpected(expectedValue, actualValue)
         assertFalse(result)
