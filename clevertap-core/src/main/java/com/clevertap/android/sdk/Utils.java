@@ -534,6 +534,13 @@ public final class Utils {
         return jsonObjectList;
     }
 
+    /**
+     * Calculates the haversine distance between two locations on Earth.
+     *
+     * @param coordinateA The first location.
+     * @param coordinateB The second location.
+     * @return The haversine distance between the two locations, in kilometers.
+     */
     public static double haversineDistance(Location coordinateA, Location coordinateB) {
         // The Earth radius ranges from a maximum of about 6378 km (equatorial)
         // to a minimum of about 6357 km (polar).

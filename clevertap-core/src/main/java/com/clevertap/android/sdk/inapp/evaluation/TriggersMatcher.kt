@@ -146,7 +146,18 @@ class TriggersMatcher {
         }
     }
 
-    fun evaluateDistance(radius: Double, expected: Location, actual: Location): Boolean {
+    /**
+     * Internal function to evaluate a haversine distance condition.
+     *
+     * This function evaluates if the haversine distance between two locations is within a specified radius.
+     * The haversine formula is used to compute the distance between two locations.
+     *
+     * @param radius The radius to check against, in kilometers.
+     * @param expected The expected location.
+     * @param actual The actual location.
+     * @return `true` if the haversine distance is within the specified radius, `false` otherwise.
+     */
+    internal fun evaluateDistance(radius: Double, expected: Location, actual: Location): Boolean {
         val distance = Utils.haversineDistance(expected, actual)
         return distance <= radius
     }
