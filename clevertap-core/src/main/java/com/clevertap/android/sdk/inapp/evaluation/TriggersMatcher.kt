@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import android.location.Location
 import androidx.annotation.VisibleForTesting
+import com.clevertap.android.sdk.Utils
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -144,6 +146,11 @@ class TriggersMatcher {
             TriggerOperator.NotContains -> !actualContainsExpected(expected, actual)
             else -> false // TODO: Implement all cases as per the backend evaluation and remove this line
         }
+    }
+
+    fun evaluateDistance(radius: Double, expected: Location, actual: Location): Boolean {
+        val distance = Utils.haversineDistance(expected, actual)
+        return distance <= radius
     }
 
     /**
