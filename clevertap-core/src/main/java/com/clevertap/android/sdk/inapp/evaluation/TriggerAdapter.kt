@@ -96,6 +96,12 @@ class TriggerAdapter(triggerJSON: JSONObject) {
         get() = items?.length() ?: 0
 
     /**
+     * The JSONArray containing Geographic radius trigger conditions.
+     * Used for location-based trigger conditions within a specified geographical radius.
+     */
+    val geoRadius: JSONArray? = triggerJSON.optJSONArray("geoRadius")
+
+    /**
      * Internal function to create a TriggerCondition from a JSON property object.
      *
      * @param property The JSON object representing a trigger condition property.
