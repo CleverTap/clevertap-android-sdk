@@ -30,28 +30,5 @@ dependencies {
 publishing {
     publications.create<MavenPublication>("Maven") {
         from(project.components["javaPlatform"])
-
-        pom {
-            name.set(project.name)
-            description.set("The CleverTap Android SDK")
-            url.set("https://github.com/CleverTap/clevertap-android-sdk/tree/master")
-            licenses {
-                license {
-                    name.set("The Apache Software License, Version 2.0")
-                    url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                    distribution.set("repo")
-                }
-            }
-            scm {
-                connection.set("scm:git:github.com/CleverTap/clevertap-android-sdk.git")
-                developerConnection.set("scm:git:ssh:github.com/CleverTap/clevertap-android-sdk.git")
-                url.set("https://github.com/CleverTap/clevertap-android-sdk/tree/master")
-            }
-            developers {
-                developer {
-                    name.set("CleverTap")
-                }
-            }
-        }
     }
 }
