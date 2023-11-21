@@ -4,14 +4,17 @@ import android.content.Context;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
-import com.clevertap.android.sdk.inapp.images.InAppImagePreloader;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderCoroutine;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
 import java.util.concurrent.Callable;
 import kotlin.Pair;
@@ -32,17 +35,21 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final StoreRegistry storeRegistry;
 
+    private final CoreMetaData coreMetaData;
+
     public InAppResponse(
             CleverTapInstanceConfig config,
             ControllerManager controllerManager,
             final boolean isSendTest,
-            StoreRegistry storeRegistry
+            StoreRegistry storeRegistry,
+            CoreMetaData coreMetaData
     ) {
         this.config = config;
         logger = this.config.getLogger();
         this.controllerManager = controllerManager;
         this.isSendTest = isSendTest;
         this.storeRegistry = storeRegistry;
+        this.coreMetaData = coreMetaData;
     }
 
     public void setCleverTapResponse(CleverTapResponse cleverTapResponse) {
@@ -120,7 +127,10 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-            InAppImagePreloader preloader = new InAppImagePreloader(inAppResourceProvider, logger);
+
+            CTExecutors executor = CTExecutorFactory.executorResourceDownloader();
+            InAppImagePreloaderStrategy preloader = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
+            //InAppImagePreloaderStrategy preloader = new InAppImagePreloaderExecutors(executor, inAppResourceProvider, logger);
 
             preloader.preloadImages(res.getPreloadImage());
 
@@ -148,7 +158,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private void handleAppLaunchServerSide(JSONArray inappNotifsApplaunched) {
         try {
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched);
+            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched, coreMetaData.getLocationFromUser());
         } catch (Throwable e) {
             logger.verbose(config.getAccountId(), "InAppManager: Malformed AppLaunched ServerSide inApps");
             logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);

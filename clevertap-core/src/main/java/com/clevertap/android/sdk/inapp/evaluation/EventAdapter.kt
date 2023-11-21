@@ -1,5 +1,8 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import android.location.Location
+import com.clevertap.android.sdk.Constants
+
 /**
  * Represents an event and its associated properties.
  *
@@ -11,6 +14,7 @@ class EventAdapter(
     val eventName: String,
     val eventProperties: Map<String, Any>,
     val items: List<Map<String, Any>?> = listOf(), // for chargedEvent only
+    val userLocation: Location? = null
 ) {
 
     /**
@@ -30,5 +34,14 @@ class EventAdapter(
      */
     fun getItemValue(propertyName: String): List<TriggerValue> {
         return items.filterNotNull().map { TriggerValue(it[propertyName]) }
+    }
+
+    /**
+     * Checks if the event is a charged event.
+     *
+     * @return `true` if the event is a charged event; otherwise, `false`.
+     */
+    fun isChargedEvent(): Boolean {
+        return eventName == Constants.CHARGED_EVENT
     }
 }

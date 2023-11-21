@@ -16,6 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -532,4 +533,35 @@ public final class Utils {
         }
         return jsonObjectList;
     }
+
+    /**
+     * Calculates the haversine distance between two locations on Earth.
+     *
+     * @param coordinateA The first location.
+     * @param coordinateB The second location.
+     * @return The haversine distance between the two locations, in kilometers.
+     */
+    public static double haversineDistance(Location coordinateA, Location coordinateB) {
+        // The Earth radius ranges from a maximum of about 6378 km (equatorial)
+        // to a minimum of about 6357 km (polar).
+        // A globally-average value is usually considered to be 6371 km (6371e3).
+        // This method uses 6378.2 km as the radius since this is the value
+        // used by the backend, and calculations should produce the same result.
+        final double EARTH_DIAMETER = 2 * 6378.2;
+
+        final double RAD_CONVERT = Math.PI / 180;
+        double phi1 = coordinateA.getLatitude() * RAD_CONVERT;
+        double phi2 = coordinateB.getLatitude() * RAD_CONVERT;
+
+        double deltaPhi = (coordinateB.getLatitude() - coordinateA.getLatitude()) * RAD_CONVERT;
+        double deltaLambda = (coordinateB.getLongitude() - coordinateA.getLongitude()) * RAD_CONVERT;
+
+        double sinPhi = Math.sin(deltaPhi / 2);
+        double sinLambda = Math.sin(deltaLambda / 2);
+
+        double a = sinPhi * sinPhi + Math.cos(phi1) * Math.cos(phi2) * sinLambda * sinLambda;
+        // Distance in km
+        return EARTH_DIAMETER * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
 }

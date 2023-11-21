@@ -2,6 +2,8 @@ package com.clevertap.android.sdk.task;
 
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.utils.UrlHashGenerator;
+
 import java.util.HashMap;
 import java.util.concurrent.Executor;
 
@@ -14,7 +16,7 @@ import java.util.concurrent.Executor;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class CTExecutors {
 
-    public final IOExecutor IO_EXECUTOR = new IOExecutor();
+    public final IOExecutor IO_EXECUTOR;
 
     public final MainThreadExecutor MAIN_EXECUTOR = new MainThreadExecutor();
 
@@ -22,10 +24,19 @@ public class CTExecutors {
 
     protected final CleverTapInstanceConfig config;
 
+    protected String singleThreadExecutorTag;
+
     private final HashMap<String, PostAsyncSafelyExecutor> postAsyncSafelyTasks = new HashMap<>();
 
     CTExecutors(CleverTapInstanceConfig config) {
         this.config = config;
+        IO_EXECUTOR = new IOExecutor();
+    }
+
+    CTExecutors(int ioPoolSize) {
+        this.config = null;
+        IO_EXECUTOR = new IOExecutor(ioPoolSize);
+        singleThreadExecutorTag = UrlHashGenerator.INSTANCE.hashWithTsSeed();
     }
 
     /**
@@ -35,6 +46,15 @@ public class CTExecutors {
      */
     public <TResult> Task<TResult> ioTask() {
         return taskOnExecutorWithName(IO_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR, "ioTask");
+    }
+
+    /**
+     * Use this task when you want to offload some background task
+     * @param <TResult>
+     * @return
+     */
+    public <TResult> Task<TResult> ioTaskNonUi() {
+        return taskOnExecutorWithName(IO_EXECUTOR, IO_EXECUTOR, "ioTaskNonUi");
     }
 
     /**
@@ -73,7 +93,13 @@ public class CTExecutors {
      * @return
      */
     public <TResult> Task<TResult> postAsyncSafelyTask() {
-        return postAsyncSafelyTask(config.getAccountId());
+        String key;
+        if (config != null) {
+            key = config.getAccountId();
+        } else {
+            key = singleThreadExecutorTag;
+        }
+        return postAsyncSafelyTask(key);
     }
 
     /**

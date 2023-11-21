@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.task;
 
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-
 import java.util.concurrent.Executor;
 
 /**
@@ -14,8 +12,7 @@ class SuccessExecutable<TResult> extends Executable<TResult> {
 
     private final OnSuccessListener<TResult> successListener;
 
-    protected SuccessExecutable(final Executor executor, OnSuccessListener<TResult> listener,
-                                final CleverTapInstanceConfig config) {
+    protected SuccessExecutable(final Executor executor, OnSuccessListener<TResult> listener) {
         super(executor);
         successListener = listener;
     }
@@ -26,11 +23,6 @@ class SuccessExecutable<TResult> extends Executable<TResult> {
 
     @Override
     void execute(final TResult input) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                successListener.onSuccess(input);
-            }
-        });
+        executor.execute(() -> successListener.onSuccess(input));
     }
 }

@@ -1,6 +1,10 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import android.location.Location
 import androidx.annotation.VisibleForTesting
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.isValid
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -61,10 +65,11 @@ class TriggersMatcher {
         eventName: String,
         details: Map<String, Any>,
         items: List<Map<String, Any>>,
+        userLocation: Location? = null
     ): Boolean {
 
         // events in array are OR-ed
-        val event = EventAdapter(eventName, details, items)
+        val event = EventAdapter(eventName, details, items, userLocation)
         return (0 until whenTriggers.length())
             .map { TriggerAdapter(whenTriggers[it] as JSONObject) }
             .any { match(it, event) }
@@ -83,8 +88,24 @@ class TriggersMatcher {
             return false
         }
 
-        // property conditions are AND-ed
-        ((0 until trigger.propertyCount)
+        if (!matchPropertyConditions(trigger, event)) {
+            return false
+        }
+
+        if (event.isChargedEvent() && !matchChargedItemConditions(trigger, event)) {
+            return false
+        }
+
+        if (trigger.geoRadiusCount > 0 && !matchGeoRadius(event, trigger)) {
+            return false
+        }
+
+        return true
+    }
+
+    private fun matchPropertyConditions(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+        // Property conditions are AND-ed
+        return (0 until trigger.propertyCount)
             .mapNotNull { trigger.propertyAtIndex(it) }
             .all {
                 evaluate(
@@ -93,9 +114,10 @@ class TriggersMatcher {
                     event.getPropertyValue(it.propertyName)
                 )
             }
-            .takeIf { it }) ?: return false
+    }
 
-        // (chargedEvent only) property conditions for items are AND-ed
+    private fun matchChargedItemConditions(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+        // (chargedEvent only) Property conditions for items are AND-ed
         return (0 until trigger.itemsCount)
             .mapNotNull { trigger.itemAtIndex(it) }
             .all { condition ->
@@ -108,6 +130,37 @@ class TriggersMatcher {
                         )
                     }
             }
+    }
+
+    /**
+     * Matches the user's location against geo-radius conditions in the trigger.
+     *
+     * Conditions are OR-ed; returns true if any condition is satisfied.
+     *
+     * @param trigger The [TriggerAdapter] having trigger condition to be matched against the event.
+     * @param event The [EventAdapter] having event to be matched against the trigger condition.
+     * @return True if user location matches any geo-radius condition; otherwise, false.
+     */
+    @VisibleForTesting
+    internal fun matchGeoRadius(event: EventAdapter, trigger: TriggerAdapter): Boolean {
+        if (event.userLocation != null && event.userLocation.isValid()) {
+            // GeoRadius conditions are OR-ed
+            for (i in 0 until trigger.geoRadiusCount) {
+                val triggerRadius = trigger.geoRadiusAtIndex(i)
+                val expected = Location("")
+                expected.latitude = triggerRadius!!.latitude
+                expected.longitude = triggerRadius.longitude
+
+                try {
+                    if (evaluateDistance(triggerRadius.radius, expected, event.userLocation)) {
+                        return true
+                    }
+                } catch (e: Exception) {
+                    Logger.d("Error matching GeoRadius triggers for event named ${event.eventName}. Reason: ${e.localizedMessage}")
+                }
+            }
+        }
+        return false
     }
 
     /**
@@ -142,6 +195,23 @@ class TriggersMatcher {
             TriggerOperator.NotContains -> !actualContainsExpected(expected, actual)
             else -> false // TODO: Implement all cases as per the backend evaluation and remove this line
         }
+    }
+
+    /**
+     * Internal function to evaluate a haversine distance condition.
+     *
+     * This function evaluates if the haversine distance between two locations is within a specified radius.
+     * The haversine formula is used to compute the distance between two locations.
+     *
+     * @param radius The radius to check against, in kilometers.
+     * @param expected The expected location.
+     * @param actual The actual location.
+     * @return `true` if the haversine distance is within the specified radius, `false` otherwise.
+     */
+    @VisibleForTesting
+    internal fun evaluateDistance(radius: Double, expected: Location, actual: Location): Boolean {
+        val distance = Utils.haversineDistance(expected, actual)
+        return distance <= radius
     }
 
     /**

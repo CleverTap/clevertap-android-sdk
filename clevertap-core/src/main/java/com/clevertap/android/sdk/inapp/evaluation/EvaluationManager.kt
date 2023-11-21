@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope.LIBRARY
+import android.location.Location
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
@@ -30,28 +31,30 @@ class EvaluationManager constructor(
     private val evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
-    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>): JSONArray {
-        val event = EventAdapter(eventName, eventProperties)
+    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
+        val event = EventAdapter(eventName, eventProperties, userLocation = userLocation)
         evaluateServerSide(event)
         return evaluateClientSide(event)
     }
 
     fun evaluateOnChargedEvent(
-        details: Map<String, Any>, items: List<Map<String, Any>>
+        details: Map<String, Any>,
+        items: List<Map<String, Any>>,
+        userLocation: Location?
     ): JSONArray {
-        val event = EventAdapter(Constants.CHARGED_EVENT, details, items)
+        val event = EventAdapter(Constants.CHARGED_EVENT, details, items, userLocation = userLocation)
         evaluateServerSide(event)
         return evaluateClientSide(event)
     }
 
     // onBatchSent with App Launched event in batch
-    fun evaluateOnAppLaunchedClientSide(): JSONArray {
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
+    fun evaluateOnAppLaunchedClientSide(userLocation: Location?): JSONArray {
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap(), userLocation = userLocation)
         return evaluateClientSide(event)
     }
 
-    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>): JSONArray {
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
+    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>, userLocation: Location?): JSONArray {
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap(), userLocation = userLocation)
 
         val eligibleInApps = evaluate(event, appLaunchedNotifs)
 

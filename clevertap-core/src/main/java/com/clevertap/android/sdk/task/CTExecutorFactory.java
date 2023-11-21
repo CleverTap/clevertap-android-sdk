@@ -12,6 +12,8 @@ import java.util.Map;
  */
 public class CTExecutorFactory {
 
+    private static final String TAG_RESOURCE_DOWNLOADER = "Resource Downloader";
+
     private static final Map<String, CTExecutors> executorMap = Collections
             .synchronizedMap(new HashMap<String, CTExecutors>());
 
@@ -26,6 +28,25 @@ public class CTExecutorFactory {
                 if (executorForAccount == null) {
                     executorForAccount = new CTExecutors(config);
                     executorMap.put(config.getAccountId(), executorForAccount);
+                }
+            }
+        }
+        return executorForAccount;
+    }
+
+    public static CTExecutors executorResourceDownloader() {
+        return executorResourceDownloader(8);
+    }
+
+    public static CTExecutors executorResourceDownloader(int ioPoolSize) {
+
+        CTExecutors executorForAccount = executorMap.get(TAG_RESOURCE_DOWNLOADER);
+        if (executorForAccount == null) {
+            synchronized (CTExecutorFactory.class) {
+                executorForAccount = executorMap.get(TAG_RESOURCE_DOWNLOADER);
+                if (executorForAccount == null) {
+                    executorForAccount = new CTExecutors(ioPoolSize);
+                    executorMap.put(TAG_RESOURCE_DOWNLOADER, executorForAccount);
                 }
             }
         }

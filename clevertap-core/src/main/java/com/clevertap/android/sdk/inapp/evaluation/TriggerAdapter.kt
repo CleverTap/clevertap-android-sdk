@@ -19,6 +19,12 @@ data class TriggerCondition(
     val value: TriggerValue,
 )
 
+data class TriggerGeoRadius(
+    var latitude: Double,
+    var longitude: Double,
+    var radius: Double
+)
+
 /**
  * Enum class representing possible operators for trigger conditions.
  *
@@ -84,6 +90,12 @@ class TriggerAdapter(triggerJSON: JSONObject) {
     val items: JSONArray? = triggerJSON.optJSONArray("itemProperties")
 
     /**
+     * The JSONArray containing Geographic radius trigger conditions.
+     * Used for location-based trigger conditions within a specified geographical radius.
+     */
+    val geoRadiusArray: JSONArray? = triggerJSON.optJSONArray("geoRadius")
+
+    /**
      * Get the count of event property trigger conditions.
      */
     val propertyCount: Int
@@ -94,6 +106,12 @@ class TriggerAdapter(triggerJSON: JSONObject) {
      */
     val itemsCount: Int
         get() = items?.length() ?: 0
+
+    /**
+     * Get the count of geoRadius property based trigger conditions.
+     */
+    val geoRadiusCount: Int
+        get() = geoRadiusArray?.length() ?: 0
 
     /**
      * Internal function to create a TriggerCondition from a JSON property object.
@@ -145,6 +163,19 @@ class TriggerAdapter(triggerJSON: JSONObject) {
         val itemJSONObject = items?.optJSONObject(index) ?: return null
 
         return triggerConditionFromJSON(itemJSONObject)
+    }
+
+    fun geoRadiusAtIndex(index: Int): TriggerGeoRadius? {
+        if (geoRadiusArray.isInvalidIndex(index)) {
+            return null
+        }
+
+        val geoRadiusItem = geoRadiusArray?.optJSONObject(index) ?: return null
+
+        val latitude = geoRadiusItem.optDouble("lat")
+        val longitude = geoRadiusItem.optDouble("lng")
+        val radius = geoRadiusItem.optDouble("rad")
+        return TriggerGeoRadius(latitude, longitude, radius)
     }
 
     //TODO: move key names to constants
