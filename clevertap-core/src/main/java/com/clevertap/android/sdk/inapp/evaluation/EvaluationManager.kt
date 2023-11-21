@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope.LIBRARY
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
@@ -17,6 +19,7 @@ import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+@RestrictTo(LIBRARY)
 class EvaluationManager constructor(
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
@@ -24,7 +27,6 @@ class EvaluationManager constructor(
     private val storeRegistry: StoreRegistry,
 ) : NetworkHeadersListener {
 
-    //TODO: make it a set instead of a list??
     private val evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
     private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
@@ -127,18 +129,22 @@ class EvaluationManager constructor(
         return (0 until whenTriggers.length()).map { TriggerAdapter(whenTriggers[it] as JSONObject) }
     }
 
-    private fun getWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
+    internal fun getWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
         val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
         val occurrenceLimits = limitJSON.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
 
-        return (frequencyLimits.toList() + occurrenceLimits.toList()).map { LimitAdapter(it) }.toMutableList()
+        return (frequencyLimits.toList() + occurrenceLimits.toList()).mapNotNull {
+            if (it.isNotNullAndEmpty()) {
+                LimitAdapter(it)
+            } else null
+        }.toMutableList()
     }
 
     /**
      * Sorts list of InApp objects with priority(100 highest - 1 lowest) and if equal priority
      * then then the one created earliest
      */
-    private fun sortByPriority(inApps: List<JSONObject>): List<JSONObject> {
+    internal fun sortByPriority(inApps: List<JSONObject>): List<JSONObject> {
         val priority: (JSONObject) -> Int = { inApp ->
             inApp.optInt(Constants.INAPP_PRIORITY, 1)
         }

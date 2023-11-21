@@ -1,30 +1,34 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
+import org.hamcrest.CoreMatchers.*
+import org.hamcrest.MatcherAssert.*
+import org.hamcrest.beans.SamePropertyValuesAs.*
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.*
+import org.mockito.*
+import kotlin.test.assertEquals
 
-@Ignore
 class EvaluationManagerTest : BaseTestCase() {
 
-    /*private lateinit var evaluationManager: EvaluationManager
+    private lateinit var evaluationManager: EvaluationManager
 
     override fun setUp() {
         super.setUp()
-        val inAppController = Mockito.mock(InAppController::class.java)
         val triggersMatcher = Mockito.mock(TriggersMatcher::class.java)
         val triggerManager = Mockito.mock(TriggerManager::class.java)
-        val impressionStore = Mockito.mock(ImpressionStore::class.java)
-        val impressionManager = Mockito.mock(ImpressionManager::class.java)
+        val storeRegistry = Mockito.mock(StoreRegistry::class.java)
         val limitsMatcher = Mockito.mock(LimitsMatcher::class.java)
-        val inAppStore = Mockito.mock(InAppStore::class.java)
         evaluationManager = EvaluationManager(
-//            inAppController,
             triggersMatcher,
             triggerManager,
-            impressionStore,
-            impressionManager,
             limitsMatcher,
-            inAppStore
+            storeRegistry
         )
     }
 
@@ -201,5 +205,56 @@ class EvaluationManagerTest : BaseTestCase() {
         val sortedList = evaluationManager.sortByPriority(inApps)
 
         assertThat(sortedList, `is`(inApps))
-    }*/
+    }
+
+    @Test
+    fun `test getWhenLimits with valid input`() {
+        val limitJSON = JSONObject()
+        val fL1 = JSONObject().apply {
+            put("type", "minutes")
+            put("limit", 10)
+            put("frequency", 30)
+        }
+        val oL1 = JSONObject().apply {
+            put("type", "onExactly")
+            put("limit", 1)
+        }
+        limitJSON.put("frequencyLimits", JSONArray().put(fL1))
+        limitJSON.put("occurrenceLimits", JSONArray().put(oL1))
+
+        val result = evaluationManager.getWhenLimits(limitJSON)
+
+        assertEquals(2, result.size)
+        // Adjust the assertions based on the actual implementation of LimitAdapter
+        assertThat(
+            LimitAdapter(fL1),
+            samePropertyValuesAs(result[0])
+        )
+        assertThat(
+            LimitAdapter(oL1),
+            samePropertyValuesAs(result[1])
+        )
+    }
+
+    @Test
+    fun `test getWhenLimits with empty JSON arrays`() {
+        val limitJSON = JSONObject()
+        limitJSON.put("frequencyLimits", JSONArray())
+        limitJSON.put("occurrenceLimits", JSONArray())
+
+        val result = evaluationManager.getWhenLimits(limitJSON)
+
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun `test getWhenLimits with empty JSON object in json arrays`() {
+        val limitJSON = JSONObject()
+        limitJSON.put("frequencyLimits", JSONArray(JSONObject()))
+        limitJSON.put("occurrenceLimits", JSONArray(JSONObject()))
+
+        val result = evaluationManager.getWhenLimits(limitJSON)
+
+        assertEquals(0, result.size)
+    }
 }
