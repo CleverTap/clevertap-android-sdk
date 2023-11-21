@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
+import android.location.Location;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
@@ -451,13 +452,15 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             @Override
             public Void call() {
 
+                Location userLocation = cleverTapMetaData.getLocationFromUser();
+
                 if (eventMediator.isChargedEvent(event)) {
                     controllerManager.getInAppController()
                             .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
-                                    eventMediator.getChargedEventItemDetails(event));
+                                    eventMediator.getChargedEventItemDetails(event), userLocation);
                 } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
                     controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
-                            eventMediator.getEventProperties(event));
+                            eventMediator.getEventProperties(event), userLocation);
                 }
 
                 if (eventMediator.shouldDropEvent(event, eventType)) {

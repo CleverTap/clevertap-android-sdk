@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
 import androidx.annotation.NonNull;
@@ -178,7 +179,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
         onAppLaunchEventSent = () -> {
-            final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedClientSide();
+            final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedClientSide(
+                    coreMetaData.getLocationFromUser());
             if (clientSideInAppsToDisplay.length() > 0) {
                 addInAppNotificationsToQueue(clientSideInAppsToDisplay);
             }
@@ -778,8 +780,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     @WorkerThread
-    public void onQueueEvent(final String eventName, Map<String, Object> eventProperties) {
-        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnEvent(eventName, eventProperties);
+    public void onQueueEvent(final String eventName, Map<String, Object> eventProperties, Location userLocation) {
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnEvent(eventName, eventProperties,
+                userLocation);
         if (clientSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(clientSideInAppsToDisplay);
         }
@@ -787,18 +790,20 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @WorkerThread
     public void onQueueChargedEvent(Map<String, Object> chargeDetails,
-            List<Map<String, Object>> items) {
-        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(chargeDetails, items);
+            List<Map<String, Object>> items, Location userLocation) {
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(chargeDetails, items,
+                userLocation);
         if (clientSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(clientSideInAppsToDisplay);
         }
     }
 
-    public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps)
+    public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps,
+            Location userLocation)
             throws JSONException {
         List<JSONObject> appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps);
         final JSONArray serverSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedServerSide(
-                appLaunchSsInAppList);
+                appLaunchSsInAppList, userLocation);
 
         if (serverSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(serverSideInAppsToDisplay);

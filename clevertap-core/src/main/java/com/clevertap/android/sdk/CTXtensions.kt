@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.SharedPreferences
+import android.location.Location
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
@@ -199,4 +200,8 @@ fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
     } else {
         this ?: other
     }
+}
+
+fun Location.isValid(): Boolean {
+    return this.latitude in -90.0..90.0 && this.longitude in -180.0..180.0
 }
