@@ -1,7 +1,7 @@
 ext {
-    set("libraryName", "CleverTapAndroidSDK")
-    set("artifact", "clevertap-android-sdk")
-    set("libraryDescription", "The CleverTap Android SDK")
+    set("libraryName", "CleverTapBOM")
+    set("artifact", "clevertap-bom")
+    set("libraryDescription", "The CleverTap Android SDK BOM")
 
     set("libraryVersion", AndroidVersion.clevertapBoM)
 
