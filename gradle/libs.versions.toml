@@ -7,6 +7,8 @@ android_targetSdk = "33"
 kotlin_plugin = "1.7.20"
 sonarqube_plugin = "3.3"
 android_buildTools = "33.0.0"
+detekt_gradle_plugin = "1.20.0-RC1"
+firebase_gradle_crashlytics = "2.8.1"
 
 # AndroidX
 annotation = "1.2.0"
@@ -96,6 +98,8 @@ catch_exception = "2.0"
 # Project
 android_gradle_plugin = { module = "com.android.tools.build:gradle", version.ref = "android_gradle_plugin" }
 kotlin_gradle_plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin_plugin" }
+detekt_gradle_plugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin" , version.ref= "detekt_gradle_plugin"}
+firebase_gradle_crashlytics = { module = "com.google.firebase:firebase-crashlytics-gradle" , version.ref= "firebase_gradle_crashlytics"}
 
 # AndroidX
 androidx_annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
