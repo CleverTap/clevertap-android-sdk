@@ -4,6 +4,7 @@ import android.content.Context;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.InAppImagePreloader;
@@ -32,17 +33,21 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final StoreRegistry storeRegistry;
 
+    private final CoreMetaData coreMetaData;
+
     public InAppResponse(
             CleverTapInstanceConfig config,
             ControllerManager controllerManager,
             final boolean isSendTest,
-            StoreRegistry storeRegistry
+            StoreRegistry storeRegistry,
+            CoreMetaData coreMetaData
     ) {
         this.config = config;
         logger = this.config.getLogger();
         this.controllerManager = controllerManager;
         this.isSendTest = isSendTest;
         this.storeRegistry = storeRegistry;
+        this.coreMetaData = coreMetaData;
     }
 
     public void setCleverTapResponse(CleverTapResponse cleverTapResponse) {
@@ -148,7 +153,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private void handleAppLaunchServerSide(JSONArray inappNotifsApplaunched) {
         try {
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched, null);
+            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched, coreMetaData.getLocationFromUser());
         } catch (Throwable e) {
             logger.verbose(config.getAccountId(), "InAppManager: Malformed AppLaunched ServerSide inApps");
             logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);

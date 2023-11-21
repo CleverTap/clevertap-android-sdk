@@ -159,7 +159,8 @@ class CleverTapFactory {
                 config,
                 controllerManager,
                 false,
-                storeRegistry
+                storeRegistry,
+                coreMetaData
         );
 
         NetworkManager networkManager = new NetworkManager(
@@ -202,7 +203,8 @@ class CleverTapFactory {
                 config,
                 controllerManager,
                 true,
-                storeRegistry
+                storeRegistry,
+                coreMetaData
         );
         inAppResponseForSendTestInApp.setCleverTapResponse(new CleverTapResponseHelper());
 
