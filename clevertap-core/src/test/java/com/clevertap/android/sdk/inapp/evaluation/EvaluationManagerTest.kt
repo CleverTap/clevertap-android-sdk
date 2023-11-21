@@ -250,8 +250,8 @@ class EvaluationManagerTest : BaseTestCase() {
     @Test
     fun `test getWhenLimits with empty JSON object in json arrays`() {
         val limitJSON = JSONObject()
-        limitJSON.put("frequencyLimits", JSONArray(JSONObject()))
-        limitJSON.put("occurrenceLimits", JSONArray(JSONObject()))
+        limitJSON.put("frequencyLimits", JSONArray().put(JSONObject()))
+        limitJSON.put("occurrenceLimits", JSONArray().put(JSONObject()))
 
         val result = evaluationManager.getWhenLimits(limitJSON)
 
