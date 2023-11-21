@@ -170,6 +170,12 @@ fun JSONArray.toList(): List<JSONObject> {
     return jsonObjectList
 }
 
+fun JSONArray.iterator(foreach: (jsonObject: JSONObject) -> Unit) {
+    for (index in 0 until length()) {
+        foreach(getJSONObject(index))
+    }
+}
+
 fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
     val has = has(key)
 

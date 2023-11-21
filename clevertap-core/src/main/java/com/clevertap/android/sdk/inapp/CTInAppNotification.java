@@ -267,7 +267,7 @@ public class CTInAppNotification implements Parcelable {
     }
 
     void didDismiss(InAppResourceProvider resourceProvider) {
-        removeImageOrGif(resourceProvider);
+        //removeImageOrGif(resourceProvider); // todo add coorect removal
     }
 
     String getBackgroundColor() {
@@ -443,7 +443,7 @@ public class CTInAppNotification implements Parcelable {
                 }
             } else if (media.isImage()) {
 
-                Bitmap bitmap = inAppResourceProvider.fetchInAppImage(media.getMediaUrl(), Bitmap.class);
+                Bitmap bitmap = inAppResourceProvider.fetchInAppImage(media.getMediaUrl());
                 if (bitmap != null) {
                     listener.notificationReady(this);
                     return;

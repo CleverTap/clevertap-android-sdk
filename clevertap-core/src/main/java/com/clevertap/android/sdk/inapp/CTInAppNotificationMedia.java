@@ -30,7 +30,7 @@ public class CTInAppNotificationMedia implements Parcelable {
 
     private String mediaUrl;
 
-    CTInAppNotificationMedia() {
+    public CTInAppNotificationMedia() {
     }
 
     private CTInAppNotificationMedia(Parcel in) {
@@ -65,7 +65,7 @@ public class CTInAppNotificationMedia implements Parcelable {
         return contentType;
     }
 
-    String getMediaUrl() {
+    public String getMediaUrl() {
         return mediaUrl;
     }
 
@@ -74,7 +74,7 @@ public class CTInAppNotificationMedia implements Parcelable {
         this.mediaUrl = mediaUrl;
     }
 
-    CTInAppNotificationMedia initWithJSON(JSONObject mediaObject, int orientation) {
+    public CTInAppNotificationMedia initWithJSON(JSONObject mediaObject, int orientation) {
         this.orientation = orientation;
         try {
             this.contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject
