@@ -36,6 +36,11 @@ class EventAdapter(
         return items.filterNotNull().map { TriggerValue(it[propertyName]) }
     }
 
+    /**
+     * Checks if the event is a charged event.
+     *
+     * @return `true` if the event is a charged event; otherwise, `false`.
+     */
     fun isChargedEvent(): Boolean {
         return eventName == Constants.CHARGED_EVENT
     }

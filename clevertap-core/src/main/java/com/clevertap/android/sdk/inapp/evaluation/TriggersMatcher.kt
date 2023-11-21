@@ -132,6 +132,15 @@ class TriggersMatcher {
             }
     }
 
+    /**
+     * Matches the user's location against geo-radius conditions in the trigger.
+     *
+     * Conditions are OR-ed; returns true if any condition is satisfied.
+     *
+     * @param trigger The [TriggerAdapter] having trigger condition to be matched against the event.
+     * @param event The [EventAdapter] having event to be matched against the trigger condition.
+     * @return True if user location matches any geo-radius condition; otherwise, false.
+     */
     @VisibleForTesting
     internal fun matchGeoRadius(event: EventAdapter, trigger: TriggerAdapter): Boolean {
         if (event.userLocation != null && event.userLocation.isValid()) {
