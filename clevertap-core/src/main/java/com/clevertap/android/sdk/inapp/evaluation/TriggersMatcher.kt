@@ -146,8 +146,8 @@ class TriggersMatcher {
                     if (evaluateDistance(triggerRadius.radius, expected, event.userLocation)) {
                         return true
                     }
-                } catch (exception: Exception) {
-                    Logger.d("Error matching triggers for event named ${event.eventName}. Reason: ${exception.message}")
+                } catch (e: Exception) {
+                    Logger.d("Error matching GeoRadius triggers for event named ${event.eventName}. Reason: ${e.localizedMessage}")
                 }
             }
         }
@@ -199,6 +199,7 @@ class TriggersMatcher {
      * @param actual The actual location.
      * @return `true` if the haversine distance is within the specified radius, `false` otherwise.
      */
+    @VisibleForTesting
     internal fun evaluateDistance(radius: Double, expected: Location, actual: Location): Boolean {
         val distance = Utils.haversineDistance(expected, actual)
         return distance <= radius
