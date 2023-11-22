@@ -20,8 +20,8 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:1.0.9"
-implementation "com.clevertap.android:clevertap-android-sdk:5.0.0" // 4.4.0 and above
+implementation "com.clevertap.android:push-templates:1.1.0"
+implementation "com.clevertap.android:clevertap-android-sdk:5.2.1" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -259,7 +259,7 @@ Template Key | Required | Value
 pt_event_name | Required | for e.g. `Remind Later`,
 pt_event_property_<property_name_1> | Optional | for e.g. `<property_value>`,
 pt_event_property_<property_name_2> | Required | future epoch timestamp. For e.g., `$D_1592503813`
-pt_dismiss_on_click | Optional | Dismisses the notification without opening the app
+pt_dismiss_on_click | Required | Value should be `true`. It dismisses the notification without opening the app and raises a required event to the user profile, needed to send a reminder notification.
 
 ![Input_Box_CTA_Remind](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/inputCtaRemind.gif)
 
@@ -533,6 +533,7 @@ Input Box | 4:3 or 2:1 | .JPG
 Product Catalog | 1:1 | .JPG
 
 * For Auto and Manual Carousel the image dimensions should not exceed more than 840x560 for Android 11 and Android 12 devices and with 3:2 image aspect ratio
+* For images in Basic, Auto/Manual Carousel templates the image dimensions should not exceed more than 400x200 for only Android 13+ devices.
 * For Product Catalog image aspect ratio should be 1:1 and image size should be less than 80kb for Android 11 and Android 12 devices
 * For Zero Bezel it's recommended that if your image has any text it should be present in the middle of the image for Android 12+ devices. 
 * For Android 12+ devices it's recommended that if your image has any text it should be present in the middle of the image.

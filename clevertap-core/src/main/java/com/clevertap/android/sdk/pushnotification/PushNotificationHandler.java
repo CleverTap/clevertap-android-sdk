@@ -9,6 +9,7 @@ import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.ge
 import android.content.Context;
 import android.os.Bundle;
 import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
@@ -52,6 +53,7 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
     @Override
     public synchronized boolean onMessageReceived(final Context applicationContext, final Bundle message,
             final String pushType) {
+        message.putLong(Constants.OMR_INVOKE_TIME_IN_MILLIS,System.currentTimeMillis());
         CleverTapAPI cleverTapAPI = CleverTapAPI
                 .getGlobalInstance(applicationContext, getAccountIdFromNotificationBundle(message));
         NotificationInfo info = CleverTapAPI.getNotificationInfo(message);
@@ -68,7 +70,7 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
                     CleverTapAPI.getSignedCallNotificationHandler().onMessageReceived(applicationContext, message, pushType);
                 } else {
                     // render core push
-                    cleverTapAPI.renderPushNotification(new CoreNotificationRenderer(), applicationContext, message);
+                    cleverTapAPI.renderPushNotificationOnCallerThread(new CoreNotificationRenderer(), applicationContext, message);
                     //CleverTapAPI.createNotification(applicationContext, message);
                 }
             } else {

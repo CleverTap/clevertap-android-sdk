@@ -18,6 +18,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.WindowInsets;
 import android.view.WindowManager;
@@ -27,7 +28,6 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import androidx.core.app.NotificationManagerCompat;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
@@ -39,6 +39,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.json.JSONObject;
@@ -74,8 +75,6 @@ public class DeviceInfo {
 
         private final String networkType;
 
-        private final boolean notificationsEnabled;
-
         private final String osName;
 
         private final String osVersion;
@@ -91,6 +90,8 @@ public class DeviceInfo {
         private String appBucket;
 
         private int localInAppCount;
+
+        private final String locale;
 
         DeviceCachedInfo() {
             versionName = getVersionName();
@@ -109,8 +110,8 @@ public class DeviceInfo {
             width = getWidth();
             widthPixels = getWidthPixels();
             dpi = getDPI();
-            notificationsEnabled = getNotificationEnabledForUser();
             localInAppCount = getLocalInAppCountFromPreference();
+            locale = getDeviceLocale();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 appBucket = getAppBucket();
             }
@@ -280,17 +281,6 @@ public class DeviceInfo {
             return Utils.getDeviceNetworkType(context);
         }
 
-        private boolean getNotificationEnabledForUser() {
-            boolean isNotificationEnabled = true;
-            try {
-                isNotificationEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled();
-            } catch (RuntimeException rte) {
-                Logger.d("Runtime exception caused when checking whether notification are enabled or not");
-                rte.printStackTrace();
-            }
-            return isNotificationEnabled;//returns true if any exception is raised.
-        }
-
         private String getOsName() {
             return OS_NAME;
         }
@@ -365,6 +355,18 @@ public class DeviceInfo {
                 wm.getDefaultDisplay().getMetrics(dm);
                 return dm.widthPixels;
             }
+        }
+
+        private String getDeviceLocale() {
+            String language = Locale.getDefault().getLanguage();
+            if ("".equals(language)) {
+                language = "xx";
+            }
+            String country = Locale.getDefault().getCountry();
+            if ("".equals(country)) {
+                country = "XX";
+            }
+            return language + "_" + country;
         }
 
         private double toTwoPlaces(double n) {
@@ -445,6 +447,8 @@ public class DeviceInfo {
 
     private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
+    private String customLocale;
+
     /**
      * Returns the integer identifier for the default app icon.
      *
@@ -497,6 +501,7 @@ public class DeviceInfo {
         this.context = context;
         this.config = config;
         this.library = null;
+        this.customLocale = null;
         mCoreMetaData = coreMetaData;
         onInitDeviceInfo(cleverTapID);
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
@@ -544,7 +549,7 @@ public class DeviceInfo {
             if (getGoogleAdID() != null) {
                 deviceIsMultiUser = new LoginInfoProvider(context, config, this).deviceIsMultiUser();
             }
-            return CTJsonConverter.from(this, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
+            return CTJsonConverter.from(this, mCoreMetaData, enableNetworkInfoReporting,
                     deviceIsMultiUser);
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Failed to construct App Launched event", t);
@@ -614,10 +619,6 @@ public class DeviceInfo {
         return getDeviceCachedInfo().networkType;
     }
 
-    public boolean getNotificationsEnabledForUser() {
-        return getDeviceCachedInfo().notificationsEnabled;
-    }
-
     public String getOsName() {
         return getDeviceCachedInfo().osName;
     }
@@ -636,6 +637,23 @@ public class DeviceInfo {
 
     public void incrementLocalInAppCount() {
         getDeviceCachedInfo().localInAppCount++;
+    }
+
+    public String getDeviceLocale() {
+        return getDeviceCachedInfo().locale;
+    }
+
+    public void setCustomLocale(String customLocale) {
+        this.customLocale = customLocale;
+    }
+
+    public String getCustomLocale() {
+        return customLocale;
+    }
+
+    public String getLocale() {
+        // If locale is set by the client then use that, otherwise fetch it from the device
+        return TextUtils.isEmpty(getCustomLocale()) ? getDeviceLocale() : getCustomLocale();
     }
 
     public ArrayList<ValidationResult> getValidationResults() {

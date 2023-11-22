@@ -4,10 +4,13 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
@@ -15,12 +18,16 @@ import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.validation.ValidationResult;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
 
 @RestrictTo(Scope.LIBRARY)
 public class CTJsonConverter {
@@ -52,10 +59,12 @@ public class CTJsonConverter {
         return r;
     }
 
-    public static JSONObject from(DeviceInfo deviceInfo, Location locationFromUser, boolean enableNetworkInfoReporting
+    public static JSONObject from(DeviceInfo deviceInfo, CoreMetaData coreMetaData, boolean enableNetworkInfoReporting
             , boolean deviceIsMultiUser) throws JSONException {
 
         final JSONObject evtData = new JSONObject();
+        Location locationFromUser = coreMetaData.getLocationFromUser();
+
         evtData.put("Build", deviceInfo.getBuild() + "");
         evtData.put("Version", deviceInfo.getVersionName());
         evtData.put("OS Version", deviceInfo.getOsVersion());
@@ -85,12 +94,25 @@ public class CTJsonConverter {
             evtData.put("hgt", deviceInfo.getHeight());
             evtData.put("dpi", deviceInfo.getDPI());
             evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
+            evtData.put("locale", deviceInfo.getLocale());
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 evtData.put("abckt", deviceInfo.getAppBucket());
             }
             if (deviceInfo.getLibrary() != null) {
                 evtData.put("lib", deviceInfo.getLibrary());
             }
+
+            String proxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getProxyDomain();
+            if (!TextUtils.isEmpty(proxyDomain)) {
+                evtData.put("proxyDomain", proxyDomain);
+            }
+
+            String spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getSpikeyProxyDomain();
+            if (!TextUtils.isEmpty(spikyProxyDomain)) {
+                evtData.put("spikyProxyDomain", spikyProxyDomain);
+            }
+
             boolean sslPinning = ManifestInfo.getInstance(deviceInfo.getContext()).isSSLPinningEnabled();
             if(sslPinning){
                 evtData.put("sslpin", true);
@@ -129,6 +151,12 @@ public class CTJsonConverter {
             }
             //Adds an extra field to send local inApp count in queueData.
             evtData.put("LIAMC",deviceInfo.getLocalInAppCount());
+
+            // add custom sdk versions in "af" key of header.
+            HashMap<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
+            for (Entry<String, Integer> entries : allCustomSdkVersions.entrySet()) {
+                evtData.put(entries.getKey(), entries.getValue());
+            }
 
         } catch (Throwable t) {
             // Ignore

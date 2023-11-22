@@ -7,10 +7,12 @@ import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Utils;
+import java.util.Random;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class LaunchPendingIntentFactory {
@@ -30,7 +32,7 @@ public class LaunchPendingIntentFactory {
             if (VERSION.SDK_INT >= VERSION_CODES.M) {
                 flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
             }
-            pIntent = PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
+            pIntent = PendingIntent.getBroadcast(context, new Random().nextInt(),
                     launchIntent, flagsLaunchPendingIntent);
         }
         return pIntent;
@@ -62,7 +64,7 @@ public class LaunchPendingIntentFactory {
             flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
         }
 
-        return PendingIntent.getActivity(context, (int) System.currentTimeMillis(), launchIntent,
+        return PendingIntent.getActivity(context, new Random().nextInt(), launchIntent,
                 flagsLaunchPendingIntent);
 
 

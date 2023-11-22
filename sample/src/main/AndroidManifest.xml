@@ -4,6 +4,7 @@
     <!-- Add Permissions needed for CleverTap -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <!--Enable below line to test for Android GO devices-->
     <!--<uses-feature android:name="android.hardware.ram.low" android:required="true"/>-->
@@ -58,6 +59,12 @@
         <meta-data
             android:name="CLEVERTAP_REGION"
             android:value="eu1"/>
+        <!--<meta-data
+            android:name="CLEVERTAP_PROXY_DOMAIN"
+            android:value="analytics.sdktesting.xyz"/>-->
+        <!--<meta-data
+            android:name="CLEVERTAP_SPIKY_PROXY_DOMAIN"
+            android:value="push.sdktesting.xyz"/>-->
 
         <!-- Xiaomi Push -->
         <meta-data
@@ -95,6 +102,9 @@
         <meta-data
             android:name="CLEVERTAP_ACTIVITY_EXCLUDE"
             android:value="HomeScreenActivity" />
+        <meta-data
+            android:name="CLEVERTAP_ENCRYPTION_LEVEL"
+            android:value="1" />
 
         <service
             android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"

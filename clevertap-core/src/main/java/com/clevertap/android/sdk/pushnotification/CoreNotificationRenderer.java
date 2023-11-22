@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.pushnotification;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -9,14 +10,20 @@ import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
+
+import com.clevertap.android.sdk.network.DownloadedBitmap;
+import com.clevertap.android.sdk.network.DownloadedBitmap.Status;
+import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
 import org.json.JSONArray;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -30,8 +37,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
 
     @Override
     public @Nullable Object getCollapseKey(final Bundle extras) {
-        Object collapse_key = extras.get(Constants.WZRK_COLLAPSE);
-        return collapse_key;
+        return extras.get(Constants.WZRK_COLLAPSE);
     }
 
     @Override
@@ -47,6 +53,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         return notifTitle;
     }
 
+    @SuppressLint("NotificationTrampoline")
     @Override
     public Builder renderNotification(final Bundle extras, final Context context,
             final Builder nb, final CleverTapInstanceConfig config, final int notificationId) {
@@ -56,12 +63,21 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         NotificationCompat.Style style;
         String bigPictureUrl = extras.getString(Constants.WZRK_BIG_PICTURE);
         if (bigPictureUrl != null && bigPictureUrl.startsWith("http")) {
+            DownloadedBitmap downloadedBitmap = DownloadedBitmapFactory.INSTANCE.nullBitmapWithStatus(Status.INIT_ERROR);
             try {
-                Bitmap bpMap = Utils.getNotificationBitmap(bigPictureUrl, false, context);
+                downloadedBitmap = Utils.getNotificationBitmapWithTimeout(bigPictureUrl,
+                        false, context, config, Constants.PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS);
+
+                Bitmap bpMap = downloadedBitmap.getBitmap();
 
                 if (bpMap == null) {
                     throw new Exception("Failed to fetch big picture!");
                 }
+                long pift = downloadedBitmap.getDownloadTime();
+                config.getLogger()
+                        .verbose("Fetched big picture in " + pift + " millis");
+
+                extras.putString(Constants.WZRK_BPDS,downloadedBitmap.getStatus().getStatusValue());
 
                 if (extras.containsKey(Constants.WZRK_MSG_SUMMARY)) {
                     String summaryText = extras.getString(Constants.WZRK_MSG_SUMMARY);
@@ -76,6 +92,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
             } catch (Throwable t) {
                 style = new NotificationCompat.BigTextStyle()
                         .bigText(notifMessage);
+                extras.putString(Constants.WZRK_BPDS, downloadedBitmap.getStatus().getStatusValue());
                 config.getLogger()
                         .verbose(config.getAccountId(),
                                 "Falling back to big text notification, couldn't fetch big picture",
@@ -84,6 +101,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         } else {
             style = new NotificationCompat.BigTextStyle()
                     .bigText(notifMessage);
+            extras.putString(Constants.WZRK_BPDS, Status.NO_IMAGE.getStatusValue());
         }
 
         boolean requiresChannelId = VERSION.SDK_INT >= VERSION_CODES.O;
@@ -106,7 +124,8 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                 .setSmallIcon(smallIcon);
 
         // uncommon
-        nb.setLargeIcon(Utils.getNotificationBitmap(icoPath, true, context));//uncommon
+        nb.setLargeIcon(Utils.getNotificationBitmapWithTimeout(icoPath, true, context,
+                config, Constants.PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS).getBitmap());//uncommon
 
         // Uncommon - START
         // add actions if any
@@ -122,7 +141,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
             }
         }
 
-        setActionButtons(context,extras,notificationId,nb,actions);
+        setActionButtons(context, extras, notificationId, nb, actions);
 
         return nb;
 
@@ -139,8 +158,9 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
     }
 
     @Override
-    public Builder setSound(final Context context, final Bundle extras, final Builder nb,CleverTapInstanceConfig config
-            ) {
+    public Builder setSound(final Context context, final Bundle extras, final Builder nb,
+            CleverTapInstanceConfig config
+    ) {
         try {
             if (extras.containsKey(Constants.WZRK_SOUND)) {
                 Uri soundUri = null;

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
+
 import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
@@ -13,6 +14,7 @@ import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+
 import java.util.concurrent.Callable;
 
 class ActivityLifeCycleManager {
@@ -85,6 +87,7 @@ class ActivityLifeCycleManager {
     public void activityResumed(Activity activity) {
         config.getLogger().verbose(config.getAccountId(), "App in foreground");
         sessionManager.checkTimeoutSession();
+
         //Anything in this If block will run once per App Launch.
         if (!coreMetaData.isAppLaunchPushed()) {
 

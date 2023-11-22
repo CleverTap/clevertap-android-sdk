@@ -16,6 +16,10 @@ public class ManifestInfo {
 
     private static String accountRegion;
 
+    private static String proxyDomain;
+
+    private static String spikyProxyDomain;
+
     private static boolean useADID;
 
     private static boolean appLaunchedDisabled;
@@ -44,7 +48,11 @@ public class ManifestInfo {
 
     private static String xiaomiAppID;
 
+    private final String devDefaultPushChannelId;
+
     private final String[] profileKeys;
+
+    private static int encryptionLevel;
 
     public synchronized static ManifestInfo getInstance(Context context) {
         if (instance == null) {
@@ -74,6 +82,12 @@ public class ManifestInfo {
         if (accountRegion == null) {
             accountRegion = _getManifestStringValueForKey(metaData, Constants.LABEL_REGION);
         }
+        if (proxyDomain == null) {
+            proxyDomain = _getManifestStringValueForKey(metaData, Constants.LABEL_PROXY_DOMAIN);
+        }
+        if (spikyProxyDomain == null) {
+            spikyProxyDomain = _getManifestStringValueForKey(metaData, Constants.LABEL_SPIKY_PROXY_DOMAIN);
+        }
         notificationIcon = _getManifestStringValueForKey(metaData, Constants.LABEL_NOTIFICATION_ICON);
         useADID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_USE_GOOGLE_AD_ID));
         appLaunchedDisabled = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_DISABLE_APP_LAUNCH));
@@ -82,6 +96,20 @@ public class ManifestInfo {
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BACKGROUND_SYNC));
         useCustomID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_CUSTOM_ID));
         fcmSenderId = _getManifestStringValueForKey(metaData, Constants.LABEL_FCM_SENDER_ID);
+        try {
+            int parsedEncryptionLevel = Integer.parseInt(_getManifestStringValueForKey(metaData,Constants.LABEL_ENCRYPTION_LEVEL));
+            if(parsedEncryptionLevel >= 0 && parsedEncryptionLevel <= 1){
+                encryptionLevel = parsedEncryptionLevel;
+            }
+            else{
+                encryptionLevel = 0;
+                Logger.v("Supported encryption levels are only 0 and 1. Setting it to 0 by default");
+            }
+        } catch (Throwable t){
+            encryptionLevel = 0;
+            Logger.v("Unable to parse encryption level from the Manifest, Setting it to 0 by default", t.getCause());
+        }
+
         if (fcmSenderId != null) {
             fcmSenderId = fcmSenderId.replace("id:", "");
         }
@@ -99,6 +127,8 @@ public class ManifestInfo {
             xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
         }
 
+        devDefaultPushChannelId = _getManifestStringValueForKey(metaData, Constants.LABEL_DEFAULT_CHANNEL_ID);
+
         profileKeys = parseProfileKeys(metaData);
     }
 
@@ -112,6 +142,9 @@ public class ManifestInfo {
 
     public String getFCMSenderId() {
         return fcmSenderId;
+    }
+    public String getDevDefaultPushChannelId() {
+        return devDefaultPushChannelId;
     }
 
     public String getIntentServiceName() {
@@ -137,6 +170,9 @@ public class ManifestInfo {
     boolean enableBeta() {
         return beta;
     }
+    public int getEncryptionLevel(){
+        return encryptionLevel;
+    }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public String getAccountRegion() {
@@ -146,6 +182,18 @@ public class ManifestInfo {
 
     String getAcountToken() {
         return accountToken;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public String getProxyDomain() {
+        Logger.v("ManifestInfo: getProxyDomain called, returning proxyDomain:" + proxyDomain);
+        return proxyDomain;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public String getSpikeyProxyDomain() {
+        Logger.v("ManifestInfo: getSpikeyProxyDomain called, returning spikeyProxyDomain:" + spikyProxyDomain);
+        return spikyProxyDomain;
     }
 
     String getPackageName() {
@@ -184,6 +232,13 @@ public class ManifestInfo {
         accountId = id;
         accountToken = token;
         accountRegion = region;
+    }
+
+    static void changeCredentials(String id, String token, String _proxyDomain, String _spikyProxyDomain) {
+        accountId = id;
+        accountToken = token;
+        proxyDomain = _proxyDomain;
+        spikyProxyDomain = _spikyProxyDomain;
     }
 
     static void changeXiaomiCredentials(String xiaomiAppID, String xiaomiAppKey) {

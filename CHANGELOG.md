@@ -1,13 +1,40 @@
 ## CHANGE LOG.
 
+### October 27, 2023
+
+* [CleverTap Push Templates SDK v1.2.0](docs/CTPUSHTEMPLATESCHANGELOG.md).
+
+### October 12, 2023
+
+* [CleverTap Android SDK v5.2.1](docs/CTCORECHANGELOG.md)
+* [CleverTap Xiaomi Push SDK v1.5.4](docs/CTXIAOMIPUSHCHANGELOG.md)
+
+### August 10, 2023
+
+* [CleverTap Android SDK v5.2.0](docs/CTCORECHANGELOG.md)
+* [CleverTap Xiaomi Push SDK v1.5.3](docs/CTXIAOMIPUSHCHANGELOG.md)
+* [CleverTap Huawei Push SDK v1.3.3](docs/CTHUAWEIPUSHCHANGELOG.md)
+
+### June 28, 2023
+
+* [CleverTap Android SDK v5.1.0](docs/CTCORECHANGELOG.md)
+* [CleverTap Push Templates SDK v1.1.0](docs/CTPUSHTEMPLATESCHANGELOG.md).
+
 ### May 5, 2023
+
 * [CleverTap Android SDK v5.0.0](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
-* [CleverTap Push Templates SDK v1.0.9](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md).
+* [CleverTap Push Templates SDK v1.0.9](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md)
+  .
 
 ### March 8, 2023
-* [CleverTap Push Templates SDK v1.0.8](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md). CleverTap Push Templates SDK `v1.0.8` requires [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md) to work properly.
+
+* [CleverTap Push Templates SDK v1.0.8](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md)
+  . CleverTap Push Templates SDK `v1.0.8`
+  requires [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+  to work properly.
 
 ### March 6, 2023
+
 * [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
 * [CleverTap RenderMax SDK v1.0.3](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTRENDERMAXCHANGELOG.md)
 

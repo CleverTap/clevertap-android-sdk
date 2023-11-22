@@ -162,9 +162,9 @@ public class PTConstants {
 
     public static final String PT_PRODUCT_DISPLAY_ACTION_TEXT_CLR_DEFAULT = PT_COLOUR_WHITE;
 
-    public static final int PT_CONNECTION_TIMEOUT = 10 * ONE_SECOND;
-
     public static final int PT_FLIP_INTERVAL_TIME = 4 * ONE_SECOND;
 
     public static final String KEY_CLICKED_STAR = "clickedStar";
+
+    public static final String KEY_REQUEST_CODES = "requestCodes";
 }

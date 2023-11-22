@@ -42,7 +42,8 @@ public final class Validator {
             "Notification Viewed", "UTM Visited", "Notification Sent", "App Launched", "wzrk_d",
             "App Uninstalled", "Notification Bounced", Constants.GEOFENCE_ENTERED_EVENT_NAME,
             Constants.GEOFENCE_EXITED_EVENT_NAME, Constants.SC_OUTGOING_EVENT_NAME,
-            Constants.SC_INCOMING_EVENT_NAME, Constants.SC_END_EVENT_NAME};
+            Constants.SC_INCOMING_EVENT_NAME, Constants.SC_END_EVENT_NAME,
+            Constants.SC_CAMPAIGN_OPT_OUT_EVENT_NAME};
 
     private ArrayList<String> discardedEvents;
 

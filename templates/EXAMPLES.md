@@ -143,6 +143,58 @@ Use `onUserLogin` to maintain multiple distinct user profiles on the same device
 
     cleverTapAPI.onUserLogin(profileUpdate);
 ```
+
+### Integrate Custom Proxy Domain
+The custom proxy domain feature allows to proxy all events raised from the CleverTap SDK through your required domain,
+ideal for handling or relaying CleverTap events and Push Impression events with your application server.
+Following ways can be used to configure custom proxy domain(s):
+
+#### Using Manifest file
+1. Add your CleverTap Account credentials in the Manifest file against the `CLEVERTAP_ACCOUNT_ID` and `CLEVERTAP_TOKEN` keys.
+2. Add the **CLEVERTAP_PROXY_DOMAIN** key with the proxy domain value for handling events through the custom proxy domain.
+3. Add the **CLEVERTAP_SPIKY_PROXY_DOMAIN** key with proxy domain value for handling push impression events.
+
+```xml
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="YOUR ACCOUNT ID" />
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="YOUR ACCOUNT TOKEN" />
+        <meta-data
+            android:name="CLEVERTAP_PROXY_DOMAIN"
+            android:value="YOUR PROXY DOMAIN"/>
+        <meta-data
+            android:name="CLEVERTAP_SPIKY_PROXY_DOMAIN"
+            android:value="YOUR SPIKY PROXY DOMAIN"/>
+```
+
+#### Using `changeCredentials` API
+
+```java
+CleverTapAPI.changeCredentials(
+                "YOUR CLEVERTAP ACCOUNT ID",
+                "YOUR CLEVERTAP ACCOUNT TOKEN",
+                "YOUR PROXY DOMAIN",
+                "YOUR SPIKY PROXY DOMAIN"
+        );
+```
+
+#### Using CleverTap's Additional Instance
+
+```java
+        CleverTapInstanceConfig cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(
+                applicationContext,
+                "YOUR CLEVERTAP ACCOUNT ID",
+                "YOUR CLEVERTAP ACCOUNT TOKEN"
+        );
+        
+        cleverTapInstanceConfig.setProxyDomain("YOUR PROXY DOMAIN");
+        cleverTapInstanceConfig.setSpikyProxyDomain("YOUR SPIKY PROXY DOMAIN");
+
+        CleverTapAPI.instanceWithConfig(applicationContext, cleverTapInstanceConfig);
+```
+
 ### Using App Inbox
 
 #### Adding Inbox Dependencies
@@ -345,7 +397,9 @@ To track the push notification events and deeplinks add the following receiver i
         android:enabled="true">
     </receiver>
 ```
-CleverTap handles closing the notification with Action buttons. You will have to add an additional CleverTap IntentService to your AndroidManifest.xml and the SDK will do it for you automatically
+CleverTap handles closing the notification with Action buttons. You will have to add an additional
+CleverTap IntentService to your AndroidManifest.xml and the SDK will do it for you automatically
+
 ```xml
     <service
          android:name="com.clevertap.android.sdk.pushnotification.CTNotificationIntentService"
@@ -356,9 +410,70 @@ CleverTap handles closing the notification with Action buttons. You will have to
      </service>
 ``` 
 
+Starting from `core v5.1.0` we have introduced a new feature that allows developers to define a
+default notification channel for their app. This feature provides flexibility in handling push
+notifications. Please note that this is only supported for clevertap core notifications. Support for
+push templates will be released soon.
+To specify the default notification channel ID, you can add the following metadata in your app's
+manifest file:
+
+```xml
+<meta-data
+    android:name="CLEVERTAP_DEFAULT_CHANNEL_ID"
+    android:value="your_default_channel_id" />
+```
+
+By including this metadata, you can define a specific notification channel that CleverTap will use
+if the channel provided in push payload is not registered by your app. This ensures that push
+notifications are displayed consistently even if the app's notification channels are not set up.
+
+In case the SDK does not find the default channel ID specified in the manifest, it will
+automatically fallback to using a default channel called "Miscellaneous". This ensures that push
+notifications are still delivered, even if no specific default channel is specified in the manifest.
+
+This enhancement provides developers with greater control over the default notification channel used
+by CleverTap for push notifications, ensuring a seamless and customizable user experience.
+
+Starting from `core v5.1.0` below APIs allows you to retrieve a notification bitmap from the
+specified `bitmapSrcUrl` with a specified timeout and size. In case the bitmap retrieval fails, you
+can choose to fallback to the app icon by setting the `fallbackToAppIcon` parameter. This API
+provides more control over the bitmap retrieval process for custom rendering.
+
+```java
+@Override
+public void onMessageReceived(RemoteMessage message) {
+        Bundle messageBundle = mParser.toBundle(message);
+        // this method must be called on background thread
+        // context, messageBundle must be non null.
+        // timeout must be in range of 1 - 20000 millis.
+        CleverTapAPI.getNotificationBitmapWithTimeout(
+context,messageBundle, "https://www.pushicons.com/icon",
+       true, 5000);
+        }
+```
+
+Below API extends the functionality of the previous one by additionally allowing you to specify the
+desired size in bytes for the retrieved bitmap.
+
+```java
+@Override
+public void onMessageReceived(RemoteMessage message) {
+        Bundle messageBundle = mParser.toBundle(message);
+        // this method must be called on background thread
+        // context, messageBundle must be non null.
+        // timeout must be in range of 1 - 20000 millis and size must be greater than 0.
+        CleverTapAPI.getNotificationBitmapWithTimeoutAndSize(
+context,messageBundle, "https://www.pushicons.com/icon",
+       true, 5000,1024);
+        }
+```
+
 #### Push Amplification
 
-Starting with v3.4.0, the SDK supports Push Amplification. Push Amplification is a capability that allows you to reach users on devices which suppress notifications via GCM/FCM. To allow your app to use CleverTap's Push Amplification via background ping service, add the following fields in your app's `AndroidManifest.xml`
+Starting with v3.4.0, the SDK supports Push Amplification. Push Amplification is a capability that
+allows you to reach users on devices which suppress notifications via GCM/FCM. To allow your app to
+use CleverTap's Push Amplification via background ping service, add the following fields in your
+app's `AndroidManifest.xml`
 
 ```xml
 <meta-data
@@ -601,3 +716,33 @@ From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver 
 #### Remote Config Variables
 
 From CleverTap SDK v5.0.0 onwards, you can use Remote Config Variables in your app. Please refer to the [Remote Config Variables doc](Variables.md) to read more on how to integrate this to your app.
+
+#### Encryption of PII data 
+
+PII data is stored across the SDK and could be sensitive information. 
+From CleverTap SDK v5.2.0 onwards, you can enable encryption for PII data wiz. **Email, Identity, Name and Phone**.  
+  
+Currently 2 levels of encryption are supported i.e None(0) and Medium(1). Encryption level is None by default.  
+**None** - All stored data is in plaintext    
+**Medium** - PII data is encrypted completely. 
+   
+The only way to set encryption level for default instance is from the `AndroidManifest.xml`
+
+* Add the following to `AndroidManifest.xml` file
+```xml
+<meta-data
+    android:name="CLEVERTAP_ENCRYPTION_LEVEL"
+    android:value="1" />
+```
+
+* Different instances can have different encryption levels. To set an encryption level for an additional instance
+```kotlin
+val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
+    applicationContext,
+    "ADDITIONAL_CLEVERTAP_ACCOUNT_ID",
+    "ADDITIONAL_CLEVERTAP_ACCOUNT_TOKEN"
+)
+
+clevertapAdditionalInstanceConfig.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext ,clevertapAdditionalInstanceConfig)
+```

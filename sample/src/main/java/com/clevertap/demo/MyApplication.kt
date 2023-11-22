@@ -64,6 +64,23 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             }
         })
 
+        /*val cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(
+            applicationContext,
+            "YOUR CLEVERTAP ACCOUNT ID",
+            "YOUR CLEVERTAP TOKEN"
+        )
+        cleverTapInstanceConfig.proxyDomain = "YOUR PROXY DOMAIN"
+        cleverTapInstanceConfig.spikyProxyDomain = "YOUR SPIKY PROXY DOMAIN"
+
+        CleverTapAPI.instanceWithConfig(this, cleverTapInstanceConfig)*/
+
+        /*CleverTapAPI.changeCredentials(
+            "YOUR CLEVERTAP ACCOUNT ID",
+            "YOUR CLEVERTAP TOKEN",
+            "YOUR PROXY DOMAIN",
+            "YOUR SPIKY PROXY DOMAIN"
+        )*/
+
         val defaultInstance = CleverTapAPI.getDefaultInstance(this)
         defaultInstance?.syncListener = object : SyncListener {
             override fun profileDataUpdated(updates: JSONObject?) {//no op
@@ -92,20 +109,18 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                     "${defaultInstance?.cleverTapAttributionIdentifier}"
         )*/
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CleverTapAPI.createNotificationChannel(
-                this, "BRTesting", "Core",
-                "Core notifications", NotificationManager.IMPORTANCE_MAX, true
-            )
-            CleverTapAPI.createNotificationChannel(
-                this, "PTTesting", "Push templates",
-                "All push templates", NotificationManager.IMPORTANCE_MAX, true
-            )
-            CleverTapAPI.createNotificationChannel(
-                this, "BlockBRTesting", "Blocked Core",
-                "Blocked Core notifications", NotificationManager.IMPORTANCE_NONE, true
-            )
-        }
+        CleverTapAPI.createNotificationChannel(
+            this, "BRTesting", "Core",
+            "Core notifications", NotificationManager.IMPORTANCE_MAX, true
+        )
+        CleverTapAPI.createNotificationChannel(
+            this, "PTTesting", "Push templates",
+            "All push templates", NotificationManager.IMPORTANCE_MAX, true
+        )
+        CleverTapAPI.createNotificationChannel(
+            this, "BlockBRTesting", "Blocked Core",
+            "Blocked Core notifications", NotificationManager.IMPORTANCE_NONE, true
+        )
     }
 
     override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {

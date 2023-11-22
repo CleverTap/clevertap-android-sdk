@@ -97,10 +97,10 @@ open class ProductDisplayLinearBigContentView(
         for (index in renderer.imageList!!.indices) {
 
             Utils.loadImageURLIntoRemoteView(
-                smallImageLayoutIds[imageCounter], renderer.imageList!![index], remoteView
+                smallImageLayoutIds[imageCounter], renderer.imageList!![index], remoteView,context
             )
             val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view)
-            Utils.loadImageURLIntoRemoteView(R.id.fimg, renderer.imageList!![index], tempRemoteView)
+            Utils.loadImageURLIntoRemoteView(R.id.fimg, renderer.imageList!![index], tempRemoteView,context)
             if (!Utils.getFallback()) {
                 if (!isFirstImageOk) {
                     isFirstImageOk = true
