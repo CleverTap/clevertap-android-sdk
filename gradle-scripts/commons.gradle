@@ -3,6 +3,8 @@ apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply from: "${project.rootDir}/gradle-scripts/jacoco_root.gradle"
+apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
+apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"
 
 ext {
     Repo = 'Maven'
@@ -182,5 +184,3 @@ afterEvaluate {
 signing {
     sign publishing.publications
 }
-apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
-apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"
