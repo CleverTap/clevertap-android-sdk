@@ -29,16 +29,17 @@ dependencies {
     compileOnly(libs.androidx.viewpager)
     compileOnly(libs.android.material)
     compileOnly(libs.androidx.fragment)
+
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.recyclerview)
     implementation(libs.installreferrer)
-
     implementation(libs.androidx.work.runtime)
+
     // Unit testing dependencies
     testImplementation(project(":test_shared"))
     testImplementation(libs.firebase.messaging)
-
     testImplementation(libs.test.mockk)
+
     androidTestImplementation(libs.test.work.testing)
     androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.test.rules)

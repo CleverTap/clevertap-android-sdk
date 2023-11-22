@@ -25,12 +25,13 @@ android {
 
 dependencies {
     compileOnly project(':clevertap-core')
-    implementation (libs.androidx.core.ktx)
-    implementation (libs.androidx.appcompat)
     compileOnly (libs.android.material)
 
+    implementation (libs.androidx.core.ktx)
+    implementation (libs.androidx.appcompat)
 
     testImplementation (libs.test.junit)
+
     androidTestImplementation (libs.test.ext.junit)
     androidTestImplementation (libs.test.espresso.core)
 }
