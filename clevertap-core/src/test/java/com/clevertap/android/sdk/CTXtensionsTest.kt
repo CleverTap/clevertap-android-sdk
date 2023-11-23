@@ -305,6 +305,34 @@ class CTXtensionsTest : BaseTestCase() {
         assertTrue(jsonArray.isInvalidIndex(-1))
     }
 
+    @Test
+    fun `test hasData with empty SharedPreferences`() {
+        val sharedPreferences = application.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
+
+        // Ensure the SharedPreferences is empty
+        assertTrue(sharedPreferences.all.isEmpty())
+
+        // Test the hasData function
+        assertFalse(sharedPreferences.hasData())
+    }
+
+    @Test
+    fun `test hasData with non-empty SharedPreferences`() {
+        val sharedPreferences = application.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
+
+        // Add some data to SharedPreferences
+        val editor = sharedPreferences.edit()
+        editor.putString("key1", "value1")
+        editor.putString("key2", "value2")
+        editor.apply()
+
+        // Ensure the SharedPreferences is not empty
+        assertTrue(sharedPreferences.all.isNotEmpty())
+
+        // Test the hasData function
+        assertTrue(sharedPreferences.hasData())
+    }
+
     private fun configureTestNotificationChannel(
         importance: Int, areChannelsEnabled: Boolean, SDK_INT: Int, channelID: String = "BlockedBRTesting",
         channelName: String = "BlockedBRTesting",
