@@ -5,13 +5,13 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build.VERSION
 import com.clevertap.android.shared.test.BaseTestCase
+import org.json.JSONArray
 import org.junit.*
 import org.junit.runner.*
 import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.util.ReflectionHelpers
-import java.lang.RuntimeException
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -278,6 +278,32 @@ class CTXtensionsTest : BaseTestCase() {
         }
     }
 
+    @Test
+    fun `test isInvalidIndex with null JSONArray`() {
+        val jsonArray: JSONArray? = null
+        assertTrue(jsonArray.isInvalidIndex(0))
+    }
+
+    @Test
+    fun `test isInvalidIndex with empty JSONArray`() {
+        val jsonArray = JSONArray()
+        assertTrue(jsonArray.isInvalidIndex(0))
+    }
+
+    @Test
+    fun `test isInvalidIndex with valid index`() {
+        val jsonArray = JSONArray("[1, 2, 3]")
+        assertFalse(jsonArray.isInvalidIndex(0))
+        assertFalse(jsonArray.isInvalidIndex(1))
+        assertFalse(jsonArray.isInvalidIndex(2))
+    }
+
+    @Test
+    fun `test isInvalidIndex with invalid index at right and left boundary`() {
+        val jsonArray = JSONArray("[1, 2, 3]")
+        assertTrue(jsonArray.isInvalidIndex(3))
+        assertTrue(jsonArray.isInvalidIndex(-1))
+    }
 
     private fun configureTestNotificationChannel(
         importance: Int, areChannelsEnabled: Boolean, SDK_INT: Int, channelID: String = "BlockedBRTesting",
