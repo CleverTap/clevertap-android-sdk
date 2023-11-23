@@ -14,6 +14,8 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.util.ReflectionHelpers
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -331,6 +333,25 @@ class CTXtensionsTest : BaseTestCase() {
 
         // Test the hasData function
         assertTrue(sharedPreferences.hasData())
+    }
+
+    @Test
+    fun `test orEmptyArray with null JSONArray`() {
+        val jsonArray: JSONArray? = null
+
+        // Ensure that the result is a non-null empty JSONArray
+        assertNotNull(jsonArray.orEmptyArray())
+
+        // Ensure that the length of the result is 0
+        assertEquals(0, jsonArray.orEmptyArray().length())
+    }
+
+    @Test
+    fun `test orEmptyArray with non-null JSONArray`() {
+        val jsonArray = JSONArray("[1, 2, 3]")
+
+        // Ensure that the result is the same reference as the original non-null JSONArray
+        assertSame(jsonArray, jsonArray.orEmptyArray())
     }
 
     private fun configureTestNotificationChannel(
