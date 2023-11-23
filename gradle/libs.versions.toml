@@ -190,6 +190,8 @@ catch_exception = { module = "eu.codearte.catch-exception:catch-exception", vers
 
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]
+powermock = ["test_powermock_api_mockito2", "test_powermock_classloading_xstream", "test_powermock_core", "test_powermock_module_junit4", "test_powermock_module_junit4_rule"]
+mockito = ["test_mockito_core", "test_mockito_inline"]
 
 [plugins]
 sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }

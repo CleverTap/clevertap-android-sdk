@@ -33,11 +33,7 @@ dependencies {
     testImplementation (libs.androidx.appcompat)
     testImplementation (libs.firebase.messaging)
 
-    testImplementation (libs.test.powermock.core)
-    testImplementation (libs.test.powermock.module.junit4)
-    testImplementation (libs.test.powermock.module.junit4.rule)
-    testImplementation (libs.test.powermock.api.mockito2)
-    testImplementation (libs.test.powermock.classloading.xstream)
+    testImplementation (libs.bundles.powermock)
     testImplementation (libs.catch.exception)
     testImplementation (project(":clevertap-core"))
 

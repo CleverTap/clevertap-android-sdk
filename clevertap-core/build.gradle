@@ -44,8 +44,8 @@ dependencies {
     testImplementation(libs.test.mockk)
 
     androidTestImplementation(libs.test.work.testing)
-    androidTestImplementation(libs.test.runner) //1.5.2
-    androidTestImplementation(libs.test.rules) // 1.5.0
+    androidTestImplementation(libs.test.runner)
+    androidTestImplementation(libs.test.rules)
     // Optional -- UI testing with Espresso
     androidTestImplementation(libs.test.espresso.core)
     // Optional -- UI testing with UI Automator
