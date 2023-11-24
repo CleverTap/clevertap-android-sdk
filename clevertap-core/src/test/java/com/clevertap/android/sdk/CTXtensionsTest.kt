@@ -529,6 +529,130 @@ class CTXtensionsTest : BaseTestCase() {
         assertEquals(innerArray2.toString(), jsonArrayList[1].toString())
     }
 
+    @Test
+    fun `test iterator with empty JSONArray`() {
+        val jsonArray = JSONArray()
+
+        val result = mutableListOf<JSONObject>()
+
+        jsonArray.iterator<JSONObject> { jsonObject ->
+            result.add(jsonObject)
+        }
+
+        assertEquals(
+            emptyList(),
+            result
+        )
+    }
+
+    @Test
+    fun `test iterator with JSONArray of Strings`() {
+        val jsonArray = JSONArray()
+        jsonArray.put("value1")
+        jsonArray.put("value2")
+
+        val result = mutableListOf<String>()
+
+        jsonArray.iterator<String> { stringValue ->
+            result.add(stringValue)
+        }
+
+        assertEquals(listOf("value1", "value2"), result)
+    }
+
+    @Test
+    fun `test iterator with JSONArray of Integers`() {
+        val jsonArray = JSONArray()
+        jsonArray.put(42)
+        jsonArray.put(100)
+
+        val result = mutableListOf<Int>()
+
+        jsonArray.iterator<Int> { intValue ->
+            result.add(intValue)
+        }
+
+        assertEquals(listOf(42, 100), result)
+    }
+
+    @Test
+    fun `test iterator with JSONArray of JSONObjects`() {
+        val jsonObject1 = JSONObject("{\"key1\": \"value1\"}")
+        val jsonObject2 = JSONObject("{\"key2\": \"value2\"}")
+
+        val jsonArray = JSONArray()
+        jsonArray.put(jsonObject1)
+        jsonArray.put(jsonObject2)
+
+        val result = mutableListOf<JSONObject>()
+
+        jsonArray.iterator<JSONObject> { jsonObject ->
+            result.add(jsonObject)
+        }
+
+        assertEquals(listOf(jsonObject1, jsonObject2), result)
+    }
+
+    @Test
+    fun `test iterator with JSONArray of mixed data types and iterator of JSONObject`() {
+        val jsonObject1 = JSONObject("{\"key1\": \"value1\"}")
+        val jsonObject2 = JSONObject("{\"key2\": \"value2\"}")
+
+        val jsonArray = JSONArray()
+        jsonArray.put(jsonObject1)
+        jsonArray.put(42)
+        jsonArray.put(3.14)
+        jsonArray.put(true)
+        jsonArray.put("string value")
+        jsonArray.put(jsonObject2)
+
+        val result = mutableListOf<JSONObject>()
+
+        jsonArray.iterator<JSONObject> { jsonObject ->
+            result.add(jsonObject)
+        }
+
+        assertEquals(
+            listOf(jsonObject1, jsonObject2),
+            result
+        )
+    }
+
+    @Test
+    fun `test iterator with generic type Any`() {
+        val jsonObject1 = JSONObject("{\"key1\": \"value1\"}")
+        val jsonObject2 = JSONObject("{\"key2\": \"value2\"}")
+
+        val innerArray1 = JSONArray()
+        innerArray1.put("value1a")
+        innerArray1.put("value1b")
+
+        val innerArray2 = JSONArray()
+        innerArray2.put("value2a")
+        innerArray2.put("value2b")
+
+        val jsonArray = JSONArray()
+        jsonArray.put(jsonObject1)
+        jsonArray.put(42)
+        jsonArray.put(3.14)
+        jsonArray.put(true)
+        jsonArray.put("string value")
+        jsonArray.put(jsonObject2)
+        jsonArray.put(innerArray1)
+        jsonArray.put(innerArray2)
+
+        val result = mutableListOf<Any>()
+
+        jsonArray.iterator<Any> { element ->
+            result.add(element)
+        }
+
+        assertEquals(
+            listOf(jsonObject1, 42, 3.14, true, "string value", jsonObject2, innerArray1, innerArray2),
+            result
+        )
+    }
+
     private fun configureTestNotificationChannel(
         importance: Int, areChannelsEnabled: Boolean, SDK_INT: Int, channelID: String = "BlockedBRTesting",
         channelName: String = "BlockedBRTesting",
