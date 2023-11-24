@@ -16,6 +16,7 @@ import org.robolectric.util.ReflectionHelpers
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -651,6 +652,64 @@ class CTXtensionsTest : BaseTestCase() {
             listOf(jsonObject1, 42, 3.14, true, "string value", jsonObject2, innerArray1, innerArray2),
             result
         )
+    }
+
+    @Test
+    fun `safeGetJSONArray returns Pair(true, JSONArray) when key exists and array is not empty`() {
+        // Arrange
+        val jsonObject = JSONObject()
+        val jsonArray = JSONArray().put(1).put(2).put(3)
+        jsonObject.put("key", jsonArray)
+
+        // Act
+        val result = jsonObject.safeGetJSONArray("key")
+
+        // Assert
+        assertTrue(result.first)
+        assertEquals(jsonArray.toString(), result.second.toString())
+    }
+
+    @Test
+    fun `safeGetJSONArray returns Pair(false, null) when key exists but array is empty`() {
+        // Arrange
+        val jsonObject = JSONObject()
+        val jsonArray = JSONArray()
+        jsonObject.put("key", jsonArray)
+
+        // Act
+        val result = jsonObject.safeGetJSONArray("key")
+
+        // Assert
+        assertFalse(result.first)
+        assertNull(result.second)
+    }
+
+    @Test
+    fun `safeGetJSONArray returns Pair(false, null) when key does not exist`() {
+        // Arrange
+        val jsonObject = JSONObject()
+        jsonObject.put("anotherKey", "value")
+
+        // Act
+        val result = jsonObject.safeGetJSONArray("key")
+
+        // Assert
+        assertFalse(result.first)
+        assertNull(result.second)
+    }
+
+    @Test
+    fun `safeGetJSONArray returns Pair(false, null) when key's value is not a JSON array`() {
+        // Arrange
+        val jsonObject = JSONObject()
+        jsonObject.put("key", "not_an_array")
+
+        // Act
+        val result = jsonObject.safeGetJSONArray("key")
+
+        // Assert
+        assertFalse(result.first)
+        assertNull(result.second)
     }
 
     private fun configureTestNotificationChannel(
