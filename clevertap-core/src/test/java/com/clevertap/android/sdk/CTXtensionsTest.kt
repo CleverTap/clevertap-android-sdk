@@ -712,6 +712,106 @@ class CTXtensionsTest : BaseTestCase() {
         assertNull(result.second)
     }
 
+    @Test
+    fun `copyFrom copies all key-value pairs from another JSONObject`() {
+        // Arrange
+        val original = JSONObject()
+        original.put("key1", "value1")
+        original.put("key2", 42)
+        original.put("key3", true)
+
+        val jsonObject = JSONObject()
+
+        // Act
+        jsonObject.copyFrom(original)
+
+        // Assert
+        assertEquals("value1", jsonObject.getString("key1"))
+        assertEquals(42, jsonObject.getInt("key2"))
+        assertEquals(true, jsonObject.getBoolean("key3"))
+    }
+
+    @Test
+    fun `copyFrom does not modify destination JSONObject if source is empty`() {
+        // Arrange
+        val original = JSONObject()
+        val jsonObject = JSONObject()
+        jsonObject.put("existingKey", "existingValue")
+
+        // Act
+        jsonObject.copyFrom(original)
+
+        // Assert
+        assertEquals("existingValue", jsonObject.getString("existingKey"))
+        assertEquals(1, jsonObject.length()) // Ensure no additional keys are added
+    }
+
+    @Test
+    fun `copyFrom overrides existing keys in destination JSONObject with values from source`() {
+        // Arrange
+        val original = JSONObject()
+        original.put("key1", "newValue1")
+        original.put("key2", 99)
+
+        val jsonObject = JSONObject()
+        jsonObject.put("key1", "value1")
+        jsonObject.put("key2", 42)
+
+        // Act
+        jsonObject.copyFrom(original)
+
+        // Assert
+        assertEquals("newValue1", jsonObject.getString("key1"))
+        assertEquals(99, jsonObject.getInt("key2"))
+    }
+
+    @Test
+    fun `copyFrom overrides existing keys in destination JSONObject with values from source, and adds new keys`() {
+        // Arrange
+        val original = JSONObject()
+        original.put("key1", "newValue1")
+        original.put("key2", 99)
+        original.put("key3", false)
+
+        val jsonObject = JSONObject()
+        jsonObject.put("key1", "value1")
+        jsonObject.put("key2", 42)
+        jsonObject.put("existingKey", "existingValue")
+
+        // Act
+        jsonObject.copyFrom(original)
+
+        // Assert
+        assertEquals("newValue1", jsonObject.getString("key1"))
+        assertEquals(99, jsonObject.getInt("key2"))
+        assertEquals(false, jsonObject.getBoolean("key3"))
+        assertEquals("existingValue", jsonObject.getString("existingKey"))
+        assertEquals(4, jsonObject.length()) // Ensure all keys are present
+    }
+
+    @Test
+    fun `copyFrom deep copies nested JSON objects`() {
+        // Arrange
+        val original = JSONObject()
+        val nestedOriginal = JSONObject()
+        nestedOriginal.put("nestedKey", "nestedValue")
+        original.put("key1", nestedOriginal)
+        original.put("key2", "value2")
+
+        val jsonObject = JSONObject()
+        val nestedJsonObject = JSONObject()
+        nestedJsonObject.put("nestedKey", "originalNestedValue")
+        jsonObject.put("key1", nestedJsonObject)
+        jsonObject.put("key2", "originalValue")
+
+        // Act
+        jsonObject.copyFrom(original)
+
+        // Assert
+        assertEquals("nestedValue", jsonObject.getJSONObject("key1").getString("nestedKey"))
+        assertEquals("value2", jsonObject.getString("key2"))
+    }
+
     private fun configureTestNotificationChannel(
         importance: Int, areChannelsEnabled: Boolean, SDK_INT: Int, channelID: String = "BlockedBRTesting",
         channelName: String = "BlockedBRTesting",
