@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build.VERSION
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
 import org.mockito.Mockito.*
@@ -352,6 +353,180 @@ class CTXtensionsTest : BaseTestCase() {
 
         // Ensure that the result is the same reference as the original non-null JSONArray
         assertSame(jsonArray, jsonArray.orEmptyArray())
+    }
+
+    @Test
+    fun `test toList with empty JSONArray`() {
+        val jsonArray = JSONArray()
+
+        val jsonObjectList = jsonArray.toList<JSONObject>()
+
+        // Ensure the resulting list is empty
+        assertTrue(jsonObjectList.isEmpty())
+    }
+
+    @Test
+    fun `test toList with non-empty JSONArray of JSONObject data type`() {
+        val jsonObject1 = JSONObject("{\"key1\": \"value1\"}")
+        val jsonObject2 = JSONObject("{\"key2\": \"value2\"}")
+
+        val jsonArray = JSONArray()
+        jsonArray.put(jsonObject1)
+        jsonArray.put(jsonObject2)
+
+        val jsonObjectList = jsonArray.toList<JSONObject>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(2, jsonObjectList.size)
+
+        // Ensure the resulting list contains the expected JSONObjects
+        assertEquals(jsonObject1.toString(), jsonObjectList[0].toString())
+        assertEquals(jsonObject2.toString(), jsonObjectList[1].toString())
+    }
+
+    @Test
+    fun `test toList with non-empty JSONArray of mix data type`() {
+        val jsonObject1 = JSONObject("{\"key1\": \"value1\"}")
+        val jsonObject2 = JSONObject("{\"key2\": \"value2\"}")
+
+        val jsonArray = JSONArray()
+        jsonArray.put(jsonObject1)
+        jsonArray.put(1)
+        jsonArray.put(3.14159265359)
+        jsonArray.put(true)
+        jsonArray.put(JSONArray())
+        jsonArray.put(jsonObject2)
+
+        val jsonObjectList = jsonArray.toList<JSONObject>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(2, jsonObjectList.size)
+
+        // Ensure the resulting list contains the expected JSONObjects
+        assertEquals(jsonObject1.toString(), jsonObjectList[0].toString())
+        assertEquals(jsonObject2.toString(), jsonObjectList[1].toString())
+
+        // double data type
+        val doubleList = jsonArray.toList<Double>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(1, doubleList.size)
+        assertEquals(jsonArray[2], doubleList[0])
+
+        // int data type
+        val intList = jsonArray.toList<Int>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(1, intList.size)
+        assertEquals(jsonArray[1], intList[0])
+
+        // boolean data type
+        val booleanList = jsonArray.toList<Boolean>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(1, booleanList.size)
+        assertTrue(booleanList[0])
+
+        // Any data type
+        val anyList = jsonArray.toList<Any>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(jsonArray.length(), anyList.size)
+        assertEquals(jsonObject1.toString(), anyList[0].toString())
+        assertEquals(jsonObject2.toString(), anyList[5].toString())
+        assertEquals(jsonArray[1], anyList[1])
+        assertEquals(jsonArray[2], anyList[2])
+        assertTrue(anyList[3] as Boolean)
+        assertEquals(jsonArray[4], anyList[4])
+    }
+
+    @Test
+    fun `test toList with non-empty JSONArray of double data type`() {
+
+        val jsonArray = JSONArray()
+        jsonArray.put(3.14159265359)
+        jsonArray.put(4.14159265359)
+        jsonArray.put(5.14159265359)
+
+        val jsonObjectList = jsonArray.toList<JSONObject>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(0, jsonObjectList.size)
+
+        val jsonObjectListDouble = jsonArray.toList<Double>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(3, jsonObjectListDouble.size)
+        assertEquals(jsonArray[0], jsonObjectListDouble[0])
+        assertEquals(jsonArray[1], jsonObjectListDouble[1])
+        assertEquals(jsonArray[2], jsonObjectListDouble[2])
+    }
+
+    @Test
+    fun `test toList with non-empty JSONArray of Int`() {
+        val jsonArray = JSONArray()
+        jsonArray.put(1)
+
+        val intList = jsonArray.toList<Int>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(1, intList.size)
+        assertEquals(jsonArray[0], intList[0])
+    }
+
+    @Test
+    fun `test toList with non-empty JSONArray of Boolean`() {
+        val jsonArray = JSONArray()
+        jsonArray.put(true)
+
+        val booleanList = jsonArray.toList<Boolean>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(1, booleanList.size)
+        assertTrue(booleanList[0])
+    }
+
+    @Test
+    fun `test toList with non-empty JSONArray of Any`() {
+        val jsonObject1 = JSONObject("{\"key1\": \"value1\"}")
+        val jsonArray = JSONArray()
+        jsonArray.put(jsonObject1)
+        jsonArray.put(1)
+        jsonArray.put(3.14159265359)
+        jsonArray.put(true)
+
+        val anyList = jsonArray.toList<Any>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(jsonArray.length(), anyList.size)
+        assertEquals(jsonObject1.toString(), anyList[0].toString())
+        assertEquals(jsonArray[1], anyList[1])
+        assertEquals(jsonArray[2], anyList[2])
+        assertTrue(anyList[3] as Boolean)
+    }
+
+    @Test
+    fun `test toList with non-empty JSONArray of JSONArray`() {
+        val innerArray1 = JSONArray()
+        innerArray1.put("value1a")
+        innerArray1.put("value1b")
+
+        val innerArray2 = JSONArray()
+        innerArray2.put("value2a")
+        innerArray2.put("value2b")
+
+        val jsonArray = JSONArray()
+        jsonArray.put(innerArray1)
+        jsonArray.put(innerArray2)
+
+        val jsonArrayList = jsonArray.toList<JSONArray>()
+
+        // Ensure the resulting list has the correct size
+        assertEquals(2, jsonArrayList.size)
+
+        // Ensure the resulting list contains the expected JSONArrays
+        assertEquals(innerArray1.toString(), jsonArrayList[0].toString())
+        assertEquals(innerArray2.toString(), jsonArrayList[1].toString())
     }
 
     private fun configureTestNotificationChannel(
