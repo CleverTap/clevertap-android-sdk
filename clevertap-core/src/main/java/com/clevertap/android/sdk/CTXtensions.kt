@@ -162,12 +162,15 @@ fun JSONArray?.orEmptyArray(): JSONArray {
     return this ?: JSONArray()
 }
 
-fun JSONArray.toList(): List<JSONObject> {
-    val jsonObjectList = mutableListOf<JSONObject>()
+inline fun <reified T> JSONArray.toList(): List<T> {
+    val list = mutableListOf<T>()
     for (index in 0 until length()) {
-        jsonObjectList.add(getJSONObject(index))
+        val element = get(index)
+        if (element is T) {
+            list.add(element)
+        }
     }
-    return jsonObjectList
+    return list
 }
 
 fun JSONArray.iterator(foreach: (jsonObject: JSONObject) -> Unit) {

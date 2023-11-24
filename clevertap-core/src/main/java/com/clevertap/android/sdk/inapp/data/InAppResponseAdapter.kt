@@ -33,7 +33,7 @@ class InAppResponseAdapter(
         fun getListOfWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
             val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
 
-            return frequencyLimits.toList().map { LimitAdapter(it) }.toMutableList()
+            return frequencyLimits.toList<JSONObject>().map { LimitAdapter(it) }.toMutableList()
         }
     }
 
@@ -128,7 +128,8 @@ interface InAppBase {
             val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
             val occurrenceLimits = limitJSON.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
 
-            return (frequencyLimits.toList() + occurrenceLimits.toList()).map { LimitAdapter(it) }.toMutableList()
+            return (frequencyLimits.toList<JSONObject>() + occurrenceLimits.toList()).map { LimitAdapter(it) }
+                .toMutableList()
         }
 
         @Throws(JSONException::class)
@@ -204,7 +205,7 @@ data class InAppClientSide(
         }
 
         fun getListFromJsonArray(jsonArray: JSONArray): List<InAppClientSide> {
-            return jsonArray.toList().mapNotNull { fromJSONObject(it) }
+            return jsonArray.toList<JSONObject>().mapNotNull { fromJSONObject(it) }
         }
     }
 }
@@ -262,7 +263,7 @@ data class InAppServerSide(
         }
 
         fun getListFromJsonArray(jsonArray: JSONArray): List<InAppServerSide> {
-            return jsonArray.toList().mapNotNull { fromJSONObject(it) }
+            return jsonArray.toList<JSONObject>().mapNotNull { fromJSONObject(it) }
         }
     }
 }
