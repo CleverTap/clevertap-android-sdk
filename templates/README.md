@@ -50,7 +50,6 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
          implementation "${ext.androidx_core_core}"
          implementation "${ext.firebase_messaging}"
          implementation "${ext.play_services_ads}" // Required only if you enable Google ADID collection in the SDK (turned off by default).
-         implementation "${ext.installreferrer}" // Mandatory for v3.6.4 and above
      }
 ```
 
