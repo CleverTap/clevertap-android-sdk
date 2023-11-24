@@ -812,6 +812,43 @@ class CTXtensionsTest : BaseTestCase() {
         assertEquals("value2", jsonObject.getString("key2"))
     }
 
+    @Test
+    fun `isNotNullAndEmpty returns true for a non-null and non-empty JSONObject`() {
+        // Arrange
+        val jsonObject = JSONObject()
+        jsonObject.put("key", "value")
+
+        // Act
+        val result = jsonObject.isNotNullAndEmpty()
+
+        // Assert
+        assertTrue(result)
+    }
+
+    @Test
+    fun `isNotNullAndEmpty returns false for a null JSONObject`() {
+        // Arrange
+        val jsonObject: JSONObject? = null
+
+        // Act
+        val result = jsonObject.isNotNullAndEmpty()
+
+        // Assert
+        assertFalse(result)
+    }
+
+    @Test
+    fun `isNotNullAndEmpty returns false for an empty JSONObject`() {
+        // Arrange
+        val jsonObject = JSONObject()
+
+        // Act
+        val result = jsonObject.isNotNullAndEmpty()
+
+        // Assert
+        assertFalse(result)
+    }
+
     private fun configureTestNotificationChannel(
         importance: Int, areChannelsEnabled: Boolean, SDK_INT: Int, channelID: String = "BlockedBRTesting",
         channelName: String = "BlockedBRTesting",
