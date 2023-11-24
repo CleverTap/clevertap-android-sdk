@@ -173,9 +173,12 @@ inline fun <reified T> JSONArray.toList(): List<T> {
     return list
 }
 
-fun JSONArray.iterator(foreach: (jsonObject: JSONObject) -> Unit) {
+inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit) {
     for (index in 0 until length()) {
-        foreach(getJSONObject(index))
+        val element = get(index)
+        if (element is T) {
+            foreach(element)
+        }
     }
 }
 

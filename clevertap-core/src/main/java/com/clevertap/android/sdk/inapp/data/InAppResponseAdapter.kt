@@ -50,12 +50,12 @@ class InAppResponseAdapter(
 
         // do legacy inapps stuff
         if (legacyInApps.first) {
-            legacyInApps.second?.iterator { jsonObject ->
+            legacyInApps.second?.iterator<JSONObject> { jsonObject ->
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
 
                 if (portrait != null) {
                     val portraitMedia = CTInAppNotificationMedia()
-                            .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
+                        .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
 
                     list.add(portraitMedia.mediaUrl)
                 }
@@ -71,12 +71,12 @@ class InAppResponseAdapter(
 
         // do cs inapps stuff
         if (clientSideInApps.first) {
-            clientSideInApps.second?.iterator { jsonObject ->
+            clientSideInApps.second?.iterator<JSONObject> { jsonObject ->
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
 
                 if (portrait != null) {
                     val portraitMedia = CTInAppNotificationMedia()
-                            .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
+                        .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
 
                     if (portraitMedia != null && portraitMedia.mediaUrl != null) {
                         list.add(portraitMedia.mediaUrl)
