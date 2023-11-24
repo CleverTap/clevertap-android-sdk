@@ -849,6 +849,75 @@ class CTXtensionsTest : BaseTestCase() {
         assertFalse(result)
     }
 
+    @Test
+    fun `concatIfNotNull concatenates two non-null strings with a separator`() {
+        // Arrange
+        val str1 = "Hello"
+        val str2 = "World"
+        val separator = ", "
+
+        // Act
+        val result = str1.concatIfNotNull(str2, separator)
+
+        // Assert
+        assertEquals("Hello, World", result)
+    }
+
+    @Test
+    fun `concatIfNotNull returns the non-null string when the other string is null`() {
+        // Arrange
+        val str1 = "Hello"
+        val str2: String? = null
+        val separator = ", "
+
+        // Act
+        val result = str1.concatIfNotNull(str2, separator)
+
+        // Assert
+        assertEquals("Hello", result)
+    }
+
+    @Test
+    fun `concatIfNotNull returns the other string when the first string is null`() {
+        // Arrange
+        val str1: String? = null
+        val str2 = "World"
+        val separator = ", "
+
+        // Act
+        val result = str1.concatIfNotNull(str2, separator)
+
+        // Assert
+        assertEquals("World", result)
+    }
+
+    @Test
+    fun `concatIfNotNull returns null when both strings are null`() {
+        // Arrange
+        val str1: String? = null
+        val str2: String? = null
+        val separator = ", "
+
+        // Act
+        val result = str1.concatIfNotNull(str2, separator)
+
+        // Assert
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `concatIfNotNull concatenates two non-null strings without a separator`() {
+        // Arrange
+        val str1 = "Hello"
+        val str2 = "World"
+
+        // Act
+        val result = str1.concatIfNotNull(str2)
+
+        // Assert
+        assertEquals("HelloWorld", result)
+    }
+
     private fun configureTestNotificationChannel(
         importance: Int, areChannelsEnabled: Boolean, SDK_INT: Int, channelID: String = "BlockedBRTesting",
         channelName: String = "BlockedBRTesting",
