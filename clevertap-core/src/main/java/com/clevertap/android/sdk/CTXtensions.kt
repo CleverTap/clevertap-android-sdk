@@ -183,19 +183,8 @@ inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit) {
 }
 
 fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
-    val has = has(key)
-
-    if (has.not()) {
-        return Pair(false, null)
-    }
-
-    val list: JSONArray = getJSONArray(key)
-
-    return if (list.length() > 0) {
-        Pair(true, list)
-    } else {
-        Pair(false, null)
-    }
+    val list: JSONArray = optJSONArray(key) ?: return Pair(false, null)
+    return Pair(list.length() > 0, list.takeIf { it.length() > 0 })
 }
 
 fun JSONObject.copyFrom(other: JSONObject) {
