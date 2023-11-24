@@ -3,6 +3,7 @@ package com.clevertap.android.sdk
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.location.Location
 import android.os.Build.VERSION
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
@@ -916,6 +917,76 @@ class CTXtensionsTest : BaseTestCase() {
 
         // Assert
         assertEquals("HelloWorld", result)
+    }
+
+    @Test
+    fun `isValid returns true for a valid location with latitude and longitude within range`() {
+        // Arrange
+        val validLocation = Location("provider")
+        validLocation.latitude = 42.0
+        validLocation.longitude = -75.0
+
+        // Act
+        val result = validLocation.isValid()
+
+        // Assert
+        assertTrue(result)
+    }
+
+    @Test
+    fun `isValid returns true for a valid location with latitude and longitude at lower bounds`() {
+        // Arrange
+        val validLocation = Location("provider")
+        validLocation.latitude = -90.0
+        validLocation.longitude = -180.0
+
+        // Act
+        val result = validLocation.isValid()
+
+        // Assert
+        assertTrue(result)
+    }
+
+    @Test
+    fun `isValid returns true for a valid location with latitude and longitude at upper bounds`() {
+        // Arrange
+        val validLocation = Location("provider")
+        validLocation.latitude = 90.0
+        validLocation.longitude = 180.0
+
+        // Act
+        val result = validLocation.isValid()
+
+        // Assert
+        assertTrue(result)
+    }
+
+    @Test
+    fun `isValid returns false for a location with latitude outside the valid range`() {
+        // Arrange
+        val invalidLocation = Location("provider")
+        invalidLocation.latitude = -91.0
+        invalidLocation.longitude = -75.0
+
+        // Act
+        val result = invalidLocation.isValid()
+
+        // Assert
+        assertFalse(result)
+    }
+
+    @Test
+    fun `isValid returns false for a location with longitude outside the valid range`() {
+        // Arrange
+        val invalidLocation = Location("provider")
+        invalidLocation.latitude = 42.0
+        invalidLocation.longitude = -181.0
+
+        // Act
+        val result = invalidLocation.isValid()
+
+        // Assert
+        assertFalse(result)
     }
 
     private fun configureTestNotificationChannel(
