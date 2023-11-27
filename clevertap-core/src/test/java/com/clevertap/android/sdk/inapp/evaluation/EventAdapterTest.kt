@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
 import kotlin.test.assertEquals
@@ -93,5 +94,21 @@ class EventAdapterTest : BaseTestCase() {
 
         // Assert
         assertEquals(listOf<String>(), result.map { it.stringValue() })
+    }
+
+    @Test
+    fun `test isChargedEvent when event is charged returns true`() {
+        // Arrange
+        val eventAdapter = EventAdapter(Constants.CHARGED_EVENT, emptyMap())
+
+        assertTrue(eventAdapter.isChargedEvent())
+    }
+
+    @Test
+    fun `test isChargedEvent when event is not charged returns false`() {
+        // Arrange
+        val eventAdapter = EventAdapter("eventName", emptyMap())
+
+        assertFalse(eventAdapter.isChargedEvent())
     }
 }
