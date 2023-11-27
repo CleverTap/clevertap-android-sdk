@@ -116,4 +116,14 @@ class InAppQueueTest {
 
         assertNull(dequeuedObject)
     }
+
+    @Test
+    fun `getQueueLength returns correctLength`() {
+        val jsonArray = JSONArray().put(JSONObject().put("key", "value"))
+        `when`(mockInAppStore.readServerSideInApps()).thenReturn(jsonArray)
+
+        val queueLength = inAppQueue.getQueueLength()
+
+        assertEquals(1, queueLength)
+    }
 }
