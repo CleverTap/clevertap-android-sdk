@@ -8,6 +8,8 @@ import org.json.JSONObject
 import org.junit.*
 import org.mockito.*
 import org.mockito.Mockito.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class InAppQueueTest {
 
@@ -91,5 +93,27 @@ class InAppQueueTest {
         inAppQueue.enqueueAll(jsonArray)
 
         verify(mockInAppStore).storeServerSideInApps(fakeQueue)
+    }
+
+    @Test
+    fun `dequeue when queue is not empty returns dequeuedObject`() {
+        val jsonObject = JSONObject().put("key", "value")
+        val fakeQueue = JSONArray().put(jsonObject)
+        `when`(mockInAppStore.readServerSideInApps()).thenReturn(fakeQueue)
+
+        val dequeuedObject = inAppQueue.dequeue()
+
+        verify(mockInAppStore).storeServerSideInApps(JSONArray())
+        assertEquals(jsonObject.toString(), dequeuedObject?.toString())
+    }
+
+    @Test
+    fun `dequeue when queue is empty returns null`() {
+        val input = JSONArray()
+        `when`(mockInAppStore.readServerSideInApps()).thenReturn(input)
+
+        val dequeuedObject = inAppQueue.dequeue()
+
+        assertNull(dequeuedObject)
     }
 }
