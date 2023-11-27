@@ -51,4 +51,45 @@ class InAppQueueTest {
 
         verifyNoInteractions(mockInAppStore)
     }
+
+    @Test
+    fun `enqueueAll multiple Objects results in objectsEnqueued`() {
+        val jsonArray = JSONArray().put(JSONObject().put("key1", "value1"))
+            .put(JSONObject().put("key2", "value2"))
+        val fakeQueue = JSONArray()
+        `when`(mockInAppStore.readServerSideInApps()).thenReturn(fakeQueue)
+
+        inAppQueue.enqueueAll(jsonArray)
+
+        val expected = JSONArray().put(jsonArray.getJSONObject(0)).put(jsonArray.getJSONObject(1))
+
+        verify(mockInAppStore).storeServerSideInApps(expected)
+    }
+
+    @Test
+    fun `enqueueAll with mixed data types ignores non-JSONObject elements`() {
+        val jsonArray = JSONArray()
+            .put(JSONObject().put("key1", "value1"))
+            .put("nonJsonObjectData")
+            .put(JSONObject().put("key2", "value2"))
+        val fakeQueue = JSONArray()
+        `when`(mockInAppStore.readServerSideInApps()).thenReturn(fakeQueue)
+
+        inAppQueue.enqueueAll(jsonArray)
+
+        // Only valid JSONObjects should be stored in the queue
+        val expected = JSONArray().put(jsonArray.getJSONObject(0)).put(jsonArray.getJSONObject(2))
+        verify(mockInAppStore).storeServerSideInApps(expected)
+    }
+
+    @Test
+    fun `enqueueAll when argument json array is empty`() {
+        val jsonArray = JSONArray()
+        val fakeQueue = JSONArray()
+        `when`(mockInAppStore.readServerSideInApps()).thenReturn(fakeQueue)
+
+        inAppQueue.enqueueAll(jsonArray)
+
+        verify(mockInAppStore).storeServerSideInApps(fakeQueue)
+    }
 }
