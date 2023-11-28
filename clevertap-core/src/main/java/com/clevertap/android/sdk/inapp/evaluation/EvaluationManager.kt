@@ -29,8 +29,11 @@ class EvaluationManager constructor(
     private val storeRegistry: StoreRegistry,
 ) : NetworkHeadersListener {
 
-    private val evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
-    private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
+    @VisibleForTesting
+    internal val evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
+
+    @VisibleForTesting
+    internal val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
         val event = EventAdapter(eventName, eventProperties, userLocation = userLocation)
@@ -184,9 +187,10 @@ class EvaluationManager constructor(
         )
     }
 
-    private fun generateWzrkId(ti: String): String {
+    @VisibleForTesting
+    internal fun generateWzrkId(ti: String, clock: Clock = Clock.SYSTEM): String {
         val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-        val date = dateFormatter.format(Clock.SYSTEM.newDate())
+        val date = dateFormatter.format(clock.newDate())
         return "${ti}_$date"
     }
 
