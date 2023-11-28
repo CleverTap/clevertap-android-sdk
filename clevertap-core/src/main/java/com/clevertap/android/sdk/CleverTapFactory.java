@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
@@ -115,6 +116,10 @@ class CleverTapFactory {
                             config.getAccountId());
                     storeRegistry.setImpressionStore(impStore);
                     callbackManager.addChangeUserCallback(impStore);
+                }
+                if (storeRegistry.getInAppAssetsStore() == null) {
+                    InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, deviceInfo, config.getAccountId());
+                    storeRegistry.setInAppAssetsStore(assetsStore);
                 }
             }
             return null;
