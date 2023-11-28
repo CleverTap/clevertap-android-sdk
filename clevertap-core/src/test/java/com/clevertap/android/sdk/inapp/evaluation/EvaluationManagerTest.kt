@@ -166,6 +166,46 @@ class EvaluationManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun `suppress should add entry to suppressedClientSideInApps with default values`() {
+        // Arrange
+        val inApp = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "campaign1")
+        every { evaluationManager.generateWzrkId(any(), any()) } returns "campaign1_20231128"
+
+        // Act
+        evaluationManager.suppress(inApp)
+
+        // Assert
+        val expectedMap = mapOf(
+            Constants.NOTIFICATION_ID_TAG to "campaign1_20231128",
+            Constants.INAPP_WZRK_PIVOT to "wzrk_default",
+            Constants.INAPP_WZRK_CGID to 0
+        )
+        assertEquals(expectedMap, evaluationManager.suppressedClientSideInApps.first())
+    }
+
+    @Test
+    fun `suppress should add entry to suppressedClientSideInApps with custom values`() {
+        // Arrange
+        val inApp = JSONObject().apply {
+            put(Constants.INAPP_ID_IN_PAYLOAD, "campaign2")
+            put(Constants.INAPP_WZRK_PIVOT, "custom_pivot")
+            put(Constants.INAPP_WZRK_CGID, 42)
+        }
+        every { evaluationManager.generateWzrkId(any(), any()) } returns "campaign2_20231128"
+
+        // Act
+        evaluationManager.suppress(inApp)
+
+        // Assert
+        val expectedMap = mapOf(
+            Constants.NOTIFICATION_ID_TAG to "campaign2_20231128",
+            Constants.INAPP_WZRK_PIVOT to "custom_pivot",
+            Constants.INAPP_WZRK_CGID to 42
+        )
+        assertEquals(expectedMap, evaluationManager.suppressedClientSideInApps.first())
+    }
+
+    @Test
     fun `test sortByPriority with valid priorities and timestamps`() {
         val jsonObject1 = JSONObject()
         jsonObject1.put("priority", 3)
