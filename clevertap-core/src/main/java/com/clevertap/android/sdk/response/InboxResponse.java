@@ -17,18 +17,18 @@ public class InboxResponse extends CleverTapResponseDecorator {
 
     private final BaseCallbackManager callbackManager;
 
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
     private final Logger logger;
 
     private final ControllerManager controllerManager;
 
-    public InboxResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
+    public InboxResponse(
+            CleverTapInstanceConfig config,
             CTLockManager ctLockManager,
-            final BaseCallbackManager callbackManager, ControllerManager controllerManager) {
-        this.cleverTapResponse = cleverTapResponse;
+            final BaseCallbackManager callbackManager,
+            ControllerManager controllerManager
+    ) {
         this.config = config;
         this.callbackManager = callbackManager;
         logger = this.config.getLogger();
@@ -44,10 +44,6 @@ public class InboxResponse extends CleverTapResponseDecorator {
         if (config.isAnalyticsOnly()) {
             logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing inbox messages");
-
-            // process PushAmp response
-            cleverTapResponse.processResponse(response, stringBody, context);
-
             return;
         }
 
@@ -56,7 +52,6 @@ public class InboxResponse extends CleverTapResponseDecorator {
         if (!response.has(Constants.INBOX_JSON_RESPONSE_KEY)) {
             logger.verbose(config.getAccountId(), "Inbox: Response JSON object doesn't contain the inbox key");
             // process PushAmp response
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {
@@ -64,10 +59,6 @@ public class InboxResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "InboxResponse: Failed to parse response", t);
         }
-
-        // process PushAmp response
-        cleverTapResponse.processResponse(response, stringBody, context);
-
     }
 
 

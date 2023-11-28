@@ -25,7 +25,6 @@ import com.clevertap.android.sdk.network.FetchInAppListener;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
-import com.clevertap.android.sdk.response.CleverTapResponseHelper;
 import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
@@ -211,7 +210,6 @@ class CleverTapFactory {
                 storeRegistry,
                 coreMetaData
         );
-        inAppResponseForSendTestInApp.setCleverTapResponse(new CleverTapResponseHelper());
 
         AnalyticsManager analyticsManager = new AnalyticsManager(
                 context,

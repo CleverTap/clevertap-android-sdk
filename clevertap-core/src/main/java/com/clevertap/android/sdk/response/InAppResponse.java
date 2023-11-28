@@ -29,8 +29,6 @@ import org.json.JSONObject;
 
 public class InAppResponse extends CleverTapResponseDecorator {
 
-    private CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
     private final ControllerManager controllerManager;
@@ -58,10 +56,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
         this.coreMetaData = coreMetaData;
     }
 
-    public void setCleverTapResponse(CleverTapResponse cleverTapResponse) {
-        this.cleverTapResponse = cleverTapResponse;
-    }
-
     @Override
     public void processResponse(
             final JSONObject response,
@@ -84,7 +78,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 logger.verbose(config.getAccountId(),
                         "CleverTap instance is configured to analytics only, not processing inapp messages");
                 // process metadata response
-                cleverTapResponse.processResponse(response, stringBody, context); // todo this is not needed, no-op
                 return;
             }
 
@@ -155,10 +148,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             Logger.v("InAppManager: Failed to parse response", t);
         }
-
-        // process metadata response
-        cleverTapResponse.processResponse(response, stringBody, context);
-
     }
 
     private void clearStaleInAppImpressions(JSONArray inappStaleList, ImpressionStore impressionStore) {
