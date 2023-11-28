@@ -21,7 +21,7 @@ class TriggerManager(
         const val PREF_PREFIX = "__triggers"
     }
 
-    private var contextRef = WeakReference(context)
+    var contextRef = WeakReference(context)
 
     /**
      * Retrieves the trigger count for a given campaign ID.
