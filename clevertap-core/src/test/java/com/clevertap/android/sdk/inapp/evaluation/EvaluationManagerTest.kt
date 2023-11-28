@@ -12,7 +12,9 @@ import org.hamcrest.beans.SamePropertyValuesAs.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import kotlin.test.assertEquals
 
 class EvaluationManagerTest : BaseTestCase() {
@@ -203,6 +205,18 @@ class EvaluationManagerTest : BaseTestCase() {
             Constants.INAPP_WZRK_CGID to 42
         )
         assertEquals(expectedMap, evaluationManager.suppressedClientSideInApps.first())
+    }
+
+    @Test
+    fun `generateWzrkId should return formatted string with ti_date`() {
+        // Arrange
+        val ti = "campaign1"
+
+        // Act
+        val result = evaluationManager.generateWzrkId(ti, FakeClock())
+
+        // Assert
+        assertEquals("campaign1_20230126", result)
     }
 
     @Test
@@ -438,7 +452,8 @@ class EvaluationManagerTest : BaseTestCase() {
         }
 
         override fun newDate(): Date {
-            return Date()
+            val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+            return dateFormatter.parse("20230126")!!// January 26, 2023
         }
     }
 }
