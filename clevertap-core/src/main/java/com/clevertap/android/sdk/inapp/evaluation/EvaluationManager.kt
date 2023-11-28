@@ -191,10 +191,10 @@ class EvaluationManager constructor(
     }
 
     @VisibleForTesting
-    internal fun updateTTL(inApp: JSONObject) {
+    internal fun updateTTL(inApp: JSONObject, clock: Clock = Clock.SYSTEM) {
         val offset = inApp.opt(Constants.WZRK_TIME_TO_LIVE_OFFSET) as? Long
         if (offset != null) {
-            val now = Clock.SYSTEM.currentTimeSeconds()
+            val now = clock.currentTimeSeconds()
             val ttl = now + offset
             inApp.put(Constants.WZRK_TIME_TO_LIVE, ttl)
         } else {
