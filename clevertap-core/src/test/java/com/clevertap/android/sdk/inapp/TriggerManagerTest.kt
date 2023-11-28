@@ -1,10 +1,18 @@
 package com.clevertap.android.sdk.inapp
 
+import android.content.Context
+import android.content.SharedPreferences
+import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.shared.test.BaseTestCase
+import org.junit.*
+import org.mockito.*
+import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.*
 
 class TriggerManagerTest : BaseTestCase() {
 
-    /*@Mock
+    @Mock
     private lateinit var context: Context
 
     @Mock
@@ -13,13 +21,16 @@ class TriggerManagerTest : BaseTestCase() {
     @Mock
     private lateinit var editor: SharedPreferences.Editor
 
+    @Mock
+    private lateinit var deviceInfo: DeviceInfo
+
     private lateinit var triggerManager: TriggerManager
 
     override fun setUp() {
         super.setUp()
         MockitoAnnotations.openMocks(this)
 
-        triggerManager = TriggerManager(context, "accountId", "deviceId")
+        triggerManager = TriggerManager(context, "123456", deviceInfo)
 
         // Mock the sharedPrefs method to return the SharedPreferences instance
         `when`(triggerManager.sharedPrefs()).thenReturn(sharedPreferences)
@@ -115,17 +126,4 @@ class TriggerManagerTest : BaseTestCase() {
         verify(editor).remove(triggerManager.getTriggersKey(campaignId))
         verify(editor).apply()
     }
-
-    @Test
-    fun testSharedPrefs_WhenContextIsNonNull_ShouldReturnNonNull() {
-        // Mock StorageHelper.getPreferences to return sharedPreferences
-        `when`(StorageHelper.getPreferences(context, triggerManager.prefName)).thenReturn(
-            sharedPreferences
-        )
-
-        val result = triggerManager.sharedPrefs()
-
-        // Assert that the result is not null
-        kotlin.test.assertNotNull(result)
-    }*/
 }
