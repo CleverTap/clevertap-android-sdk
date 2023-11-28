@@ -202,17 +202,33 @@ internal class InAppResourceProvider constructor(
 
     fun deleteImage(cacheKey: String) {
         val imageMemoryCache = ctCaches.imageCache()
-        imageMemoryCache.remove(cacheKey)
+        val bitmap = imageMemoryCache.remove(cacheKey)
+
+        if (bitmap != null) {
+            logger?.verbose("successfully removed $cacheKey from memory cache")
+        }
 
         val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
-        imageDiskCache.remove(cacheKey)
+        val b = imageDiskCache.remove(cacheKey)
+
+        if (b) {
+            logger?.verbose("successfully removed $cacheKey from file cache")
+        }
     }
 
     fun deleteGif(cacheKey: String) {
         val imageMemoryCache = ctCaches.gifCache()
-        imageMemoryCache.remove(cacheKey)
+        val bytes = imageMemoryCache.remove(cacheKey)
+
+        if (bytes != null) {
+            logger?.verbose("successfully removed gif $cacheKey from memory cache")
+        }
 
         val imageDiskCache = ctCaches.gifCacheDisk(dir = gifs)
-        imageDiskCache.remove(cacheKey)
+        val b = imageDiskCache.remove(cacheKey)
+
+        if (b) {
+            logger?.verbose("successfully removed gif $cacheKey from file cache")
+        }
     }
 }
