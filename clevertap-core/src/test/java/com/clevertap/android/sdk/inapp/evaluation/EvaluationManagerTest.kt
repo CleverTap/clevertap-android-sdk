@@ -5,31 +5,126 @@ import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.*
 import org.hamcrest.beans.SamePropertyValuesAs.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
-import org.mockito.*
 import kotlin.test.assertEquals
 
 class EvaluationManagerTest : BaseTestCase() {
 
+    private lateinit var triggersMatcher: TriggersMatcher
+    private lateinit var triggersManager: TriggerManager
+    private lateinit var limitsMatcher: LimitsMatcher
     private lateinit var evaluationManager: EvaluationManager
+    private lateinit var storeRegistry: StoreRegistry
 
     override fun setUp() {
         super.setUp()
-        val triggersMatcher = Mockito.mock(TriggersMatcher::class.java)
-        val triggerManager = Mockito.mock(TriggerManager::class.java)
-        val storeRegistry = Mockito.mock(StoreRegistry::class.java)
-        val limitsMatcher = Mockito.mock(LimitsMatcher::class.java)
-        evaluationManager = EvaluationManager(
-            triggersMatcher,
-            triggerManager,
-            limitsMatcher,
-            storeRegistry
-        )
+        MockKAnnotations.init(this)
+        triggersMatcher = mockk(relaxed = true)
+        triggersManager = mockk(relaxed = true)
+        limitsMatcher = mockk(relaxed = true)
+        storeRegistry = mockk(relaxed = true)
+        evaluationManager = spyk(EvaluationManager(triggersMatcher, triggersManager, limitsMatcher, storeRegistry))
+    }
+
+    @Test
+    fun `evaluate should return empty list when inappNotifs is empty`() {
+        // Arrange
+        val event = EventAdapter("eventName", emptyMap(), userLocation = null)
+
+        // Act
+        val result = evaluationManager.evaluate(event, emptyList())
+
+        // Assert
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun `evaluate should return empty list when no in-apps match triggers`() {
+        // Arrange
+        val event = EventAdapter("eventName", emptyMap(), userLocation = null)
+        val inApp1 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "campaign1")
+        val inApp2 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "campaign2")
+
+        every { triggersMatcher.matchEvent(any(), any()) } returns false
+
+        // Act
+        val result = evaluationManager.evaluate(event, listOf(inApp1, inApp2))
+
+        // Assert
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun `evaluate should return in-apps that match triggers and limits`() {
+        // Arrange
+        val event = EventAdapter("eventName", emptyMap(), userLocation = null)
+        val inApp1 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "campaign1")
+        val inApp2 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "campaign2")
+
+        every { triggersMatcher.matchEvent(any(), any()) } returns true
+        every { limitsMatcher.matchWhenLimits(any(), any()) } returns true
+
+        // Act
+        val result = evaluationManager.evaluate(event, listOf(inApp1, inApp2))
+
+        // Assert
+        assertEquals(2, result.size)
+        assertEquals("campaign1", result[0].optString(Constants.INAPP_ID_IN_PAYLOAD))
+        assertEquals("campaign2", result[1].optString(Constants.INAPP_ID_IN_PAYLOAD))
+        // Verify that triggersManager.increment is called for each in-app
+        verify(exactly = 2) { triggersManager.increment(any()) }
+        // Verify that limitsMatcher.matchWhenLimits is called for each in-app
+        verify(exactly = 2) { limitsMatcher.matchWhenLimits(any(), any()) }
+    }
+
+    @Test
+    fun `evaluate should return in-apps that match triggers but not limits`() {
+        // Arrange
+        val event = EventAdapter("eventName", emptyMap(), userLocation = null)
+        val inApp1 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "campaign1")
+        val inApp2 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "campaign2")
+
+        every { triggersMatcher.matchEvent(any(), any()) } returns true
+        every { limitsMatcher.matchWhenLimits(any(), "campaign1") } returns true
+        every { limitsMatcher.matchWhenLimits(any(), "campaign2") } returns false
+
+        // Act
+        val result = evaluationManager.evaluate(event, listOf(inApp1, inApp2))
+
+        // Assert
+        assertEquals(1, result.size)
+        assertEquals("campaign1", result[0].optString(Constants.INAPP_ID_IN_PAYLOAD))
+        // Verify that triggersManager.increment is called for the eligible in-app
+        verify { triggersManager.increment("campaign1") }
+        // Verify that limitsMatcher.matchWhenLimits is called for each in-app
+        verify { limitsMatcher.matchWhenLimits(any(), "campaign1") }
+        verify { limitsMatcher.matchWhenLimits(any(), "campaign2") }
+    }
+
+    @Test
+    fun `evaluate should return empty list when in-apps match limits but not triggers`() {
+        // Arrange
+        val event = EventAdapter("eventName", emptyMap(), userLocation = null)
+        every { triggersMatcher.matchEvent(any(), any()) } returns false
+        every { limitsMatcher.matchWhenLimits(any(), "campaign1") } returns true
+        every { limitsMatcher.matchWhenLimits(any(), "campaign2") } returns true
+
+        // Act
+        val result = evaluationManager.evaluate(event, listOf(JSONObject(), JSONObject()))
+
+        // Assert
+        assertEquals(0, result.size)
+        // Verify that triggersManager.increment is not called
+        verify(exactly = 0) { triggersManager.increment(any()) }
+        // Verify that limitsMatcher.matchWhenLimits is called for each in-app
+        verify(exactly = 0) { limitsMatcher.matchWhenLimits(any(), "campaign1") }
+        verify(exactly = 0) { limitsMatcher.matchWhenLimits(any(), "campaign2") }
     }
 
     @Test
