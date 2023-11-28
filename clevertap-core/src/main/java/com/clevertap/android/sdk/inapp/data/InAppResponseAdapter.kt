@@ -33,7 +33,7 @@ class InAppResponseAdapter(
         fun getListOfWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
             val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
 
-            return frequencyLimits.toList().map { LimitAdapter(it) }.toMutableList()
+            return frequencyLimits.toList<JSONObject>().map { LimitAdapter(it) }.toMutableList()
         }
     }
 
@@ -50,12 +50,12 @@ class InAppResponseAdapter(
 
         // do legacy inapps stuff
         if (legacyInApps.first) {
-            legacyInApps.second?.iterator { jsonObject ->
+            legacyInApps.second?.iterator<JSONObject> { jsonObject ->
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
 
                 if (portrait != null) {
                     val portraitMedia = CTInAppNotificationMedia()
-                            .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
+                        .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
 
                     list.add(portraitMedia.mediaUrl)
                 }
@@ -71,12 +71,12 @@ class InAppResponseAdapter(
 
         // do cs inapps stuff
         if (clientSideInApps.first) {
-            clientSideInApps.second?.iterator { jsonObject ->
+            clientSideInApps.second?.iterator<JSONObject> { jsonObject ->
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
 
                 if (portrait != null) {
                     val portraitMedia = CTInAppNotificationMedia()
-                            .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
+                        .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
 
                     if (portraitMedia != null && portraitMedia.mediaUrl != null) {
                         list.add(portraitMedia.mediaUrl)
@@ -128,7 +128,8 @@ interface InAppBase {
             val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
             val occurrenceLimits = limitJSON.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
 
-            return (frequencyLimits.toList() + occurrenceLimits.toList()).map { LimitAdapter(it) }.toMutableList()
+            return (frequencyLimits.toList<JSONObject>() + occurrenceLimits.toList()).map { LimitAdapter(it) }
+                .toMutableList()
         }
 
         @Throws(JSONException::class)
@@ -204,7 +205,7 @@ data class InAppClientSide(
         }
 
         fun getListFromJsonArray(jsonArray: JSONArray): List<InAppClientSide> {
-            return jsonArray.toList().mapNotNull { fromJSONObject(it) }
+            return jsonArray.toList<JSONObject>().mapNotNull { fromJSONObject(it) }
         }
     }
 }
@@ -262,7 +263,7 @@ data class InAppServerSide(
         }
 
         fun getListFromJsonArray(jsonArray: JSONArray): List<InAppServerSide> {
-            return jsonArray.toList().mapNotNull { fromJSONObject(it) }
+            return jsonArray.toList<JSONObject>().mapNotNull { fromJSONObject(it) }
         }
     }
 }

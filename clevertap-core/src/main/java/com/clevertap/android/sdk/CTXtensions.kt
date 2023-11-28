@@ -162,34 +162,29 @@ fun JSONArray?.orEmptyArray(): JSONArray {
     return this ?: JSONArray()
 }
 
-fun JSONArray.toList(): List<JSONObject> {
-    val jsonObjectList = mutableListOf<JSONObject>()
+inline fun <reified T> JSONArray.toList(): List<T> {
+    val list = mutableListOf<T>()
     for (index in 0 until length()) {
-        jsonObjectList.add(getJSONObject(index))
+        val element = get(index)
+        if (element is T) {
+            list.add(element)
+        }
     }
-    return jsonObjectList
+    return list
 }
 
-fun JSONArray.iterator(foreach: (jsonObject: JSONObject) -> Unit) {
+inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit) {
     for (index in 0 until length()) {
-        foreach(getJSONObject(index))
+        val element = get(index)
+        if (element is T) {
+            foreach(element)
+        }
     }
 }
 
 fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
-    val has = has(key)
-
-    if (has.not()) {
-        return Pair(false, null)
-    }
-
-    val list: JSONArray = getJSONArray(key)
-
-    return if (list.length() > 0) {
-        Pair(true, list)
-    } else {
-        Pair(false, null)
-    }
+    val list: JSONArray = optJSONArray(key) ?: return Pair(false, null)
+    return Pair(list.length() > 0, list.takeIf { it.length() > 0 })
 }
 
 fun JSONObject.copyFrom(other: JSONObject) {

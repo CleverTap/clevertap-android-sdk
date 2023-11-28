@@ -1,8 +1,8 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import android.location.Location
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope.LIBRARY
-import android.location.Location
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
@@ -145,7 +145,7 @@ class EvaluationManager constructor(
         val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
         val occurrenceLimits = limitJSON.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
 
-        return (frequencyLimits.toList() + occurrenceLimits.toList()).mapNotNull {
+        return (frequencyLimits.toList<JSONObject>() + occurrenceLimits.toList()).mapNotNull {
             if (it.isNotNullAndEmpty()) {
                 LimitAdapter(it)
             } else null
