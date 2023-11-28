@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 import android.location.Location
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope.LIBRARY
+import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
@@ -72,7 +73,8 @@ class EvaluationManager constructor(
         return limitsMatcher.matchWhenLimits(listOfLimitAdapter, campaignId)
     }
 
-    private fun evaluateServerSide(event: EventAdapter) {
+    @VisibleForTesting
+    internal fun evaluateServerSide(event: EventAdapter) {
         storeRegistry.inAppStore?.let { store ->
             val eligibleInApps = evaluate(event, store.readServerSideInAppsMetaData().toList())
 
@@ -86,7 +88,8 @@ class EvaluationManager constructor(
         }
     }
 
-    private fun evaluateClientSide(event: EventAdapter): JSONArray {
+    @VisibleForTesting
+    internal fun evaluateClientSide(event: EventAdapter): JSONArray {
         storeRegistry.inAppStore?.let { store ->
             val eligibleInApps = evaluate(event, store.readClientSideInApps().toList())
 
@@ -101,7 +104,8 @@ class EvaluationManager constructor(
         }.run { return JSONArray() }
     }
 
-    private fun evaluate(event: EventAdapter, inappNotifs: List<JSONObject>): List<JSONObject> {
+    @VisibleForTesting
+    internal fun evaluate(event: EventAdapter, inappNotifs: List<JSONObject>): List<JSONObject> {
         val eligibleInApps: MutableList<JSONObject> = mutableListOf()
 
         for (inApp in inappNotifs) {
@@ -127,7 +131,8 @@ class EvaluationManager constructor(
         return eligibleInApps
     }
 
-    private fun getWhenTriggers(triggerJson: JSONObject): List<TriggerAdapter> {
+    @VisibleForTesting
+    internal fun getWhenTriggers(triggerJson: JSONObject): List<TriggerAdapter> {
         val whenTriggers = triggerJson.optJSONArray(Constants.INAPP_WHEN_TRIGGERS).orEmptyArray()
         return (0 until whenTriggers.length()).map { TriggerAdapter(whenTriggers[it] as JSONObject) }
     }
@@ -163,7 +168,8 @@ class EvaluationManager constructor(
         return inApp.optBoolean(Constants.INAPP_SUPPRESSED)
     }
 
-    private fun suppress(inApp: JSONObject) {
+    @VisibleForTesting
+    internal fun suppress(inApp: JSONObject) {
         val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
         val wzrkId = generateWzrkId(campaignId)
         val wzrkPivot = inApp.optString(Constants.INAPP_WZRK_PIVOT, "wzrk_default")
@@ -184,7 +190,8 @@ class EvaluationManager constructor(
         return "${ti}_$date"
     }
 
-    private fun updateTTL(inApp: JSONObject) {
+    @VisibleForTesting
+    internal fun updateTTL(inApp: JSONObject) {
         val offset = inApp.opt(Constants.WZRK_TIME_TO_LIVE_OFFSET) as? Long
         if (offset != null) {
             val now = Clock.SYSTEM.currentTimeSeconds()
