@@ -12,6 +12,7 @@ import org.hamcrest.beans.SamePropertyValuesAs.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
+import java.util.Date
 import kotlin.test.assertEquals
 
 class EvaluationManagerTest : BaseTestCase() {
@@ -125,6 +126,43 @@ class EvaluationManagerTest : BaseTestCase() {
         // Verify that limitsMatcher.matchWhenLimits is called for each in-app
         verify(exactly = 0) { limitsMatcher.matchWhenLimits(any(), "campaign1") }
         verify(exactly = 0) { limitsMatcher.matchWhenLimits(any(), "campaign2") }
+    }
+
+    @Test
+    fun `updateTTL should set TTL when offset is not null`() {
+        // Arrange
+
+        val inApp = JSONObject().put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+
+        // Act
+        evaluationManager.updateTTL(inApp, FakeClock())
+
+        // Assert
+        assertEquals(70L, inApp.optLong(Constants.WZRK_TIME_TO_LIVE))
+    }
+
+    @Test
+    fun `updateTTL should remove TTL when offset is null`() {
+        // Arrange
+        val inApp = JSONObject().put(Constants.WZRK_TIME_TO_LIVE_OFFSET, null)
+
+        // Act
+        evaluationManager.updateTTL(inApp)
+
+        // Assert
+        assertEquals(null, inApp.opt(Constants.WZRK_TIME_TO_LIVE))
+    }
+
+    @Test
+    fun `updateTTL should not set TTL when offset is not a Long`() {
+        // Arrange
+        val inApp = JSONObject().put(Constants.WZRK_TIME_TO_LIVE_OFFSET, "not_a_long")
+
+        // Act
+        evaluationManager.updateTTL(inApp)
+
+        // Assert
+        assertEquals(null, inApp.opt(Constants.WZRK_TIME_TO_LIVE))
     }
 
     @Test
@@ -351,5 +389,16 @@ class EvaluationManagerTest : BaseTestCase() {
         val result = evaluationManager.getWhenLimits(limitJSON)
 
         assertEquals(0, result.size)
+    }
+
+    class FakeClock : Clock {
+
+        override fun currentTimeMillis(): Long {
+            return 10_000L
+        }
+
+        override fun newDate(): Date {
+            return Date()
+        }
     }
 }
