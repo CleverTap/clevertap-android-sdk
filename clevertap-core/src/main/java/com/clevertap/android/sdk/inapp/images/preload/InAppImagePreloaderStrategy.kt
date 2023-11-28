@@ -11,6 +11,7 @@ internal interface InAppImagePreloaderStrategy {
 
     val config: InAppImagePreloadConfig
 
-    fun preloadImages(urls: List<String>)
+    fun preloadImages(urls: List<String>) = preloadImages(urls) {}
+    fun preloadImages(urls: List<String>, successBlock: (url: String) -> Unit = {})
     fun cleanup()
 }

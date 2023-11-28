@@ -21,7 +21,7 @@ internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
     private val jobs: MutableList<Job> = mutableListOf()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun preloadImages(urls: List<String>) {
+    override fun preloadImages(urls: List<String>, successBlock: (url: String) -> Unit) {
 
         val handler = CoroutineExceptionHandler { _, throwable ->
             logger?.verbose("Cancelled image pre fetch \n ${throwable.stackTrace}")
@@ -33,7 +33,10 @@ internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
                 logger?.verbose("started image url fetch $url")
 
                 val mils = measureTimeMillis {
-                    inAppImageProvider.fetchInAppImage(url)
+                    val fetchInAppImage = inAppImageProvider.fetchInAppImage(url)
+                    if (fetchInAppImage != null) {
+                        successBlock.invoke(url)
+                    }
                 }
 
                 logger?.verbose("finished image url fetch $url in $mils ms")
@@ -43,6 +46,6 @@ internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
     }
 
     override fun cleanup() {
-        jobs.map { job -> job.cancel() }
+        jobs.forEach { job -> job.cancel() }
     }
 }
