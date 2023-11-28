@@ -7,15 +7,21 @@ import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
+import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
+import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyCoroutine;
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderCoroutine;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
+import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
+
+import java.util.List;
 import java.util.concurrent.Callable;
 import kotlin.Pair;
 import org.json.JSONArray;
@@ -67,8 +73,10 @@ public class InAppResponse extends CleverTapResponseDecorator {
             InAppResponseAdapter res = new InAppResponseAdapter(response);
             final ImpressionStore impressionStore = storeRegistry.getImpressionStore();
             final InAppStore inAppStore = storeRegistry.getInAppStore();
+            final InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
 
-            if (impressionStore == null || inAppStore == null) {
+            if (impressionStore == null || inAppStore == null || inAppAssetStore == null) {
+                logger.verbose(config.getAccountId(), "Stores are not initialised, ignoring inapps!!!!");
                 return;
             }
 
@@ -127,16 +135,21 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
+            InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
+            InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
 
-            CTExecutors executor = CTExecutorFactory.executorResourceDownloader();
-            InAppImagePreloaderStrategy preloader = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
-            //InAppImagePreloaderStrategy preloader = new InAppImagePreloaderExecutors(executor, inAppResourceProvider, logger);
+            /*InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(
+                    CTExecutorFactory.executorResourceDownloader(),
+                    inAppResourceProvider, logger
+            );*/
 
-            preloader.preloadImages(res.getPreloadImage());
+            InAppImageRepoImpl impl = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore);
+            impl.fetchAllImages(res.getPreloadImage());
+            impl.cleanupStaleImages(res.getAllImages());
 
-            String inappMode = res.getInAppMode();
-            if (!inappMode.isEmpty()) {
-                inAppStore.setMode(inappMode);
+            String mode = res.getInAppMode();
+            if (!mode.isEmpty()) {
+                inAppStore.setMode(mode);
             }
 
         } catch (Throwable t) {
