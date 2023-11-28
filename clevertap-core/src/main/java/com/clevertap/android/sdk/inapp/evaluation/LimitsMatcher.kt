@@ -66,4 +66,22 @@ class LimitsMatcher(
         }
     }
 
+    fun shouldDiscard(
+        whenLimits: List<LimitAdapter>,
+        campaignId: String,
+    ): Boolean {
+        var discard = false
+        whenLimits.forEach { limitAdapter ->
+            discard = discard || when (limitAdapter.limitType) {
+                LimitType.Ever -> {
+                    !matchLimit(limitAdapter, campaignId)
+                }
+                else -> {
+                    false
+                }
+            }
+        }
+        return discard
+    }
+
 }
