@@ -137,7 +137,10 @@ class EvaluationManager constructor(
     @VisibleForTesting
     internal fun getWhenTriggers(triggerJson: JSONObject): List<TriggerAdapter> {
         val whenTriggers = triggerJson.optJSONArray(Constants.INAPP_WHEN_TRIGGERS).orEmptyArray()
-        return (0 until whenTriggers.length()).map { TriggerAdapter(whenTriggers[it] as JSONObject) }
+        return (0 until whenTriggers.length()).mapNotNull {
+            val jsonObject = whenTriggers[it] as? JSONObject
+            jsonObject?.let { nonNullJsonObject -> TriggerAdapter(nonNullJsonObject) }
+        }
     }
 
     internal fun getWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
