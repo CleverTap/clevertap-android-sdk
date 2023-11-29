@@ -50,7 +50,6 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
          implementation "androidx.core:core:1.9.0"
          implementation "com.google.firebase:firebase-messaging:23.0.6"
          implementation "com.google.android.gms:play-services-ads:22.3.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
-         implementation "com.android.installreferrer:installreferrer:2.2" // Mandatory for v3.6.4 and above
      }
 ```
 
@@ -71,7 +70,7 @@ Also be sure to include the `google-services.json` classpath in your Project lev
         
          }       
          dependencies {      
-             classpath "com.android.tools.build:gradle:7.3.0"
+             classpath "com.android.tools.build:gradle:7.4.2"
              classpath "com.google.gms:google-services:4.3.3"
         
              // NOTE: Do not place your application dependencies here; they belong       

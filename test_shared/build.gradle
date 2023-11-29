@@ -1,13 +1,15 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+plugins {
+    id('com.android.library')
+    id('kotlin-android')
+}
 
 android {
-    compileSdkVersion Android.compileSdkVersionVal
-    buildToolsVersion Android.buildToolsVersionVal
+    compileSdkVersion libs.versions.android.compileSdk.get().toInteger()
+    buildToolsVersion libs.versions.android.buildTools.get()
 
     defaultConfig {
-        minSdkVersion Android.minSdkVersionVal
-        targetSdkVersion Android.targetSdkVersionVal
+        minSdkVersion libs.versions.android.minSdk.get().toInteger()
+        targetSdkVersion libs.versions.android.targetSdk.get().toInteger()
         versionCode 1
         versionName "1.0"
 
@@ -26,33 +28,31 @@ android {
 dependencies {
     api project(':clevertap-core')
     // Unit ing dependencies
-    api Libs.junit_platform_runner
-    api Libs.junit_jupiter_api
-    api Libs.junit_jupiter_engine
-    api Libs.kotlin_stdlib_jdk7
-    api Libs.jsonassert
-    api Libs.gson
-    def mockito_version = '3.5.11'
-    api Libs.mockito_core
-    api "org.mockito:mockito-inline:$mockito_version"
-    api Libs.robolectric
-    api Libs.opentest4j
+    api (libs.test.junit.platform.runner)
+    api (libs.test.junit.jupiter.api)
+    api (libs.test.junit.jupiter.engine)
+    api (libs.kotlin.stdlib.jdk7)
+    api (libs.test.jsonassert)
+    api (libs.gson)
+    api (libs.bundles.mockito)
+    api (libs.test.robolectric)
+    api (libs.test.opentest4j)
 
-    api Libs.androidx_test_core
-    api Libs.androidx_test_ext_junit
+    api (libs.test.core)
+    api (libs.test.ext.junit)
 
-    api Libs.fragment
+    api (libs.androidx.fragment)
     // AndroidJUnitRunner and JUnit Rules
-    api Libs.androidx_test_runner
-    api Libs.androidx_test_rules
-    api Libs.espresso_core
+    api (libs.test.runner)
+    api (libs.test.rules)
+    api (libs.test.espresso.core)
 
-    api Libs.catch_exception
-    api Libs.androidx_core_core
+    api (libs.catch.exception)
+    api (libs.androidx.core.core)
 
-    api Libs.kotlin_test
-    api Libs.truth
+    api (libs.test.kotlin.test)
+    api (libs.test.truth)
 
-    api Libs.xmlpull
+    api (libs.test.xmlpull)
 
 }
