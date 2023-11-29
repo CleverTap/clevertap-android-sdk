@@ -138,7 +138,13 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             InAppImageRepoImpl impl = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore);
             impl.fetchAllImages(res.getPreloadImage());
-            impl.cleanupStaleImages(res.getAllImages());
+
+            if (isFullResponse) {
+                logger.verbose(config.getAccountId(), "Handling cache eviction");
+                impl.cleanupStaleImages(res.getAllImages());
+            } else {
+                logger.verbose(config.getAccountId(), "Ignoring cache eviction");
+            }
 
             String mode = res.getInAppMode();
             if (!mode.isEmpty()) {

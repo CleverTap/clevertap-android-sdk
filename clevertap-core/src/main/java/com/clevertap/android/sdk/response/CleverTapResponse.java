@@ -10,6 +10,8 @@ import org.json.JSONObject;
  */
 public abstract class CleverTapResponse {
 
+    public boolean isFullResponse = false; // todo this is volatile, could not fix using current infra
+
     @WorkerThread
     public void processResponse(
             final JSONObject jsonBody,

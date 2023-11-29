@@ -847,6 +847,7 @@ public class NetworkManager extends BaseNetworkManager {
             JSONObject jsonObject = new JSONObject(body);
 
             for (CleverTapResponse response: cleverTapResponses) {
+                response.isFullResponse = isFullResponse;
                response.processResponse(jsonObject, body, context);
             }
         } catch (JSONException e) {
