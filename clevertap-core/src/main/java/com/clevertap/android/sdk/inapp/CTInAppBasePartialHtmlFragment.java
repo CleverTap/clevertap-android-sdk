@@ -16,6 +16,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.clevertap.android.sdk.CTWebInterface;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.utils.UriHelper;
@@ -147,6 +149,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
 
     abstract View getView(LayoutInflater inflater, ViewGroup container);
 
+    @SuppressLint("SetJavaScriptEnabled")
     private View displayHTMLView(LayoutInflater inflater, ViewGroup container) {
         View inAppView;
         ViewGroup layout;
@@ -160,6 +163,17 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
             webView.setWebViewClient(webViewClient);
             webView.setOnTouchListener(CTInAppBasePartialHtmlFragment.this);
             webView.setOnLongClickListener(CTInAppBasePartialHtmlFragment.this);
+
+            if (inAppNotification.isJsEnabled()) {
+                webView.getSettings().setJavaScriptEnabled(true);
+                webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
+                webView.getSettings().setAllowContentAccess(false);
+                webView.getSettings().setAllowFileAccess(false);
+                webView.getSettings().setAllowFileAccessFromFileURLs(false);
+                webView.addJavascriptInterface(
+                        new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(), config),
+                                this), "CleverTap");
+            }
 
             if (layout != null) {
                 layout.addView(webView);
