@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.evaluation.TriggerOperator.Equals
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
@@ -317,6 +318,77 @@ class EvaluationManagerTest : BaseTestCase() {
         Assert.assertEquals("Property1", triggerCondition?.propertyName)
         Assert.assertEquals(Equals, triggerCondition?.op)
         Assert.assertEquals("Value1", triggerCondition?.value?.stringValue())
+    }
+
+    @Test
+    fun `test evaluateClientSide if inapp suppressed then does not return after evaluation`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+
+        assertEquals(0, evaluateClientSide.length())
+        assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide when 1st inapp is suppressed while other not`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+            .put(Constants.INAPP_SUPPRESSED, true)
+        val inApp2 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 10L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1, inApp2)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide when both inapps are not suppressed`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val inApp2 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 10L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1, inApp2)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide if inapp not suppressed then does return after evaluation`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
     }
 
     @Test
