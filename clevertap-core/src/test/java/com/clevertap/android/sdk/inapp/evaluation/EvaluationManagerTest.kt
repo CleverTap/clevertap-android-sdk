@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.evaluation.TriggerOperator.Equals
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
@@ -217,6 +218,105 @@ class EvaluationManagerTest : BaseTestCase() {
 
         // Assert
         assertEquals("campaign1_20230126", result)
+    }
+
+    @Test
+    fun `getWhenTriggers should return empty list when JSONArray is empty`() {
+        // Arrange
+        val triggerJson = JSONObject().put(Constants.INAPP_WHEN_TRIGGERS, JSONArray())
+
+        // Act
+        val result = evaluationManager.getWhenTriggers(triggerJson)
+
+        // Assert
+        assertEquals(emptyList(), result)
+    }
+
+    @Test
+    fun `getWhenTriggers should return list of TriggerAdapter objects`() {
+        // Arrange
+        val trigger1 = JSONObject().put("eventName", "event1")
+        val trigger2 = JSONObject().put("eventName", "event2")
+
+        val triggerJson = JSONObject().put(Constants.INAPP_WHEN_TRIGGERS, JSONArray().put(trigger1).put(trigger2))
+
+        // Act
+        val result = evaluationManager.getWhenTriggers(triggerJson)
+
+        // Assert
+        assertEquals(2, result.size)
+        assertThat(TriggerAdapter(trigger1), samePropertyValuesAs(result[0]))
+        assertThat(TriggerAdapter(trigger2), samePropertyValuesAs(result[1]))
+    }
+
+    @Test
+    fun `getWhenTriggers should handle invalid JSONObject in JSONArray`() {
+        // Arrange
+        val triggerJson = JSONObject().put(Constants.INAPP_WHEN_TRIGGERS, JSONArray().put("invalidObject"))
+
+        // Act
+        val result = evaluationManager.getWhenTriggers(triggerJson)
+
+        // Assert
+        assertEquals(emptyList(), result)
+    }
+
+    @Test
+    fun `getWhenTriggers should return empty list when INAPP_WHEN_TRIGGERS is missing`() {
+        // Arrange
+        val triggerJson = JSONObject()
+
+        // Act
+        val result = evaluationManager.getWhenTriggers(triggerJson)
+
+        // Assert
+        assertEquals(emptyList(), result)
+    }
+
+    @Test
+    fun `getWhenTriggers should return empty list when INAPP_WHEN_TRIGGERS is not a JSONArray`() {
+        // Arrange
+        val triggerJson = JSONObject().put(Constants.INAPP_WHEN_TRIGGERS, "not_an_array")
+
+        // Act
+        val result = evaluationManager.getWhenTriggers(triggerJson)
+
+        // Assert
+        assertEquals(emptyList(), result)
+    }
+
+    @Test
+    fun `getWhenTriggers should handle JSONArray with event properties`() {
+        // Arrange
+        val jsonString = """
+            {
+              "${Constants.INAPP_WHEN_TRIGGERS}": [
+                {
+                  "${Constants.KEY_EVT_NAME}": "TestEvent",
+                  "eventProperties": [
+                    {
+                      "${Constants.INAPP_PROPERTYNAME}": "Property1",
+                      "${Constants.INAPP_OPERATOR}": 1,
+                      "${Constants.KEY_PROPERTY_VALUE}": "Value1"
+                    }
+                  ]
+                }
+              ]
+            }
+        """.trimIndent()
+
+        // Act
+        val result = evaluationManager.getWhenTriggers(JSONObject(jsonString))
+
+        // Assert
+        assertEquals(1, result.size)
+        assertEquals(1, result[0].propertyCount)
+
+        val triggerCondition = result[0].propertyAtIndex(0)
+
+        Assert.assertEquals("Property1", triggerCondition?.propertyName)
+        Assert.assertEquals(Equals, triggerCondition?.op)
+        Assert.assertEquals("Value1", triggerCondition?.value?.stringValue())
     }
 
     @Test
