@@ -488,6 +488,63 @@ class EvaluationManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun `test evaluateOnAppLaunchedServerSide if inapp suppressed then does not return after evaluation`() {
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val inApps = listOf(inApp1)
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, null)
+
+        assertEquals(0, evaluateClientSide.length())
+        assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedServerSide when 1st inapp is suppressed while other not`() {
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_SUPPRESSED, true)
+        val inApp2 = JSONObject()
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val inApps = listOf(inApp1, inApp2)
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, null)
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedServerSide when both inapps are not suppressed`() {
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val inApp2 = JSONObject()
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val inApps = listOf(inApp1, inApp2)
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, null)
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedServerSide if inapp not suppressed then does return after evaluation`() {
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val inApps = listOf(inApp1)
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, null)
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
     fun `test evaluateServerSide when campaignId is 0 then don't add id to evaluatedServerSideCampaignIds`() {
         val inApp1 = JSONObject()
             .put(Constants.INAPP_ID_IN_PAYLOAD, 0)
