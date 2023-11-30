@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.evaluation.TriggerOperator.Equals
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
@@ -18,6 +19,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class EvaluationManagerTest : BaseTestCase() {
 
@@ -643,6 +648,100 @@ class EvaluationManagerTest : BaseTestCase() {
         val result = evaluationManager.getWhenLimits(limitJSON)
 
         assertEquals(0, result.size)
+    }
+
+    @Test
+    fun `onAttachHeaders returns JSONObject when evaluatedServerSideCampaignIds is not empty`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+        // Populate evaluatedServerSideCampaignIds with some values
+        evaluationManager.evaluatedServerSideCampaignIds.add(1)
+
+        // Act
+        val result = evaluationManager.onAttachHeaders(endpointId)
+
+        // Assert
+        assertNotNull(result)
+        assertTrue(result.has(Constants.INAPP_SS_EVAL_META))
+        val evaluatedIdsArray = result.getJSONArray(Constants.INAPP_SS_EVAL_META)
+        assertEquals(1, evaluatedIdsArray.length())
+        assertEquals(1L, evaluatedIdsArray.getLong(0))
+
+        assertFalse(result.has(Constants.INAPP_SUPPRESSED_META)) // Ensure the other key is not present
+    }
+
+    @Test
+    fun `onAttachHeaders returns JSONObject when suppressedClientSideInApps is not empty`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+        evaluationManager.suppressedClientSideInApps.add(mapOf("key" to "value"))
+
+        // Act
+        val result = evaluationManager.onAttachHeaders(endpointId)
+
+        // Assert
+        assertNotNull(result)
+
+        assertFalse(result.has(Constants.INAPP_SS_EVAL_META)) // Ensure the other key is not present
+
+        assertTrue(result.has(Constants.INAPP_SUPPRESSED_META))
+        val suppressedAppsArray = result.getJSONArray(Constants.INAPP_SUPPRESSED_META)
+        assertEquals(1, suppressedAppsArray.length())
+        val suppressedApp = suppressedAppsArray.getJSONObject(0)
+        assertEquals("value", suppressedApp.getString("key"))
+    }
+
+    @Test
+    fun `onAttachHeaders returns JSONObject when both lists are not empty`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+        evaluationManager.suppressedClientSideInApps.add(mapOf("key" to "value"))
+        evaluationManager.evaluatedServerSideCampaignIds.add(1)
+
+        // Act
+        val result = evaluationManager.onAttachHeaders(endpointId)
+
+        // Assert
+        assertNotNull(result)
+
+        assertTrue(result.has(Constants.INAPP_SS_EVAL_META))
+        assertTrue(result.has(Constants.INAPP_SUPPRESSED_META))
+
+        val suppressedAppsArray = result.getJSONArray(Constants.INAPP_SUPPRESSED_META)
+        assertEquals(1, suppressedAppsArray.length())
+        val suppressedApp = suppressedAppsArray.getJSONObject(0)
+        assertEquals("value", suppressedApp.getString("key"))
+
+        val evaluatedIdsArray = result.getJSONArray(Constants.INAPP_SS_EVAL_META)
+        assertEquals(1, evaluatedIdsArray.length())
+        assertEquals(1L, evaluatedIdsArray.getLong(0))
+    }
+
+    @Test
+    fun `onAttachHeaders returns null when both lists are empty`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        // Act
+        val result = evaluationManager.onAttachHeaders(endpointId)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun `onAttachHeaders returns null for non-ENDPOINT_A1`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_HELLO
+
+        evaluationManager.suppressedClientSideInApps.add(mapOf("key" to "value"))
+        evaluationManager.evaluatedServerSideCampaignIds.add(1)
+
+        // Act
+        val result = evaluationManager.onAttachHeaders(endpointId)
+
+        // Assert
+        assertNull(result)
     }
 
     class FakeClock : Clock {
