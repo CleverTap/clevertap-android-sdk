@@ -77,6 +77,32 @@ class EvaluationManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun `test evaluateOnAppLaunchedClientSide`() {
+        // Arrange
+        val userLocation = mockk<Location>()
+
+        // Capture the created EventAdapter
+        val eventAdapterSlot = slot<EventAdapter>()
+        every { evaluationManager.evaluateClientSide(capture(eventAdapterSlot)) } returns JSONArray().put(
+            JSONObject(
+                mapOf("resultKey" to "resultValue")
+            )
+        )
+
+        // Act
+        evaluationManager.evaluateOnAppLaunchedClientSide(userLocation)
+
+        // Assert
+        // Verify that the captured EventAdapter has the expected properties for app launched event
+        val capturedEventAdapter = eventAdapterSlot.captured
+        assertEquals(Constants.APP_LAUNCHED_EVENT, capturedEventAdapter.eventName)
+        assertEquals(emptyMap(), capturedEventAdapter.eventProperties)
+        assertEquals(userLocation, capturedEventAdapter.userLocation)
+
+        verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
+        verify(exactly = 0) { evaluationManager.evaluateServerSide(any()) }
+    }
+    @Test
     fun `test evaluateOnChargedEvent`() {
         // Arrange
         val details = mapOf("key" to "value")
