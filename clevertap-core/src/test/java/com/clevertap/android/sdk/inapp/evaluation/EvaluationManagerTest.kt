@@ -77,6 +77,37 @@ class EvaluationManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun `test evaluateOnChargedEvent`() {
+        // Arrange
+        val details = mapOf("key" to "value")
+        val items = listOf(mapOf("itemKey" to "itemValue"))
+        val userLocation = mockk<Location>()
+
+        // Capture the created EventAdapter
+        val eventAdapterSlot = slot<EventAdapter>()
+        every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(JSONObject(mapOf("resultKey" to "resultValue")))
+
+        // Act
+        val result = evaluationManager.evaluateOnChargedEvent(details, items, userLocation)
+
+        // Assert
+        // Verify that the captured EventAdapter has the expected event type
+        val capturedEventAdapter = eventAdapterSlot.captured
+        assertEquals(Constants.CHARGED_EVENT, capturedEventAdapter.eventName)
+
+        assertNotNull(result)
+        assertTrue(result.length() > 0)
+
+        // Perform more detailed assertions on the content of the JSONArray if needed
+        val firstResultObject = result.getJSONObject(0)
+        assertEquals("resultValue", firstResultObject.getString("resultKey"))
+
+        verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
+    }
+
+    @Test
     fun `evaluate should return empty list when inappNotifs is empty`() {
         // Arrange
         val event = EventAdapter("eventName", emptyMap(), userLocation = null)
