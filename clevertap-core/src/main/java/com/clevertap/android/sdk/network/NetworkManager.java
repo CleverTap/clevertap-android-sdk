@@ -784,7 +784,6 @@ public class NetworkManager extends BaseNetworkManager {
                 if (eventGroup == EventGroup.VARIABLES) {
                     processVariablesResponse(body);
                 } else {
-
                     // check if there is app launched/wzrk_fetch event
                     boolean found = false;
                     for (int index = 0; index < queue.length(); index++) {
@@ -832,6 +831,8 @@ public class NetworkManager extends BaseNetworkManager {
         try {
             JSONObject jsonObject = new JSONObject(body);
 
+            logger.verbose(config.getAccountId(), "Processing variables response : " + jsonObject);
+
             new ARPResponse(config, this, validator, controllerManager)
                     .processResponse(jsonObject, body, this.context);
             new SyncUpstreamResponse(localDataStore, logger, config.getAccountId())
@@ -845,6 +846,8 @@ public class NetworkManager extends BaseNetworkManager {
     private void processAllResponses(String body, boolean isFullResponse) {
         try {
             JSONObject jsonObject = new JSONObject(body);
+
+            logger.verbose(config.getAccountId(), "Processing response : " + jsonObject);
 
             for (CleverTapResponse response: cleverTapResponses) {
                 response.isFullResponse = isFullResponse;
