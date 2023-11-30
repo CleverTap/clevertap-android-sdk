@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import android.location.Location
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.evaluation.TriggerOperator.Equals
@@ -40,6 +41,39 @@ class EvaluationManagerTest : BaseTestCase() {
         limitsMatcher = mockk(relaxed = true)
         storeRegistry = mockk(relaxed = true)
         evaluationManager = spyk(EvaluationManager(triggersMatcher, triggersManager, limitsMatcher, storeRegistry))
+    }
+
+    @Test
+    fun `test evaluateOnEvent`() {
+        // Arrange
+        val eventName = "customEvent"
+        val eventProperties = mapOf("key" to "value")
+        val userLocation = mockk<Location>()
+
+        // Capture the created EventAdapter
+        val eventAdapterSlot = slot<EventAdapter>()
+        every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(JSONObject(mapOf("resultKey" to "resultValue")))
+
+        // Act
+        val result = evaluationManager.evaluateOnEvent(eventName, eventProperties, userLocation)
+
+        // Assert
+        // Verify that the captured EventAdapter has the expected properties
+        val capturedEventAdapter = eventAdapterSlot.captured
+        assertEquals(eventName, capturedEventAdapter.eventName)
+        assertEquals(eventProperties, capturedEventAdapter.eventProperties)
+        assertEquals(userLocation, capturedEventAdapter.userLocation)
+
+        assertNotNull(result)
+        assertTrue(result.length() > 0)
+
+        // Perform more detailed assertions on the content of the JSONArray if needed
+        val firstResultObject = result.getJSONObject(0)
+        assertEquals("resultValue", firstResultObject.getString("resultKey"))
+
+        verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
     }
 
     @Test
