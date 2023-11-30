@@ -744,6 +744,248 @@ class EvaluationManagerTest : BaseTestCase() {
         assertNull(result)
     }
 
+    @Test
+    fun `onSentHeaders removes sent evaluatedServerSideCampaignIds and suppressedClientSideInApps for ENDPOINT_A1`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        // Create a JSONObject with the desired structure
+        val header = JSONObject().apply {
+            put(Constants.INAPP_SS_EVAL_META, JSONArray().put(1).put(2).put(3))
+            put(
+                Constants.INAPP_SUPPRESSED_META,
+                JSONArray().put(mapOf(Constants.NOTIFICATION_ID_TAG to "id1"))
+                    .put(mapOf(Constants.NOTIFICATION_ID_TAG to "id2"))
+            )
+        }
+
+        // Manually manipulate the evaluatedServerSideCampaignIds and suppressedClientSideInApps lists
+        evaluationManager.evaluatedServerSideCampaignIds.add(1L)
+        evaluationManager.evaluatedServerSideCampaignIds.add(2L)
+        evaluationManager.evaluatedServerSideCampaignIds.add(3L)
+
+        evaluationManager.suppressedClientSideInApps.add(mapOf(Constants.NOTIFICATION_ID_TAG to "id1"))
+        evaluationManager.suppressedClientSideInApps.add(mapOf(Constants.NOTIFICATION_ID_TAG to "id2"))
+        evaluationManager.suppressedClientSideInApps.add(mapOf(Constants.NOTIFICATION_ID_TAG to "id3"))
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+        // Manually assert the state after the method call
+        assertTrue(evaluationManager.evaluatedServerSideCampaignIds.isEmpty())
+
+        val resultList = evaluationManager.suppressedClientSideInApps
+        assertEquals(1, resultList.size)
+        assertEquals("id3", resultList[0][Constants.NOTIFICATION_ID_TAG])
+    }
+
+    @Test
+    fun `onSentHeaders doesn't remove sent suppressedClientSideInApps for ENDPOINT_A1 when NOTIFICATION_ID_TAG not present in header json`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        // Create a JSONObject with the desired structure
+        val header = JSONObject().apply {
+            put(
+                Constants.INAPP_SUPPRESSED_META,
+                JSONArray().put(mapOf("key" to "12"))
+            )
+        }
+
+        evaluationManager.suppressedClientSideInApps.add(mapOf(Constants.NOTIFICATION_ID_TAG to "112322222_646464646"))
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+
+        val resultList = evaluationManager.suppressedClientSideInApps
+        assertEquals(1, resultList.size)
+        assertEquals("112322222_646464646", resultList[0][Constants.NOTIFICATION_ID_TAG])
+    }
+
+    @Test
+    fun `onSentHeaders removes sent suppressedClientSideInApps for ENDPOINT_A1 when key in header json is different but id is same`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        // Create a JSONObject with the desired structure
+        val header = JSONObject().apply {
+            put(
+                Constants.INAPP_SUPPRESSED_META,
+                JSONArray().put(mapOf("key" to "112322222_646464646"))// key is not wzrk_id but value matches
+            )
+        }
+
+        evaluationManager.suppressedClientSideInApps.add(mapOf(Constants.NOTIFICATION_ID_TAG to "112322222_646464646"))
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+
+        val resultList = evaluationManager.suppressedClientSideInApps
+        assertEquals(0, resultList.size)
+    }
+
+    @Test
+    fun `onSentHeaders doesn't remove sent suppressedClientSideInApps for non-ENDPOINT_A1`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_HELLO
+
+        // Create a JSONObject with the desired structure
+        val header = JSONObject().apply {
+            put(
+                Constants.INAPP_SUPPRESSED_META,
+                JSONArray().put(mapOf(Constants.NOTIFICATION_ID_TAG to "112322222_646464646"))// key is not wzrk_id but value matches
+            )
+        }
+
+        evaluationManager.suppressedClientSideInApps.add(mapOf(Constants.NOTIFICATION_ID_TAG to "112322222_646464646"))
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+
+        val resultList = evaluationManager.suppressedClientSideInApps
+        assertEquals(1, resultList.size)
+        assertEquals("112322222_646464646", resultList[0][Constants.NOTIFICATION_ID_TAG])
+    }
+
+    @Test
+    fun `onSentHeaders doesn't remove sent evaluatedServerSideCampaignIds for non-ENDPOINT_A1`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_HELLO
+
+        val header = JSONObject().apply {
+            put(Constants.INAPP_SS_EVAL_META, JSONArray().put(1))
+        }
+
+        evaluationManager.evaluatedServerSideCampaignIds.add(1L)
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+
+        val resultList = evaluationManager.evaluatedServerSideCampaignIds
+        assertEquals(1, resultList.size)
+    }
+
+    @Test
+    fun `onSentHeaders doesn't remove sent suppressedClientSideInApps for empty header`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        // Create a JSONObject with the desired structure
+        val header = JSONObject()
+
+        evaluationManager.suppressedClientSideInApps.add(mapOf(Constants.NOTIFICATION_ID_TAG to "112322222_646464646"))
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+
+        val resultList = evaluationManager.suppressedClientSideInApps
+        assertEquals(1, resultList.size)
+        assertEquals("112322222_646464646", resultList[0][Constants.NOTIFICATION_ID_TAG])
+    }
+
+    @Test
+    fun `onSentHeaders doesn't remove sent suppressedClientSideInApps for empty header json array`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        // Create a JSONObject with the desired structure
+        val header = JSONObject().put(Constants.INAPP_SUPPRESSED_META, JSONArray())
+
+        evaluationManager.suppressedClientSideInApps.add(mapOf(Constants.NOTIFICATION_ID_TAG to "112322222_646464646"))
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+
+        val resultList = evaluationManager.suppressedClientSideInApps
+        assertEquals(1, resultList.size)
+        assertEquals("112322222_646464646", resultList[0][Constants.NOTIFICATION_ID_TAG])
+    }
+
+    @Test
+    fun `onSentHeaders should not crash when suppressedClientSideInApps doesn't have NOTIFICATION_ID_TAG`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        // Create a JSONObject with the desired structure
+        val header = JSONObject().apply {
+            put(
+                Constants.INAPP_SUPPRESSED_META,
+                JSONArray().put(mapOf(Constants.NOTIFICATION_ID_TAG to "112322222_646464646"))// key is not wzrk_id but value matches
+            )
+        }
+
+        evaluationManager.suppressedClientSideInApps.add(mapOf("key" to "112322222_646464646"))
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+
+        val resultList = evaluationManager.suppressedClientSideInApps
+        assertEquals(1, resultList.size)
+        assertEquals("112322222_646464646", resultList[0]["key"])
+    }
+
+    @Test
+    fun `onSentHeaders should not crash when suppressedClientSideInApps have NOTIFICATION_ID_TAG mapped to other type`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        // Create a JSONObject with the desired structure
+        val header = JSONObject().apply {
+            put(
+                Constants.INAPP_SUPPRESSED_META,
+                JSONArray().put(mapOf(Constants.NOTIFICATION_ID_TAG to "112322222_646464646"))// key is not wzrk_id but value matches
+            )
+        }
+
+        evaluationManager.suppressedClientSideInApps.add(mapOf(Constants.NOTIFICATION_ID_TAG to JSONObject()))
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+
+        val resultList = evaluationManager.suppressedClientSideInApps
+        assertEquals(1, resultList.size)
+    }
+
+    @Test
+    fun `onSentHeaders should not remove when evaluatedServerSideCampaignIds have id as 0`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        // Create a JSONObject with the desired structure
+        val header = JSONObject().apply {
+            put(Constants.INAPP_SS_EVAL_META, JSONArray().put(0))
+        }
+
+        evaluationManager.evaluatedServerSideCampaignIds.add(1L)
+        evaluationManager.evaluatedServerSideCampaignIds.add(2L)
+        evaluationManager.evaluatedServerSideCampaignIds.add(3L)
+
+        // Act
+        evaluationManager.onSentHeaders(header, endpointId)
+
+        // Assert
+
+        val resultList = evaluationManager.evaluatedServerSideCampaignIds
+        assertEquals(3, resultList.size)
+    }
+
     class FakeClock : Clock {
 
         override fun currentTimeMillis(): Long {
