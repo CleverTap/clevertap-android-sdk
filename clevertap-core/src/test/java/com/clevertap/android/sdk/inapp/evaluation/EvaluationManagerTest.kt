@@ -392,6 +392,34 @@ class EvaluationManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun `test evaluateServerSide when campaignId is 0 then don't add id to evaluatedServerSideCampaignIds`() {
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, 0)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        evaluationManager.evaluateServerSide(EventAdapter("", mapOf()))
+
+        assertEquals(0, evaluationManager.evaluatedServerSideCampaignIds.size)
+    }
+
+    @Test
+    fun `test evaluateServerSide when campaignId is not 0 then add id to evaluatedServerSideCampaignIds`() {
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, 123)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        evaluationManager.evaluateServerSide(EventAdapter("", mapOf()))
+
+        assertEquals(1, evaluationManager.evaluatedServerSideCampaignIds.size)
+    }
+
+    @Test
     fun `test sortByPriority with valid priorities and timestamps`() {
         val jsonObject1 = JSONObject()
         jsonObject1.put("priority", 3)
