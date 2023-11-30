@@ -4,9 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.SharedPreferences.Editor
+import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP
+import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import java.lang.ref.WeakReference
 
+@RestrictTo(LIBRARY_GROUP)
 class CTPreference(context: Context, private var prefName: String? = null) : ICTPreference {
 
     private val contextRef = WeakReference(context)
@@ -176,7 +180,8 @@ class CTPreference(context: Context, private var prefName: String? = null) : ICT
         this.prefName = prefName
     }
 
-    private fun sharedPrefs(): SharedPreferences? {
+    @VisibleForTesting
+    internal fun sharedPrefs(): SharedPreferences? {
         val context = contextRef.get() ?: return null
         return context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
     }
