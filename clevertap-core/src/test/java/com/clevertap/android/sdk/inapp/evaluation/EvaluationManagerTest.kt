@@ -1134,6 +1134,12 @@ class EvaluationManagerTest : BaseTestCase() {
         assertEquals(3, resultList.size)
     }
 
+    @Test
+    fun `test matchWhenLimitsBeforeDisplay`() {
+        evaluationManager.matchWhenLimitsBeforeDisplay(emptyList(), "123")
+        verify(exactly = 1) { limitsMatcher.matchWhenLimits(any(), any()) }
+    }
+
     class FakeClock : Clock {
 
         override fun currentTimeMillis(): Long {
