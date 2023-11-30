@@ -139,7 +139,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             if (isFullResponse) {
                 logger.verbose(config.getAccountId(), "Handling cache eviction");
-                impl.cleanupStaleImages(res.getAllImages());
+                impl.cleanupStaleImages(res.getPreloadImage());
             } else {
                 logger.verbose(config.getAccountId(), "Ignoring cache eviction");
             }

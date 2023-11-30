@@ -16,7 +16,7 @@ internal class InAppCleanupStrategyCoroutine @JvmOverloads constructor(
 ) : InAppCleanupStrategy {
 
     private var jobs: MutableList<Job> = mutableListOf()
-    override fun clearAssets(urls: List<String>) {
+    override fun clearAssets(urls: List<String>, successBlock: (url: String) -> Unit) {
         val job = CoroutineScope(dispatchers.io()).launch {
 
             val asyncTasks = mutableListOf<Deferred<Unit>>()
@@ -24,6 +24,7 @@ internal class InAppCleanupStrategyCoroutine @JvmOverloads constructor(
                 val deferred: Deferred<Unit> = async {
                     inAppResourceProvider.deleteImage(url)
                     inAppResourceProvider.deleteGif(url)
+                    successBlock.invoke(url)
                 }
                 asyncTasks.add(deferred)
             }
