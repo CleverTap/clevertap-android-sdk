@@ -17,10 +17,12 @@ import kotlin.test.assertEquals
 class ImpressionManagerTest : BaseTestCase() {
 
     @Mock
-    private lateinit var clock: FakeClock
+    private lateinit var clock: Clock
 
     @Mock
     private lateinit var deviceInfo: DeviceInfo
+
+    private lateinit var impressionStore: ImpressionStore
 
     private lateinit var impressionManager: ImpressionManager
 
@@ -29,7 +31,6 @@ class ImpressionManagerTest : BaseTestCase() {
         MockitoAnnotations.openMocks(this)
 
         val storeRegistry = StoreRegistry()
-        clock = FakeClock()
 
         impressionManager = ImpressionManager(
             storeRegistry = storeRegistry,
@@ -39,12 +40,12 @@ class ImpressionManagerTest : BaseTestCase() {
 
         `when`(deviceInfo.deviceID).thenReturn("device_id")
 
-        val impStore: ImpressionStore = StoreProvider.getInstance().provideImpressionStore(
+        impressionStore = StoreProvider.getInstance().provideImpressionStore(
             appCtx, deviceInfo,
             "account_id"
         )
 
-        storeRegistry.impressionStore = impStore
+        storeRegistry.impressionStore = impressionStore
     }
 
     class FakeClock : Clock {
@@ -64,10 +65,6 @@ class ImpressionManagerTest : BaseTestCase() {
     fun `recordImpression should increase sessionImpressionsTotal`() {
         // Arrange
         val campaignId = "campaign123"
-//        val currentTime = 123456L // Replace with a desired timestamp
-//
-//        // Mock the clock to return a fixed timestamp
-//        `when`(clock.currentTimeSeconds()).thenReturn(currentTime)
 
         assertEquals(0, impressionManager.perSessionTotal())
 
@@ -75,7 +72,7 @@ class ImpressionManagerTest : BaseTestCase() {
         impressionManager.recordImpression(campaignId)
 
         // Assert
-        assertEquals(1, impressionManager.perSessionTotal()) // Expecting one impression recorded
+        assertEquals(1, impressionManager.perSessionTotal())
     }
 
     @Test
@@ -130,6 +127,56 @@ class ImpressionManagerTest : BaseTestCase() {
         val result = impressionManager.perSessionTotal()
 
         // Assert
-        assertEquals(3, result) // Expecting the total number of impressions recorded
+        assertEquals(3, result)
+    }
+
+    @Test
+    fun `perSecond should return correct impression count for impressions within the last 5 seconds`() {
+        // Arrange
+        val campaignId = "campaign123"
+        val currentTimestamp = System.currentTimeMillis() / 1000
+
+        // Record impressions within the last 5 seconds
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp - 1)
+        impressionManager.recordImpression(campaignId)
+
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp - 2)
+        impressionManager.recordImpression(campaignId)
+
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp - 3)
+        impressionManager.recordImpression(campaignId)
+
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+
+        // Act
+        val result = impressionManager.perSecond(campaignId, 5)
+
+        // Assert
+        assertEquals(3, result)
+    }
+
+    @Test
+    fun `perSecond should return 0 for impressions outside the last 5 seconds`() {
+        // Arrange
+        val campaignId = "campaign123"
+        val currentTimestamp = System.currentTimeMillis() / 1000
+
+        // Record impressions outside the last 5 seconds
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp - 10)
+        impressionManager.recordImpression(campaignId)
+
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp - 20)
+        impressionManager.recordImpression(campaignId)
+
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp - 30)
+        impressionManager.recordImpression(campaignId)
+
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+
+        // Act
+        val result = impressionManager.perSecond(campaignId, 5)
+
+        // Assert
+        assertEquals(0, result)
     }
 }
