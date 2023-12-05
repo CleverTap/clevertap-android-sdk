@@ -773,8 +773,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 Logger.v(config.getAccountId(),
                         "Fragment not able to render, please ensure your Activity is an instance of AppCompatActivity"
                                 + e.getMessage());
+                currentlyDisplayingInApp = null;
             } catch (Throwable t) {
                 Logger.v(config.getAccountId(), "Fragment not able to render", t);
+                currentlyDisplayingInApp = null;
             }
         }
     }
