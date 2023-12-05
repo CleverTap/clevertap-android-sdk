@@ -186,13 +186,47 @@ class ImpressionManagerTest : BaseTestCase() {
         recordImpression(oneMinuteAgo, campaignId)
         recordImpression(thirtySecondsAgo, campaignId)
 
-        // Act and Assert
+        // test per 1 minute
         `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
         assertEquals(2, impressionManager.perMinute(campaignId, 1))
 
-        // Act and Assert
+        // test per 2 minutes
         `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
         assertEquals(3, impressionManager.perMinute(campaignId, 2))
+    }
+
+    @Test
+    fun testPerHour() {
+        // Arrange
+        val campaignId = "campaign123"
+        val currentTimestamp = System.currentTimeMillis() / 1000
+
+        val thirtyMinutesAgo = currentTimestamp - TimeUnit.MINUTES.toSeconds(30)
+        val oneHourAgo = currentTimestamp - TimeUnit.HOURS.toSeconds(1)
+        val oneHourOneSecondAgo = oneHourAgo - 1
+        val twentyFiveHoursAgo = currentTimestamp - TimeUnit.HOURS.toSeconds(25)
+        val twentyFiveHoursOneSecondAgo = twentyFiveHoursAgo - 1
+
+        // IMP: Impression should be recorded in increasing order of timeStamps otherwise unit test will get failed
+        recordImpression(twentyFiveHoursOneSecondAgo, campaignId)
+        recordImpression(twentyFiveHoursAgo, campaignId)
+        recordImpression(oneHourOneSecondAgo, campaignId)
+        recordImpression(oneHourAgo, campaignId)
+        recordImpression(thirtyMinutesAgo, campaignId)
+
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+
+        // test per 1 hour
+        assertEquals(2, impressionManager.perHour(campaignId, 1))
+
+        // test per 2 hours
+        assertEquals(3, impressionManager.perHour(campaignId, 2))
+
+        // test per 25 hours
+        assertEquals(4, impressionManager.perHour(campaignId, 25))
+
+        // test per 26 hours
+        assertEquals(5, impressionManager.perHour(campaignId, 26))
     }
 
     private fun recordImpression(timestamp: Long, campaignId: String) {
