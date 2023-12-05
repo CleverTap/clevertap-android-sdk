@@ -284,13 +284,13 @@ class TriggersMatcher {
 
                 else -> null
             }
-        }?.also { return if (isLessThan) it < actualNumber else it > actualNumber }
+        }?.also { return if (isLessThan) actualNumber < it else actualNumber > it }
 
         val expectedNumber =
             expected.numberValue()?.toDouble() ?: expected.stringValue()?.toDoubleOrNull()
             ?: return false
 
-        return if (isLessThan) expectedNumber < actualNumber else expectedNumber > actualNumber
+        return if (isLessThan) actualNumber < expectedNumber else actualNumber > expectedNumber
     }
 
     /**
