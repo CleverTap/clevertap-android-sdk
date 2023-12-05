@@ -132,43 +132,35 @@ class ImpressionManagerTest : BaseTestCase() {
     }
 
     @Test
-    fun `perSecond should return correct impression count for impressions within the last 5 seconds`() {
+    fun testPerSecond() {
         // Arrange
         val campaignId = "campaign123"
         val currentTimestamp = System.currentTimeMillis() / 1000
 
-        // Record impressions within the last 5 seconds
+        val oneSecondAgo = currentTimestamp - 1
+        val twoSecondsAgo = currentTimestamp - 2
+        val threeSecondsAgo = currentTimestamp - 3
+        val elvenSecondsAgo = currentTimestamp - 11
+
         // IMP: Impression should be recorded in increasing order of timeStamps otherwise unit test will get failed
-        recordImpression(currentTimestamp - 3, campaignId)
-        recordImpression(currentTimestamp - 2, campaignId)
-        recordImpression(currentTimestamp - 1, campaignId)
+        recordImpression(elvenSecondsAgo, campaignId)
+        recordImpression(threeSecondsAgo, campaignId)
+        recordImpression(twoSecondsAgo, campaignId)
+        recordImpression(oneSecondAgo, campaignId)
 
-        // Act
         `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
-        val result = impressionManager.perSecond(campaignId, 5)
 
-        // Assert
-        assertEquals(3, result)
-    }
+        // test per 1 second
+        assertEquals(1, impressionManager.perSecond(campaignId, 1))
 
-    @Test
-    fun `perSecond should return 0 for impressions outside the last 5 seconds`() {
-        // Arrange
-        val campaignId = "campaign123"
-        val currentTimestamp = System.currentTimeMillis() / 1000
+        // test per 10 second
+        assertEquals(3, impressionManager.perSecond(campaignId, 10))
 
-        // Record impressions outside the last 5 seconds
-        // IMP: Impression should be recorded in increasing order of timeStamps otherwise unit test will get failed
-        recordImpression(currentTimestamp - 30, campaignId)
-        recordImpression(currentTimestamp - 20, campaignId)
-        recordImpression(currentTimestamp - 10, campaignId)
+        // test per 11 second
+        assertEquals(4, impressionManager.perSecond(campaignId, 11))
 
-        // Act
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
-        val result = impressionManager.perSecond(campaignId, 5)
-
-        // Assert
-        assertEquals(0, result)
+        // test per 12 second
+        assertEquals(4, impressionManager.perSecond(campaignId, 12))
     }
 
     @Test
@@ -180,19 +172,27 @@ class ImpressionManagerTest : BaseTestCase() {
         val oneMinuteAgo = currentTimestamp - TimeUnit.MINUTES.toSeconds(1)
         val oneMinuteOneSecondAgo = oneMinuteAgo - 1
         val thirtySecondsAgo = currentTimestamp - 30
+        val sixtyFiveMinutesAgo = currentTimestamp - TimeUnit.MINUTES.toSeconds(65)
 
         // IMP: Impression should be recorded in increasing order of timeStamps otherwise unit test will get failed
+        recordImpression(sixtyFiveMinutesAgo, campaignId)
         recordImpression(oneMinuteOneSecondAgo, campaignId)
         recordImpression(oneMinuteAgo, campaignId)
         recordImpression(thirtySecondsAgo, campaignId)
 
-        // test per 1 minute
         `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+
+        // test per 1 minute
         assertEquals(2, impressionManager.perMinute(campaignId, 1))
 
         // test per 2 minutes
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
         assertEquals(3, impressionManager.perMinute(campaignId, 2))
+
+        // test per 60 minutes
+        assertEquals(3, impressionManager.perMinute(campaignId, 60))
+
+        // test per 70 minutes
+        assertEquals(4, impressionManager.perMinute(campaignId, 70))
     }
 
     @Test
