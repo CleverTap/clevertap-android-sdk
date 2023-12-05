@@ -10,9 +10,9 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 
 internal class InAppResourceProvider constructor(
-    val images: File,
-    val gifs: File,
-    val logger: ILogger? = null,
+    private val images: File,
+    private val gifs: File,
+    private val logger: ILogger? = null,
     private val ctCaches: CTCaches = CTCaches.instance(logger = logger),
     private val fileToBitmap : (file: File?) -> Bitmap? = { file ->
         if (file != null && file.hasValidBitmap()) {
