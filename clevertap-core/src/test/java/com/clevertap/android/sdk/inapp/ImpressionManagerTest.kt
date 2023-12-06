@@ -10,6 +10,7 @@ import org.junit.*
 import org.mockito.*
 import org.mockito.Mockito.*
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -227,6 +228,95 @@ class ImpressionManagerTest : BaseTestCase() {
 
         // test per 26 hours
         assertEquals(5, impressionManager.perHour(campaignId, 26))
+    }
+
+    @Test
+    fun testPerDay() {
+        // Arrange
+        val campaignId = "campaign123"
+        val currentTimestamp = System.currentTimeMillis() / 1000
+
+        val referenceTimestamp = getSecondsSinceLastMidnight()
+
+        val twoDayBeforeMidnightMinus1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(2) - 1
+        val twoDaysBeforeMidnightOffset1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(2) + 1
+        val oneDayBeforeMidnightMinus1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(1) - 1
+        val oneDayBeforeMidnightOffset1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(1) + 1
+        val tenHoursBeforeMidnight = referenceTimestamp - TimeUnit.HOURS.toSeconds(10)
+        val oneMinuteBeforeMidnight = referenceTimestamp - TimeUnit.MINUTES.toSeconds(1)
+        val tenHoursFromMidnight = referenceTimestamp + TimeUnit.HOURS.toSeconds(10)
+        val oneSecondAgo = currentTimestamp - 1
+
+        //Arrange
+        recordImpression(twoDayBeforeMidnightMinus1s, campaignId)
+        //Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perDay(campaignId, 0))
+        assertEquals(0, impressionManager.perDay(campaignId, 1))
+        assertEquals(0, impressionManager.perDay(campaignId, 2))
+        assertEquals(1, impressionManager.perDay(campaignId, 3))
+
+        //Arrange
+        recordImpression(twoDaysBeforeMidnightOffset1s, campaignId)
+        //Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perDay(campaignId, 0))
+        assertEquals(0, impressionManager.perDay(campaignId, 1))
+        assertEquals(1, impressionManager.perDay(campaignId, 2))
+        assertEquals(2, impressionManager.perDay(campaignId, 3))
+
+        //Arrange
+        recordImpression(oneDayBeforeMidnightMinus1s, campaignId)
+        //Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perDay(campaignId, 0))
+        assertEquals(0, impressionManager.perDay(campaignId, 1))
+        assertEquals(2, impressionManager.perDay(campaignId, 2))
+        assertEquals(3, impressionManager.perDay(campaignId, 3))
+
+        //Arrange
+        recordImpression(oneDayBeforeMidnightOffset1s, campaignId)
+        //Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perDay(campaignId, 0))
+        assertEquals(1, impressionManager.perDay(campaignId, 1))
+        assertEquals(3, impressionManager.perDay(campaignId, 2))
+        assertEquals(4, impressionManager.perDay(campaignId, 3))
+
+        //Arrange
+        recordImpression(tenHoursBeforeMidnight, campaignId)
+        //Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perDay(campaignId, 0))
+        assertEquals(2, impressionManager.perDay(campaignId, 1))
+        assertEquals(4, impressionManager.perDay(campaignId, 2))
+        assertEquals(5, impressionManager.perDay(campaignId, 3))
+
+        //Arrange
+        recordImpression(oneMinuteBeforeMidnight, campaignId)
+        recordImpression(tenHoursFromMidnight, campaignId)
+        recordImpression(oneSecondAgo, campaignId)
+        //Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(2, impressionManager.perDay(campaignId, 0))
+        assertEquals(5, impressionManager.perDay(campaignId, 1))
+        assertEquals(7, impressionManager.perDay(campaignId, 2))
+        assertEquals(8, impressionManager.perDay(campaignId, 3))
+    }
+
+    private fun getSecondsSinceLastMidnight(): Long {
+        val timeInMillis =
+        Calendar.getInstance(Locale.US).apply {
+            val currentDate = Date()
+            // Set the calendar's time to the current date and time
+            time = currentDate
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time.time
+
+        return TimeUnit.MILLISECONDS.toSeconds(timeInMillis)
     }
 
     private fun recordImpression(timestamp: Long, campaignId: String) {
