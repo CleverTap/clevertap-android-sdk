@@ -304,6 +304,97 @@ class ImpressionManagerTest : BaseTestCase() {
         assertEquals(8, impressionManager.perDay(campaignId, 3))
     }
 
+    @Test
+    fun testPerWeek() {
+        // Arrange
+        val campaignId = "campaign123"
+        val currentTimestamp = System.currentTimeMillis() / 1000
+
+        val referenceTimestamp = getSecondsSinceFirstDayOfCurrentWeek()
+
+        val twoWeeksBeforeStartOfWeekMinus1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(14) - 1
+        val twoWeeksBeforeStartOfWeekOffset1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(14) + 1
+        val oneWeekBeforeStartOfWeekMinus1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(7) - 1
+        val oneWeekBeforeStartOfWeekOffset1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(7) + 1
+        val tenHoursBeforeStartOfWeek = referenceTimestamp - TimeUnit.HOURS.toSeconds(10)
+        val oneMinuteBeforeStartOfWeek = referenceTimestamp - TimeUnit.MINUTES.toSeconds(1)
+        val tenHoursFromStartOfWeek = referenceTimestamp + TimeUnit.HOURS.toSeconds(10)
+        val oneSecondAgo = currentTimestamp - 1
+
+        // Arrange
+        recordImpression(twoWeeksBeforeStartOfWeekMinus1s, campaignId)
+        // Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perWeek(campaignId, 0))
+        assertEquals(0, impressionManager.perWeek(campaignId, 1))
+        assertEquals(0, impressionManager.perWeek(campaignId, 2))
+        assertEquals(1, impressionManager.perWeek(campaignId, 3))
+
+        // Arrange
+        recordImpression(twoWeeksBeforeStartOfWeekOffset1s, campaignId)
+        // Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perWeek(campaignId, 0))
+        assertEquals(0, impressionManager.perWeek(campaignId, 1))
+        assertEquals(1, impressionManager.perWeek(campaignId, 2))
+        assertEquals(2, impressionManager.perWeek(campaignId, 3))
+
+        // Arrange
+        recordImpression(oneWeekBeforeStartOfWeekMinus1s, campaignId)
+        // Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perWeek(campaignId, 0))
+        assertEquals(0, impressionManager.perWeek(campaignId, 1))
+        assertEquals(2, impressionManager.perWeek(campaignId, 2))
+        assertEquals(3, impressionManager.perWeek(campaignId, 3))
+
+        // Arrange
+        recordImpression(oneWeekBeforeStartOfWeekOffset1s, campaignId)
+        // Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perWeek(campaignId, 0))
+        assertEquals(0, impressionManager.perWeek(campaignId, 1))
+        assertEquals(3, impressionManager.perWeek(campaignId, 2))
+        assertEquals(4, impressionManager.perWeek(campaignId, 3))
+
+        // Arrange
+        recordImpression(tenHoursBeforeStartOfWeek, campaignId)
+        // Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(0, impressionManager.perWeek(campaignId, 0))
+        assertEquals(0, impressionManager.perWeek(campaignId, 1))
+        assertEquals(4, impressionManager.perWeek(campaignId, 2))
+        assertEquals(5, impressionManager.perWeek(campaignId, 3))
+
+        // Arrange
+        recordImpression(oneMinuteBeforeStartOfWeek, campaignId)
+        recordImpression(tenHoursFromStartOfWeek, campaignId)
+        recordImpression(oneSecondAgo, campaignId)
+        // Act and Assert
+        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        assertEquals(2, impressionManager.perWeek(campaignId, 0))
+        assertEquals(2, impressionManager.perWeek(campaignId, 1))
+        assertEquals(7, impressionManager.perWeek(campaignId, 2))
+        assertEquals(8, impressionManager.perWeek(campaignId, 3))
+    }
+
+    private fun getSecondsSinceFirstDayOfCurrentWeek(): Long {
+        // get today and clear time of day
+        val cal = Calendar.getInstance(Locale.US).apply {
+            val currentDate = Date()
+            // Set the calendar's time to the current date and time
+            time = currentDate
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        // get start of this week in milliseconds
+        cal[Calendar.DAY_OF_WEEK] = cal.firstDayOfWeek
+        return TimeUnit.MILLISECONDS.toSeconds(cal.time.time)
+    }
+
     private fun getSecondsSinceLastMidnight(): Long {
         val timeInMillis =
         Calendar.getInstance(Locale.US).apply {
