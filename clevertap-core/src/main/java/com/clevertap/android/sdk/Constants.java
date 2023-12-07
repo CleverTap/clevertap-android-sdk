@@ -266,6 +266,10 @@ public interface Constants {
     String INAPP_OCCURRENCE_LIMITS = "occurrenceLimits";
 
     String INAPP_PRIORITY = "priority";
+
+    String CLTAP_PROP_CAMPAIGN_ID = "Campaign id";
+    String CLTAP_PROP_VARIANT = "Variant";
+
     String WZRK_RNV = "wzrk_rnv";
     String BLACK = "#000000";
     String WHITE = "#FFFFFF";
