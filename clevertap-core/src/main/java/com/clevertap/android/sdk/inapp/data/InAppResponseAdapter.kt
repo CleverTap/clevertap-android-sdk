@@ -57,14 +57,18 @@ class InAppResponseAdapter(
                     val portraitMedia = CTInAppNotificationMedia()
                         .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
 
-                    list.add(portraitMedia.mediaUrl)
+                    if (portraitMedia != null && portraitMedia.mediaUrl != null) {
+                        list.add(portraitMedia.mediaUrl)
+                    }
                 }
                 val landscape = jsonObject.optJSONObject(Constants.KEY_MEDIA_LANDSCAPE)
                 if (landscape != null) {
                     val landscapeMedia = CTInAppNotificationMedia()
                             .initWithJSON(landscape, Configuration.ORIENTATION_LANDSCAPE)
 
-                    list.add(landscapeMedia.mediaUrl)
+                    if (landscapeMedia != null && landscapeMedia.mediaUrl != null) {
+                        list.add(landscapeMedia.mediaUrl)
+                    }
                 }
             }
         }
