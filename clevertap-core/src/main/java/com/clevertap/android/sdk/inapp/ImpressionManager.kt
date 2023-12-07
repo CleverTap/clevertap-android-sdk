@@ -133,7 +133,7 @@ class ImpressionManager @JvmOverloads constructor(
 
     /**
      * Counts the impressions for a campaign within the last N weeks.
-     * passing 1 means it will lookup in the current week
+     * It looks up in the current week if the value one is passed as week offset
      *
      * @param campaignId The identifier of the campaign.
      * @param weeks      The time interval in weeks.
