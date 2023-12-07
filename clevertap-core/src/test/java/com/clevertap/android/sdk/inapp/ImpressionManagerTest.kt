@@ -415,4 +415,24 @@ class ImpressionManagerTest : BaseTestCase() {
         impressionManager.recordImpression(campaignId)
     }
 
+
+    @Test
+    fun testClearSessionData() {
+        // Arrange
+        val campaignId = "campaign123"
+
+        // Record an impression to ensure sessionImpressions is not empty
+        impressionManager.recordImpression(campaignId)
+
+        // Verify that sessionImpressions is not empty initially
+        val initialSessionImpressionsSize = impressionManager.perSessionTotal()
+        assert(initialSessionImpressionsSize > 0)
+
+        // Act
+        impressionManager.clearSessionData()
+
+        // Assert
+        val clearedSessionImpressionsSize = impressionManager.perSessionTotal()
+        assertEquals(0, clearedSessionImpressionsSize) // Expecting sessionImpressions to be cleared
+    }
 }
