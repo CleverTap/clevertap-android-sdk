@@ -103,7 +103,9 @@ internal class InAppResourceProvider constructor(
         val file = imageDiskCache.get(cacheKey)
 
         val bitmapFromFile = fileToBitmap(file)
-        logger?.verbose("cached image for url : $cacheKey, bitmap : ${bitmapFromFile.hashCode()}")
+        if (bitmapFromFile != null) {
+            logger?.verbose("returning cached image for url : $cacheKey")
+        }
         return bitmapFromFile
     }
 
