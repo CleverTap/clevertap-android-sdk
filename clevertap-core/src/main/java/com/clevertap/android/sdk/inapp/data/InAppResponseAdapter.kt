@@ -23,11 +23,11 @@ class InAppResponseAdapter(
 
     companion object {
 
-        private const val IN_APP_DEFAULT_DAILY = 10
-        private const val IN_APP_DEFAULT_SESSION = 10
+        const val IN_APP_DEFAULT_DAILY = 10
+        const val IN_APP_DEFAULT_SESSION = 10
 
-        private const val IN_APP_SESSION_KEY = Constants.INAPP_MAX_PER_SESSION_KEY
-        private const val IN_APP_DAILY_KEY = Constants.INAPP_MAX_PER_DAY_KEY
+        const val IN_APP_SESSION_KEY = Constants.INAPP_MAX_PER_SESSION_KEY
+        const val IN_APP_DAILY_KEY = Constants.INAPP_MAX_PER_DAY_KEY
 
         @JvmStatic
         fun getListOfWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
