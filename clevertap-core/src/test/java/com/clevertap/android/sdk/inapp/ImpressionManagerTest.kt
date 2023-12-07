@@ -35,16 +35,13 @@ class ImpressionManagerTest : BaseTestCase() {
         val storeRegistry = StoreRegistry()
 
         impressionManager = ImpressionManager(
-            storeRegistry = storeRegistry,
-            clock = clock,
-            locale = Locale.US
+            storeRegistry = storeRegistry, clock = clock, locale = Locale.US
         )
 
         `when`(deviceInfo.deviceID).thenReturn("device_id")
 
         impressionStore = StoreProvider.getInstance().provideImpressionStore(
-            appCtx, deviceInfo,
-            "account_id"
+            appCtx, deviceInfo, "account_id"
         )
 
         storeRegistry.impressionStore = impressionStore
@@ -395,27 +392,6 @@ class ImpressionManagerTest : BaseTestCase() {
         return TimeUnit.MILLISECONDS.toSeconds(cal.time.time)
     }
 
-    private fun getSecondsSinceLastMidnight(): Long {
-        val timeInMillis =
-        Calendar.getInstance(Locale.US).apply {
-            val currentDate = Date()
-            // Set the calendar's time to the current date and time
-            time = currentDate
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.time.time
-
-        return TimeUnit.MILLISECONDS.toSeconds(timeInMillis)
-    }
-
-    private fun recordImpression(timestamp: Long, campaignId: String) {
-        `when`(clock.currentTimeSeconds()).thenReturn(timestamp)
-        impressionManager.recordImpression(campaignId)
-    }
-
-
     @Test
     fun testClearSessionData() {
         // Arrange
@@ -434,5 +410,24 @@ class ImpressionManagerTest : BaseTestCase() {
         // Assert
         val clearedSessionImpressionsSize = impressionManager.perSessionTotal()
         assertEquals(0, clearedSessionImpressionsSize) // Expecting sessionImpressions to be cleared
+    }
+
+    private fun getSecondsSinceLastMidnight(): Long {
+        val timeInMillis = Calendar.getInstance(Locale.US).apply {
+            val currentDate = Date()
+            // Set the calendar's time to the current date and time
+            time = currentDate
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time.time
+
+        return TimeUnit.MILLISECONDS.toSeconds(timeInMillis)
+    }
+
+    private fun recordImpression(timestamp: Long, campaignId: String) {
+        `when`(clock.currentTimeSeconds()).thenReturn(timestamp)
+        impressionManager.recordImpression(campaignId)
     }
 }
