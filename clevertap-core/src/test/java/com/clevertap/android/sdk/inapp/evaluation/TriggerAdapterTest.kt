@@ -18,7 +18,7 @@ class TriggerAdapterTest {
         val propertyObject = JSONObject()
         propertyObject.put("propertyName", "Property1")
         propertyObject.put("operator", 1)
-        propertyObject.put("value", "Value1")
+        propertyObject.put("propertyValue", "Value1")
         propertiesArray.put(propertyObject)
 
         triggerJSON.put("eventProperties", propertiesArray)
@@ -44,7 +44,7 @@ class TriggerAdapterTest {
         val propertyObject = JSONObject()
         propertyObject.put("propertyName", "Property1")
         propertyObject.put("operator", 1)
-        propertyObject.put("value", "Value1")
+        propertyObject.put("propertyValue", "Value1")
         propertiesArray.put(propertyObject)
 
         triggerJSON.put("eventProperties", propertiesArray)
@@ -68,7 +68,7 @@ class TriggerAdapterTest {
         val itemObject = JSONObject()
         itemObject.put("propertyName", "ItemProperty1")
         itemObject.put("operator", 2)
-        itemObject.put("value", "ItemValue1")
+        itemObject.put("propertyValue", "ItemValue1")
         itemsArray.put(itemObject)
 
         triggerJSON.put("itemProperties", itemsArray)
@@ -94,7 +94,7 @@ class TriggerAdapterTest {
         val itemObject = JSONObject()
         itemObject.put("propertyName", "ItemProperty1")
         itemObject.put("operator", 2)
-        itemObject.put("value", "ItemValue1")
+        itemObject.put("propertyValue", "ItemValue1")
         itemsArray.put(itemObject)
 
         triggerJSON.put("itemProperties", itemsArray)
@@ -192,7 +192,7 @@ class TriggerAdapterTest {
     fun testTriggerConditionFromJSON() {
         // Arrange
         val propertyObject = JSONObject()
-        propertyObject.put(Constants.KEY_VALUE, "TestValue")
+        propertyObject.put("propertyValue", "TestValue")
         propertyObject.put(Constants.INAPP_OPERATOR, 1)
         propertyObject.put(Constants.INAPP_PROPERTYNAME, "propertyName")
 
