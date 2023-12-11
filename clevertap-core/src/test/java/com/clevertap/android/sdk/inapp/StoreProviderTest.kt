@@ -75,4 +75,31 @@ class StoreProviderTest {
         verify { storeProvider.getCTPreference(mockContext, prefName) }
         assertEquals(LegacyInAppStore::class.java, legacyInAppStore.javaClass)
     }
+
+    @Test
+    fun `constructStorePreferenceName should construct correct preference name for InApp`() {
+        // Act
+        val prefName = storeProvider.constructStorePreferenceName(STORE_TYPE_INAPP, "deviceId", "accountId")
+
+        // Assert
+        assertEquals("${Constants.INAPP_KEY}:deviceId:accountId", prefName)
+    }
+
+    @Test
+    fun `constructStorePreferenceName should construct correct preference name for Impression`() {
+        // Act
+        val prefName = storeProvider.constructStorePreferenceName(STORE_TYPE_IMPRESSION, "deviceId", "accountId")
+
+        // Assert
+        assertEquals("${Constants.KEY_COUNTS_PER_INAPP}:deviceId:accountId", prefName)
+    }
+
+    @Test
+    fun `constructStorePreferenceName should construct correct preference name for LegacyInApp`() {
+        // Act
+        val prefName = storeProvider.constructStorePreferenceName(STORE_TYPE_LEGACY_INAPP)
+
+        // Assert
+        assertEquals(Constants.CLEVERTAP_STORAGE_TAG, prefName)
+    }
 }
