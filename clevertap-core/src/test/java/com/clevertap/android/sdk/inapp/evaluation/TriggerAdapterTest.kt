@@ -453,6 +453,36 @@ class TriggerAdapterTest {
     }
 
     @Test
+    fun testGeoRadiusArrayWithNonNullItems() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        val itemsArray = JSONArray()
+        itemsArray.put(JSONObject())
+        itemsArray.put(JSONObject())
+        triggerJSON.put("geoRadius", itemsArray)
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val items = triggerAdapter.geoRadiusArray
+
+        // Assert
+        assertEquals(itemsArray, items)
+    }
+
+    @Test
+    fun testGeoRadiusArrayWithNullItems() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val items = triggerAdapter.geoRadiusArray
+
+        // Assert
+        assertEquals(null, items)
+    }
+
+    @Test
     fun testGeoRadiusCountWithNonNullGeoRadiusArray() {
         // Arrange
         val triggerJSON = JSONObject()
@@ -481,4 +511,5 @@ class TriggerAdapterTest {
         // Assert
         assertEquals(0, geoRadiusCount)
     }
+
 }
