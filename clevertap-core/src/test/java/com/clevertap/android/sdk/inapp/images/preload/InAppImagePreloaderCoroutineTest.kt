@@ -16,6 +16,7 @@ import org.junit.Test
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.mockito.Mockito
+import kotlin.test.assertEquals
 
 class InAppImagePreloaderCoroutineTest {
 
@@ -39,22 +40,30 @@ class InAppImagePreloaderCoroutineTest {
     fun `preload image fetches images from all urls`() = testScheduler.run {
 
         val urls = mutableListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k")
+        val successUrls = mutableListOf<String>()
 
         for (url in urls) {
             Mockito.`when`(inAppResourceProvider.fetchInAppImage(url)).thenReturn(mockBitmap)
         }
 
-        inAppImagePreloaderCoroutine.preloadImages(urls)
+        val func = fun (url: String) {
+            // dummy func
+            successUrls.add(url)
+        }
+
+        inAppImagePreloaderCoroutine.preloadImages(urls, func)
         advanceUntilIdle()
 
-        for (url in urls) {
+        for (count in 0 until urls.size) {
+            val url = urls[count]
             Mockito.verify(inAppResourceProvider).fetchInAppImage(url)
         }
+        assertEquals(urls.size, successUrls.size)
     }
 }
 
-class MainDispatcherRule(
-    val testDispatcher: TestDispatcher = UnconfinedTestDispatcher(),
+class MainDispatcherRule @OptIn(ExperimentalCoroutinesApi::class) constructor(
+    private val testDispatcher: TestDispatcher = UnconfinedTestDispatcher(),
 ) : TestWatcher() {
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun starting(description: Description) {
