@@ -77,23 +77,23 @@ class TriggerAdapter(triggerJSON: JSONObject) {
     /**
      * The name of the event associated with the trigger conditions.
      */
-    val eventName: String = triggerJSON.optString("eventName", "")
+    val eventName: String = triggerJSON.optString(Constants.KEY_EVENT_NAME, "")
 
     /**
      * The JSONArray containing event property trigger conditions.
      */
-    val properties: JSONArray? = triggerJSON.optJSONArray("eventProperties")
+    val properties: JSONArray? = triggerJSON.optJSONArray(Constants.KEY_EVENT_PROPERTIES)
 
     /**
      * The JSONArray containing item property trigger conditions.Used for Charged event.
      */
-    val items: JSONArray? = triggerJSON.optJSONArray("itemProperties")
+    val items: JSONArray? = triggerJSON.optJSONArray(Constants.KEY_ITEM_PROPERTIES)
 
     /**
      * The JSONArray containing Geographic radius trigger conditions.
      * Used for location-based trigger conditions within a specified geographical radius.
      */
-    val geoRadiusArray: JSONArray? = triggerJSON.optJSONArray("geoRadius")
+    val geoRadiusArray: JSONArray? = triggerJSON.optJSONArray(Constants.KEY_GEO_RADIUS_PROPERTIES)
 
     /**
      * Get the count of event property trigger conditions.
@@ -178,22 +178,21 @@ class TriggerAdapter(triggerJSON: JSONObject) {
         return TriggerGeoRadius(latitude, longitude, radius)
     }
 
-    //TODO: move key names to constants
     fun toJsonObject(): JSONObject {
         val triggerJson = JSONObject()
 
-        triggerJson.put("eventName", eventName)
+        triggerJson.put(Constants.KEY_EVENT_NAME, eventName)
 
         if (properties != null) {
-            triggerJson.put("eventProperties", properties)
+            triggerJson.put(Constants.KEY_EVENT_PROPERTIES, properties)
         }
 
         if (items != null) {
-            triggerJson.put("itemProperties", items)
+            triggerJson.put(Constants.KEY_ITEM_PROPERTIES, items)
         }
 
         if (geoRadiusArray != null) {
-            triggerJson.put("geoRadius", geoRadiusArray)
+            triggerJson.put(Constants.KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
         }
 
         return triggerJson
