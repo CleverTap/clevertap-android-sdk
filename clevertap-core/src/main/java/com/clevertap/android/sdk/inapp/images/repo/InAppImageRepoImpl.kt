@@ -11,11 +11,11 @@ internal class InAppImageRepoImpl(
 ) : InAppResourcesRepo {
 
     companion object {
-        private const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
+        const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
         private const val DAYS_FOR_EXPIRY = 14
 
         // 14 days
-        private const val EXPIRY_OFFSET_MILLIS = DAY_IN_MILLIS * DAYS_FOR_EXPIRY
+        const val EXPIRY_OFFSET_MILLIS = DAY_IN_MILLIS * DAYS_FOR_EXPIRY
     }
 
     /**
