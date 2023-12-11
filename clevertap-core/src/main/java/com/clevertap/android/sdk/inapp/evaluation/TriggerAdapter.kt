@@ -192,6 +192,10 @@ class TriggerAdapter(triggerJSON: JSONObject) {
             triggerJson.put("itemProperties", items)
         }
 
+        if (geoRadiusArray != null) {
+            triggerJson.put("geoRadius", geoRadiusArray)
+        }
+
         return triggerJson
     }
 
