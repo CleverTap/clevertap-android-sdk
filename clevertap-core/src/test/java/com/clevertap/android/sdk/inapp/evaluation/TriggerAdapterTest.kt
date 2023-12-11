@@ -359,10 +359,10 @@ class TriggerAdapterTest {
     fun testOptTriggerOperatorWithNonNullValue() {
         // Arrange
         val jsonObject = JSONObject()
-        jsonObject.put("operatorKey", TriggerOperator.GreaterThan.operatorValue)
+        jsonObject.put(Constants.INAPP_OPERATOR, TriggerOperator.GreaterThan.operatorValue)
 
         // Act
-        val triggerOperator = jsonObject.optTriggerOperator("operatorKey")
+        val triggerOperator = jsonObject.optTriggerOperator(Constants.INAPP_OPERATOR)
 
         // Assert
         assertEquals(TriggerOperator.GreaterThan, triggerOperator)
