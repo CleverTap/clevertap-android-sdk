@@ -379,4 +379,106 @@ class TriggerAdapterTest {
         // Assert
         assertEquals(TriggerOperator.Equals, triggerOperator)
     }
+
+    @Test
+    fun testGeoRadiusAtIndexValid() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        triggerJSON.put("eventName", "TestEvent")
+
+        val geoRadiusArray = JSONArray()
+        val geoRadiusObject = JSONObject()
+        geoRadiusObject.put("lat", 37.7749)
+        geoRadiusObject.put("lng", -122.4194)
+        geoRadiusObject.put("rad", 1000.0)
+        geoRadiusArray.put(geoRadiusObject)
+
+        triggerJSON.put("geoRadius", geoRadiusArray)
+
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val geoRadius = triggerAdapter.geoRadiusAtIndex(0)
+
+        // Assert
+        assertNotNull(geoRadius)
+        assertEquals(37.7749, geoRadius?.latitude)
+        assertEquals(-122.4194, geoRadius?.longitude)
+        assertEquals(1000.0, geoRadius?.radius)
+    }
+
+    @Test
+    fun testGeoRadiusAtIndexInvalidIndex() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        triggerJSON.put("eventName", "TestEvent")
+
+        val geoRadiusArray = JSONArray()
+        val geoRadiusObject = JSONObject()
+        geoRadiusObject.put("lat", 37.7749)
+        geoRadiusObject.put("lng", -122.4194)
+        geoRadiusObject.put("rad", 1000.0)
+        geoRadiusArray.put(geoRadiusObject)
+
+        triggerJSON.put("geoRadius", geoRadiusArray)
+
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val geoRadius = triggerAdapter.geoRadiusAtIndex(1)
+
+        // Assert
+        assertNull(geoRadius)
+    }
+
+    @Test
+    fun testGeoRadiusAtIndexInvalidOutOfBoundIndex() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        triggerJSON.put("eventName", "TestEvent")
+
+        val geoRadiusArray = JSONArray()
+        geoRadiusArray.put(JSONObject())
+        geoRadiusArray.put(JSONObject())
+
+        triggerJSON.put("geoRadius", geoRadiusArray)
+
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val geoRadius = triggerAdapter.geoRadiusAtIndex(3)
+
+        // Assert
+        assertNull(geoRadius)
+    }
+
+    @Test
+    fun testGeoRadiusCountWithNonNullGeoRadiusArray() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        val geoRadiusArray = JSONArray()
+        geoRadiusArray.put(JSONObject())
+        geoRadiusArray.put(JSONObject())
+        triggerJSON.put("geoRadius", geoRadiusArray)
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val geoRadiusCount = triggerAdapter.geoRadiusCount
+
+        // Assert
+        assertEquals(2, geoRadiusCount)
+    }
+
+    @Test
+    fun testGeoRadiusCountWithNullGeoRadiusArray() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val geoRadiusCount = triggerAdapter.geoRadiusCount
+
+        // Assert
+        assertEquals(0, geoRadiusCount)
+    }
 }
