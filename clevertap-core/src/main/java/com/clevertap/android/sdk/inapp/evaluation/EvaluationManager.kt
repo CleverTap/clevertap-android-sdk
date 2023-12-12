@@ -52,13 +52,17 @@ class EvaluationManager constructor(
     }
 
     // onBatchSent with App Launched event in batch
-    fun evaluateOnAppLaunchedClientSide(userLocation: Location?): JSONArray {
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap(), userLocation = userLocation)
+    fun evaluateOnAppLaunchedClientSide(eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
         return evaluateClientSide(event)
     }
 
-    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>, userLocation: Location?): JSONArray {
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap(), userLocation = userLocation)
+    fun evaluateOnAppLaunchedServerSide(
+        appLaunchedNotifs: List<JSONObject>,
+        eventProperties: Map<String, Any>,
+        userLocation: Location?
+    ): JSONArray {
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
 
         val eligibleInApps = evaluate(event, appLaunchedNotifs)
 

@@ -90,7 +90,7 @@ class EvaluationManagerTest : BaseTestCase() {
         )
 
         // Act
-        evaluationManager.evaluateOnAppLaunchedClientSide(userLocation)
+        evaluationManager.evaluateOnAppLaunchedClientSide(emptyMap(), userLocation)
 
         // Assert
         // Verify that the captured EventAdapter has the expected properties for app launched event
@@ -495,7 +495,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApps = listOf(inApp1)
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, null)
+        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, emptyMap(), null)
 
         assertEquals(0, evaluateClientSide.length())
         assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
@@ -510,7 +510,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApps = listOf(inApp1, inApp2)
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, null)
+        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, emptyMap(), null)
 
         assertEquals(1, evaluateClientSide.length())
         assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
@@ -525,7 +525,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApps = listOf(inApp1, inApp2)
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, null)
+        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, emptyMap(), null)
 
         assertEquals(1, evaluateClientSide.length())
         assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
@@ -538,7 +538,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApps = listOf(inApp1)
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, null)
+        val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, emptyMap(), null)
 
         assertEquals(1, evaluateClientSide.length())
         assertEquals(0, evaluationManager.suppressedClientSideInApps.size)

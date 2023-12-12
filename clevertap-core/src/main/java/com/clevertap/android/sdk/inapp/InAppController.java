@@ -180,8 +180,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
         onAppLaunchEventSent = () -> {
+            final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
+                    deviceInfo.getAppLaunchedFields());
             final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedClientSide(
-                    coreMetaData.getLocationFromUser());
+                    appLaunchedProperties, coreMetaData.getLocationFromUser());
             if (clientSideInAppsToDisplay.length() > 0) {
                 addInAppNotificationsToQueue(clientSideInAppsToDisplay);
             }
@@ -811,9 +813,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps,
             Location userLocation)
             throws JSONException {
+        final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
+                deviceInfo.getAppLaunchedFields());
         List<JSONObject> appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps);
         final JSONArray serverSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedServerSide(
-                appLaunchSsInAppList, userLocation);
+                appLaunchSsInAppList, appLaunchedProperties, userLocation);
 
         if (serverSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(serverSideInAppsToDisplay);
