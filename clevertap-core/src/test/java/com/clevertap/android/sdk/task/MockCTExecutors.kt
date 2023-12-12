@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.task
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 
-class MockCTExecutors(config: CleverTapInstanceConfig) : CTExecutors(config) {
+class MockCTExecutors @JvmOverloads constructor(config: CleverTapInstanceConfig? = null) : CTExecutors(config) {
 
     override fun <TResult : Any?> ioTask(): Task<TResult> {
         val executor = MockExecutorService()
@@ -12,6 +12,11 @@ class MockCTExecutors(config: CleverTapInstanceConfig) : CTExecutors(config) {
     override fun <TResult : Any?> mainTask(): Task<TResult> {
         val executor = MockExecutor()
         return Task(config, executor, executor, "mainTask")
+    }
+
+    override fun <TResult : Any?> ioTaskNonUi(): Task<TResult> {
+        val executor = MockExecutorService()
+        return Task(config, executor, executor, "ioTaskNonUi")
     }
 
     override fun <TResult : Any?> postAsyncSafelyTask(): Task<TResult> {

@@ -6,7 +6,7 @@ internal interface InAppCleanupStrategy{
 
     val inAppResourceProvider: InAppResourceProvider
 
-    fun clearAssets(urls: List<String>)
+    fun clearAssets(urls: List<String>, successBlock: (url: String) -> Unit)
 
     fun stop()
 }
