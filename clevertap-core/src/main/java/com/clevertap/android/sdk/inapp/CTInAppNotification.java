@@ -89,7 +89,7 @@ public class CTInAppNotification implements Parcelable {
 
     private String landscapeImageUrl;
 
-    private int maxPerSession = -1;
+    private int maxPerSession;
 
     private ArrayList<CTInAppNotificationMedia> mediaList = new ArrayList<>();
 
@@ -472,6 +472,8 @@ public class CTInAppNotification implements Parcelable {
             this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
+            this.maxPerSession = jsonObject.has(Constants.INAPP_MAX_DISPLAY_COUNT) ? jsonObject
+                    .getInt(Constants.INAPP_MAX_DISPLAY_COUNT) : -1;
             this.inAppType = CTInAppType.fromString(this.type);
             this.isTablet = jsonObject.has(Constants.KEY_IS_TABLET) && jsonObject.getBoolean(Constants.KEY_IS_TABLET);
             this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG)

@@ -458,7 +458,12 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     controllerManager.getInAppController()
                             .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
                                     eventMediator.getChargedEventItemDetails(event), userLocation);
+                } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
+                    // in case device is offline just evaluate all events
+                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
+                            eventMediator.getEventProperties(event), userLocation);
                 } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
+                    // in case device is online only evaluate non-appLaunched events
                     controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
                             eventMediator.getEventProperties(event), userLocation);
                 }

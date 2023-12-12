@@ -43,6 +43,7 @@ import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.variables.JsonUtil;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -179,8 +180,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
         onAppLaunchEventSent = () -> {
+            final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
+                    deviceInfo.getAppLaunchedFields());
             final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedClientSide(
-                    coreMetaData.getLocationFromUser());
+                    appLaunchedProperties, coreMetaData.getLocationFromUser());
             if (clientSideInAppsToDisplay.length() > 0) {
                 addInAppNotificationsToQueue(clientSideInAppsToDisplay);
             }
@@ -773,15 +776,21 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 Logger.v(config.getAccountId(),
                         "Fragment not able to render, please ensure your Activity is an instance of AppCompatActivity"
                                 + e.getMessage());
+                currentlyDisplayingInApp = null;
             } catch (Throwable t) {
                 Logger.v(config.getAccountId(), "Fragment not able to render", t);
+                currentlyDisplayingInApp = null;
             }
         }
     }
 
     @WorkerThread
     public void onQueueEvent(final String eventName, Map<String, Object> eventProperties, Location userLocation) {
-        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnEvent(eventName, eventProperties,
+        final Map<String, Object> appFieldsWithEventProperties = JsonUtil.mapFromJson(
+                deviceInfo.getAppLaunchedFields());
+        appFieldsWithEventProperties.putAll(eventProperties);
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnEvent(eventName,
+                appFieldsWithEventProperties,
                 userLocation);
         if (clientSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(clientSideInAppsToDisplay);
@@ -791,8 +800,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     @WorkerThread
     public void onQueueChargedEvent(Map<String, Object> chargeDetails,
             List<Map<String, Object>> items, Location userLocation) {
-        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(chargeDetails, items,
-                userLocation);
+        final Map<String, Object> appFieldsWithChargedEventProperties = JsonUtil.mapFromJson(
+                deviceInfo.getAppLaunchedFields());
+        appFieldsWithChargedEventProperties.putAll(chargeDetails);
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(
+                appFieldsWithChargedEventProperties, items, userLocation);
         if (clientSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(clientSideInAppsToDisplay);
         }
@@ -801,9 +813,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps,
             Location userLocation)
             throws JSONException {
+        final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
+                deviceInfo.getAppLaunchedFields());
         List<JSONObject> appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps);
         final JSONArray serverSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedServerSide(
-                appLaunchSsInAppList, userLocation);
+                appLaunchSsInAppList, appLaunchedProperties, userLocation);
 
         if (serverSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(serverSideInAppsToDisplay);

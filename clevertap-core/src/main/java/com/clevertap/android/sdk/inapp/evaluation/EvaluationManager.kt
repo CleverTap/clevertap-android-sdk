@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 import android.location.Location
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope.LIBRARY
+import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
@@ -28,8 +29,11 @@ class EvaluationManager constructor(
     private val storeRegistry: StoreRegistry,
 ) : NetworkHeadersListener {
 
-    private val evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
-    private val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
+    @VisibleForTesting
+    internal val evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
+
+    @VisibleForTesting
+    internal val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
         val event = EventAdapter(eventName, eventProperties, userLocation = userLocation)
@@ -48,13 +52,17 @@ class EvaluationManager constructor(
     }
 
     // onBatchSent with App Launched event in batch
-    fun evaluateOnAppLaunchedClientSide(userLocation: Location?): JSONArray {
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap(), userLocation = userLocation)
+    fun evaluateOnAppLaunchedClientSide(eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
         return evaluateClientSide(event)
     }
 
-    fun evaluateOnAppLaunchedServerSide(appLaunchedNotifs: List<JSONObject>, userLocation: Location?): JSONArray {
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap(), userLocation = userLocation)
+    fun evaluateOnAppLaunchedServerSide(
+        appLaunchedNotifs: List<JSONObject>,
+        eventProperties: Map<String, Any>,
+        userLocation: Location?
+    ): JSONArray {
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
 
         val eligibleInApps = evaluate(event, appLaunchedNotifs)
 
@@ -72,7 +80,8 @@ class EvaluationManager constructor(
         return limitsMatcher.matchWhenLimits(listOfLimitAdapter, campaignId)
     }
 
-    private fun evaluateServerSide(event: EventAdapter) {
+    @VisibleForTesting
+    internal fun evaluateServerSide(event: EventAdapter) {
         storeRegistry.inAppStore?.let { store ->
             val eligibleInApps = evaluate(event, store.readServerSideInAppsMetaData().toList())
 
@@ -86,7 +95,8 @@ class EvaluationManager constructor(
         }
     }
 
-    private fun evaluateClientSide(event: EventAdapter): JSONArray {
+    @VisibleForTesting
+    internal fun evaluateClientSide(event: EventAdapter): JSONArray {
         storeRegistry.inAppStore?.let { store ->
             val eligibleInApps = evaluate(event, store.readClientSideInApps().toList())
 
@@ -101,7 +111,8 @@ class EvaluationManager constructor(
         }.run { return JSONArray() }
     }
 
-    private fun evaluate(
+    @VisibleForTesting
+    internal fun evaluate(
         event: EventAdapter,
         inappNotifs: List<JSONObject>,
         clearResource: (url: String) -> Unit = {}
@@ -136,9 +147,13 @@ class EvaluationManager constructor(
         return eligibleInApps
     }
 
-    private fun getWhenTriggers(triggerJson: JSONObject): List<TriggerAdapter> {
+    @VisibleForTesting
+    internal fun getWhenTriggers(triggerJson: JSONObject): List<TriggerAdapter> {
         val whenTriggers = triggerJson.optJSONArray(Constants.INAPP_WHEN_TRIGGERS).orEmptyArray()
-        return (0 until whenTriggers.length()).map { TriggerAdapter(whenTriggers[it] as JSONObject) }
+        return (0 until whenTriggers.length()).mapNotNull {
+            val jsonObject = whenTriggers[it] as? JSONObject
+            jsonObject?.let { nonNullJsonObject -> TriggerAdapter(nonNullJsonObject) }
+        }
     }
 
     internal fun getWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
@@ -172,7 +187,8 @@ class EvaluationManager constructor(
         return inApp.optBoolean(Constants.INAPP_SUPPRESSED)
     }
 
-    private fun suppress(inApp: JSONObject) {
+    @VisibleForTesting
+    internal fun suppress(inApp: JSONObject) {
         val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
         val wzrkId = generateWzrkId(campaignId)
         val wzrkPivot = inApp.optString(Constants.INAPP_WZRK_PIVOT, "wzrk_default")
@@ -187,16 +203,18 @@ class EvaluationManager constructor(
         )
     }
 
-    private fun generateWzrkId(ti: String): String {
+    @VisibleForTesting
+    internal fun generateWzrkId(ti: String, clock: Clock = Clock.SYSTEM): String {
         val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-        val date = dateFormatter.format(Clock.SYSTEM.newDate())
+        val date = dateFormatter.format(clock.newDate())
         return "${ti}_$date"
     }
 
-    private fun updateTTL(inApp: JSONObject) {
+    @VisibleForTesting
+    internal fun updateTTL(inApp: JSONObject, clock: Clock = Clock.SYSTEM) {
         val offset = inApp.opt(Constants.WZRK_TIME_TO_LIVE_OFFSET) as? Long
         if (offset != null) {
-            val now = Clock.SYSTEM.currentTimeSeconds()
+            val now = clock.currentTimeSeconds()
             val ttl = now + offset
             inApp.put(Constants.WZRK_TIME_TO_LIVE, ttl)
         } else {

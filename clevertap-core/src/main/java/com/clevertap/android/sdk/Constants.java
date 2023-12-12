@@ -266,6 +266,20 @@ public interface Constants {
     String INAPP_OCCURRENCE_LIMITS = "occurrenceLimits";
 
     String INAPP_PRIORITY = "priority";
+
+    String CLTAP_PROP_CAMPAIGN_ID = "Campaign id";
+    String CLTAP_PROP_VARIANT = "Variant";
+    String CLTAP_APP_VERSION = "Version";
+    String CLTAP_LATITUDE = "Latitude";
+    String CLTAP_LONGITUDE = "Longitude";
+    String CLTAP_OS_VERSION = "OS Version";
+    String CLTAP_SDK_VERSION = "SDK Version";
+    String CLTAP_CARRIER = "Carrier";
+    String CLTAP_NETWORK_TYPE = "Radio";
+    String CLTAP_CONNECTED_TO_WIFI = "wifi";
+    String CLTAP_BLUETOOTH_VERSION = "BluetoothVersion";
+    String CLTAP_BLUETOOTH_ENABLED = "BluetoothEnabled";
+
     String WZRK_RNV = "wzrk_rnv";
     String BLACK = "#000000";
     String WHITE = "#FFFFFF";
