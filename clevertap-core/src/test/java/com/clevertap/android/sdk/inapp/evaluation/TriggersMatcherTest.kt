@@ -987,8 +987,8 @@ class TriggersMatcherTest : BaseTestCase() {
         // Test when the operator is LessThan, and both expected and actual values are numbers.
         // Expects a positive result, as the expected number is less than the actual number.
         val operator = TriggerOperator.LessThan
-        val expectedValue = TriggerValue(5.0)
-        val actualValue = TriggerValue(10.0)
+        val expectedValue = TriggerValue(10.0)
+        val actualValue = TriggerValue(5.0)
 
         val result = triggersMatcher.evaluate(operator, expectedValue, actualValue)
         assertTrue(result)
@@ -1033,8 +1033,8 @@ class TriggersMatcherTest : BaseTestCase() {
         // Test when the operator is GreaterThan, and both expected and actual values are numbers.
         // Expects a positive result, as the expected number is greater than the actual number.
         val operator = TriggerOperator.GreaterThan
-        val expectedValue = TriggerValue(10.0)
-        val actualValue = TriggerValue(5.0)
+        val expectedValue = TriggerValue(5.0)
+        val actualValue = TriggerValue(10.0)
 
         val result = triggersMatcher.evaluate(operator, expectedValue, actualValue)
         assertTrue(result)
