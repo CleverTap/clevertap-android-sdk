@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import android.location.Location
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
@@ -1361,19 +1363,130 @@ class TriggersMatcherTest : BaseTestCase() {
         assertFalse(triggersMatcher.match(trigger, event))
     }
 
+    @Test
+    fun testMatch_WhenGeoRadiusConditionsAreMet_ShouldReturnTrue() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0) // San Francisco
+            )
+        )
+
+        // User location set to Ottawa, Canada
+        val event = createEventAdapter(
+            "EventWithGeoRadius",
+            userLocation = Location("").apply {
+                latitude = 37.7750
+                longitude = -122.4195
+            }
+        )
+
+        assertTrue(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun testMatch_WhenGeoRadiusConditionsAreNotMet_ShouldReturnFalse() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0) // San Francisco
+            )
+        )
+
+        // User location set to Ottawa, Canada
+        val event = createEventAdapter(
+            "EventWithGeoRadius",
+            userLocation = Location("").apply {
+                latitude = 40.7128
+                longitude = -74.0060
+            }
+        )
+
+        assertFalse(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun testMatch_WhenMultipleGeoRadiusConditions_WithAnyMet_ShouldReturnTrue() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0), // San Francisco
+                TriggerGeoRadius(40.7128, -74.0060, 10.0) // New York
+            )
+        )
+
+        // User location set to Ottawa, Canada
+        val event = createEventAdapter(
+            "EventWithGeoRadius",
+            userLocation = Location("").apply {
+                latitude = 40.7128
+                longitude = -74.0060
+            }
+        )
+
+        assertTrue(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun testMatch_WhenMultipleGeoRadiusConditions_NoneMet_ShouldReturnFalse() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0),  // San Francisco
+                TriggerGeoRadius(40.7128, -74.0060, 10.0)    // New York
+            )
+        )
+
+        // User location set to Ottawa, Canada
+        val event = createEventAdapter(
+            "EventWithGeoRadius",
+            userLocation = Location("").apply {
+                latitude = 45.4215
+                longitude = -75.6993
+            }
+        )
+
+        assertFalse(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun testMatch_WhenGeoRadiusConditionsExist_ShouldCallMatchGeoRadius() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0)
+            )
+        )
+
+        // Event with or without geo-radius conditions
+        val event = createEventAdapter("EventWithGeoRadius")
+
+        val spyTriggersMatcher = spyk(triggersMatcher)
+
+        every { spyTriggersMatcher.matchGeoRadius(any(), any()) } returns true
+
+        //Act
+        spyTriggersMatcher.match(trigger, event)
+
+        // Verify that matchGeoRadius is called when geoRadiusCount > 0
+        verify(exactly = 1) { spyTriggersMatcher.matchGeoRadius(event, trigger) }
+    }
+
     // Helper functions to create EventAdapter and TriggerAdapter instances
     private fun createEventAdapter(
         eventName: String,
         eventProperties: Map<String, Any> = emptyMap(),
-        items: List<Map<String, Any>> = emptyList()
+        items: List<Map<String, Any>> = emptyList(),
+        userLocation: Location? = null
     ): EventAdapter {
-        return EventAdapter(eventName, eventProperties, items)
+        return EventAdapter(eventName, eventProperties, items, userLocation)
     }
 
     private fun createTriggerAdapter(
         eventName: String,
         propertyConditions: List<TriggerCondition> = emptyList(),
-        itemConditions: List<TriggerCondition> = emptyList()
+        itemConditions: List<TriggerCondition> = emptyList(),
+        geoRadiusConditions: List<TriggerGeoRadius> = emptyList()
     ): TriggerAdapter {
         val triggerJSON = JSONObject().apply {
             put("eventName", eventName)
@@ -1387,6 +1500,18 @@ class TriggersMatcherTest : BaseTestCase() {
                 put(
                     "itemProperties",
                     JSONArray(itemConditions.map { createPropertyConditionJSON(it) })
+                )
+            }
+            if (geoRadiusConditions.isNotEmpty()) {
+                put(
+                    "geoRadius",
+                    JSONArray(geoRadiusConditions.map { condition ->
+                         JSONObject().apply {
+                            put("lat", condition.latitude)
+                            put("lng", condition.longitude)
+                            put("rad", condition.radius)
+                        }
+                    })
                 )
             }
         }
