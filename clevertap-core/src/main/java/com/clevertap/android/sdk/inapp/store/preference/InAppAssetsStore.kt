@@ -2,29 +2,29 @@ package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.store.preference.ICTPreference
 
+/**
+ * This is a pref based store backed by a shared-pref file. This file contains only KV pairs for
+ * the url assets and their data.
+ *
+ * Note : do not save anything else in this preference
+ */
 class InAppAssetsStore(
     private val ctPreference: ICTPreference,
 ) {
 
-    companion object {
-        private const val INAPPS_ASSETS = "inapps_assets"
+    fun saveAssetUrl(url: String, expiry: Long) {
+        ctPreference.writeLong(url, expiry)
     }
 
-    fun saveAllAssetUrls(urls: Set<String>) {
-        ctPreference.writeStringSet(INAPPS_ASSETS, urls)
-    }
-
-    fun saveAssetUrl(url: String) {
-        val set = ctPreference.readStringSet(INAPPS_ASSETS, emptySet()) ?: emptySet()
-        val updated = mutableSetOf<String>().apply {
-            add(url)
-            addAll(set)
-        }
-
-        ctPreference.writeStringSet(INAPPS_ASSETS, updated)
+    fun clearAssetUrl(url: String) {
+        ctPreference.remove(url)
     }
 
     fun getAllAssetUrls(): Set<String> {
-        return ctPreference.readStringSet(INAPPS_ASSETS, emptySet()) ?: emptySet()
+        return ctPreference.readAll()?.keys ?: emptySet()
+    }
+
+    fun expiryForUrl(url: String) : Long {
+        return ctPreference.readLong(url, 0)
     }
 }

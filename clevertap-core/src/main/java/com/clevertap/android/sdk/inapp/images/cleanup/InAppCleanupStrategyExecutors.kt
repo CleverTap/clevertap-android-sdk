@@ -11,7 +11,7 @@ internal class InAppCleanupStrategyExecutors(
     companion object {
         private const val TAG = "InAppCleanupStrategyExecutors"
     }
-    override fun clearAssets(urls: List<String>) {
+    override fun clearAssets(urls: List<String>, successBlock: (url: String) -> Unit) {
 
         for (url in urls) {
             val task = executor.ioTaskNonUi<Unit>()
@@ -19,6 +19,7 @@ internal class InAppCleanupStrategyExecutors(
             task.execute(TAG) {
                 inAppResourceProvider.deleteImage(url)
                 inAppResourceProvider.deleteGif(url)
+                successBlock.invoke(url)
             }
         }
     }

@@ -41,6 +41,7 @@ dependencies {
     testImplementation project(':test_shared')
     testImplementation Libs.firebase_messaging
     testImplementation "io.mockk:mockk:1.13.5"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 
     androidTestImplementation "androidx.work:work-testing:2.7.1"
     androidTestImplementation "androidx.test:runner:1.5.2"

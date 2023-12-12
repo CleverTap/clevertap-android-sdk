@@ -18,18 +18,14 @@ import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
 
-import java.util.List;
 import java.util.concurrent.Callable;
 import kotlin.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class InAppResponse extends CleverTapResponseDecorator {
-
-    private CleverTapResponse cleverTapResponse;
 
     private final CleverTapInstanceConfig config;
 
@@ -58,10 +54,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
         this.coreMetaData = coreMetaData;
     }
 
-    public void setCleverTapResponse(CleverTapResponse cleverTapResponse) {
-        this.cleverTapResponse = cleverTapResponse;
-    }
-
     @Override
     public void processResponse(
             final JSONObject response,
@@ -84,7 +76,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 logger.verbose(config.getAccountId(),
                         "CleverTap instance is configured to analytics only, not processing inapp messages");
                 // process metadata response
-                cleverTapResponse.processResponse(response, stringBody, context); // todo this is not needed, no-op
                 return;
             }
 
@@ -145,7 +136,13 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             InAppImageRepoImpl impl = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore);
             impl.fetchAllImages(res.getPreloadImage());
-            impl.cleanupStaleImages(res.getAllImages());
+
+            if (isFullResponse) {
+                logger.verbose(config.getAccountId(), "Handling cache eviction");
+                impl.cleanupStaleImages(res.getPreloadImage());
+            } else {
+                logger.verbose(config.getAccountId(), "Ignoring cache eviction");
+            }
 
             String mode = res.getInAppMode();
             if (!mode.isEmpty()) {
@@ -155,10 +152,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             Logger.v("InAppManager: Failed to parse response", t);
         }
-
-        // process metadata response
-        cleverTapResponse.processResponse(response, stringBody, context);
-
     }
 
     private void clearStaleInAppImpressions(JSONArray inappStaleList, ImpressionStore impressionStore) {

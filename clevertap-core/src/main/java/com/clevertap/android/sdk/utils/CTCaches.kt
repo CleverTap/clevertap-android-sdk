@@ -10,8 +10,8 @@ import kotlin.math.max
  */
 // todo locking should be individual cache based
 class CTCaches private constructor(
-    val config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
-    val logger: ILogger? = null
+    private val config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
+    private val logger: ILogger? = null
 ) {
 
     companion object {
