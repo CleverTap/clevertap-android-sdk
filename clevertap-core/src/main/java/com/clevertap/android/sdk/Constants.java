@@ -215,6 +215,10 @@ public interface Constants {
     String KEY_TEXT = "text";
     String KEY_KEY = "key";
     String KEY_VALUE = "value";
+    String KEY_EVENT_NAME = "eventName";
+    String KEY_EVENT_PROPERTIES = "eventProperties";
+    String KEY_ITEM_PROPERTIES = "itemProperties";
+    String KEY_GEO_RADIUS_PROPERTIES = "geoRadius";
     String KEY_PROPERTY_VALUE = "propertyValue";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
