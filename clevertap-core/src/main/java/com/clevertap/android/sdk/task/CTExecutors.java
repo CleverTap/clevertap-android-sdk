@@ -39,6 +39,12 @@ public class CTExecutors {
         singleThreadExecutorTag = UrlHashGenerator.INSTANCE.hashWithTsSeed();
     }
 
+    CTExecutors() {
+        this.config = null;
+        IO_EXECUTOR = new IOExecutor();
+        singleThreadExecutorTag = UrlHashGenerator.INSTANCE.hashWithTsSeed();
+    }
+
     /**
      * Use this task when you want to offload some background task
      * @param <TResult>

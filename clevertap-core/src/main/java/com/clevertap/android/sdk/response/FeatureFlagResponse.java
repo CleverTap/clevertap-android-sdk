@@ -11,17 +11,13 @@ import org.json.JSONObject;
 
 public class FeatureFlagResponse extends CleverTapResponseDecorator {
 
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
     private final Logger logger;
 
     private final ControllerManager controllerManager;
 
-    public FeatureFlagResponse(CleverTapResponse cleverTapResponse,
-            CleverTapInstanceConfig config, ControllerManager controllerManager) {
-        this.cleverTapResponse = cleverTapResponse;
+    public FeatureFlagResponse(CleverTapInstanceConfig config, ControllerManager controllerManager) {
         this.config = config;
         logger = this.config.getLogger();
         this.controllerManager = controllerManager;
@@ -35,7 +31,6 @@ public class FeatureFlagResponse extends CleverTapResponseDecorator {
             logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing Feature Flags response");
             // process product config response
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
 
@@ -49,7 +44,6 @@ public class FeatureFlagResponse extends CleverTapResponseDecorator {
             logger.verbose(config.getAccountId(),
                     Constants.FEATURE_FLAG_UNIT + "JSON object doesn't contain the Feature Flags key");
             // process product config response
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {
@@ -60,10 +54,6 @@ public class FeatureFlagResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), Constants.FEATURE_FLAG_UNIT + "Failed to parse response", t);
         }
-
-        // process product config response
-        cleverTapResponse.processResponse(response, stringBody, context);
-
     }
 
     private void parseFeatureFlags(JSONObject responseKV) throws JSONException {

@@ -14,7 +14,6 @@ import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.response.CleverTapResponse;
-import com.clevertap.android.sdk.response.CleverTapResponseHelper;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
@@ -527,10 +526,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                                 extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
                         testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
                         inboxNotifs.put(testPushObject);
-                        CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
-                        cleverTapResponse = new InboxResponse(cleverTapResponse, config,
-                                ctLockManager, callbackManager, controllerManager);
 
+                        CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
                         cleverTapResponse.processResponse(r, null, context);
                     } catch (Throwable t) {
                         Logger.v("Failed to process inbox message from push notification payload", t);
@@ -1430,11 +1427,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             JSONObject r = CTJsonConverter.displayUnitFromExtras(extras);
 
-            CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
-
-            cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
-                    callbackManager, controllerManager);
-
+            CleverTapResponse cleverTapResponse = new DisplayUnitResponse(config, callbackManager, controllerManager);
             cleverTapResponse.processResponse(r, null, context);
 
         } catch (Throwable t) {

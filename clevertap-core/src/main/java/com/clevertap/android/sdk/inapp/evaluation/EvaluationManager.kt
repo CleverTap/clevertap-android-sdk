@@ -112,7 +112,11 @@ class EvaluationManager constructor(
     }
 
     @VisibleForTesting
-    internal fun evaluate(event: EventAdapter, inappNotifs: List<JSONObject>): List<JSONObject> {
+    internal fun evaluate(
+        event: EventAdapter,
+        inappNotifs: List<JSONObject>,
+        clearResource: (url: String) -> Unit = {}
+    ): List<JSONObject> {
         val eligibleInApps: MutableList<JSONObject> = mutableListOf()
 
         for (inApp in inappNotifs) {
@@ -125,6 +129,11 @@ class EvaluationManager constructor(
                 triggersManager.increment(campaignId)
 
                 val matchesLimits = limitsMatcher.matchWhenLimits(getWhenLimits(inApp), campaignId)
+                val discardData = limitsMatcher.shouldDiscard(getWhenLimits(inApp), campaignId)
+
+                if (discardData) {
+                    clearResource.invoke("") // todo pass correct url
+                }
                 if (matchesLimits) {
                     Logger.v("INAPP", "Limits matched for event ${event.eventName} against inApp $campaignId")
                     eligibleInApps.add(inApp)

@@ -39,6 +39,7 @@ import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
@@ -2798,6 +2799,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                     accountId);
             storeRegistry.setImpressionStore(impStore);
             coreState.getCallbackManager().addChangeUserCallback(impStore);
+        }
+
+        if (storeRegistry.getInAppAssetsStore() == null) {
+            InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, deviceInfo, accountId);
+            storeRegistry.setInAppAssetsStore(assetsStore);
         }
 
         /**

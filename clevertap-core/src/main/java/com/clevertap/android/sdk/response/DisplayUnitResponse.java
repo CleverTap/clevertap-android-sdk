@@ -18,18 +18,17 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     private final BaseCallbackManager callbackManager;
 
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
     private final ControllerManager controllerManager;
 
     private final Logger logger;
 
-    public DisplayUnitResponse(CleverTapResponse cleverTapResponse,
+    public DisplayUnitResponse(
             CleverTapInstanceConfig config,
-            BaseCallbackManager callbackManager, ControllerManager controllerManager) {
-        this.cleverTapResponse = cleverTapResponse;
+            BaseCallbackManager callbackManager,
+            ControllerManager controllerManager
+    ) {
         this.config = config;
         logger = this.config.getLogger();
         this.callbackManager = callbackManager;
@@ -47,7 +46,6 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
             logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing Display Unit response");
             // process feature flag response
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
 
@@ -61,8 +59,6 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         if (!response.has(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY)) {
             logger.verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "JSON object doesn't contain the Display Units key");
-            // process feature flag response
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {
@@ -73,9 +69,6 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to parse response", t);
         }
-
-        // process feature flag response
-        cleverTapResponse.processResponse(response, stringBody, context);
     }
 
     /**

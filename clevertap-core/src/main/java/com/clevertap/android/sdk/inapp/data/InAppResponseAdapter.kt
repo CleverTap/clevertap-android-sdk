@@ -39,66 +39,55 @@ class InAppResponseAdapter(
 
     val preloadImage: List<String>
 
+    val allImages: List<String>
+
     val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_JSON_RESPONSE_KEY)
 
     val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
 
     val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
 
+    val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+
     init {
         val list = mutableListOf<String>()
 
-        // do legacy inapps stuff
-        if (legacyInApps.first) {
-            legacyInApps.second?.iterator<JSONObject> { jsonObject ->
-                val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
-
-                if (portrait != null) {
-                    val portraitMedia = CTInAppNotificationMedia()
-                        .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
-
-                    if (portraitMedia != null && portraitMedia.mediaUrl != null) {
-                        list.add(portraitMedia.mediaUrl)
-                    }
-                }
-                val landscape = jsonObject.optJSONObject(Constants.KEY_MEDIA_LANDSCAPE)
-                if (landscape != null) {
-                    val landscapeMedia = CTInAppNotificationMedia()
-                            .initWithJSON(landscape, Configuration.ORIENTATION_LANDSCAPE)
-
-                    if (landscapeMedia != null && landscapeMedia.mediaUrl != null) {
-                        list.add(landscapeMedia.mediaUrl)
-                    }
-                }
-            }
-        }
-
-        // do cs inapps stuff
-        if (clientSideInApps.first) {
-            clientSideInApps.second?.iterator<JSONObject> { jsonObject ->
-                val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
-
-                if (portrait != null) {
-                    val portraitMedia = CTInAppNotificationMedia()
-                        .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
-
-                    if (portraitMedia != null && portraitMedia.mediaUrl != null) {
-                        list.add(portraitMedia.mediaUrl)
-                    }
-                }
-                val landscape = jsonObject.optJSONObject(Constants.KEY_MEDIA_LANDSCAPE)
-                if (landscape != null) {
-                    val landscapeMedia = CTInAppNotificationMedia()
-                            .initWithJSON(landscape, Configuration.ORIENTATION_LANDSCAPE)
-
-                    if (landscapeMedia != null && landscapeMedia.mediaUrl != null) {
-                        list.add(landscapeMedia.mediaUrl)
-                    }
-                }
-            }
-        }
+        fetchMediaUrls(legacyInApps, list)
+        fetchMediaUrls(clientSideInApps, list)
+        fetchMediaUrls(appLaunchServerSideInApps, list)
 
         preloadImage = list
+
+        val allImagesList = list.toMutableList()
+        fetchMediaUrls(serverSideInApps, allImagesList)
+
+        allImages = allImagesList
+    }
+
+    private fun fetchMediaUrls(data: Pair<Boolean, JSONArray?>, list: MutableList<String>) {
+        if (data.first) {
+            data.second?.iterator<JSONObject> { jsonObject ->
+                val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
+
+                if (portrait != null) {
+                    val portraitMedia = CTInAppNotificationMedia()
+                        .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
+
+                    if (portraitMedia != null && portraitMedia.mediaUrl != null) {
+                        list.add(portraitMedia.mediaUrl)
+                    }
+                }
+                val landscape = jsonObject.optJSONObject(Constants.KEY_MEDIA_LANDSCAPE)
+                if (landscape != null) {
+                    val landscapeMedia = CTInAppNotificationMedia()
+                            .initWithJSON(landscape, Configuration.ORIENTATION_LANDSCAPE)
+
+                    if (landscapeMedia != null && landscapeMedia.mediaUrl != null) {
+                        list.add(landscapeMedia.mediaUrl)
+                    }
+                }
+            }
+        }
     }
 
     val inAppsPerSession: Int = responseJson.optInt(IN_APP_SESSION_KEY, IN_APP_DEFAULT_SESSION)
@@ -108,9 +97,6 @@ class InAppResponseAdapter(
     val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "");
 
     val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_STALE_KEY)
-
-    val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> =
-        responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
 }
 
 // Define a common interface for the properties that are common to both data classes

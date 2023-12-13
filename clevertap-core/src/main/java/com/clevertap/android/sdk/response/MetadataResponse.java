@@ -9,9 +9,6 @@ import org.json.JSONObject;
 
 public class MetadataResponse extends CleverTapResponseDecorator {
 
-
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
     private final DeviceInfo deviceInfo;
@@ -20,10 +17,11 @@ public class MetadataResponse extends CleverTapResponseDecorator {
 
     private final NetworkManager networkManager;
 
-    public MetadataResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
+    public MetadataResponse(
+            CleverTapInstanceConfig config,
             DeviceInfo deviceInfo,
-            NetworkManager networkManager) {
-        this.cleverTapResponse = cleverTapResponse;
+            NetworkManager networkManager
+    ) {
         this.config = config;
         logger = this.config.getLogger();
         this.deviceInfo = deviceInfo;
@@ -63,8 +61,5 @@ public class MetadataResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             // Ignore
         }
-
-        // process ARP response
-        cleverTapResponse.processResponse(response, stringBody, context);
     }
 }

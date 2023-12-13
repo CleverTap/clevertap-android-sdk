@@ -12,8 +12,6 @@ import org.json.JSONObject;
 
 public class ProductConfigResponse extends CleverTapResponseDecorator {
 
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
     private final CoreMetaData coreMetaData;
@@ -22,10 +20,11 @@ public class ProductConfigResponse extends CleverTapResponseDecorator {
 
     private final ControllerManager controllerManager;
 
-    public ProductConfigResponse(CleverTapResponse cleverTapResponse,
+    public ProductConfigResponse(
             CleverTapInstanceConfig config,
-            CoreMetaData coreMetaData, ControllerManager controllerManager) {
-        this.cleverTapResponse = cleverTapResponse;
+            CoreMetaData coreMetaData,
+            ControllerManager controllerManager
+    ) {
         this.config = config;
         logger = this.config.getLogger();
         this.coreMetaData = coreMetaData;
@@ -39,8 +38,6 @@ public class ProductConfigResponse extends CleverTapResponseDecorator {
         if (config.isAnalyticsOnly()) {
             logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing Product Config response");
-            // process geofence response
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
 
@@ -55,8 +52,6 @@ public class ProductConfigResponse extends CleverTapResponseDecorator {
             logger.verbose(config.getAccountId(),
                     Constants.LOG_TAG_PRODUCT_CONFIG + "JSON object doesn't contain the Product Config key");
             onProductConfigFailed();
-            // process geofence response
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {
@@ -69,10 +64,6 @@ public class ProductConfigResponse extends CleverTapResponseDecorator {
             logger.verbose(config.getAccountId(),
                     Constants.LOG_TAG_PRODUCT_CONFIG + "Failed to parse Product Config response", t);
         }
-
-        // process geofence response
-        cleverTapResponse.processResponse(response, stringBody, context);
-
     }
 
     private void onProductConfigFailed() {

@@ -20,8 +20,6 @@ public class ARPResponse extends CleverTapResponseDecorator {
 
     private final CTProductConfigController ctProductConfigController;
 
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
     private final Logger logger;
@@ -30,10 +28,12 @@ public class ARPResponse extends CleverTapResponseDecorator {
 
     private final Validator validator;
 
-    public ARPResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
+    public ARPResponse(
+            CleverTapInstanceConfig config,
             NetworkManager networkManager,
-            Validator validator, ControllerManager controllerManager) {
-        this.cleverTapResponse = cleverTapResponse;
+            Validator validator,
+            ControllerManager controllerManager
+    ) {
         this.config = config;
         ctProductConfigController = controllerManager.getCTProductConfigController();
         logger = this.config.getLogger();
@@ -64,9 +64,6 @@ public class ARPResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "Failed to process ARP", t);
         }
-
-        // process Console response
-        cleverTapResponse.processResponse(response, stringBody, context);
     }
 
     //Saves ARP directly to new namespace

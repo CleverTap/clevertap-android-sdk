@@ -10,9 +10,9 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 
 internal class InAppResourceProvider constructor(
-    val images: File,
-    val gifs: File,
-    val logger: ILogger? = null,
+    private val images: File,
+    private val gifs: File,
+    private val logger: ILogger? = null,
     private val ctCaches: CTCaches = CTCaches.instance(logger = logger),
     private val fileToBitmap : (file: File?) -> Bitmap? = { file ->
         if (file != null && file.hasValidBitmap()) {
@@ -103,7 +103,9 @@ internal class InAppResourceProvider constructor(
         val file = imageDiskCache.get(cacheKey)
 
         val bitmapFromFile = fileToBitmap(file)
-        logger?.verbose("cached image for url : $cacheKey, bitmap : ${bitmapFromFile.hashCode()}")
+        if (bitmapFromFile != null) {
+            logger?.verbose("returning cached image for url : $cacheKey")
+        }
         return bitmapFromFile
     }
 
@@ -202,17 +204,33 @@ internal class InAppResourceProvider constructor(
 
     fun deleteImage(cacheKey: String) {
         val imageMemoryCache = ctCaches.imageCache()
-        imageMemoryCache.remove(cacheKey)
+        val bitmap = imageMemoryCache.remove(cacheKey)
+
+        if (bitmap != null) {
+            logger?.verbose("successfully removed $cacheKey from memory cache")
+        }
 
         val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
-        imageDiskCache.remove(cacheKey)
+        val b = imageDiskCache.remove(cacheKey)
+
+        if (b) {
+            logger?.verbose("successfully removed $cacheKey from file cache")
+        }
     }
 
     fun deleteGif(cacheKey: String) {
         val imageMemoryCache = ctCaches.gifCache()
-        imageMemoryCache.remove(cacheKey)
+        val bytes = imageMemoryCache.remove(cacheKey)
+
+        if (bytes != null) {
+            logger?.verbose("successfully removed gif $cacheKey from memory cache")
+        }
 
         val imageDiskCache = ctCaches.gifCacheDisk(dir = gifs)
-        imageDiskCache.remove(cacheKey)
+        val b = imageDiskCache.remove(cacheKey)
+
+        if (b) {
+            logger?.verbose("successfully removed gif $cacheKey from file cache")
+        }
     }
 }

@@ -6,7 +6,6 @@ import android.content.Context;
 import android.os.Bundle;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
@@ -21,8 +20,6 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
 
     private final BaseCallbackManager callbackManager;
 
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
     private final Context context;
@@ -33,13 +30,13 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
 
     private final BaseDatabaseManager baseDatabaseManager;
 
-    public PushAmpResponse(CleverTapResponse cleverTapResponse,
+    public PushAmpResponse(
             Context context,
             CleverTapInstanceConfig config,
             BaseDatabaseManager dbManager,
             BaseCallbackManager callbackManager,
-            ControllerManager controllerManager) {
-        this.cleverTapResponse = cleverTapResponse;
+            ControllerManager controllerManager
+    ) {
         this.context = context;
         this.config = config;
         logger = this.config.getLogger();
@@ -54,10 +51,6 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
         if (config.isAnalyticsOnly()) {
             logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing push amp response");
-
-            // process Display Unit response
-            cleverTapResponse.processResponse(response, stringBody, context);
-
             return;
         }
         try {
@@ -99,9 +92,6 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             //Ignore
         }
-
-        // process Display Unit response
-        cleverTapResponse.processResponse(response, stringBody, context);
     }
 
     //PN
@@ -139,6 +129,4 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
             logger.verbose(config.getAccountId(), "Error parsing push notification JSON");
         }
     }
-
-
 }
