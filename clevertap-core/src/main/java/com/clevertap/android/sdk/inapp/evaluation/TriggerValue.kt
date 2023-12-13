@@ -28,6 +28,11 @@ class TriggerValue(val value: Any? = null, private var listValue: List<Any?>? = 
                 stringValueCleaned = value.trim().lowercase()
             }
 
+            is Boolean -> {
+                stringValue = value.toString()
+                stringValueCleaned = value.toString().trim().lowercase()
+            }
+
             is Number -> numberValue = value
             is List<*> -> {
                 listValue = value

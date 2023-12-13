@@ -391,6 +391,10 @@ class TriggersMatcher {
                     .any { it.trim().lowercase().toDoubleOrNull() == numberToCheck }
             }
 
+            is Boolean -> {
+                // Check for equality in booleans
+                return list.asSequence().filterIsInstance<String>().any { it == elementToCheckForEquality.toString() }
+            }
             else -> {
                 // Handle other cases or return false if the type is not supported
                 return false
