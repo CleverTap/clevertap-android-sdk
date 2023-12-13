@@ -133,6 +133,7 @@ class ImpressionManager @JvmOverloads constructor(
 
     /**
      * Counts the impressions for a campaign within the last N weeks.
+     * It looks up in the current week if the value one is passed as week offset
      *
      * @param campaignId The identifier of the campaign.
      * @param weeks      The time interval in weeks.
@@ -177,7 +178,7 @@ class ImpressionManager @JvmOverloads constructor(
      * @param campaignId The identifier of the campaign.
      * @return The total number of impressions recorded for the campaign.
      */
-    fun getImpressionCount(campaignId: String): Int {
+    private fun getImpressionCount(campaignId: String): Int {
         return storeRegistry.impressionStore?.read(campaignId)?.size ?: 0
     }
 
@@ -188,7 +189,7 @@ class ImpressionManager @JvmOverloads constructor(
      * @param timestampStart  The start timestamp of the time interval (in seconds since the Unix epoch).
      * @return The count of impressions within the specified time interval.
      */
-    fun getImpressionCount(campaignId: String, timestampStart: Long): Int {
+    private fun getImpressionCount(campaignId: String, timestampStart: Long): Int {
         val timestamps = getImpressions(campaignId)
 
         var count = 0
