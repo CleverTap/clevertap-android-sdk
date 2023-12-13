@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import android.location.Location
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
@@ -120,7 +122,7 @@ class TriggersMatcherTest : BaseTestCase() {
 
         // Adding a trigger with one condition that should not match the charged event (should not match)
         val triggerJSON1 = JSONObject().apply {
-            put("eventName", "ChargedEvent")
+            put("eventName", Constants.CHARGED_EVENT)
             put("eventProperties", JSONArray().put(JSONObject().apply {
                 put("propertyName", "Property1")
                 put("op", TriggerOperator.Equals.operatorValue)
@@ -136,7 +138,7 @@ class TriggersMatcherTest : BaseTestCase() {
 
         // Adding another trigger with a charged event name (should match)
         val triggerJSON2 = JSONObject().apply {
-            put("eventName", "ChargedEvent")
+            put("eventName", Constants.CHARGED_EVENT)
             put("eventProperties", JSONArray().put(JSONObject().apply {
                 put("propertyName", "Property1")
                 put("op", TriggerOperator.Equals.operatorValue)
@@ -150,7 +152,7 @@ class TriggersMatcherTest : BaseTestCase() {
         }
         whenTriggers.put(triggerJSON2)
 
-        assertTrue(triggersMatcher.matchChargedEvent(whenTriggers, "ChargedEvent", details, items))
+        assertTrue(triggersMatcher.matchChargedEvent(whenTriggers, Constants.CHARGED_EVENT, details, items))
     }
 
     @Test
@@ -163,7 +165,7 @@ class TriggersMatcherTest : BaseTestCase() {
 
         // Adding a trigger with a different event condition (should not match)
         val triggerJSON1 = JSONObject().apply {
-            put("eventName", "ChargedEvent")
+            put("eventName", Constants.CHARGED_EVENT)
             put("eventProperties", JSONArray().put(JSONObject().apply {
                 put("propertyName", "Property1")
                 put("op", TriggerOperator.Equals.operatorValue)
@@ -179,7 +181,7 @@ class TriggersMatcherTest : BaseTestCase() {
 
         // Adding another trigger with a charged event name (should not match)
         val triggerJSON2 = JSONObject().apply {
-            put("eventName", "ChargedEvent")
+            put("eventName", Constants.CHARGED_EVENT)
             put("eventProperties", JSONArray().put(JSONObject().apply {
                 put("propertyName", "Property1")
                 put("op", TriggerOperator.Equals.operatorValue)
@@ -193,7 +195,7 @@ class TriggersMatcherTest : BaseTestCase() {
         }
         whenTriggers.put(triggerJSON2)
 
-        assertFalse(triggersMatcher.matchChargedEvent(whenTriggers, "ChargedEvent", details, items))
+        assertFalse(triggersMatcher.matchChargedEvent(whenTriggers, Constants.CHARGED_EVENT, details, items))
     }
 
     @Test
@@ -210,7 +212,7 @@ class TriggersMatcherTest : BaseTestCase() {
     @Test
     fun testMatchChargedEvent_WhenNoTriggerConditions_ShouldReturnFalse() {
         val whenTriggers = JSONArray()
-        val eventName = "ChargedEvent"
+        val eventName = Constants.CHARGED_EVENT
         val eventProperties = mapOf("Property1" to "Value1")
 
         assertFalse(
@@ -1005,8 +1007,8 @@ class TriggersMatcherTest : BaseTestCase() {
         // Test when the operator is LessThan, and both expected and actual values are numbers.
         // Expects a positive result, as the expected number is less than the actual number.
         val operator = TriggerOperator.LessThan
-        val expectedValue = TriggerValue(5.0)
-        val actualValue = TriggerValue(10.0)
+        val expectedValue = TriggerValue(10.0)
+        val actualValue = TriggerValue(5.0)
 
         val result = triggersMatcher.evaluate(operator, expectedValue, actualValue)
         assertTrue(result)
@@ -1051,8 +1053,8 @@ class TriggersMatcherTest : BaseTestCase() {
         // Test when the operator is GreaterThan, and both expected and actual values are numbers.
         // Expects a positive result, as the expected number is greater than the actual number.
         val operator = TriggerOperator.GreaterThan
-        val expectedValue = TriggerValue(10.0)
-        val actualValue = TriggerValue(5.0)
+        val expectedValue = TriggerValue(5.0)
+        val actualValue = TriggerValue(10.0)
 
         val result = triggersMatcher.evaluate(operator, expectedValue, actualValue)
         assertTrue(result)
@@ -1267,7 +1269,7 @@ class TriggersMatcherTest : BaseTestCase() {
     @Test
     fun testMatch_WhenChargedEventItemPropertyConditionsAreMet_ShouldReturnTrue() {
         val trigger = createTriggerAdapter(
-            "ChargedEvent", listOf(), listOf(
+            Constants.CHARGED_EVENT, listOf(), listOf(
                 TriggerCondition(
                     "ItemProperty1",
                     TriggerOperator.Equals,
@@ -1281,7 +1283,7 @@ class TriggersMatcherTest : BaseTestCase() {
             )
         )
         val event = createEventAdapter(
-            "ChargedEvent", emptyMap(), listOf(
+            Constants.CHARGED_EVENT, emptyMap(), listOf(
                 mapOf("ItemProperty1" to "ItemValue1", "ItemProperty2" to "SomeItemValue2"),
                 mapOf("ItemProperty1" to "DifferentItemValue1", "ItemProperty2" to "ItemValue2")
             )
@@ -1293,7 +1295,7 @@ class TriggersMatcherTest : BaseTestCase() {
     @Test
     fun testMatch_WhenChargedEventItemPropertyConditionsAreNotMet_ShouldReturnFalse() {
         val trigger = createTriggerAdapter(
-            "ChargedEvent", listOf(), listOf(
+            Constants.CHARGED_EVENT, listOf(), listOf(
                 TriggerCondition(
                     "ItemProperty1",
                     TriggerOperator.Equals,
@@ -1307,7 +1309,7 @@ class TriggersMatcherTest : BaseTestCase() {
             )
         )
         val event = createEventAdapter(
-            "ChargedEvent", emptyMap(), listOf(
+            Constants.CHARGED_EVENT, emptyMap(), listOf(
                 mapOf(
                     "ItemProperty1" to "DifferentItemValue1",
                     "ItemProperty2" to "SomeItemValue2"
@@ -1326,7 +1328,7 @@ class TriggersMatcherTest : BaseTestCase() {
     @Test
     fun testMatch_WhenEventNameMatchesAndBothPropertyTypesAreEvaluated_ShouldReturnTrue() {
         val trigger = createTriggerAdapter(
-            "ChargedEvent", listOf(
+            Constants.CHARGED_EVENT, listOf(
                 // Event property condition
                 TriggerCondition("Property1", TriggerOperator.Equals, TriggerValue("Value1"))
             ),
@@ -1340,7 +1342,7 @@ class TriggersMatcherTest : BaseTestCase() {
             )
         )
         val event = createEventAdapter(
-            "ChargedEvent", mapOf(
+            Constants.CHARGED_EVENT, mapOf(
                 "Property1" to "Value1"
             ), listOf(
                 mapOf("ItemProperty1" to "ItemValue1", "ItemProperty2" to "SomeItemValue2")
@@ -1353,7 +1355,7 @@ class TriggersMatcherTest : BaseTestCase() {
     @Test
     fun testMatch_WhenBothPropertyTypesAreEvaluatedButConditionsAreNotMet_ShouldReturnFalse() {
         val trigger = createTriggerAdapter(
-            "ChargedEvent", listOf(
+            Constants.CHARGED_EVENT, listOf(
                 // Event property condition
                 TriggerCondition("Property1", TriggerOperator.Equals, TriggerValue("Value1")),
             ), listOf(
@@ -1366,7 +1368,7 @@ class TriggersMatcherTest : BaseTestCase() {
             )
         )
         val event = createEventAdapter(
-            "ChargedEvent", mapOf(
+            Constants.CHARGED_EVENT, mapOf(
                 "Property1" to "DifferentValue1"
             ), listOf(
                 mapOf(
@@ -1379,19 +1381,130 @@ class TriggersMatcherTest : BaseTestCase() {
         assertFalse(triggersMatcher.match(trigger, event))
     }
 
+    @Test
+    fun testMatch_WhenGeoRadiusConditionsAreMet_ShouldReturnTrue() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0) // San Francisco
+            )
+        )
+
+        // User location set to Ottawa, Canada
+        val event = createEventAdapter(
+            "EventWithGeoRadius",
+            userLocation = Location("").apply {
+                latitude = 37.7750
+                longitude = -122.4195
+            }
+        )
+
+        assertTrue(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun testMatch_WhenGeoRadiusConditionsAreNotMet_ShouldReturnFalse() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0) // San Francisco
+            )
+        )
+
+        // User location set to Ottawa, Canada
+        val event = createEventAdapter(
+            "EventWithGeoRadius",
+            userLocation = Location("").apply {
+                latitude = 40.7128
+                longitude = -74.0060
+            }
+        )
+
+        assertFalse(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun testMatch_WhenMultipleGeoRadiusConditions_WithAnyMet_ShouldReturnTrue() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0), // San Francisco
+                TriggerGeoRadius(40.7128, -74.0060, 10.0) // New York
+            )
+        )
+
+        // User location set to Ottawa, Canada
+        val event = createEventAdapter(
+            "EventWithGeoRadius",
+            userLocation = Location("").apply {
+                latitude = 40.7128
+                longitude = -74.0060
+            }
+        )
+
+        assertTrue(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun testMatch_WhenMultipleGeoRadiusConditions_NoneMet_ShouldReturnFalse() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0),  // San Francisco
+                TriggerGeoRadius(40.7128, -74.0060, 10.0)    // New York
+            )
+        )
+
+        // User location set to Ottawa, Canada
+        val event = createEventAdapter(
+            "EventWithGeoRadius",
+            userLocation = Location("").apply {
+                latitude = 45.4215
+                longitude = -75.6993
+            }
+        )
+
+        assertFalse(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun testMatch_WhenGeoRadiusConditionsExist_ShouldCallMatchGeoRadius() {
+        val trigger = createTriggerAdapter(
+            "EventWithGeoRadius",
+            geoRadiusConditions = listOf(
+                TriggerGeoRadius(37.7749, -122.4194, 10.0)
+            )
+        )
+
+        // Event with or without geo-radius conditions
+        val event = createEventAdapter("EventWithGeoRadius")
+
+        val spyTriggersMatcher = spyk(triggersMatcher)
+
+        every { spyTriggersMatcher.matchGeoRadius(any(), any()) } returns true
+
+        //Act
+        spyTriggersMatcher.match(trigger, event)
+
+        // Verify that matchGeoRadius is called when geoRadiusCount > 0
+        verify(exactly = 1) { spyTriggersMatcher.matchGeoRadius(event, trigger) }
+    }
+
     // Helper functions to create EventAdapter and TriggerAdapter instances
     private fun createEventAdapter(
         eventName: String,
         eventProperties: Map<String, Any> = emptyMap(),
-        items: List<Map<String, Any>> = emptyList()
+        items: List<Map<String, Any>> = emptyList(),
+        userLocation: Location? = null
     ): EventAdapter {
-        return EventAdapter(eventName, eventProperties, items)
+        return EventAdapter(eventName, eventProperties, items, userLocation)
     }
 
     private fun createTriggerAdapter(
         eventName: String,
         propertyConditions: List<TriggerCondition> = emptyList(),
-        itemConditions: List<TriggerCondition> = emptyList()
+        itemConditions: List<TriggerCondition> = emptyList(),
+        geoRadiusConditions: List<TriggerGeoRadius> = emptyList()
     ): TriggerAdapter {
         val triggerJSON = JSONObject().apply {
             put("eventName", eventName)
@@ -1405,6 +1518,18 @@ class TriggersMatcherTest : BaseTestCase() {
                 put(
                     "itemProperties",
                     JSONArray(itemConditions.map { createPropertyConditionJSON(it) })
+                )
+            }
+            if (geoRadiusConditions.isNotEmpty()) {
+                put(
+                    "geoRadius",
+                    JSONArray(geoRadiusConditions.map { condition ->
+                         JSONObject().apply {
+                            put("lat", condition.latitude)
+                            put("lng", condition.longitude)
+                            put("rad", condition.radius)
+                        }
+                    })
                 )
             }
         }
