@@ -94,7 +94,7 @@ fun NotificationManager.getOrCreateChannel(
         if (getNotificationChannel(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID) == null) {
 
             val defaultChannelName = try {
-                  context.getString(R.string.fcm_fallback_notification_channel_label)
+                  context.getString(R.string.ct_fcm_fallback_notification_channel_label)
             } catch (e: Exception) {
                 Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME
             }
