@@ -828,6 +828,24 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `test expectedValueEqualsActual when expected list of strings has actual boolean true`() {
+        val expectedValue = TriggerValue(listOf("true"))
+        val actualValue = TriggerValue(true)
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test expectedValueEqualsActual when expected list of strings has actual string true`() {
+        val expectedValue = TriggerValue(listOf("true"))
+        val actualValue = TriggerValue("true")
+
+        val result = triggersMatcher.expectedValueEqualsActual(expectedValue, actualValue)
+        assertTrue(result)
+    }
+
+    @Test
     fun `test expectedValueEqualsActual when expected list of double has actual double in string form`() {
         // Test when the expected value is a non-empty list, and the actual value is an empty list.
         // Expects a negative result, indicating that a non-empty list is not equal to an empty list.
