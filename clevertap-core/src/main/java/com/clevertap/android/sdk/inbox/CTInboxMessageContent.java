@@ -17,7 +17,6 @@ import org.json.JSONObject;
  * Public model class for the "msg" object from notification inbox payload
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-@RestrictTo(Scope.LIBRARY)
 public class CTInboxMessageContent implements Parcelable {
 
     @SuppressWarnings("unused")
