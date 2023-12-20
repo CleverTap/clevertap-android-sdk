@@ -16,6 +16,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 fun Context.isPackageAndOsTargetsAbove(apiLevel: Int) =
@@ -205,4 +206,14 @@ fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
 
 fun Location.isValid(): Boolean {
     return this.latitude in -90.0..90.0 && this.longitude in -180.0..180.0
+}
+
+fun String?.toJsonOrNull(): JSONObject? {
+    return this?.let {
+        try {
+            JSONObject(it)
+        } catch (e: JSONException) {
+            null
+        }
+    }
 }
