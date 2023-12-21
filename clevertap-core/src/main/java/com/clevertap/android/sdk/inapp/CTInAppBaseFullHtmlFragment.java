@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -127,9 +126,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                 webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
                 webView.getSettings().setAllowContentAccess(false);
                 webView.getSettings().setAllowFileAccess(false);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    webView.getSettings().setAllowFileAccessFromFileURLs(false);
-                }
+                webView.getSettings().setAllowFileAccessFromFileURLs(false);
                 webView.addJavascriptInterface(
                         new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(), config),
                                 this), "CleverTap");
