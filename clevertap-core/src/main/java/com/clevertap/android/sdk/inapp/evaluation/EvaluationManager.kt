@@ -4,6 +4,7 @@ import android.location.Location
 import androidx.annotation.RestrictTo
 import androidx.annotation.RestrictTo.Scope.LIBRARY
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
@@ -30,10 +31,10 @@ class EvaluationManager constructor(
 ) : NetworkHeadersListener {
 
     @VisibleForTesting
-    internal val evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
+    internal var evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
 
     @VisibleForTesting
-    internal val suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
+    internal var suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
         val event = EventAdapter(eventName, eventProperties, userLocation = userLocation)
@@ -66,12 +67,21 @@ class EvaluationManager constructor(
 
         val eligibleInApps = evaluate(event, appLaunchedNotifs)
 
+        var updated = false
         sortByPriority(eligibleInApps).forEach { inApp ->
             if (!shouldSuppress(inApp)) {
+                if (updated) {
+                    saveSuppressedClientSideInAppIds()
+                } // save before returning
                 return JSONArray().also { it.put(inApp) }
             } else {
+                updated = true
                 suppress(inApp)
             }
+        }
+        // save before returning
+        if (updated) {
+            saveSuppressedClientSideInAppIds()
         }
         return JSONArray()
     }
@@ -82,6 +92,7 @@ class EvaluationManager constructor(
 
     @VisibleForTesting
     internal fun evaluateServerSide(event: EventAdapter) {
+        var updated = false
         storeRegistry.inAppStore?.let { store ->
             val eligibleInApps = evaluate(event, store.readServerSideInAppsMetaData().toList())
 
@@ -89,25 +100,39 @@ class EvaluationManager constructor(
                 val campaignId = inApp.optLong(Constants.INAPP_ID_IN_PAYLOAD)
 
                 if (campaignId != 0L) {
+                    updated = true
                     evaluatedServerSideCampaignIds.add(campaignId)
                 }
+            }
+            if (updated) {
+                saveEvaluatedServerSideInAppIds()
             }
         }
     }
 
     @VisibleForTesting
     internal fun evaluateClientSide(event: EventAdapter): JSONArray {
+        var updated = false
         storeRegistry.inAppStore?.let { store ->
             val eligibleInApps = evaluate(event, store.readClientSideInApps().toList())
 
             sortByPriority(eligibleInApps).forEach { inApp ->
                 if (!shouldSuppress(inApp)) {
+                    if (updated) {
+                        saveSuppressedClientSideInAppIds()
+                    } // save before returning
+
                     updateTTL(inApp)
                     return JSONArray().also { it.put(inApp) }
                 } else {
+                    updated = true
                     suppress(inApp)
                 }
             }
+            if (updated) {
+                saveSuppressedClientSideInAppIds()
+            } // save before returning
+
         }.run { return JSONArray() }
     }
 
@@ -225,19 +250,25 @@ class EvaluationManager constructor(
     }
 
     private fun removeSentEvaluatedServerSideCampaignIds(header: JSONObject) {
+        var updated = false
         val inAppsEval = header.optJSONArray(Constants.INAPP_SS_EVAL_META)
         inAppsEval?.let {
             for (i in 0 until it.length()) {
                 val campaignId = it.optLong(i)
 
                 if (campaignId != 0L) {
+                    updated = true
                     evaluatedServerSideCampaignIds.remove(campaignId)
                 }
             }
         }
+        if (updated) {
+            saveEvaluatedServerSideInAppIds()
+        }
     }
 
     private fun removeSentSuppressedClientSideInApps(header: JSONObject) {
+        var updated = false
         val inAppsEval = header.optJSONArray(Constants.INAPP_SUPPRESSED_META)
         inAppsEval?.let {
             val iterator = suppressedClientSideInApps.iterator()
@@ -245,9 +276,14 @@ class EvaluationManager constructor(
                 val suppressedInApp = iterator.next()
                 val inAppId = suppressedInApp[Constants.NOTIFICATION_ID_TAG] as? String
                 if (inAppId != null && inAppsEval.toString().contains(inAppId)) {
+                    updated = true
                     iterator.remove()
                 }
             }
+        }
+
+        if (updated) {
+            saveSuppressedClientSideInAppIds()
         }
     }
 
@@ -272,5 +308,32 @@ class EvaluationManager constructor(
             removeSentEvaluatedServerSideCampaignIds(allHeaders)
             removeSentSuppressedClientSideInApps(allHeaders)
         }
+    }
+
+    @WorkerThread
+    fun loadSuppressedCSAndEvaluatedSSInAppsIds() {
+        storeRegistry.inAppStore?.let { store ->
+            evaluatedServerSideCampaignIds =
+                store.readEvaluatedServerSideInAppIds().toList<Long>() as MutableList<Long>
+            suppressedClientSideInApps = JsonUtil.listFromJson(store.readSuppressedClientSideInAppIds())
+        }
+    }
+
+    @VisibleForTesting
+    internal fun saveEvaluatedServerSideInAppIds() {
+        storeRegistry.inAppStore?.storeEvaluatedServerSideInAppIds(
+            JsonUtil.listToJsonArray(
+                evaluatedServerSideCampaignIds
+            )
+        )
+    }
+
+    @VisibleForTesting
+    internal fun saveSuppressedClientSideInAppIds() {
+        storeRegistry.inAppStore?.storeSuppressedClientSideInAppIds(
+            JsonUtil.listToJsonArray(
+                suppressedClientSideInApps
+            )
+        )
     }
 }

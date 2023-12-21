@@ -104,6 +104,8 @@ public interface Constants {
 
     String PREFS_INAPP_KEY_CS = INAPP_NOTIFS_KEY_CS;
     String PREFS_INAPP_KEY_SS = INAPP_NOTIFS_KEY_SS;
+    String PREFS_EVALUATED_INAPP_KEY_SS = "evaluated_ss";
+    String PREFS_SUPPRESSED_INAPP_KEY_CS = "suppressed_ss";
 
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";

@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.Constants.INAPP_KEY
+import com.clevertap.android.sdk.Constants.PREFS_EVALUATED_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
+import com.clevertap.android.sdk.Constants.PREFS_SUPPRESSED_INAPP_KEY_CS
 import com.clevertap.android.sdk.STORE_TYPE_INAPP
 import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.cryption.CryptHandler
@@ -109,6 +111,14 @@ class InAppStore(
         encryptedString?.apply { ctPreference.writeString(INAPP_KEY, this) }
     }
 
+    fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: JSONArray) {
+        ctPreference.writeString(PREFS_EVALUATED_INAPP_KEY_SS, evaluatedServerSideInAppIds.toString())
+    }
+
+    fun storeSuppressedClientSideInAppIds(suppressedClientSideInAppIds: JSONArray) {
+        ctPreference.writeString(PREFS_SUPPRESSED_INAPP_KEY_CS, suppressedClientSideInAppIds.toString())
+    }
+
     /**
      * Reads and decrypts Client-side In-App messages.
      *
@@ -138,6 +148,20 @@ class InAppStore(
         if (ssInAppsMetaData.isNullOrBlank()) return JSONArray()
 
         return JSONArray(ssInAppsMetaData)
+    }
+
+    fun readEvaluatedServerSideInAppIds(): JSONArray {
+        val evaluatedServerSideInAppIds = ctPreference.readString(PREFS_EVALUATED_INAPP_KEY_SS, "")
+        if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONArray()
+
+        return JSONArray(evaluatedServerSideInAppIds)
+    }
+
+    fun readSuppressedClientSideInAppIds(): JSONArray {
+        val suppressedClientSideInAppIds = ctPreference.readString(PREFS_SUPPRESSED_INAPP_KEY_CS, "")
+        if (suppressedClientSideInAppIds.isNullOrBlank()) return JSONArray()
+
+        return JSONArray(suppressedClientSideInAppIds)
     }
 
     fun readServerSideInApps(): JSONArray {

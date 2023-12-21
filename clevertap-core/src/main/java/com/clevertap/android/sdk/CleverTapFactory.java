@@ -139,6 +139,12 @@ class CleverTapFactory {
         );
         coreState.setEvaluationManager(evaluationManager);
 
+        Task<Void> taskLoadSuppressedAndServerSideInAppsId = CTExecutorFactory.executors(config).ioTask();
+        taskLoadSuppressedAndServerSideInAppsId.execute("LoadSuppressedAndServerSideInAppsId", () -> {
+            evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
+            return null;
+        });
+
         //Get device id should be async to avoid strict mode policy.
         Task<Void> taskInitFCManager = CTExecutorFactory.executors(config).ioTask();
         taskInitFCManager.execute("initFCManager", new Callable<Void>() {
