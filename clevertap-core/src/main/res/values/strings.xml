@@ -8,5 +8,5 @@
 
     <string name="notification_permission_name_for_title">Notifications</string>
     <string name="notification_permission_settings_message">Notifications</string>
-    <string name="fcm_fallback_notification_channel_label">Miscellaneous</string>
+    <string name="ct_fcm_fallback_notification_channel_label">Miscellaneous</string>
 </resources>
