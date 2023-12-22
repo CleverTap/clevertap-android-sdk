@@ -96,34 +96,6 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
-        final StoreProvider storeProvider = StoreProvider.getInstance();
-        /*InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
-                config.getAccountId());*/
-        //ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo, config.getAccountId());
-
-        Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
-        taskInitStores.execute("initStores", () -> {
-            if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
-                if (storeRegistry.getInAppStore() == null) {
-                    InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
-                            config.getAccountId());
-                    storeRegistry.setInAppStore(inAppStore);
-                    callbackManager.addChangeUserCallback(inAppStore);
-                }
-                if (storeRegistry.getImpressionStore() == null) {
-                    ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo,
-                            config.getAccountId());
-                    storeRegistry.setImpressionStore(impStore);
-                    callbackManager.addChangeUserCallback(impStore);
-                }
-                if (storeRegistry.getInAppAssetsStore() == null) {
-                    InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, deviceInfo, config.getAccountId());
-                    storeRegistry.setInAppAssetsStore(assetsStore);
-                }
-            }
-            return null;
-        });
-
         TriggersMatcher triggersMatcher = new TriggersMatcher();
         TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
         ImpressionManager impressionManager = new ImpressionManager(storeRegistry);
@@ -139,9 +111,32 @@ class CleverTapFactory {
         );
         coreState.setEvaluationManager(evaluationManager);
 
-        Task<Void> taskLoadSuppressedAndServerSideInAppsId = CTExecutorFactory.executors(config).ioTask();
-        taskLoadSuppressedAndServerSideInAppsId.execute("LoadSuppressedAndServerSideInAppsId", () -> {
-            evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
+        final StoreProvider storeProvider = StoreProvider.getInstance();
+        /*InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                config.getAccountId());*/
+        //ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo, config.getAccountId());
+
+        Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
+        taskInitStores.execute("initStores", () -> {
+            if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
+                if (storeRegistry.getInAppStore() == null) {
+                    InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                            config.getAccountId());
+                    storeRegistry.setInAppStore(inAppStore);
+                    evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
+                    callbackManager.addChangeUserCallback(inAppStore);
+                }
+                if (storeRegistry.getImpressionStore() == null) {
+                    ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo,
+                            config.getAccountId());
+                    storeRegistry.setImpressionStore(impStore);
+                    callbackManager.addChangeUserCallback(impStore);
+                }
+                if (storeRegistry.getInAppAssetsStore() == null) {
+                    InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, deviceInfo, config.getAccountId());
+                    storeRegistry.setInAppAssetsStore(assetsStore);
+                }
+            }
             return null;
         });
 
