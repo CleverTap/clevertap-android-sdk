@@ -314,7 +314,7 @@ class EvaluationManager constructor(
     fun loadSuppressedCSAndEvaluatedSSInAppsIds() {
         storeRegistry.inAppStore?.let { store ->
             evaluatedServerSideCampaignIds =
-                store.readEvaluatedServerSideInAppIds().toList<Long>() as MutableList<Long>
+                store.readEvaluatedServerSideInAppIds().mapNotNull { it.toLongOrNull() } as MutableList<Long>
             suppressedClientSideInApps = JsonUtil.listFromJson(store.readSuppressedClientSideInAppIds())
         }
     }
@@ -322,9 +322,7 @@ class EvaluationManager constructor(
     @VisibleForTesting
     internal fun saveEvaluatedServerSideInAppIds() {
         storeRegistry.inAppStore?.storeEvaluatedServerSideInAppIds(
-            JsonUtil.listToJsonArray(
-                evaluatedServerSideCampaignIds
-            )
+            evaluatedServerSideCampaignIds.map { it.toString() }.toSet()
         )
     }
 

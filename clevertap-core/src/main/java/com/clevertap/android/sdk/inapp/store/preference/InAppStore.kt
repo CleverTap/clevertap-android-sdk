@@ -111,8 +111,8 @@ class InAppStore(
         encryptedString?.apply { ctPreference.writeString(INAPP_KEY, this) }
     }
 
-    fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: JSONArray) {
-        ctPreference.writeString(PREFS_EVALUATED_INAPP_KEY_SS, evaluatedServerSideInAppIds.toString())
+    fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: Set<String>) {
+        ctPreference.writeStringSet(PREFS_EVALUATED_INAPP_KEY_SS, evaluatedServerSideInAppIds)
     }
 
     fun storeSuppressedClientSideInAppIds(suppressedClientSideInAppIds: JSONArray) {
@@ -150,11 +150,15 @@ class InAppStore(
         return JSONArray(ssInAppsMetaData)
     }
 
-    fun readEvaluatedServerSideInAppIds(): JSONArray {
-        val evaluatedServerSideInAppIds = ctPreference.readString(PREFS_EVALUATED_INAPP_KEY_SS, "")
-        if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONArray()
+    fun readEvaluatedServerSideInAppIds(): Set<String> {
+        val evaluatedServerSideInAppIds = ctPreference.readStringSet(PREFS_EVALUATED_INAPP_KEY_SS, emptySet())
 
-        return JSONArray(evaluatedServerSideInAppIds)
+        // If the set is null or empty, return an empty set
+        if (evaluatedServerSideInAppIds.isNullOrEmpty()) {
+            return emptySet()
+        }
+
+        return evaluatedServerSideInAppIds
     }
 
     fun readSuppressedClientSideInAppIds(): JSONArray {
