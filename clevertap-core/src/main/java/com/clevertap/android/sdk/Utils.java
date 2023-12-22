@@ -12,6 +12,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
@@ -37,11 +38,14 @@ import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation;
 import com.clevertap.android.sdk.network.DownloadedBitmap;
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
 import com.google.firebase.messaging.RemoteMessage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -564,4 +568,19 @@ public final class Utils {
         return EARTH_DIAMETER * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
+    /**
+     * Reads the content of a file from the "assets" folder.
+     *
+     * @param context  The application context.
+     * @param fileName The name of the file to be read from the "assets" folder.
+     * @return The content of the file as a String.
+     * @throws IOException If an I/O error occurs while reading the file.
+     */
+    public static String readAssetFile(Context context, String fileName) throws IOException {
+        AssetManager assetManager = context.getAssets();
+        try (InputStream inputStream = assetManager.open(fileName)) {
+            // Read the entire content of the file into a String
+            return new Scanner(inputStream).useDelimiter("\\A").next();
+        }
+    }
 }
