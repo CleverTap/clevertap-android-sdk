@@ -76,6 +76,11 @@ public interface Constants {
     String ERROR_KEY = "wzrk_error";
     int PUSH_DELAY_MS = 1000;
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
+    String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
+    String INAPP_IMAGE_INTERSTITIAL_TYPE = "image-interstitial";
+    String INAPP_IMAGE_INTERSTITIAL_CONFIG = "imageInterstitialConfig";
+    String INAPP_HTML_SPLIT = "\"##Vars##\"";
+    String INAPP_IMAGE_INTERSTITIAL_HTML_NAME = "image_interstitial.html";
     String INBOX_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inbox";
     String DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_adunit";
     String INAPP_HTML_TAG = "html";
