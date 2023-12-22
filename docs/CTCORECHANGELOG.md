@@ -1,5 +1,21 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 5.2.2 (December 22, 2023)
+
+#### New Features
+* Migrates SDK dependency management to Version Catalog
+
+#### Bug Fixes
+* Fixes a bug where JavaScript was not working for custom html InApp header/footer templates.
+* Fixes an **NPE** related to AppInbox APIs.
+* Fixes a **ClassCastException** in `defineVariable` API of Product Experiences.
+* Fixes a resource name conflict with the firebase library in `fcm_fallback_notification_channel_label`
+* Fixes the scope of `CTInboxMessageContent.java` to allow access to its methods.
+* Fixes a StrictMode Violation spawning from `ctVariables.init()`.
+* Removes use of lossy conversions leading to an issue in PushTemplates.
+* Updates `PendingIntent.FLAG_MUTABLE` to `PendingIntent.FLAG_IMMUTABLE` to prevent vulnerabilities in pre-launch report on PlayStore
+* Handles an edge case related to migration of encryption level when local db is out of memory
+
 ### Version 5.2.1 (October 12, 2023)
 
 #### New Features
