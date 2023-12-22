@@ -2,7 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.webkit.JavascriptInterface;
 import androidx.annotation.RestrictTo;
-import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
+import com.clevertap.android.sdk.inapp.CTInAppBaseFragment;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +17,7 @@ import org.json.JSONObject;
 public class CTWebInterface {
 
     private final WeakReference<CleverTapAPI> weakReference;
-    private CTInAppBaseFullFragment inAppBaseFullFragment;
+    private CTInAppBaseFragment inAppBaseFragment;
 
     public CTWebInterface(CleverTapAPI instance) {
         this.weakReference = new WeakReference<>(instance);
@@ -31,9 +31,9 @@ public class CTWebInterface {
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public CTWebInterface(CleverTapAPI instance, CTInAppBaseFullFragment inAppBaseFullFragment){
+    public CTWebInterface(CleverTapAPI instance, CTInAppBaseFragment inAppBaseFragment){
         this.weakReference = new WeakReference<>(instance);
-        this.inAppBaseFullFragment = inAppBaseFullFragment;
+        this.inAppBaseFragment = inAppBaseFragment;
     }
 
     /**
@@ -62,8 +62,8 @@ public class CTWebInterface {
             Logger.d("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
-            if (inAppBaseFullFragment != null) {
-                inAppBaseFullFragment.didDismiss(null);
+            if (inAppBaseFragment != null) {
+                inAppBaseFragment.didDismiss(null);
             }
         }
     }

@@ -1,5 +1,9 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.2.1 (December 22, 2023)
+#### Bug Fixes
+* Updates `PendingIntent.FLAG_MUTABLE` to `PendingIntent.FLAG_IMMUTABLE` to prevent vulnerabilities in pre-launch report on PlayStore
+
 ### Version 1.2.0 (October 27, 2023)
 #### New features
 * Adds support for developer defined default notification channel for PushTemplates. Please refer to

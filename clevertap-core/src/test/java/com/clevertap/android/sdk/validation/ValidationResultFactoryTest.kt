@@ -94,13 +94,13 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 512,
                 Constants.CHANNEL_ID_MISSING_IN_PAYLOAD,
                 keysArr,
-                "Unable to render notification, channelId is required but not provided in the notification payload: $key"
+                "ChannelId is required for API 26+ but not provided in the notification payload. Falling to default channel: $key"
             ),
             ValidationIO(
                 512,
                 Constants.CHANNEL_ID_NOT_REGISTERED,
                 keysArr,
-                "Unable to render notification on channelId: $key as it is not registered by the app."
+                "Unable to render notification on channelId: $key as it is not registered by the app. Falling to default channel: "
             ),
             ValidationIO(
                 512,

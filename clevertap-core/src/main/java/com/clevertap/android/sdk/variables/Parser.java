@@ -159,7 +159,7 @@ public class Parser {
     // we first call var.define(..) with field name, value and kind
     final Var<T> var = Var.define(name, value, kind, ctVariables);
     if (var == null) {
-      log("Something went wrong, var is null, returning");
+      log("Something went wrong, variable '" + name + "' is null, returning");
       return;
     }
 
