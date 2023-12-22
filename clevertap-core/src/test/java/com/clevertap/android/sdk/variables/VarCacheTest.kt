@@ -49,7 +49,7 @@ class VarCacheTest : BaseTestCase() {
 
     parser.parseVariables(NullDefaultValue())
 
-    assertNull(varCache.getVariable<Int>("string_with_null").value())
+    assertNull(varCache.getVariable<Int>("string_with_null"))
   }
 
   @Test
@@ -58,7 +58,7 @@ class VarCacheTest : BaseTestCase() {
 
     Var.define<String>("var_string", null, ctVariables)
 
-    assertNull(varCache.getVariable<Int>("var_string").value())
+    assertNull(varCache.getVariable<Int>("var_string"))
   }
 
   @Test
