@@ -3264,10 +3264,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return Returns the Var instance.
      */
     public <T> Var<T> defineVariable(String name, T defaultValue) {
-        if (defaultValue == null) {
-            Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '" + name + "'.");
-            return null;
-        }
         return Var.define(name, defaultValue,coreState.getCTVariables());
     }
 
