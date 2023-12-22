@@ -93,14 +93,19 @@ class InAppStoreTest {
     @Test
     fun `storeEvaluatedServerSideInAppIds writes JSONArray to ctPreference`() {
         // Arrange
-        val evaluatedServerSideInAppIds = JSONArray("[100000,1000002,100000001]")
+        val evaluatedServerSideInAppIds = setOf("100000", "1000002", "10000000")
         every { ctPreference.writeString(any(), any()) } just Runs
 
         // Act
         inAppStore.storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds)
 
         // Assert
-        verify { ctPreference.writeString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, "[100000,1000002,100000001]") }
+        verify {
+            ctPreference.writeStringSet(
+                Constants.PREFS_EVALUATED_INAPP_KEY_SS,
+                setOf("100000", "1000002", "10000000")
+            )
+        }
     }
 
     @Test
