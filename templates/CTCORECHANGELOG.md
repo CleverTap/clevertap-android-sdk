@@ -13,7 +13,6 @@
 * Fixes the scope of `CTInboxMessageContent.java` to allow access to its methods.
 * Fixes a StrictMode Violation spawning from `ctVariables.init()`.
 * Removes use of lossy conversions leading to an issue in PushTemplates.
-* Updates `PendingIntent.FLAG_MUTABLE` to `PendingIntent.FLAG_IMMUTABLE` to prevent vulnerabilities in pre-launch report on PlayStore
 * Handles an edge case related to migration of encryption level when local db is out of memory
 
 ### Version 5.2.1 (October 12, 2023)
