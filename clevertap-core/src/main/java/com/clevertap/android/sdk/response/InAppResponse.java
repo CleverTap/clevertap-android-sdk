@@ -16,6 +16,7 @@ import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
@@ -66,8 +67,9 @@ public class InAppResponse extends CleverTapResponseDecorator {
             final ImpressionStore impressionStore = storeRegistry.getImpressionStore();
             final InAppStore inAppStore = storeRegistry.getInAppStore();
             final InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
+            final LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
 
-            if (impressionStore == null || inAppStore == null || inAppAssetStore == null) {
+            if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null) {
                 logger.verbose(config.getAccountId(), "Stores are not initialised, ignoring inapps!!!!");
                 return;
             }
@@ -134,7 +136,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                     inAppResourceProvider, logger
             );*/
 
-            InAppImageRepoImpl impl = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore);
+            InAppImageRepoImpl impl = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore, legacyInAppStore);
             impl.fetchAllImages(res.getPreloadImage());
 
             if (isFullResponse) {

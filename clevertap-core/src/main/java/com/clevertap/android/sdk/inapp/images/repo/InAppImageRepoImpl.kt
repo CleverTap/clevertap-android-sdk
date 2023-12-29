@@ -3,11 +3,13 @@ package com.clevertap.android.sdk.inapp.images.repo
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 
 internal class InAppImageRepoImpl(
     override val cleanupStrategy: InAppCleanupStrategy,
     override val preloaderStrategy: InAppImagePreloaderStrategy,
-    private val inAppAssetsStore: InAppAssetsStore
+    private val inAppAssetsStore: InAppAssetsStore,
+    private val legacyInAppsStore: LegacyInAppStore
 ) : InAppResourcesRepo {
 
     companion object {
@@ -37,6 +39,12 @@ internal class InAppImageRepoImpl(
     override fun cleanupStaleImages(validUrls: List<String>) {
 
         val currentTime = System.currentTimeMillis()
+
+        if (currentTime - legacyInAppsStore.lastCleanupTs() < EXPIRY_OFFSET_MILLIS) {
+            // limiting cleanup once per 14 days
+            return
+        }
+
         val valid = validUrls.associateWith { it }
 
         val allAssetUrls = inAppAssetsStore.getAllAssetUrls()
@@ -53,5 +61,6 @@ internal class InAppImageRepoImpl(
         }
 
         cleanupStrategy.clearAssets(cleanupUrls, successBlock)
+        legacyInAppsStore.updateAssetCleanupTs(currentTime)
     }
 }
