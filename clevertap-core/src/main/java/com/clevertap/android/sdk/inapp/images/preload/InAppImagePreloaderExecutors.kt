@@ -2,12 +2,13 @@ package com.clevertap.android.sdk.inapp.images.preload
 
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.CTExecutors
 
 internal class InAppImagePreloaderExecutors @JvmOverloads constructor(
-    private val executor: CTExecutors,
     override val inAppImageProvider: InAppResourceProvider,
     override val logger: ILogger? = null,
+    private val executor: CTExecutors = CTExecutorFactory.executorResourceDownloader(),
     override val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
 ) : InAppImagePreloaderStrategy {
 

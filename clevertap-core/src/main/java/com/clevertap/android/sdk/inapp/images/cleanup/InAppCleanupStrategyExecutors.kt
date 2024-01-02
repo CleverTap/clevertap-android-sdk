@@ -1,11 +1,12 @@
 package com.clevertap.android.sdk.inapp.images.cleanup
 
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.CTExecutors
 
-internal class InAppCleanupStrategyExecutors(
+internal class InAppCleanupStrategyExecutors @JvmOverloads constructor(
     override val inAppResourceProvider: InAppResourceProvider,
-    private val executor: CTExecutors
+    private val executor: CTExecutors = CTExecutorFactory.executorResourceDownloader()
 ) : InAppCleanupStrategy {
 
     companion object {
