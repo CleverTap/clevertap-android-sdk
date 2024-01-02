@@ -12,12 +12,27 @@ internal class InAppImagePreloaderExecutors @JvmOverloads constructor(
 ) : InAppImagePreloaderStrategy {
 
     override fun preloadImages(urls: List<String>, successBlock: (url: String) -> Unit) {
+        preloadAssets(urls, successBlock) { url ->
+            inAppImageProvider.fetchInAppImage(url)
+        }
+    }
 
+    override fun preloadGifs(urls: List<String>, successBlock: (url: String) -> Unit) {
+        preloadAssets(urls, successBlock) { url ->
+            inAppImageProvider.fetchInAppGif(url)
+        }
+    }
+
+    private fun preloadAssets(
+        urls: List<String>,
+        successBlock: (url: String) -> Unit,
+        assetBlock: (url: String) -> Any?
+    ) {
         for (url in urls) {
             val task = executor.ioTaskNonUi<Unit>()
 
             task.execute("tag") {
-                val bitmap = inAppImageProvider.fetchInAppImage(url)
+                val bitmap = assetBlock(url)
                 if (bitmap != null) {
                     successBlock.invoke(url)
                 }
