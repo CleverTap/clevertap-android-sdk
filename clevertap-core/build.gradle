@@ -1,15 +1,14 @@
-import static de.fayard.refreshVersions.core.Versions.versionFor
 ext {
     libraryName = 'CleverTapAndroidSDK'
     artifact = 'clevertap-android-sdk'
     libraryDescription = 'The CleverTap Android SDK'
 
-    libraryVersion = versionFor("version.com.clevertap.android..clevertap-android-sdk")
+    libraryVersion = libs.versions.clevertap.android.sdk.get()
 
     licenseName = 'The Apache Software License, Version 2.0'
     licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = ["Apache-2.0"]
-    minSdkVersionVal = Android.minSdkVersionVal
+    minSdkVersionVal = libs.versions.android.minSdk.get().toInteger()
 }
 
 apply from: "../gradle-scripts/commons.gradle"
@@ -26,39 +25,41 @@ android {
             }
         }
     }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
-    compileOnly Libs.firebase_messaging
-    compileOnly Libs.exoplayer
-    compileOnly Libs.exoplayer_hls
-    compileOnly Libs.exoplayer_ui
-    compileOnly Libs.glide
+    compileOnly(libs.firebase.messaging)
+    compileOnly(libs.bundles.exoplayer)
+    compileOnly(libs.glide)
     //for notification
-    compileOnly Libs.androidx_core_core
-    compileOnly Libs.viewpager
-    implementation Libs.appcompat
-    implementation Libs.recyclerview
-    compileOnly Libs.material
-    compileOnly Libs.fragment
-    implementation Libs.installreferrer
+    compileOnly(libs.androidx.core.core)
+    compileOnly(libs.androidx.viewpager)
+    compileOnly(libs.android.material)
+    compileOnly(libs.androidx.fragment)
 
-    implementation Libs.work_runtime
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.installreferrer)
+    implementation(libs.androidx.work.runtime)
+
     // Unit testing dependencies
-    testImplementation project(':test_shared')
-    testImplementation Libs.firebase_messaging
-    testImplementation "io.mockk:mockk:1.13.5"
+    testImplementation(project(":test_shared"))
+    testImplementation(libs.firebase.messaging)
+    testImplementation(libs.test.mockk)
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 
-    androidTestImplementation "androidx.work:work-testing:2.7.1"
-    androidTestImplementation "androidx.test:runner:1.5.2"
-    androidTestImplementation "androidx.test:rules:1.5.0"
+    androidTestImplementation(libs.test.work.testing)
+    androidTestImplementation(libs.test.runner)
+    androidTestImplementation(libs.test.rules)
     // Optional -- UI testing with Espresso
-    androidTestImplementation Libs.espresso_core
+    androidTestImplementation(libs.test.espresso.core)
     // Optional -- UI testing with UI Automator
-    androidTestImplementation "androidx.test.uiautomator:uiautomator:2.3.0-alpha03"
+    androidTestImplementation(libs.test.uiautomator)
     // Optional -- UI testing with Compose
-    androidTestImplementation Libs.androidx_test_ext_junit
+    androidTestImplementation(libs.test.ext.junit)
 }
 
 sonarqube {

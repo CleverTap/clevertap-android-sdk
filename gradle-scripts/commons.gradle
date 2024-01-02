@@ -1,9 +1,10 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-//apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply from: "${project.rootDir}/gradle-scripts/jacoco_root.gradle"
+apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
+apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"
 
 ext {
     Repo = 'Maven'
@@ -30,12 +31,12 @@ group = publishedGroupId
 def (major,minor,patch) = libraryVersion.split("\\.")
 
 android {
-    compileSdkVersion Android.compileSdkVersionVal
-    buildToolsVersion Android.buildToolsVersionVal
+    compileSdkVersion libs.versions.android.compileSdk.get().toInteger()
+    buildToolsVersion libs.versions.android.buildTools.get()
 
     defaultConfig {
-        minSdkVersion minSdkVersionVal
-        targetSdkVersion Android.targetSdkVersionVal
+        minSdkVersion libs.versions.android.minSdk.get().toInteger()
+        targetSdkVersion libs.versions.android.targetSdk.get().toInteger()
         versionCode "${major}0${minor}0${patch}".toInteger()
         versionName libraryVersion
 
@@ -183,5 +184,3 @@ afterEvaluate {
 signing {
     sign publishing.publications
 }
-apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
-apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"

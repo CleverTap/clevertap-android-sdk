@@ -159,6 +159,22 @@ class CleverTapFactory {
             }
         });
 
+        VarCache varCache = new VarCache(config, context);
+        coreState.setVarCache(varCache);
+
+        CTVariables ctVariables = new CTVariables(varCache);
+        coreState.setCTVariables(ctVariables);
+        coreState.getControllerManager().setCtVariables(ctVariables);
+
+        Parser parser = new Parser(ctVariables);
+        coreState.setParser(parser);
+
+        Task<Void> taskVariablesInit = CTExecutorFactory.executors(config).ioTask();
+        taskVariablesInit.execute("initCTVariables", () -> {
+            ctVariables.init();
+            return null;
+        });
+
         InAppResponse inAppResponse = new InAppResponse(
                 config,
                 controllerManager,
@@ -276,18 +292,6 @@ class CleverTapFactory {
                 coreMetaData, controllerManager, sessionManager,
                 localDataStore, callbackManager, baseDatabaseManager, ctLockManager, cryptHandler);
         coreState.setLoginController(loginController);
-
-        VarCache varCache = new VarCache(config, context);
-        coreState.setVarCache(varCache);
-
-        CTVariables ctVariables = new CTVariables(varCache);
-        coreState.setCTVariables(ctVariables);
-        coreState.getControllerManager().setCtVariables(ctVariables);
-
-        Parser parser = new Parser(ctVariables);
-        coreState.setParser(parser);
-
-        ctVariables.init();
 
         return coreState;
     }

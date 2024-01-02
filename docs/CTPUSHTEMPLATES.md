@@ -20,8 +20,8 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:1.1.0"
-implementation "com.clevertap.android:clevertap-android-sdk:5.2.1" // 4.4.0 and above
+implementation "com.clevertap.android:push-templates:1.2.1"
+implementation "com.clevertap.android:clevertap-android-sdk:5.2.2" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -534,6 +534,7 @@ Product Catalog | 1:1 | .JPG
 
 * For Auto and Manual Carousel the image dimensions should not exceed more than 840x560 for Android 11 and Android 12 devices and with 3:2 image aspect ratio
 * For images in Basic, Auto/Manual Carousel templates the image dimensions should not exceed more than 400x200 for only Android 13+ devices.
+* For images in Five Icons template the image dimensions should not exceed more than 300x300 for only Android 13+ devices.
 * For Product Catalog image aspect ratio should be 1:1 and image size should be less than 80kb for Android 11 and Android 12 devices
 * For Zero Bezel it's recommended that if your image has any text it should be present in the middle of the image for Android 12+ devices. 
 * For Android 12+ devices it's recommended that if your image has any text it should be present in the middle of the image.

@@ -515,10 +515,10 @@ public class DBAdapter {
             return messageDAOArrayList;
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error retrieving records from " + tName, e);
-            return null;
+            return messageDAOArrayList;
         } catch (JSONException e) {
             getConfigLogger().verbose("Error retrieving records from " + tName, e.getMessage());
-            return null;
+            return messageDAOArrayList;
         } finally {
             dbHelper.close();
         }

@@ -109,20 +109,18 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                     "${defaultInstance?.cleverTapAttributionIdentifier}"
         )*/
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CleverTapAPI.createNotificationChannel(
-                this, "BRTesting", "Core",
-                "Core notifications", NotificationManager.IMPORTANCE_MAX, true
-            )
-            CleverTapAPI.createNotificationChannel(
-                this, "PTTesting", "Push templates",
-                "All push templates", NotificationManager.IMPORTANCE_MAX, true
-            )
-            CleverTapAPI.createNotificationChannel(
-                this, "BlockBRTesting", "Blocked Core",
-                "Blocked Core notifications", NotificationManager.IMPORTANCE_NONE, true
-            )
-        }
+        CleverTapAPI.createNotificationChannel(
+            this, "BRTesting", "Core",
+            "Core notifications", NotificationManager.IMPORTANCE_MAX, true
+        )
+        CleverTapAPI.createNotificationChannel(
+            this, "PTTesting", "Push templates",
+            "All push templates", NotificationManager.IMPORTANCE_MAX, true
+        )
+        CleverTapAPI.createNotificationChannel(
+            this, "BlockBRTesting", "Blocked Core",
+            "Blocked Core notifications", NotificationManager.IMPORTANCE_NONE, true
+        )
     }
 
     override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
