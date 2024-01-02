@@ -37,9 +37,7 @@ class InAppResponseAdapter(
         }
     }
 
-    val preloadImage: List<String>
-
-    val allImages: List<String>
+    val preloadImages: List<String>
 
     val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_JSON_RESPONSE_KEY)
 
@@ -56,12 +54,7 @@ class InAppResponseAdapter(
         //fetchMediaUrls(appLaunchServerSideInApps, list)
         fetchMediaUrls(clientSideInApps, list)
 
-        preloadImage = list
-
-        val allImagesList = list.toMutableList()
-        fetchMediaUrls(serverSideInApps, allImagesList)
-
-        allImages = allImagesList
+        preloadImages = list
     }
 
     private fun fetchMediaUrls(data: Pair<Boolean, JSONArray?>, list: MutableList<String>) {
