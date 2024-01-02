@@ -34,6 +34,16 @@ class InAppImageRepoTest {
     }
 
     @Test
+    fun `fetch all gifs use case`() {
+        val urls = listOf("url1", "url2", "url3")
+        inAppImageRepoImpl.fetchAllGifs(urls)
+
+        verify {
+            preloaderStrategy.preloadGifs(urls, any())
+        }
+    }
+
+    @Test
     fun `cleanup all images use case`() {
 
         // urls from api call

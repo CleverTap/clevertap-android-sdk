@@ -39,7 +39,7 @@ internal class InAppImageRepoImpl(
             inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
         }
 
-        preloaderStrategy.preloadImages(urls, successBlock)
+        preloaderStrategy.preloadGifs(urls, successBlock)
     }
 
     /**
