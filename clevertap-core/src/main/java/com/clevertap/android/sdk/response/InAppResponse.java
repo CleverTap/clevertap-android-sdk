@@ -8,9 +8,9 @@ import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyCoroutine;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderCoroutine;
+import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderExecutors;
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
 import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
@@ -128,13 +128,12 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-            InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
-            InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
 
-            /*InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(
-                    CTExecutorFactory.executorResourceDownloader(),
-                    inAppResourceProvider, logger
-            );*/
+            //InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
+            //InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
+
+            InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(inAppResourceProvider, logger);
+            InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
 
             InAppImageRepoImpl assetRepo = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore, legacyInAppStore);
             assetRepo.fetchAllImages(res.getPreloadImages());

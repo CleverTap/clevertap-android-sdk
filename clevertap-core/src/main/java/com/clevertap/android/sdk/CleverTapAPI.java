@@ -40,8 +40,8 @@ import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyCoroutine;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderCoroutine;
+import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderExecutors;
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
 import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
@@ -3520,8 +3520,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-        InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
-        InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
+        InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
+        InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(
+                inAppResourceProvider,
+                logger
+        );
 
         InAppImageRepoImpl impl = new InAppImageRepoImpl(
                 cleanupStrategy,
