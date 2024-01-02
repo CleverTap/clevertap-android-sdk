@@ -52,9 +52,9 @@ class InAppResponseAdapter(
     init {
         val list = mutableListOf<String>()
 
-        fetchMediaUrls(legacyInApps, list)
+        //fetchMediaUrls(legacyInApps, list)
+        //fetchMediaUrls(appLaunchServerSideInApps, list)
         fetchMediaUrls(clientSideInApps, list)
-        fetchMediaUrls(appLaunchServerSideInApps, list)
 
         preloadImage = list
 
