@@ -38,6 +38,7 @@ class InAppResponseAdapter(
     }
 
     val preloadImages: List<String>
+    val preloadGifs: List<String>
 
     val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_JSON_RESPONSE_KEY)
 
@@ -48,16 +49,22 @@ class InAppResponseAdapter(
     val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
 
     init {
-        val list = mutableListOf<String>()
+        val imageList = mutableListOf<String>()
+        val gifList = mutableListOf<String>()
 
         //fetchMediaUrls(legacyInApps, list)
         //fetchMediaUrls(appLaunchServerSideInApps, list)
-        fetchMediaUrls(clientSideInApps, list)
+        fetchMediaUrls(clientSideInApps, imageList, gifList)
 
-        preloadImages = list
+        preloadImages = imageList
+        preloadGifs = imageList
     }
 
-    private fun fetchMediaUrls(data: Pair<Boolean, JSONArray?>, list: MutableList<String>) {
+    private fun fetchMediaUrls(
+        data: Pair<Boolean, JSONArray?>,
+        imageList: MutableList<String>,
+        gifList: MutableList<String>
+    ) {
         if (data.first) {
             data.second?.iterator<JSONObject> { jsonObject ->
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
@@ -67,7 +74,11 @@ class InAppResponseAdapter(
                         .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
 
                     if (portraitMedia != null && portraitMedia.mediaUrl != null) {
-                        list.add(portraitMedia.mediaUrl)
+                        if (portraitMedia.isImage) {
+                            imageList.add(portraitMedia.mediaUrl)
+                        } else if (portraitMedia.isGIF) {
+                            gifList.add(portraitMedia.mediaUrl)
+                        }
                     }
                 }
                 val landscape = jsonObject.optJSONObject(Constants.KEY_MEDIA_LANDSCAPE)
@@ -76,7 +87,11 @@ class InAppResponseAdapter(
                             .initWithJSON(landscape, Configuration.ORIENTATION_LANDSCAPE)
 
                     if (landscapeMedia != null && landscapeMedia.mediaUrl != null) {
-                        list.add(landscapeMedia.mediaUrl)
+                        if (landscapeMedia.isImage) {
+                            imageList.add(landscapeMedia.mediaUrl)
+                        } else if (landscapeMedia.isGIF) {
+                            gifList.add(landscapeMedia.mediaUrl)
+                        }
                     }
                 }
             }
