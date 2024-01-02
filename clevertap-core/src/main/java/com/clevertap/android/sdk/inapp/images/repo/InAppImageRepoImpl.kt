@@ -45,6 +45,15 @@ internal class InAppImageRepoImpl(
             return
         }
 
+        cleanupStaleImagesNow(validUrls, currentTime)
+        legacyInAppsStore.updateAssetCleanupTs(currentTime)
+    }
+
+    @JvmOverloads
+    fun cleanupStaleImagesNow(
+        validUrls: List<String> = emptyList(),
+        currentTime: Long = System.currentTimeMillis()
+    ) {
         val valid = validUrls.associateWith { it }
 
         val allAssetUrls = inAppAssetsStore.getAllAssetUrls()
@@ -56,11 +65,17 @@ internal class InAppImageRepoImpl(
                         && (currentTime > inAppAssetsStore.expiryForUrl(key))
             }
 
+        cleanupAllImages(cleanupUrls)
+    }
+
+    @JvmOverloads
+    fun cleanupAllImages(
+        cleanupUrls: List<String> = inAppAssetsStore.getAllAssetUrls().toList()
+    ) {
         val successBlock: (url: String) -> Unit = { url ->
             inAppAssetsStore.clearAssetUrl(url)
         }
 
         cleanupStrategy.clearAssets(cleanupUrls, successBlock)
-        legacyInAppsStore.updateAssetCleanupTs(currentTime)
     }
 }

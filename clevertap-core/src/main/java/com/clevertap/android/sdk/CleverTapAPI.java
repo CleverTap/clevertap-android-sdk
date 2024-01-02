@@ -38,9 +38,16 @@ import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
+import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyCoroutine;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderCoroutine;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
+import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -3487,5 +3494,45 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public String getLocale() {
         return coreState.getDeviceInfo().getCustomLocale();
+    }
+
+    /**
+     * Deletes all images and gifs which are preloaded for inapps in cs mode
+     *
+     * @param expiredOnly to clear only assets which will not be needed further for inapps
+     */
+    public void clearInAppResources(boolean expiredOnly) {
+
+        Logger logger = coreState.getConfig().getLogger();
+
+        StoreRegistry storeRegistry = coreState.getStoreRegistry();
+        if (storeRegistry == null) {
+            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
+        LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
+
+        if (inAppAssetStore == null || legacyInAppStore == null) {
+            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
+        InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
+        InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
+
+        InAppImageRepoImpl impl = new InAppImageRepoImpl(
+                cleanupStrategy,
+                preloadStrategy,
+                inAppAssetStore,
+                legacyInAppStore
+        );
+        if (expiredOnly) {
+            impl.cleanupStaleImagesNow();
+        } else {
+            impl.cleanupAllImages();
+        }
     }
 }

@@ -43,8 +43,7 @@ class CleverTapFactory {
         CoreState coreState = new CoreState(context);
 
         StoreRegistry storeRegistry = new StoreRegistry();
-        storeRegistry.setLegacyInAppStore(
-                StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
+        storeRegistry.setLegacyInAppStore(StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
         coreState.setStoreRegistry(storeRegistry);
 
         CoreMetaData coreMetaData = new CoreMetaData();
