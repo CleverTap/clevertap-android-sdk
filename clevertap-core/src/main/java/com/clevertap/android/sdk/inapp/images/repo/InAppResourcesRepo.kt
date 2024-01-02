@@ -9,6 +9,7 @@ internal interface InAppResourcesRepo {
     val preloaderStrategy: InAppImagePreloaderStrategy
 
     fun fetchAllImages(urls: List<String>)
+    fun fetchAllGifs(urls: List<String>)
 
     fun cleanupStaleImages(validUrls: List<String>)
 }

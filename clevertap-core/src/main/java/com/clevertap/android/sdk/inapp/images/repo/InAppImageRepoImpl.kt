@@ -33,6 +33,15 @@ internal class InAppImageRepoImpl(
         preloaderStrategy.preloadImages(urls, successBlock)
     }
 
+    override fun fetchAllGifs(urls: List<String>) {
+        val successBlock: (url: String) -> Unit = { url ->
+            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
+            inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
+        }
+
+        preloaderStrategy.preloadImages(urls, successBlock)
+    }
+
     /**
      * Checks all existing cached data and check if it is in valid urls, if not evict item from cache
      */
