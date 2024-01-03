@@ -43,8 +43,7 @@ class CleverTapFactory {
         CoreState coreState = new CoreState(context);
 
         StoreRegistry storeRegistry = new StoreRegistry();
-        storeRegistry.setLegacyInAppStore(
-                StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
+        storeRegistry.setLegacyInAppStore(StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
         coreState.setStoreRegistry(storeRegistry);
 
         CoreMetaData coreMetaData = new CoreMetaData();
@@ -158,6 +157,22 @@ class CleverTapFactory {
                 }
                 return null;
             }
+        });
+
+        VarCache varCache = new VarCache(config, context);
+        coreState.setVarCache(varCache);
+
+        CTVariables ctVariables = new CTVariables(varCache);
+        coreState.setCTVariables(ctVariables);
+        coreState.getControllerManager().setCtVariables(ctVariables);
+
+        Parser parser = new Parser(ctVariables);
+        coreState.setParser(parser);
+
+        Task<Void> taskVariablesInit = CTExecutorFactory.executors(config).ioTask();
+        taskVariablesInit.execute("initCTVariables", () -> {
+            ctVariables.init();
+            return null;
         });
 
         InAppResponse inAppResponse = new InAppResponse(
@@ -277,18 +292,6 @@ class CleverTapFactory {
                 coreMetaData, controllerManager, sessionManager,
                 localDataStore, callbackManager, baseDatabaseManager, ctLockManager, cryptHandler);
         coreState.setLoginController(loginController);
-
-        VarCache varCache = new VarCache(config, context);
-        coreState.setVarCache(varCache);
-
-        CTVariables ctVariables = new CTVariables(varCache);
-        coreState.setCTVariables(ctVariables);
-        coreState.getControllerManager().setCtVariables(ctVariables);
-
-        Parser parser = new Parser(ctVariables);
-        coreState.setParser(parser);
-
-        ctVariables.init();
 
         return coreState;
     }

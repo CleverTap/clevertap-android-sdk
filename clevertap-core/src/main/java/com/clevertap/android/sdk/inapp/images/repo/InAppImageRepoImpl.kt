@@ -3,11 +3,13 @@ package com.clevertap.android.sdk.inapp.images.repo
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 
 internal class InAppImageRepoImpl(
     override val cleanupStrategy: InAppCleanupStrategy,
     override val preloaderStrategy: InAppImagePreloaderStrategy,
-    private val inAppAssetsStore: InAppAssetsStore
+    private val inAppAssetsStore: InAppAssetsStore,
+    private val legacyInAppsStore: LegacyInAppStore
 ) : InAppResourcesRepo {
 
     companion object {
@@ -31,12 +33,36 @@ internal class InAppImageRepoImpl(
         preloaderStrategy.preloadImages(urls, successBlock)
     }
 
+    override fun fetchAllGifs(urls: List<String>) {
+        val successBlock: (url: String) -> Unit = { url ->
+            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
+            inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
+        }
+
+        preloaderStrategy.preloadGifs(urls, successBlock)
+    }
+
     /**
      * Checks all existing cached data and check if it is in valid urls, if not evict item from cache
      */
     override fun cleanupStaleImages(validUrls: List<String>) {
 
         val currentTime = System.currentTimeMillis()
+
+        if (currentTime - legacyInAppsStore.lastCleanupTs() < EXPIRY_OFFSET_MILLIS) {
+            // limiting cleanup once per 14 days
+            return
+        }
+
+        cleanupStaleImagesNow(validUrls, currentTime)
+        legacyInAppsStore.updateAssetCleanupTs(currentTime)
+    }
+
+    @JvmOverloads
+    fun cleanupStaleImagesNow(
+        validUrls: List<String> = emptyList(),
+        currentTime: Long = System.currentTimeMillis()
+    ) {
         val valid = validUrls.associateWith { it }
 
         val allAssetUrls = inAppAssetsStore.getAllAssetUrls()
@@ -48,6 +74,13 @@ internal class InAppImageRepoImpl(
                         && (currentTime > inAppAssetsStore.expiryForUrl(key))
             }
 
+        cleanupAllImages(cleanupUrls)
+    }
+
+    @JvmOverloads
+    fun cleanupAllImages(
+        cleanupUrls: List<String> = inAppAssetsStore.getAllAssetUrls().toList()
+    ) {
         val successBlock: (url: String) -> Unit = { url ->
             inAppAssetsStore.clearAssetUrl(url)
         }

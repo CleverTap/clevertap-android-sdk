@@ -11,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.system.measureTimeMillis
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
     override val inAppImageProvider: InAppResourceProvider,
     override val logger: ILogger? = null,
@@ -19,27 +20,40 @@ internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
 ) : InAppImagePreloaderStrategy {
 
     private val jobs: MutableList<Job> = mutableListOf()
+    private val handler = CoroutineExceptionHandler { _, throwable ->
+        logger?.verbose("Cancelled image pre fetch \n ${throwable.stackTrace}")
+    }
+    private val scope = CoroutineScope(dispatchers.io().limitedParallelism(config.parallelDownloads))
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun preloadImages(urls: List<String>, successBlock: (url: String) -> Unit) {
-
-        val handler = CoroutineExceptionHandler { _, throwable ->
-            logger?.verbose("Cancelled image pre fetch \n ${throwable.stackTrace}")
+        preloadAssets(urls, successBlock) { url ->
+            inAppImageProvider.fetchInAppImage(url)
         }
-        val scope = CoroutineScope(dispatchers.io().limitedParallelism(config.parallelDownloads))
+    }
 
+    override fun preloadGifs(urls: List<String>, successBlock: (url: String) -> Unit) {
+        preloadAssets(urls, successBlock) { url ->
+            inAppImageProvider.fetchInAppGif(url)
+        }
+    }
+
+    private fun preloadAssets(
+        urls: List<String>,
+        successBlock: (url: String) -> Unit,
+        assetBlock: (url: String) -> Any?
+    ) {
         urls.forEach { url ->
             val job = scope.launch(handler) {
-                logger?.verbose("started image url fetch $url")
+                logger?.verbose("started asset url fetch $url")
 
                 val mils = measureTimeMillis {
-                    val fetchInAppImage = inAppImageProvider.fetchInAppImage(url)
+                    val fetchInAppImage = assetBlock(url)
                     if (fetchInAppImage != null) {
                         successBlock.invoke(url)
                     }
                 }
 
-                logger?.verbose("finished image url fetch $url in $mils ms")
+                logger?.verbose("finished asset url fetch $url in $mils ms")
             }
             jobs.add(job)
         }

@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.images.repo
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -13,11 +14,13 @@ class InAppImageRepoTest {
     private val inAppImageCleanupStrategy = mockk<InAppCleanupStrategy>(relaxed = true)
     private val preloaderStrategy = mockk<InAppImagePreloaderStrategy>(relaxed = true)
     private val inAppAssetStore = mockk<InAppAssetsStore>(relaxed = true)
+    private val legacyInAppStore = mockk<LegacyInAppStore>(relaxed = true)
 
     private val inAppImageRepoImpl = InAppImageRepoImpl(
         cleanupStrategy = inAppImageCleanupStrategy,
         preloaderStrategy = preloaderStrategy,
-        inAppAssetsStore = inAppAssetStore
+        inAppAssetsStore = inAppAssetStore,
+        legacyInAppsStore = legacyInAppStore
     )
 
     @Test
@@ -27,6 +30,16 @@ class InAppImageRepoTest {
 
         verify {
             preloaderStrategy.preloadImages(urls, any())
+        }
+    }
+
+    @Test
+    fun `fetch all gifs use case`() {
+        val urls = listOf("url1", "url2", "url3")
+        inAppImageRepoImpl.fetchAllGifs(urls)
+
+        verify {
+            preloaderStrategy.preloadGifs(urls, any())
         }
     }
 
@@ -56,5 +69,6 @@ class InAppImageRepoTest {
 
         // assert
         verify { inAppImageCleanupStrategy.clearAssets(expiredUrls.toList(), any()) }
+        verify { legacyInAppStore.updateAssetCleanupTs(any()) }
     }
 }

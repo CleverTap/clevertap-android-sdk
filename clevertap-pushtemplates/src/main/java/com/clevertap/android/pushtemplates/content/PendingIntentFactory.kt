@@ -70,7 +70,7 @@ internal object PendingIntentFactory {
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
             if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
-                flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
             }
             return PendingIntent.getBroadcast(
                 context, requestCode,
@@ -86,7 +86,7 @@ internal object PendingIntentFactory {
 
         var flagsLaunchPendingIntent = PendingIntent.FLAG_CANCEL_CURRENT
         if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
-            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
         }
         return PendingIntent.getBroadcast(
             context, Random().nextInt(),

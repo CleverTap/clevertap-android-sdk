@@ -705,14 +705,6 @@ Please note if using Google Ad Id for apps targeting Android 13+, will have to d
 <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 ```
 
-#### Tracking the Install Referrer
-
-From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver if you are using it and add the following gradle dependency to capture UTM details, app install time, referrer click time and other metrics provided by the Google Install Referrer Library.
-
-```groovy
-    implementation "com.android.installreferrer:installreferrer:2.2"
-```
-
 #### Remote Config Variables
 
 From CleverTap SDK v5.0.0 onwards, you can use Remote Config Variables in your app. Please refer to the [Remote Config Variables doc](Variables.md) to read more on how to integrate this to your app.

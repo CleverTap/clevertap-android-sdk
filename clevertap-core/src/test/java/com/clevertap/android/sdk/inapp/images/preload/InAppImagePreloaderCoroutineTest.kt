@@ -24,6 +24,9 @@ class InAppImagePreloaderCoroutineTest {
     //val mainDispatcherRule = MainDispatcherRule()
 
     private val mockBitmap = Mockito.mock(Bitmap::class.java)
+    private val byteArray = ByteArray(10) { pos ->
+        pos.toByte()
+    }
     private val inAppResourceProvider = Mockito.mock(InAppResourceProvider::class.java)
     private val logger = TestLogger()
 
@@ -57,6 +60,31 @@ class InAppImagePreloaderCoroutineTest {
         for (count in 0 until urls.size) {
             val url = urls[count]
             Mockito.verify(inAppResourceProvider).fetchInAppImage(url)
+        }
+        assertEquals(urls.size, successUrls.size)
+    }
+
+    @Test
+    fun `preload gifs fetches gif from all urls`() = testScheduler.run {
+
+        val urls = mutableListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k")
+        val successUrls = mutableListOf<String>()
+
+        for (url in urls) {
+            Mockito.`when`(inAppResourceProvider.fetchInAppGif(url)).thenReturn(byteArray)
+        }
+
+        val func = fun (url: String) {
+            // dummy func
+            successUrls.add(url)
+        }
+
+        inAppImagePreloaderCoroutine.preloadGifs(urls, func)
+        advanceUntilIdle()
+
+        for (count in 0 until urls.size) {
+            val url = urls[count]
+            Mockito.verify(inAppResourceProvider).fetchInAppGif(url)
         }
         assertEquals(urls.size, successUrls.size)
     }

@@ -8,14 +8,15 @@ import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyCoroutine;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderCoroutine;
+import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderExecutors;
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
 import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
@@ -66,8 +67,9 @@ public class InAppResponse extends CleverTapResponseDecorator {
             final ImpressionStore impressionStore = storeRegistry.getImpressionStore();
             final InAppStore inAppStore = storeRegistry.getInAppStore();
             final InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
+            final LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
 
-            if (impressionStore == null || inAppStore == null || inAppAssetStore == null) {
+            if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null) {
                 logger.verbose(config.getAccountId(), "Stores are not initialised, ignoring inapps!!!!");
                 return;
             }
@@ -126,20 +128,20 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-            InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
-            InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
 
-            /*InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(
-                    CTExecutorFactory.executorResourceDownloader(),
-                    inAppResourceProvider, logger
-            );*/
+            //InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
+            //InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
 
-            InAppImageRepoImpl impl = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore);
-            impl.fetchAllImages(res.getPreloadImage());
+            InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(inAppResourceProvider, logger);
+            InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
+
+            InAppImageRepoImpl assetRepo = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore, legacyInAppStore);
+            assetRepo.fetchAllImages(res.getPreloadImages());
+            assetRepo.fetchAllGifs(res.getPreloadGifs());
 
             if (isFullResponse) {
                 logger.verbose(config.getAccountId(), "Handling cache eviction");
-                impl.cleanupStaleImages(res.getPreloadImage());
+                assetRepo.cleanupStaleImages(res.getPreloadImages());
             } else {
                 logger.verbose(config.getAccountId(), "Ignoring cache eviction");
             }

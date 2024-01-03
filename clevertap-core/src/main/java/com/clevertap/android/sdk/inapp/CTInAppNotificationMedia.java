@@ -102,23 +102,23 @@ public class CTInAppNotificationMedia implements Parcelable {
         }
     }
 
-    boolean isAudio() {
+    public boolean isAudio() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("audio");
     }
 
-    boolean isGIF() {
+    public boolean isGIF() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.equals("image/gif");
     }
 
-    boolean isImage() {
+    public boolean isImage() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("image") && !contentType
                 .equals("image/gif");
     }
 
-    boolean isVideo() {
+    public boolean isVideo() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("video");
     }

@@ -200,8 +200,8 @@ object CryptUtils {
 
 
     /**
-     * This method migrates the encryption level of the value under cachedGUIDsKey stored in the shared preference file
-     * Only the value of the identifier(eg: johndoe@gmail.com) is encrypted/decrypted for this key throughout the sdk
+     * This method migrates the encryption level of the user profiles stored in the local db
+     * Only pii data such as name, phone, email and identity are encrypted from the user profile, remaining are kept as is
      *
      * @param encrypt - Flag to indicate the task to be either encryption or decryption
      * @param config  - The [CleverTapInstanceConfig] object
@@ -240,7 +240,7 @@ object CryptUtils {
                     }
                 }
             }
-            if (dbAdapter.storeUserProfile(config.accountId, profile) == -1L)
+            if (dbAdapter.storeUserProfile(config.accountId, profile) <= -1L)
                 migrationStatus = ENCRYPTION_FLAG_FAIL
         } catch (e: Exception) {
             config.logger.verbose(config.accountId, "Error migrating local DB profile: $e")
@@ -250,14 +250,12 @@ object CryptUtils {
     }
 
     /**
-     * This method migrates the encryption level of the value under cachedGUIDsKey stored in the shared preference file
-     * Only the value of the identifier(eg: johndoe@gmail.com) is encrypted/decrypted for this key throughout the sdk
+     * This method updates the encryptionFlagStatus if encryption fails when new data is added
      *
      * @param context - Context object
      * @param config  - The [CleverTapInstanceConfig] object
      * @param failedFlag - Indicates which encryption has failed
      * @param cryptHandler - The [CryptHandler] object
-     * Returns the status of db migration
      */
     @JvmStatic
     fun updateEncryptionFlagOnFailure(

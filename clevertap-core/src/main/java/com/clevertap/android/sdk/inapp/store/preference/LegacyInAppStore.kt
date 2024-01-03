@@ -8,6 +8,10 @@ import org.json.JSONException
 
 class LegacyInAppStore(private val ctPreference: ICTPreference, accountId: String) {
 
+    companion object {
+        private const val ASSETS_CLEANUP_TS_KEY = "last_assets_cleanup"
+    }
+
     private val inAppKey = Constants.INAPP_KEY.concatIfNotNull(accountId, ":")
 
     fun storeInApps(inApps: JSONArray) {
@@ -25,5 +29,13 @@ class LegacyInAppStore(private val ctPreference: ICTPreference, accountId: Strin
 
     fun removeInApps() {
         ctPreference.remove(inAppKey!!)
+    }
+
+    fun updateAssetCleanupTs(ts: Long) {
+        ctPreference.writeLong(ASSETS_CLEANUP_TS_KEY, ts)
+    }
+
+    fun lastCleanupTs() : Long {
+        return ctPreference.readLong(ASSETS_CLEANUP_TS_KEY, 0)
     }
 }

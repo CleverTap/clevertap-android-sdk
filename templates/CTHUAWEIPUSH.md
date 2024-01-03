@@ -37,7 +37,7 @@ buildscript {
     }
     dependencies {
         // FOR HUAWEI ADD THIS
-        classpath "${ext.agcp}${ext['version.com.huawei.agconnect..agcp']}"
+        classpath "${ext.agcp}"
     }
 }
 
@@ -52,8 +52,8 @@ allprojects {
 * Add the following to your app’s `build.gradle` file
 
 ```groovy
-implementation "${ext.clevertap_hms_sdk}${ext['version.com.clevertap.android..clevertap-hms-sdk']}"
-implementation "${ext.push}${ext['version.com.huawei.hms..push']}"
+implementation "${ext.clevertap_hms_sdk}"
+implementation "${ext.push}"
 
 //At the bottom of the file add this
 apply plugin: 'com.huawei.agconnect'
