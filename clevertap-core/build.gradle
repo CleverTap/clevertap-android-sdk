@@ -49,7 +49,7 @@ dependencies {
     testImplementation(project(":test_shared"))
     testImplementation(libs.firebase.messaging)
     testImplementation(libs.test.mockk)
-    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
+    testImplementation(libs.test.coroutines)
 
     androidTestImplementation(libs.test.work.testing)
     androidTestImplementation(libs.test.runner)
