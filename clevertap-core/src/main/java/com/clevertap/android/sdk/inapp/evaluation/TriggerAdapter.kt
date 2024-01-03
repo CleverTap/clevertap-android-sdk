@@ -165,6 +165,16 @@ class TriggerAdapter(triggerJSON: JSONObject) {
         return triggerConditionFromJSON(itemJSONObject)
     }
 
+    /**
+     * Retrieves a [TriggerGeoRadius] instance at the specified index from the geoRadiusArray.
+     *
+     * The function checks if the provided index is valid and, if so, extracts the latitude, longitude, and radius
+     * information from the corresponding JSON object within the geoRadiusArray. It then creates and returns a
+     * [TriggerGeoRadius] instance based on the extracted data.
+     *
+     * @param index The index indicating the position of the desired [TriggerGeoRadius] in the geoRadiusArray.
+     * @return A [TriggerGeoRadius] instance if the index is valid and data is available; otherwise, `null`.
+     */
     fun geoRadiusAtIndex(index: Int): TriggerGeoRadius? {
         if (geoRadiusArray.isInvalidIndex(index)) {
             return null
@@ -178,6 +188,15 @@ class TriggerAdapter(triggerJSON: JSONObject) {
         return TriggerGeoRadius(latitude, longitude, radius)
     }
 
+    /**
+     * Converts the TriggerAdapter instance into a JSON object.
+     *
+     * The function creates a JSON object representing the TriggerAdapter instance, including the event name, event properties,
+     * item properties, and geographical radius properties (if available). The resulting JSON object is suitable for further
+     * serialization or transmission.
+     *
+     * @return A [JSONObject] representing the TriggerAdapter instance.
+     */
     fun toJsonObject(): JSONObject {
         val triggerJson = JSONObject()
 
