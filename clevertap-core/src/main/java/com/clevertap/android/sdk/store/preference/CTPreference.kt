@@ -10,6 +10,14 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import java.lang.ref.WeakReference
 
+/**
+ * The `CTPreference` class implements the `ICTPreference` interface and provides methods
+ * to read and write various types of data to shared preferences. It ensures safe handling
+ * of shared preferences operations in a weakly referenced context to prevent memory leaks.
+ *
+ * @param context The Android application context.
+ * @param prefName The name of the shared preferences file.
+ */
 @RestrictTo(LIBRARY_GROUP)
 class CTPreference(context: Context, private var prefName: String? = null) : ICTPreference {
 
