@@ -18,13 +18,12 @@ import org.json.JSONArray
  *
  * <p>
  * It stores in-apps in the shared preferences named "WizRocket_inapp:<<account_id>>:<<device_id>>"
- * with keys "inapp_notifs_cs" for client-side inApps whereas "inapp_notifs_ss" for server-side inApps.
+ * with keys "inapp_notifs_cs" for client-side inApps whereas "inapp_notifs_ss" for server-side inApps meta data.
+ * It also stores legacy ss in-apps using key "inApp", evaluated ss inapp ids and suppressed cs inapp ids
  * </p>
  *
- * @property context The Android application context.
+ * @property ctPreference The shared preference handler for storing and retrieving data.
  * @property cryptHandler The handler used for encryption and decryption of In-App messages.
- * @property accountId The unique account identifier.
- * @property deviceId The unique device identifier.
  */
 class InAppStore(
     private val ctPreference: ICTPreference,
@@ -75,7 +74,7 @@ class InAppStore(
     }
 
     /**
-     * Removes Server-side In-App messages.
+     * Removes Server-side In-App meta data.
      */
     private fun removeServerSideInAppsMetaData() {
         ctPreference.remove(PREFS_INAPP_KEY_SS)
@@ -96,14 +95,19 @@ class InAppStore(
     }
 
     /**
-     * Stores Server-side In-App messages in encrypted format.
+     * Stores Server-side In-App metadata.
      *
-     * @param serverSideInAppsMetaData The array of Server-side In-App messages.
+     * @param serverSideInAppsMetaData The array of Server-side In-App metadata.
      */
     fun storeServerSideInAppsMetaData(serverSideInAppsMetaData: JSONArray) {
         ctPreference.writeString(PREFS_INAPP_KEY_SS, serverSideInAppsMetaData.toString())
     }
 
+    /**
+     * Stores Server-side legacy In-App messages in encrypted format.
+     *
+     * @param serverSideInApps The array of Server-side legacy In-App messages.
+     */
     fun storeServerSideInApps(serverSideInApps: JSONArray) {
         this.serverSideInApps = serverSideInApps
         val encryptedString =
@@ -111,10 +115,20 @@ class InAppStore(
         encryptedString?.apply { ctPreference.writeString(INAPP_KEY, this) }
     }
 
+    /**
+     * Stores evaluated Server-side In-App IDs.
+     *
+     * @param evaluatedServerSideInAppIds The array of evaluated Server-side In-App IDs.
+     */
     fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: JSONArray) {
         ctPreference.writeString(PREFS_EVALUATED_INAPP_KEY_SS, evaluatedServerSideInAppIds.toString())
     }
 
+    /**
+     * Stores suppressed Client-side In-App IDs.
+     *
+     * @param suppressedClientSideInAppIds The array of suppressed Client-side In-App IDs.
+     */
     fun storeSuppressedClientSideInAppIds(suppressedClientSideInAppIds: JSONArray) {
         ctPreference.writeString(PREFS_SUPPRESSED_INAPP_KEY_CS, suppressedClientSideInAppIds.toString())
     }
@@ -138,9 +152,9 @@ class InAppStore(
     }
 
     /**
-     * Reads and decrypts Server-side In-App messages.
+     * Reads Server-side In-App metadata.
      *
-     * @return An array of Server-side In-App messages.
+     * @return An array of Server-side In-App metadata.
      */
     fun readServerSideInAppsMetaData(): JSONArray {
         val ssInAppsMetaData = ctPreference.readString(PREFS_INAPP_KEY_SS, "")
@@ -150,6 +164,11 @@ class InAppStore(
         return JSONArray(ssInAppsMetaData)
     }
 
+    /**
+     * Reads evaluated Server-side In-App IDs.
+     *
+     * @return An array of evaluated Server-side In-App IDs.
+     */
     fun readEvaluatedServerSideInAppIds(): JSONArray {
         val evaluatedServerSideInAppIds = ctPreference.readString(PREFS_EVALUATED_INAPP_KEY_SS, "")
         if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONArray()
@@ -157,6 +176,11 @@ class InAppStore(
         return JSONArray(evaluatedServerSideInAppIds)
     }
 
+    /**
+     * Reads suppressed Client-side In-App IDs.
+     *
+     * @return An array of suppressed Client-side In-App IDs.
+     */
     fun readSuppressedClientSideInAppIds(): JSONArray {
         val suppressedClientSideInAppIds = ctPreference.readString(PREFS_SUPPRESSED_INAPP_KEY_CS, "")
         if (suppressedClientSideInAppIds.isNullOrBlank()) return JSONArray()
@@ -164,6 +188,11 @@ class InAppStore(
         return JSONArray(suppressedClientSideInAppIds)
     }
 
+    /**
+     * Reads and decrypts Server-side legacy In-App messages.
+     *
+     * @return An array of Server-side legacy In-App messages.
+     */
     fun readServerSideInApps(): JSONArray {
         if (serverSideInApps != null)
             return serverSideInApps as JSONArray
@@ -178,6 +207,15 @@ class InAppStore(
         return serverSideInApps as JSONArray
     }
 
+    /**
+     * Callback method triggered when the user changes, updating the preferences associated with the new user.
+     *
+     * When called, it constructs a new
+     * preference name using the `StoreProvider` and updates the `ctPreference` instance to use the new preference name.
+     *
+     * @param deviceId The new unique device identifier for the changed user.
+     * @param accountId The new unique account identifier for the changed user.
+     */
     override fun onChangeUser(deviceId: String, accountId: String) {
         val newPrefName =
             StoreProvider.getInstance().constructStorePreferenceName(STORE_TYPE_INAPP, deviceId, accountId)
