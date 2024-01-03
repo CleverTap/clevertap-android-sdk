@@ -4,7 +4,12 @@ import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.TriggerManager
 
 /**
- * A utility class responsible for matching limits against campaign conditions.
+ * The `LimitsMatcher` class is responsible for evaluating limits defined by [LimitAdapter]s for a given campaign.
+ * It checks whether the specified limits are met and provides functionality to determine if an impression should
+ * be discarded based on certain conditions.
+ *
+ * @property manager The [ImpressionManager] used to track campaign impressions.
+ * @property triggerManager The [TriggerManager] used to manage triggers for in-app notifications.
  */
 class LimitsMatcher(
     private val manager: ImpressionManager,
@@ -12,11 +17,10 @@ class LimitsMatcher(
 ) {
 
     /**
-     * Checks if all given limits specified by JSON objects are met for a campaign.
+     * Checks if all given limits specified by [LimitAdapter]s are met for a campaign.
      *
-     * @param whenLimits The list of JSON objects representing the limits to be checked.
+     * @param whenLimits The list of [LimitAdapter] representing the limits to be checked.
      * @param campaignId The unique identifier of the campaign.
-     * @param manager The ImpressionManager used to track campaign impressions.
      * @return `true` if all limits are met, otherwise `false`.
      */
     fun matchWhenLimits(
@@ -31,7 +35,6 @@ class LimitsMatcher(
      *
      * @param limit The adapter representing the limit condition.
      * @param campaignId The unique identifier of the campaign.
-     * @param manager The ImpressionManager used to track campaign impressions.
      * @return `true` if the limit is met, otherwise `false`.
      */
     private fun matchLimit(
