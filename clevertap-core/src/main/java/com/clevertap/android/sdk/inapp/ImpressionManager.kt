@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
 class ImpressionManager @JvmOverloads constructor(
     private val storeRegistry: StoreRegistry,
     private val clock: Clock = Clock.SYSTEM,
-    private val locale: Locale = Locale.US,
+    private val locale: Locale = Locale.getDefault(),
 ) {
 
     private var sessionImpressions: MutableMap<String, MutableList<Long>> = mutableMapOf()
