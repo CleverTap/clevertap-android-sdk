@@ -51,7 +51,7 @@ class TriggerManager(
      *
      * @param campaignId The identifier of the In-App campaign.
      */
-    fun removeTriggers(campaignId: String) { // TODO handle inappStale from server to clear data per inapp
+    fun removeTriggers(campaignId: String) {
         val prefs = sharedPrefs() ?: return
         prefs.edit().remove(getTriggersKey(campaignId)).apply()
     }

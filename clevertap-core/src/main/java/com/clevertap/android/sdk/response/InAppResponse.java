@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
@@ -38,6 +39,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final StoreRegistry storeRegistry;
 
+    private final TriggerManager triggerManager;
+
     private final CoreMetaData coreMetaData;
 
     public InAppResponse(
@@ -45,6 +48,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             ControllerManager controllerManager,
             final boolean isSendTest,
             StoreRegistry storeRegistry,
+            TriggerManager triggerManager,
             CoreMetaData coreMetaData
     ) {
         this.config = config;
@@ -52,6 +56,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
         this.controllerManager = controllerManager;
         this.isSendTest = isSendTest;
         this.storeRegistry = storeRegistry;
+        this.triggerManager = triggerManager;
         this.coreMetaData = coreMetaData;
     }
 
@@ -89,7 +94,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             if (!isSendTest && controllerManager.getInAppFCManager() != null) {
                 Logger.v("Updating InAppFC Limits");
                 controllerManager.getInAppFCManager().updateLimits(context, perDay, perSession);
-                controllerManager.getInAppFCManager().processResponse(context, response);// Handle stale_inapp
+                controllerManager.getInAppFCManager().processResponse(context, response);
             } else {
                 logger.verbose(config.getAccountId(),
                         "controllerManager.getInAppFCManager() is NULL, not Updating InAppFC Limits");
@@ -97,7 +102,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             Pair<Boolean, JSONArray> inappStaleList = res.getStaleInApps();
             if (inappStaleList.getFirst()) {
-                clearStaleInAppImpressions(inappStaleList.getSecond(), impressionStore);
+                clearStaleInAppCache(inappStaleList.getSecond(), impressionStore, triggerManager);
             }
 
             Pair<Boolean, JSONArray> legacyInApps = res.getLegacyInApps();
@@ -149,11 +154,13 @@ public class InAppResponse extends CleverTapResponseDecorator {
         }
     }
 
-    private void clearStaleInAppImpressions(JSONArray inappStaleList, ImpressionStore impressionStore) {
-        //Stale in-app ids used to remove in-app counts from impressionStore
+    private void clearStaleInAppCache(JSONArray inappStaleList, ImpressionStore impressionStore,
+            final TriggerManager triggerManager) {
+        //Stale in-app ids used to remove in-app counts and triggers
         for (int i = 0; i < inappStaleList.length(); i++) {
             String inappStaleId = inappStaleList.optString(i);
             impressionStore.clear(inappStaleId);
+            triggerManager.removeTriggers(inappStaleId);
         }
     }
 
