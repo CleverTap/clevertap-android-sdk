@@ -4,14 +4,11 @@ import android.content.res.Configuration
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
-import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter
 import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.safeGetJSONArray
 import com.clevertap.android.sdk.toList
-import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -102,7 +99,7 @@ class InAppResponseAdapter(
 
     val inAppsPerDay: Int = responseJson.optInt(IN_APP_DAILY_KEY, IN_APP_DEFAULT_DAILY)
 
-    val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "");
+    val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "")
 
     val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_STALE_KEY)
 }
