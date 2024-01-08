@@ -95,13 +95,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
                         "controllerManager.getInAppFCManager() is NULL, not Updating InAppFC Limits");
             }
 
-            // TODO get all types of inapps from response - ss, cs, applaunched - DONE
-            // TODO store the inapps (get the old code and move it to some ***Store class) - DONE
-            // TODO save the SS/CS mode from the json response - DONE
-            //      add onChanged for this SS/CS mode to handle case when switching from SS/CS to CS/SS or
-            //      from none to CS/SS to clear data. - DONE
-            // TODO call EvaluationManager.evaluateOnAppLaunchedServerSide(appLaunchedNotifs) - DONE
-
             Pair<Boolean, JSONArray> inappStaleList = res.getStaleInApps();
             if (inappStaleList.getFirst()) {
                 clearStaleInAppImpressions(inappStaleList.getSecond(), impressionStore);
