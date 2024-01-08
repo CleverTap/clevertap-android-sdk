@@ -21,7 +21,7 @@ public abstract class BaseDatabaseManager {
 
     public abstract DBAdapter loadDBAdapter(Context context);
 
-    abstract QueueCursor getQueueCursor(final Context context, DBAdapter.Table table, final int batchSize,
+    abstract QueueCursor getQueueCursor(final Context context, Table table, final int batchSize,
             final QueueCursor previousCursor);
 
     abstract QueueCursor getQueuedDBEvents(final Context context, final int batchSize,

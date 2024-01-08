@@ -1,12 +1,13 @@
 package com.clevertap.android.sdk.db
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.db.DBAdapter.Table
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
+import org.junit.*
 import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.*
+import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit
 import kotlin.test.*
@@ -27,6 +28,10 @@ class DBAdapterTest : BaseTestCase() {
         dbAdapter = DBAdapter(appCtx, instanceConfig)
     }
 
+    @After
+    fun deleteDB() {
+        dbAdapter.deleteDB()
+    }
 
     @Test
     fun test_deleteMessageForId_when_MessageIDAndUserIDIsPassed_should_DeleteMessageIfExists() {
@@ -52,55 +57,66 @@ class DBAdapterTest : BaseTestCase() {
     }
 
     @Test
-    fun test_deleteMessagesForIds_when_MessageIDAndUserIdIsPassed_should_DeleteMessagesIfExists(){
-        var msgIds:ArrayList<String>?=null
-        var userId:String?=null
-        var result=false
+    fun test_deleteMessagesForIds_when_MessageIDAndUserIdIsPassed_should_DeleteMessagesIfExists() {
+        var msgIds: ArrayList<String>? = null
+        var userId: String? = null
+        var result = false
 
         // case 1:when msdIds and userId is null, false should be returned
-        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
+        result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
         assertFalse(result)
 
-        userId="user_11"
+        userId = "user_11"
 
         //case 2: when msgIds and userId is non-null, false should be returned
-        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
+        result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
         assertFalse(result)
 
-        userId=null
-        msgIds= ArrayList()
+        userId = null
+        msgIds = ArrayList()
         //case 3: when msgIds is non-null and userId is null, false should be returned
-        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
+        result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
         assertFalse(result)
 
         //case 4: when msgIds and userId is non-null, sqlite query is run and true is returned
-        userId="user_11"
+        userId = "user_11"
         msgIds.add("msg_1")
         msgIds.add("msg_2")
         msgIds.add("msg_3")
 
         //When all msgIds are present in the db all should be deleted
-        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgIds[0],userId,false),getCtMsgDao(msgIds[1],userId,false),getCtMsgDao(msgIds[2],userId,false)))
-        var msgList=dbAdapter.getMessages(userId)
-        assertEquals(3,msgList.size)
+        dbAdapter.upsertMessages(
+            arrayListOf(
+                getCtMsgDao(msgIds[0], userId, false),
+                getCtMsgDao(msgIds[1], userId, false),
+                getCtMsgDao(msgIds[2], userId, false)
+            )
+        )
+        var msgList = dbAdapter.getMessages(userId)
+        assertEquals(3, msgList.size)
 
-        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
+        result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
         assertTrue(result)
-        msgList=dbAdapter.getMessages(userId)
-        assertEquals(0,msgList.size)
-
+        msgList = dbAdapter.getMessages(userId)
+        assertEquals(0, msgList.size)
 
         // When some msgId from msgIds is not found, it is skipped and remaining are deleted
-        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgIds[0],userId,false),getCtMsgDao(msgIds[1],userId,false),getCtMsgDao(msgIds[2],userId,false)))
-        msgList=dbAdapter.getMessages(userId)
-        assertEquals(3,msgList.size)
+        dbAdapter.upsertMessages(
+            arrayListOf(
+                getCtMsgDao(msgIds[0], userId, false),
+                getCtMsgDao(msgIds[1], userId, false),
+                getCtMsgDao(msgIds[2], userId, false)
+            )
+        )
+        msgList = dbAdapter.getMessages(userId)
+        assertEquals(3, msgList.size)
 
         msgIds.removeLast()
         msgIds.add("msg_4")
-        result=dbAdapter.deleteMessagesForIDs(msgIds,userId)
-        msgList=dbAdapter.getMessages(userId)
+        result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
+        msgList = dbAdapter.getMessages(userId)
         assertTrue(result)
-        assertEquals(1,msgList.size)
+        assertEquals(1, msgList.size)
     }
 
     @Test
@@ -126,10 +142,12 @@ class DBAdapterTest : BaseTestCase() {
     @Test
     fun test_fetchUserProfileById_when_calledWithUserId_should_returnUserProfile() {
         //assumption: profile is already stored
-        dbAdapter.storeUserProfile("userID", JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+        dbAdapter.storeUserProfile(
+            "userID",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
 
         //validation : profile is fetched
-        dbAdapter.fetchUserProfileById("userID").let {
+        dbAdapter.fetchUserProfileById("userID")!!.let {
             assertEquals("john", it.getString("name"))
             assertEquals("daniel", it.getString("father"))
         }
@@ -137,20 +155,18 @@ class DBAdapterTest : BaseTestCase() {
         // validation: null is returned
         assertNull(dbAdapter.fetchUserProfileById(null))
         assertNull(dbAdapter.fetchUserProfileById("notAvaialble"))
-
-
     }
 
     @Test
     fun test_getLastUninstallTimestamp_when_FunctionIsCalled_should_ReturnTheLastUninstallTime() {
         //when no uninstall time is stored, should return 0
-        assertEquals(0, dbAdapter.lastUninstallTimestamp)
+        assertEquals(0, dbAdapter.getLastUninstallTimestamp())
 
         //assertion: store current time as uninstall time
         val currentTime = System.currentTimeMillis()
         dbAdapter.storeUninstallTimestamp()
         //validation : the last uninstall timestamp is returned(can differ by 1-2 seconds based on processor speed, so taking a range in here of max 2 seconds
-        assertTrue(dbAdapter.lastUninstallTimestamp in currentTime..(currentTime + 2000))
+        assertTrue(dbAdapter.getLastUninstallTimestamp() in currentTime..(currentTime + 2000))
     }
 
     @Test
@@ -158,7 +174,6 @@ class DBAdapterTest : BaseTestCase() {
         // case : incorrect user id
         var msgList = dbAdapter.getMessages("unavailableUser")
         assertEquals(0, msgList.size)
-
 
         // case correct user id
         val msgId = "msg_1234"
@@ -168,12 +183,11 @@ class DBAdapterTest : BaseTestCase() {
         assertEquals(1, msgList.size)
         assertEquals(msgId, msgList[0].id)
         assertEquals(userID, msgList[0].userId)
-
     }
 
     @Test
     fun test_markReadMessageForId_when_CorrectUserIdAndMessageIsPAssed_should_SetMEssageIdAsRead() {
-        var msgId = "msg_1234"
+        val msgId = "msg_1234"
         var userID = "user_11"
         dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgId, userID, false)))
         dbAdapter.markReadMessageForId(msgId, userID)
@@ -185,32 +199,30 @@ class DBAdapterTest : BaseTestCase() {
         dbAdapter.markReadMessageForId("msgId", userID)
         msg = dbAdapter.getMessages(userID)[0]
         assertFalse(msg.isRead == 1)
-
-
     }
 
     @Test
     fun test_markReadMessagesForIds_when_CorrectUserIdAndMessagesArePassed_should_SetMessageIdsAsRead() {
-        var msgIds:ArrayList<String>?=null
-        var userId:String?=null
-        var result:Boolean
+        var msgIds: ArrayList<String>? = null
+        var userId: String? = null
+        var result: Boolean
 
         // case 1:when msdIds and userId is null, false should be returned
-        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
+        result = dbAdapter.markReadMessagesForIds(msgIds, userId)
         assertFalse(result)
 
-        userId="user_11"
+        userId = "user_11"
         //case 2: when msgIds and userId is non-null, false should be returned
-        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
+        result = dbAdapter.markReadMessagesForIds(msgIds, userId)
         assertFalse(result)
 
-        userId=null
-        msgIds= ArrayList()
+        userId = null
+        msgIds = ArrayList()
         //case 3: when msgIds is non-null and userId is null, false should be returned
-        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
+        result = dbAdapter.markReadMessagesForIds(msgIds, userId)
         assertFalse(result)
 
-        userId="user_11"
+        userId = "user_11"
         msgIds.add("msg_1")
         msgIds.add("msg_2")
         msgIds.add("msg_3")
@@ -218,23 +230,35 @@ class DBAdapterTest : BaseTestCase() {
         //case 4: when msgIds and userId is non-null, sqlite query is run and true is returned
 
         //When all msgIds are present in the db all should be marked as read
-        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgIds[0],userId,false),getCtMsgDao(msgIds[1],userId,false),getCtMsgDao(msgIds[2],userId,false)))
-        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
-        var msgList=dbAdapter.getMessages(userId)
+        dbAdapter.upsertMessages(
+            arrayListOf(
+                getCtMsgDao(msgIds[0], userId, false),
+                getCtMsgDao(msgIds[1], userId, false),
+                getCtMsgDao(msgIds[2], userId, false)
+            )
+        )
+        result = dbAdapter.markReadMessagesForIds(msgIds, userId)
+        var msgList = dbAdapter.getMessages(userId)
         assertTrue(result)
-        for(msg in msgList)
-            assertTrue(msg.isRead==1)
+        for (msg in msgList)
+            assertTrue(msg.isRead == 1)
 
         // When some msgId from msgIds is not found, it is skipped and remaining are marked as read
-        userId="user_12"
-        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgIds[0],userId,false),getCtMsgDao(msgIds[1],userId,false),getCtMsgDao(msgIds[2],userId,false)))
+        userId = "user_12"
+        dbAdapter.upsertMessages(
+            arrayListOf(
+                getCtMsgDao(msgIds[0], userId, false),
+                getCtMsgDao(msgIds[1], userId, false),
+                getCtMsgDao(msgIds[2], userId, false)
+            )
+        )
         msgIds.removeLast()
         msgIds.add("msg_4")
-        result=dbAdapter.markReadMessagesForIds(msgIds,userId)
-        msgList=dbAdapter.getMessages(userId)
+        result = dbAdapter.markReadMessagesForIds(msgIds, userId)
+        msgList = dbAdapter.getMessages(userId)
         assertTrue(result)
-        for(msg in msgList) {
-            if(msg.id in msgIds)
+        for (msg in msgList) {
+            if (msg.id in msgIds)
                 assertTrue(msg.isRead == 1)
             else
                 assertFalse(msg.isRead == 1)
@@ -244,7 +268,9 @@ class DBAdapterTest : BaseTestCase() {
     @Test
     fun test_removeUserProfile() {
         // assuption
-        dbAdapter.storeUserProfile("userID", JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+        dbAdapter.storeUserProfile(
+            "userID",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
         assertNotNull(dbAdapter.fetchUserProfileById("userID"))
 
         //test
@@ -252,7 +278,6 @@ class DBAdapterTest : BaseTestCase() {
 
         //validation
         assertNull(dbAdapter.fetchUserProfileById("userID"))
-
     }
 
     @Test
@@ -263,13 +288,15 @@ class DBAdapterTest : BaseTestCase() {
         dbAdapter.storeUninstallTimestamp()
 
         //validation : the last uninstall timestamp is returned(can differ by 1-2 seconds based on processor speed, so taking a range in here of max 2 seconds
-        assertTrue(dbAdapter.lastUninstallTimestamp in currentTime..(currentTime + 2000))
+        assertTrue(dbAdapter.getLastUninstallTimestamp() in currentTime..(currentTime + 2000))
     }
 
     @Test
     fun test_storeUserProfile() {
         // test
-        dbAdapter.storeUserProfile("userID", JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+        dbAdapter.storeUserProfile(
+            "userID",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
 
         //validation
         dbAdapter.fetchUserProfileById("userID").let {
@@ -278,9 +305,7 @@ class DBAdapterTest : BaseTestCase() {
             assertEquals("daniel", it.getString("father"))
 
         }
-
     }
-
 
     @Test
     fun test_storePushNotificationId_when_Called_should_storePushNotificationId() {
@@ -292,8 +317,6 @@ class DBAdapterTest : BaseTestCase() {
             assertEquals(1, it.size)
             assertEquals("pn1", it[0])
         }
-
-
     }
 
     @Test
@@ -314,8 +337,6 @@ class DBAdapterTest : BaseTestCase() {
         assertEquals(1, dbAdapter.getMessages("user_11").size)
         assertEquals(true, dbAdapter.getMessages("user_11")[0].isRead == 1)
         assertEquals("cp4321", dbAdapter.getMessages("user_11")[0].campaignId)
-
-
     }
 
     @Test
@@ -326,40 +347,40 @@ class DBAdapterTest : BaseTestCase() {
         //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
         // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table->
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
             println("table:$table")
 
             //assertion
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
 
             //test
-            dbAdapter.fetchEvents(table,2).let {  /// {2: ["__","__"]}
+            dbAdapter.fetchEvents(table, 2).let {  /// {2: ["__","__"]}
 
                 //validation
                 println("jsonObject = $it")
-                val arr = it.getJSONArray("2")
-                assertEquals(2,arr.length())
+                val arr = it!!.getJSONArray("2")
+                assertEquals(2, arr.length())
                 assertTrue(arr[0] is JSONObject)
-                assertEquals("${table.getName()}1",(arr[0] as JSONObject).getString("name"))
-                assertEquals("${table.getName()}2",(arr[1] as JSONObject).getString("name"))
+                assertEquals("${table.tableName}1", (arr[0] as JSONObject).getString("name"))
+                assertEquals("${table.tableName}2", (arr[1] as JSONObject).getString("name"))
             }
         }
-
     }
+
     @Test
     fun test_removeEvents_when_called_should_RemoveAllEntries() {
         //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
             println("table:$table")
             //assertion
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
             dbAdapter.fetchEvents(table, Int.MAX_VALUE).let { println("jsonObject = $it") }
 
             //test
@@ -368,10 +389,9 @@ class DBAdapterTest : BaseTestCase() {
             //validation
             dbAdapter.fetchEvents(table, Int.MAX_VALUE).let {
                 println("jsonObject = $it")
-               assertNull(it)
+                assertNull(it)
             }
         }
-
     }
 
     @Test
@@ -380,30 +400,26 @@ class DBAdapterTest : BaseTestCase() {
         //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
         // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
-
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
             println("table:$table")
 
             //test
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
 
             //validation
-            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let {
-
+            dbAdapter.fetchEvents(table, Int.MAX_VALUE).let {
 
                 println("jsonObject = $it")
-                val arr = it.getJSONArray("4")
-                assertEquals(4,arr.length())
+                val arr = it!!.getJSONArray("4")
+                assertEquals(4, arr.length())
                 assertTrue(arr[0] is JSONObject)
-                assertEquals("${table.getName()}1",(arr[0] as JSONObject).getString("name"))
-                assertEquals("${table.getName()}2",(arr[1] as JSONObject).getString("name"))
+                assertEquals("${table.tableName}1", (arr[0] as JSONObject).getString("name"))
+                assertEquals("${table.tableName}2", (arr[1] as JSONObject).getString("name"))
             }
         }
-
-
     }
 
     @Test
@@ -411,32 +427,31 @@ class DBAdapterTest : BaseTestCase() {
         //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
         // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
             println("table:$table")
 
             //assert
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
-            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let { println("jsonObject = $it")}
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
+            dbAdapter.fetchEvents(table, Int.MAX_VALUE).let { println("jsonObject = $it") }
 
             //test
-            dbAdapter.cleanupEventsFromLastId("2",table)//will remove ids 1 & 2 , and will save ids 3 & 4
+            dbAdapter.cleanupEventsFromLastId("2", table)//will remove ids 1 & 2 , and will save ids 3 & 4
 
             //validation
             println("after")
-            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let {
+            dbAdapter.fetchEvents(table, Int.MAX_VALUE).let {
                 println("jsonObject = $it")
-                val arr = it.getJSONArray("4")
-                assertEquals(2,arr.length())
+                val arr = it!!.getJSONArray("4")
+                assertEquals(2, arr.length())
                 assertTrue(arr[0] is JSONObject)
-                assertEquals("${table.getName()}3",(arr[0] as JSONObject).getString("name"))
-                assertEquals("${table.getName()}4",(arr[1] as JSONObject).getString("name"))
+                assertEquals("${table.tableName}3", (arr[0] as JSONObject).getString("name"))
+                assertEquals("${table.tableName}4", (arr[1] as JSONObject).getString("name"))
 
             }
         }
-
     }
 
     @Test
@@ -445,43 +460,44 @@ class DBAdapterTest : BaseTestCase() {
         dbAdapter.cleanUpPushNotifications()
         assertTrue { true }
     }
+
     @Test
     fun test_cleanStaleEvents_when_Called_should_ClearAllStoredPNsThatHaventExpired() {
         //since this function only calls cleanInternal which is being tested seperately, therefore it doesn't need to be tested
-        dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS)
+        dbAdapter.cleanupStaleEvents(Table.EVENTS)
         assertTrue { true }
     }
-/*
+    /*
 
-    @Test //todo revert when bug is fixed and when clean internal is again marked as @TestOnly
-    fun test_cleanInternal_when_CalledWithTableNameAndAnExpiryTime_should_ClearAllEntriesInThatTableBeforeCurrentTimeMinusExpiryTime() {
-        //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
-        // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+        @Test //todo revert when bug is fixed and when clean internal is again marked as @TestOnly
+        fun test_cleanInternal_when_CalledWithTableNameAndAnExpiryTime_should_ClearAllEntriesInThatTableBeforeCurrentTimeMinusExpiryTime() {
+            //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
+            // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED ).forEach { table ->
-            //assert : storing 2 objects at current time( say 13-7-22 2.23.05.100 pm) and waiting for 200 millis before running the actual function
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
-            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let { println("before call = $it")}
+            arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED ).forEach { table ->
+                //assert : storing 2 objects at current time( say 13-7-22 2.23.05.100 pm) and waiting for 200 millis before running the actual function
+                dbAdapter.storeObject(JSONObject().also {it.put("name","${table.tableName}1") },table)
+                dbAdapter.storeObject(JSONObject().also {it.put("name","${table.tableName}2") },table)
+                dbAdapter.fetchEvents(table,Int.MAX_VALUE).let { println("before call = $it")}
 
-            Thread.sleep(200)
-            //test. note : this function has a bug. ideally we waited for 200 milliseconds. now the time should be 13-7-22 2.23.05.300 pm and if we pass 0 as millisBefore,
-            // this function should ideally remove all events that are launched before current time i,e both event . but the value in functio's business logic is incorrect ,
-            // so to make this test pass, we pass a -70,000 year value!
-            val millisBefore = TimeUnit.DAYS.toMillis(365)*-70000 //0
-            dbAdapter.cleanInternal(table,millisBefore)
+                Thread.sleep(200)
+                //test. note : this function has a bug. ideally we waited for 200 milliseconds. now the time should be 13-7-22 2.23.05.300 pm and if we pass 0 as millisBefore,
+                // this function should ideally remove all events that are launched before current time i,e both event . but the value in functio's business logic is incorrect ,
+                // so to make this test pass, we pass a -70,000 year value!
+                val millisBefore = TimeUnit.DAYS.toMillis(365)*-70000 //0
+                dbAdapter.cleanInternal(table,millisBefore)
 
 
-            //validate: the table is cleared of all the values launched before the current time
-            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let {
-                assertNull(it)
+                //validate: the table is cleared of all the values launched before the current time
+                dbAdapter.fetchEvents(table,Int.MAX_VALUE).let {
+                    assertNull(it)
+                }
             }
+
+
         }
 
-
-    }
-
-*/
+    */
 
     @Test
     fun test_updatePushNotificationIds_when_CalledWithAListOfIds_should_MarkAssociatedEntriesInTableAsRead() {
@@ -494,35 +510,39 @@ class DBAdapterTest : BaseTestCase() {
             "pn4" to TimeUnit.DAYS.toMillis(-1),
             "pn5" to TimeUnit.DAYS.toMillis(-2),
         )
-        notifPairs.forEach { dbAdapter.storePushNotificationId(it.first,it.second) }
+        notifPairs.forEach { dbAdapter.storePushNotificationId(it.first, it.second) }
         dbAdapter.fetchPushNotificationIds().let { println(it.toList()) }//[pn1,pn2,pn3]
 
         //test: calling updatePushNotificationIds with 2 notif ids
         dbAdapter.updatePushNotificationIds(arrayOf("pn1", "pn3"))
 
-
         //validate: those 2 ids will now not be part of list of notifs that are unread implying that these are now marked as read
         // note the flag rtlDirtyFlag impacts the list of data returned by fetchPushNotificationIds.
         // so for the sake of testing the database, we add another notification to set rtlDirtyFlag to true
-        dbAdapter.storePushNotificationId("temp",TimeUnit.DAYS.toMillis(1))
+        dbAdapter.storePushNotificationId("temp", TimeUnit.DAYS.toMillis(1))
 
         dbAdapter.fetchPushNotificationIds().let {
             println(it.toList())
-            assertFalse (it.contains("pn1"))
-            assertTrue (it.contains("pn2"))
-            assertFalse (it.contains("pn3"))
-            assertTrue (it.contains("pn4"))
-            assertTrue (it.contains("pn5"))
-            assertTrue (it.contains("temp"))
+            assertFalse(it.contains("pn1"))
+            assertTrue(it.contains("pn2"))
+            assertFalse(it.contains("pn3"))
+            assertTrue(it.contains("pn4"))
+            assertTrue(it.contains("pn5"))
+            assertTrue(it.contains("temp"))
         }
-
     }
 
-
-
-
-
-    fun getCtMsgDao(id: String = "1", userId: String = "1", read: Boolean= false, jsonData: JSONObject = JSONObject(), date: Long = System.currentTimeMillis(), expires: Long = (System.currentTimeMillis() * 10), tags: List<String> = listOf(), campaignId: String = "campaignID", wzrkParams: JSONObject = JSONObject()): CTMessageDAO {
+    fun getCtMsgDao(
+        id: String = "1",
+        userId: String = "1",
+        read: Boolean = false,
+        jsonData: JSONObject = JSONObject(),
+        date: Long = System.currentTimeMillis(),
+        expires: Long = (System.currentTimeMillis() * 10),
+        tags: List<String> = listOf(),
+        campaignId: String = "campaignID",
+        wzrkParams: JSONObject = JSONObject()
+    ): CTMessageDAO {
         return CTMessageDAO().also {
             it.id = id
             it.jsonData = jsonData
