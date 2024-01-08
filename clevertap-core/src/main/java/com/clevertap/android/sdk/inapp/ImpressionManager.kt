@@ -20,9 +20,6 @@ class ImpressionManager @JvmOverloads constructor(
     private val locale: Locale = Locale.US,
 ) {
 
-    // TODO add the offset to shorten the timestamps
-    // private val DATE_OFFSET = ..
-
     private var sessionImpressions: MutableMap<String, MutableList<Long>> = mutableMapOf()
     private var sessionImpressionsTotal = 0
 
@@ -111,7 +108,7 @@ class ImpressionManager @JvmOverloads constructor(
      */
     fun perDay(campaignId: String, days: Int): Int {
         val calendar =
-            Calendar.getInstance(locale).apply { // TODO reuse instance and just set time?
+            Calendar.getInstance(locale).apply {
                 val currentDate = Date()
                 // Set the calendar's time to the current date and time
                 time = currentDate
@@ -144,7 +141,7 @@ class ImpressionManager @JvmOverloads constructor(
     ): Int {
         // start of week is Monday for some countries and Sunday in others
         val calendar =
-            Calendar.getInstance(locale).apply { // TODO reuse instance and just set time?
+            Calendar.getInstance(locale).apply {
                 val currentDate = Date()
                 // Set the calendar's time to the current date and time
                 time = currentDate
