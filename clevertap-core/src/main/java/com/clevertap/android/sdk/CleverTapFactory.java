@@ -111,9 +111,6 @@ class CleverTapFactory {
         coreState.setEvaluationManager(evaluationManager);
 
         final StoreProvider storeProvider = StoreProvider.getInstance();
-        /*InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
-                config.getAccountId());*/
-        //ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo, config.getAccountId());
 
         Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
         taskInitStores.execute("initStores", () -> {
