@@ -239,7 +239,6 @@ class CleverTapFactory {
                 callbackManager,
                 controllerManager,
                 ctLockManager,
-                cryptHandler,
                 inAppResponseForSendTestInApp
         );
         coreState.setAnalyticsManager(analyticsManager);

@@ -41,7 +41,6 @@ class AnalyticsManagerTest : BaseTestCase() {
             coreState.callbackManager,
             coreState.controllerManager,
             coreState.ctLockManager,
-            coreState.cryptHandler,
             inAppResponse
         )
     }
