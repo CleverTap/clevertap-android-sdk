@@ -3,11 +3,11 @@ package com.clevertap.android.sdk.db
 import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.db.DBAdapter.Table
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
@@ -24,29 +24,38 @@ class DBManagerTest: BaseTestCase() {
     private lateinit var dbManagerSpy:DBManager
     private lateinit var instanceConfig: CleverTapInstanceConfig
     private lateinit var lockManager:CTLockManager
+    private lateinit var dbAdapter: DBAdapter
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx,"accountId","accountToken")
         lockManager = CTLockManager()
         dbManager = DBManager(instanceConfig,lockManager)
         dbManagerSpy = Mockito.spy(dbManager)
+        dbAdapter = DBAdapter(appCtx,instanceConfig)
+    }
+
+    @After
+    fun deleteDb() {
+        dbManager.loadDBAdapter(appCtx).deleteDB()
+        dbManagerSpy.loadDBAdapter(appCtx).deleteDB()
+        dbAdapter.deleteDB()
     }
 
     @Test
     fun test_loadDBAdapter_when_CalledWithContext_should_ReturnDBAdapterInstanceWithCleanedUpTables(){
         //assertion : some tables of dbadapter already have some entries
-        var dAdp = DBAdapter(appCtx,instanceConfig)
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED ).forEach { table ->
-            dAdp.storeObject(JSONObject().also { it.put("name", "${table.getName()}1") }, table)
-            println("before call, entries for table: ${table.getName()} = ${dAdp.fetchEvents(table, Int.MAX_VALUE)}")
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
+            println("before call, entries for table: ${table.tableName} = ${dbAdapter.fetchEvents(table, Int.MAX_VALUE)}")
         }
+
         //test
-        dAdp = dbManager.loadDBAdapter(appCtx)
+        val dAdp = dbManager.loadDBAdapter(appCtx)
 
         //validate
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED ).forEach { table ->
             val entries = dAdp.fetchEvents(table,Int.MAX_VALUE)
-            println("after call, entries for table: ${table.getName()} = $entries")
+            println("after call, entries for table: ${table.tableName} = $entries")
             //assertNull(entries)  // should ideally be null but due to error in db adapter, clean not work.
                                   // check comment on line 363 in DbAdapterTest.kt for github commit id #b4f64d71
             assertTrue { true }
@@ -56,10 +65,9 @@ class DBManagerTest: BaseTestCase() {
     @Test
     fun test_clearQueues_when_called_should_ClearEventsAndProfileEventsTable(){
         //assertion : some tables of dbadapter already have some entries
-        val dAdp = DBAdapter(appCtx,instanceConfig)
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS ).forEach { table ->
-            dAdp.storeObject(JSONObject().also { it.put("name", "${table.getName()}1") }, table)
-            println("before call, entries for table: ${table.getName()} = ${dAdp.fetchEvents(table, Int.MAX_VALUE)}")
+            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
+            println("before call, entries for table: ${table.tableName} = ${dbAdapter.fetchEvents(table, Int.MAX_VALUE)}")
         }
 
         //test
@@ -67,8 +75,8 @@ class DBManagerTest: BaseTestCase() {
 
         //validate
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS ).forEach { table ->
-            val entries = dAdp.fetchEvents(table,Int.MAX_VALUE)
-            println("after call, entries for table: ${table.getName()} = $entries")
+            val entries = dbAdapter.fetchEvents(table,Int.MAX_VALUE)
+            println("after call, entries for table: ${table.tableName} = $entries")
             assertNull(entries)
         }
     }
@@ -89,7 +97,6 @@ class DBManagerTest: BaseTestCase() {
         // the data of such cursor will be : isEmpty=false | data= array of all the entries in table | lastID = last id of entry
         arrayOf(Table.EVENTS,Table.PROFILE_EVENTS,Table.PUSH_NOTIFICATION_VIEWED).forEach {table ->
             //assertion : adding entries in each table
-            dbManager = DBManager(instanceConfig,lockManager)
             val dbAdapter = dbManager.loadDBAdapter(appCtx)
             val sampleEntries = listOf(JSONObject("""{"key":"value1"}"""), JSONObject("""{"key":"value2"}"""), JSONObject("""{"key":"value3"}"""), JSONObject("""{"key":"value4"}"""))
             sampleEntries.forEach { dbAdapter.storeObject(it,table) }
@@ -121,7 +128,6 @@ class DBManagerTest: BaseTestCase() {
 
         arrayOf(Table.EVENTS,Table.PROFILE_EVENTS,Table.PUSH_NOTIFICATION_VIEWED).forEach {table ->
             //assertion : adding entries in each table
-            dbManager = DBManager(instanceConfig,lockManager)
             val dbAdapter = dbManager.loadDBAdapter(appCtx)
             val sampleEntries = listOf(JSONObject("""{"key":"value1"}"""), JSONObject("""{"key":"value2"}"""), JSONObject("""{"key":"value3"}"""), JSONObject("""{"key":"value4"}"""))
             sampleEntries.forEach { dbAdapter.storeObject(it,table) }
@@ -248,23 +254,22 @@ class DBManagerTest: BaseTestCase() {
         Mockito.verify(dbManagerSpy,Mockito.times(1)).getPushNotificationViewedQueuedEvents(appCtx, Int.MAX_VALUE,null)
 
         arrayOf(EventGroup.REGULAR).forEach {
-            dbManagerSpy = Mockito.spy(dbManager)
-            dbManagerSpy.getQueuedEvents(appCtx, Int.MAX_VALUE,null,it)
-            Mockito.verify(dbManagerSpy,Mockito.times(1)).getQueuedDBEvents(appCtx, Int.MAX_VALUE,null)
+            val spy = Mockito.spy(dbManager)
+            spy.getQueuedEvents(appCtx, Int.MAX_VALUE,null,it)
+            Mockito.verify(spy,Mockito.times(1)).getQueuedDBEvents(appCtx, Int.MAX_VALUE,null)
+            spy.loadDBAdapter(appCtx).deleteDB()
         }
-
     }
 
     @Test
     fun test_queueEventToDB_when_called_should_storeDataInEventOrProfileEventTable(){
         val json = JSONObject().also {it.put("name","a1")}
-        val dAdp = DBAdapter(appCtx,instanceConfig)
 
         //test
         dbManager.queueEventToDB(appCtx,json,Constants.PROFILE_EVENT)
 
         //validate
-        dAdp.fetchEvents(Table.PROFILE_EVENTS,Int.MAX_VALUE).let {
+        dbAdapter.fetchEvents(Table.PROFILE_EVENTS,Int.MAX_VALUE).let {
             println(" entries : $it")
             assertNotNull(it)
             assertEquals(1,it.length())
@@ -277,27 +282,24 @@ class DBManagerTest: BaseTestCase() {
         dbManager.queueEventToDB(appCtx,json,Constants.PROFILE_EVENT+1)
 
         //validate
-        dAdp.fetchEvents(Table.EVENTS,Int.MAX_VALUE).let {
+        dbAdapter.fetchEvents(Table.EVENTS,Int.MAX_VALUE).let {
             println(" entries : $it")
             assertNotNull(it)
             assertEquals(1,it.length())
             assertEquals("a1",it.getJSONArray("1").getJSONObject(0).getString("name"))
 
         }
-
-
     }
 
     @Test
     fun test_queuePushNotificationViewedEventToDB_when_Called_should_StoreDataInPushNotificationViewedTable(){
         val json = JSONObject().also {it.put("name","a1")}
-        val dAdp = DBAdapter(appCtx,instanceConfig)
 
         //test
         dbManager.queuePushNotificationViewedEventToDB(appCtx,json)
 
         //validate
-        dAdp.fetchEvents(Table.PUSH_NOTIFICATION_VIEWED,Int.MAX_VALUE).let {
+        dbAdapter.fetchEvents(Table.PUSH_NOTIFICATION_VIEWED,Int.MAX_VALUE).let {
             println(" entries : $it")
             assertNotNull(it)
             assertEquals(1,it.length())

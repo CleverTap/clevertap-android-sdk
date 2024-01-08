@@ -9,7 +9,7 @@ public final class QueueCursor {
 
     private String lastId; // the id of the last object returned from the db, used to remove sent objects
 
-    private DBAdapter.Table tableName;
+    private Table tableName;
 
     @Override
     public String toString() {
@@ -34,19 +34,19 @@ public final class QueueCursor {
         this.lastId = lastId;
     }
 
-    DBAdapter.Table getTableName() {
+    Table getTableName() {
         return tableName;
     }
 
-    void setTableName(DBAdapter.Table tableName) {
+    void setTableName(Table tableName) {
         this.tableName = tableName;
     }
 
-    public Boolean isEmpty() {
-        return (lastId == null || data == null || data.length() <= 0);
+    public boolean isEmpty() {
+        return lastId == null || data == null || data.length() <= 0;
     }
 
-    private void resetForTableName(DBAdapter.Table tName) {
+    private void resetForTableName(Table tName) {
         tableName = tName;
         data = null;
         lastId = null;

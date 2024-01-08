@@ -7,7 +7,6 @@ import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.db.DBAdapter.Table;
 import com.clevertap.android.sdk.events.EventGroup;
 import java.util.Iterator;
 import org.json.JSONException;
@@ -29,12 +28,12 @@ public class DBManager extends BaseDatabaseManager {
 
     @WorkerThread
     @Override
-    public DBAdapter loadDBAdapter(final Context context) {
+    public synchronized DBAdapter loadDBAdapter(final Context context) {
         if (dbAdapter == null) {
             dbAdapter = new DBAdapter(context, config);
-            dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
-            dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
-            dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+            dbAdapter.cleanupStaleEvents(Table.EVENTS);
+            dbAdapter.cleanupStaleEvents(Table.PROFILE_EVENTS);
+            dbAdapter.cleanupStaleEvents(Table.PUSH_NOTIFICATION_VIEWED);
             dbAdapter.cleanUpPushNotifications();
         }
         return dbAdapter;
@@ -48,10 +47,10 @@ public class DBManager extends BaseDatabaseManager {
         synchronized (ctLockManager.getEventLock()) {
 
             DBAdapter adapter = loadDBAdapter(context);
-            DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
+            Table tableName = Table.EVENTS;
 
             adapter.removeEvents(tableName);
-            tableName = DBAdapter.Table.PROFILE_EVENTS;
+            tableName = Table.PROFILE_EVENTS;
             adapter.removeEvents(tableName);
 
             clearUserContext(context);
@@ -77,6 +76,7 @@ public class DBManager extends BaseDatabaseManager {
         clearFirstRequestTimestampIfNeeded(context);
         clearLastRequestTimestamp(context);
     }
+
     //Session
     private void clearFirstRequestTimestampIfNeeded(Context context) {
         StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS), 0);
@@ -87,7 +87,7 @@ public class DBManager extends BaseDatabaseManager {
     @Override
     QueueCursor getPushNotificationViewedQueuedEvents(final Context context, final int batchSize,
             final QueueCursor previousCursor) {
-        return getQueueCursor(context, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED, batchSize, previousCursor);
+        return getQueueCursor(context, Table.PUSH_NOTIFICATION_VIEWED, batchSize, previousCursor);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class DBManager extends BaseDatabaseManager {
             final QueueCursor previousCursor) {
         synchronized (ctLockManager.getEventLock()) {
             DBAdapter adapter = loadDBAdapter(context);
-            DBAdapter.Table tableName = (previousCursor != null) ? previousCursor.getTableName() : table;
+            Table tableName = (previousCursor != null) ? previousCursor.getTableName() : table;
 
             // if previousCursor that means the batch represented by the previous cursor was processed so remove those from the db
             if (previousCursor != null) {
@@ -117,10 +117,10 @@ public class DBManager extends BaseDatabaseManager {
     QueueCursor getQueuedDBEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
 
         synchronized (ctLockManager.getEventLock()) {
-            QueueCursor newCursor = getQueueCursor(context, DBAdapter.Table.EVENTS, batchSize, previousCursor);
+            QueueCursor newCursor = getQueueCursor(context, Table.EVENTS, batchSize, previousCursor);
 
-            if (newCursor.isEmpty() && newCursor.getTableName().equals(DBAdapter.Table.EVENTS)) {
-                newCursor = getQueueCursor(context, DBAdapter.Table.PROFILE_EVENTS, batchSize, null);
+            if (newCursor.isEmpty() && newCursor.getTableName().equals(Table.EVENTS)) {
+                newCursor = getQueueCursor(context, Table.PROFILE_EVENTS, batchSize, null);
             }
 
             return newCursor.isEmpty() ? null : newCursor;
@@ -143,15 +143,15 @@ public class DBManager extends BaseDatabaseManager {
     @WorkerThread
     @Override
     public void queueEventToDB(final Context context, final JSONObject event, final int type) {
-        DBAdapter.Table table = (type == Constants.PROFILE_EVENT) ? DBAdapter.Table.PROFILE_EVENTS
-                : DBAdapter.Table.EVENTS;
+        Table table = (type == Constants.PROFILE_EVENT) ? Table.PROFILE_EVENTS
+                : Table.EVENTS;
         queueEventInternal(context, event, table);
     }
 
     @WorkerThread
     @Override
     public void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event) {
-        queueEventInternal(context, event, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+        queueEventInternal(context, event, Table.PUSH_NOTIFICATION_VIEWED);
     }
 
     /* calling this function Will set items from jsonObject to queue cursor.
@@ -184,10 +184,10 @@ public class DBManager extends BaseDatabaseManager {
     }
 
     @WorkerThread
-    private void queueEventInternal(final Context context, final JSONObject event, DBAdapter.Table table) {
+    private void queueEventInternal(final Context context, final JSONObject event, Table table) {
         synchronized (ctLockManager.getEventLock()) {
             DBAdapter adapter = loadDBAdapter(context);
-            int returnCode = adapter.storeObject(event, table);
+            long returnCode = adapter.storeObject(event, table);
 
             if (returnCode > 0) {
                 config.getLogger().debug(config.getAccountId(), "Queued event: " + event.toString());
