@@ -290,7 +290,6 @@ public class InAppFCManager {
     }
 
     private boolean hasLifetimeCapacityMaxedOut(CTInAppNotification inapp) {
-        // TODO think about migrating data to the new ImpressionManager scheme
 
         final String id = getInAppID(inapp);
         if (id == null) {
