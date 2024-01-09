@@ -35,7 +35,7 @@ class ImpressionManagerTest : BaseTestCase() {
         val storeRegistry = StoreRegistry()
 
         impressionManager = ImpressionManager(
-            storeRegistry = storeRegistry, clock = clock, locale = Locale.US
+            storeRegistry = storeRegistry, clock = clock, locale = Locale.getDefault()
         )
 
         `when`(deviceInfo.deviceID).thenReturn("device_id")

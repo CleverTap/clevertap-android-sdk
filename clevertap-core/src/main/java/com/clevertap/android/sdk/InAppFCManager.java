@@ -97,7 +97,7 @@ public class InAppFCManager {
 
     public void changeUser(String deviceId) {
         // reset counters
-        impressionManager.clearSessionData(); // TODO change deviceId in manager
+        impressionManager.clearSessionData();
         this.deviceId = deviceId;
         init(deviceId);
     }
@@ -290,7 +290,6 @@ public class InAppFCManager {
     }
 
     private boolean hasLifetimeCapacityMaxedOut(CTInAppNotification inapp) {
-        // TODO think about migrating data to the new ImpressionManager scheme
 
         final String id = getInAppID(inapp);
         if (id == null) {

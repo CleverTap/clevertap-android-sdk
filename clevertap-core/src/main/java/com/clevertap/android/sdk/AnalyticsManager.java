@@ -52,8 +52,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final ControllerManager controllerManager;
 
-    private final CryptHandler cryptHandler;
-
     private final CoreMetaData coreMetaData;
 
     private final DeviceInfo deviceInfo;
@@ -88,7 +86,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                      DeviceInfo deviceInfo,
                      BaseCallbackManager callbackManager, ControllerManager controllerManager,
                      final CTLockManager ctLockManager,
-                     CryptHandler cryptHandler,
                      InAppResponse inAppResponse) {
         this.context = context;
         this.config = config;
@@ -101,7 +98,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.callbackManager = callbackManager;
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
-        this.cryptHandler = cryptHandler;
         this.inAppResponse = inAppResponse;
     }
 

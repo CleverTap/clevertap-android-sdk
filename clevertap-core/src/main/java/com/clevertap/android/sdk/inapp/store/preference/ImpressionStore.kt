@@ -35,7 +35,7 @@ class ImpressionStore(
      * @param campaignId The campaign ID for which to write the impression.
      * @param timestamp The timestamp of the impression.
      */
-    fun write(campaignId: String, timestamp: Long) { //TODO Migrate inAppFcManager's count per device key to new prefName key?
+    fun write(campaignId: String, timestamp: Long) {
         val records = read(campaignId).toMutableList()
         records.add(timestamp)
 
@@ -47,7 +47,7 @@ class ImpressionStore(
      *
      * @param campaignId The campaign ID for which to clear the impressions.
      */
-    fun clear(campaignId: String) { // TODO handle inappStale from server to clear data per inapp
+    fun clear(campaignId: String) {
         ctPreference.remove("${PREF_PREFIX}_$campaignId")
     }
 

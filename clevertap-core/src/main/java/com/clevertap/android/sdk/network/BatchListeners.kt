@@ -40,7 +40,7 @@ class AppLaunchListener : BatchListener {
     override fun onBatchSent(batch: JSONArray, success: Boolean) {
         for (i in 0 until batch.length()) {
             val item = batch.getJSONObject(i)
-            if (item.optString("evtName") == Constants.APP_LAUNCHED_EVENT && success) { // TODO check success?
+            if (item.optString("evtName") == Constants.APP_LAUNCHED_EVENT && success) {
                 onAppLaunchedFound()
                 return
             }

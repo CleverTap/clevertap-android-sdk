@@ -85,8 +85,6 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final LocalDataStore localDataStore;
 
-    private final CryptHandler cryptHandler;
-
     private final Logger logger;
 
     private int networkRetryCount = 0;
@@ -146,7 +144,6 @@ public class NetworkManager extends BaseNetworkManager {
         this.callbackManager = callbackManager;
         this.validator = validator;
         this.localDataStore = localDataStore;
-        this.cryptHandler = cryptHandler;
         logger = this.config.getLogger();
 
         this.coreMetaData = coreMetaData;

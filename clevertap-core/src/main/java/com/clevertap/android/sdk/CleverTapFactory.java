@@ -111,9 +111,6 @@ class CleverTapFactory {
         coreState.setEvaluationManager(evaluationManager);
 
         final StoreProvider storeProvider = StoreProvider.getInstance();
-        /*InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
-                config.getAccountId());*/
-        //ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo, config.getAccountId());
 
         Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
         taskInitStores.execute("initStores", () -> {
@@ -180,6 +177,7 @@ class CleverTapFactory {
                 controllerManager,
                 false,
                 storeRegistry,
+                triggersManager,
                 coreMetaData
         );
 
@@ -224,6 +222,7 @@ class CleverTapFactory {
                 controllerManager,
                 true,
                 storeRegistry,
+                triggersManager,
                 coreMetaData
         );
 
@@ -239,7 +238,6 @@ class CleverTapFactory {
                 callbackManager,
                 controllerManager,
                 ctLockManager,
-                cryptHandler,
                 inAppResponseForSendTestInApp
         );
         coreState.setAnalyticsManager(analyticsManager);
@@ -254,7 +252,6 @@ class CleverTapFactory {
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
-        // TODO register App Launched listener
         final AppLaunchListener appLaunchListener = new AppLaunchListener();
         appLaunchListener.addListener(inAppController.onAppLaunchEventSent);
 
