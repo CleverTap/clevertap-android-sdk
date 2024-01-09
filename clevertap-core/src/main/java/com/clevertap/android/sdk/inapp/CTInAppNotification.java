@@ -469,7 +469,8 @@ public class CTInAppNotification implements Parcelable {
             this.isLocalInApp = jsonObject.has(IS_LOCAL_INAPP) && jsonObject.getBoolean(IS_LOCAL_INAPP);
             this.fallBackToNotificationSettings = jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS) &&
                     jsonObject.getBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS);
-            this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
+            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 ||
+                    jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
             this.maxPerSession = jsonObject.has(Constants.INAPP_MAX_DISPLAY_COUNT) ? jsonObject
@@ -580,7 +581,7 @@ public class CTInAppNotification implements Parcelable {
                     .getString(Constants.INAPP_ID_IN_PAYLOAD) : "";
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject
                     .getString(Constants.NOTIFICATION_ID_TAG) : "";
-            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 || //TODO: OR or AND?
+            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 ||
                     jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
