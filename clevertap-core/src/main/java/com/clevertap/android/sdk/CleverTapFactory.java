@@ -14,6 +14,7 @@ import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
@@ -244,9 +245,18 @@ class CleverTapFactory {
 
         networkManager.addNetworkHeadersListener(evaluationManager);
 
-        InAppController inAppController = new InAppController(context, config, mainLooperHandler,
-                controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo, new InAppQueue(config,
-                storeRegistry), evaluationManager
+        InAppController inAppController = new InAppController(
+                context,
+                config,
+                mainLooperHandler,
+                controllerManager,
+                callbackManager,
+                analyticsManager,
+                coreMetaData,
+                deviceInfo,
+                new InAppQueue(config, storeRegistry),
+                evaluationManager,
+                new InAppResourceProvider(context, config.getLogger())
         );
 
         coreState.setInAppController(inAppController);

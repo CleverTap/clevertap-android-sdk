@@ -156,19 +156,22 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     public final static String SHOW_FALLBACK_SETTINGS_BUNDLE_KEY = "shouldShowFallbackSettings";
 
-    public InAppController(Context context,
+    public InAppController(
+            Context context,
             CleverTapInstanceConfig config,
             MainLooperHandler mainLooperHandler,
             ControllerManager controllerManager,
             BaseCallbackManager callbackManager,
             AnalyticsManager analyticsManager,
-            CoreMetaData coreMetaData, final DeviceInfo deviceInfo,
+            CoreMetaData coreMetaData,
+            final DeviceInfo deviceInfo,
             InAppQueue inAppQueue,
-            final EvaluationManager evaluationManager) {
-
+            final EvaluationManager evaluationManager,
+            InAppResourceProvider resourceProvider
+    ) {
         this.context = context;
         this.config = config;
-        logger = this.config.getLogger();
+        this.logger = this.config.getLogger();
         this.mainLooperHandler = mainLooperHandler;
         this.controllerManager = controllerManager;
         this.callbackManager = callbackManager;
@@ -176,10 +179,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
         this.deviceInfo = deviceInfo;
-        this.resourceProvider = new InAppResourceProvider(context, logger);
+        this.resourceProvider = resourceProvider;
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
-        onAppLaunchEventSent = () -> {
+        this.onAppLaunchEventSent = () -> {
             final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
                     deviceInfo.getAppLaunchedFields());
             final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedClientSide(
