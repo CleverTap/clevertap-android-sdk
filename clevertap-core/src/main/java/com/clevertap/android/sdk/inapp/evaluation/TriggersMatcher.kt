@@ -5,8 +5,6 @@ import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.isValid
-import org.json.JSONArray
-import org.json.JSONObject
 
 /**
  * The `TriggersMatcher` class provides methods for matching trigger conditions with event properties,
@@ -161,7 +159,7 @@ class TriggersMatcher {
             TriggerOperator.Between -> actualIsInRangeOfExpected(expected, actual)
             TriggerOperator.Contains -> actualContainsExpected(expected, actual)
             TriggerOperator.NotContains -> !actualContainsExpected(expected, actual)
-            else -> false // TODO: Implement all cases as per the backend evaluation and remove this line
+            TriggerOperator.NotSet -> false
         }
     }
 
