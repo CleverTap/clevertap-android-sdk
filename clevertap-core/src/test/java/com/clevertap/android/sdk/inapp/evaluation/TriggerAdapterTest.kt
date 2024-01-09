@@ -545,17 +545,12 @@ class TriggerAdapterTest {
 
         triggerJSON.put(Constants.KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
 
-        val triggerAdapter = TriggerAdapter(triggerJSON)
-
-        // Act
-        val jsonObject = triggerAdapter.toJsonObject()
-
         // Assert
-        assertNotNull(jsonObject)
-        assertEquals("TestEvent", jsonObject.optString(Constants.KEY_EVENT_NAME))
-        assertEquals(propertiesArray, jsonObject.optJSONArray(Constants.KEY_EVENT_PROPERTIES))
-        assertEquals(itemsArray, jsonObject.optJSONArray(Constants.KEY_ITEM_PROPERTIES))
-        assertEquals(geoRadiusArray, jsonObject.optJSONArray(Constants.KEY_GEO_RADIUS_PROPERTIES))
+        assertNotNull(triggerJSON)
+        assertEquals("TestEvent", triggerJSON.optString(Constants.KEY_EVENT_NAME))
+        assertEquals(propertiesArray, triggerJSON.optJSONArray(Constants.KEY_EVENT_PROPERTIES))
+        assertEquals(itemsArray, triggerJSON.optJSONArray(Constants.KEY_ITEM_PROPERTIES))
+        assertEquals(geoRadiusArray, triggerJSON.optJSONArray(Constants.KEY_GEO_RADIUS_PROPERTIES))
     }
 
 }
