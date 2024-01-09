@@ -493,7 +493,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 public Void call() {
                     try {
                         String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
-                        String inappPreviewString = (String) extras.get(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
+                        String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
                         JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
 
                         JSONArray inappNotifs = new JSONArray();
