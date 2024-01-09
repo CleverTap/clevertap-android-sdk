@@ -1,35 +1,36 @@
 package com.clevertap.android.sdk.events
 
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
 import kotlin.test.assertEquals
 
-class EventMediatorTest : BaseTestCase() {
+class EventMediatorTest {
 
     private var sampleEvent: JSONObject = JSONObject()
 
     @Before
     fun setup() {
         // Create a sample JSONObject for testing
-        sampleEvent.put(
+        val evtData = JSONObject()
+        evtData.put(
             Constants.KEY_ITEMS, JSONArray(
                 "[{\"product_id\": \"123\", \"product_name\": \"Sample Product 1\", \"quantity\": 2, \"price\": 49.99}," +
                         "{\"product_id\": \"456\", \"product_name\": \"Sample Product 2\", \"quantity\": 1, \"price\": 29.99}," +
                         "{\"product_id\": \"789\", \"product_name\": \"Sample Product 3\", \"quantity\": 3, \"price\": 99.99}]"
             )
         )
-        sampleEvent.put("property1", "value1")
-        sampleEvent.put("property2", 123)
+        evtData.put("property1", "value1")
+        evtData.put("property2", 123)
+        sampleEvent.put(Constants.KEY_EVT_DATA, evtData)
     }
 
     @Test
     fun testGetChargedEventItemDetails() {
-        val yourClass = EventMediator(null, null, null)
+        val eventMediator = EventMediator(null, null, null)
 
-        val itemDetails = yourClass.getChargedEventItemDetails(sampleEvent)
+        val itemDetails = eventMediator.getChargedEventItemDetails(sampleEvent)
 
         // Check if the list of item details was correctly extracted
         val expectedItemDetails = ArrayList<Map<String, Any>>()
