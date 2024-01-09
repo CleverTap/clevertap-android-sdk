@@ -74,7 +74,7 @@ class InAppQueue(
         }
         val removedObject = currentQueue.remove(0)
         saveQueue(currentQueue)
-        return removedObject as JSONObject
+        return removedObject as? JSONObject
     }
 
     /**
