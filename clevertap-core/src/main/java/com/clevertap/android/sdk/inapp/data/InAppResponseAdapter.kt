@@ -36,6 +36,7 @@ class InAppResponseAdapter(
 
     val preloadImages: List<String>
     val preloadGifs: List<String>
+    val preloadAssets: List<String>
 
     val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_JSON_RESPONSE_KEY)
 
@@ -55,6 +56,7 @@ class InAppResponseAdapter(
 
         preloadImages = imageList
         preloadGifs = gifList
+        preloadAssets = imageList + gifList
     }
 
     private fun fetchMediaUrls(
