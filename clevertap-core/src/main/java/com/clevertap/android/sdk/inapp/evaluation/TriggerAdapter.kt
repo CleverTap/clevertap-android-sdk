@@ -187,34 +187,4 @@ class TriggerAdapter(triggerJSON: JSONObject) {
         val radius = geoRadiusItem.optDouble("rad")
         return TriggerGeoRadius(latitude, longitude, radius)
     }
-
-    /**
-     * Converts the TriggerAdapter instance into a JSON object.
-     *
-     * The function creates a JSON object representing the TriggerAdapter instance, including the event name, event properties,
-     * item properties, and geographical radius properties (if available). The resulting JSON object is suitable for further
-     * serialization or transmission.
-     *
-     * @return A [JSONObject] representing the TriggerAdapter instance.
-     */
-    fun toJsonObject(): JSONObject {
-        val triggerJson = JSONObject()
-
-        triggerJson.put(Constants.KEY_EVENT_NAME, eventName)
-
-        if (properties != null) {
-            triggerJson.put(Constants.KEY_EVENT_PROPERTIES, properties)
-        }
-
-        if (items != null) {
-            triggerJson.put(Constants.KEY_ITEM_PROPERTIES, items)
-        }
-
-        if (geoRadiusArray != null) {
-            triggerJson.put(Constants.KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
-        }
-
-        return triggerJson
-    }
-
 }
