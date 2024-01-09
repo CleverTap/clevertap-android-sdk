@@ -316,7 +316,7 @@ class EvaluationManager constructor(
             if (it.isNotNullAndEmpty()) {
                 LimitAdapter(it)
             } else null
-        }.toMutableList()
+        }
     }
 
     /**
