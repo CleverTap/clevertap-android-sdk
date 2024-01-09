@@ -40,6 +40,7 @@ import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -702,6 +703,13 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
         if ((System.currentTimeMillis() / 1000) > inAppNotification.getTimeToLive()) {
             Logger.d("InApp has elapsed its time to live, not showing the InApp");
+            return;
+        }
+
+        boolean isHtmlType = inAppNotification.getType().equals(Constants.KEY_CUSTOM_HTML);
+        if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
+            Logger.d(config.getAccountId(),
+                    "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp");
             return;
         }
 
