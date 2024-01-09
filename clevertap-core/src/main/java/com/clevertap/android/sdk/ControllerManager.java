@@ -14,7 +14,6 @@ import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.variables.CTVariables;
-
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import java.util.concurrent.Callable;
 import org.json.JSONArray;
@@ -221,6 +220,13 @@ public class ControllerManager {
         // Add more callbacks if necessary
     }
 
+    /**
+     * Invokes the batch listener callback to notify about the completion of a batch operation.
+     *
+     * @param requestQueue The JSON array representing the batch request sent to server.
+     * @param success      true when the batch operation was successful, false when no network or CleverTap
+     *                     instance is set to offline mode or request is failed.
+     */
     public void invokeBatchListener(JSONArray requestQueue, boolean success) {
         BatchListener listener = callbackManager.getBatchListener();
         if (listener != null) {
