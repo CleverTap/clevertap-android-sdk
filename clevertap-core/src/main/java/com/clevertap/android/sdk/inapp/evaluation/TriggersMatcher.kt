@@ -5,8 +5,6 @@ import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.isValid
-import org.json.JSONArray
-import org.json.JSONObject
 
 /**
  * The `TriggersMatcher` class provides methods for matching trigger conditions with event properties,
@@ -41,38 +39,6 @@ class TriggersMatcher {
         //val event = EventAdapter(eventName, eventProperties)
         // Check if any TriggerAdapter in the list matches the event
         return whenTriggers.any { match(it, event) }
-    }
-
-    /**
-     * Matches a charged event against a set of trigger conditions.
-     *
-     * This function evaluates the trigger conditions for a charged event and returns `true`
-     * if all conditions within any of the charged events are met. The events in the `whenTriggers`
-     * array are checked in an OR-ed manner, meaning that if any charged event with all conditions
-     * within that event are met, the function returns `true`.
-     *
-     * @param whenTriggers A JSON array of event triggers with conditions to match against the charged event.
-     * @param eventName The name of the charged event to be matched.
-     * @param details A map of event details or properties where keys are property names and
-     *        values are property values.
-     * @param items A list of items associated with the charged event. Each item is represented as
-     *        a map of properties where keys are property names and values are property values.
-     * @return `true` if any event matches, and all conditions
-     * within that event are met, `false` otherwise.
-     */
-    fun matchChargedEvent(
-        whenTriggers: JSONArray,
-        eventName: String,
-        details: Map<String, Any>,
-        items: List<Map<String, Any>>,
-        userLocation: Location? = null
-    ): Boolean {
-
-        // events in array are OR-ed
-        val event = EventAdapter(eventName, details, items, userLocation)
-        return (0 until whenTriggers.length())
-            .map { TriggerAdapter(whenTriggers[it] as JSONObject) }
-            .any { match(it, event) }
     }
 
     /**
@@ -193,7 +159,7 @@ class TriggersMatcher {
             TriggerOperator.Between -> actualIsInRangeOfExpected(expected, actual)
             TriggerOperator.Contains -> actualContainsExpected(expected, actual)
             TriggerOperator.NotContains -> !actualContainsExpected(expected, actual)
-            else -> false // TODO: Implement all cases as per the backend evaluation and remove this line
+            TriggerOperator.NotSet -> false
         }
     }
 

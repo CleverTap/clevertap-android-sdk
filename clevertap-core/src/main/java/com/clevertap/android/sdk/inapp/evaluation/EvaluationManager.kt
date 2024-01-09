@@ -57,6 +57,8 @@ class EvaluationManager constructor(
     @VisibleForTesting
     internal var suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
+    private val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+
     /**
      * Evaluates in-app notifications based on a specific event, incorporating the event name,
      * additional properties associated with the event, and the user's location.
@@ -316,7 +318,7 @@ class EvaluationManager constructor(
             if (it.isNotNullAndEmpty()) {
                 LimitAdapter(it)
             } else null
-        }.toMutableList()
+        }
     }
 
     /**
@@ -366,9 +368,9 @@ class EvaluationManager constructor(
      *
      * @return A unique WizRocket identifier combining the input identifier and the current date.
      */
+
     @VisibleForTesting
     internal fun generateWzrkId(ti: String, clock: Clock = Clock.SYSTEM): String {
-        val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
         val date = dateFormatter.format(clock.newDate())
         return "${ti}_$date"
     }

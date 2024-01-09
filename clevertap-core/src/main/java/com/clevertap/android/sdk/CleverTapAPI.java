@@ -3379,7 +3379,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             event.put(Constants.KEY_EVT_NAME, Constants.WZRK_FETCH);
             event.put(Constants.KEY_EVT_DATA, notif);
         } catch (JSONException e) {
-            e.printStackTrace();
+            Logger.v(Constants.CLEVERTAP_LOG_TAG,
+                    "Failed while parsing fetch request as json:", e);
         }
         return event;
     }
