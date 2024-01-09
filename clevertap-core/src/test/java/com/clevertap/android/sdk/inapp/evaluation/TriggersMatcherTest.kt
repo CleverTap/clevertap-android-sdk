@@ -112,91 +112,6 @@ class TriggersMatcherTest : BaseTestCase() {
         assertFalse(triggersMatcher.matchEvent(triggerAdapterList, eventAdapter))
     }
 
-    @Test
-    fun testMatchChargedEvent_WhenMultipleTriggersExistAndOneEventMatches_ShouldReturnTrue() {
-        val whenTriggers = JSONArray()
-        val details = mapOf("Property1" to "Value1")
-        val items = listOf(
-            mapOf("ItemProperty1" to "ItemValue1", "ItemProperty2" to "SomeItemValue2")
-        )
-
-        // Adding a trigger with one condition that should not match the charged event (should not match)
-        val triggerJSON1 = JSONObject().apply {
-            put("eventName", Constants.CHARGED_EVENT)
-            put("eventProperties", JSONArray().put(JSONObject().apply {
-                put("propertyName", "Property1")
-                put("op", TriggerOperator.Equals.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "Value9")
-            }))
-            put("itemProperties", JSONArray().put(JSONObject().apply {
-                put("propertyName", "ItemProperty1")
-                put("op", TriggerOperator.Contains.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "nike")
-            }))
-        }
-        whenTriggers.put(triggerJSON1)
-
-        // Adding another trigger with a charged event name (should match)
-        val triggerJSON2 = JSONObject().apply {
-            put("eventName", Constants.CHARGED_EVENT)
-            put("eventProperties", JSONArray().put(JSONObject().apply {
-                put("propertyName", "Property1")
-                put("op", TriggerOperator.Equals.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "Value1")
-            }))
-            put("itemProperties", JSONArray().put(JSONObject().apply {
-                put("propertyName", "ItemProperty1")
-                put("op", TriggerOperator.Contains.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "ItemValue1")
-            }))
-        }
-        whenTriggers.put(triggerJSON2)
-
-        assertTrue(triggersMatcher.matchChargedEvent(whenTriggers, Constants.CHARGED_EVENT, details, items))
-    }
-
-    @Test
-    fun testMatchChargedEvent_WhenMultipleTriggersExistAndNoEventMatches_ShouldReturnFalse() {
-        val whenTriggers = JSONArray()
-        val details = mapOf("Property1" to "Value1")
-        val items = listOf(
-            mapOf("ItemProperty1" to "DifferentItemValue1", "ItemProperty2" to "SomeItemValue2")
-        )
-
-        // Adding a trigger with a different event condition (should not match)
-        val triggerJSON1 = JSONObject().apply {
-            put("eventName", Constants.CHARGED_EVENT)
-            put("eventProperties", JSONArray().put(JSONObject().apply {
-                put("propertyName", "Property1")
-                put("op", TriggerOperator.Equals.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "DifferentValue")
-            }))
-            put("itemProperties", JSONArray().put(JSONObject().apply {
-                put("propertyName", "ItemProperty1")
-                put("op", TriggerOperator.Contains.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "nike")
-            }))
-        }
-        whenTriggers.put(triggerJSON1)
-
-        // Adding another trigger with a charged event name (should not match)
-        val triggerJSON2 = JSONObject().apply {
-            put("eventName", Constants.CHARGED_EVENT)
-            put("eventProperties", JSONArray().put(JSONObject().apply {
-                put("propertyName", "Property1")
-                put("op", TriggerOperator.Equals.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "hello")
-            }))
-            put("itemProperties", JSONArray().put(JSONObject().apply {
-                put("propertyName", "ItemProperty1")
-                put("op", TriggerOperator.Contains.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "world")
-            }))
-        }
-        whenTriggers.put(triggerJSON2)
-
-        assertFalse(triggersMatcher.matchChargedEvent(whenTriggers, Constants.CHARGED_EVENT, details, items))
-    }
 
     @Test
     fun testMatchEvent_WhenNoTriggerConditions_ShouldReturnFalse() {
@@ -207,20 +122,6 @@ class TriggersMatcherTest : BaseTestCase() {
         val eventAdapter = EventAdapter(eventName, eventProperties)
 
         assertFalse(triggersMatcher.matchEvent(triggerAdapterList, eventAdapter))
-    }
-
-    @Test
-    fun testMatchChargedEvent_WhenNoTriggerConditions_ShouldReturnFalse() {
-        val whenTriggers = JSONArray()
-        val eventName = Constants.CHARGED_EVENT
-        val eventProperties = mapOf("Property1" to "Value1")
-
-        assertFalse(
-            triggersMatcher.matchChargedEvent(
-                whenTriggers, eventName, eventProperties,
-                listOf()
-            )
-        )
     }
 
     @Test
