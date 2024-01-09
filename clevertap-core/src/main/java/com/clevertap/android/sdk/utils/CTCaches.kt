@@ -8,7 +8,6 @@ import kotlin.math.max
 /**
  * We have 2 caches in CT, image cache and a gif cache with different size configs
  */
-// todo locking should be individual cache based
 class CTCaches private constructor(
     private val config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
     private val logger: ILogger? = null
@@ -17,16 +16,23 @@ class CTCaches private constructor(
     companion object {
         private var ctCaches: CTCaches? = null
 
+        private val lock1 = Any()
+        private val lock2 = Any()
+        private val lock3 = Any()
+        private val lock4 = Any()
+
         fun instance(
             config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
             logger: ILogger?
         ) : CTCaches {
-            synchronized(this) {
-                if (ctCaches == null) {
-                    ctCaches = CTCaches(config = config, logger = logger)
+            if (ctCaches == null) {
+                synchronized(this) {
+                    if (ctCaches == null) {
+                        ctCaches = CTCaches(config = config, logger = logger)
+                    }
                 }
-                return ctCaches!!
             }
+            return ctCaches!!
         }
         fun clear() {
             synchronized(this) {
@@ -42,47 +48,55 @@ class CTCaches private constructor(
     private var gifFileCache: FileCache? = null
 
     fun imageCache(): LruCache<Bitmap> {
-        synchronized(this) {
-            if (imageCache == null) {
-                imageCache = LruCache(maxSize = imageCacheSize())
+        if (imageCache == null) {
+            synchronized(lock1) {
+                if (imageCache == null) {
+                    imageCache = LruCache(maxSize = imageCacheSize())
+                }
             }
-            return imageCache!!
         }
+        return imageCache!!
     }
 
     fun gifCache(): LruCache<ByteArray> {
-        synchronized(this) {
-            if (gifCache == null) {
-                gifCache = LruCache(maxSize = gifCacheSize())
+        if (gifCache == null) {
+            synchronized(lock2) {
+                if (gifCache == null) {
+                    gifCache = LruCache(maxSize = gifCacheSize())
+                }
             }
-            return gifCache!!
         }
+        return gifCache!!
     }
 
     fun imageCacheDisk(dir: File): FileCache {
-        synchronized(this) {
-            if (imageFileCache == null) {
-                imageFileCache = FileCache(
-                    directory = dir,
-                    maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
-                    logger = logger
-                )
+        if (imageFileCache == null) {
+            synchronized(lock3) {
+                if (imageFileCache == null) {
+                    imageFileCache = FileCache(
+                        directory = dir,
+                        maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
+                        logger = logger
+                    )
+                }
             }
-            return imageFileCache!!
         }
+        return imageFileCache!!
     }
 
     fun gifCacheDisk(dir: File): FileCache {
-        synchronized(this) {
-            if (gifFileCache == null) {
-                gifFileCache = FileCache(
-                    directory = dir,
-                    maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
-                    logger = logger
-                )
+        if (gifFileCache == null) {
+            synchronized(lock4) {
+                if (gifFileCache == null) {
+                    gifFileCache = FileCache(
+                        directory = dir,
+                        maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
+                        logger = logger
+                    )
+                }
             }
-            return gifFileCache!!
         }
+        return gifFileCache!!
     }
 
     fun imageCacheSize(): Int {
