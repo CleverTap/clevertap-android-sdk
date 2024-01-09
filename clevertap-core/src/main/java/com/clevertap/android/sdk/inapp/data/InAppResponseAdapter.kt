@@ -57,7 +57,7 @@ class InAppResponseAdapter(
         fetchMediaUrls(clientSideInApps, imageList, gifList)
 
         preloadImages = imageList
-        preloadGifs = imageList
+        preloadGifs = gifList
     }
 
     private fun fetchMediaUrls(
