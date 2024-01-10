@@ -14,13 +14,13 @@ import kotlin.test.*
 
 @RunWith(RobolectricTestRunner::class)
 class DBAdapterTest : BaseTestCase() {
+
     private lateinit var dbAdapter: DBAdapter
     private lateinit var instanceConfig: CleverTapInstanceConfig
 
     private val accID = "accountID"
     private val accToken = "token"
     private val accRegion = "sk1"
-    private val dbName = "clevertap_$accID"
 
     override fun setUp() {
         super.setUp()
@@ -35,17 +35,13 @@ class DBAdapterTest : BaseTestCase() {
 
     @Test
     fun test_deleteMessageForId_when_MessageIDAndUserIDIsPassed_should_DeleteMessageIfExists() {
-        var msgId: String? = null
-        var userID: String? = null
-        var result = false
-
         //case 1 : when msgId or user id is null, false is returned
-        result = dbAdapter.deleteMessageForId(msgId, userID)
+        var result = dbAdapter.deleteMessageForId(messageId = null, userId = null)
         assertEquals(false, result)
 
         //case 2 : when msgId or user id is not null, the sqlite query is executed accordingly on the table and therefore true is returned. note, even empty values for msg or user id are allowed
-        msgId = "msg_1234"
-        userID = "user_11"
+        val msgId = "msg_1234"
+        val userID = "user_11"
         dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgId, userID, false)))
         var msgList = dbAdapter.getMessages(userID)
         assertEquals(1, msgList.size)
@@ -58,24 +54,19 @@ class DBAdapterTest : BaseTestCase() {
 
     @Test
     fun test_deleteMessagesForIds_when_MessageIDAndUserIdIsPassed_should_DeleteMessagesIfExists() {
-        var msgIds: ArrayList<String>? = null
-        var userId: String? = null
-        var result = false
-
         // case 1:when msdIds and userId is null, false should be returned
-        result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
+        var result = dbAdapter.deleteMessagesForIDs(messageIDs = null, userId = null)
         assertFalse(result)
 
-        userId = "user_11"
+        var userId = "user_11"
 
         //case 2: when msgIds and userId is non-null, false should be returned
-        result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
+        result = dbAdapter.deleteMessagesForIDs(messageIDs = null, userId)
         assertFalse(result)
 
-        userId = null
-        msgIds = ArrayList()
+        val msgIds = mutableListOf<String>()
         //case 3: when msgIds is non-null and userId is null, false should be returned
-        result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
+        result = dbAdapter.deleteMessagesForIDs(msgIds, userId = null)
         assertFalse(result)
 
         //case 4: when msgIds and userId is non-null, sqlite query is run and true is returned
@@ -165,6 +156,7 @@ class DBAdapterTest : BaseTestCase() {
         //assertion: store current time as uninstall time
         val currentTime = System.currentTimeMillis()
         dbAdapter.storeUninstallTimestamp()
+        //TODO: This could be tested in a better way when DBAdapter can be provided with a test clock
         //validation : the last uninstall timestamp is returned(can differ by 1-2 seconds based on processor speed, so taking a range in here of max 2 seconds
         assertTrue(dbAdapter.getLastUninstallTimestamp() in currentTime..(currentTime + 2000))
     }
@@ -178,7 +170,7 @@ class DBAdapterTest : BaseTestCase() {
         // case correct user id
         val msgId = "msg_1234"
         val userID = "user_11"
-        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgId, userID, false)))
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgId, userID, read = false)))
         msgList = dbAdapter.getMessages(userID)
         assertEquals(1, msgList.size)
         assertEquals(msgId, msgList[0].id)
@@ -186,16 +178,16 @@ class DBAdapterTest : BaseTestCase() {
     }
 
     @Test
-    fun test_markReadMessageForId_when_CorrectUserIdAndMessageIsPAssed_should_SetMEssageIdAsRead() {
+    fun test_markReadMessageForId_when_CorrectUserIdAndMessageIsPassed_should_SetMessageIdAsRead() {
         val msgId = "msg_1234"
         var userID = "user_11"
-        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgId, userID, false)))
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgId, userID, read = false)))
         dbAdapter.markReadMessageForId(msgId, userID)
         var msg = dbAdapter.getMessages(userID)[0]
         assertTrue(msg.isRead == 1)
 
         userID = "user_12"
-        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgId, userID, false)))
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgId, userID, read = false)))
         dbAdapter.markReadMessageForId("msgId", userID)
         msg = dbAdapter.getMessages(userID)[0]
         assertFalse(msg.isRead == 1)
@@ -203,23 +195,18 @@ class DBAdapterTest : BaseTestCase() {
 
     @Test
     fun test_markReadMessagesForIds_when_CorrectUserIdAndMessagesArePassed_should_SetMessageIdsAsRead() {
-        var msgIds: ArrayList<String>? = null
-        var userId: String? = null
-        var result: Boolean
-
         // case 1:when msdIds and userId is null, false should be returned
-        result = dbAdapter.markReadMessagesForIds(msgIds, userId)
+        var result: Boolean = dbAdapter.markReadMessagesForIds(messageIDs = null, userId = null)
         assertFalse(result)
 
-        userId = "user_11"
-        //case 2: when msgIds and userId is non-null, false should be returned
-        result = dbAdapter.markReadMessagesForIds(msgIds, userId)
+        var userId = "user_11"
+        //case 2: when msgIds is null and userId is non-null, false should be returned
+        result = dbAdapter.markReadMessagesForIds(messageIDs = null, userId)
         assertFalse(result)
 
-        userId = null
-        msgIds = ArrayList()
+        val msgIds = mutableListOf<String>()
         //case 3: when msgIds is non-null and userId is null, false should be returned
-        result = dbAdapter.markReadMessagesForIds(msgIds, userId)
+        result = dbAdapter.markReadMessagesForIds(msgIds, userId = null)
         assertFalse(result)
 
         userId = "user_11"
@@ -232,9 +219,9 @@ class DBAdapterTest : BaseTestCase() {
         //When all msgIds are present in the db all should be marked as read
         dbAdapter.upsertMessages(
             arrayListOf(
-                getCtMsgDao(msgIds[0], userId, false),
-                getCtMsgDao(msgIds[1], userId, false),
-                getCtMsgDao(msgIds[2], userId, false)
+                getCtMsgDao(msgIds[0], userId, read = false),
+                getCtMsgDao(msgIds[1], userId, read = false),
+                getCtMsgDao(msgIds[2], userId, read = false)
             )
         )
         result = dbAdapter.markReadMessagesForIds(msgIds, userId)
@@ -247,9 +234,9 @@ class DBAdapterTest : BaseTestCase() {
         userId = "user_12"
         dbAdapter.upsertMessages(
             arrayListOf(
-                getCtMsgDao(msgIds[0], userId, false),
-                getCtMsgDao(msgIds[1], userId, false),
-                getCtMsgDao(msgIds[2], userId, false)
+                getCtMsgDao(msgIds[0], userId, read = false),
+                getCtMsgDao(msgIds[1], userId, read = false),
+                getCtMsgDao(msgIds[2], userId, read = false)
             )
         )
         msgIds.removeLast()
@@ -267,7 +254,7 @@ class DBAdapterTest : BaseTestCase() {
 
     @Test
     fun test_removeUserProfile() {
-        // assuption
+        // assumption
         dbAdapter.storeUserProfile(
             "userID",
             JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
@@ -278,17 +265,6 @@ class DBAdapterTest : BaseTestCase() {
 
         //validation
         assertNull(dbAdapter.fetchUserProfileById("userID"))
-    }
-
-    @Test
-    fun test_storeUninstallTimestamp_when_FunctionIsCalled_should_StoreCurrentTimeAsLastUninstallTime() {
-
-        //test: store current time as uninstall time
-        val currentTime = System.currentTimeMillis()
-        dbAdapter.storeUninstallTimestamp()
-
-        //validation : the last uninstall timestamp is returned(can differ by 1-2 seconds based on processor speed, so taking a range in here of max 2 seconds
-        assertTrue(dbAdapter.getLastUninstallTimestamp() in currentTime..(currentTime + 2000))
     }
 
     @Test
@@ -324,14 +300,14 @@ class DBAdapterTest : BaseTestCase() {
         //when a message is not present it will insert the message
 
         //test
-        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao("msg_1234", "user_11", false, campaignId = "cp1234")))
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao("msg_1234", "user_11", read = false, campaignId = "cp1234")))
 
         //validate
         assertNotNull(dbAdapter.getMessages("user_11")[0])
 
         //when a message is not present it will insert the message
         //test
-        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao("msg_1234", "user_11", true, campaignId = "cp4321")))
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao("msg_1234", "user_11", read = true, campaignId = "cp4321")))
 
         //validate
         assertEquals(1, dbAdapter.getMessages("user_11").size)
@@ -344,8 +320,8 @@ class DBAdapterTest : BaseTestCase() {
         //when calling this function, it will return all the entries fro the given table less than or equal to passed limit.
         // the returned list of entries will be of format {'key' : <jsonArray> } where key is the last index of entries
 
-        //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
-        // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+        //note : this function is not supposed to work with following tables as they have separate functions with different insertion rules :
+        // Table.USER_PROFILES, Table.PUSH_NOTIFICATIONS, Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
             println("table:$table")
@@ -372,7 +348,7 @@ class DBAdapterTest : BaseTestCase() {
 
     @Test
     fun test_removeEvents_when_called_should_RemoveAllEntries() {
-        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+        //note : will not work with Table.USER_PROFILES, Table.PUSH_NOTIFICATIONS, Table.INBOX_MESSAGES, Table.UNINSTALL_TS
 
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
             println("table:$table")
@@ -381,7 +357,7 @@ class DBAdapterTest : BaseTestCase() {
             dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
             dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
             dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
-            dbAdapter.fetchEvents(table, Int.MAX_VALUE).let { println("jsonObject = $it") }
+            println("jsonObject = ${dbAdapter.fetchEvents(table, Int.MAX_VALUE)}")
 
             //test
             dbAdapter.removeEvents(table)
@@ -397,8 +373,8 @@ class DBAdapterTest : BaseTestCase() {
     @Test
     fun test_storeObject_when_called_should_storeTheObjectInGivenTable() {
         //when calling this function, it will store all the entries in the given table
-        //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
-        // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+        //note : this function is not supposed to work with following tables as they have separate functions with different insertion rules :
+        // Table.USER_PROFILES, Table.PUSH_NOTIFICATIONS, Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
             println("table:$table")
@@ -424,8 +400,8 @@ class DBAdapterTest : BaseTestCase() {
 
     @Test
     fun test_cleanupEventsFromLastId_when_called_should_removeAllEntriesWithIdLesserThanPassedId() {
-        //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
-        // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+        //note : this function is not supposed to work with following tables as they have separate functions with different insertion rules :
+        // Table.USER_PROFILES, Table.PUSH_NOTIFICATIONS, Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
             println("table:$table")
@@ -435,7 +411,7 @@ class DBAdapterTest : BaseTestCase() {
             dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
             dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
             dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
-            dbAdapter.fetchEvents(table, Int.MAX_VALUE).let { println("jsonObject = $it") }
+            println("jsonObject = ${dbAdapter.fetchEvents(table, Int.MAX_VALUE)}")
 
             //test
             dbAdapter.cleanupEventsFromLastId("2", table)//will remove ids 1 & 2 , and will save ids 3 & 4
@@ -455,49 +431,16 @@ class DBAdapterTest : BaseTestCase() {
     }
 
     @Test
+    @Ignore("This could be tested when DBAdapter can be provided with a test clock")
     fun test_cleanUpPushNotifications_when_Called_should_ClearAllStoredPNsThatHaventExpired() {
-        //since this function only calls cleanInternal which is being tested seperately, therefore it doesn't need to be tested
         dbAdapter.cleanUpPushNotifications()
-        assertTrue { true }
     }
 
     @Test
+    @Ignore("This could be tested when DBAdapter can be provided with a test clock")
     fun test_cleanStaleEvents_when_Called_should_ClearAllStoredPNsThatHaventExpired() {
-        //since this function only calls cleanInternal which is being tested seperately, therefore it doesn't need to be tested
         dbAdapter.cleanupStaleEvents(Table.EVENTS)
-        assertTrue { true }
     }
-    /*
-
-        @Test //todo revert when bug is fixed and when clean internal is again marked as @TestOnly
-        fun test_cleanInternal_when_CalledWithTableNameAndAnExpiryTime_should_ClearAllEntriesInThatTableBeforeCurrentTimeMinusExpiryTime() {
-            //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
-            // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
-
-            arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED ).forEach { table ->
-                //assert : storing 2 objects at current time( say 13-7-22 2.23.05.100 pm) and waiting for 200 millis before running the actual function
-                dbAdapter.storeObject(JSONObject().also {it.put("name","${table.tableName}1") },table)
-                dbAdapter.storeObject(JSONObject().also {it.put("name","${table.tableName}2") },table)
-                dbAdapter.fetchEvents(table,Int.MAX_VALUE).let { println("before call = $it")}
-
-                Thread.sleep(200)
-                //test. note : this function has a bug. ideally we waited for 200 milliseconds. now the time should be 13-7-22 2.23.05.300 pm and if we pass 0 as millisBefore,
-                // this function should ideally remove all events that are launched before current time i,e both event . but the value in functio's business logic is incorrect ,
-                // so to make this test pass, we pass a -70,000 year value!
-                val millisBefore = TimeUnit.DAYS.toMillis(365)*-70000 //0
-                dbAdapter.cleanInternal(table,millisBefore)
-
-
-                //validate: the table is cleared of all the values launched before the current time
-                dbAdapter.fetchEvents(table,Int.MAX_VALUE).let {
-                    assertNull(it)
-                }
-            }
-
-
-        }
-
-    */
 
     @Test
     fun test_updatePushNotificationIds_when_CalledWithAListOfIds_should_MarkAssociatedEntriesInTableAsRead() {
@@ -511,7 +454,7 @@ class DBAdapterTest : BaseTestCase() {
             "pn5" to TimeUnit.DAYS.toMillis(-2),
         )
         notifPairs.forEach { dbAdapter.storePushNotificationId(it.first, it.second) }
-        dbAdapter.fetchPushNotificationIds().let { println(it.toList()) }//[pn1,pn2,pn3]
+        println(dbAdapter.fetchPushNotificationIds().toList())//[pn1,pn2,pn3]
 
         //test: calling updatePushNotificationIds with 2 notif ids
         dbAdapter.updatePushNotificationIds(arrayOf("pn1", "pn3"))
@@ -532,7 +475,7 @@ class DBAdapterTest : BaseTestCase() {
         }
     }
 
-    fun getCtMsgDao(
+    private fun getCtMsgDao(
         id: String = "1",
         userId: String = "1",
         read: Boolean = false,

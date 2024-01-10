@@ -17,6 +17,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
+//TODO: Introduce Clock or a time provider instead of depending on the static currentTimeMillis()
 internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
 
     companion object {
@@ -461,8 +462,8 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
      * @param table the table to remove events
      */
     @Synchronized
-    fun cleanupStaleEvents(table: Table?) {
-        cleanInternal(table!!, DATA_EXPIRATION)
+    fun cleanupStaleEvents(table: Table) {
+        cleanInternal(table, DATA_EXPIRATION)
     }
 
     /**

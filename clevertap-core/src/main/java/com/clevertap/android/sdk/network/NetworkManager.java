@@ -27,7 +27,7 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
-import com.clevertap.android.sdk.db.QueueCursor;
+import com.clevertap.android.sdk.db.QueueData;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
@@ -177,8 +177,8 @@ public class NetworkManager extends BaseNetworkManager {
         config.getLogger()
                 .verbose(config.getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
-        QueueCursor cursor;
-        QueueCursor previousCursor = null;
+        QueueData cursor;
+        QueueData previousCursor = null;
         boolean loadMore = true;
 
         while (loadMore) {
