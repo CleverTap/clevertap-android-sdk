@@ -42,6 +42,7 @@ junit_jupiter_api = "5.7.2"
 junit_jupiter_engine = "5.7.2"
 junit_platform_runner = "1.7.2"
 mockito_core = "3.5.11"
+mockito_kotlin = "3.2.0"
 opentest4j = "1.2.0"
 powermock_api_mockito2 = "2.0.9"
 powermock_classloading_xstream = "2.0.9"
@@ -134,6 +135,7 @@ test_junit_jupiter_api = { module = "org.junit.jupiter:junit-jupiter-api", versi
 test_junit_jupiter_engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit_jupiter_engine" }
 test_junit_platform_runner = { module = "org.junit.platform:junit-platform-runner", version.ref = "junit_platform_runner" }
 test_mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito_core" }
+test_mockito_kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito_kotlin" }
 test_mockito_inline = { module = "org.mockito:mockito-inline", version.ref = "mockito_core" }
 test_opentest4j = { module = "org.opentest4j:opentest4j", version.ref = "opentest4j" }
 test_powermock_api_mockito2 = { module = "org.powermock:powermock-api-mockito2", version.ref = "powermock_api_mockito2" }
