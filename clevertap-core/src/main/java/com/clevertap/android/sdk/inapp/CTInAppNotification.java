@@ -267,7 +267,6 @@ public class CTInAppNotification implements Parcelable {
     }
 
     void didDismiss(InAppResourceProvider resourceProvider) {
-        //removeImageOrGif(resourceProvider); // todo add coorect removal
     }
 
     String getBackgroundColor() {
