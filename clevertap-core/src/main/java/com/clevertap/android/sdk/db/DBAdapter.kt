@@ -59,11 +59,9 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         }
         val tName = INBOX_MESSAGES.tableName
         return try {
-            dbHelper.writableDatabase.use { db ->
-                db.delete(
-                    tName, Column.ID + " = ? AND " + Column.USER_ID + " = ?", arrayOf(messageId, userId)
-                )
-            }
+            dbHelper.writableDatabase.delete(
+                tName, Column.ID + " = ? AND " + Column.USER_ID + " = ?", arrayOf(messageId, userId)
+            )
             true
         } catch (e: SQLiteException) {
             logger.verbose("Error removing stale records from $tName", e)
@@ -91,11 +89,10 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         whereArgs.add(userId)
 
         return try {
-            dbHelper.writableDatabase.use { db ->
-                db.delete(
-                    tName, "${Column.ID} IN ($idsTemplateGroup) AND ${Column.USER_ID} = ?", whereArgs.toTypedArray()
-                )
-            }
+            dbHelper.writableDatabase.delete(
+                tName, "${Column.ID} IN ($idsTemplateGroup) AND ${Column.USER_ID} = ?", whereArgs.toTypedArray()
+            )
+
             true
         } catch (e: SQLiteException) {
             logger.verbose("Error removing stale records from $tName", e)
@@ -117,18 +114,17 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val pushIds: MutableList<String?> = ArrayList()
 
         try {
-            dbHelper.readableDatabase.use { db ->
-                db.query(tName, null, "${Column.IS_READ} = 0", null, null, null, null)?.use { cursor ->
-                        while (cursor.moveToNext()) {
-                            val dataIndex = cursor.getColumnIndex(Column.DATA)
-                            if (dataIndex >= 0) {
-                                val data = cursor.getString(dataIndex)
-                                logger.verbose("Fetching PID - $data")
-                                pushIds.add(data)
-                            }
+            dbHelper.readableDatabase.query(tName, null, "${Column.IS_READ} = 0", null, null, null, null)
+                ?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val dataIndex = cursor.getColumnIndex(Column.DATA)
+                        if (dataIndex >= 0) {
+                            val data = cursor.getString(dataIndex)
+                            logger.verbose("Fetching PID - $data")
+                            pushIds.add(data)
                         }
                     }
-            }
+                }
         } catch (e: SQLiteException) {
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
@@ -143,16 +139,15 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val tName = USER_PROFILES.tableName
         var profileString: String? = null
         try {
-            dbHelper.readableDatabase.use { db ->
-                db.query(tName, null, "${Column.ID} = ?", arrayOf(id), null, null, null)?.use { cursor ->
-                        if (cursor.moveToFirst()) {
-                            val dataIndex = cursor.getColumnIndex(Column.DATA)
-                            if (dataIndex >= 0) {
-                                profileString = cursor.getString(dataIndex)
-                            }
+            dbHelper.readableDatabase.query(tName, null, "${Column.ID} = ?", arrayOf(id), null, null, null)
+                ?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val dataIndex = cursor.getColumnIndex(Column.DATA)
+                        if (dataIndex >= 0) {
+                            profileString = cursor.getString(dataIndex)
                         }
                     }
-            }
+                }
         } catch (e: SQLiteException) {
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
@@ -171,13 +166,12 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val tName = UNINSTALL_TS.tableName
         var timestamp: Long = 0
         try {
-            dbHelper.readableDatabase.use { db ->
-                db.query(tName, null, null, null, null, null, "${Column.CREATED_AT} DESC", "1")?.use { cursor ->
-                        if (cursor.moveToFirst()) {
-                            timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
-                        }
+            dbHelper.readableDatabase.query(tName, null, null, null, null, null, "${Column.CREATED_AT} DESC", "1")
+                ?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
                     }
-            }
+                }
         } catch (e: Exception) { // SQLiteException | IllegalArgumentException
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
@@ -196,25 +190,22 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val tName = INBOX_MESSAGES.tableName
         val messageDAOArrayList = ArrayList<CTMessageDAO>()
         try {
-            dbHelper.readableDatabase.use { db ->
-                db.query(
-                    tName, null, "${Column.USER_ID} = ?", arrayOf(userId), null, null, "${Column.CREATED_AT} DESC"
-                )?.use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val ctMessageDAO = CTMessageDAO()
-                        ctMessageDAO.id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
-                        ctMessageDAO.jsonData =
-                            JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)))
-                        ctMessageDAO.wzrkParams =
-                            JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)))
-                        ctMessageDAO.date = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
-                        ctMessageDAO.expires = cursor.getLong(cursor.getColumnIndexOrThrow(Column.EXPIRES))
-                        ctMessageDAO.isRead = cursor.getInt(cursor.getColumnIndexOrThrow(Column.IS_READ))
-                        ctMessageDAO.userId = cursor.getString(cursor.getColumnIndexOrThrow(Column.USER_ID))
-                        ctMessageDAO.tags = cursor.getString(cursor.getColumnIndexOrThrow(Column.TAGS))
-                        ctMessageDAO.campaignId = cursor.getString(cursor.getColumnIndexOrThrow(Column.CAMPAIGN))
-                        messageDAOArrayList.add(ctMessageDAO)
-                    }
+            dbHelper.readableDatabase.query(
+                tName, null, "${Column.USER_ID} = ?", arrayOf(userId), null, null, "${Column.CREATED_AT} DESC"
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val ctMessageDAO = CTMessageDAO()
+                    ctMessageDAO.id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
+                    ctMessageDAO.jsonData = JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)))
+                    ctMessageDAO.wzrkParams =
+                        JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)))
+                    ctMessageDAO.date = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
+                    ctMessageDAO.expires = cursor.getLong(cursor.getColumnIndexOrThrow(Column.EXPIRES))
+                    ctMessageDAO.isRead = cursor.getInt(cursor.getColumnIndexOrThrow(Column.IS_READ))
+                    ctMessageDAO.userId = cursor.getString(cursor.getColumnIndexOrThrow(Column.USER_ID))
+                    ctMessageDAO.tags = cursor.getString(cursor.getColumnIndexOrThrow(Column.TAGS))
+                    ctMessageDAO.campaignId = cursor.getString(cursor.getColumnIndexOrThrow(Column.CAMPAIGN))
+                    messageDAOArrayList.add(ctMessageDAO)
                 }
             }
         } catch (e: Exception) { //SQLiteException | IllegalArgumentException | JSONException
@@ -239,14 +230,9 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val cv = ContentValues()
         cv.put(Column.IS_READ, 1)
         return try {
-            dbHelper.writableDatabase.use { db ->
-                db.update(
-                    INBOX_MESSAGES.tableName,
-                    cv,
-                    "${Column.ID} = ? AND ${Column.USER_ID} = ?",
-                    arrayOf(messageId, userId)
-                )
-            }
+            dbHelper.writableDatabase.update(
+                INBOX_MESSAGES.tableName, cv, "${Column.ID} = ? AND ${Column.USER_ID} = ?", arrayOf(messageId, userId)
+            )
             true
         } catch (e: SQLiteException) {
             logger.verbose("Error removing stale records from $tName", e)
@@ -276,14 +262,12 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val cv = ContentValues()
         cv.put(Column.IS_READ, 1)
         return try {
-            dbHelper.writableDatabase.use { db ->
-                db.update(
-                    INBOX_MESSAGES.tableName,
-                    cv,
-                    "${Column.ID} IN ($idsTemplateGroup) AND ${Column.USER_ID} = ?",
-                    whereArgs.toTypedArray()
-                )
-            }
+            dbHelper.writableDatabase.update(
+                INBOX_MESSAGES.tableName,
+                cv,
+                "${Column.ID} IN ($idsTemplateGroup) AND ${Column.USER_ID} = ?",
+                whereArgs.toTypedArray()
+            )
             true
         } catch (e: SQLiteException) {
             logger.verbose("Error removing stale records from $tName", e)
@@ -301,9 +285,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         }
         val tableName = USER_PROFILES.tableName
         try {
-            dbHelper.writableDatabase.use { db ->
-                db.delete(tableName, "${Column.ID} = ?", arrayOf(id))
-            }
+            dbHelper.writableDatabase.delete(tableName, "${Column.ID} = ?", arrayOf(id))
         } catch (e: SQLiteException) {
             logger.verbose("Error removing user profile from $tableName Recreating DB")
             deleteDB()
@@ -323,9 +305,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val cv = ContentValues()
         cv.put(Column.CREATED_AT, System.currentTimeMillis())
         try {
-            dbHelper.writableDatabase.use { db ->
-                db.insert(tableName, null, cv)
-            }
+            dbHelper.writableDatabase.insert(tableName, null, cv)
         } catch (e: SQLiteException) {
             logger.verbose("Error adding data to table $tableName Recreating DB")
             deleteDB()
@@ -354,9 +334,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         cv.put(Column.ID, id)
 
         return try {
-            dbHelper.writableDatabase.use { db ->
-                db.insertWithOnConflict(tableName, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
-            }
+            dbHelper.writableDatabase.insertWithOnConflict(tableName, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
         } catch (e: SQLiteException) {
             logger.verbose("Error adding data to table $tableName Recreating DB")
             deleteDB()
@@ -376,25 +354,25 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return
         }
-        try {
-            dbHelper.writableDatabase.use { db ->
-                for (messageDAO in inboxMessages) {
-                    val cv = ContentValues()
-                    cv.put(Column.ID, messageDAO.id)
-                    cv.put(Column.DATA, messageDAO.jsonData.toString())
-                    cv.put(Column.WZRKPARAMS, messageDAO.wzrkParams.toString())
-                    cv.put(Column.CAMPAIGN, messageDAO.campaignId)
-                    cv.put(Column.TAGS, messageDAO.tags)
-                    cv.put(Column.IS_READ, messageDAO.isRead())
-                    cv.put(Column.EXPIRES, messageDAO.expires)
-                    cv.put(Column.CREATED_AT, messageDAO.date)
-                    cv.put(Column.USER_ID, messageDAO.userId)
 
-                    db.insertWithOnConflict(INBOX_MESSAGES.tableName, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
-                }
+        for (messageDAO in inboxMessages) {
+            val cv = ContentValues()
+            cv.put(Column.ID, messageDAO.id)
+            cv.put(Column.DATA, messageDAO.jsonData.toString())
+            cv.put(Column.WZRKPARAMS, messageDAO.wzrkParams.toString())
+            cv.put(Column.CAMPAIGN, messageDAO.campaignId)
+            cv.put(Column.TAGS, messageDAO.tags)
+            cv.put(Column.IS_READ, messageDAO.isRead())
+            cv.put(Column.EXPIRES, messageDAO.expires)
+            cv.put(Column.CREATED_AT, messageDAO.date)
+            cv.put(Column.USER_ID, messageDAO.userId)
+            try {
+                dbHelper.writableDatabase.insertWithOnConflict(
+                    INBOX_MESSAGES.tableName, null, cv, SQLiteDatabase.CONFLICT_REPLACE
+                )
+            } catch (e: SQLiteException) {
+                logger.verbose("Error adding data to table " + INBOX_MESSAGES.tableName)
             }
-        } catch (e: SQLiteException) {
-            logger.verbose("Error adding data to table " + INBOX_MESSAGES.tableName)
         }
     }
 
@@ -416,9 +394,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     fun cleanupEventsFromLastId(lastId: String, table: Table) {
         val tName = table.tableName
         try {
-            dbHelper.writableDatabase.use { db ->
-                db.delete(tName, "${Column.ID} <= ?", arrayOf(lastId))
-            }
+            dbHelper.writableDatabase.delete(tName, "${Column.ID} <= ?", arrayOf(lastId))
         } catch (e: SQLiteException) {
             logger.verbose("Error removing sent data from table $tName Recreating DB")
             deleteDB()
@@ -445,9 +421,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         cv.put(Column.CREATED_AT, createdAtTime)
         cv.put(Column.IS_READ, 0)
         try {
-            dbHelper.writableDatabase.use { db ->
-                db.insert(tableName, null, cv)
-            }
+            dbHelper.writableDatabase.insert(tableName, null, cv)
             rtlDirtyFlag = true
             logger.verbose("Stored PN - $id with TTL - $createdAtTime")
         } catch (e: SQLiteException) {
@@ -479,20 +453,18 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         var lastId: String? = null
         val events = JSONArray()
         try {
-            dbHelper.readableDatabase.use { db ->
-                db.query(
-                    tName, null, null, null, null, null, "${Column.CREATED_AT} ASC", limit.toString()
-                )?.use { cursor ->
-                    while (cursor.moveToNext()) {
-                        if (cursor.isLast) {
-                            lastId = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
-                        }
-                        try {
-                            val j = JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)))
-                            events.put(j)
-                        } catch (e: JSONException) {
-                            // Ignore
-                        }
+            dbHelper.readableDatabase.query(
+                tName, null, null, null, null, null, "${Column.CREATED_AT} ASC", limit.toString()
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    if (cursor.isLast) {
+                        lastId = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
+                    }
+                    try {
+                        val j = JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)))
+                        events.put(j)
+                    } catch (e: JSONException) {
+                        // Ignore
                     }
                 }
             }
@@ -527,9 +499,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         cv.put(Column.IS_READ, 1)
         val idsTemplateGroup = getTemplateMarkersList(ids.size)
         try {
-            dbHelper.writableDatabase.use { db ->
-                db.update(tableName, cv, "${Column.DATA} IN ($idsTemplateGroup)", ids)
-            }
+            dbHelper.writableDatabase.update(tableName, cv, "${Column.DATA} IN ($idsTemplateGroup)", ids)
             rtlDirtyFlag = false
         } catch (e: SQLiteException) {
             logger.verbose("Error adding data to table $tableName Recreating DB")
@@ -557,12 +527,10 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         cv.put(Column.CREATED_AT, System.currentTimeMillis())
 
         return try {
-            dbHelper.writableDatabase.use { db ->
-                db.insert(tableName, null, cv)
-                val sql = "SELECT COUNT(*) FROM $tableName"
-                val statement = db.compileStatement(sql)
-                statement.simpleQueryForLong()
-            }
+            dbHelper.writableDatabase.insert(tableName, null, cv)
+            val sql = "SELECT COUNT(*) FROM $tableName"
+            val statement = dbHelper.writableDatabase.compileStatement(sql)
+            statement.simpleQueryForLong()
         } catch (e: SQLiteException) {
             logger.verbose("Error adding data to table $tableName Recreating DB")
             deleteDB()
@@ -579,9 +547,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     fun removeEvents(table: Table) {
         val tName = table.tableName
         try {
-            dbHelper.writableDatabase.use { db ->
-                db.delete(tName, null, null)
-            }
+            dbHelper.writableDatabase.delete(tName, null, null)
         } catch (e: SQLiteException) {
             logger.verbose("Error removing all events from table $tName Recreating DB")
             deleteDB()
@@ -597,9 +563,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val time = (System.currentTimeMillis() - expiration) / 1000
         val tName = table.tableName
         try {
-            dbHelper.writableDatabase.use { db ->
-                db.delete(tName, "${Column.CREATED_AT} <= $time", null)
-            }
+            dbHelper.writableDatabase.delete(tName, "${Column.CREATED_AT} <= $time", null)
         } catch (e: SQLiteException) {
             logger.verbose("Error removing stale event records from $tName. Recreating DB.", e)
             deleteDB()
@@ -615,14 +579,13 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val tName = PUSH_NOTIFICATIONS.tableName
         var pushId = "" // TODO: fix dupe failing
         try {
-            dbHelper.readableDatabase.use { db ->
-                db.query(tName, null, "${Column.DATA} =?", arrayOf(id), null, null, null)?.use { cursor ->
-                        if (cursor.moveToFirst()) {
-                            pushId = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
-                        }
-                        logger.verbose("Fetching PID for check - $pushId")
+            dbHelper.readableDatabase.query(tName, null, "${Column.DATA} =?", arrayOf(id), null, null, null)
+                ?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        pushId = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
                     }
-            }
+                    logger.verbose("Fetching PID for check - $pushId")
+                }
         } catch (e: Exception) { // SQLiteException | IllegalArgumentException
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
