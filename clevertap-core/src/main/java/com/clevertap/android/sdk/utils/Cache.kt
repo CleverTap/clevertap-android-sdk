@@ -31,6 +31,7 @@ class LruCache<T : Any>(
 
     fun add(key: String, value: T) : Boolean {
         if (value.sizeInKb() > maxSize) {
+            remove(key = key)
             return false
         }
         memoryCache.add(key, value)

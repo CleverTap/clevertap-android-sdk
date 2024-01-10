@@ -19,6 +19,7 @@ class FileCache(
 
     fun add(key: String, value: ByteArray) : Boolean {
         if (value.sizeInKb() > maxFileSizeKb) {
+            remove(key = key)
             return false
         }
         val file = fetchFile(key)
