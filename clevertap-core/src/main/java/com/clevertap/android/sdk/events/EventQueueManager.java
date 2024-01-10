@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
-import android.location.Location;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
@@ -490,7 +489,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                         }
                     }, 2000);
                 } else {
-                    if (eventType == Constants.FETCH_EVENT) {
+                    if (eventType == Constants.FETCH_EVENT || eventType == Constants.NV_EVENT) {
                         addToQueue(context, event, eventType);
                     } else {
                         sessionManager.lazyCreateSession(context);
