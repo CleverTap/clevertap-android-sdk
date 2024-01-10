@@ -18,7 +18,9 @@ object HttpBitmapLoader {
         readTimeout = Constants.PN_IMAGE_READ_TIMEOUT_IN_MILLIS,
         useCaches = true,
         doInput = true,
-        requestMap = mapOf("Accept-Encoding" to "gzip, deflate")
+        requestMap = mapOf(
+            "Accept-Encoding" to "gzip, deflate",
+        )
     )
     private val inAppStandardHttpUrlConnectionParams = HttpUrlConnectionParams(
         connectTimeout = RESOURCE_CONNECTION_TIMEOUT,
@@ -115,7 +117,7 @@ object HttpBitmapLoader {
             HttpBitmapOperation.DOWNLOAD_ANY_BITMAP -> {
                 BitmapDownloadRequestHandler(
                     bitmapDownloader = BitmapDownloader(
-                        httpUrlConnectionParams = inAppStandardHttpUrlConnectionParams,
+                        httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
                         bitmapInputStreamReader = GzipBitmapInputStreamReader()
                     )
                 ).handleRequest(
