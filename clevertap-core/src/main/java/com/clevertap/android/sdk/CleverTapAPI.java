@@ -2808,11 +2808,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             coreState.getCallbackManager().addChangeUserCallback(impStore);
         }
 
-        if (storeRegistry.getInAppAssetsStore() == null) {
-            InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, deviceInfo, accountId);
-            storeRegistry.setInAppAssetsStore(assetsStore);
-        }
-
         /**
          * Reinitialising InAppFCManager with device id, if it's null
          * during first initialisation from CleverTapFactory.getCoreState()
