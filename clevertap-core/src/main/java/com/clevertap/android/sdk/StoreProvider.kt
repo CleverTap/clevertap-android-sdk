@@ -35,6 +35,8 @@ class StoreProvider {
         @Volatile
         private var INSTANCE: StoreProvider? = null
 
+        private const val ASSET_STORE_PREFIX = "inapp_assets"
+
         /**
          * Gets the singleton instance of the [StoreProvider].
          *
@@ -52,16 +54,14 @@ class StoreProvider {
      * Provides an instance of [InAppAssetsStore] using the given parameters.
      *
      * @param context The Android application context.
-     * @param deviceInfo The information about the device.
      * @param accountId The unique account identifier.
      * @return An instance of [InAppAssetsStore].
      */
     fun provideInAppAssetsStore(
         context: Context,
-        deviceInfo: DeviceInfo,
         accountId: String
     ): InAppAssetsStore {
-        val prefName = constructStorePreferenceName(STORE_TYPE_INAPP_ASSETS, deviceInfo.deviceID, accountId)
+        val prefName = constructStorePreferenceName(STORE_TYPE_INAPP_ASSETS, accountId)
         return InAppAssetsStore(getCTPreference(context, prefName))
     }
 
@@ -133,7 +133,7 @@ class StoreProvider {
      */
     fun constructStorePreferenceName(storeType: Int, deviceId: String = "", accountId: String = ""): String =
         when (storeType) {
-            STORE_TYPE_INAPP_ASSETS -> "inapp_assets:$deviceId:$accountId"
+            STORE_TYPE_INAPP_ASSETS -> "$ASSET_STORE_PREFIX:$accountId"
             STORE_TYPE_INAPP -> "${Constants.INAPP_KEY}:$deviceId:$accountId"
             STORE_TYPE_IMPRESSION -> "${Constants.KEY_COUNTS_PER_INAPP}:$deviceId:$accountId"
             STORE_TYPE_LEGACY_INAPP -> Constants.CLEVERTAP_STORAGE_TAG

@@ -115,6 +115,10 @@ class CleverTapFactory {
 
         Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
         taskInitStores.execute("initStores", () -> {
+            if (storeRegistry.getInAppAssetsStore() == null) {
+                InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, config.getAccountId());
+                storeRegistry.setInAppAssetsStore(assetsStore);
+            }
             if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
                 if (storeRegistry.getInAppStore() == null) {
                     InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
@@ -128,10 +132,6 @@ class CleverTapFactory {
                             config.getAccountId());
                     storeRegistry.setImpressionStore(impStore);
                     callbackManager.addChangeUserCallback(impStore);
-                }
-                if (storeRegistry.getInAppAssetsStore() == null) {
-                    InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, deviceInfo, config.getAccountId());
-                    storeRegistry.setInAppAssetsStore(assetsStore);
                 }
             }
             return null;
