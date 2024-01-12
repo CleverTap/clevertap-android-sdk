@@ -186,17 +186,24 @@ class ImpressionManager @JvmOverloads constructor(
      * @param timestampStart  The start timestamp of the time interval (in seconds since the Unix epoch).
      * @return The count of impressions within the specified time interval.
      */
-    private fun getImpressionCount(campaignId: String, timestampStart: Long): Int {
+    internal fun getImpressionCount(campaignId: String, timestampStart: Long): Int {
+
         val timestamps = getImpressions(campaignId)
 
-        var count = 0
-        for (i in (0..timestamps.lastIndex).reversed()) {
-            if (timestampStart > timestamps[i]) {
-                break
+        var low = 0
+        var high = timestamps.size - 1
+
+        while (low <= high) {
+            val mid = (low + high).ushr(1) // safe from overflows
+            val midVal = timestamps[mid]
+
+            if (midVal < timestampStart) {
+                low = mid + 1
+            } else {
+                high = mid - 1
             }
-            count++
         }
-        return count
+        return timestamps.size - low
     }
 
     fun getImpressions(campaignId: String): List<Long> {

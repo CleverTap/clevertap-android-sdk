@@ -412,6 +412,201 @@ class ImpressionManagerTest : BaseTestCase() {
         assertEquals(0, clearedSessionImpressionsSize) // Expecting sessionImpressions to be cleared
     }
 
+    @Test
+    fun getImpressionCountEmptyArray() {
+        val campaignId = "campaign123"
+        assertEquals(0, impressionManager.getImpressionCount(campaignId, 5))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToFirstElement() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(5, impressionManager.getImpressionCount(campaignId, 1))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToLastElement() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(1, impressionManager.getImpressionCount(campaignId, 9))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToFirstElementWithLeftDuplicates() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 1, 1, 1, 3, 5, 7, 9).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(9, impressionManager.getImpressionCount(campaignId, 1))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToLastElementWithRightDuplicates() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9, 9, 9, 9, 9).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(5, impressionManager.getImpressionCount(campaignId, 9))
+    }
+
+    @Test
+    fun getImpressionCountTargetGreaterThanAllElements() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(0, impressionManager.getImpressionCount(campaignId, 10))
+    }
+
+    @Test
+    fun getImpressionCountTargetLessThanAllElements() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(5, impressionManager.getImpressionCount(campaignId, 0))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToExistingElement() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(3, impressionManager.getImpressionCount(campaignId, 5))
+    }
+
+    @Test
+    fun getImpressionCountTargetWithDuplicates() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 3, 5, 7, 9).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(4, impressionManager.getImpressionCount(campaignId, 3))
+    }
+
+    @Test
+    fun `getImpressionCount with single element greater than target`() {
+        val campaignId = "campaign123"
+        listOf(5).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(1, impressionManager.getImpressionCount(campaignId, 4))
+    }
+
+    @Test
+    fun `getImpressionCount with single element equals to target`() {
+        val campaignId = "campaign123"
+        listOf(5).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(1, impressionManager.getImpressionCount(campaignId, 5))
+    }
+
+    @Test
+    fun `getImpressionCount with single element less than target`() {
+        val campaignId = "campaign123"
+        listOf(5).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(0, impressionManager.getImpressionCount(campaignId, 6))
+    }
+
+    @Test
+    fun `getImpressionCount with all equal elements and target greater`() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 1, 1, 1).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(0, impressionManager.getImpressionCount(campaignId, 2))
+    }
+
+    @Test
+    fun `getImpressionCount with duplicates`() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 2, 2, 3, 3).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(4, impressionManager.getImpressionCount(campaignId, 2))
+    }
+
+    @Test
+    fun `getImpressionCount with all equal elements and target equal`() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 1, 1, 1).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(5, impressionManager.getImpressionCount(campaignId, 1))
+    }
+
+    @Test
+    fun getImpressionCountTargetWithNegativeNumbers() {
+        val campaignId = "campaign123"
+        listOf(-5, -3, -1, 1, 3).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(2, impressionManager.getImpressionCount(campaignId, 0))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToFirstElementWithEvenListSize() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9, 11).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(6, impressionManager.getImpressionCount(campaignId, 1))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToLastElementWithEvenListSize() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9, 11).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(1, impressionManager.getImpressionCount(campaignId, 11))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToFirstElementWithLeftDuplicatesWithEvenListSize() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 1, 1, 1, 3, 5, 7, 9, 11).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(10, impressionManager.getImpressionCount(campaignId, 1))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToLastElementWithRightDuplicatesWithEvenListSize() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9, 11, 11, 11, 11, 11).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(5, impressionManager.getImpressionCount(campaignId, 11))
+    }
+
+    @Test
+    fun getImpressionCountTargetGreaterThanAllElementsWithEvenListSize() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9, 11).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(0, impressionManager.getImpressionCount(campaignId, 12))
+    }
+
+    @Test
+    fun getImpressionCountTargetLessThanAllElementsWithEvenListSize() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9, 11).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(6, impressionManager.getImpressionCount(campaignId, 0))
+    }
+
+    @Test
+    fun getImpressionCountTargetEqualToExistingElementWithEvenListSize() {
+        val campaignId = "campaign123"
+        listOf(1, 3, 5, 7, 9, 11).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(3, impressionManager.getImpressionCount(campaignId, 7))
+    }
+
+    @Test
+    fun getImpressionCountTargetWithDuplicatesWithEvenListSize() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 3, 5, 7, 9, 11).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(5, impressionManager.getImpressionCount(campaignId, 3))
+    }
+
+    @Test
+    fun `getImpressionCount with all equal elements and target greater with even list size`() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 1, 1, 1, 1).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(0, impressionManager.getImpressionCount(campaignId, 2))
+    }
+
+    @Test
+    fun `getImpressionCount with duplicates with even list size`() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 2, 2, 3, 3, 4, 4).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(4, impressionManager.getImpressionCount(campaignId, 3))
+    }
+
+    @Test
+    fun `getImpressionCount with all equal elements and target equal with even list size`() {
+        val campaignId = "campaign123"
+        listOf(1, 1, 1, 1, 1, 1).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(6, impressionManager.getImpressionCount(campaignId, 1))
+    }
+
+    @Test
+    fun getImpressionCountTargetWithNegativeNumbersWithEvenListSize() {
+        val campaignId = "campaign123"
+        listOf(-5, -3, -1, 1, 3, 5).forEach { recordImpression(it.toLong(), campaignId) }
+        assertEquals(3, impressionManager.getImpressionCount(campaignId, 0))
+    }
+
     private fun getSecondsSinceLastMidnight(): Long {
         val timeInMillis = Calendar.getInstance(Locale.US).apply {
             val currentDate = Date()
