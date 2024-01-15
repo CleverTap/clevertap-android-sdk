@@ -8,7 +8,6 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
-import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
@@ -464,8 +463,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
             config.getLogger().debug(config.getAccountId(),
-                    "Push notification: " + (extras == null ? "NULL" : extras.toString())
-                            + " not from CleverTap - will not process Notification Clicked event.");
+                    "Push notification not from CleverTap - will not process Notification Clicked event.");
             return;
         }
 
