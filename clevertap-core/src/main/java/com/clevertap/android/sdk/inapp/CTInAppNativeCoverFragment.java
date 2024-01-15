@@ -44,7 +44,6 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
                 imageView.setImageBitmap(inAppNotification
                         .getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
                 imageView.setTag(0);
-                imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
             }
         }
 
