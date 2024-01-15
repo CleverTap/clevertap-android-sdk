@@ -87,7 +87,7 @@ apply plugin: 'com.google.gms.google-services'
 Interstitial InApp Notification templates support Audio and Video with the help of ExoPlayer. To enable Audio/Video in your Interstitial InApp Notifications, add the following dependencies in your `build.gradle` file :
 
 ```groovy
-    implementation "com.google.android.exoplayer:exoplayer:2.19.1"
+implementation "com.google.android.exoplayer:exoplayer:2.19.1"
 implementation "com.google.android.exoplayer:exoplayer-hls:2.19.1"
 implementation "com.google.android.exoplayer:exoplayer-ui:2.19.1"
 ```  
