@@ -1,11 +1,28 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 6.0.0 (January 15, 2024)
+
+#### New Features
+
+* Adds support for client-side in-apps.
+
+#### Bug Fixes
+
+* Fixes no empty message for app inbox without tabs
+* Removes onClickListener for Image of Cover InApp
+
+#### Dependency Update
+
+* Adds support for exoplayer `v2.19.1`
+
 ### Version 5.2.2 (December 22, 2023)
 
 #### New Features
+
 * Migrates SDK dependency management to Version Catalog
 
 #### Bug Fixes
+
 * Fixes a bug where JavaScript was not working for custom html InApp header/footer templates.
 * Fixes an **NPE** related to AppInbox APIs.
 * Fixes a **ClassCastException** in `defineVariable` API of Product Experiences.
