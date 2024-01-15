@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
-
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventMediator;
+import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.InAppController;
+import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
@@ -48,6 +50,10 @@ public class CoreState extends CleverTapState {
 
     private InAppController inAppController;
 
+    private EvaluationManager evaluationManager;
+
+    private ImpressionManager impressionManager;
+
     private LoginController loginController;
 
     private SessionManager sessionManager;
@@ -66,8 +72,18 @@ public class CoreState extends CleverTapState {
 
     private CryptHandler cryptHandler;
 
+    private StoreRegistry storeRegistry;
+
     public CTVariables getCTVariables() {
         return ctVariables;
+    }
+
+    public ImpressionManager getImpressionManager() {
+        return impressionManager;
+    }
+
+    public StoreRegistry getStoreRegistry() {
+        return storeRegistry;
     }
 
     public void setCTVariables(final CTVariables CTVariables) {
@@ -78,6 +94,10 @@ public class CoreState extends CleverTapState {
 
     public Parser getParser() {
         return parser;
+    }
+
+    public void setImpressionManager(final ImpressionManager impressionManager) {
+        this.impressionManager = impressionManager;
     }
 
     public void setParser(final Parser parser) {
@@ -106,6 +126,10 @@ public class CoreState extends CleverTapState {
 
     public BaseEventQueueManager getBaseEventQueueManager() {
         return baseEventQueueManager;
+    }
+
+    public void setStoreRegistry(final StoreRegistry storeRegistry) {
+        this.storeRegistry = storeRegistry;
     }
 
     void setBaseEventQueueManager(final BaseEventQueueManager baseEventQueueManager) {
@@ -187,6 +211,14 @@ public class CoreState extends CleverTapState {
 
     public void setInAppController(final InAppController inAppController) {
         this.inAppController = inAppController;
+    }
+
+    public EvaluationManager getEvaluationManager() {
+        return evaluationManager;
+    }
+
+    public void setEvaluationManager(final EvaluationManager evaluationManager) {
+        this.evaluationManager = evaluationManager;
     }
 
     public LocalDataStore getLocalDataStore() {

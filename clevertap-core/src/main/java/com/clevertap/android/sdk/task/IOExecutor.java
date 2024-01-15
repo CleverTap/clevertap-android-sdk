@@ -16,14 +16,27 @@ import java.util.concurrent.TimeoutException;
  */
 class IOExecutor implements ExecutorService {
 
+    public IOExecutor() {
+        executorService = new ThreadPoolExecutor(numCores * 2, numCores * 2,
+                60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+    }
+
+    public IOExecutor(int poolSize) {
+        executorService = new ThreadPoolExecutor(4,
+                poolSize,
+                60L,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>()
+        );
+    }
+
     private final int numCores = Runtime.getRuntime().availableProcessors();
 
     public void setExecutorService(final ExecutorService executorService) {
         this.executorService = executorService;
     }
 
-    ExecutorService executorService = new ThreadPoolExecutor(numCores * 2, numCores * 2,
-            60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+    ExecutorService executorService;
 
     @Override
     public boolean awaitTermination(final long timeout, final TimeUnit unit) throws InterruptedException {

@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -148,6 +149,12 @@ public class LoginController {
                     resetProductConfigs();
                     recordDeviceIDErrors();
                     resetDisplayUnits();
+
+                    final List<ChangeUserCallback> changeUserCallbackList
+                            = callbackManager.getChangeUserCallbackList();
+                    for (ChangeUserCallback callback : changeUserCallbackList) {
+                        callback.onChangeUser(deviceInfo.getDeviceID(), config.getAccountId());
+                    }
                     controllerManager.getInAppFCManager().changeUser(deviceInfo.getDeviceID());
                 } catch (Throwable t) {
                     config.getLogger().verbose(config.getAccountId(), "Reset Profile error", t);
@@ -324,4 +331,5 @@ public class LoginController {
             controllerManager.getCtVariables().clearUserContent();
         }
     }
+
 }

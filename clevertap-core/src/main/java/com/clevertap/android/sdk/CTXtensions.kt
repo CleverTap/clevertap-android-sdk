@@ -2,19 +2,21 @@
 
 package com.clevertap.android.sdk
 
-import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
+import android.content.SharedPreferences
+import android.location.Location
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.task.CTExecutorFactory
+import org.json.JSONArray
+import org.json.JSONObject
 
 fun Context.isPackageAndOsTargetsAbove(apiLevel: Int) =
     VERSION.SDK_INT > apiLevel && targetSdkVersion > apiLevel
@@ -142,4 +144,132 @@ fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: S
     } catch (e: Exception) {
         e.printStackTrace()
     }
+}
+
+/**
+ * Checks whether the given index is a valid index within the JSONArray.
+ *
+ * @param index The index to be checked.
+ * @return `true` if the JSONArray is null or the index is out of bounds, `false` otherwise.
+ */
+fun JSONArray?.isInvalidIndex(index: Int): Boolean {
+    return this == null || index < 0 || index >= this.length()
+}
+
+/**
+ * Extension function to check if a SharedPreferences file has data.
+ * @return `true` if the SharedPreferences file has data, `false` otherwise.
+ */
+fun SharedPreferences.hasData(): Boolean {
+    return all.isNotEmpty()
+}
+
+/**
+ * Returns the original JSONArray if not null, or an empty JSONArray if the original is null.
+ *
+ * @return The original JSONArray or an empty JSONArray.
+ */
+fun JSONArray?.orEmptyArray(): JSONArray {
+    return this ?: JSONArray()
+}
+
+/**
+ * Converts a JSONArray to a List of elements of type [T].
+ *
+ * @return A List of elements of type [T] extracted from the JSONArray.
+ * @reified T The expected type of elements in the list.
+ */
+inline fun <reified T> JSONArray.toList(): List<T> {
+    val list = mutableListOf<T>()
+    for (index in 0 until length()) {
+        val element = get(index)
+        if (element is T) {
+            list.add(element)
+        }
+    }
+    return list
+}
+
+/**
+ * Iterates over the elements of the JSONArray of type [T].
+ *
+ * @param foreach Lambda function to be executed for each element of type [T].
+ * @reified T The expected type of elements in the JSONArray.
+ */
+inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit) {
+    for (index in 0 until length()) {
+        val element = get(index)
+        if (element is T) {
+            foreach(element)
+        }
+    }
+}
+
+/**
+ * Safely retrieves a JSONArray from the JSONObject using the specified [key].
+ *
+ * @param key The key to retrieve the JSONArray.
+ * @return A [Pair] indicating success and the retrieved JSONArray.
+ *         The first value of the Pair is `true` if the JSONArray is not null and not empty, `false` otherwise.
+ *         The second value of the Pair is the non-empty JSONArray if it exists, or `null` otherwise.
+ */
+fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
+    val list: JSONArray = optJSONArray(key) ?: return Pair(false, null)
+    return Pair(list.length() > 0, list.takeIf { it.length() > 0 })
+}
+
+/**
+ * Copies all key-value pairs from the specified [other] JSONObject to this JSONObject.
+ *
+ * @param other The JSONObject to copy key-value pairs from.
+ */
+fun JSONObject.copyFrom(other: JSONObject) {
+    for (key in other.keys()) {
+        this.put(key, other.opt(key))
+    }
+}
+
+/**
+ * Checks if the JSONObject is not null and has at least one key-value pair.
+ *
+ * @return `true` if the JSONObject is not null and not empty, `false` otherwise.
+ */
+fun JSONObject?.isNotNullAndEmpty() = this != null && this.length() > 0
+
+/**
+ * Concatenates this String with another String if it is not null.
+ *
+ * This extension function checks if both the receiver String (denoted by 'this') and the [other] String are not null.
+ * If both Strings are not null, they are concatenated using the specified [separator]. If either String is null,
+ * it returns the non-null String, or null if both are null.
+ *
+ * @param other The String to concatenate with the receiver String.
+ * @param separator The separator between the two Strings (default is an empty string).
+ * @return The concatenated String or null if both Strings are null.
+ *
+ * Example Usage:
+ * ```
+ * val result = "Hello".concatIfNotNull("World", ", ")
+ * // Result: "Hello, World"
+ *
+ * val nullResult = null.concatIfNotNull("World")
+ * // Result: World
+ * ```
+ */
+fun String?.concatIfNotNull(other: String?, separator: String = ""): String? {
+    return if (this != null && other != null) {
+        this + separator + other
+    } else {
+        this ?: other
+    }
+}
+
+/**
+ * Checks if the Location is valid, i.e., latitude is in the range [-90.0, 90.0] and
+ * longitude is in the range [-180.0, 180.0].
+ *
+ * @return `true` if the Location is valid, `false` otherwise.
+ */
+fun Location.isValid(): Boolean {
+    return this.latitude in -90.0..90.0 && this.longitude in -180.0..180.0
 }

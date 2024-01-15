@@ -9,12 +9,10 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CTXtensions;
@@ -27,6 +25,7 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueCursor;
 import com.clevertap.android.sdk.events.EventGroup;
@@ -34,9 +33,7 @@ import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
 import com.clevertap.android.sdk.response.ARPResponse;
-import com.clevertap.android.sdk.response.BaseResponse;
 import com.clevertap.android.sdk.response.CleverTapResponse;
-import com.clevertap.android.sdk.response.CleverTapResponseHelper;
 import com.clevertap.android.sdk.response.ConsoleResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.FeatureFlagResponse;
@@ -47,49 +44,68 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
+import com.clevertap.android.sdk.response.SyncUpstreamResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class NetworkManager extends BaseNetworkManager {
     private static SSLSocketFactory sslSocketFactory;
     private static SSLContext sslContext;
     private final BaseCallbackManager callbackManager;
-    private CleverTapResponse cleverTapResponse;
+    private final List<CleverTapResponse> cleverTapResponses = new ArrayList<>();
     private final CleverTapInstanceConfig config;
     private final Context context;
     private final ControllerManager controllerManager;
     private final CoreMetaData coreMetaData;
     private int currentRequestTimestamp = 0;
+
     private final BaseDatabaseManager databaseManager;
+
     private final DeviceInfo deviceInfo;
+
     private final LocalDataStore localDataStore;
+
     private final Logger logger;
+
     private int networkRetryCount = 0;
+
     private final ValidationResultStack validationResultStack;
+
     private int responseFailureCount = 0;
+
     private final Validator validator;
+
     private int minDelayFrequency = 0;
+
+    private final List<NetworkHeadersListener> mNetworkHeadersListeners = new ArrayList<>();
+
+    public void addNetworkHeadersListener(NetworkHeadersListener listener) {
+        mNetworkHeadersListeners.add(listener);
+    }
+
+    public void removeNetworkHeadersListener(NetworkHeadersListener listener) {
+        mNetworkHeadersListeners.remove(listener);
+    }
 
     public static boolean isNetworkOnline(Context context) {
 
@@ -119,7 +135,9 @@ public class NetworkManager extends BaseNetworkManager {
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
-            LocalDataStore localDataStore) {
+            LocalDataStore localDataStore,
+            CryptHandler cryptHandler,
+            InAppResponse inAppResponse) {
         this.context = context;
         this.config = config;
         this.deviceInfo = deviceInfo;
@@ -132,29 +150,19 @@ public class NetworkManager extends BaseNetworkManager {
         this.validationResultStack = validationResultStack;
         this.controllerManager = controllerManager;
         databaseManager = baseDatabaseManager;
-        // maintain order
-        CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
 
-        cleverTapResponse = new GeofenceResponse(cleverTapResponse, config, callbackManager);
-        cleverTapResponse = new ProductConfigResponse(cleverTapResponse, config, coreMetaData, controllerManager);
-        cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config, controllerManager);
-        cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
-                callbackManager, controllerManager);
-        cleverTapResponse = new FetchVariablesResponse(cleverTapResponse,config,controllerManager,callbackManager);
-        cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config,
-                baseDatabaseManager, callbackManager, controllerManager);
-        cleverTapResponse = new InboxResponse(cleverTapResponse, config, ctLockManager,
-                callbackManager, controllerManager);
-
-        cleverTapResponse = new ConsoleResponse(cleverTapResponse, config);
-        cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator, controllerManager);
-        cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
-        cleverTapResponse = new InAppResponse(cleverTapResponse, config, controllerManager, false);
-
-        cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore, cleverTapResponse);
-
-        setCleverTapResponse(cleverTapResponse);
-
+        cleverTapResponses.add(inAppResponse);
+        cleverTapResponses.add(new MetadataResponse(config, deviceInfo, this));
+        cleverTapResponses.add(new ARPResponse(config, this, validator, controllerManager));
+        cleverTapResponses.add(new ConsoleResponse(config));
+        cleverTapResponses.add(new InboxResponse(config, ctLockManager, callbackManager, controllerManager));
+        cleverTapResponses.add(new PushAmpResponse(context, config, baseDatabaseManager, callbackManager, controllerManager));
+        cleverTapResponses.add(new FetchVariablesResponse(config,controllerManager,callbackManager));
+        cleverTapResponses.add(new DisplayUnitResponse(config, callbackManager, controllerManager));
+        cleverTapResponses.add(new FeatureFlagResponse(config, controllerManager));
+        cleverTapResponses.add(new ProductConfigResponse(config, coreMetaData, controllerManager));
+        cleverTapResponses.add(new GeofenceResponse(config, callbackManager));
+        cleverTapResponses.add(new SyncUpstreamResponse(localDataStore, logger, config.getAccountId()));
     }
 
     /**
@@ -211,6 +219,10 @@ public class NetworkManager extends BaseNetworkManager {
             if (!loadMore) {
                 // network error
                 controllerManager.invokeCallbacksForNetworkError();
+                controllerManager.invokeBatchListener(queue, false);
+            } else {
+                // response was successfully received
+                controllerManager.invokeBatchListener(queue, true);
             }
         }
     }
@@ -315,14 +327,6 @@ public class NetworkManager extends BaseNetworkManager {
             }
         }
         return conn;
-    }
-
-    CleverTapResponse getCleverTapResponse() {
-        return cleverTapResponse;
-    }
-
-    void setCleverTapResponse(final CleverTapResponse cleverTapResponse) {
-        this.cleverTapResponse = cleverTapResponse;
     }
 
     int getCurrentRequestTimestamp() {
@@ -437,11 +441,10 @@ public class NetworkManager extends BaseNetworkManager {
      * Constructs a header JSON object and inserts it into a new JSON array along with the given JSON array.
      *
      * @param context The Context object.
-     * @param arr     The JSON array to include in the resulting array.
      * @param caller  The optional caller identifier.
      * @return A new JSON array as a string with the constructed header and the given JSON array.
      */
-    String insertHeader(Context context, JSONArray arr,@Nullable final String caller) {//[{}]
+    JSONObject getHeader(Context context, @Nullable final String caller) {//[{}]
         try {
             // Construct the header JSON object
             final JSONObject header = new JSONObject();
@@ -584,15 +587,15 @@ public class NetworkManager extends BaseNetworkManager {
             // Create a new JSON array with the header and the given JSON array
             // Return the new JSON array as a string
             // Resort to string concat for backward compatibility
-            return "[" + header + ", " + arr.toString().substring(1);
+            return header;
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "CommsManager: Failed to attach header", t);
-            return arr.toString();
+            return null;
         }
     }
 
     void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
-            final Runnable handshakeSuccessCallback) {
+                                   final Runnable handshakeSuccessCallback) {
         final String endpoint = getEndpoint(true, eventGroup);
         if (endpoint == null) {
             logger.verbose(config.getAccountId(), "Unable to perform handshake, endpoint is null");
@@ -702,7 +705,22 @@ public class NetworkManager extends BaseNetworkManager {
             conn = buildHttpsURLConnection(endpoint);
 
             final String body;
-            final String req = insertHeader(context, queue,caller);
+//            final String req = insertHeader(context, queue,caller);
+            final JSONObject header = getHeader(context, caller);
+            final EndpointId endpointId = EndpointId.fromString(endpoint);
+            String req;
+            if (header == null) {
+                req = queue.toString();
+            } else {
+                for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
+                    final JSONObject headersToAttach = listener.onAttachHeaders(endpointId);
+                    if (headersToAttach != null) {
+                        CTXtensions.copyFrom(header, headersToAttach);
+                    }
+                }
+                req = "[" + header + ", " + queue.toString().substring(1);
+            }
+
             if (req == null) {
                 logger.debug(config.getAccountId(), "Problem configuring queue request, unable to send queue");
                 return false;
@@ -742,6 +760,12 @@ public class NetworkManager extends BaseNetworkManager {
                 }
             }
 
+            for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
+                if (header != null) {
+                    listener.onSentHeaders(header, endpointId);
+                }
+            }
+
             if (processIncomingHeaders(context, conn)) {
                 // Read the response body from the connection input stream
                 BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
@@ -755,14 +779,21 @@ public class NetworkManager extends BaseNetworkManager {
 
                 // Process the response body
                 if (eventGroup == EventGroup.VARIABLES) {
-                    CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
-                    cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator,
-                            controllerManager);
-                    cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore,
-                            cleverTapResponse);
-                    cleverTapResponse.processResponse(null, body, this.context);
+                    processVariablesResponse(body);
                 } else {
-                    getCleverTapResponse().processResponse(null, body, this.context);
+                    // check if there is app launched/wzrk_fetch event
+                    boolean found = false;
+                    for (int index = 0; index < queue.length(); index++) {
+                        JSONObject event = queue.getJSONObject(index);
+                        final String eventType = event.getString("type");
+                        if ("event".equals(eventType)) {
+                            final String evtName = event.getString("evtName");
+                            if (Constants.APP_LAUNCHED_EVENT.equals(evtName) || Constants.WZRK_FETCH.equals(evtName)) {
+                                found = true;
+                            }
+                        }
+                    }
+                    processAllResponses(body, found);
                 }
             }
 
@@ -793,12 +824,43 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    private void processVariablesResponse(String body) {
+        try {
+            JSONObject jsonObject = new JSONObject(body);
+
+            logger.verbose(config.getAccountId(), "Processing variables response : " + jsonObject);
+
+            new ARPResponse(config, this, validator, controllerManager)
+                    .processResponse(jsonObject, body, this.context);
+            new SyncUpstreamResponse(localDataStore, logger, config.getAccountId())
+                    .processResponse(jsonObject, body, context);
+        } catch (JSONException e) {
+            logger.verbose(config.getAccountId(), "Error in parsing response.", e);
+            incrementResponseFailureCount();
+        }
+    }
+
+    private void processAllResponses(String body, boolean isFullResponse) {
+        try {
+            JSONObject jsonObject = new JSONObject(body);
+
+            logger.verbose(config.getAccountId(), "Processing response : " + jsonObject);
+
+            for (CleverTapResponse response: cleverTapResponses) {
+                response.isFullResponse = isFullResponse;
+               response.processResponse(jsonObject, body, context);
+            }
+        } catch (JSONException e) {
+            logger.verbose(config.getAccountId(), "Error in parsing response.", e);
+            incrementResponseFailureCount();
+        }
+    }
+
     private void notifyListenersForPushImpressionSentToServer(final JSONArray queue) throws JSONException {
 
          /* verify whether there is a listener assigned to the push ID for monitoring the 'push impression'
          event.
          */
-
         for (int i = 0; i < queue.length(); i++) {
             try {
                 JSONObject notif = queue.getJSONObject(i).optJSONObject("evtData");
@@ -808,7 +870,7 @@ public class NetworkManager extends BaseNetworkManager {
 
                     notifyListenerForPushImpressionSentToServer(PushNotificationUtil.
                             buildPushNotificationRenderedListenerKey(pushAccountId,
-                            pushId));
+                                    pushId));
 
                 }
             } catch (JSONException e) {
@@ -853,7 +915,7 @@ public class NetworkManager extends BaseNetworkManager {
 
             case 401:
                 logger.info("variables", "Unauthorized access from a non-test profile. "
-                    + "Please mark this profile as a test profile from the CleverTap dashboard.");
+                        + "Please mark this profile as a test profile from the CleverTap dashboard.");
                 return true;
 
             default:
@@ -865,7 +927,7 @@ public class NetworkManager extends BaseNetworkManager {
     private JSONObject getErrorStreamAsJson(HttpsURLConnection conn) {
         try {
             BufferedReader br = new BufferedReader(
-                new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
+                    new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
 
             StringBuilder text = new StringBuilder();
             String line;
