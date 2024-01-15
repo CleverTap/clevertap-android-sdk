@@ -3,7 +3,6 @@ package com.clevertap.android.sdk;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
@@ -77,6 +76,11 @@ public interface Constants {
     String ERROR_KEY = "wzrk_error";
     int PUSH_DELAY_MS = 1000;
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
+    String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
+    String INAPP_IMAGE_INTERSTITIAL_TYPE = "image-interstitial";
+    String INAPP_IMAGE_INTERSTITIAL_CONFIG = "imageInterstitialConfig";
+    String INAPP_HTML_SPLIT = "\"##Vars##\"";
+    String INAPP_IMAGE_INTERSTITIAL_HTML_NAME = "image_interstitial.html";
     String INBOX_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inbox";
     String DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_adunit";
     String INAPP_HTML_TAG = "html";
@@ -94,6 +98,20 @@ public interface Constants {
     String INAPP_NOTIF_DARKEN_SCREEN = "dk";
     String INAPP_NOTIF_SHOW_CLOSE = "sc";
     String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
+
+    String INAPP_NOTIFS_STALE_KEY = "inapp_stale";
+    String INAPP_NOTIFS_APP_LAUNCHED_KEY = "inapp_notifs_applaunched";
+
+    String INAPP_NOTIFS_KEY_CS = "inapp_notifs_cs";
+    String INAPP_NOTIFS_KEY_SS = "inapp_notifs_ss";
+
+    String INAPP_DELIVERY_MODE_KEY = "inapp_delivery_mode";
+
+    String PREFS_INAPP_KEY_CS = INAPP_NOTIFS_KEY_CS;
+    String PREFS_INAPP_KEY_SS = INAPP_NOTIFS_KEY_SS;
+    String PREFS_EVALUATED_INAPP_KEY_SS = "evaluated_ss";
+    String PREFS_SUPPRESSED_INAPP_KEY_CS = "suppressed_ss";
+
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
@@ -102,9 +120,12 @@ public interface Constants {
     String GEOFENCES_JSON_RESPONSE_KEY = "geofences";
     String DISCARDED_EVENT_JSON_KEY = "d_e";
     String INAPP_MAX_DISPLAY_COUNT = "mdc";
-    String INAPP_MAX_PER_SESSION = "imc";
+    String INAPP_MAX_PER_SESSION_KEY = "imc";
+    String INAPP_MAX_PER_DAY_KEY = "imp";
     String INAPP_WINDOW = "w";
     String INAPP_KEY = "inApp";
+    String INAPP_WZRK_PIVOT = "wzrk_pivot";
+    String INAPP_WZRK_CGID = "wzrk_cgId";
     int INAPP_CLOSE_IV_WIDTH = 40;
     String INAPP_JS_ENABLED = "isJsEnabled";
     String NOTIFICATION_ID_TAG = "wzrk_id";
@@ -138,11 +159,14 @@ public interface Constants {
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";
     String CHARGED_EVENT = "Charged";
+    String KEY_ITEMS = "Items";
     String KEY_MUTED = "comms_mtd";
     int EMPTY_NOTIFICATION_ID = -1000;
     String KEY_MAX_PER_DAY = "istmcd_inapp";
     String KEY_COUNTS_SHOWN_TODAY = "istc_inapp";
     String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
+
+    String KEY_TRIGGERS_PER_INAPP = "triggers_per_inapp";
     String INAPP_ID_IN_PAYLOAD = "ti";
     int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
     String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
@@ -179,10 +203,16 @@ public interface Constants {
     String KEY_CONFIG = "config";
     String KEY_C2A = "wzrk_c2a";
     String KEY_EFC = "efc";
+    String KEY_EXCLUDE_GLOBAL_CAPS = "excludeGlobalFCaps";
     String KEY_TLC = "tlc";
     String KEY_TDC = "tdc";
     String KEY_KV = "kv";
     String KEY_TYPE = "type";
+    String KEY_LIMIT = "limit";
+    String KEY_FREQUENCY = "frequency";
+    String KEY_T = "t";
+    String KEY_EVT_NAME = "evtName";
+    String KEY_EVT_DATA = "evtData";
     String KEY_FALLBACK_NOTIFICATION_SETTINGS = "fbSettings";
     String KEY_REQUEST_FOR_NOTIFICATION_PERMISSION = "rfp";
     int NOTIFICATION_PERMISSION_REQUEST_CODE = 102;
@@ -192,6 +222,11 @@ public interface Constants {
     String KEY_TEXT = "text";
     String KEY_KEY = "key";
     String KEY_VALUE = "value";
+    String KEY_EVENT_NAME = "eventName";
+    String KEY_EVENT_PROPERTIES = "eventProperties";
+    String KEY_ITEM_PROPERTIES = "itemProperties";
+    String KEY_GEO_RADIUS_PROPERTIES = "geoRadius";
+    String KEY_PROPERTY_VALUE = "propertyValue";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
     String KEY_HIDE_CLOSE = "close";
@@ -230,6 +265,32 @@ public interface Constants {
     String WZRK_COLOR = "wzrk_clr";
     String WZRK_SOUND = "wzrk_sound";
     String WZRK_TIME_TO_LIVE = "wzrk_ttl";
+    String WZRK_TIME_TO_LIVE_OFFSET = "wzrk_ttl_offset";
+    String INAPP_SUPPRESSED = "suppressed";
+    String INAPP_SS_EVAL_META = "inapps_eval";
+    String INAPP_SUPPRESSED_META = "inapps_suppressed";
+    String INAPP_OPERATOR = "operator";
+    String INAPP_PROPERTYNAME = "propertyName";
+    String INAPP_WHEN_TRIGGERS = "whenTriggers";
+    String INAPP_WHEN_LIMITS = "whenLimit";
+    String INAPP_FC_LIMITS = "frequencyLimits";
+    String INAPP_OCCURRENCE_LIMITS = "occurrenceLimits";
+
+    String INAPP_PRIORITY = "priority";
+
+    String CLTAP_PROP_CAMPAIGN_ID = "Campaign id";
+    String CLTAP_PROP_VARIANT = "Variant";
+    String CLTAP_APP_VERSION = "Version";
+    String CLTAP_LATITUDE = "Latitude";
+    String CLTAP_LONGITUDE = "Longitude";
+    String CLTAP_OS_VERSION = "OS Version";
+    String CLTAP_SDK_VERSION = "SDK Version";
+    String CLTAP_CARRIER = "Carrier";
+    String CLTAP_NETWORK_TYPE = "Radio";
+    String CLTAP_CONNECTED_TO_WIFI = "wifi";
+    String CLTAP_BLUETOOTH_VERSION = "BluetoothVersion";
+    String CLTAP_BLUETOOTH_ENABLED = "BluetoothEnabled";
+
     String WZRK_RNV = "wzrk_rnv";
     String BLACK = "#000000";
     String WHITE = "#FFFFFF";
@@ -270,6 +331,10 @@ public interface Constants {
     String KEY_LINKS = "links";
     String KEY_ENCRYPTION_MIGRATION = "encryptionmigration";
     String KEY_ENCRYPTION_CGK = "cgk";
+    String KEY_ENCRYPTION_INAPP_CS = "cs";
+
+    String KEY_ENCRYPTION_INAPP_SS = "ss";
+
     String KEY_ENCRYPTION_NAME = "Name";
     String KEY_ENCRYPTION_IDENTITY = "Identity";
     String KEY_ENCRYPTION_PHONE = "Phone";
@@ -285,8 +350,10 @@ public interface Constants {
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
     int FETCH_TYPE_VARIABLES = 4;
+    int FETCH_TYPE_IN_APPS = 5;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
+    String LOG_TAG_INAPP = "InApp : ";
     // error message codes
     int INVALID_MULTI_VALUE = 1;
     int PUSH_KEY_EMPTY = 2;

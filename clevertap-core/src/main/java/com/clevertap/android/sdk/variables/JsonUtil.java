@@ -30,7 +30,7 @@ public class JsonUtil {
     }
   }
 
-  private static JSONArray listToJsonArray(Iterable<?> list) throws JSONException {
+  public static JSONArray listToJsonArray(Iterable<?> list) throws JSONException {
     if (list == null) {
       return null;
     }
@@ -73,7 +73,7 @@ public class JsonUtil {
     return result;
   }
 
-  private static <T> List<T> listFromJson(JSONArray json) {
+  public static <T> List<T> listFromJson(JSONArray json) {
     if (json == null) {
       return null;
     }

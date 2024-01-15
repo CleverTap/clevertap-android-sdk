@@ -86,7 +86,7 @@ object HomeScreenModel {
                 "Hard permission dialog with fallbackToSettings - false",
                 "Hard permission dialog with fallbackToSettings - true"
             ),
-            "INAPP" to listOf("Footer InApp", "Footer InApp without image")
+            "INAPP" to listOf("Footer InApp", "Footer InApp without image", "Header")
         )
     }
 }

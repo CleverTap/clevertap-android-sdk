@@ -1,0 +1,656 @@
+{
+  "arp": {
+    "j_n": "Zw==",
+    "i_n": "YmpjfA==",
+    "d_ts": 1700806038,
+    "dh": 189146920,
+    "v": 2,
+    "j_s": "{ }",
+    "id": "67Z-RRK-696Z",
+    "e_ts": 0,
+    "d_e": [],
+    "r_ts": 1700810420,
+    "wdt": 2.08,
+    "hgt": 4.7,
+    "av": "1.4.6-push-plus",
+    "sv": 60000
+  },
+  "inapp_stale": [],
+  "imc": 10,
+  "imp": 20,
+  "inapp_delivery_mode": "CS",
+  "inapp_notifs_cs": [
+    {
+      "type": "alert-template",
+      "bg": "#ffffff",
+      "tablet": false,
+      "close": true,
+      "message": {
+        "text": "expiry check",
+        "color": "#434761",
+        "replacements": "expiry check",
+        "og": ""
+      },
+      "title": {
+        "text": "Inapp with date and time",
+        "color": "#434761",
+        "replacements": "Inapp with date and time",
+        "og": ""
+      },
+      "buttons": [
+        {
+          "text": "Button",
+          "actions": {
+            "close": true,
+            "type": "close",
+            "android": "",
+            "ios": "",
+            "kv": {}
+          }
+        }
+      ],
+      "media": {},
+      "isMediaSourceRecommended": false,
+      "recommendedText": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "mediaLandscape": {},
+      "isMediaSourceRecommendedLandscape": false,
+      "recommendedTextLandscape": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "hasPortrait": true,
+      "hasLandscape": true,
+      "rounded-borders": false,
+      "is_native": true,
+      "ti": 1700810282,
+      "wzrk_id": "1700810282_20231124",
+      "wzrk_pivot": "wzrk_default",
+      "priority": 7,
+      "whenTriggers": [
+        {
+          "eventName": "BlockBRTesting",
+          "eventProperties": []
+        }
+      ],
+      "frequencyLimits": [
+        {
+          "type": "session",
+          "limit": 5
+        }
+      ],
+      "excludeGlobalFCaps": false,
+      "occurrenceLimits": [],
+      "wzrk_ttl_offset": 259200
+    },
+    {
+      "type": "cover",
+      "bg": "#ffffff",
+      "tablet": false,
+      "close": true,
+      "message": {
+        "text": "b",
+        "color": "#434761",
+        "replacements": "b",
+        "og": ""
+      },
+      "title": {
+        "text": "a",
+        "color": "#434761",
+        "replacements": "a",
+        "og": ""
+      },
+      "buttons": [],
+      "media": {},
+      "isMediaSourceRecommended": false,
+      "recommendedText": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "mediaLandscape": {},
+      "isMediaSourceRecommendedLandscape": false,
+      "recommendedTextLandscape": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "hasPortrait": true,
+      "hasLandscape": false,
+      "rounded-borders": false,
+      "is_native": true,
+      "ti": 1699357949,
+      "wzrk_id": "1699357949_20231124",
+      "wzrk_pivot": "wzrk_default",
+      "priority": 1,
+      "whenTriggers": [
+        {
+          "eventName": "Geocluster Entered",
+          "eventProperties": [
+            {
+              "propertyName": "Cluster id",
+              "operator": 1,
+              "propertyValue": 1
+            }
+          ]
+        }
+      ],
+      "frequencyLimits": [],
+      "excludeGlobalFCaps": false,
+      "occurrenceLimits": [],
+      "wzrk_ttl_offset": 172800
+    },
+    {
+      "type": "interstitial",
+      "bg": "#B7DBD0",
+      "tablet": false,
+      "close": true,
+      "message": {
+        "text": "Setting up test message",
+        "color": "#2738A5",
+        "replacements": "Setting up test message",
+        "og": ""
+      },
+      "title": {
+        "text": "Image interstitial",
+        "color": "#132ED8",
+        "replacements": "Image interstitial",
+        "og": ""
+      },
+      "buttons": [],
+      "media": {
+        "url": "https://d3agmz665ce71e.cloudfront.net/dist/1696322176/i/ad16cf67c5474e26963530be7cc2198c.jpeg?v=1700474710",
+        "poster": "",
+        "key": "ad16cf67c5474e26963530be7cc2198c",
+        "content_type": "image/jpeg",
+        "filename": "",
+        "processing": false
+      },
+      "isMediaSourceRecommended": false,
+      "recommendedText": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "mediaLandscape": {},
+      "isMediaSourceRecommendedLandscape": false,
+      "recommendedTextLandscape": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "hasPortrait": true,
+      "hasLandscape": true,
+      "rounded-borders": false,
+      "is_native": true,
+      "ti": 1700474898,
+      "wzrk_id": "1700474898_20231124",
+      "wzrk_pivot": "wzrk_default",
+      "priority": 7,
+      "whenTriggers": [
+        {
+          "eventName": "testEventPushAmp",
+          "eventProperties": []
+        }
+      ],
+      "frequencyLimits": [],
+      "excludeGlobalFCaps": false,
+      "occurrenceLimits": [],
+      "wzrk_ttl_offset": 172800
+    },
+    {
+      "type": "header-template",
+      "buttons": [
+        {
+          "text": "DeepLink",
+          "color": "#000000",
+          "bg": "#1EB858",
+          "actions": {
+            "close": true,
+            "type": "url",
+            "android": "https://www.clevertap.com",
+            "ios": "https://www.clevertap.com",
+            "kv": {}
+          },
+          "border": "",
+          "radius": ""
+        },
+        {
+          "text": "CLOSE",
+          "color": "#000000",
+          "bg": "#1EB858",
+          "actions": {
+            "close": true,
+            "type": "close",
+            "android": "",
+            "ios": "",
+            "kv": {}
+          },
+          "border": "",
+          "radius": ""
+        }
+      ],
+      "bg": "#ffffff",
+      "tablet": false,
+      "close": true,
+      "message": {
+        "text": "Client Side Testing",
+        "color": "#434761",
+        "replacements": "Client Side Testing",
+        "og": ""
+      },
+      "title": {
+        "text": "Header",
+        "color": "#434761",
+        "replacements": "Header",
+        "og": ""
+      },
+      "media": {
+        "url": "https://d2hduo7492lb76.cloudfront.net/dist/1696322176/i/e9ec4f2393894dbdb2d7c81c9cafb6b1.jpeg?v=1699442512",
+        "poster": "",
+        "key": "e9ec4f2393894dbdb2d7c81c9cafb6b1",
+        "content_type": "image/jpeg",
+        "filename": "",
+        "processing": false
+      },
+      "isMediaSourceRecommended": false,
+      "recommendedText": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "mediaLandscape": {},
+      "isMediaSourceRecommendedLandscape": false,
+      "recommendedTextLandscape": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "hasPortrait": true,
+      "hasLandscape": true,
+      "rounded-borders": false,
+      "is_native": true,
+      "ti": 1699442760,
+      "wzrk_id": "1699442760_20231124",
+      "wzrk_pivot": "wzrk_default",
+      "priority": 1,
+      "whenTriggers": [
+        {
+          "eventName": "Header",
+          "eventProperties": []
+        }
+      ],
+      "frequencyLimits": [
+        {
+          "type": "minutes",
+          "limit": 10,
+          "frequency": 30
+        }
+      ],
+      "excludeGlobalFCaps": true,
+      "occurrenceLimits": [
+        {
+          "type": "onExactly",
+          "limit": 1
+        }
+      ],
+      "wzrk_ttl_offset": 172800
+    },
+    {
+      "type": "interstitial-image",
+      "bg": "#ffffff",
+      "tablet": false,
+      "close": true,
+      "message": {
+        "text": "Message",
+        "color": "#434761",
+        "replacements": "",
+        "og": ""
+      },
+      "title": {
+        "text": "Title",
+        "color": "#434761",
+        "replacements": "",
+        "og": ""
+      },
+      "buttons": [
+        {
+          "actions": {
+            "close": true,
+            "type": "close",
+            "android": "",
+            "ios": "",
+            "kv": {}
+          }
+        }
+      ],
+      "media": {
+        "url": "https://d2hduo7492lb76.cloudfront.net/dist/1696322176/i/825c00010358491aab8e52f3d987624d.jpeg?v=1699441301",
+        "poster": "",
+        "key": "825c00010358491aab8e52f3d987624d",
+        "content_type": "image/jpeg",
+        "filename": "",
+        "processing": false
+      },
+      "isMediaSourceRecommended": false,
+      "recommendedText": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "mediaLandscape": {},
+      "isMediaSourceRecommendedLandscape": false,
+      "recommendedTextLandscape": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "hasPortrait": true,
+      "hasLandscape": false,
+      "rounded-borders": false,
+      "is_native": true,
+      "ti": 1699441540,
+      "wzrk_id": "1699441540_20231124",
+      "wzrk_pivot": "wzrk_default",
+      "priority": 5,
+      "whenTriggers": [
+        {
+          "eventName": "App Launched",
+          "eventProperties": []
+        }
+      ],
+      "frequencyLimits": [
+        {
+          "type": "session",
+          "limit": 5
+        }
+      ],
+      "excludeGlobalFCaps": true,
+      "occurrenceLimits": [
+        {
+          "type": "onEvery",
+          "limit": 2
+        }
+      ],
+      "wzrk_ttl_offset": 172800
+    },
+    {
+      "type": "half-interstitial",
+      "bg": "#D62828",
+      "tablet": false,
+      "close": true,
+      "message": {
+        "text": "gggrgrg",
+        "color": "#434761",
+        "replacements": "gggrgrg",
+        "og": ""
+      },
+      "title": {
+        "text": "charged",
+        "color": "#434761",
+        "replacements": "charged",
+        "og": ""
+      },
+      "buttons": [
+        {
+          "text": "Button",
+          "color": "#000000",
+          "bg": "#1EB858",
+          "border": "#1EB858",
+          "radius": "4",
+          "actions": {
+            "close": true,
+            "type": "close",
+            "android": "",
+            "ios": "",
+            "kv": {}
+          }
+        }
+      ],
+      "media": {
+        "url": "https://d2hduo7492lb76.cloudfront.net/dist/1696322176/i/825c00010358491aab8e52f3d987624d.jpeg?v=1699441301",
+        "poster": "",
+        "key": "825c00010358491aab8e52f3d987624d",
+        "content_type": "image/jpeg",
+        "filename": "",
+        "processing": false
+      },
+      "isMediaSourceRecommended": false,
+      "recommendedText": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "mediaLandscape": {},
+      "isMediaSourceRecommendedLandscape": false,
+      "recommendedTextLandscape": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "hasPortrait": true,
+      "hasLandscape": false,
+      "rounded-borders": false,
+      "is_native": true,
+      "ti": 1700138989,
+      "wzrk_id": "1700138989_20231124",
+      "wzrk_pivot": "wzrk_default",
+      "priority": 5,
+      "whenTriggers": [
+        {
+          "eventName": "Charged",
+          "eventProperties": [
+            {
+              "propertyName": "Payment Mode",
+              "operator": 1,
+              "propertyValue": [
+                "Credit card"
+              ]
+            }
+          ],
+          "itemProperties": [
+            {
+              "propertyName": "Product category",
+              "operator": 3,
+              "propertyValue": [
+                "books"
+              ]
+            },
+            {
+              "propertyName": "Quantity",
+              "operator": 2,
+              "propertyValue": [
+                2
+              ]
+            }
+          ]
+        }
+      ],
+      "frequencyLimits": [
+        {
+          "type": "session",
+          "limit": 2
+        },
+        {
+          "type": "minutes",
+          "limit": 1,
+          "frequency": 1
+        },
+        {
+          "type": "ever",
+          "limit": 10
+        }
+      ],
+      "excludeGlobalFCaps": true,
+      "occurrenceLimits": [
+        {
+          "type": "onEvery",
+          "limit": 1
+        }
+      ],
+      "wzrk_ttl_offset": 172800
+    },
+    {
+      "type": "interstitial",
+      "bg": "#ffffff",
+      "tablet": false,
+      "close": true,
+      "message": {
+        "text": "test",
+        "color": "#434761",
+        "replacements": "test",
+        "og": ""
+      },
+      "title": {
+        "text": "test",
+        "color": "#434761",
+        "replacements": "test",
+        "og": ""
+      },
+      "buttons": [],
+      "media": {},
+      "isMediaSourceRecommended": false,
+      "recommendedText": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "mediaLandscape": {},
+      "isMediaSourceRecommendedLandscape": false,
+      "recommendedTextLandscape": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "hasPortrait": true,
+      "hasLandscape": true,
+      "rounded-borders": false,
+      "is_native": true,
+      "ti": 1700523470,
+      "wzrk_id": "1700523470_20231124",
+      "wzrk_pivot": "wzrk_default",
+      "priority": 1,
+      "whenTriggers": [
+        {
+          "eventName": "int",
+          "eventProperties": [
+            {
+              "propertyName": "n",
+              "operator": 4,
+              "propertyValue": [
+                2,
+                10
+              ]
+            },
+            {
+              "propertyName": "s",
+              "operator": 1,
+              "propertyValue": [
+                "textt",
+                "text"
+              ]
+            }
+          ]
+        }
+      ],
+      "frequencyLimits": [
+        {
+          "type": "session",
+          "limit": 3
+        }
+      ],
+      "excludeGlobalFCaps": false,
+      "occurrenceLimits": [
+        {
+          "type": "onEvery",
+          "limit": 2
+        }
+      ],
+      "wzrk_ttl_offset": 172800
+    },
+    {
+      "type": "header-template",
+      "buttons": [
+        {
+          "text": "Button",
+          "color": "#000000",
+          "bg": "#1EB858",
+          "actions": {
+            "close": true,
+            "type": "close",
+            "android": "",
+            "ios": "",
+            "kv": {}
+          },
+          "border": "",
+          "radius": ""
+        }
+      ],
+      "bg": "#ffffff",
+      "tablet": false,
+      "close": true,
+      "message": {
+        "text": "header",
+        "color": "#434761",
+        "replacements": "header",
+        "og": ""
+      },
+      "title": {
+        "text": "header",
+        "color": "#434761",
+        "replacements": "header",
+        "og": ""
+      },
+      "media": {},
+      "isMediaSourceRecommended": false,
+      "recommendedText": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "mediaLandscape": {},
+      "isMediaSourceRecommendedLandscape": false,
+      "recommendedTextLandscape": {
+        "text": "",
+        "replacements": "",
+        "og": ""
+      },
+      "hasPortrait": true,
+      "hasLandscape": true,
+      "rounded-borders": false,
+      "is_native": true,
+      "ti": 1700600917,
+      "wzrk_id": "1700600917_20231124",
+      "wzrk_pivot": "wzrk_default",
+      "priority": 1,
+      "whenTriggers": [
+        {
+          "eventName": "Notification Viewed",
+          "eventProperties": [
+            {
+              "propertyName": "Campaign id",
+              "operator": 3,
+              "propertyValue": [
+                "1700523470"
+              ]
+            }
+          ]
+        }
+      ],
+      "frequencyLimits": [],
+      "excludeGlobalFCaps": true,
+      "occurrenceLimits": [],
+      "wzrk_ttl_offset": 172800
+    }
+  ],
+  "pushamp_notifs": {
+    "list": [],
+    "ack": true,
+    "pf": 240
+  },
+  "vars": {}
+}

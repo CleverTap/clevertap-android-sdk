@@ -49,6 +49,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private PushPermissionManager pushPermissionManager;
 
+    private Bundle returnBundle = null;
+
+    private boolean invokedInAppDismissCallback = false;
+
     public interface PushPermissionResultCallback {
 
         void onPushPermissionAccept();
@@ -159,6 +163,33 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     public void finish() {
         super.finish();
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+
+        if (invokedInAppDismissCallback) {
+            return;
+        }
+        notifyInAppDismissed();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+
+        if (invokedInAppDismissCallback) {
+            return;
+        }
+        notifyInAppDismissed();
+    }
+
+    private void notifyInAppDismissed() {
+        if (isAlertVisible) {
+            isAlertVisible = false;
+        }
+        InAppListener listener = getListener();
+        if (listener != null && getBaseContext() != null && inAppNotification != null) {
+            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, returnBundle);
+        }
+        invokedInAppDismissCallback = true;
     }
 
     @Override
@@ -176,14 +207,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     @Override
     public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
         didShow(formData);
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-        finish();
-        didDismiss(null);
     }
 
     @Override
@@ -229,14 +252,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     void didDismiss(Bundle data) {
-        if (isAlertVisible) {
-            isAlertVisible = false;
-        }
+        returnBundle = data;
         finish();
-        InAppListener listener = getListener();
-        if (listener != null && getBaseContext() != null && inAppNotification != null) {
-            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data);
-        }
     }
 
     void didShow(Bundle data) {
@@ -444,10 +461,12 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                 new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
+
                                         Bundle data = new Bundle();
                                         data.putString(Constants.NOTIFICATION_ID_TAG,
                                                 inAppNotification.getCampaignId());
                                         data.putString("wzrk_c2a", inAppNotification.getButtons().get(2).getText());
+
                                         didClick(data, null);
                                         String actionUrl = inAppNotification.getButtons().get(2).getActionUrl();
                                         if (actionUrl != null) {

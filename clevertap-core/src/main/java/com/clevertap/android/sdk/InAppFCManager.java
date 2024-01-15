@@ -7,15 +7,20 @@ import android.content.SharedPreferences;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.inapp.ImpressionManager;
+import com.clevertap.android.sdk.inapp.SharedPreferencesMigration;
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import kotlin.jvm.functions.Function1;
+import kotlin.jvm.functions.Function2;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -30,20 +35,20 @@ public class InAppFCManager {
 
     private String deviceId;
 
-    private final ArrayList<String> mDismissedThisSession = new ArrayList<>();
+    private ImpressionManager impressionManager;
 
-    private final HashMap<String, Integer> mShownThisSession = new HashMap<>();
+    private final StoreRegistry storeRegistry;
 
-    private int mShownThisSessionCount = 0;
-
-
-    InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId) {
+    InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId,
+            StoreRegistry storeRegistry, ImpressionManager impressionManager) {
         this.config = config;
         this.context = context;
         this.deviceId = deviceId;
+        this.storeRegistry = storeRegistry;
+        this.impressionManager = impressionManager;
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("initInAppFCManager",new Callable<Void>() {
+        task.execute("initInAppFCManager", new Callable<Void>() {
             @Override
             public Void call() {
                 init(InAppFCManager.this.deviceId);
@@ -52,7 +57,9 @@ public class InAppFCManager {
         });
     }
 
-    public boolean canShow(CTInAppNotification inapp) {
+
+    public boolean canShow(CTInAppNotification inapp,
+            Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut) {
         try {
             if (inapp == null) {
                 return false;
@@ -61,6 +68,15 @@ public class InAppFCManager {
             final String id = getInAppID(inapp);
             if (id == null) {
                 return true;
+            }
+
+
+            /* Evaluate frequency limits again (without Nth triggers)
+               in case the message was added multiple times before being displayed,
+               or queue was paused and the message was added multiple times in the meantime
+            */
+            if (hasInAppFrequencyLimitsMaxedOut.invoke(inapp.getJsonDescription(), id)) {
+                return false;
             }
 
             // Exclude from all caps?
@@ -81,18 +97,13 @@ public class InAppFCManager {
 
     public void changeUser(String deviceId) {
         // reset counters
-        mShownThisSession.clear();
-        mShownThisSessionCount = 0;
-        mDismissedThisSession.clear();
+        impressionManager.clearSessionData();
         this.deviceId = deviceId;
         init(deviceId);
     }
 
     public void didDismiss(CTInAppNotification inapp) {
-        final Object id = inapp.getId();
-        if (id != null) {
-            mDismissedThisSession.add(id.toString());
-        }
+        // NO-OP
     }
 
     public void didShow(final Context context, CTInAppNotification inapp) {
@@ -101,14 +112,7 @@ public class InAppFCManager {
             return;
         }
 
-        mShownThisSessionCount++;
-
-        Integer count = mShownThisSession.get(id);
-        if (count == null) {
-            count = 1;
-        }
-
-        mShownThisSession.put(id, ++count);
+        impressionManager.recordImpression(id);
 
         incrementInAppCountsInPersistentStore(id);
 
@@ -127,7 +131,7 @@ public class InAppFCManager {
             // tlc: [[targetID, todayCount, lifetime]]
             JSONArray arr = new JSONArray();
             final SharedPreferences prefs = StorageHelper
-                    .getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
+                    .getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
             final Map<String, ?> all = prefs.getAll();
             for (String inapp : all.keySet()) {
                 final Object o = all.get(inapp);
@@ -158,7 +162,7 @@ public class InAppFCManager {
             final JSONArray arr = response.getJSONArray("inapp_stale");
 
             final SharedPreferences prefs = getPreferences(context,
-                    getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
+                    storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
             final SharedPreferences.Editor editor = prefs.edit();
 
             for (int i = 0; i < arr.length(); i++) {
@@ -182,7 +186,7 @@ public class InAppFCManager {
         StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_MAX_PER_DAY, deviceId)),
                 perDay);
         StorageHelper
-                .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION, deviceId)),
+                .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION_KEY, deviceId)),
                         perSession);
     }
 
@@ -196,7 +200,7 @@ public class InAppFCManager {
 
     private int[] getInAppCountsFromPersistentStore(String inappID) {
         final SharedPreferences prefs = getPreferences(context,
-                getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
+                storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
         final String str = prefs.getString(inappID, null);
         if (str == null) {
             return new int[]{0, 0};
@@ -215,7 +219,7 @@ public class InAppFCManager {
         }
     }
 
-    private String getInAppID(CTInAppNotification inapp) {
+    public String getInAppID(CTInAppNotification inapp) {
         if (inapp.getId() == null) {
             return null;
         }
@@ -286,6 +290,7 @@ public class InAppFCManager {
     }
 
     private boolean hasLifetimeCapacityMaxedOut(CTInAppNotification inapp) {
+
         final String id = getInAppID(inapp);
         if (id == null) {
             return false;
@@ -313,17 +318,12 @@ public class InAppFCManager {
             return false;
         }
 
-        // 1. Has this been dismissed?
-        if (mDismissedThisSession.contains(id)) {
-            return true;
-        }
-
         // 2. Has the session max count for this inapp been breached?
         try {
             final int maxPerSession = inapp.getMaxPerSession() >= 0 ? inapp.getMaxPerSession() : 1000;
 
-            Integer c = mShownThisSession.get(id);
-            if (c != null && c >= maxPerSession) {
+            int c = impressionManager.perSession(id);
+            if (c >= maxPerSession) {
                 return true;
             }
         } catch (Throwable t) {
@@ -331,8 +331,9 @@ public class InAppFCManager {
         }
 
         // 3. Have we shown enough of in-apps this session?
-        final int c = getIntFromPrefs(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION, deviceId), 1);
-        return (mShownThisSessionCount >= c);
+        final int c = getIntFromPrefs(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION_KEY, deviceId), 1);
+        int sessionTotal = impressionManager.perSessionTotal();
+        return (sessionTotal >= c);
     }
 
     private void incrementInAppCountsInPersistentStore(String inappID) {
@@ -341,7 +342,7 @@ public class InAppFCManager {
         current[1] = current[1] + 1;
 
         final SharedPreferences prefs = getPreferences(context,
-                getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
+                storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
         final SharedPreferences.Editor editor = prefs.edit();
 
         // protocol: todayCount,lifeTimeCount
@@ -353,6 +354,26 @@ public class InAppFCManager {
         getConfigLogger()
                 .verbose(config.getAccountId() + ":async_deviceID", "InAppFCManager init() called");
         try {
+            //================= Testing START==================TODO: remove after testing
+
+            /*SharedPreferences spCountsPerInAppV3 = getPreferences(context,
+                    storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
+
+            spCountsPerInAppV3.edit().clear().commit();
+
+            *//*SharedPreferences spCountsPerInAppV1 = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
+            SharedPreferences.Editor edit = spCountsPerInAppV1.edit();*//*
+            SharedPreferences spCountsPerInAppV2 = getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP,deviceId));
+            SharedPreferences.Editor edit = spCountsPerInAppV2.edit();
+            edit.putString("inapp1","1,1");
+            edit.putString("inapp2","1");
+            edit.putString("inapp3","1,1");
+            edit.putString("inapp4","hello");
+            edit.putInt("inapp5",10);
+            edit.putBoolean("inapp6",true);
+            edit.commit();*/
+
+            //================= Testing END==================TODO: remove after testing
             migrateToNewPrefsKey(deviceId);
             final String today = ddMMyyyy.format(new Date());
             final String lastUpdated = getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), "20140428");
@@ -366,7 +387,7 @@ public class InAppFCManager {
 
                 // Reset the counts for each inapp
                 final SharedPreferences prefs = getPreferences(context,
-                        getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
+                        storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
                 final SharedPreferences.Editor editor = prefs.edit();
                 final Map<String, ?> all = prefs.getAll();
                 for (String inapp : all.keySet()) {
@@ -401,8 +422,50 @@ public class InAppFCManager {
 
     private void migrateToNewPrefsKey(String deviceId) {
 
-        if (getStringFromPrefs(storageKeyWithSuffix(getKeyWithDeviceId("ict_date", deviceId)), null) != null
-                || getStringFromPrefs("ict_date", null) == null) {
+        // without account id and device id
+        SharedPreferences spCountsPerInAppV1 = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
+
+        // with device id
+        SharedPreferences spCountsPerInAppV2 = getPreferences(context,
+                getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
+
+        // with account id and device id
+        SharedPreferences spCountsPerInAppV3 = getPreferences(context,
+                storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
+
+        Function1<String, Boolean> countsPerInAppMigrationCondition =
+                (it) -> it.split(",").length == 2;
+
+        if (CTXtensions.hasData(spCountsPerInAppV2)) {
+            Logger.d("migrating shared preference countsPerInApp from V2 to V3...");
+            SharedPreferencesMigration<String> countsPerInAppMigrationV2ToV3 = new SharedPreferencesMigration<>(
+                    spCountsPerInAppV2, spCountsPerInAppV3, String.class, countsPerInAppMigrationCondition);
+
+            countsPerInAppMigrationV2ToV3.migrate();
+            Logger.d("Finished migrating shared preference countsPerInApp from V2 to V3.");
+        } else if (CTXtensions.hasData(spCountsPerInAppV1)) {
+            Logger.d("migrating shared preference countsPerInApp from V1 to V3...");
+            SharedPreferencesMigration<String> countsPerInAppMigrationV1ToV3 = new SharedPreferencesMigration<>(
+                    spCountsPerInAppV1, spCountsPerInAppV3, String.class, countsPerInAppMigrationCondition);
+
+            countsPerInAppMigrationV1ToV3.migrate();
+            Logger.d("Finished migrating shared preference countsPerInApp from V1 to V3.");
+        }
+
+        final InAppStore inAppStore = storeRegistry.getInAppStore();
+        final LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
+        if (inAppStore != null && legacyInAppStore != null) {
+            final JSONArray accountBasedInApps = legacyInAppStore.readInApps();
+            if (accountBasedInApps.length() > 0) {
+                Logger.d("migrating in-apps from account id to device id based preference.");
+                inAppStore.storeServerSideInApps(accountBasedInApps);
+                legacyInAppStore.removeInApps();
+                Logger.d("Finished migrating in-apps from account id to device id based preference.");
+            }
+        }
+
+        if (getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), null) != null//F
+                || getStringFromPrefs("ict_date", null) == null)/*T | F*/ {
             return;
         }
 
@@ -415,30 +478,6 @@ public class InAppFCManager {
         StorageHelper
                 .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
                         keyCountsShownToday);
-
-        final SharedPreferences oldPrefs = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
-        final SharedPreferences.Editor editor = oldPrefs.edit();
-
-        final SharedPreferences newPrefs = getPreferences(context,
-                getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
-        final SharedPreferences.Editor newEditor = newPrefs.edit();
-
-        final Map<String, ?> all = oldPrefs.getAll();
-        for (String inapp : all.keySet()) {
-            Object ov = all.get(inapp);
-            if (!(ov instanceof String)) {
-                editor.remove(inapp);
-                continue;
-            }
-            String[] oldValues = ((String) ov).split(",");
-            if (oldValues.length != 2) {
-                editor.remove(inapp);
-                continue;
-            }
-            newEditor.putString(inapp, ov.toString());
-        }
-        StorageHelper.persist(newEditor);
-        editor.clear().apply();
     }
 
     private String storageKeyWithSuffix(String key) {

@@ -10,24 +10,32 @@ import com.clevertap.android.sdk.network.DownloadedBitmap
 
 object HttpBitmapLoader {
 
+    private const val RESOURCE_CONNECTION_TIMEOUT = 5000
+    private const val RESOURCE_READ_TIMEOUT = 15000
+
     private val standardGzipHttpUrlConnectionParams = HttpUrlConnectionParams(
         connectTimeout = Constants.PN_IMAGE_CONNECTION_TIMEOUT_IN_MILLIS,
         readTimeout = Constants.PN_IMAGE_READ_TIMEOUT_IN_MILLIS,
         useCaches = true,
         doInput = true,
-        requestMap = mapOf("Accept-Encoding" to "gzip, deflate")
+        requestMap = mapOf(
+            "Accept-Encoding" to "gzip, deflate",
+        )
     )
     private val inAppStandardHttpUrlConnectionParams = HttpUrlConnectionParams(
+        connectTimeout = RESOURCE_CONNECTION_TIMEOUT,
+        readTimeout = RESOURCE_READ_TIMEOUT,
         useCaches = true,
         doInput = true
     )
-
 
     enum class HttpBitmapOperation {
         DOWNLOAD_NOTIFICATION_BITMAP,
         DOWNLOAD_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,
         DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP,
-        DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT, DOWNLOAD_INAPP_BITMAP
+        DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,
+        DOWNLOAD_INAPP_BITMAP,
+        DOWNLOAD_ANY_BITMAP
     }
 
     @JvmStatic
@@ -37,63 +45,85 @@ object HttpBitmapLoader {
     ): DownloadedBitmap {
 
         return when (bitmapOperation) {
-            DOWNLOAD_NOTIFICATION_BITMAP -> NotificationBitmapDownloadRequestHandler(
-                BitmapDownloadRequestHandler(
-                    BitmapDownloader(standardGzipHttpUrlConnectionParams, BitmapInputStreamDecoder())
+            DOWNLOAD_NOTIFICATION_BITMAP -> {
+                NotificationBitmapDownloadRequestHandler(
+                    iBitmapDownloadRequestHandler = BitmapDownloadRequestHandler(
+                        bitmapDownloader = BitmapDownloader(
+                            httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
+                            bitmapInputStreamReader = BitmapInputStreamDecoder()
+                        )
+                    )
+                ).handleRequest(
+                    bitmapDownloadRequest = bitmapDownloadRequest
                 )
-            ).handleRequest(
-                bitmapDownloadRequest
-            )
+            }
 
             DOWNLOAD_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT -> {
-                val notificationBitmapDownloadRequestHandlerWithTimeLimit = BitmapDownloadRequestHandlerWithTimeLimit(
-                    NotificationBitmapDownloadRequestHandler(
-                        BitmapDownloadRequestHandler(
-                            BitmapDownloader(
-                                standardGzipHttpUrlConnectionParams, BitmapInputStreamDecoder(
-                                    GzipBitmapInputStreamReader()
-                                )
+                BitmapDownloadRequestHandlerWithTimeLimit(
+                    iBitmapDownloadRequestHandler = NotificationBitmapDownloadRequestHandler(
+                        iBitmapDownloadRequestHandler = BitmapDownloadRequestHandler(
+                            bitmapDownloader = BitmapDownloader(
+                                httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
+                                bitmapInputStreamReader = GzipBitmapInputStreamReader()
                             )
                         )
                     )
+                ).handleRequest(
+                    bitmapDownloadRequest = bitmapDownloadRequest
                 )
-                notificationBitmapDownloadRequestHandlerWithTimeLimit.handleRequest(bitmapDownloadRequest)
             }
 
-            DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP -> NotificationBitmapDownloadRequestHandler(
-                BitmapDownloadRequestHandler(
-                    BitmapDownloader(
-                        standardGzipHttpUrlConnectionParams,
-                        BitmapInputStreamDecoder(GzipBitmapInputStreamReader()),
-                        Pair(true, bitmapDownloadRequest.downloadSizeLimitInBytes)
+            DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP -> {
+                NotificationBitmapDownloadRequestHandler(
+                    iBitmapDownloadRequestHandler = BitmapDownloadRequestHandler(
+                        bitmapDownloader = BitmapDownloader(
+                            httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
+                            bitmapInputStreamReader = GzipBitmapInputStreamReader(),
+                            sizeConstrainedPair = Pair(true, bitmapDownloadRequest.downloadSizeLimitInBytes)
+                        )
                     )
+                ).handleRequest(
+                    bitmapDownloadRequest = bitmapDownloadRequest
                 )
-            ).handleRequest(
-                bitmapDownloadRequest
-            )
+            }
 
             DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT -> {
-                val notificationBitmapDownloadRequestHandlerWithTimeLimit = BitmapDownloadRequestHandlerWithTimeLimit(
-                    NotificationBitmapDownloadRequestHandler(
-                        BitmapDownloadRequestHandler(
-                            BitmapDownloader(
-                                standardGzipHttpUrlConnectionParams,
-                                BitmapInputStreamDecoder(GzipBitmapInputStreamReader()),
-                                Pair(true, bitmapDownloadRequest.downloadSizeLimitInBytes)
+                BitmapDownloadRequestHandlerWithTimeLimit(
+                    iBitmapDownloadRequestHandler = NotificationBitmapDownloadRequestHandler(
+                        iBitmapDownloadRequestHandler = BitmapDownloadRequestHandler(
+                            bitmapDownloader = BitmapDownloader(
+                                httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
+                                bitmapInputStreamReader = GzipBitmapInputStreamReader(),
+                                sizeConstrainedPair = Pair(true, bitmapDownloadRequest.downloadSizeLimitInBytes)
                             )
                         )
                     )
+                ).handleRequest(
+                    bitmapDownloadRequest = bitmapDownloadRequest
                 )
-                notificationBitmapDownloadRequestHandlerWithTimeLimit.handleRequest(bitmapDownloadRequest)
             }
 
-            DOWNLOAD_INAPP_BITMAP -> BitmapDownloadRequestHandler(
-                BitmapDownloader(
-                    inAppStandardHttpUrlConnectionParams, BitmapInputStreamDecoder()
+            DOWNLOAD_INAPP_BITMAP -> {
+                BitmapDownloadRequestHandler(
+                    bitmapDownloader = BitmapDownloader(
+                        httpUrlConnectionParams = inAppStandardHttpUrlConnectionParams,
+                        bitmapInputStreamReader = BitmapInputStreamDecoder(saveBytes = true)
+                    )
+                ).handleRequest(
+                    bitmapDownloadRequest = bitmapDownloadRequest
                 )
-            ).handleRequest(
-                bitmapDownloadRequest
-            )
+            }
+
+            HttpBitmapOperation.DOWNLOAD_ANY_BITMAP -> {
+                BitmapDownloadRequestHandler(
+                    bitmapDownloader = BitmapDownloader(
+                        httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
+                        bitmapInputStreamReader = GzipBitmapInputStreamReader()
+                    )
+                ).handleRequest(
+                    bitmapDownloadRequest = bitmapDownloadRequest
+                )
+            }
         }
     }
 }

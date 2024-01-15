@@ -2,18 +2,17 @@ package com.clevertap.android.sdk.inapp;
 
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.IS_LOCAL_INAPP;
+
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.LruCache;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.utils.ImageCache;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import java.util.ArrayList;
 import java.util.Iterator;
 import org.json.JSONArray;
@@ -22,108 +21,6 @@ import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class CTInAppNotification implements Parcelable {
-
-    // intended to only hold an gif byte array reference for the life of the parent CTInAppNotification, in order to facilitate parceling
-    private static class GifCache {
-
-        private static final int MIN_CACHE_SIZE = 1024 * 5; // 5mb minimum (in KB)
-
-        private final static int maxMemory = (int) (Runtime.getRuntime().maxMemory()) / 1024;
-
-        private final static int cacheSize = Math.max((maxMemory / 32), MIN_CACHE_SIZE);
-
-        private static LruCache<String, byte[]> mMemoryCache;
-
-        static boolean addByteArray(String key, byte[] byteArray) {
-
-            if (mMemoryCache == null) {
-                return false;
-            }
-
-            if (getByteArray(key) == null) {
-                synchronized (GifCache.class) {
-                    int arraySize = getByteArraySizeInKB(byteArray);
-                    int available = getAvailableMemory();
-                    Logger.v(
-                            "CTInAppNotification.GifCache: gif size: " + arraySize + "KB. Available mem: " + available
-                                    + "KB.");
-                    if (arraySize > getAvailableMemory()) {
-                        Logger.v("CTInAppNotification.GifCache: insufficient memory to add gif: " + key);
-                        return false;
-                    }
-                    mMemoryCache.put(key, byteArray);
-                    Logger.v("CTInAppNotification.GifCache: added gif for key: " + key);
-                }
-            }
-            return true;
-        }
-
-        static byte[] getByteArray(String key) {
-            synchronized (GifCache.class) {
-                return mMemoryCache == null ? null : mMemoryCache.get(key);
-            }
-        }
-
-        static void init() {
-            synchronized (GifCache.class) {
-                if (mMemoryCache == null) {
-                    Logger.v("CTInAppNotification.GifCache: init with max device memory: " + maxMemory
-                            + "KB and allocated cache size: " + cacheSize + "KB");
-                    try {
-                        mMemoryCache = new LruCache<String, byte[]>(cacheSize) {
-                            @Override
-                            protected int sizeOf(String key, byte[] byteArray) {
-                                // The cache size will be measured in kilobytes rather than
-                                // number of items.
-                                int size = getByteArraySizeInKB(byteArray);
-                                Logger.v("CTInAppNotification.GifCache: have gif of size: " + size + "KB for key: "
-                                        + key);
-                                return size;
-                            }
-                        };
-                    } catch (Throwable t) {
-                        Logger.v("CTInAppNotification.GifCache: unable to initialize cache: ", t.getCause());
-                    }
-                }
-            }
-        }
-
-        static void removeByteArray(String key) {
-            synchronized (GifCache.class) {
-                if (mMemoryCache == null) {
-                    return;
-                }
-                mMemoryCache.remove(key);
-                Logger.v("CTInAppNotification.GifCache: removed gif for key: " + key);
-                cleanup();
-            }
-        }
-
-        private static void cleanup() {
-            synchronized (GifCache.class) {
-                if (isEmpty()) {
-                    Logger.v("CTInAppNotification.GifCache: cache is empty, removing it");
-                    mMemoryCache = null;
-                }
-            }
-        }
-
-        private static int getAvailableMemory() {
-            synchronized (GifCache.class) {
-                return mMemoryCache == null ? 0 : cacheSize - mMemoryCache.size();
-            }
-        }
-
-        private static int getByteArraySizeInKB(byte[] byteArray) {
-            return byteArray.length / 1024;
-        }
-
-        private static boolean isEmpty() {
-            synchronized (GifCache.class) {
-                return mMemoryCache.size() <= 0;
-            }
-        }
-    }
 
     interface CTInAppNotificationListener {
 
@@ -369,8 +266,7 @@ public class CTInAppNotification implements Parcelable {
         dest.writeLong(timeToLive);
     }
 
-    void didDismiss() {
-        removeImageOrGif();
+    void didDismiss(InAppResourceProvider resourceProvider) {
     }
 
     String getBackgroundColor() {
@@ -409,10 +305,6 @@ public class CTInAppNotification implements Parcelable {
         return fallBackToNotificationSettings;
     }
 
-    byte[] getGifByteArray(CTInAppNotificationMedia inAppMedia) {
-        return GifCache.getByteArray(inAppMedia.getCacheKey());
-    }
-
     int getHeight() {
         return height;
     }
@@ -423,10 +315,6 @@ public class CTInAppNotification implements Parcelable {
 
     String getHtml() {
         return html;
-    }
-
-    Bitmap getImage(CTInAppNotificationMedia inAppMedia) {
-        return ImageCache.getBitmap(inAppMedia.getCacheKey());
     }
 
     CTInAppNotificationMedia getInAppMediaForOrientation(int orientation) {
@@ -541,45 +429,25 @@ public class CTInAppNotification implements Parcelable {
         return isTablet;
     }
 
-    void prepareForDisplay() {
+    void prepareForDisplay(InAppResourceProvider inAppResourceProvider) {
 
         for (CTInAppNotificationMedia media : this.mediaList) {
             if (media.isGIF()) {
-                GifCache.init();
-                if (this.getGifByteArray(media) != null) {
+                byte[] bytes = inAppResourceProvider.fetchInAppGif(media.getMediaUrl());
+                if (bytes != null && bytes.length > 0) {
                     listener.notificationReady(this);
                     return;
-                }
-
-                if (media.getMediaUrl() != null) {
-                    Logger.v("CTInAppNotification: downloading GIF :" + media.getMediaUrl());
-                    byte[] gifByteArray = Utils.getByteArrayFromImageURL(media.getMediaUrl());
-                    if (gifByteArray != null) {
-                        Logger.v("GIF Downloaded from url: " + media.getMediaUrl());
-                        if (!GifCache.addByteArray(media.getCacheKey(), gifByteArray)) {
-                            this.error = "Error processing GIF";
-                        }
-                    }
+                } else {
+                    this.error = "Error processing GIF";
                 }
             } else if (media.isImage()) {
-                ImageCache.init();
-                if (this.getImage(media) != null) {
+
+                Bitmap bitmap = inAppResourceProvider.fetchInAppImage(media.getMediaUrl());
+                if (bitmap != null) {
                     listener.notificationReady(this);
                     return;
-                }
-
-                if (media.getMediaUrl() != null) {
-                    Logger.v("CTInAppNotification: downloading Image :" + media.getMediaUrl());
-                    Bitmap imageBitmap = Utils.getBitmapFromURL(media.getMediaUrl());
-                    if (imageBitmap != null) {
-                        Logger.v("Image Downloaded from url: " + media.getMediaUrl());
-                        if (!ImageCache.addBitmap(media.getCacheKey(), imageBitmap)) {
-                            this.error = "Error processing image";
-                        }
-                    } else {
-                        Logger.d("Image Bitmap is null");
-                        this.error = "Error processing image as bitmap was NULL";
-                    }
+                } else {
+                    this.error = "Error processing image as bitmap was NULL";
                 }
             } else if (media.isVideo() || media.isAudio()) {
                 if (!this.videoSupported) {
@@ -600,9 +468,12 @@ public class CTInAppNotification implements Parcelable {
             this.isLocalInApp = jsonObject.has(IS_LOCAL_INAPP) && jsonObject.getBoolean(IS_LOCAL_INAPP);
             this.fallBackToNotificationSettings = jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS) &&
                     jsonObject.getBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS);
-            this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
+            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 ||
+                    jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
+            this.maxPerSession = jsonObject.has(Constants.INAPP_MAX_DISPLAY_COUNT) ? jsonObject
+                    .getInt(Constants.INAPP_MAX_DISPLAY_COUNT) : -1;
             this.inAppType = CTInAppType.fromString(this.type);
             this.isTablet = jsonObject.has(Constants.KEY_IS_TABLET) && jsonObject.getBoolean(Constants.KEY_IS_TABLET);
             this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG)
@@ -709,7 +580,8 @@ public class CTInAppNotification implements Parcelable {
                     .getString(Constants.INAPP_ID_IN_PAYLOAD) : "";
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject
                     .getString(Constants.NOTIFICATION_ID_TAG) : "";
-            this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
+            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 ||
+                    jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
             this.jsEnabled = jsonObject.has(Constants.INAPP_JS_ENABLED) && jsonObject
@@ -766,15 +638,16 @@ public class CTInAppNotification implements Parcelable {
         }
     }
 
-    private void removeImageOrGif() {
+    private void removeImageOrGif(InAppResourceProvider resourceProvider) {
         for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
-            if (inAppMedia.getMediaUrl() != null && inAppMedia.getCacheKey() != null) {
-                if (!inAppMedia.getContentType().equals("image/gif")) {
-                    ImageCache.removeBitmap(inAppMedia.getCacheKey(), false);
-                    Logger.v("Deleted image - " + inAppMedia.getCacheKey());
+            String mediaUrl = inAppMedia.getMediaUrl();
+            if (mediaUrl != null) {
+                if (inAppMedia.isImage()) {
+                    resourceProvider.deleteImage(mediaUrl);
+                    Logger.v("Deleted image - " + mediaUrl);
                 } else {
-                    GifCache.removeByteArray(inAppMedia.getCacheKey());
-                    Logger.v("Deleted GIF - " + inAppMedia.getCacheKey());
+                    resourceProvider.deleteGif(mediaUrl);
+                    Logger.v("Deleted GIF - " + mediaUrl);
                 }
             }
         }

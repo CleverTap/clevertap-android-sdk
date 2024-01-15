@@ -81,7 +81,7 @@ public class Task<TResult> {
     public Task<TResult> addOnSuccessListener(@NonNull final Executor executor,
             final OnSuccessListener<TResult> listener) {
         if (listener != null) {
-            successExecutables.add(new SuccessExecutable<>(executor, listener, config));
+            successExecutables.add(new SuccessExecutable<>(executor, listener));
         }
         return this;
     }
@@ -174,6 +174,7 @@ public class Task<TResult> {
      * @param timeoutMillis - timeout for piece of code to run
      * @return result of callable or null
      */
+    // TODO This method does not set state of the task correctly.
     public @Nullable TResult submitAndGetResult(final String logTag, final Callable<TResult> callable, long timeoutMillis) {
         if (!(executor instanceof ExecutorService)) {
             throw new UnsupportedOperationException(
@@ -228,22 +229,25 @@ public class Task<TResult> {
             @Override
             public void run() {
                 try {
-                    config.getLogger()
-                            .verbose(taskName + " Task: " + logTag + " starting on..." + Thread.currentThread()
-                                    .getName());
+                    setState(STATE.RUNNING);
+                    logProperly(taskName + " Task: " + logTag + " starting on..." + Thread.currentThread().getName(), null);
                     TResult result = callable.call();
-                    config.getLogger().verbose(
-                            taskName + " Task: " + logTag + " executed successfully on..." + Thread.currentThread()
-                                    .getName());
+                    logProperly(taskName + " Task: " + logTag + " executed successfully on..." + Thread.currentThread().getName(), null);
                     onSuccess(result);
                 } catch (Exception e) {
                     onFailure(e);
-                    config.getLogger().verbose(
-                            taskName + " Task: " + logTag + " failed to execute on..." + Thread.currentThread()
-                                    .getName(), e);
+                    logProperly(taskName + " Task: " + logTag + " failed to execute on..." + Thread.currentThread().getName(), e);
                     e.printStackTrace();
                 }
             }
         };
+    }
+
+    private void logProperly(String log, Exception e) {
+        if (config != null) {
+            config.getLogger().verbose(log, e);
+        } else {
+            Logger.v(log, e);
+        }
     }
 }

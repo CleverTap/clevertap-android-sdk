@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -140,12 +141,12 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
 
         }
 
-        if (inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
-            if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))
-                    != null) {
+        CTInAppNotificationMedia mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation);
+        if (mediaForOrientation != null) {
+            Bitmap bitmap = resourceProvider().cachedImage(mediaForOrientation.getMediaUrl());
+            if (bitmap != null) {
                 ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-                imageView.setImageBitmap(inAppNotification
-                        .getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+                imageView.setImageBitmap(bitmap);
             }
         }
 

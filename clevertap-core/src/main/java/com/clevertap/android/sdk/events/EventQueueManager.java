@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
+import android.location.Location;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
@@ -180,6 +181,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             controllerManager.invokeCallbacksForNetworkError();
+            controllerManager.invokeBatchListener(new JSONArray(), false);
             return;
         }
 
@@ -188,6 +190,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
             controllerManager.invokeCallbacksForNetworkError();
+            controllerManager.invokeBatchListener(new JSONArray(), false);
             return;
         }
 
@@ -448,6 +451,23 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         return task.submit("queueEvent", new Callable<Void>() {
             @Override
             public Void call() {
+
+                Location userLocation = cleverTapMetaData.getLocationFromUser();
+
+                if (eventMediator.isChargedEvent(event)) {
+                    controllerManager.getInAppController()
+                            .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
+                                    eventMediator.getChargedEventItemDetails(event), userLocation);
+                } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
+                    // in case device is offline just evaluate all events
+                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
+                            eventMediator.getEventProperties(event), userLocation);
+                } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
+                    // in case device is online only evaluate non-appLaunched events
+                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
+                            eventMediator.getEventProperties(event), userLocation);
+                }
+
                 if (eventMediator.shouldDropEvent(event, eventType)) {
                     return null;
                 }
