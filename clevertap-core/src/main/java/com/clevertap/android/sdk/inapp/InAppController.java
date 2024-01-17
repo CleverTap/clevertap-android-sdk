@@ -214,7 +214,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                     fragmentTransaction.add(android.R.id.content, inAppFragment, currentlyDisplayingInApp.getType());
                     Logger.v(config.getAccountId(),
                             "calling InAppFragment " + currentlyDisplayingInApp.getCampaignId());
-                    fragmentTransaction.commit();
+                    fragmentTransaction.commitNow();
                 }
             }
         }
@@ -782,7 +782,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                 fragmentTransaction.add(android.R.id.content, inAppFragment, inAppNotification.getType());
                 Logger.v(config.getAccountId(), "calling InAppFragment " + inAppNotification.getCampaignId());
-                fragmentTransaction.commit();
+                fragmentTransaction.commitNow();
 
             } catch (ClassCastException e) {
                 Logger.v(config.getAccountId(),
