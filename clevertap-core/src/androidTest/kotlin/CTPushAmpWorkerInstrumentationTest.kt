@@ -38,7 +38,6 @@ class CTPushAmpWorkerInstrumentationTest {
     fun testWork(){
         CleverTapAPI.setDebugLevel(VERBOSE)
         val myContext = ApplicationProvider.getApplicationContext<Context>()
-        val defaultInstance = CleverTapAPI.getDefaultInstance(myContext)
 
         val constraints = Builder()
             .setRequiredNetworkType(CONNECTED)
@@ -51,7 +50,7 @@ class CTPushAmpWorkerInstrumentationTest {
                 .setConstraints(constraints).build()
 
         val workManager = WorkManager.getInstance(myContext)
-        val testDriver = WorkManagerTestInitHelper.getTestDriver()!!
+        val testDriver = WorkManagerTestInitHelper.getTestDriver(myContext)!!
         // Enqueue
         workManager.enqueue(request).result.get()
         testDriver.setAllConstraintsMet(request.id)

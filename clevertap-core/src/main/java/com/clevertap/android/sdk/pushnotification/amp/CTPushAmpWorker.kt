@@ -11,7 +11,6 @@ class CTPushAmpWorker(context: Context, params: WorkerParameters) : Worker(conte
     override fun doWork(): Result {
         Logger.v("PushAmpWorker is awake")
         CleverTapAPI.runJobWork(applicationContext)
-        Logger.v("PushAmpWorker Work is done. Going to sleep now")
         return Result.success()
     }
 }

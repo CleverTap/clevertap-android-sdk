@@ -12,7 +12,6 @@ import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
-import android.app.job.JobParameters;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -1021,7 +1020,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
             if (instance != null) {
                 if (instance.getConfig().isBackgroundSync()) {
-                    instance.coreState.getPushProviders().runInstanceJobWork(context);
+                    instance.coreState.getPushProviders().runPushAmpWork(context);
                 } else {
                     Logger.d("Instance doesn't allow Background sync, not running the Job");
                 }
@@ -1038,7 +1037,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.d(accountId, "Instance doesn't allow Background sync, not running the Job");
                 continue;
             }
-            instance.coreState.getPushProviders().runInstanceJobWork(context);
+            instance.coreState.getPushProviders().runPushAmpWork(context);
         }
     }
 

@@ -57,7 +57,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -437,13 +436,13 @@ public class PushProviders implements CTPushProviderListener {
         return alreadyAvailable;
     }
 
-    public void runInstanceJobWork(final Context context) {
+    public void runPushAmpWork(final Context context) {
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        Future future = task.submit("runningPushAmpWork", new Callable<Void>() {
+        task.execute("runningPushAmpWork", new Callable<Void>() {
             @Override
             public Void call() {
                 if (!isNotificationSupported()) {
-                    Logger.v(config.getAccountId(), "Token is not present, not running the Job");
+                    Logger.v(config.getAccountId(), "Token is not present, not running the PushAmpWork");
                     return null;
                 }
 
@@ -457,7 +456,7 @@ public class PushProviders implements CTPushProviderListener {
                 Date endTime = parseTimeToDate(Constants.DND_STOP);
 
                 if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
-                    Logger.v(config.getAccountId(), "Job Service won't run in default DND hours");
+                    Logger.v(config.getAccountId(), "PushAmp won't run in default DND hours");
                     return null;
                 }
 
@@ -476,75 +475,67 @@ public class PushProviders implements CTPushProviderListener {
                 return null;
             }
         });
-        try {
-            future.get();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @SuppressLint("MissingPermission")
     @RequiresApi(api = VERSION_CODES.LOLLIPOP)
     private void stopJobScheduler(Context context) {
         int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
         if (existingJobId >= 0) {//cancel already running job
+            JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
             jobScheduler.cancel(existingJobId);
             StorageHelper.remove(context, Constants.PF_JOB_ID);
         }
     }
 
     private void stopWorker() {
-        int existingWorkName = StorageHelper.getInt(context, Constants.PF_WORK_ID, -1);
-        if (existingWorkName >= 0) {
+        String existingWorkName = StorageHelper.getString(context, Constants.PF_WORK_ID, "");
+        if (existingWorkName.equals("")) {
             WorkManager workManager = WorkManager.getInstance(context);
-            workManager.cancelUniqueWork(String.valueOf(existingWorkName));
+            workManager.cancelUniqueWork(existingWorkName);
             StorageHelper.putInt(context, Constants.PF_WORK_ID, -1);
         }
     }
     private void createOrResetWorker(boolean isPingFrequencyUpdated) {
-        int existingWorkName = StorageHelper.getInt(context, Constants.PF_WORK_ID, -1);
-        WorkManager workManager = WorkManager.getInstance(context);
-
         //Disable push amp for devices below Api 26
         if (VERSION.SDK_INT < VERSION_CODES.O) {
             config.getLogger().debug(config.getAccountId(), "Push Amplification feature is not supported below Oreo");
             return;
         }
 
+        String existingWorkName = StorageHelper.getString(context, Constants.PF_WORK_ID, "");
+        WorkManager workManager = WorkManager.getInstance(context);
         int pingFrequency = getPingFrequency(context);
 
-        //no running work and nothing to create
-        if (existingWorkName < 0 && pingFrequency < 0) {
+        // no running work and nothing to create
+        if (existingWorkName.equals("") && pingFrequency <= 0) {
             return;
         }
 
         // running work but hard cancel
-        if (pingFrequency < 0) {
-            workManager.cancelUniqueWork(String.valueOf(existingWorkName));
+        if (pingFrequency <= 0) {
+            workManager.cancelUniqueWork(existingWorkName);
             StorageHelper.putInt(context, Constants.PF_WORK_ID, -1);
             config.getLogger().debug(config.getAccountId(), "Cancelling pushamp work since ping frequency is less than 0");
             return;
         }
 
         // Create a work request only when it doesn't exist already or the ping frequency is updated
-        boolean needsCreate = (existingWorkName < 0 && pingFrequency > 0) || isPingFrequencyUpdated;
-
-        if (needsCreate) {
+        if (existingWorkName.equals("") || isPingFrequencyUpdated) {
             Constraints constraints = new Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .setRequiresCharging(false)
                     .setRequiresBatteryNotLow(true)
                     .build();
 
-            PeriodicWorkRequest request = new
-                    PeriodicWorkRequest.Builder(CTPushAmpWorker.class, pingFrequency, TimeUnit.MINUTES, 5, TimeUnit.MINUTES)
-                    .setConstraints(constraints).build();
+            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, 15, TimeUnit.MINUTES)
+                    .setConstraints(constraints)
+                    .build();
 
-            int workName= config.getAccountId().hashCode();
+            String workName = existingWorkName.equals("") ? config.getAccountId() : existingWorkName;
 
-            workManager.enqueueUniquePeriodicWork(String.valueOf(workName), ExistingPeriodicWorkPolicy.REPLACE, request);
-            StorageHelper.putInt(context, Constants.PF_WORK_ID, workName);
+            workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.REPLACE, request);
+            StorageHelper.putString(context, Constants.PF_WORK_ID, workName);
             config.getLogger().debug(config.getAccountId(),
                     "Finished scheduling periodic work request for pushAmp - " + workName + " with repeatInterval- "
                             + pingFrequency +" minutes");
@@ -898,16 +889,6 @@ public class PushProviders implements CTPushProviderListener {
     public @NonNull
     Object getPushRenderingLock() {
         return pushRenderingLock;
-    }
-
-    @RequiresApi(api = VERSION_CODES.LOLLIPOP)
-    private static JobInfo getJobInfo(int jobId, JobScheduler jobScheduler) {
-        for (JobInfo jobInfo : jobScheduler.getAllPendingJobs()) {
-            if (jobInfo.getId() == jobId) {
-                return jobInfo;
-            }
-        }
-        return null;
     }
 
     @RestrictTo(Scope.LIBRARY)
