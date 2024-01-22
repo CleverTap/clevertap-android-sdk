@@ -479,11 +479,17 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.v("HomeScreenViewModel", "Notification permission is already granted.")
                 }
             }
+
             "11-0" -> {
                 cleverTapAPI?.pushEvent("Footer InApp")
             }
+
             "11-1" -> {
                 cleverTapAPI?.pushEvent("Footer InApp without image")
+            }
+
+            "11-2" -> {
+                cleverTapAPI?.pushEvent("Header")
             }
 
             //"60" -> webViewClickListener?.onWebViewClick()

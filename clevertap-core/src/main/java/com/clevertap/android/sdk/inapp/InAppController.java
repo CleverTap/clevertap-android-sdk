@@ -7,11 +7,15 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -32,9 +36,15 @@ import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
+import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
+import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.variables.JsonUtil;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,12 +52,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function2;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+// inapp db handle // glovbal dn
+@RestrictTo(Scope.LIBRARY_GROUP)
 public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener,
         InAppNotificationActivity.PushPermissionResultCallback {
 
@@ -76,7 +92,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay();
+            inAppNotification.prepareForDisplay(resourceProvider);
         }
     }
 
@@ -115,32 +131,48 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final DeviceInfo deviceInfo;
 
+    private final EvaluationManager evaluationManager;
+
     private InAppState inAppState;
 
     private HashSet<String> inappActivityExclude = null;
 
     private final Logger logger;
 
+    private InAppResourceProvider resourceProvider;
+
     private final MainLooperHandler mainLooperHandler;
 
+    private final InAppQueue inAppQueue;
+
+    public final Function0<Unit> onAppLaunchEventSent;
+
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
+
     public final static String IS_HARD_PERMISSION_REQUEST = "isHardPermissionRequest";
 
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
+
     public final static String DISPLAY_HARD_PERMISSION_BUNDLE_KEY = "displayHardPermissionDialog";
+
     public final static String SHOW_FALLBACK_SETTINGS_BUNDLE_KEY = "shouldShowFallbackSettings";
 
-    public InAppController(Context context,
+    public InAppController(
+            Context context,
             CleverTapInstanceConfig config,
             MainLooperHandler mainLooperHandler,
             ControllerManager controllerManager,
             BaseCallbackManager callbackManager,
             AnalyticsManager analyticsManager,
-            CoreMetaData coreMetaData, final DeviceInfo deviceInfo) {
-
+            CoreMetaData coreMetaData,
+            final DeviceInfo deviceInfo,
+            InAppQueue inAppQueue,
+            final EvaluationManager evaluationManager,
+            InAppResourceProvider resourceProvider
+    ) {
         this.context = context;
         this.config = config;
-        logger = this.config.getLogger();
+        this.logger = this.config.getLogger();
         this.mainLooperHandler = mainLooperHandler;
         this.controllerManager = controllerManager;
         this.callbackManager = callbackManager;
@@ -148,6 +180,19 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
         this.deviceInfo = deviceInfo;
+        this.resourceProvider = resourceProvider;
+        this.inAppQueue = inAppQueue;
+        this.evaluationManager = evaluationManager;
+        this.onAppLaunchEventSent = () -> {
+            final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
+                    deviceInfo.getAppLaunchedFields());
+            final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedClientSide(
+                    appLaunchedProperties, coreMetaData.getLocationFromUser());
+            if (clientSideInAppsToDisplay.length() > 0) {
+                addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+            }
+            return null;
+        };
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -294,7 +339,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     @Override
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
             final Bundle formData) {
-        inAppNotification.didDismiss();
+        inAppNotification.didDismiss(resourceProvider);
+
         if (controllerManager.getInAppFCManager() != null) {
             controllerManager.getInAppFCManager().didDismiss(inAppNotification);
             logger.verbose(config.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
@@ -340,6 +386,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     //InApp
     @Override
     public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
+        controllerManager.getInAppFCManager().didShow(context, inAppNotification);
         analyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData);
 
         //Fire onShow() callback when InApp is shown.
@@ -402,6 +449,18 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         showInAppNotificationIfAny();
     }
 
+    public void addInAppNotificationsToQueue(JSONArray inappNotifs) {
+        try {
+            inAppQueue.enqueueAll(inappNotifs);
+
+            // Fire the first notification, if any
+            showNotificationIfAvailable(context);
+        } catch (Exception e) {
+            logger.debug(config.getAccountId(), "InAppController: : InApp notification handling error: " + e.getMessage());
+        }
+    }
+
+
     //InApp
     public void showNotificationIfAvailable(final Context context) {
         if (!config.isAnalyticsOnly()) {
@@ -423,7 +482,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     //InApp
     private void _showNotificationIfAvailable(Context context) {
-        SharedPreferences prefs = StorageHelper.getPreferences(context);
         try {
             if (!canShowInAppOnActivity()) {
                 Logger.v("Not showing notification on blacklisted activity");
@@ -436,36 +494,19 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
 
-            checkPendingNotifications(context,
-                    config, this);  // see if we have any pending notifications
+            checkPendingNotifications(context, config, this);  // see if we have any pending notifications
 
-            JSONArray inapps = new JSONArray(
-                    StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));
-            if (inapps.length() < 1) {
+            JSONObject inapp = inAppQueue.dequeue();
+            if (inapp == null) {
                 return;
             }
 
             if (this.inAppState != InAppState.DISCARDED) {
-                JSONObject inapp = inapps.getJSONObject(0);
                 prepareNotificationForDisplay(inapp);
             } else {
                 logger.debug(config.getAccountId(),
                         "InApp Notifications are set to be discarded, dropping the InApp Notification");
             }
-
-            // JSON array doesn't have the feature to remove a single element,
-            // so we have to copy over the entire array, but the first element
-            JSONArray inappsUpdated = new JSONArray();
-            for (int i = 0; i < inapps.length(); i++) {
-                if (i == 0) {
-                    continue;
-                }
-                inappsUpdated.put(inapps.get(i));
-            }
-            SharedPreferences.Editor editor = prefs.edit()
-                    .putString(StorageHelper.storageKeyWithSuffix(config, Constants.INAPP_KEY),
-                            inappsUpdated.toString());
-            StorageHelper.persist(editor);
         } catch (Throwable t) {
             // We won't get here
             logger.verbose(config.getAccountId(), "InApp: Couldn't parse JSON array string from prefs", t);
@@ -499,14 +540,18 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
 
         if (controllerManager.getInAppFCManager() != null) {
-            if (!controllerManager.getInAppFCManager().canShow(inAppNotification)) {
+
+            final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
+                final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
+                return !evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
+            };
+
+            if (!controllerManager.getInAppFCManager().canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {
                 logger.verbose(config.getAccountId(),
                         "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
                 showInAppNotificationIfAny();
                 return;
             }
-
-            controllerManager.getInAppFCManager().didShow(context, inAppNotification);
         } else {
             logger.verbose(config.getAccountId(),
                     "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
@@ -661,6 +706,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             return;
         }
 
+        boolean isHtmlType = inAppNotification.getType().equals(Constants.KEY_CUSTOM_HTML);
+        if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
+            Logger.d(config.getAccountId(),
+                    "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp");
+            inAppController.showInAppNotificationIfAny();
+            return;
+        }
+
         currentlyDisplayingInApp = inAppNotification;
 
         CTInAppBaseFragment inAppFragment = null;
@@ -735,9 +788,51 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 Logger.v(config.getAccountId(),
                         "Fragment not able to render, please ensure your Activity is an instance of AppCompatActivity"
                                 + e.getMessage());
+                currentlyDisplayingInApp = null;
             } catch (Throwable t) {
                 Logger.v(config.getAccountId(), "Fragment not able to render", t);
+                currentlyDisplayingInApp = null;
             }
+        }
+    }
+
+    @WorkerThread
+    public void onQueueEvent(final String eventName, Map<String, Object> eventProperties, Location userLocation) {
+        final Map<String, Object> appFieldsWithEventProperties = JsonUtil.mapFromJson(
+                deviceInfo.getAppLaunchedFields());
+        appFieldsWithEventProperties.putAll(eventProperties);
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnEvent(eventName,
+                appFieldsWithEventProperties,
+                userLocation);
+        if (clientSideInAppsToDisplay.length() > 0) {
+            addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+        }
+    }
+
+    @WorkerThread
+    public void onQueueChargedEvent(Map<String, Object> chargeDetails,
+            List<Map<String, Object>> items, Location userLocation) {
+        final Map<String, Object> appFieldsWithChargedEventProperties = JsonUtil.mapFromJson(
+                deviceInfo.getAppLaunchedFields());
+        appFieldsWithChargedEventProperties.putAll(chargeDetails);
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(
+                appFieldsWithChargedEventProperties, items, userLocation);
+        if (clientSideInAppsToDisplay.length() > 0) {
+            addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+        }
+    }
+
+    public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps,
+            Location userLocation)
+            throws JSONException {
+        final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
+                deviceInfo.getAppLaunchedFields());
+        List<JSONObject> appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps);
+        final JSONArray serverSideInAppsToDisplay = evaluationManager.evaluateOnAppLaunchedServerSide(
+                appLaunchSsInAppList, appLaunchedProperties, userLocation);
+
+        if (serverSideInAppsToDisplay.length() > 0) {
+            addInAppNotificationsToQueue(serverSideInAppsToDisplay);
         }
     }
 }

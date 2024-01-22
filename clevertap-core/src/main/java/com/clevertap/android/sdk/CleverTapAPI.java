@@ -24,20 +24,31 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
+import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
+import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderExecutors;
+import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
+import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
@@ -67,11 +78,6 @@ import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,6 +85,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 /**
@@ -2751,6 +2760,24 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
+        StoreRegistry storeRegistry = coreState.getStoreRegistry();
+        DeviceInfo deviceInfo = coreState.getDeviceInfo();
+        CryptHandler cryptHandler = coreState.getCryptHandler();
+        StoreProvider storeProvider = StoreProvider.getInstance();
+
+        if (storeRegistry.getInAppStore() == null) {
+            InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                    accountId);
+            storeRegistry.setInAppStore(inAppStore);
+            coreState.getCallbackManager().addChangeUserCallback(inAppStore);
+        }
+        if (storeRegistry.getImpressionStore() == null) {
+            ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo,
+                    accountId);
+            storeRegistry.setImpressionStore(impStore);
+            coreState.getCallbackManager().addChangeUserCallback(impStore);
+        }
+
         /**
          * Reinitialising InAppFCManager with device id, if it's null
          * during first initialisation from CleverTapFactory.getCoreState()
@@ -2759,7 +2786,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfigLogger().verbose(accountId + ":async_deviceID",
                     "Initializing InAppFC after Device ID Created = " + deviceId);
             coreState.getControllerManager()
-                    .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId));
+                    .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId,
+                            coreState.getStoreRegistry(), coreState.getImpressionManager()));
         }
 
         //todo : replace with variables
@@ -3289,6 +3317,40 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Fetches In Apps from server.
+     *
+     * @param callback Callback instance {@link FetchInAppsCallback} to be invoked when fetching is done.
+     */
+    public void fetchInApps(FetchInAppsCallback callback) {
+        if (coreState.getConfig().isAnalyticsOnly()) {
+            return;
+        }
+        Logger.v(Constants.LOG_TAG_INAPP + " Fetching In Apps...");
+
+        if (callback != null) {
+            coreState.getCallbackManager().setFetchInAppsCallback(callback);
+        }
+
+        JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS);
+        coreState.getAnalyticsManager().sendFetchEvent(event);
+    }
+
+    @NonNull
+    private JSONObject getFetchRequestAsJson(int fetchType) {
+        JSONObject event = new JSONObject();
+        JSONObject notif = new JSONObject();
+        try {
+            notif.put(Constants.KEY_T, fetchType);
+            event.put(Constants.KEY_EVT_NAME, Constants.WZRK_FETCH);
+            event.put(Constants.KEY_EVT_DATA, notif);
+        } catch (JSONException e) {
+            Logger.v(Constants.CLEVERTAP_LOG_TAG,
+                    "Failed while parsing fetch request as json:", e);
+        }
+        return event;
+    }
+
+    /**
      * Fetches variable values from server.
      * Note that SDK keeps only one registered callback, if you call that method again it would
      * override the callback.
@@ -3304,15 +3366,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             coreState.getCallbackManager().setFetchVariablesCallback(callback);
         }
 
-        JSONObject event = new JSONObject();
-        JSONObject notif = new JSONObject();
-        try {
-            notif.put("t", Constants.FETCH_TYPE_VARIABLES);
-            event.put("evtName", Constants.WZRK_FETCH);
-            event.put("evtData", notif);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_VARIABLES);
         coreState.getAnalyticsManager().sendFetchEvent(event);
     }
 
@@ -3406,5 +3460,48 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public String getLocale() {
         return coreState.getDeviceInfo().getCustomLocale();
+    }
+
+    /**
+     * Deletes all images and gifs which are preloaded for inapps in cs mode
+     *
+     * @param expiredOnly to clear only assets which will not be needed further for inapps
+     */
+    public void clearInAppResources(boolean expiredOnly) {
+
+        Logger logger = coreState.getConfig().getLogger();
+
+        StoreRegistry storeRegistry = coreState.getStoreRegistry();
+        if (storeRegistry == null) {
+            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
+        LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
+
+        if (inAppAssetStore == null || legacyInAppStore == null) {
+            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
+        InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
+        InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(
+                inAppResourceProvider,
+                logger
+        );
+
+        InAppImageRepoImpl impl = new InAppImageRepoImpl(
+                cleanupStrategy,
+                preloadStrategy,
+                inAppAssetStore,
+                legacyInAppStore
+        );
+        if (expiredOnly) {
+            impl.cleanupStaleImagesNow();
+        } else {
+            impl.cleanupAllImages();
+        }
     }
 }

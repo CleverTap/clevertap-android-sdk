@@ -13,16 +13,17 @@ import org.json.JSONObject;
 
 public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
 
     private final ControllerManager controllerManager;
     private final BaseCallbackManager callbackMgr;
 
-    public FetchVariablesResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, ControllerManager controllerManager, BaseCallbackManager mgr) {
-        this.cleverTapResponse = cleverTapResponse;
+    public FetchVariablesResponse(
+            CleverTapInstanceConfig config,
+            ControllerManager controllerManager,
+            BaseCallbackManager mgr
+    ) {
         this.config = config;
         this.controllerManager = controllerManager;
         this.callbackMgr = mgr;
@@ -45,7 +46,6 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
         if (config.isAnalyticsOnly()) {
             logI("CleverTap instance is configured to analytics only, not processing Variable response");
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
 
@@ -58,7 +58,6 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
         if (!response.has(varsKey)) {
             logI("JSON object doesn't contain the " + varsKey + " key");
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
 
@@ -78,9 +77,6 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
         } catch (Throwable t) {
             logI("Failed to parse response", t);
-        }
-        finally {
-            cleverTapResponse.processResponse(response, stringBody, context);
         }
     }
 }

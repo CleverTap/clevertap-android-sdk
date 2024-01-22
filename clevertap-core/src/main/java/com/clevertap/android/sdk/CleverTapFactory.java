@@ -1,18 +1,32 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
-
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.events.EventQueueManager;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory;
+import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.InAppController;
+import com.clevertap.android.sdk.inapp.InAppQueue;
+import com.clevertap.android.sdk.inapp.TriggerManager;
+import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
+import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
+import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
+import com.clevertap.android.sdk.network.AppLaunchListener;
+import com.clevertap.android.sdk.network.CompositeBatchListener;
+import com.clevertap.android.sdk.network.FetchInAppListener;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
+import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -21,7 +35,6 @@ import com.clevertap.android.sdk.validation.Validator;
 import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.Parser;
 import com.clevertap.android.sdk.variables.VarCache;
-
 import java.util.concurrent.Callable;
 
 class CleverTapFactory {
@@ -29,6 +42,10 @@ class CleverTapFactory {
     static CoreState getCoreState(Context context, CleverTapInstanceConfig cleverTapInstanceConfig,
             String cleverTapID) {
         CoreState coreState = new CoreState(context);
+
+        StoreRegistry storeRegistry = new StoreRegistry();
+        storeRegistry.setLegacyInAppStore(StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
+        coreState.setStoreRegistry(storeRegistry);
 
         CoreMetaData coreMetaData = new CoreMetaData();
         coreState.setCoreMetaData(coreMetaData);
@@ -79,6 +96,47 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
+        TriggersMatcher triggersMatcher = new TriggersMatcher();
+        TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
+        ImpressionManager impressionManager = new ImpressionManager(storeRegistry);
+        LimitsMatcher limitsMatcher = new LimitsMatcher(impressionManager, triggersManager);
+
+        coreState.setImpressionManager(impressionManager);
+
+        EvaluationManager evaluationManager = new EvaluationManager(
+                triggersMatcher,
+                triggersManager,
+                limitsMatcher,
+                storeRegistry
+        );
+        coreState.setEvaluationManager(evaluationManager);
+
+        final StoreProvider storeProvider = StoreProvider.getInstance();
+
+        Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
+        taskInitStores.execute("initStores", () -> {
+            if (storeRegistry.getInAppAssetsStore() == null) {
+                InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, config.getAccountId());
+                storeRegistry.setInAppAssetsStore(assetsStore);
+            }
+            if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
+                if (storeRegistry.getInAppStore() == null) {
+                    InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                            config.getAccountId());
+                    storeRegistry.setInAppStore(inAppStore);
+                    evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
+                    callbackManager.addChangeUserCallback(inAppStore);
+                }
+                if (storeRegistry.getImpressionStore() == null) {
+                    ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo,
+                            config.getAccountId());
+                    storeRegistry.setImpressionStore(impStore);
+                    callbackManager.addChangeUserCallback(impStore);
+                }
+            }
+            return null;
+        });
+
         //Get device id should be async to avoid strict mode policy.
         Task<Void> taskInitFCManager = CTExecutorFactory.executors(config).ioTask();
         taskInitFCManager.execute("initFCManager", new Callable<Void>() {
@@ -88,37 +146,129 @@ class CleverTapFactory {
                         && controllerManager.getInAppFCManager() == null) {
                     coreState.getConfig().getLogger()
                             .verbose(config.getAccountId() + ":async_deviceID",
-                                    "Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
+                                    "Initializing InAppFC with device Id = " + coreState.getDeviceInfo()
+                                            .getDeviceID());
                     controllerManager
-                            .setInAppFCManager(new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
+                            .setInAppFCManager(
+                                    new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID(),
+                                            storeRegistry, impressionManager));
                 }
                 return null;
             }
         });
 
+        VarCache varCache = new VarCache(config, context);
+        coreState.setVarCache(varCache);
 
+        CTVariables ctVariables = new CTVariables(varCache);
+        coreState.setCTVariables(ctVariables);
+        coreState.getControllerManager().setCtVariables(ctVariables);
 
-        NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
-                validationResultStack, controllerManager, baseDatabaseManager,
-                callbackManager, ctLockManager, validator, localDataStore);
+        Parser parser = new Parser(ctVariables);
+        coreState.setParser(parser);
+
+        Task<Void> taskVariablesInit = CTExecutorFactory.executors(config).ioTask();
+        taskVariablesInit.execute("initCTVariables", () -> {
+            ctVariables.init();
+            return null;
+        });
+
+        InAppResponse inAppResponse = new InAppResponse(
+                config,
+                controllerManager,
+                false,
+                storeRegistry,
+                triggersManager,
+                coreMetaData
+        );
+
+        NetworkManager networkManager = new NetworkManager(
+                context,
+                config,
+                deviceInfo,
+                coreMetaData,
+                validationResultStack,
+                controllerManager,
+                baseDatabaseManager,
+                callbackManager,
+                ctLockManager,
+                validator,
+                localDataStore,
+                cryptHandler,
+                inAppResponse
+        );
         coreState.setNetworkManager(networkManager);
 
-        EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config,
+        EventQueueManager baseEventQueueManager = new EventQueueManager(
+                baseDatabaseManager,
+                context,
+                config,
                 eventMediator,
-                sessionManager, callbackManager,
-                mainLooperHandler, deviceInfo, validationResultStack,
-                networkManager, coreMetaData, ctLockManager, localDataStore, controllerManager, cryptHandler);
+                sessionManager,
+                callbackManager,
+                mainLooperHandler,
+                deviceInfo,
+                validationResultStack,
+                networkManager,
+                coreMetaData,
+                ctLockManager,
+                localDataStore,
+                controllerManager,
+                cryptHandler
+        );
         coreState.setBaseEventQueueManager(baseEventQueueManager);
 
-        AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
-                validationResultStack, coreMetaData, localDataStore, deviceInfo,
-                callbackManager, controllerManager, ctLockManager);
+        InAppResponse inAppResponseForSendTestInApp = new InAppResponse(
+                config,
+                controllerManager,
+                true,
+                storeRegistry,
+                triggersManager,
+                coreMetaData
+        );
+
+        AnalyticsManager analyticsManager = new AnalyticsManager(
+                context,
+                config,
+                baseEventQueueManager,
+                validator,
+                validationResultStack,
+                coreMetaData,
+                localDataStore,
+                deviceInfo,
+                callbackManager,
+                controllerManager,
+                ctLockManager,
+                inAppResponseForSendTestInApp
+        );
         coreState.setAnalyticsManager(analyticsManager);
 
-        InAppController inAppController = new InAppController(context, config, mainLooperHandler,
-                controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo);
+        networkManager.addNetworkHeadersListener(evaluationManager);
+
+        InAppController inAppController = new InAppController(
+                context,
+                config,
+                mainLooperHandler,
+                controllerManager,
+                callbackManager,
+                analyticsManager,
+                coreMetaData,
+                deviceInfo,
+                new InAppQueue(config, storeRegistry),
+                evaluationManager,
+                new InAppResourceProvider(context, config.getLogger())
+        );
+
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
+
+        final AppLaunchListener appLaunchListener = new AppLaunchListener();
+        appLaunchListener.addListener(inAppController.onAppLaunchEventSent);
+
+        CompositeBatchListener batchListener = new CompositeBatchListener();
+        batchListener.addListener(appLaunchListener);
+        batchListener.addListener(new FetchInAppListener(callbackManager));
+        callbackManager.setBatchListener(batchListener);
 
         Task<Void> taskInitFeatureFlags = CTExecutorFactory.executors(config).ioTask();
         taskInitFeatureFlags.execute("initFeatureFlags", new Callable<Void>() {
@@ -128,8 +278,6 @@ class CleverTapFactory {
                 return null;
             }
         });
-
-
 
         LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
         coreState.setLocationManager(locationManager);
@@ -151,18 +299,6 @@ class CleverTapFactory {
                 coreMetaData, controllerManager, sessionManager,
                 localDataStore, callbackManager, baseDatabaseManager, ctLockManager, cryptHandler);
         coreState.setLoginController(loginController);
-
-        VarCache varCache = new VarCache(config,context);
-        coreState.setVarCache(varCache);
-
-        CTVariables ctVariables = new CTVariables(varCache );
-        coreState.setCTVariables(ctVariables);
-        coreState.getControllerManager().setCtVariables(ctVariables);
-
-        Parser parser = new Parser(ctVariables);
-        coreState.setParser(parser);
-
-        ctVariables.init();
 
         return coreState;
     }

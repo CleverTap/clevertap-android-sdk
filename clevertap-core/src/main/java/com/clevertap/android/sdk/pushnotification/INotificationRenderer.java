@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.Utils;
+import java.util.Random;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -138,7 +139,7 @@ public interface INotificationRenderer {
                     }
 
                     PendingIntent actionIntent;
-                    int requestCode = ((int) System.currentTimeMillis()) + i;
+                    int requestCode = new Random().nextInt();
                     int flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
                     if (VERSION.SDK_INT >= VERSION_CODES.M) {
                         flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;

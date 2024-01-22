@@ -11,16 +11,14 @@ public class GeofenceResponse extends CleverTapResponseDecorator {
 
     private final BaseCallbackManager callbackManager;
 
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
     private final Logger logger;
 
-    public GeofenceResponse(final CleverTapResponse cleverTapResponse,
+    public GeofenceResponse(
             CleverTapInstanceConfig config,
-            BaseCallbackManager callbackManager) {
-        this.cleverTapResponse = cleverTapResponse;
+            BaseCallbackManager callbackManager
+    ) {
         this.config = config;
         logger = this.config.getLogger();
         this.callbackManager = callbackManager;
@@ -33,9 +31,6 @@ public class GeofenceResponse extends CleverTapResponseDecorator {
         if (config.isAnalyticsOnly()) {
             logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing geofence response");
-
-            // process further response
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
 
@@ -48,8 +43,6 @@ public class GeofenceResponse extends CleverTapResponseDecorator {
         if (!response.has(Constants.GEOFENCES_JSON_RESPONSE_KEY)) {
             logger.verbose(config.getAccountId(),
                     Constants.LOG_TAG_GEOFENCES + "JSON object doesn't contain the Geofences key");
-            // process further response
-            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {
@@ -70,9 +63,5 @@ public class GeofenceResponse extends CleverTapResponseDecorator {
                     .verbose(config.getAccountId(),
                             Constants.LOG_TAG_GEOFENCES + "Failed to handle Geofences response", t);
         }
-
-        // process further response
-        cleverTapResponse.processResponse(response, stringBody, context);
-
     }
 }

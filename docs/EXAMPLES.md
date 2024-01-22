@@ -209,9 +209,9 @@ implementation "com.google.android.material:material:1.4.0"//MANDATORY for App I
 implementation "com.github.bumptech.glide:glide:4.12.0"//MANDATORY for App Inbox
 
 //Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
-implementation "com.google.android.exoplayer:exoplayer:2.17.1"
-implementation "com.google.android.exoplayer:exoplayer-hls:2.17.1"
-implementation "com.google.android.exoplayer:exoplayer-ui:2.17.1"
+implementation "com.google.android.exoplayer:exoplayer:2.19.1"
+implementation "com.google.android.exoplayer:exoplayer-hls:2.19.1"
+implementation "com.google.android.exoplayer:exoplayer-ui:2.19.1"
 ```
 #### Initializing the Inbox
 
@@ -703,14 +703,6 @@ class HomeScreenActivity : AppCompatActivity(),PushPermissionResponseListener{
 Please note if using Google Ad Id for apps targeting Android 13+, will have to declare the below permission
 ```xml
 <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
-```
-
-#### Tracking the Install Referrer
-
-From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver if you are using it and add the following gradle dependency to capture UTM details, app install time, referrer click time and other metrics provided by the Google Install Referrer Library.
-
-```groovy
-    implementation "com.android.installreferrer:installreferrer:2.2"
 ```
 
 #### Remote Config Variables

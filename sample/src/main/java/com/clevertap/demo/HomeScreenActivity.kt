@@ -25,6 +25,7 @@ import net.khirr.android.privacypolicy.PrivacyPolicyDialog
 import net.khirr.android.privacypolicy.PrivacyPolicyDialog.OnClickListener
 
 import com.clevertap.demo.ui.main.NotificationUtils
+import com.google.android.gms.common.wrappers.InstantApps.isInstantApp
 
 import org.json.JSONObject
 import java.util.HashMap
@@ -41,6 +42,8 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_screen_activity)
+
+        Log.i(TAG, "is Instant app? - ${isInstantApp(this)}")
         if (savedInstanceState == null) {
             supportFragmentManager.commitNow {
                 replace(R.id.container, HomeScreenFragment.newInstance())

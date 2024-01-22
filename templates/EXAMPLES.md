@@ -202,16 +202,16 @@ CleverTapAPI.changeCredentials(
 Add the following dependencies in your app's `build.gradle`
 
 ```groovy
-implementation "${ext.appcompat}${ext['version.androidx.appcompat']}"//MANDATORY for App Inbox
-implementation "${ext.recyclerview}${ext['version.androidx.recyclerview']}"//MANDATORY for App Inbox
-implementation "${ext.viewpager}${ext['version.androidx.viewpager']}"//MANDATORY for App Inbox
-implementation "${ext.material}${ext['version.google.android.material']}"//MANDATORY for App Inbox
-implementation "${ext.glide}${ext['version.com.github.bumptech.glide..glide']}"//MANDATORY for App Inbox
+implementation "${ext.appcompat}"//MANDATORY for App Inbox
+implementation "${ext.recyclerview}"//MANDATORY for App Inbox
+implementation "${ext.viewpager}"//MANDATORY for App Inbox
+implementation "${ext.material}"//MANDATORY for App Inbox
+implementation "${ext.glide}"//MANDATORY for App Inbox
 
 //Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
-implementation "${ext.exoplayer}${ext['version.com.google.android.exoplayer..exoplayer']}"
-implementation "${ext.exoplayer_hls}${ext['version.com.google.android.exoplayer..exoplayer-hls']}"
-implementation "${ext.exoplayer_ui}${ext['version.com.google.android.exoplayer..exoplayer-ui']}"
+implementation "${ext.exoplayer}"
+implementation "${ext.exoplayer_hls}"
+implementation "${ext.exoplayer_ui}"
 ```
 #### Initializing the Inbox
 
@@ -703,14 +703,6 @@ class HomeScreenActivity : AppCompatActivity(),PushPermissionResponseListener{
 Please note if using Google Ad Id for apps targeting Android 13+, will have to declare the below permission
 ```xml
 <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
-```
-
-#### Tracking the Install Referrer
-
-From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver if you are using it and add the following gradle dependency to capture UTM details, app install time, referrer click time and other metrics provided by the Google Install Referrer Library.
-
-```groovy
-    implementation "${ext.installreferrer}${ext['version.com.android.installreferrer..installreferrer']}"
 ```
 
 #### Remote Config Variables

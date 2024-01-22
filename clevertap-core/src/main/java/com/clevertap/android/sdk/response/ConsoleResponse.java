@@ -9,15 +9,12 @@ import org.json.JSONObject;
 
 public class ConsoleResponse extends CleverTapResponseDecorator {
 
-    private final CleverTapResponse cleverTapResponse;
-
     private final CleverTapInstanceConfig config;
 
 
     private final Logger logger;
 
-    public ConsoleResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config) {
-        this.cleverTapResponse = cleverTapResponse;
+    public ConsoleResponse(CleverTapInstanceConfig config) {
         this.config = config;
         logger = this.config.getLogger();
     }
@@ -55,8 +52,5 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             // Ignore
         }
-
-        // process InBox Response
-        cleverTapResponse.processResponse(response, stringBody, context);
     }
 }

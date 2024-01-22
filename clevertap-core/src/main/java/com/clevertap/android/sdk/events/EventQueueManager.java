@@ -3,9 +3,8 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
-
+import android.location.Location;
 import androidx.annotation.Nullable;
-
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -30,15 +29,13 @@ import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class EventQueueManager extends BaseEventQueueManager implements FailureFlushListener {
 
@@ -184,6 +181,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             controllerManager.invokeCallbacksForNetworkError();
+            controllerManager.invokeBatchListener(new JSONArray(), false);
             return;
         }
 
@@ -192,6 +190,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
             controllerManager.invokeCallbacksForNetworkError();
+            controllerManager.invokeBatchListener(new JSONArray(), false);
             return;
         }
 
@@ -452,6 +451,23 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         return task.submit("queueEvent", new Callable<Void>() {
             @Override
             public Void call() {
+
+                Location userLocation = cleverTapMetaData.getLocationFromUser();
+
+                if (eventMediator.isChargedEvent(event)) {
+                    controllerManager.getInAppController()
+                            .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
+                                    eventMediator.getChargedEventItemDetails(event), userLocation);
+                } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
+                    // in case device is offline just evaluate all events
+                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
+                            eventMediator.getEventProperties(event), userLocation);
+                } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
+                    // in case device is online only evaluate non-appLaunched events
+                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
+                            eventMediator.getEventProperties(event), userLocation);
+                }
+
                 if (eventMediator.shouldDropEvent(event, eventType)) {
                     return null;
                 }
@@ -474,7 +490,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                         }
                     }, 2000);
                 } else {
-                    if (eventType == Constants.FETCH_EVENT) {
+                    if (eventType == Constants.FETCH_EVENT || eventType == Constants.NV_EVENT) {
                         addToQueue(context, event, eventType);
                     } else {
                         sessionManager.lazyCreateSession(context);

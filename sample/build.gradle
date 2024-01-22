@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
@@ -16,22 +18,43 @@ android {
         applicationId "com.clevertap.demo"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 10406
-        versionName "1.4.6-push-plus"
+        versionCode 200005
+        versionName "1.6.2-full"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    //flavorDimensionList "version", "deps"
+    flavorDimensions += "deps"
+    productFlavors {
+        create("remote") {
+            dimension("deps")
+            //applicationIdSuffix = ".remote"
+            //versionNameSuffix = "-remote"
+        }
+        create("local") {
+            dimension("deps")
+        }
+        create("staging") {
+            dimension("deps")
+            //applicationIdSuffix = ".staging"
+            //versionNameSuffix = "-staging"
+
+            repositories {
+                maven { url 'https://oss.sonatype.org/content/groups/staging/' }
+            }
+        }
+    }
     buildTypes {
-        debug {
+        named("debug") {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        release {
+        named("release") {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    tasks.withType(KotlinCompile).configureEach {
         kotlinOptions {
             jvmTarget = JavaVersion.VERSION_1_8
         }
@@ -48,78 +71,64 @@ android {
 dependencies {
     def lifecycle_version = "2.3.1"
 
-    implementation 'androidx.core:core:1.9.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
-    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31"
+    implementation ("androidx.core:core:1.9.0")
+    implementation ("androidx.constraintlayout:constraintlayout:2.1.1")
+    implementation ("androidx.coordinatorlayout:coordinatorlayout:1.1.0")
+    implementation ("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31")
     // LiveData
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-    implementation "androidx.fragment:fragment-ktx:1.3.6"
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
+    implementation("androidx.fragment:fragment-ktx:1.3.6")
     testImplementation 'junit:junit:4.13'
 
     // Material Dialog Library
-    implementation 'dev.shreyaspatil.MaterialDialog:MaterialDialog:2.2.3'
+    implementation("dev.shreyaspatil.MaterialDialog:MaterialDialog:2.2.3")
 
     // Material Design Library
-    implementation 'com.google.android.material:material:1.0.0'
+    implementation("com.google.android.material:material:1.0.0")
 
     // Lottie Animation Library
-    implementation 'com.airbnb.android:lottie:4.2.2'
-    implementation 'com.github.khirr:Android-Privacy-Policy:1.0.3'
+    implementation("com.airbnb.android:lottie:4.2.2")
+    implementation("com.github.khirr:Android-Privacy-Policy:1.0.3")
 
-    //CleverTap Android SDK, make sure the AAR file is in the libs folder
-    implementation project(':clevertap-core')
+    localImplementation(project(":clevertap-core")) //CleverTap Android SDK, make sure the AAR file is in the libs folder
+    //implementation fileTree(include: ['*.aar'], dir: 'libs')
+    localImplementation(project(":clevertap-geofence")) // Geofence
+    localImplementation(project(":clevertap-xps")) // For Xiaomi Push use
+    localImplementation(project(":clevertap-pushtemplates"))
+    localImplementation(project(":clevertap-hms")) // For Huawei Push use
 
-    implementation fileTree(include: ['*.aar'], dir: 'libs')
-    //implementation "com.clevertap.android:clevertap-android-sdk:5.1.0"
+    implementation("com.huawei.hms:push:6.5.0.300")
+    implementation("com.google.android.gms:play-services-location:21.0.0") // Needed for geofence
+    implementation("androidx.work:work-runtime:2.7.1") // Needed for geofence
+    implementation("androidx.concurrent:concurrent-futures:1.1.0") // Needed for geofence
 
-    implementation project(':clevertap-geofence')
-    //implementation "com.clevertap.android:clevertap-geofence-sdk:1.2.0"
-
-    // For Xiaomi Push use
-    implementation project(':clevertap-xps')
-    //implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.5.2'
-
-    implementation project(':clevertap-pushtemplates')
-//    implementation "com.clevertap.android:push-templates:1.1.0"
-
-    // For Huawei Push use
-    implementation project(':clevertap-hms')
-    //implementation 'com.clevertap.android:clevertap-hms-sdk:1.3.2'
-    //implementation 'com.huawei.hms:push:6.5.0.300'
-
-    implementation 'com.google.android.gms:play-services-location:21.0.0'// Needed for geofence
-    implementation 'androidx.work:work-runtime:2.7.1'// Needed for geofence
-    implementation 'androidx.concurrent:concurrent-futures:1.1.0'// Needed for geofence
-
-    implementation 'com.google.firebase:firebase-messaging:23.0.6' //Needed for FCM
-    implementation 'com.google.android.gms:play-services-ads:20.4.0' //Needed to use Google Ad Ids
+    implementation("com.google.firebase:firebase-messaging:23.0.6") //Needed for FCM
+    implementation("com.google.android.gms:play-services-ads:20.4.0") //Needed to use Google Ad Ids
     //ExoPlayer Libraries for Audio/Video InApp Notifications
-    implementation 'com.google.android.exoplayer:exoplayer:2.17.1'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.17.1'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.17.1'
-    implementation 'com.github.bumptech.glide:glide:4.12.0'
+    implementation("com.google.android.exoplayer:exoplayer:2.19.1")
+    implementation("com.google.android.exoplayer:exoplayer-hls:2.19.1")
+    implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
+    implementation("com.github.bumptech.glide:glide:4.12.0")
 
     //Mandatory if you are using Notification Inbox
+    implementation("com.google.android.material:material:1.4.0")
+    implementation("androidx.fragment:fragment:1.3.6")
+    implementation("androidx.appcompat:appcompat:1.6.0-rc01")
+    implementation("androidx.recyclerview:recyclerview:1.2.1")
+    implementation("androidx.viewpager:viewpager:1.0.0")
 
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'androidx.fragment:fragment:1.3.6'
-    implementation 'androidx.appcompat:appcompat:1.6.0-rc01'
-    implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    implementation 'androidx.viewpager:viewpager:1.0.0'
-
-    implementation 'com.android.installreferrer:installreferrer:2.2'
+    implementation("com.android.installreferrer:installreferrer:2.2")
     // Mandatory for v3.6.4 and above
 
-    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation("androidx.multidex:multidex:2.0.1")
 
     // Import the BoM for the Firebase platform
-    implementation platform('com.google.firebase:firebase-bom:30.0.2')
+    implementation platform("com.google.firebase:firebase-bom:30.0.2")
 
     // Declare the dependency for the Analytics library
     // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation("com.google.firebase:firebase-crashlytics")
 /*
     implementation "com.android.tools.build:gradle:4.2.1"
     implementation "com.google.gms:google-services:4.3.3"// Google Services plugin
@@ -128,6 +137,18 @@ dependencies {
     implementation "org.jacoco:org.jacoco.core:0.8.4"
     implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72"
     implementation "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"*/
+
+    remoteImplementation("com.clevertap.android:clevertap-android-sdk:5.2.1")
+    remoteImplementation("com.clevertap.android:clevertap-geofence-sdk:1.2.0")
+    remoteImplementation("com.clevertap.android:clevertap-xiaomi-sdk:1.5.2")
+    remoteImplementation("com.clevertap.android:push-templates:1.1.0")
+    remoteImplementation("com.clevertap.android:clevertap-hms-sdk:1.3.2")
+
+    stagingImplementation("com.clevertap.android:clevertap-android-sdk:5.2.1")
+    stagingImplementation("com.clevertap.android:clevertap-geofence-sdk:1.2.0")
+    stagingImplementation("com.clevertap.android:clevertap-xiaomi-sdk:1.5.2")
+    stagingImplementation("com.clevertap.android:push-templates:1.1.0")
+    stagingImplementation("com.clevertap.android:clevertap-hms-sdk:1.3.2")
 }
 
 apply plugin: 'com.google.gms.google-services'

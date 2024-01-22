@@ -10,5 +10,5 @@ interface IBitmapInputStreamReader {
         inputStream: InputStream,
         connection: HttpURLConnection,
         downloadStartTimeInMilliseconds: Long
-    ): DownloadedBitmap?
+    ): DownloadedBitmap
 }

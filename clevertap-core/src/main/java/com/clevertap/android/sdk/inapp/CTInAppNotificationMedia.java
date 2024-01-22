@@ -2,12 +2,16 @@ package com.clevertap.android.sdk.inapp;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import androidx.annotation.RestrictTo;
+
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class CTInAppNotificationMedia implements Parcelable {
 
     public static final Creator<CTInAppNotificationMedia> CREATOR = new Creator<CTInAppNotificationMedia>() {
@@ -30,7 +34,7 @@ public class CTInAppNotificationMedia implements Parcelable {
 
     private String mediaUrl;
 
-    CTInAppNotificationMedia() {
+    public CTInAppNotificationMedia() {
     }
 
     private CTInAppNotificationMedia(Parcel in) {
@@ -65,7 +69,7 @@ public class CTInAppNotificationMedia implements Parcelable {
         return contentType;
     }
 
-    String getMediaUrl() {
+    public String getMediaUrl() {
         return mediaUrl;
     }
 
@@ -74,7 +78,7 @@ public class CTInAppNotificationMedia implements Parcelable {
         this.mediaUrl = mediaUrl;
     }
 
-    CTInAppNotificationMedia initWithJSON(JSONObject mediaObject, int orientation) {
+    public CTInAppNotificationMedia initWithJSON(JSONObject mediaObject, int orientation) {
         this.orientation = orientation;
         try {
             this.contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject
@@ -102,23 +106,23 @@ public class CTInAppNotificationMedia implements Parcelable {
         }
     }
 
-    boolean isAudio() {
+    public boolean isAudio() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("audio");
     }
 
-    boolean isGIF() {
+    public boolean isGIF() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.equals("image/gif");
     }
 
-    boolean isImage() {
+    public boolean isImage() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("image") && !contentType
                 .equals("image/gif");
     }
 
-    boolean isVideo() {
+    public boolean isVideo() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("video");
     }

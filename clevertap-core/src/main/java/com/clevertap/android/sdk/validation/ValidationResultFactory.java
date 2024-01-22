@@ -59,12 +59,12 @@ public class ValidationResultFactory {
                         case Constants.CHANNEL_ID_MISSING_IN_PAYLOAD:
                             msg
                                     =
-                                    "Unable to render notification, channelId is required but not provided in the notification payload: "
+                                    "ChannelId is required for API 26+ but not provided in the notification payload. Falling to default channel: "
                                             + values[0];
                             break;
                         case Constants.CHANNEL_ID_NOT_REGISTERED:
                             msg = "Unable to render notification on channelId: " + values[0]
-                                    + " as it is not registered by the app.";
+                                    + " as it is not registered by the app. Falling to default channel: ";
                             break;
                         case Constants.NOTIFICATION_VIEWED_DISABLED:
                             msg

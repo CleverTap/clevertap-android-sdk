@@ -12,10 +12,12 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -36,16 +38,14 @@ import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation;
 import com.clevertap.android.sdk.network.DownloadedBitmap;
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
 import com.google.firebase.messaging.RemoteMessage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import javax.net.ssl.HttpsURLConnection;
+import java.util.Scanner;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -162,37 +162,6 @@ public final class Utils {
 
     public static long getNowInMillis() {
         return System.currentTimeMillis();
-    }
-
-    public static byte[] getByteArrayFromImageURL(String srcUrl) {
-        srcUrl = srcUrl.replace("///", "/");
-        srcUrl = srcUrl.replace("//", "/");
-        srcUrl = srcUrl.replace("http:/", "http://");
-        srcUrl = srcUrl.replace("https:/", "https://");
-        HttpsURLConnection connection = null;
-        try {
-            URL url = new URL(srcUrl);
-            connection = (HttpsURLConnection) url.openConnection();
-            InputStream is = connection.getInputStream();
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            while ((bytesRead = is.read(buffer)) != -1) {
-                baos.write(buffer, 0, bytesRead);
-            }
-            return baos.toByteArray();
-        } catch (IOException e) {
-            Logger.v("Error processing image bytes from url: " + srcUrl);
-            return null;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            } catch (Throwable t) {
-                Logger.v("Couldn't close connection!", t);
-            }
-        }
     }
 
     @SuppressLint("MissingPermission")
@@ -329,11 +298,7 @@ public final class Utils {
         if (activity == null) {
             return true;
         }
-        boolean isActivityDead = activity.isFinishing();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            isActivityDead = isActivityDead || activity.isDestroyed();
-        }
-        return isActivityDead;
+        return activity.isFinishing() || activity.isDestroyed();
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -497,14 +462,14 @@ public final class Utils {
             if (logo == null) {
                 throw new Exception("Logo is null");
             }
-            return DownloadedBitmapFactory.INSTANCE.successBitmap(drawableToBitmap(logo), 0);
+            return DownloadedBitmapFactory.INSTANCE.successBitmap(drawableToBitmap(logo), 0, null);
         } catch (Exception e) {
             e.printStackTrace();
             // Try to get the app icon now
             // No error handling here - handle upstream
             return DownloadedBitmapFactory.INSTANCE.successBitmap(
                     drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo())),
-                    0);
+                    0, null);
         }
     }
 
@@ -563,5 +528,59 @@ public final class Utils {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static List<JSONObject> toJSONObjectList(JSONArray jsonArray) throws JSONException {
+        List<JSONObject> jsonObjectList = new ArrayList<>();
+        for (int index = 0; index < jsonArray.length(); index++) {
+            jsonObjectList.add(jsonArray.getJSONObject(index));
+        }
+        return jsonObjectList;
+    }
+
+    /**
+     * Calculates the haversine distance between two locations on Earth.
+     *
+     * @param coordinateA The first location.
+     * @param coordinateB The second location.
+     * @return The haversine distance between the two locations, in kilometers.
+     */
+    public static double haversineDistance(Location coordinateA, Location coordinateB) {
+        // The Earth radius ranges from a maximum of about 6378 km (equatorial)
+        // to a minimum of about 6357 km (polar).
+        // A globally-average value is usually considered to be 6371 km (6371e3).
+        // This method uses 6378.2 km as the radius since this is the value
+        // used by the backend, and calculations should produce the same result.
+        final double EARTH_DIAMETER = 2 * 6378.2;
+
+        final double RAD_CONVERT = Math.PI / 180;
+        double phi1 = coordinateA.getLatitude() * RAD_CONVERT;
+        double phi2 = coordinateB.getLatitude() * RAD_CONVERT;
+
+        double deltaPhi = (coordinateB.getLatitude() - coordinateA.getLatitude()) * RAD_CONVERT;
+        double deltaLambda = (coordinateB.getLongitude() - coordinateA.getLongitude()) * RAD_CONVERT;
+
+        double sinPhi = Math.sin(deltaPhi / 2);
+        double sinLambda = Math.sin(deltaLambda / 2);
+
+        double a = sinPhi * sinPhi + Math.cos(phi1) * Math.cos(phi2) * sinLambda * sinLambda;
+        // Distance in km
+        return EARTH_DIAMETER * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    /**
+     * Reads the content of a file from the "assets" folder.
+     *
+     * @param context  The application context.
+     * @param fileName The name of the file to be read from the "assets" folder.
+     * @return The content of the file as a String.
+     * @throws IOException If an I/O error occurs while reading the file.
+     */
+    public static String readAssetFile(Context context, String fileName) throws IOException {
+        AssetManager assetManager = context.getAssets();
+        try (InputStream inputStream = assetManager.open(fileName)) {
+            // Read the entire content of the file into a String
+            return new Scanner(inputStream).useDelimiter("\\A").next();
+        }
     }
 }
