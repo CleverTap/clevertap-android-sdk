@@ -528,7 +528,7 @@ public class PushProviders implements CTPushProviderListener {
                     .setRequiresBatteryNotLow(true)
                     .build();
 
-            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, 15, TimeUnit.MINUTES)
+            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, pingFrequency, TimeUnit.MINUTES)
                     .setConstraints(constraints)
                     .build();
 
