@@ -398,8 +398,9 @@ public class NetworkManager extends BaseNetworkManager {
 
             // Add ddnd (Do Not Disturb)
             header.put("ddnd",
-                    !(CTXtensions.areAppNotificationsEnabled(this.context) && (controllerManager.getPushProviders()
-                            .isNotificationSupported())));
+                    !(CTXtensions.areAppNotificationsEnabled(this.context)
+                            && (controllerManager.getPushProviders() == null
+                            || controllerManager.getPushProviders().isNotificationSupported())));
 
             // Add bk (Background Ping) if required
             if (coreMetaData.isBgPing()) {
