@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.pushnotification;
 
-import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
@@ -8,8 +7,6 @@ import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.ge
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
 import android.content.Context;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
@@ -481,9 +478,11 @@ public class PushProviders implements CTPushProviderListener {
     @RequiresApi(api = VERSION_CODES.LOLLIPOP)
     private void stopJobScheduler(Context context) {
         int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
-        if (existingJobId >= 0) {//cancel already running job
-            JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
-            jobScheduler.cancel(existingJobId);
+        if (existingJobId >= 0) {
+            // Todo - Test this scenario
+//            Cancel already running job. Unnecessary as job is cancelled on it's own when app is updated
+//            JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
+//            jobScheduler.cancel(existingJobId);
             StorageHelper.remove(context, Constants.PF_JOB_ID);
         }
     }
@@ -491,54 +490,73 @@ public class PushProviders implements CTPushProviderListener {
     private void stopWorker() {
         String existingWorkName = StorageHelper.getString(context, Constants.PF_WORK_ID, "");
         if (existingWorkName.equals("")) {
-            WorkManager workManager = WorkManager.getInstance(context);
-            workManager.cancelUniqueWork(existingWorkName);
-            StorageHelper.putInt(context, Constants.PF_WORK_ID, -1);
+            try {
+                WorkManager workManager = WorkManager.getInstance(context);
+                workManager.cancelUniqueWork(existingWorkName);
+                StorageHelper.putInt(context, Constants.PF_WORK_ID, -1);
+                config.getLogger().debug(config.getAccountId(),
+                        "Pushamp - Successfully cancelled work since background sync is disabled or account is analytics only");
+            }
+            catch (Exception e) {
+                config.getLogger().debug(config.getAccountId(),
+                        "Pushamp - Failure while cancelling work since background sync is disabled or account is analytics only");
+            }
         }
     }
+
     private void createOrResetWorker(boolean isPingFrequencyUpdated) {
         //Disable push amp for devices below Api 26
         if (VERSION.SDK_INT < VERSION_CODES.O) {
-            config.getLogger().debug(config.getAccountId(), "Push Amplification feature is not supported below Oreo");
+            config.getLogger().debug(config.getAccountId(), "Pushamp feature is not supported below Oreo");
             return;
         }
 
         String existingWorkName = StorageHelper.getString(context, Constants.PF_WORK_ID, "");
-        WorkManager workManager = WorkManager.getInstance(context);
         int pingFrequency = getPingFrequency(context);
 
         // no running work and nothing to create
         if (existingWorkName.equals("") && pingFrequency <= 0) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Pushamp - There is no running work and nothing to create");
             return;
         }
 
-        // running work but hard cancel
-        if (pingFrequency <= 0) {
-            workManager.cancelUniqueWork(existingWorkName);
-            StorageHelper.putInt(context, Constants.PF_WORK_ID, -1);
-            config.getLogger().debug(config.getAccountId(), "Cancelling pushamp work since ping frequency is less than 0");
-            return;
-        }
+        try {
+            WorkManager workManager = WorkManager.getInstance(context);
+            // Running work exists but hard cancel
+            if (pingFrequency <= 0) {
+                workManager.cancelUniqueWork(existingWorkName);
+                StorageHelper.putInt(context, Constants.PF_WORK_ID, -1);
+                config.getLogger()
+                        .debug(config.getAccountId(), "Pushamp - Cancelling work since ping frequency is <= 0");
+                return;
+            }
 
-        // Create a work request only when it doesn't exist already or the ping frequency is updated
-        if (existingWorkName.equals("") || isPingFrequencyUpdated) {
-            Constraints constraints = new Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .setRequiresCharging(false)
-                    .setRequiresBatteryNotLow(true)
-                    .build();
+            // Create a work request only when it doesn't exist already or the ping frequency is updated
+            if (existingWorkName.equals("") || isPingFrequencyUpdated) {
+                Constraints constraints = new Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .setRequiresCharging(false)
+                        .setRequiresBatteryNotLow(true)
+                        .build();
 
-            PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, pingFrequency, TimeUnit.MINUTES)
-                    .setConstraints(constraints)
-                    .build();
+                // Todo - Earlier flex interval was 5 minutes but it was always defaulted to higher time? Possibly redundant to specify
+                PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, pingFrequency,
+                        TimeUnit.MINUTES)
+                        .setConstraints(constraints)
+                        .build();
 
-            String workName = existingWorkName.equals("") ? config.getAccountId() : existingWorkName;
+                String workName = existingWorkName.equals("") ? config.getAccountId() : existingWorkName;
 
-            workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.REPLACE, request);
-            StorageHelper.putString(context, Constants.PF_WORK_ID, workName);
+                workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.REPLACE, request);
+                StorageHelper.putString(context, Constants.PF_WORK_ID, workName);
+                config.getLogger().debug(config.getAccountId(),
+                        "Pushamp - Finished scheduling periodic work request - " + workName + " with repeatInterval- "
+                                + pingFrequency + " minutes");
+            }
+        } catch (Exception e) {
             config.getLogger().debug(config.getAccountId(),
-                    "Finished scheduling periodic work request for pushAmp - " + workName + " with repeatInterval- "
-                            + pingFrequency +" minutes");
+                    "Pushamp - Failed scheduling/cancelling periodic work request" + e);
         }
     }
 
@@ -718,6 +736,7 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void initPushAmp() {
+        // Prevent PushAmp initialisation on xiaomi's thread
         if(!Utils.isMainProcess(context, context.getPackageName()))
             return;
 
