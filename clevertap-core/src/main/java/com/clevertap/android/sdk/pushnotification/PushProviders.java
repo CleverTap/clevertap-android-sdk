@@ -487,23 +487,6 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
-    private void stopWorker() {
-        String existingWorkName = StorageHelper.getString(context, Constants.PF_WORK_ID, "");
-        if (existingWorkName.equals("")) {
-            try {
-                WorkManager workManager = WorkManager.getInstance(context);
-                workManager.cancelUniqueWork(existingWorkName);
-                StorageHelper.putInt(context, Constants.PF_WORK_ID, -1);
-                config.getLogger().debug(config.getAccountId(),
-                        "Pushamp - Successfully cancelled work since background sync is disabled or account is analytics only");
-            }
-            catch (Exception e) {
-                config.getLogger().debug(config.getAccountId(),
-                        "Pushamp - Failure while cancelling work since background sync is disabled or account is analytics only");
-            }
-        }
-    }
-
     private void createOrResetWorker(boolean isPingFrequencyUpdated) {
         //Disable push amp for devices below Api 26
         if (VERSION.SDK_INT < VERSION_CODES.O) {
@@ -521,16 +504,16 @@ public class PushProviders implements CTPushProviderListener {
             return;
         }
 
+        // Running work exists but hard cancel
+        if (pingFrequency <= 0) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Pushamp - Cancelling worker as pingFrequency <=0 ");
+            stopWorker();
+            return;
+        }
+
         try {
             WorkManager workManager = WorkManager.getInstance(context);
-            // Running work exists but hard cancel
-            if (pingFrequency <= 0) {
-                workManager.cancelUniqueWork(existingWorkName);
-                StorageHelper.putInt(context, Constants.PF_WORK_ID, -1);
-                config.getLogger()
-                        .debug(config.getAccountId(), "Pushamp - Cancelling work since ping frequency is <= 0");
-                return;
-            }
 
             // Create a work request only when it doesn't exist already or the ping frequency is updated
             if (existingWorkName.equals("") || isPingFrequencyUpdated) {
@@ -557,6 +540,22 @@ public class PushProviders implements CTPushProviderListener {
         } catch (Exception e) {
             config.getLogger().debug(config.getAccountId(),
                     "Pushamp - Failed scheduling/cancelling periodic work request" + e);
+        }
+    }
+
+    private void stopWorker() {
+        String existingWorkName = StorageHelper.getString(context, Constants.PF_WORK_ID, "");
+        if (!existingWorkName.equals("")) {
+            try {
+                WorkManager workManager = WorkManager.getInstance(context);
+                workManager.cancelUniqueWork(existingWorkName);
+                StorageHelper.putString(context, Constants.PF_WORK_ID, "");
+                config.getLogger().debug(config.getAccountId(),
+                        "Pushamp - Successfully cancelled work");
+            } catch (Exception e) {
+                config.getLogger().debug(config.getAccountId(),
+                        "Pushamp - Failure while cancelling work");
+            }
         }
     }
 
@@ -750,6 +749,8 @@ public class PushProviders implements CTPushProviderListener {
                 if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
                     createOrResetWorker(false);
                 } else {
+                    config.getLogger()
+                            .debug(config.getAccountId(), "Pushamp - Cancelling worker as background sync is disabled or config is analytics only");
                     stopWorker();
                 }
                 return null;
