@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.pushnotification;
 
+import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
@@ -7,6 +8,7 @@ import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.ge
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.job.JobScheduler;
 import android.content.Context;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
@@ -479,10 +481,9 @@ public class PushProviders implements CTPushProviderListener {
     private void stopJobScheduler(Context context) {
         int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
         if (existingJobId >= 0) {
-            // Todo - Test this scenario
-//            Cancel already running job. Unnecessary as job is cancelled on it's own when app is updated
-//            JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
-//            jobScheduler.cancel(existingJobId);
+//          Cancel already running job. Possibly unnecessary
+            JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
+            jobScheduler.cancel(existingJobId);
             StorageHelper.remove(context, Constants.PF_JOB_ID);
         }
     }
