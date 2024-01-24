@@ -3,7 +3,6 @@ package com.clevertap.android.pushtemplates.content
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
@@ -69,8 +68,14 @@ internal object PendingIntentFactory {
             launchIntent.flags =
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
-            if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
-                flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
+            if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                flagsLaunchPendingIntent = flagsLaunchPendingIntent or
+                        if (launchIntent.hasExtra(PTConstants.PT_INPUT_FEEDBACK)) {
+                            //  PendingIntents attached to actions with remote inputs must be mutable
+                            PendingIntent.FLAG_MUTABLE
+                        } else {
+                            PendingIntent.FLAG_IMMUTABLE
+                        }
             }
             return PendingIntent.getBroadcast(
                 context, requestCode,
@@ -85,7 +90,7 @@ internal object PendingIntentFactory {
         intent.putExtra(PTConstants.PT_DISMISS_INTENT, true)
 
         var flagsLaunchPendingIntent = PendingIntent.FLAG_CANCEL_CURRENT
-        if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
+        if (VERSION.SDK_INT >= VERSION_CODES.M) {
             flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
         }
         return PendingIntent.getBroadcast(
@@ -304,18 +309,16 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtra(PTConstants.PT_INPUT_AUTO_OPEN, renderer?.pt_input_auto_open)
                 launchIntent!!.putExtra("config", renderer?.config)
 
-                return if (renderer?.deepLinkList != null) {
-                    setPendingIntent(
-                        context,
-                        notificationId,
-                        extras,
-                        launchIntent,
-                        requestCode
-                    )
-                } else {
+                if (renderer.deepLinkList == null) {
                     extras.putString(Constants.DEEP_LINK_KEY, null)
-                    setPendingIntent(context, notificationId, extras, launchIntent, requestCode)
                 }
+                return setPendingIntent(
+                    context,
+                    notificationId,
+                    extras,
+                    launchIntent,
+                    requestCode
+                )
             }
             else -> throw IllegalArgumentException("invalid pendingIntentType")
         }
