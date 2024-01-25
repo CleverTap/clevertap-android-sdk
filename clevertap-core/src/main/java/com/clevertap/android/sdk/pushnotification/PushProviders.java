@@ -67,6 +67,12 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
 
+    public static final int DEFAULT_FLEX_INTERVAL = 5;
+    public static final int PING_FREQUENCY_VALUE = 240;
+    public static final String PF_JOB_ID = "pfjobid";
+    public static final String PF_WORK_ID = "pfworkid";
+    public static final String PING_FREQUENCY = "pf";
+
     private final ArrayList<PushType> allEnabledPushTypes = new ArrayList<>();
 
     private final ArrayList<PushType> allDisabledPushTypes = new ArrayList<>();
@@ -436,55 +442,49 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     public void runPushAmpWork(final Context context) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("runningPushAmpWork", new Callable<Void>() {
-            @Override
-            public Void call() {
-                if (!isNotificationSupported()) {
-                    Logger.v(config.getAccountId(), "Token is not present, not running the PushAmpWork");
-                    return null;
-                }
+        Logger.v(config.getAccountId(), "Pushamp - Running work request");
+        if (!isNotificationSupported()) {
+            Logger.v(config.getAccountId(), "Pushamp - Token is not present, not running the work request");
+            return;
+        }
 
-                Calendar now = Calendar.getInstance();
+        Calendar now = Calendar.getInstance();
 
-                int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
-                int minute = now.get(Calendar.MINUTE);
+        int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
+        int minute = now.get(Calendar.MINUTE);
 
-                Date currentTime = parseTimeToDate(hour + ":" + minute);
-                Date startTime = parseTimeToDate(Constants.DND_START);
-                Date endTime = parseTimeToDate(Constants.DND_STOP);
+        Date currentTime = parseTimeToDate(hour + ":" + minute);
+        Date startTime = parseTimeToDate(Constants.DND_START);
+        Date endTime = parseTimeToDate(Constants.DND_STOP);
 
-                if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
-                    Logger.v(config.getAccountId(), "PushAmp won't run in default DND hours");
-                    return null;
-                }
+        if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
+            Logger.v(config.getAccountId(), "Pushamp won't run in default DND hours");
+            return;
+        }
 
-                long lastTS = baseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
+        long lastTS = baseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
 
-                if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
-                    try {
-                        JSONObject eventObject = new JSONObject();
-                        eventObject.put("bk", 1);
-                        analyticsManager.sendPingEvent(eventObject);
-                    } catch (JSONException e) {
-                        Logger.v("Unable to raise background Ping event");
-                    }
-
-                }
-                return null;
+        if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
+            try {
+                JSONObject eventObject = new JSONObject();
+                eventObject.put("bk", 1);
+                analyticsManager.sendPingEvent(eventObject);
+                Logger.v(config.getAccountId(), "Pushamp - Successfully completed work request");
+            } catch (JSONException e) {
+                Logger.v("Pushamp - Unable to complete work request");
             }
-        });
+        }
     }
 
     @SuppressLint("MissingPermission")
     @RequiresApi(api = VERSION_CODES.LOLLIPOP)
     private void stopJobScheduler(Context context) {
-        int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
-        if (existingJobId >= 0) {
+        int existingJobId = StorageHelper.getInt(context, PF_JOB_ID, -1);
+        if (existingJobId != -1) {
 //          Cancel already running job. Possibly unnecessary
             JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
             jobScheduler.cancel(existingJobId);
-            StorageHelper.remove(context, Constants.PF_JOB_ID);
+            StorageHelper.remove(context, PF_JOB_ID);
         }
     }
 
@@ -495,7 +495,7 @@ public class PushProviders implements CTPushProviderListener {
             return;
         }
 
-        String existingWorkName = StorageHelper.getString(context, Constants.PF_WORK_ID, "");
+        String existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "");
         int pingFrequency = getPingFrequency(context);
 
         // no running work and nothing to create
@@ -524,16 +524,15 @@ public class PushProviders implements CTPushProviderListener {
                         .setRequiresBatteryNotLow(true)
                         .build();
 
-                // Todo - Earlier flex interval was 5 minutes but it was always defaulted to higher time? Possibly redundant to specify
-                PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, pingFrequency,
-                        TimeUnit.MINUTES)
+                PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, 15,
+                        TimeUnit.MINUTES, DEFAULT_FLEX_INTERVAL, TimeUnit.MINUTES)
                         .setConstraints(constraints)
                         .build();
 
                 String workName = existingWorkName.equals("") ? config.getAccountId() : existingWorkName;
 
                 workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.REPLACE, request);
-                StorageHelper.putString(context, Constants.PF_WORK_ID, workName);
+                StorageHelper.putString(context, PF_WORK_ID, workName);
                 config.getLogger().debug(config.getAccountId(),
                         "Pushamp - Finished scheduling periodic work request - " + workName + " with repeatInterval- "
                                 + pingFrequency + " minutes");
@@ -545,12 +544,12 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void stopWorker() {
-        String existingWorkName = StorageHelper.getString(context, Constants.PF_WORK_ID, "");
+        String existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "");
         if (!existingWorkName.equals("")) {
             try {
                 WorkManager workManager = WorkManager.getInstance(context);
                 workManager.cancelUniqueWork(existingWorkName);
-                StorageHelper.putString(context, Constants.PF_WORK_ID, "");
+                StorageHelper.putString(context, PF_WORK_ID, "");
                 config.getLogger().debug(config.getAccountId(),
                         "Pushamp - Successfully cancelled work");
             } catch (Exception e) {
@@ -715,8 +714,8 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private int getPingFrequency(Context context) {
-        return StorageHelper.getInt(context, Constants.PING_FREQUENCY,
-                Constants.PING_FREQUENCY_VALUE); //intentional global key because only one Job is running
+        return StorageHelper.getInt(context, PING_FREQUENCY,
+                PING_FREQUENCY_VALUE);
     }
 
     /**
@@ -897,7 +896,7 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void setPingFrequency(Context context, int pingFrequency) {
-        StorageHelper.putInt(context, Constants.PING_FREQUENCY, pingFrequency);
+        StorageHelper.putInt(context, PING_FREQUENCY, pingFrequency);
     }
 
     @RestrictTo(Scope.LIBRARY)
