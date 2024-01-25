@@ -18,7 +18,7 @@ jobs:
       - name: Checkout the code from Repo
         uses: actions/checkout@v3
 
-      - name: Setup JDK 11.
+      - name: Setup JDK 17.
         uses: ./.github/mini_flows/setup_jdk
 
       - name: Run lint tests and Upload results

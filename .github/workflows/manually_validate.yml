@@ -77,7 +77,7 @@ jobs:
         if: ${{ github.event.inputs.check_mandatory }}
         uses: ./.github/mini_flows/mandatory_filechanges
 
-      - name: Setup JDK 11.
+      - name: Setup JDK 17.
         uses: ./.github/mini_flows/setup_jdk
 
       - name: Run lint tests and Upload results
