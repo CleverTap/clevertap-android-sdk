@@ -31,6 +31,9 @@ import com.clevertap.android.sdk.db.QueueCursor;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
+import com.clevertap.android.sdk.network.api.CtApi;
+import com.clevertap.android.sdk.network.api.SendQueueRequestBody;
+import com.clevertap.android.sdk.network.http.Response;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
 import com.clevertap.android.sdk.response.ARPResponse;
 import com.clevertap.android.sdk.response.CleverTapResponse;
@@ -49,35 +52,28 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class NetworkManager extends BaseNetworkManager {
-    private static SSLSocketFactory sslSocketFactory;
-    private static SSLContext sslContext;
+
     private final BaseCallbackManager callbackManager;
     private final List<CleverTapResponse> cleverTapResponses = new ArrayList<>();
     private final CleverTapInstanceConfig config;
+
     private final Context context;
+
     private final ControllerManager controllerManager;
+
     private final CoreMetaData coreMetaData;
-    private int currentRequestTimestamp = 0;
 
     private final BaseDatabaseManager databaseManager;
 
@@ -87,11 +83,13 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final Logger logger;
 
+    private final CtApi ctApi;
+
+    private int responseFailureCount = 0;
+
     private int networkRetryCount = 0;
 
     private final ValidationResultStack validationResultStack;
-
-    private int responseFailureCount = 0;
 
     private final Validator validator;
 
@@ -118,7 +116,7 @@ public class NetworkManager extends BaseNetworkManager {
             }
             @SuppressLint("MissingPermission") NetworkInfo netInfo = cm.getActiveNetworkInfo();
             return netInfo != null && netInfo.isConnected();
-        } catch (Throwable ignore) {
+        } catch (Exception ignore) {
             // lets be optimistic, if we are truly offline we handle the exception
             return true;
         }
@@ -132,6 +130,7 @@ public class NetworkManager extends BaseNetworkManager {
             ValidationResultStack validationResultStack,
             ControllerManager controllerManager,
             BaseDatabaseManager baseDatabaseManager,
+            CtApi ctApi,
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
@@ -150,6 +149,7 @@ public class NetworkManager extends BaseNetworkManager {
         this.validationResultStack = validationResultStack;
         this.controllerManager = controllerManager;
         databaseManager = baseDatabaseManager;
+        this.ctApi = ctApi;
 
         cleverTapResponses.add(inAppResponse);
         cleverTapResponses.add(new MetadataResponse(config, deviceInfo, this));
@@ -168,12 +168,12 @@ public class NetworkManager extends BaseNetworkManager {
     /**
      * Flushes the events queue from the local database to CleverTap servers.
      *
-     * @param context     The Context object.
-     * @param eventGroup  The EventGroup indicating the type of events to be flushed.
-     * @param caller      The optional caller identifier.
+     * @param context    The Context object.
+     * @param eventGroup The EventGroup indicating the type of events to be flushed.
+     * @param caller     The optional caller identifier.
      */
     @Override
-    public void flushDBQueue(final Context context, final EventGroup eventGroup,@Nullable final String caller) {
+    public void flushDBQueue(final Context context, final EventGroup eventGroup, @Nullable final String caller) {
         config.getLogger()
                 .verbose(config.getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
@@ -192,8 +192,7 @@ public class NetworkManager extends BaseNetworkManager {
 
                 if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
                     // Notify listener for push impression sent to the server
-                    if (previousCursor!=null && previousCursor.getData()!=null)
-                    {
+                    if (previousCursor != null && previousCursor.getData() != null) {
                         try {
                             notifyListenersForPushImpressionSentToServer(previousCursor.getData());
                         } catch (Exception e) {
@@ -215,7 +214,7 @@ public class NetworkManager extends BaseNetworkManager {
             }
 
             // Send the events queue to CleverTap servers
-            loadMore = sendQueue(context, eventGroup, queue,caller);
+            loadMore = sendQueue(context, eventGroup, queue, caller);
             if (!loadMore) {
                 // network error
                 controllerManager.invokeCallbacksForNetworkError();
@@ -274,19 +273,16 @@ public class NetworkManager extends BaseNetworkManager {
         return "ARP:" + accountId + ":" + deviceInfo.getDeviceID();
     }
 
-    public void incrementResponseFailureCount() {
-        responseFailureCount++;
-    }
-
     @Override
     public void initHandshake(final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
+        // Always set this to 0 so that the handshake is not performed during a HTTP failure
         responseFailureCount = 0;
         performHandshakeForDomain(context, eventGroup, handshakeSuccessCallback);
     }
 
     @Override
     public boolean needsHandshakeForDomain(final EventGroup eventGroup) {
-        final String domain = getDomainFromPrefsOrMetadata(eventGroup);
+        final String domain = getDomain(eventGroup);
         boolean needHandshakeDueToFailure = responseFailureCount > 5;
         if (needHandshakeDueToFailure) {
             setDomain(context, null);
@@ -310,106 +306,12 @@ public class NetworkManager extends BaseNetworkManager {
         StorageHelper.persist(editor);
     }
 
-    HttpsURLConnection buildHttpsURLConnection(final String endpoint)
-            throws IOException {
-        URL url = new URL(endpoint);
-        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-        conn.setConnectTimeout(10000);
-        conn.setReadTimeout(10000);
-        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-        conn.setRequestProperty("X-CleverTap-Account-ID", config.getAccountId());
-        conn.setRequestProperty("X-CleverTap-Token", config.getAccountToken());
-        conn.setInstanceFollowRedirects(false);
-        if (config.isSslPinningEnabled()) {
-            SSLContext _sslContext = getSSLContext();
-            if (_sslContext != null) {
-                conn.setSSLSocketFactory(getPinnedCertsSslSocketfactory(_sslContext));
-            }
-        }
-        return conn;
-    }
-
     int getCurrentRequestTimestamp() {
-        return currentRequestTimestamp;
+        return ctApi.getCurrentRequestTimestampSeconds();
     }
 
-    void setCurrentRequestTimestamp(final int currentRequestTimestamp) {
-        this.currentRequestTimestamp = currentRequestTimestamp;
-    }
-
-    String getDomain(boolean defaultToHandshakeURL, final EventGroup eventGroup) {
-        String domain = getDomainFromPrefsOrMetadata(eventGroup);
-
-        final boolean emptyDomain = domain == null || domain.trim().length() == 0;
-        if (emptyDomain && !defaultToHandshakeURL) {
-            return null;
-        }
-
-        if (emptyDomain) {
-            domain = Constants.PRIMARY_DOMAIN + "/hello";
-        } else if (eventGroup == EventGroup.VARIABLES) {
-            domain += eventGroup.additionalPath;
-        } else {
-            domain += "/a1";
-        }
-
-        return domain;
-    }
-
-    public String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
-        try {
-            // Always set this to 0 so that the handshake is not performed during a HTTP failure
-            setResponseFailureCount(0);
-
-            final String region = config.getAccountRegion();
-            final String proxyDomain = config.getProxyDomain();
-            final String spikyProxyDomain = config.getSpikyProxyDomain();
-
-            if (region != null && region.trim().length() > 0) {
-                return (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) ?
-                        region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN :
-                        region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
-            } else if (eventGroup.equals(EventGroup.REGULAR) && proxyDomain != null && proxyDomain.trim().length() > 0) {
-                return proxyDomain;
-            } else if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED) && spikyProxyDomain != null && spikyProxyDomain.trim().length() > 0) {
-                return spikyProxyDomain;
-            }
-        } catch (Throwable t) {
-            // Ignore
-        }
-
-        return (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) ?
-                StorageHelper.getStringFromPrefs(context, config, Constants.SPIKY_KEY_DOMAIN_NAME, null) :
-                StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
-    }
-
-    String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
-        String domain = getDomain(defaultToHandshakeURL, eventGroup);
-        if (domain == null) {
-            logger.verbose(config.getAccountId(), "Unable to configure endpoint, domain is null");
-            return null;
-        }
-
-        final String accountId = config.getAccountId();
-
-        if (accountId == null) {
-            logger.verbose(config.getAccountId(), "Unable to configure endpoint, accountID is null");
-            return null;
-        }
-
-        String endpoint = "https://" + domain + "?os=Android&t=" + deviceInfo.getSdkVersion();
-        endpoint += "&z=" + accountId;
-
-        final boolean needsHandshake = needsHandshakeForDomain(eventGroup);
-        // Don't attach ts if its handshake
-        if (needsHandshake) {
-            return endpoint;
-        }
-
-        currentRequestTimestamp = (int) (System.currentTimeMillis() / 1000);
-        endpoint += "&ts=" + getCurrentRequestTimestamp();
-
-        return endpoint;
+    public String getDomain(final EventGroup eventGroup) {
+        return ctApi.getActualDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED);
     }
 
     int getFirstRequestTimestamp() {
@@ -424,27 +326,18 @@ public class NetworkManager extends BaseNetworkManager {
         StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_LAST_TS), ts);
     }
 
-    int getResponseFailureCount() {
-        return responseFailureCount;
-    }
-
-    void setResponseFailureCount(final int responseFailureCount) {
-        this.responseFailureCount = responseFailureCount;
-    }
-
     boolean hasDomainChanged(final String newDomain) {
         final String oldDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
         return !newDomain.equals(oldDomain);
     }
 
     /**
-     * Constructs a header JSON object and inserts it into a new JSON array along with the given JSON array.
+     * Constructs a header {@link JSONObject} to be included as a first element of a sendQueue request
      *
      * @param context The Context object.
      * @param caller  The optional caller identifier.
-     * @return A new JSON array as a string with the constructed header and the given JSON array.
      */
-    JSONObject getHeader(Context context, @Nullable final String caller) {//[{}]
+    private JSONObject getQueueHeader(Context context, @Nullable final String caller) {
         try {
             // Construct the header JSON object
             final JSONObject header = new JSONObject();
@@ -468,7 +361,7 @@ public class NetworkManager extends BaseNetworkManager {
 
             // Add app fields
             JSONObject appFields = deviceInfo.getAppLaunchedFields();
-            if(coreMetaData.isWebInterfaceInitializedExternally()) {
+            if (coreMetaData.isWebInterfaceInitializedExternally()) {
                 appFields.put("wv_init", true);
             }
             header.put("af", appFields);
@@ -488,9 +381,7 @@ public class NetworkManager extends BaseNetworkManager {
             String token = config.getAccountToken();
 
             if (accountId == null || token == null) {
-                logger
-                        .debug(config.getAccountId(),
-                                "Account ID/token not found, unable to configure queue request");
+                logger.debug(config.getAccountId(), "Account ID/token not found, unable to configure queue request");
                 return null;
             }
 
@@ -507,8 +398,9 @@ public class NetworkManager extends BaseNetworkManager {
 
             // Add ddnd (Do Not Disturb)
             header.put("ddnd",
-                    !(CTXtensions.areAppNotificationsEnabled(this.context) && (controllerManager.getPushProviders()
-                            .isNotificationSupported())));
+                    !(CTXtensions.areAppNotificationsEnabled(this.context)
+                            && (controllerManager.getPushProviders() == null
+                            || controllerManager.getPushProviders().isNotificationSupported())));
 
             // Add bk (Background Ping) if required
             if (coreMetaData.isBgPing()) {
@@ -527,8 +419,9 @@ public class NetworkManager extends BaseNetworkManager {
             header.put("frs", coreMetaData.isFirstRequestInSession());
 
             // Add debug flag to show errors and events on the integration-debugger
-            if(CleverTapAPI.getDebugLevel() == 3)
-                header.put("debug",true);
+            if (CleverTapAPI.getDebugLevel() == 3) {
+                header.put("debug", true);
+            }
 
             coreMetaData.setFirstRequestInSession(false);
 
@@ -538,8 +431,8 @@ public class NetworkManager extends BaseNetworkManager {
                 if (arp != null && arp.length() > 0) {
                     header.put("arp", arp);
                 }
-            } catch (Throwable t) {
-                logger.verbose(config.getAccountId(), "Failed to attach ARP", t);
+            } catch (JSONException e) {
+                logger.verbose(config.getAccountId(), "Failed to attach ARP", e);
             }
 
             // Add ref (Referrer Information)
@@ -565,8 +458,8 @@ public class NetworkManager extends BaseNetworkManager {
                     header.put("ref", ref);
                 }
 
-            } catch (Throwable t) {
-                logger.verbose(config.getAccountId(), "Failed to attach ref", t);
+            } catch (JSONException e) {
+                logger.verbose(config.getAccountId(), "Failed to attach ref", e);
             }
 
             // Add wzrk_ref (CleverTap-specific Parameters)
@@ -578,59 +471,38 @@ public class NetworkManager extends BaseNetworkManager {
             // Attach InAppFC to header if available
             if (controllerManager.getInAppFCManager() != null) {
                 Logger.v("Attaching InAppFC to Header");
-                controllerManager.getInAppFCManager().attachToHeader(context, header);
+                header.put("imp", controllerManager.getInAppFCManager().getShownTodayCount());
+                header.put("tlc", controllerManager.getInAppFCManager().getInAppsCount(context));
             } else {
                 logger.verbose(config.getAccountId(),
                         "controllerManager.getInAppFCManager() is NULL, not Attaching InAppFC to Header");
             }
 
-            // Create a new JSON array with the header and the given JSON array
-            // Return the new JSON array as a string
-            // Resort to string concat for backward compatibility
             return header;
-        } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "CommsManager: Failed to attach header", t);
+        } catch (JSONException e) {
+            logger.verbose(config.getAccountId(), "CommsManager: Failed to attach header", e);
             return null;
         }
     }
 
-    void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
-                                   final Runnable handshakeSuccessCallback) {
-        final String endpoint = getEndpoint(true, eventGroup);
-        if (endpoint == null) {
-            logger.verbose(config.getAccountId(), "Unable to perform handshake, endpoint is null");
-        }
-        logger.verbose(config.getAccountId(), "Performing handshake with " + endpoint);
+    private void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
+            final Runnable handshakeSuccessCallback) {
 
-        HttpsURLConnection conn = null;
-        try {
-            conn = buildHttpsURLConnection(endpoint);
-            final int responseCode = conn.getResponseCode();
-            if (responseCode != 200) {
-                logger
-                        .verbose(config.getAccountId(),
-                                "Invalid HTTP status code received for handshake - " + responseCode);
-                return;
-            }
+        try (Response response = ctApi.performHandshakeForDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)) {
+            if (response.isSuccess()) {
+                logger.verbose(config.getAccountId(), "Received success from handshake :)");
 
-            logger.verbose(config.getAccountId(), "Received success from handshake :)");
-
-            if (processIncomingHeaders(context, conn)) {
-                logger.verbose(config.getAccountId(), "We are not muted");
-                // We have a new domain, run the callback
-                handshakeSuccessCallback.run();
-            }
-        } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "Failed to perform handshake!", t);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.getInputStream().close();
-                    conn.disconnect();
-                } catch (Throwable t) {
-                    // Ignore
+                if (processIncomingHeaders(context, response)) {
+                    logger.verbose(config.getAccountId(), "We are not muted");
+                    // We have a new domain, run the callback
+                    handshakeSuccessCallback.run();
                 }
+            } else {
+                logger.verbose(config.getAccountId(),
+                        "Invalid HTTP status code received for handshake - " + response.getCode());
             }
+        } catch (Exception e) {
+            logger.verbose(config.getAccountId(), "Failed to perform handshake!", e);
         }
     }
 
@@ -639,8 +511,8 @@ public class NetworkManager extends BaseNetworkManager {
      *
      * @return True to continue sending requests, false otherwise.
      */
-    boolean processIncomingHeaders(final Context context, final HttpsURLConnection conn) {
-        final String muteCommand = conn.getHeaderField(Constants.HEADER_MUTE);
+    private boolean processIncomingHeaders(final Context context, Response response) {
+        final String muteCommand = response.getHeaderValue(Constants.HEADER_MUTE);
         if (muteCommand != null && muteCommand.trim().length() > 0) {
             if (muteCommand.equals("true")) {
                 setMuted(context, true);
@@ -650,13 +522,13 @@ public class NetworkManager extends BaseNetworkManager {
             }
         }
 
-        final String domainName = conn.getHeaderField(Constants.HEADER_DOMAIN_NAME);
+        final String domainName = response.getHeaderValue(Constants.HEADER_DOMAIN_NAME);
         Logger.v("Getting domain from header - " + domainName);
         if (domainName == null || domainName.trim().length() == 0) {
             return true;
         }
 
-        final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
+        final String spikyDomainName = response.getHeaderValue(Constants.SPIKY_HEADER_DOMAIN_NAME);
         Logger.v("Getting spiky domain from header - " + spikyDomainName);
 
         setMuted(context, false);
@@ -680,7 +552,8 @@ public class NetworkManager extends BaseNetworkManager {
      * @return True if the queue was sent successfully, false otherwise.
      */
     @Override
-    public boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue, @Nullable final String caller) {
+    public boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue,
+            @Nullable final String caller) {
         if (queue == null || queue.length() <= 0) {
             // Empty queue, no need to send
             return false;
@@ -691,169 +564,160 @@ public class NetworkManager extends BaseNetworkManager {
             return false;
         }
 
-        HttpsURLConnection conn = null;
-        try {
-            final String endpoint = getEndpoint(false, eventGroup);
+        EndpointId endpointId = EndpointId.fromEventGroup(eventGroup);
+        JSONObject queueHeader = getQueueHeader(context, caller);
+        applyQueueHeaderListeners(queueHeader, endpointId);
 
-            // This is just a safety check, which would only arise
-            // if upstream didn't adhere to the protocol (sent nothing during the initial handshake)
-            if (endpoint == null) {
-                logger.debug(config.getAccountId(), "Problem configuring queue endpoint, unable to send queue");
-                return false;
-            }
+        final SendQueueRequestBody body = new SendQueueRequestBody(queueHeader, queue);
+        logger.debug(config.getAccountId(), "Send queue contains " + queue.length() + " items: " + body);
 
-            conn = buildHttpsURLConnection(endpoint);
-
-            final String body;
-//            final String req = insertHeader(context, queue,caller);
-            final JSONObject header = getHeader(context, caller);
-            final EndpointId endpointId = EndpointId.fromString(endpoint);
-            String req;
-            if (header == null) {
-                req = queue.toString();
-            } else {
-                for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
-                    final JSONObject headersToAttach = listener.onAttachHeaders(endpointId);
-                    if (headersToAttach != null) {
-                        CTXtensions.copyFrom(header, headersToAttach);
-                    }
-                }
-                req = "[" + header + ", " + queue.toString().substring(1);
-            }
-
-            if (req == null) {
-                logger.debug(config.getAccountId(), "Problem configuring queue request, unable to send queue");
-                return false;
-            }
-
-            logger.debug(config.getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
-            logger.debug(config.getAccountId(), "Sending queue to: " + endpoint);
-
-            // Enable output for writing data
-            conn.setDoOutput(true);
-            // Write the request body to the connection output stream
-            conn.getOutputStream().write(req.getBytes("UTF-8"));
-
-            // Get the HTTP response code
-            final int responseCode = conn.getResponseCode();
-
+        try (Response response = callApiForEventGroup(eventGroup, body)) {
+            networkRetryCount = 0;
+            boolean isProcessed;
             if (eventGroup == EventGroup.VARIABLES) {
-                if (handleVariablesResponseError(responseCode, conn)) {
-                    return false;
-                }
+                isProcessed = handleVariablesResponse(response);
             } else {
-                // Always check for a 200 OK
-                if (responseCode != 200) {
-                    throw new IOException("Response code is not 200. It is " + responseCode);
-                }
+                isProcessed = handleSendQueueResponse(response, body, endpointId);
             }
 
-            // Check for a change in domain
-            final String newDomain = conn.getHeaderField(Constants.HEADER_DOMAIN_NAME);
-            if (newDomain != null && newDomain.trim().length() > 0) {
-                if (hasDomainChanged(newDomain)) {
-                    // The domain has changed. Return a status of -1 so that the caller retries
-                    setDomain(context, newDomain);
-                    logger.debug(config.getAccountId(),
-                            "The domain has changed to " + newDomain + ". The request will be retried shortly.");
-                    return false;
-                }
+            if (isProcessed) {
+                responseFailureCount = 0;
+            } else {
+                responseFailureCount++;
             }
-
-            for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
-                if (header != null) {
-                    listener.onSentHeaders(header, endpointId);
-                }
-            }
-
-            if (processIncomingHeaders(context, conn)) {
-                // Read the response body from the connection input stream
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-                body = sb.toString();
-
-                // Process the response body
-                if (eventGroup == EventGroup.VARIABLES) {
-                    processVariablesResponse(body);
-                } else {
-                    // check if there is app launched/wzrk_fetch event
-                    boolean found = false;
-                    for (int index = 0; index < queue.length(); index++) {
-                        JSONObject event = queue.getJSONObject(index);
-                        final String eventType = event.getString("type");
-                        if ("event".equals(eventType)) {
-                            final String evtName = event.getString("evtName");
-                            if (Constants.APP_LAUNCHED_EVENT.equals(evtName) || Constants.WZRK_FETCH.equals(evtName)) {
-                                found = true;
-                            }
-                        }
-                    }
-                    processAllResponses(body, found);
-                }
-            }
-
-            setLastRequestTimestamp(getCurrentRequestTimestamp());
-            setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
-
-            logger.debug(config.getAccountId(), "Queue sent successfully");
-
-            responseFailureCount = 0;
-            networkRetryCount = 0; //reset retry count when queue is sent successfully
-            return true;
-        } catch (Throwable e) {
-            logger.debug(config.getAccountId(),
-                    "An exception occurred while sending the queue, will retry: ", e);
-            responseFailureCount++;
+            return isProcessed;
+        } catch (Exception e) {
             networkRetryCount++;
-            callbackManager.getFailureFlushListener().failureFlush(context);
+            responseFailureCount++;
+            logger.debug(config.getAccountId(), "An exception occurred while sending the queue, will retry: ", e);
+            if (callbackManager.getFailureFlushListener() != null) {
+                callbackManager.getFailureFlushListener().failureFlush(context);
+            }
             return false;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.getInputStream().close();
-                    conn.disconnect();
-                } catch (Throwable t) {
-                    // Ignore
+        }
+    }
+
+    private void applyQueueHeaderListeners(JSONObject queueHeader, EndpointId endpointId) {
+        if (queueHeader != null) {
+            for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
+                final JSONObject headersToAttach = listener.onAttachHeaders(endpointId);
+                if (headersToAttach != null) {
+                    CTXtensions.copyFrom(queueHeader, headersToAttach);
                 }
             }
         }
     }
 
-    private void processVariablesResponse(String body) {
-        try {
-            JSONObject jsonObject = new JSONObject(body);
+    private Response callApiForEventGroup(EventGroup eventGroup, SendQueueRequestBody body) {
+        if (eventGroup == EventGroup.VARIABLES) {
+            return ctApi.defineVars(body);
+        } else {
+            return ctApi.sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
+        }
+    }
 
-            logger.verbose(config.getAccountId(), "Processing variables response : " + jsonObject);
+    private boolean handleVariablesResponse(@NonNull Response response) {
+        if (response.isSuccess()) {
+            String bodyString = response.readBody();
+            JSONObject bodyJson = CTXtensions.toJsonOrNull(bodyString);
+
+            logger.verbose(config.getAccountId(), "Processing variables response : " + bodyJson);
 
             new ARPResponse(config, this, validator, controllerManager)
-                    .processResponse(jsonObject, body, this.context);
+                    .processResponse(bodyJson, bodyString, this.context);
             new SyncUpstreamResponse(localDataStore, logger, config.getAccountId())
-                    .processResponse(jsonObject, body, context);
-        } catch (JSONException e) {
-            logger.verbose(config.getAccountId(), "Error in parsing response.", e);
-            incrementResponseFailureCount();
+                    .processResponse(bodyJson, bodyString, context);
+            return true;
+        } else {
+            handleVariablesResponseError(response);
+            return false;
         }
     }
 
-    private void processAllResponses(String body, boolean isFullResponse) {
-        try {
-            JSONObject jsonObject = new JSONObject(body);
-
-            logger.verbose(config.getAccountId(), "Processing response : " + jsonObject);
-
-            for (CleverTapResponse response: cleverTapResponses) {
-                response.isFullResponse = isFullResponse;
-               response.processResponse(jsonObject, body, context);
-            }
-        } catch (JSONException e) {
-            logger.verbose(config.getAccountId(), "Error in parsing response.", e);
-            incrementResponseFailureCount();
+    private void handleVariablesResponseError(Response response) {
+        switch (response.getCode()) {
+            case 400:
+                JSONObject errorStreamJson = CTXtensions.toJsonOrNull(response.readBody());
+                if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
+                    String errorMessage = errorStreamJson.optString("error");
+                    logger.info("variables", "Error while syncing vars: " + errorMessage);
+                } else {
+                    logger.info("variables", "Error while syncing vars.");
+                }
+                return;
+            case 401:
+                logger.info("variables", "Unauthorized access from a non-test profile. "
+                        + "Please mark this profile as a test profile from the CleverTap dashboard.");
+                return;
+            default:
+                logger.info("variables", "Response code " + response.getCode() + " while syncing vars.");
         }
+    }
+
+    private boolean handleSendQueueResponse(@NonNull Response response, SendQueueRequestBody body,
+            EndpointId endpointId) {
+        if (!response.isSuccess()) {
+            handleSendQueueResponseError(response);
+            return false;
+        }
+
+        String newDomain = response.getHeaderValue(Constants.HEADER_DOMAIN_NAME);
+
+        if (newDomain != null && !newDomain.trim().isEmpty() && hasDomainChanged(newDomain)) {
+            setDomain(context, newDomain);
+            logger.debug(config.getAccountId(),
+                    "The domain has changed to " + newDomain + ". The request will be retried shortly.");
+            return false;
+        }
+
+        if (body.getQueueHeader() != null) {
+            for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
+                listener.onSentHeaders(body.getQueueHeader(), endpointId);
+            }
+        }
+
+        if (!processIncomingHeaders(context, response)) {
+            return false;
+        }
+
+        logger.debug(config.getAccountId(), "Queue sent successfully");
+        setLastRequestTimestamp(getCurrentRequestTimestamp());
+        setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
+
+        String bodyString = response.readBody();
+        JSONObject bodyJson = CTXtensions.toJsonOrNull(bodyString);
+        logger.verbose(config.getAccountId(), "Processing response : " + bodyJson);
+
+        boolean isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(body);
+        for (CleverTapResponse processor : cleverTapResponses) {
+            processor.isFullResponse = isFullResponse;
+            processor.processResponse(bodyJson, bodyString, context);
+        }
+
+        return true;
+    }
+
+    private void handleSendQueueResponseError(@NonNull Response response) {
+        logger.info("Received error response code: " + response.getCode());
+    }
+
+    private boolean doesBodyContainAppLaunchedOrFetchEvents(SendQueueRequestBody body) {
+        // check if there is app launched/wzrk_fetch event
+        for (int index = 0; index < body.getQueue().length(); index++) {
+            try {
+                JSONObject event = body.getQueue().getJSONObject(index);
+                final String eventType = event.getString("type");
+                if ("event".equals(eventType)) {
+                    final String evtName = event.getString("evtName");
+                    if (Constants.APP_LAUNCHED_EVENT.equals(evtName) || Constants.WZRK_FETCH.equals(evtName)) {
+                        return true;
+                    }
+                }
+            } catch (JSONException jsonException) {
+                //skip
+            }
+        }
+        return false;
     }
 
     private void notifyListenersForPushImpressionSentToServer(final JSONArray queue) throws JSONException {
@@ -897,55 +761,11 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
-    private boolean handleVariablesResponseError(int responseCode, HttpsURLConnection conn) {
-        switch (responseCode) {
-            case 200:
-                logger.info("variables", "Vars synced successfully.");
-                return false;
-
-            case 400:
-                JSONObject errorStreamJson = getErrorStreamAsJson(conn);
-                if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
-                    String errorMessage = errorStreamJson.optString("error");
-                    logger.info("variables", "Error while syncing vars: " + errorMessage);
-                } else {
-                    logger.info("variables", "Error while syncing vars.");
-                }
-                return true;
-
-            case 401:
-                logger.info("variables", "Unauthorized access from a non-test profile. "
-                        + "Please mark this profile as a test profile from the CleverTap dashboard.");
-                return true;
-
-            default:
-                logger.info("variables", "Response code " + responseCode + " while syncing vars.");
-                return true;
-        }
-    }
-
-    private JSONObject getErrorStreamAsJson(HttpsURLConnection conn) {
-        try {
-            BufferedReader br = new BufferedReader(
-                    new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
-
-            StringBuilder text = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                text.append(line);
-            }
-
-            return new JSONObject(text.toString());
-
-        } catch (IOException | JSONException e) {
-            return null;
-        }
-    }
-
-    void setDomain(final Context context, String domainName) {
+    private void setDomain(final Context context, String domainName) {
         logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
                 domainName);
+        ctApi.setDomain(domainName);
 
         if (callbackManager.getSCDomainListener() != null) {
             if (domainName != null) {
@@ -956,17 +776,18 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
-    void setFirstRequestTimestampIfNeeded(int ts) {
+    private void setFirstRequestTimestampIfNeeded(int ts) {
         if (getFirstRequestTimestamp() > 0) {
             return;
         }
         StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS), ts);
     }
 
-    void setSpikyDomain(final Context context, String spikyDomainName) {
+    private void setSpikyDomain(final Context context, String spikyDomainName) {
         logger.verbose(config.getAccountId(), "Setting spiky domain to " + spikyDomainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
                 spikyDomainName);
+        ctApi.setSpikyDomain(spikyDomainName);
     }
 
     /**
@@ -1009,8 +830,8 @@ public class NetworkManager extends BaseNetworkManager {
             logger.verbose(config.getAccountId(),
                     "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + all);
             return ret;
-        } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "Failed to construct ARP object", t);
+        } catch (Exception e) {
+            logger.verbose(config.getAccountId(), "Failed to construct ARP object", e);
             return null;
         }
     }
@@ -1061,7 +882,7 @@ public class NetworkManager extends BaseNetworkManager {
                         "ARP update for key " + kv.getKey() + " rejected (invalid data type)");
             }
         }
-        logger.verbose(config.getAccountId(), "Completed ARP update for namespace key: " + newKey + "");
+        logger.verbose(config.getAccountId(), "Completed ARP update for namespace key: " + newKey);
         StorageHelper.persist(editor);
         oldPrefs.edit().clear().apply();
         return newPrefs;
@@ -1082,28 +903,5 @@ public class NetworkManager extends BaseNetworkManager {
         } else {
             StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MUTED), 0);
         }
-    }
-
-    private static SSLSocketFactory getPinnedCertsSslSocketfactory(SSLContext sslContext) {
-        if (sslContext == null) {
-            return null;
-        }
-
-        if (sslSocketFactory == null) {
-            try {
-                sslSocketFactory = sslContext.getSocketFactory();
-                Logger.d("Pinning SSL session to DigiCertGlobalRoot CA certificate");
-            } catch (Throwable e) {
-                Logger.d("Issue in pinning SSL,", e);
-            }
-        }
-        return sslSocketFactory;
-    }
-
-    private static synchronized SSLContext getSSLContext() {
-        if (sslContext == null) {
-            sslContext = new SSLContextBuilder().build();
-        }
-        return sslContext;
     }
 }
