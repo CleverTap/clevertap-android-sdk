@@ -1,12 +1,12 @@
 [versions]
 # Project
-android_compileSdk = "33"
-android_gradle_plugin = "7.4.2"
+android_compileSdk = "34"
+android_gradle_plugin = "8.2.1"
 android_minSdk = "19"
-android_targetSdk = "33"
-kotlin_plugin = "1.7.20"
+android_targetSdk = "34"
+kotlin_plugin = "1.9.0"
 sonarqube_plugin = "3.3"
-android_buildTools = "33.0.0"
+android_buildTools = "34.0.0"
 detekt_gradle_plugin = "1.20.0-RC1"
 firebase_gradle_crashlytics = "2.8.1"
 
@@ -85,10 +85,10 @@ gson = "2.8.6"
 firebase_messaging = "23.0.6"
 
 #GMS
-google_services = "4.3.3"
+google_services = "4.4.0"
 
 #HMS Push Plugin/Lib
-agcp = "1.9.0.300"
+agcp = "1.9.1.300"
 push = "6.11.0.300"
 
 #Catch Exception

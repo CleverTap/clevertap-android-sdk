@@ -18,6 +18,10 @@ ext {
 
 apply from: "../gradle-scripts/commons.gradle"
 
+android {
+    namespace 'com.clevertap.android.hms'
+}
+
 dependencies {
     compileOnly project(':clevertap-core')
     implementation (libs.huawei.push)

@@ -19,6 +19,7 @@ android{
             dirs 'libs'
         }
     }
+    namespace 'com.clevertap.android.xps'
 }
 
 dependencies {
