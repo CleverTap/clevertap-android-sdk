@@ -12,6 +12,6 @@
 -keepnames class * implements android.os.Parcelable {
     public static final ** CREATOR;
 }
-
+-dontwarn com.clevertap.android.sdk.**
 -keepattributes Exceptions,InnerClasses,Signature,Deprecated,
                 SourceFile,LineNumberTable,*Annotation*,EnclosingMethod
