@@ -93,8 +93,6 @@ public class PushProviders implements CTPushProviderListener {
 
     private INotificationRenderer iNotificationRenderer = new CoreNotificationRenderer();
 
-    private final SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
-
     private final ValidationResultStack validationResultStack;
 
     private final Object tokenLock = new Object();
@@ -456,9 +454,11 @@ public class PushProviders implements CTPushProviderListener {
         int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
         int minute = now.get(Calendar.MINUTE);
 
-        Date currentTime = parseTimeToDate(hour + ":" + minute);
-        Date startTime = parseTimeToDate(Constants.DND_START);
-        Date endTime = parseTimeToDate(Constants.DND_STOP);
+        final SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
+
+        Date currentTime = parseTimeToDate(hour + ":" + minute, inputParser);
+        Date startTime = parseTimeToDate(Constants.DND_START, inputParser);
+        Date endTime = parseTimeToDate(Constants.DND_STOP, inputParser);
 
         if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
             Logger.v(config.getAccountId(), "Pushamp won't run in default DND hours");
@@ -813,7 +813,7 @@ public class PushProviders implements CTPushProviderListener {
         return true;
     }
 
-    private Date parseTimeToDate(String time) {
+    private Date parseTimeToDate(String time, SimpleDateFormat inputParser) {
         try {
             return inputParser.parse(time);
         } catch (java.text.ParseException e) {
