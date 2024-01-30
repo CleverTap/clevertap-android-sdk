@@ -429,11 +429,8 @@ public class CTGeofenceAPITest extends BaseTestCase {
 
     @Test
     public void testSetCtLocationUpdatesListener() {
-        CTLocationUpdatesListener listener = new CTLocationUpdatesListener() {
-            @Override
-            public void onLocationUpdates(Location location) {
+        CTLocationUpdatesListener listener = location -> {
 
-            }
         };
 
         CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
