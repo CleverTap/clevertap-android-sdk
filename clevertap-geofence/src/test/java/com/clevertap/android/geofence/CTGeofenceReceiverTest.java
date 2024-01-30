@@ -2,29 +2,12 @@ package com.clevertap.android.geofence;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import android.content.BroadcastReceiver;
 import android.content.Intent;
-import java.util.concurrent.Callable;
 import org.junit.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.mockito.invocation.*;
-import org.mockito.stubbing.*;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({CTGeofenceAPI.class, CTGeofenceTaskManager.class})
 public class CTGeofenceReceiverTest extends BaseTestCase {
 
     @Mock
@@ -33,37 +16,20 @@ public class CTGeofenceReceiverTest extends BaseTestCase {
     @Mock
     public BroadcastReceiver.PendingResult pendingResult;
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
-
     @Mock
-    public CTGeofenceTaskManager taskManager;
-
     private Logger logger;
 
     @Before
     public void setUp() throws Exception {
-
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(CTGeofenceAPI.class, CTGeofenceTaskManager.class);
-
+        MockitoAnnotations.openMocks(this);
         super.setUp();
-
-        when(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI);
-        logger = new Logger(Logger.DEBUG);
-        when(CTGeofenceAPI.getLogger()).thenReturn(logger);
-
-        PowerMockito.when(CTGeofenceTaskManager.getInstance()).thenReturn(taskManager);
-
     }
 
     @Test
     public void testOnReceiveWhenIntentIsNull() {
         CTGeofenceReceiver receiver = new CTGeofenceReceiver();
         CTGeofenceReceiver spy = Mockito.spy(receiver);
-
         spy.onReceive(application, null);
-
         verify(spy, never()).goAsync();
     }
 
@@ -75,25 +41,23 @@ public class CTGeofenceReceiverTest extends BaseTestCase {
 
         final Boolean[] isFinished = {false};
 
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                isFinished[0] = true;
-                return null;
-            }
+        doAnswer(invocation -> {
+            isFinished[0] = true;
+            return null;
         }).when(pendingResult).finish();
 
-        Intent intent = new Intent();
-        spy.onReceive(application, intent);
+        try (MockedStatic<CTGeofenceAPI> ctGeofenceAPIMockedStatic = Mockito.mockStatic(CTGeofenceAPI.class)) {
+            ctGeofenceAPIMockedStatic.when(CTGeofenceAPI::getLogger).thenReturn(logger);
 
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinished[0];
-            }
-        });
+            Intent intent = new Intent();
+            spy.onReceive(application, intent);
 
-        verify(pendingResult).finish();
+            await().until(() -> isFinished[0]);
+
+            verify(CTGeofenceAPI.getLogger()).debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Geofence receiver called");
+            verify(CTGeofenceAPI.getLogger()).debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Returning from Geofence receiver");
+            verify(pendingResult).finish();
+        }
     }
 
 }

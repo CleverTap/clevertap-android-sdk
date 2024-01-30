@@ -8,30 +8,13 @@ import static com.clevertap.android.geofence.CTGeofenceSettings.FETCH_LAST_LOCAT
 import static org.junit.Assert.*;
 
 import org.junit.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({Utils.class})
 public class CTGeofenceSettingsTest extends BaseTestCase {
-
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(Utils.class);
+        MockitoAnnotations.openMocks(this);
         super.setUp();
     }
 
