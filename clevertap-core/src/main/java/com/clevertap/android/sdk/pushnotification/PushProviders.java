@@ -67,11 +67,12 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
 
-    public static final int DEFAULT_FLEX_INTERVAL = 5;
-    public static final int PING_FREQUENCY_VALUE = 240;
-    public static final String PF_JOB_ID = "pfjobid";
-    public static final String PF_WORK_ID = "pfworkid";
-    public static final String PING_FREQUENCY = "pf";
+    private static final int DEFAULT_FLEX_INTERVAL = 5;
+    private static final int PING_FREQUENCY_VALUE = 240;
+    private static final String PF_JOB_ID = "pfjobid";
+    private static final String PF_WORK_ID = "pfworkid";
+    private static final String PING_FREQUENCY = "pf";
+    private static final String inputFormat = "HH:mm";
 
     private final ArrayList<PushType> allEnabledPushTypes = new ArrayList<>();
 
@@ -91,6 +92,8 @@ public class PushProviders implements CTPushProviderListener {
     private final CTWorkManager ctWorkManager;
 
     private INotificationRenderer iNotificationRenderer = new CoreNotificationRenderer();
+
+    private final SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
 
     private final ValidationResultStack validationResultStack;
 
@@ -524,7 +527,7 @@ public class PushProviders implements CTPushProviderListener {
                         .setRequiresBatteryNotLow(true)
                         .build();
 
-                PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, 15,
+                PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, pingFrequency,
                         TimeUnit.MINUTES, DEFAULT_FLEX_INTERVAL, TimeUnit.MINUTES)
                         .setConstraints(constraints)
                         .build();
@@ -811,9 +814,6 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private Date parseTimeToDate(String time) {
-
-        final String inputFormat = "HH:mm";
-        SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
         try {
             return inputParser.parse(time);
         } catch (java.text.ParseException e) {
