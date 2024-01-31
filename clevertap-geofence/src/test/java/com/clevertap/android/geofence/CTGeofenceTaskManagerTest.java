@@ -3,25 +3,17 @@ package com.clevertap.android.geofence;
 import static org.awaitility.Awaitility.await;
 
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import org.junit.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
 public class CTGeofenceTaskManagerTest extends BaseTestCase {
 
 
     @Before
     public void setUp() throws Exception {
 
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         super.setUp();
     }
 
@@ -38,19 +30,9 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
     public void testPostAsyncSafelyRunnable() {
 
         final boolean[] isFinish = {false};
-        Future<?> future = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new Runnable() {
-            @Override
-            public void run() {
-                isFinish[0] = true;
-            }
-        });
+        Future<?> future = CTGeofenceTaskManager.getInstance().postAsyncSafely("", () -> isFinish[0] = true);
 
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinish[0];
-            }
-        });
+        await().until(() -> isFinish[0]);
 
         Assert.assertNotNull(future);
     }
@@ -62,26 +44,11 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
 
         final boolean[] isFinish = {false, false};
         final Future<?>[] flatFuture = {null, null};
-        flatFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new Runnable() {
-            @Override
-            public void run() {
-                isFinish[0] = true;
-            }
-        });
+        flatFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("", () -> isFinish[0] = true);
 
-        flatFuture[1] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested", new Runnable() {
-            @Override
-            public void run() {
-                isFinish[1] = true;
-            }
-        });
+        flatFuture[1] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested", () -> isFinish[1] = true);
 
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinish[0] && isFinish[1];
-            }
-        });
+        await().until(() -> isFinish[0] && isFinish[1]);
 
         Assert.assertNotNull(flatFuture[0]);
         Assert.assertNotNull(flatFuture[1]);
@@ -94,26 +61,11 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
 
         final boolean[] isFinish = {false};
         final Future<?>[] nestedFuture = {null};
-        Future<?> future = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new Runnable() {
-            @Override
-            public void run() {
+        Future<?> future = CTGeofenceTaskManager.getInstance().postAsyncSafely("",
+                () -> nestedFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested",
+                        () -> isFinish[0] = true));
 
-                nestedFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested", new Runnable() {
-                    @Override
-                    public void run() {
-                        isFinish[0] = true;
-                    }
-                });
-
-            }
-        });
-
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinish[0];
-            }
-        });
+        await().until(() -> isFinish[0]);
 
         Assert.assertNotNull(future);
         Assert.assertNull(nestedFuture[0]);
@@ -135,12 +87,7 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
             }
         });
 
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinish[0];
-            }
-        });
+        await().until(() -> isFinish[0]);
 
         Assert.assertNotNull(future);
     }
@@ -177,12 +124,7 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
             }
         });
 
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinish[0] && isFinish[1];
-            }
-        });
+        await().until(() -> isFinish[0] && isFinish[1]);
 
         Assert.assertNotNull(flatFuture[0]);
         Assert.assertNotNull(flatFuture[1]);
@@ -219,12 +161,7 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
             }
         });
 
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinish[0];
-            }
-        });
+        await().until(() -> isFinish[0]);
 
         Assert.assertNotNull(future);
         Assert.assertNull(nestedFuture[0]);
@@ -241,12 +178,8 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
             @Override
             public void execute() {
 
-                nestedFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested", new Runnable() {
-                    @Override
-                    public void run() {
-                        isFinish[0] = true;
-                    }
-                });
+                nestedFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested",
+                        () -> isFinish[0] = true);
 
             }
 
@@ -256,12 +189,7 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
             }
         });
 
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinish[0];
-            }
-        });
+        await().until(() -> isFinish[0]);
 
         Assert.assertNotNull(future);
         Assert.assertNull(nestedFuture[0]);

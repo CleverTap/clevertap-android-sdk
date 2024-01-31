@@ -41,13 +41,8 @@ kotlin_test = "1.7.20" #check with kotlin_gradle_plugin
 junit_jupiter_api = "5.7.2"
 junit_jupiter_engine = "5.7.2"
 junit_platform_runner = "1.7.2"
-mockito_core = "3.5.11"
+mockito_core = "5.2.0"
 opentest4j = "1.2.0"
-powermock_api_mockito2 = "2.0.9"
-powermock_classloading_xstream = "2.0.9"
-powermock_core = "2.0.9"
-powermock_module_junit4 = "2.0.9"
-powermock_module_junit4_rule = "2.0.9"
 robolectric = "4.9"
 jsonassert = "1.5.0"
 xmlpull = "1.1.3.1"
@@ -136,11 +131,6 @@ test_junit_platform_runner = { module = "org.junit.platform:junit-platform-runne
 test_mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito_core" }
 test_mockito_inline = { module = "org.mockito:mockito-inline", version.ref = "mockito_core" }
 test_opentest4j = { module = "org.opentest4j:opentest4j", version.ref = "opentest4j" }
-test_powermock_api_mockito2 = { module = "org.powermock:powermock-api-mockito2", version.ref = "powermock_api_mockito2" }
-test_powermock_classloading_xstream = { module = "org.powermock:powermock-classloading-xstream", version.ref = "powermock_classloading_xstream" }
-test_powermock_core = { module = "org.powermock:powermock-core", version.ref = "powermock_core" }
-test_powermock_module_junit4 = { module = "org.powermock:powermock-module-junit4", version.ref = "powermock_module_junit4" }
-test_powermock_module_junit4_rule = { module = "org.powermock:powermock-module-junit4-rule", version.ref = "powermock_module_junit4_rule" }
 test_robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 test_jsonassert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonassert" }
 test_xmlpull = { module = "xmlpull:xmlpull", version.ref = "xmlpull" }
@@ -192,7 +182,6 @@ catch_exception = { module = "eu.codearte.catch-exception:catch-exception", vers
 
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]
-powermock = ["test_powermock_api_mockito2", "test_powermock_classloading_xstream", "test_powermock_core", "test_powermock_module_junit4", "test_powermock_module_junit4_rule"]
 mockito = ["test_mockito_core", "test_mockito_inline"]
 
 [plugins]
