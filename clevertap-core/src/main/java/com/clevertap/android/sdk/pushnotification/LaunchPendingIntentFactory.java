@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.pushnotification;
 
+import android.app.ActivityOptions;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -7,7 +8,6 @@ import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.Constants;
@@ -64,8 +64,14 @@ public class LaunchPendingIntentFactory {
             flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
         }
 
+        Bundle optionsBundle = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            optionsBundle = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(
+                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED).toBundle();
+        }
+
         return PendingIntent.getActivity(context, new Random().nextInt(), launchIntent,
-                flagsLaunchPendingIntent);
+                flagsLaunchPendingIntent, optionsBundle);
 
 
     }

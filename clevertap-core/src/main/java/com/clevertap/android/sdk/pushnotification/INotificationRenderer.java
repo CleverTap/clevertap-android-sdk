@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.pushnotification;
 
+import android.app.ActivityOptions;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -148,8 +149,13 @@ public interface INotificationRenderer {
                         actionIntent = PendingIntent.getService(context, requestCode,
                                 actionLaunchIntent, flagsActionLaunchPendingIntent);
                     } else {
+                        Bundle optionsBundle = null;
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            optionsBundle = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(
+                                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED).toBundle();
+                        }
                         actionIntent = PendingIntent.getActivity(context, requestCode,
-                                actionLaunchIntent, flagsActionLaunchPendingIntent);
+                                actionLaunchIntent, flagsActionLaunchPendingIntent, optionsBundle);
                     }
                     nb.addAction(icon, label, actionIntent);
 
