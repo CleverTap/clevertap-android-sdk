@@ -5,8 +5,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
-
 
 /**
  * Class for handling activity lifecycle events
@@ -38,7 +36,6 @@ public final class ActivityLifecycleCallback {
 
         @Override
         public void onActivityResumed(Activity activity) {
-            Log.i("axa", "onActivityResumed -> ALCC");
             if (cleverTapId != null) {
                 CleverTapAPI.onActivityResumed(activity, cleverTapId);
             } else {
