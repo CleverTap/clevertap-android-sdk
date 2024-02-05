@@ -13,6 +13,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.view.WindowManager;
 import androidx.annotation.NonNull;
@@ -159,10 +161,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
     }
 
+    @SuppressLint("WrongConstant")
     @Override
     public void finish() {
         super.finish();
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        if (VERSION.SDK_INT >= VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, android.R.anim.fade_in, android.R.anim.fade_out);
+        } else {
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        }
 
         if (invokedInAppDismissCallback) {
             return;
@@ -170,11 +177,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         notifyInAppDismissed();
     }
 
+    @SuppressLint("WrongConstant")
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-
+        if (VERSION.SDK_INT >= VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, android.R.anim.fade_in, android.R.anim.fade_out);
+        } else {
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        }
         if (invokedInAppDismissCallback) {
             return;
         }
