@@ -34,7 +34,7 @@ dependencies {
     api (libs.kotlin.stdlib.jdk7)
     api (libs.test.jsonassert)
     api (libs.gson)
-    api (libs.bundles.mockito)
+    api (libs.test.mockito.core)
     api (libs.test.robolectric)
     api (libs.test.opentest4j)
 

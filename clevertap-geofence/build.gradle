@@ -25,7 +25,7 @@ dependencies {
     testImplementation (libs.test.junit.platform.runner)
     testImplementation (libs.test.junit.jupiter.api)
 
-    testApi (libs.bundles.mockito)
+    testImplementation (libs.test.mockito.core)
     testImplementation (libs.test.robolectric)
 
     testImplementation (libs.test.core)

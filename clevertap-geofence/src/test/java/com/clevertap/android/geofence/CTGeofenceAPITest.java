@@ -48,6 +48,12 @@ public class CTGeofenceAPITest extends BaseTestCase {
         Field field = CTGeofenceAPI.class.getDeclaredField("ctGeofenceAPI");
         field.setAccessible(true);
         field.set(instance, null);
+
+        CTGeofenceTaskManager taskManagerInstance = CTGeofenceTaskManager.getInstance();
+        Field fieldTaskManager = CTGeofenceTaskManager.class.getDeclaredField("taskManager");
+        fieldTaskManager.setAccessible(true);
+        fieldTaskManager.set(taskManagerInstance, null);
+
         ctLocationFactoryMockedStatic.close();
         ctGeofenceFactoryMockedStatic.close();
         utilsMockedStatic.close();

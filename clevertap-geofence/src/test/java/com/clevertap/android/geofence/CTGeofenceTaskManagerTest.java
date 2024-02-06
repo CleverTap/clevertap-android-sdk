@@ -5,15 +5,11 @@ import static org.awaitility.Awaitility.await;
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import java.util.concurrent.Future;
 import org.junit.*;
-import org.mockito.*;
-
 public class CTGeofenceTaskManagerTest extends BaseTestCase {
 
 
     @Before
     public void setUp() throws Exception {
-
-        MockitoAnnotations.openMocks(this);
         super.setUp();
     }
 
