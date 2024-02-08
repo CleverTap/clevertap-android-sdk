@@ -17,6 +17,7 @@
 
             <ImageView
                 android:id="@+id/header_icon"
+                android:contentDescription="inapp_icon"
                 android:layout_width="78dp"
                 android:layout_height="78dp"
                 android:layout_marginLeft="20dp"
