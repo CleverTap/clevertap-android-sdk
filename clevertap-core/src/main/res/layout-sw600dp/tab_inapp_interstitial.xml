@@ -15,6 +15,7 @@
 
         <TextView
             android:id="@+id/interstitial_title"
+            android:contentDescription="inapp_title"
             android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
@@ -27,6 +28,7 @@
 
         <ImageView
             android:id="@+id/backgroundImage"
+            android:contentDescription="inapp_bg_img"
             android:layout_width="408dp"
             android:layout_height="229dp"
             android:layout_below="@+id/interstitial_title"
@@ -55,6 +57,7 @@
 
         <TextView
             android:id="@+id/interstitial_message"
+            android:contentDescription="inapp_message"
             android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:layout_below="@+id/backgroundImage"
@@ -81,6 +84,7 @@
 
             <Button
                 android:id="@+id/interstitial_button1"
+                android:contentDescription="inapp_btn1"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/inapp_button_height"
                 android:textSize="@dimen/txt_size_inapp_button"
@@ -88,6 +92,7 @@
 
             <Button
                 android:id="@+id/interstitial_button2"
+                android:contentDescription="inapp_btn2"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/inapp_button_height"
                 android:layout_marginTop="14dp"
@@ -97,6 +102,7 @@
     </RelativeLayout>
 
     <com.clevertap.android.sdk.customviews.CloseImageView
+        android:contentDescription="inapp_close_btn"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"
