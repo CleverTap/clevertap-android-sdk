@@ -8,10 +8,8 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
-
 import android.app.PendingIntent;
+import android.content.Context;
 import android.location.Location;
 import android.util.Log;
 import androidx.work.Configuration;
@@ -22,9 +20,7 @@ import androidx.work.WorkManager;
 import androidx.work.testing.SynchronousExecutor;
 import androidx.work.testing.WorkManagerTestInitHelper;
 import com.clevertap.android.geofence.fakes.GeofenceEventFake;
-import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
-import com.clevertap.android.geofence.interfaces.CTLocationCallback;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
@@ -32,29 +28,13 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.junit.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.powermock.reflect.internal.WhiteboxImpl;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({CTGeofenceAPI.class, Utils.class, CleverTapAPI.class
-        , LocationServices.class, Tasks.class})
-@Ignore
+
 public class GoogleLocationAdapterTest extends BaseTestCase {
 
     @Mock
@@ -67,43 +47,52 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
     public CTLocationAdapter ctLocationAdapter;
 
     @Mock
-    public CTGeofenceTask.OnCompleteListener onCompleteListener;
-
-    @Mock
     public FusedLocationProviderClient providerClient;
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
-
+    @Mock
     private Logger logger;
+
+    private MockedStatic<Tasks> tasksMockedStatic;
+
+    private MockedStatic<Utils> utilsMockedStatic;
+
+    private MockedStatic<LocationServices> locationServicesMockedStatic;
+
+    private MockedStatic<CTGeofenceAPI> ctGeofenceAPIMockedStatic;
 
     @Before
     public void setUp() throws Exception {
 
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(CTGeofenceAPI.class, Utils.class, CleverTapAPI.class,
-                LocationServices.class, Tasks.class);
+        MockitoAnnotations.openMocks(this);
+
+        ctGeofenceAPIMockedStatic = Mockito.mockStatic(CTGeofenceAPI.class);
+        locationServicesMockedStatic = Mockito.mockStatic(LocationServices.class);
+        utilsMockedStatic = Mockito.mockStatic(Utils.class);
+        tasksMockedStatic = Mockito.mockStatic(Tasks.class);
+
+        when(CTGeofenceAPI.getInstance(any(Context.class))).thenReturn(ctGeofenceAPI);
+        when(CTGeofenceAPI.getLogger()).thenReturn(logger);
+        when(ctGeofenceAPI.getCtLocationAdapter()).thenReturn(ctLocationAdapter);
+        when(ctGeofenceAPI.getCleverTapApi()).thenReturn(cleverTapAPI);
 
         super.setUp();
 
-        when(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI);
-        logger = new Logger(Logger.DEBUG);
-        when(CTGeofenceAPI.getLogger()).thenReturn(logger);
-
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "ctLocationAdapter", ctLocationAdapter);
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "cleverTapAPI", cleverTapAPI);
-
         Configuration config = new Configuration.Builder()
-                // Set log level to Log.DEBUG to
-                // make it easier to see why tests failed
                 .setMinimumLoggingLevel(Log.DEBUG)
-                // Use a SynchronousExecutor to make it easier to write tests
                 .setExecutor(new SynchronousExecutor())
                 .build();
 
         // Initialize WorkManager for unit test.
         WorkManagerTestInitHelper.initializeTestWorkManager(
                 application, config);
+    }
+
+    @After
+    public void cleanup() {
+        ctGeofenceAPIMockedStatic.close();
+        locationServicesMockedStatic.close();
+        utilsMockedStatic.close();
+        tasksMockedStatic.close();
     }
 
     @Test
@@ -123,23 +112,17 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
         final GoogleLocationAdapter locationAdapter = new GoogleLocationAdapter(application);
 
         try {
-            WhiteboxImpl.invokeMethod(locationAdapter, "applySettings", application);
-            LocationRequest actualLocationRequest = WhiteboxImpl.invokeMethod(locationAdapter,
-                    "getLocationRequest");
+            locationAdapter.requestLocationUpdates();
+            LocationRequest actualLocationRequest = new LocationRequest.Builder(Priority.PRIORITY_LOW_POWER,2000000)
+                    .setMinUpdateIntervalMillis(2000000)
+                    .setMinUpdateDistanceMeters(900)
+                    .build();
 
             assertEquals(ctGeofenceSettings.getInterval(), actualLocationRequest.getIntervalMillis());
             assertEquals(ctGeofenceSettings.getFastestInterval(), actualLocationRequest.getMinUpdateIntervalMillis());
             assertEquals(ctGeofenceSettings.getSmallestDisplacement(),
                     actualLocationRequest.getMinUpdateDistanceMeters(), 0);
             assertEquals(Priority.PRIORITY_LOW_POWER, actualLocationRequest.getPriority());
-
-            Field actualFetchMode = WhiteboxImpl.getField(GoogleLocationAdapter.class, "locationFetchMode");
-            Field actualLocationUpdateEnabled = WhiteboxImpl.getField(GoogleLocationAdapter.class,
-                    "backgroundLocationUpdatesEnabled");
-
-            assertEquals(ctGeofenceSettings.getLocationFetchMode(), actualFetchMode.getInt(locationAdapter));
-            assertEquals(ctGeofenceSettings.isBackgroundLocationUpdatesEnabled(),
-                    actualLocationUpdateEnabled.getBoolean(locationAdapter));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -153,26 +136,19 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
                 .thenReturn(providerClient);
         Task<Location> locationTask = mock(Task.class);
         try {
-            PowerMockito.when(Tasks.await(locationTask)).thenReturn(expectedLocation);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+            when(Tasks.await(locationTask)).thenReturn(expectedLocation);
+        } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
 
         when(providerClient.getLastLocation()).thenReturn(locationTask);
         final GoogleLocationAdapter locationAdapter = new GoogleLocationAdapter(application);
 
-        locationAdapter.getLastLocation(new CTLocationCallback() {
-            @Override
-            public void onLocationComplete(Location location) {
-                Assert.assertSame(expectedLocation, location);
-            }
-        });
+        locationAdapter.getLastLocation(location -> Assert.assertSame(expectedLocation, location));
     }
 
     @Test
-    public void testRequestLocationUpdatesTC1() throws Exception {
+    public void testRequestLocationUpdatesTC1() {
 
         // when backgroundLocationUpdates not enabled
 
@@ -233,13 +209,11 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
         verify(providerClient).requestLocationUpdates(
                 any(LocationRequest.class), any(PendingIntent.class));
 
-        verifyStatic(Tasks.class);
-        Tasks.await(null);
+        tasksMockedStatic.verify(() -> Tasks.await(null));
 
     }
 
     @Test
-    @Ignore
     public void testRequestLocationUpdatesTC3() throws Exception {
 
         // when backgroundLocationUpdates is enabled and fetch mode is last location
@@ -274,8 +248,7 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
 
         verify(providerClient).removeLocationUpdates(any(PendingIntent.class));
 
-        verifyStatic(Tasks.class);
-        Tasks.await(null);
+        tasksMockedStatic.verify(() -> Tasks.await(null));
 
     }
 

@@ -6,8 +6,6 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import android.content.Context;
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
@@ -18,23 +16,9 @@ import java.util.Arrays;
 import java.util.List;
 import org.json.JSONObject;
 import org.junit.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.powermock.reflect.internal.WhiteboxImpl;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({CTGeofenceAPI.class, FileUtils.class})
 public class GeofenceUpdateTaskTest extends BaseTestCase {
 
     @Mock
@@ -43,10 +27,18 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
     @Mock
     public CTGeofenceAdapter ctGeofenceAdapter;
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
+    private MockedStatic<CTGeofenceAPI> ctGeofenceAPIMockedStatic;
 
+    private MockedStatic<FileUtils> fileUtilsMockedStatic;
+
+    @Mock
     private Logger logger;
+
+    @After
+    public void cleanup() {
+        ctGeofenceAPIMockedStatic.close();
+        fileUtilsMockedStatic.close();
+    }
 
     @Test
     public void executeTestTC1() throws Exception {
@@ -70,8 +62,8 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
 
         ArgumentCaptor<JSONObject> argumentCaptorJson = ArgumentCaptor.forClass(JSONObject.class);
 
-        verifyStatic(FileUtils.class);
-        FileUtils.writeJsonToFile(any(Context.class), anyString(), anyString(), argumentCaptorJson.capture());
+        fileUtilsMockedStatic.verify(() -> FileUtils.writeJsonToFile(any(Context.class), anyString(), anyString(),
+                argumentCaptorJson.capture()));
 
         JSONAssert.assertEquals(GeofenceJSON.getFirst(), argumentCaptorJson.getValue(), true);
 
@@ -103,8 +95,8 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
 
         ArgumentCaptor<JSONObject> argumentCaptorJson = ArgumentCaptor.forClass(JSONObject.class);
 
-        verifyStatic(FileUtils.class);
-        FileUtils.writeJsonToFile(any(Context.class), anyString(), anyString(), argumentCaptorJson.capture());
+        fileUtilsMockedStatic.verify(() -> FileUtils.writeJsonToFile(any(Context.class), anyString(), anyString(),
+                argumentCaptorJson.capture()));
 
         JSONAssert.assertEquals(GeofenceJSON.getEmptyGeofence(), argumentCaptorJson.getValue(), true);
 
@@ -136,8 +128,8 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
 
         ArgumentCaptor<JSONObject> argumentCaptorJson = ArgumentCaptor.forClass(JSONObject.class);
 
-        verifyStatic(FileUtils.class);
-        FileUtils.writeJsonToFile(any(Context.class), anyString(), anyString(), argumentCaptorJson.capture());
+        fileUtilsMockedStatic.verify(() -> FileUtils.writeJsonToFile(any(Context.class), anyString(), anyString(),
+                argumentCaptorJson.capture()));
 
         JSONAssert.assertEquals(GeofenceJSON.getEmptyJson(), argumentCaptorJson.getValue(), true);
 
@@ -148,7 +140,7 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
     }
 
     @Test
-    public void executeTestTC4() throws Exception {
+    public void executeTestTC4() {
 
         // when old geofence is not empty and new geofence list is not empty
 
@@ -171,7 +163,7 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
 
         verify(ctGeofenceAdapter)
                 .removeAllGeofence(argumentCaptorOldGeofence.capture(), any(OnSuccessListener.class));
-        assertThat(argumentCaptorOldGeofence.getValue(), is(Arrays.asList(new String[]{"310001"})));
+        assertThat(argumentCaptorOldGeofence.getValue(), is(Arrays.asList("310001")));
 
     }
 
@@ -197,9 +189,8 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
 
         ArgumentCaptor<JSONObject> argumentCaptorJson = ArgumentCaptor.forClass(JSONObject.class);
 
-        verifyStatic(FileUtils.class);
-        FileUtils.writeJsonToFile(any(Context.class), anyString(), anyString(), argumentCaptorJson.capture());
-
+        fileUtilsMockedStatic.verify(() -> FileUtils.writeJsonToFile(any(Context.class), anyString(), anyString(),
+                argumentCaptorJson.capture()));
         JSONAssert.assertEquals(GeofenceJSON.getGeofence(), argumentCaptorJson.getValue(), true);
 
         ArgumentCaptor<List<CTGeofence>> argumentCaptor = ArgumentCaptor.forClass(List.class);
@@ -210,18 +201,12 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
 
     @Before
     public void setUp() throws Exception {
-
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(CTGeofenceAPI.class, FileUtils.class);
-
+        MockitoAnnotations.openMocks(this);
         super.setUp();
-
+        ctGeofenceAPIMockedStatic = Mockito.mockStatic(CTGeofenceAPI.class);
+        fileUtilsMockedStatic = Mockito.mockStatic(FileUtils.class);
         when(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI);
-        logger = new Logger(Logger.DEBUG);
         when(CTGeofenceAPI.getLogger()).thenReturn(logger);
-
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "ctGeofenceAdapter", ctGeofenceAdapter);
-
+        when(ctGeofenceAPI.getCtGeofenceAdapter()).thenReturn(ctGeofenceAdapter);
     }
-
 }

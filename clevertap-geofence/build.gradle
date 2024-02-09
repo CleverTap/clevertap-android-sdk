@@ -37,7 +37,6 @@ dependencies {
     testImplementation (libs.androidx.appcompat)
     testImplementation (libs.firebase.messaging)
 
-    testImplementation (libs.bundles.powermock)
     testImplementation (libs.catch.exception)
     testImplementation (project(":clevertap-core"))
 

@@ -3,17 +3,12 @@ package com.clevertap.android.geofence;
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LATITUDE;
 import static com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LONGITUDE;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import android.Manifest;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.location.Location;
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
@@ -21,30 +16,12 @@ import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener;
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.GeofenceCallback;
 import java.lang.reflect.Field;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import org.json.JSONObject;
 import org.junit.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
-import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowApplication;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({CleverTapAPI.class, Utils.class, CTLocationFactory.class, CTGeofenceFactory.class
-        , Executors.class, FileUtils.class})
 public class CTGeofenceAPITest extends BaseTestCase {
 
     @Mock
@@ -59,12 +36,11 @@ public class CTGeofenceAPITest extends BaseTestCase {
     @Mock
     public CTLocationAdapter locationAdapter;
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
+    private MockedStatic<CTGeofenceFactory> ctGeofenceFactoryMockedStatic;
 
-    private Location location;
+    private MockedStatic<CTLocationFactory> ctLocationFactoryMockedStatic;
 
-    private Logger logger;
+    private MockedStatic<Utils> utilsMockedStatic;
 
     @After
     public void cleanup() throws NoSuchFieldException, IllegalAccessException {
@@ -72,21 +48,33 @@ public class CTGeofenceAPITest extends BaseTestCase {
         Field field = CTGeofenceAPI.class.getDeclaredField("ctGeofenceAPI");
         field.setAccessible(true);
         field.set(instance, null);
+
+        CTGeofenceTaskManager taskManagerInstance = CTGeofenceTaskManager.getInstance();
+        Field fieldTaskManager = CTGeofenceTaskManager.class.getDeclaredField("taskManager");
+        fieldTaskManager.setAccessible(true);
+        fieldTaskManager.set(taskManagerInstance, null);
+
+        ctLocationFactoryMockedStatic.close();
+        ctGeofenceFactoryMockedStatic.close();
+        utilsMockedStatic.close();
+
     }
 
     @Before
     public void setUp() throws Exception {
 
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(Utils.class, CleverTapAPI.class, CTLocationFactory.class
-                , CTGeofenceFactory.class, Executors.class, FileUtils.class);
+        MockitoAnnotations.openMocks(this);
         super.setUp();
 
-        location = new Location("");
+        ctLocationFactoryMockedStatic = mockStatic(CTLocationFactory.class);
+        ctLocationFactoryMockedStatic.when(() -> CTLocationFactory.createLocationAdapter(application))
+                .thenReturn(locationAdapter);
 
-        when(CTLocationFactory.createLocationAdapter(application)).thenReturn(locationAdapter);
-        when(CTGeofenceFactory.createGeofenceAdapter(application)).thenReturn(geofenceAdapter);
+        ctGeofenceFactoryMockedStatic = mockStatic(CTGeofenceFactory.class);
+        ctGeofenceFactoryMockedStatic.when(() -> CTGeofenceFactory.createGeofenceAdapter(application))
+                .thenReturn(geofenceAdapter);
 
+        utilsMockedStatic = Mockito.mockStatic(Utils.class);
     }
 
     @Test
@@ -94,25 +82,26 @@ public class CTGeofenceAPITest extends BaseTestCase {
 
         CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
-        ctGeofenceAPI.deactivate();
+        try (MockedStatic<FileUtils> fileUtilsMockedStatic = Mockito.mockStatic(FileUtils.class)) {
+            ctGeofenceAPI.deactivate();
+            ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(Runnable.class);
+            verify(executorService).submit(argumentCaptor.capture());
 
-        ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(executorService).submit(argumentCaptor.capture());
+            PendingIntent geofenceMonitoring = PendingIntentFactory.getPendingIntent(application,
+                    PendingIntentFactory.PENDING_INTENT_GEOFENCE, FLAG_UPDATE_CURRENT);
+            PendingIntent locationUpdates = PendingIntentFactory.getPendingIntent(application,
+                    PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_UPDATE_CURRENT);
 
-        PendingIntent geofenceMonitoring = PendingIntentFactory.getPendingIntent(application,
-                PendingIntentFactory.PENDING_INTENT_GEOFENCE, FLAG_UPDATE_CURRENT);
-        PendingIntent locationUpdates = PendingIntentFactory.getPendingIntent(application,
-                PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_UPDATE_CURRENT);
+            argumentCaptor.getValue().run();
 
-        argumentCaptor.getValue().run();
+            verify(geofenceAdapter).stopGeofenceMonitoring(geofenceMonitoring);
+            verify(locationAdapter).removeLocationUpdates(locationUpdates);
 
-        verify(geofenceAdapter).stopGeofenceMonitoring(geofenceMonitoring);
-        verify(locationAdapter).removeLocationUpdates(locationUpdates);
+            fileUtilsMockedStatic.verify(
+                    () -> FileUtils.deleteDirectory(any(), FileUtils.getCachedDirName(application)));
 
-        PowerMockito.verifyStatic(FileUtils.class);
-        FileUtils.deleteDirectory(any(Context.class), FileUtils.getCachedDirName(application));
-
-        assertFalse(ctGeofenceAPI.isActivated());
+            assertFalse(ctGeofenceAPI.isActivated());
+        }
     }
 
     @Test
@@ -446,11 +435,8 @@ public class CTGeofenceAPITest extends BaseTestCase {
 
     @Test
     public void testSetCtLocationUpdatesListener() {
-        CTLocationUpdatesListener listener = new CTLocationUpdatesListener() {
-            @Override
-            public void onLocationUpdates(Location location) {
+        CTLocationUpdatesListener listener = location -> {
 
-            }
         };
 
         CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);

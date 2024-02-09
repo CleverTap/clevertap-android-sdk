@@ -8,30 +8,13 @@ import static com.clevertap.android.geofence.CTGeofenceSettings.FETCH_LAST_LOCAT
 import static org.junit.Assert.*;
 
 import org.junit.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({Utils.class})
 public class CTGeofenceSettingsTest extends BaseTestCase {
-
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(Utils.class);
+        MockitoAnnotations.openMocks(this);
         super.setUp();
     }
 
@@ -50,12 +33,12 @@ public class CTGeofenceSettingsTest extends BaseTestCase {
                 .setSmallestDisplacement(780)
                 .build();
 
-        assertEquals(false, customSettings.isBackgroundLocationUpdatesEnabled());
+        assertFalse(customSettings.isBackgroundLocationUpdatesEnabled());
         assertEquals(ACCURACY_MEDIUM, customSettings.getLocationAccuracy());
         assertEquals(FETCH_CURRENT_LOCATION_PERIODIC, customSettings.getLocationFetchMode());
         assertEquals(Logger.INFO, customSettings.getLogLevel());
         assertEquals(98, customSettings.getGeofenceMonitoringCount());
-        assertEquals(null, customSettings.getId());
+        assertNull(customSettings.getId());
         assertEquals(2000000, customSettings.getInterval());
         assertEquals(1900000, customSettings.getFastestInterval());
         assertEquals(780, customSettings.getSmallestDisplacement(), 0);
@@ -78,12 +61,12 @@ public class CTGeofenceSettingsTest extends BaseTestCase {
 
         CTGeofenceSettings defaultSettings = new CTGeofenceSettings.Builder().build();
 
-        assertEquals(true, defaultSettings.isBackgroundLocationUpdatesEnabled());
+        assertTrue(defaultSettings.isBackgroundLocationUpdatesEnabled());
         assertEquals(ACCURACY_HIGH, defaultSettings.getLocationAccuracy());
         assertEquals(FETCH_LAST_LOCATION_PERIODIC, defaultSettings.getLocationFetchMode());
         assertEquals(Logger.DEBUG, defaultSettings.getLogLevel());
         assertEquals(DEFAULT_GEO_MONITOR_COUNT, defaultSettings.getGeofenceMonitoringCount());
-        assertEquals(null, defaultSettings.getId());
+        assertNull(defaultSettings.getId());
         assertEquals(GoogleLocationAdapter.INTERVAL_IN_MILLIS, defaultSettings.getInterval());
         assertEquals(GoogleLocationAdapter.INTERVAL_FASTEST_IN_MILLIS, defaultSettings.getFastestInterval());
         assertEquals(GoogleLocationAdapter.SMALLEST_DISPLACEMENT_IN_METERS, defaultSettings.getSmallestDisplacement(),
