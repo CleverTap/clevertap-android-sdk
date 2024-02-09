@@ -1,32 +1,14 @@
 package com.clevertap.android.geofence;
 
-import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
-
 import android.app.PendingIntent;
 import android.content.Context;
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
 import org.junit.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.powermock.reflect.internal.WhiteboxImpl;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({CTGeofenceAPI.class, Utils.class, FileUtils.class})
 public class LocationUpdateTaskTest extends BaseTestCase {
 
     @Mock
@@ -38,30 +20,52 @@ public class LocationUpdateTaskTest extends BaseTestCase {
     @Mock
     public CTGeofenceTask.OnCompleteListener onCompleteListener;
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
-
+    @Mock
     private Logger logger;
+
+    @Mock
+    PendingIntent pendingIntent;
+
+    private MockedStatic<CTGeofenceAPI> ctGeofenceAPIMockedStatic;
+
+    private MockedStatic<FileUtils> fileUtilsMockedStatic;
+    private MockedStatic<Utils> utilsMockedStatic;
+
+    private MockedStatic<PendingIntentFactory> pendingIntentFactoryMockedStatic;
 
     @Before
     public void setUp() throws Exception {
 
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(CTGeofenceAPI.class, Utils.class, FileUtils.class);
+        MockitoAnnotations.openMocks(this);
 
+        ctGeofenceAPIMockedStatic = Mockito.mockStatic(CTGeofenceAPI.class);
+        fileUtilsMockedStatic = Mockito.mockStatic(FileUtils.class);
+        utilsMockedStatic = Mockito.mockStatic(Utils.class);
+        pendingIntentFactoryMockedStatic = Mockito.mockStatic(PendingIntentFactory.class);
         super.setUp();
 
         when(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI);
-        logger = new Logger(Logger.DEBUG);
         when(CTGeofenceAPI.getLogger()).thenReturn(logger);
 
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "ctLocationAdapter", ctLocationAdapter);
+        when(ctGeofenceAPI.getCtLocationAdapter()).thenReturn(ctLocationAdapter);
 
+    }
+
+    @After
+    public void cleanup() {
+        ctGeofenceAPIMockedStatic.close();
+        fileUtilsMockedStatic.close();
+        utilsMockedStatic.close();
+        pendingIntentFactoryMockedStatic.close();
     }
 
     @Test
     public void testExecuteTC1() {
         // when pending intent is null and bgLocationUpdate is true
+
+        CTGeofenceSettings ctGeofenceSettings = new CTGeofenceSettings.Builder()
+                .enableBackgroundLocationUpdates(true).build();
+        when(ctGeofenceAPI.getGeofenceSettings()).thenReturn(ctGeofenceSettings);
 
         LocationUpdateTask task = new LocationUpdateTask(application);
         task.setOnCompleteListener(onCompleteListener);
@@ -69,8 +73,7 @@ public class LocationUpdateTaskTest extends BaseTestCase {
 
         verify(ctLocationAdapter).requestLocationUpdates();
 
-        verifyStatic(Utils.class);
-        Utils.writeSettingsToFile(any(Context.class), any(CTGeofenceSettings.class));
+        utilsMockedStatic.verify(() -> Utils.writeSettingsToFile(any(Context.class), any(CTGeofenceSettings.class)));
 
         verify(onCompleteListener).onComplete();
     }
@@ -90,8 +93,7 @@ public class LocationUpdateTaskTest extends BaseTestCase {
         verify(ctLocationAdapter, never()).requestLocationUpdates();
         verify(ctLocationAdapter, never()).removeLocationUpdates(any(PendingIntent.class));
 
-        verifyStatic(Utils.class);
-        Utils.writeSettingsToFile(any(Context.class), any(CTGeofenceSettings.class));
+        utilsMockedStatic.verify(() -> Utils.writeSettingsToFile(any(Context.class), any(CTGeofenceSettings.class)));
 
     }
 
@@ -105,8 +107,7 @@ public class LocationUpdateTaskTest extends BaseTestCase {
         when(ctGeofenceAPI.getGeofenceSettings()).thenReturn(ctGeofenceSettings);
 
         // make pending intent non-null
-        PendingIntent pendingIntent = PendingIntentFactory.getPendingIntent(application,
-                PendingIntentFactory.PENDING_INTENT_LOCATION, PendingIntent.FLAG_UPDATE_CURRENT);
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(pendingIntent);
 
         LocationUpdateTask task = new LocationUpdateTask(application);
         task.execute();
@@ -115,8 +116,7 @@ public class LocationUpdateTaskTest extends BaseTestCase {
         verify(ctLocationAdapter).removeLocationUpdates(any(PendingIntent.class));
         verify(ctLocationAdapter, never()).requestLocationUpdates();
 
-        verifyStatic(Utils.class);
-        Utils.writeSettingsToFile(any(Context.class), any(CTGeofenceSettings.class));
+        utilsMockedStatic.verify(() -> Utils.writeSettingsToFile(any(Context.class), any(CTGeofenceSettings.class)));
 
     }
 
@@ -124,17 +124,16 @@ public class LocationUpdateTaskTest extends BaseTestCase {
     public void testExecuteWhenLocationAdapterIsNull() {
         // when location adapter is null
 
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "ctLocationAdapter", (Object[]) null);
+        when(ctGeofenceAPI.getCtLocationAdapter()).thenReturn(null);
         LocationUpdateTask task = new LocationUpdateTask(application);
         task.execute();
 
-        verifyStatic(Utils.class, never());
-        Utils.writeSettingsToFile(any(Context.class), any(CTGeofenceSettings.class));
+        utilsMockedStatic.verifyNoInteractions();
 
     }
 
     @Test
-    public void testIsRequestLocationTC1() throws Exception {
+    public void testIsRequestLocationTC1() {
         // when currentBgLocationUpdate is false
 //
 //        CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
@@ -144,8 +143,6 @@ public class LocationUpdateTaskTest extends BaseTestCase {
 //
 //        CTGeofenceSettings lastGeofenceSettings = new CTGeofenceSettings.Builder().build();
 //
-//        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
-//
 //        LocationUpdateTask task = new LocationUpdateTask(application);
 //        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation", null);
 //
@@ -154,7 +151,7 @@ public class LocationUpdateTaskTest extends BaseTestCase {
     }
 
     @Test
-    public void testIsRequestLocationTC10() throws Exception {
+    public void testIsRequestLocationTC10() {
         // when currentBgLocationUpdate is true and there is no change in settings
 
         CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
@@ -162,42 +159,44 @@ public class LocationUpdateTaskTest extends BaseTestCase {
                 .build();
 
         when(ctGeofenceAPI.getGeofenceSettings()).thenReturn(currentGeofenceSettings);
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(pendingIntent);
 
         CTGeofenceSettings lastGeofenceSettings = new CTGeofenceSettings.Builder()
                 .build();
 
-        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
 
         LocationUpdateTask task = new LocationUpdateTask(application);
-        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation",
-                mock(PendingIntent.class));
+        task.execute();
 
-        assertFalse(isRequestLocation);
+        verify(logger).verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Dropping duplicate location update request");
 
     }
 
     @Test
-    public void testIsRequestLocationTC2() throws Exception {
+    public void testIsRequestLocationTC2() {
         // when currentBgLocationUpdate is true and pendingIntent is null
 
-//        CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
-//                .enableBackgroundLocationUpdates(true).build();
-//
-//        when(ctGeofenceAPI.getGeofenceSettings()).thenReturn(currentGeofenceSettings);
-//
-//        CTGeofenceSettings lastGeofenceSettings = new CTGeofenceSettings.Builder().build();
-//
-//        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
-//
-//        LocationUpdateTask task = new LocationUpdateTask(application);
-//        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation", null);
-//
-//        assertTrue(isRequestLocation);
+        CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
+                .enableBackgroundLocationUpdates(true).build();
+
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(null);
+        when(ctGeofenceAPI.getGeofenceSettings()).thenReturn(currentGeofenceSettings);
+
+        CTGeofenceSettings lastGeofenceSettings = new CTGeofenceSettings.Builder().build();
+
+        when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+
+        LocationUpdateTask task = new LocationUpdateTask(application);
+        task.execute();
+
+        verify(ctLocationAdapter).requestLocationUpdates();
 
     }
 
     @Test
-    public void testIsRequestLocationTC3() throws Exception {
+    public void testIsRequestLocationTC3() {
         // when fetch mode is current and change in accuracy
 
         CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
@@ -207,23 +206,23 @@ public class LocationUpdateTaskTest extends BaseTestCase {
                 .build();
 
         when(ctGeofenceAPI.getGeofenceSettings()).thenReturn(currentGeofenceSettings);
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(pendingIntent);
+
 
         CTGeofenceSettings lastGeofenceSettings = new CTGeofenceSettings.Builder()
                 .setLocationAccuracy(CTGeofenceSettings.ACCURACY_LOW)
                 .build();
 
-        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
 
         LocationUpdateTask task = new LocationUpdateTask(application);
-        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation",
-                mock(PendingIntent.class));
+        task.execute();
 
-        assertTrue(isRequestLocation);
-
+        verify(ctLocationAdapter).requestLocationUpdates();
     }
 
     @Test
-    public void testIsRequestLocationTC4() throws Exception {
+    public void testIsRequestLocationTC4() {
         // when fetch mode is current and change in interval
 
         CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
@@ -233,23 +232,23 @@ public class LocationUpdateTaskTest extends BaseTestCase {
                 .build();
 
         when(ctGeofenceAPI.getGeofenceSettings()).thenReturn(currentGeofenceSettings);
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(pendingIntent);
+
 
         CTGeofenceSettings lastGeofenceSettings = new CTGeofenceSettings.Builder()
                 .setInterval(5000000)
                 .build();
 
-        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
 
         LocationUpdateTask task = new LocationUpdateTask(application);
-        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation",
-                mock(PendingIntent.class));
+        task.execute();
 
-        assertTrue(isRequestLocation);
-
+        verify(ctLocationAdapter).requestLocationUpdates();
     }
 
     @Test
-    public void testIsRequestLocationTC5() throws Exception {
+    public void testIsRequestLocationTC5() {
         // when fetch mode is current and change in fastest interval
 
         CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
@@ -259,23 +258,23 @@ public class LocationUpdateTaskTest extends BaseTestCase {
                 .build();
 
         when(ctGeofenceAPI.getGeofenceSettings()).thenReturn(currentGeofenceSettings);
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(pendingIntent);
 
         CTGeofenceSettings lastGeofenceSettings = new CTGeofenceSettings.Builder()
                 .setFastestInterval(5000000)
                 .build();
 
-        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
 
         LocationUpdateTask task = new LocationUpdateTask(application);
-        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation",
-                mock(PendingIntent.class));
+        task.execute();
 
-        assertTrue(isRequestLocation);
+        verify(ctLocationAdapter).requestLocationUpdates();
 
     }
 
     @Test
-    public void testIsRequestLocationTC6() throws Exception {
+    public void testIsRequestLocationTC6() {
         // when fetch mode is current and change in displacement
 
         CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
@@ -285,23 +284,23 @@ public class LocationUpdateTaskTest extends BaseTestCase {
                 .build();
 
         when(ctGeofenceAPI.getGeofenceSettings()).thenReturn(currentGeofenceSettings);
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(pendingIntent);
+
 
         CTGeofenceSettings lastGeofenceSettings = new CTGeofenceSettings.Builder()
                 .setSmallestDisplacement(700)
                 .build();
 
-        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
 
         LocationUpdateTask task = new LocationUpdateTask(application);
-        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation",
-                mock(PendingIntent.class));
+        task.execute();
 
-        assertTrue(isRequestLocation);
-
+        verify(ctLocationAdapter).requestLocationUpdates();
     }
 
     @Test
-    public void testIsRequestLocationTC7() throws Exception {
+    public void testIsRequestLocationTC7() {
         // when fetch mode is last location and change in interval
 
         CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
@@ -316,18 +315,17 @@ public class LocationUpdateTaskTest extends BaseTestCase {
                 .setInterval(5000000)
                 .build();
 
-        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(pendingIntent);
 
         LocationUpdateTask task = new LocationUpdateTask(application);
-        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation",
-                mock(PendingIntent.class));
+        task.execute();
 
-        assertTrue(isRequestLocation);
-
+        verify(ctLocationAdapter).requestLocationUpdates();
     }
 
     @Test
-    public void testIsRequestLocationTC8() throws Exception {
+    public void testIsRequestLocationTC8() {
         // when fetch mode is current location and change in fetch mode
 
         CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
@@ -341,18 +339,17 @@ public class LocationUpdateTaskTest extends BaseTestCase {
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC)
                 .build();
 
-        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(pendingIntent);
 
         LocationUpdateTask task = new LocationUpdateTask(application);
-        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation",
-                mock(PendingIntent.class));
+        task.execute();
 
-        assertTrue(isRequestLocation);
-
+        verify(ctLocationAdapter).requestLocationUpdates();
     }
 
     @Test
-    public void testIsRequestLocationTC9() throws Exception {
+    public void testIsRequestLocationTC9() {
         // when fetch mode is last location and change in fetch mode
 
         CTGeofenceSettings currentGeofenceSettings = new CTGeofenceSettings.Builder()
@@ -366,14 +363,14 @@ public class LocationUpdateTaskTest extends BaseTestCase {
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC)
                 .build();
 
-        PowerMockito.when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings);
+        when(PendingIntentFactory.getPendingIntent(any(Context.class),any(int.class),any(int.class))).thenReturn(pendingIntent);
+
 
         LocationUpdateTask task = new LocationUpdateTask(application);
-        boolean isRequestLocation = WhiteboxImpl.invokeMethod(task, "isRequestLocation",
-                mock(PendingIntent.class));
+        task.execute();
 
-        assertTrue(isRequestLocation);
-
+        verify(ctLocationAdapter).requestLocationUpdates();
     }
 
 }
