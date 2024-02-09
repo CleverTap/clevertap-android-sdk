@@ -19,6 +19,9 @@ android{
             dirs 'libs'
         }
     }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
     namespace 'com.clevertap.android.xps'
 }
 
