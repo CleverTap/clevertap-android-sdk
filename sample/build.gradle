@@ -94,7 +94,6 @@ dependencies {
     localImplementation(project(":clevertap-core")) //CleverTap Android SDK, make sure the AAR file is in the libs folder
     //implementation fileTree(include: ['*.aar'], dir: 'libs')
     localImplementation(project(":clevertap-geofence")) // Geofence
-    localImplementation(project(":clevertap-xps")) // For Xiaomi Push use
     localImplementation(project(":clevertap-pushtemplates"))
     localImplementation(project(":clevertap-hms")) // For Huawei Push use
 
