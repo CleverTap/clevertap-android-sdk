@@ -135,7 +135,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
                         .add(android.R.id.content, contentFragment, getFragmentTag())
-                        .commit();
+                        .commitNow();
             }
         } else if (isAlertVisible) {
             createContentFragment();
