@@ -99,7 +99,6 @@ dependencies {
     localImplementation(project(":clevertap-pushtemplates"))
     localImplementation(project(":clevertap-hms")) // For Huawei Push use
 
-    implementation("com.huawei.hms:push:6.5.0.300")
     implementation("com.google.android.gms:play-services-location:21.0.0") // Needed for geofence
     implementation("androidx.work:work-runtime:2.7.1") // Needed for geofence
     implementation("androidx.concurrent:concurrent-futures:1.1.0") // Needed for geofence
