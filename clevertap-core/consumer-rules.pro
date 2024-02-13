@@ -13,5 +13,6 @@
     public static final ** CREATOR;
 }
 -dontwarn com.clevertap.android.sdk.**
+-dontwarn com.baidu.**
 -keepattributes Exceptions,InnerClasses,Signature,Deprecated,
                 SourceFile,LineNumberTable,*Annotation*,EnclosingMethod
