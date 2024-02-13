@@ -47,7 +47,6 @@ import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.utils.PackageUtils;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
@@ -63,7 +62,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Single point of contact to load & support all types of Notification messaging services viz. FCM, XPS, HMS etc.
+ * Single point of contact to load & support all types of Notification messaging services viz. FCM, HMS etc.
  */
 
 @RestrictTo(Scope.LIBRARY_GROUP)
@@ -251,9 +250,6 @@ public class PushProviders implements CTPushProviderListener {
         switch (pushType) {
             case FCM:
                 handleToken(token, PushType.FCM, true);
-                break;
-            case XPS:
-                handleToken(token, PushType.XPS, true);
                 break;
             case HPS:
                 handleToken(token, PushType.HPS, true);
@@ -605,24 +601,6 @@ public class PushProviders implements CTPushProviderListener {
             providers.add(pushProvider);
         }
 
-        for (PushType pushType : allDisabledPushTypes) {
-            // only for XPS, if for disabled push cached token already exists then unregister xiaomi push
-            // for case like user enables xps on all devices first then in next app version disables on all devices
-
-            if (pushType == PushType.XPS) {
-                String cachedTokenXps = getCachedToken(PushType.XPS);
-                if (!TextUtils.isEmpty(cachedTokenXps)) {
-                    CTPushProvider pushProvider = getCTPushProviderFromPushType(pushType, false);
-
-                    if (pushProvider instanceof UnregistrableCTPushProvider) {
-                        ((UnregistrableCTPushProvider) pushProvider).unregisterPush(context);
-                        config.log(PushConstants.LOG_TAG, "unregistering existing token for disabled " + pushType);
-                    }
-                }
-            }
-
-        }
-
         return providers;
     }
 
@@ -716,22 +694,12 @@ public class PushProviders implements CTPushProviderListener {
                 allEnabledPushTypes.add(pushType);
                 config.log(PushConstants.LOG_TAG, "SDK Class Available :" + className);
 
-                // if push is off on all devices then remove xps
-                if (pushType.getRunningDevices() == PushConstants.NO_DEVICES) {
+                /*if (pushType.getRunningDevices() == PushConstants.NO_DEVICES) {
                     allEnabledPushTypes.remove(pushType);
                     allDisabledPushTypes.add(pushType);
                     config.log(PushConstants.LOG_TAG,
                             "disabling " + pushType + " due to flag set as PushConstants.NO_DEVICES");
-                }
-                // if push is off for non-xiaomi devices then remove xps
-                if (pushType.getRunningDevices() == PushConstants.XIAOMI_MIUI_DEVICES) {
-                    if (!PackageUtils.isXiaomiDeviceRunningMiui(context)) {
-                        allEnabledPushTypes.remove(pushType);
-                        allDisabledPushTypes.add(pushType);
-                        config.log(PushConstants.LOG_TAG,
-                                "disabling " + pushType + " due to flag set as PushConstants.XIAOMI_MIUI_DEVICES");
-                    }
-                }
+                }*/
 
             } catch (Exception e) {
                 config.log(PushConstants.LOG_TAG,
@@ -810,7 +778,6 @@ public class PushProviders implements CTPushProviderListener {
         switch (provider.getPushType()) {
             case FCM:
             case HPS:
-            case XPS:
             case BPS:
                 if (provider.getPlatform() != PushConstants.ANDROID_PLATFORM) {
                     config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() +
@@ -858,10 +825,6 @@ public class PushProviders implements CTPushProviderListener {
                 data.put("action", action);
                 data.put("id", token);
                 data.put("type", pushType.getType());
-                if (pushType == PushType.XPS) {
-                    config.getLogger().verbose("PushProviders: pushDeviceTokenEvent requesting device region");
-                    data.put("region", pushType.getServerRegion());
-                }
                 event.put("data", data);
                 config.getLogger().verbose(config.getAccountId(), pushType + action + " device token " + token);
                 analyticsManager.sendDataEvent(event);

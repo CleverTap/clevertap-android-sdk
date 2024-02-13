@@ -15,7 +15,7 @@ public interface IPushAmpHandler<T> {
     /**
      *  Processes notification message for push amplification
      * @param context application context
-     * @param message notification message received from cloud messaging provider like firebase,xiaomi,huawei etc.
+     * @param message notification message received from cloud messaging provider like firebase,huawei etc.
      */
     void processPushAmp(final Context context, @NonNull final T message);
 }
