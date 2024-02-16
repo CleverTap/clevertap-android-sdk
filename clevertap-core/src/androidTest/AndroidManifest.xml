@@ -14,6 +14,9 @@
         <meta-data
             android:name="CLEVERTAP_TOKEN"
             android:value="TEST" />
+        <meta-data
+            android:name="CLEVERTAP_BACKGROUND_SYNC"
+            android:value="1" />
 
     </application>
 </manifest>
