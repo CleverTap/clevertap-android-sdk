@@ -1,5 +1,6 @@
 package com.clevertap.android.pushtemplates
 
+import android.app.ActivityOptions
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ContentResolver
@@ -453,7 +454,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         extras: Bundle,
         notificationId: Int,
         nb: Builder, actions: JSONArray?
-    ): Builder? {
+    ): Builder {
         val intentServiceName = ManifestInfo.getInstance(context).intentServiceName
         var clazz: Class<*>? = null
         if (intentServiceName != null) {
@@ -563,9 +564,15 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                             actionLaunchIntent!!, flagsActionLaunchPendingIntent
                         )
                     } else {
+                        var optionsBundle: Bundle? = null
+                        if (VERSION.SDK_INT >= VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            optionsBundle = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(
+                                ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                            ).toBundle()
+                        }
                         PendingIntent.getActivity(
                             context, requestCode,
-                            actionLaunchIntent, flagsActionLaunchPendingIntent
+                            actionLaunchIntent!!, flagsActionLaunchPendingIntent, optionsBundle
                         )
                     }
                     nb.addAction(icon, label, actionIntent)

@@ -31,12 +31,10 @@ group = publishedGroupId
 def (major,minor,patch) = libraryVersion.split("\\.")
 
 android {
-    compileSdkVersion libs.versions.android.compileSdk.get().toInteger()
-    buildToolsVersion libs.versions.android.buildTools.get()
+    compileSdk libs.versions.android.compileSdk.get().toInteger()
 
     defaultConfig {
         minSdkVersion libs.versions.android.minSdk.get().toInteger()
-        targetSdkVersion libs.versions.android.targetSdk.get().toInteger()
         versionCode "${major}0${minor}0${patch}".toInteger()
         versionName libraryVersion
 
@@ -113,7 +111,7 @@ if (project.rootProject.file('local.properties').exists()) {
 }
 
 task sourcesJar(type: Jar) {
-    baseName "$artifact"
+    archiveBaseName.set("$artifact")
     from android.sourceSets.main.java.srcDirs
     archiveClassifier.set('sources')
 }

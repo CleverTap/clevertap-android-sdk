@@ -13,6 +13,17 @@ ext {
 
 apply from: "../gradle-scripts/commons.gradle"
 
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+    namespace 'com.clevertap.android.geofence'
+}
+
 dependencies {
     compileOnly (project(":clevertap-core"))
     compileOnly (libs.play.services.location)
@@ -33,7 +44,6 @@ dependencies {
     testImplementation (libs.androidx.appcompat)
     testImplementation (libs.firebase.messaging)
 
-    testImplementation (libs.bundles.powermock)
     testImplementation (libs.catch.exception)
     testImplementation (project(":clevertap-core"))
 

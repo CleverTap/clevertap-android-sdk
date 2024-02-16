@@ -3,16 +3,11 @@ package com.clevertap.android.geofence;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import android.app.PendingIntent;
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
-import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.geofence.model.CTGeofence;
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
@@ -22,43 +17,18 @@ import com.google.android.gms.tasks.Tasks;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import org.hamcrest.*;
 import org.junit.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.powermock.reflect.internal.WhiteboxImpl;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({CTGeofenceAPI.class, Utils.class, CleverTapAPI.class
-        , LocationServices.class, Tasks.class})
-@Ignore
 public class GoogleGeofenceAdapterTest extends BaseTestCase {
-
-    @Mock
-    public CleverTapAPI cleverTapAPI;
 
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
 
-    @Mock
-    public CTGeofenceAdapter ctLocationAdapter;
 
     @Mock
     public GeofencingClient geofencingClient;
 
-    @Mock
-    public CTGeofenceTask.OnCompleteListener onCompleteListener;
 
     @Mock
     public OnSuccessListener onSuccessListener;
@@ -66,30 +36,45 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
     @Mock
     public PendingIntent pendingIntent;
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
-
     @Mock
     public Task<Void> task;
 
+    private MockedStatic<CTGeofenceAPI> ctGeofenceAPIMockedStatic;
+
+    @Mock
+    private CTGeofenceAdapter ctGeofenceAdapter;
+
+    private MockedStatic<LocationServices> locationServicesMockedStatic;
+
+    @Mock
     private Logger logger;
+
+    private MockedStatic<Tasks> tasksMockedStatic;
+
+    private MockedStatic<Utils> utilsMockedStatic;
+
+    @After
+    public void cleanup() {
+        ctGeofenceAPIMockedStatic.close();
+        locationServicesMockedStatic.close();
+        utilsMockedStatic.close();
+        tasksMockedStatic.close();
+    }
 
     @Before
     public void setUp() throws Exception {
-
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(CTGeofenceAPI.class, Utils.class, CleverTapAPI.class,
-                LocationServices.class, Tasks.class);
+        MockitoAnnotations.openMocks(this);
+        ctGeofenceAPIMockedStatic = Mockito.mockStatic(CTGeofenceAPI.class);
+        locationServicesMockedStatic = Mockito.mockStatic(LocationServices.class);
+        utilsMockedStatic = Mockito.mockStatic(Utils.class);
+        tasksMockedStatic = Mockito.mockStatic(Tasks.class);
 
         super.setUp();
 
         when(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI);
-        logger = new Logger(Logger.DEBUG);
         when(CTGeofenceAPI.getLogger()).thenReturn(logger);
-
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "ctGeofenceAdapter", ctLocationAdapter);
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "cleverTapAPI", cleverTapAPI);
-        PowerMockito.when(LocationServices.getGeofencingClient(application)).thenReturn(geofencingClient);
+        when(LocationServices.getGeofencingClient(application)).thenReturn(geofencingClient);
+        when(ctGeofenceAPI.getCtGeofenceAdapter()).thenReturn(ctGeofenceAdapter);
 
     }
 
@@ -109,7 +94,7 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
 
         // when fence list is empty
         GoogleGeofenceAdapter geofenceAdapter = new GoogleGeofenceAdapter(application);
-        geofenceAdapter.addAllGeofence(new ArrayList<CTGeofence>(), onSuccessListener);
+        geofenceAdapter.addAllGeofence(new ArrayList<>(), onSuccessListener);
         verify(geofencingClient, never()).addGeofences(any(GeofencingRequest.class), any(PendingIntent.class));
 
     }
@@ -125,16 +110,8 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
                 .thenReturn(task);
         geofenceAdapter.addAllGeofence(ctGeofences, onSuccessListener);
 
-        try {
-            verifyStatic(Tasks.class);
-            Tasks.await(task);
-
-            verify(onSuccessListener).onSuccess(null);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        tasksMockedStatic.verify(() -> Tasks.await(task));
+        verify(onSuccessListener).onSuccess(null);
 
     }
 
@@ -144,18 +121,21 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
         List<CTGeofence> ctGeofences = CTGeofence.from(GeofenceJSON.getGeofence());
 
         try {
-            List<Geofence> googleGeofences = WhiteboxImpl.invokeMethod(geofenceAdapter,
-                    "getGoogleGeofences", ctGeofences);
-            GeofencingRequest geofencingRequest = WhiteboxImpl.invokeMethod(geofenceAdapter,
-                    "getGeofencingRequest", googleGeofences);
+            geofenceAdapter.addAllGeofence(ctGeofences, onSuccessListener);
+            ArgumentCaptor<GeofencingRequest> geofencingRequestArgumentCaptor = ArgumentCaptor.forClass(
+                    GeofencingRequest.class);
+            ArgumentCaptor<PendingIntent> pendingIntentArgumentCaptor = ArgumentCaptor.forClass(PendingIntent.class);
 
-            assertEquals(GeofencingRequest.INITIAL_TRIGGER_ENTER, geofencingRequest.getInitialTrigger());
-            MatcherAssert.assertThat(geofencingRequest.getGeofences(), CoreMatchers.is(googleGeofences));
+            verify(geofencingClient).addGeofences(geofencingRequestArgumentCaptor.capture(),
+                    pendingIntentArgumentCaptor.capture());
+            assertEquals(GeofencingRequest.INITIAL_TRIGGER_ENTER,
+                    geofencingRequestArgumentCaptor.getValue().getInitialTrigger());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    //
     @Test
     public void testRemoveAllGeofenceTC1() {
         // when fence list is null
@@ -166,16 +146,18 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
 
     }
 
+    //
     @Test
     public void testRemoveAllGeofenceTC2() {
         // when fence list is empty
         GoogleGeofenceAdapter geofenceAdapter = new GoogleGeofenceAdapter(application);
-        geofenceAdapter.removeAllGeofence(new ArrayList<String>(), onSuccessListener);
+        geofenceAdapter.removeAllGeofence(new ArrayList<>(), onSuccessListener);
 
         verify(geofencingClient, never()).removeGeofences(ArgumentMatchers.anyList());
 
     }
 
+    //
     @Test
     public void testRemoveAllGeofenceTC3() {
         // when fence list is not empty
@@ -185,16 +167,8 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
         when(geofencingClient.removeGeofences(ctGeofenceIds)).thenReturn(task);
         geofenceAdapter.removeAllGeofence(ctGeofenceIds, onSuccessListener);
 
-        try {
-            verifyStatic(Tasks.class);
-            Tasks.await(task);
-
-            verify(onSuccessListener).onSuccess(null);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        tasksMockedStatic.verify(() -> Tasks.await(task));
+        verify(onSuccessListener).onSuccess(null);
 
     }
 
@@ -218,16 +192,8 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
 
         geofenceAdapter.stopGeofenceMonitoring(pendingIntent);
 
-        try {
-            verifyStatic(Tasks.class);
-            Tasks.await(task);
-
-            verify(pendingIntent).cancel();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        tasksMockedStatic.verify(() -> Tasks.await(task));
+        verify(pendingIntent).cancel();
     }
 
 }

@@ -4,14 +4,10 @@ plugins {
 }
 
 android {
-    compileSdkVersion libs.versions.android.compileSdk.get().toInteger()
-    buildToolsVersion libs.versions.android.buildTools.get()
+    compileSdk libs.versions.android.compileSdk.get().toInteger()
 
     defaultConfig {
         minSdkVersion libs.versions.android.minSdk.get().toInteger()
-        targetSdkVersion libs.versions.android.targetSdk.get().toInteger()
-        versionCode 1
-        versionName "1.0"
 
 //        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -23,6 +19,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    namespace 'com.clevertap.android.shared.test'
 }
 
 dependencies {
@@ -34,7 +39,7 @@ dependencies {
     api (libs.kotlin.stdlib.jdk7)
     api (libs.test.jsonassert)
     api (libs.gson)
-    api (libs.bundles.mockito)
+    api (libs.test.mockito.core)
     api (libs.test.robolectric)
     api (libs.test.opentest4j)
 

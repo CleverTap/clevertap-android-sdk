@@ -4,32 +4,15 @@ import static org.junit.Assert.*;
 
 import android.app.PendingIntent;
 import android.content.ComponentName;
-import com.clevertap.android.sdk.CleverTapAPI;
 import org.junit.*;
-import org.junit.runner.*;
-import org.mockito.*;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPendingIntent;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({CTGeofenceAPI.class, CleverTapAPI.class})
 public class PendingIntentFactoryTest extends BaseTestCase {
-
 
     @Before
     public void setUp() throws Exception {
-
-        MockitoAnnotations.initMocks(this);
         super.setUp();
-
     }
 
     @Test

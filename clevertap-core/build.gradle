@@ -28,6 +28,8 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
     }
+    namespace 'com.clevertap.android.sdk'
+    testNamespace 'com.clevertap.demo'
 }
 
 dependencies {

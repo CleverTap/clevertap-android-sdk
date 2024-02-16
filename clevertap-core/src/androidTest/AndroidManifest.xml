@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.clevertap.demo"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Required runtime permission to display notifications on Android 13 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -15,6 +14,9 @@
         <meta-data
             android:name="CLEVERTAP_TOKEN"
             android:value="TEST" />
+        <meta-data
+            android:name="CLEVERTAP_BACKGROUND_SYNC"
+            android:value="1" />
 
     </application>
 </manifest>
