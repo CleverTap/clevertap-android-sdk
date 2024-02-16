@@ -21,6 +21,7 @@
     </RelativeLayout>
 
     <com.clevertap.android.sdk.customviews.CloseImageView
+        android:contentDescription="inapp_close_btn"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"
