@@ -3,7 +3,7 @@
 android_compileSdk = "34"
 android_gradle_plugin = "8.2.2"
 android_minSdk = "19"
-kotlin_plugin = "1.7.20"
+kotlin_plugin = "1.9.0"
 sonarqube_plugin = "3.3"
 android_buildTools = "34.0.0"
 detekt_gradle_plugin = "1.20.0-RC1"
