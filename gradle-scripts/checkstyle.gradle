@@ -17,10 +17,10 @@ task Checkstyle(type: Checkstyle) {
     showViolations true
     include '**/*.java'
     classpath = files()
-    reports{
-        html.enabled(true)
-        html.destination = file("${buildDir}/reports/checkstyle/checkstyle-${project.name}.html")
-        xml.enabled(false)
+    reports {
+        html.required.set(true)
+        xml.required.set(false)
+        html.outputLocation.set(file("${buildDir}/reports/checkstyle/checkstyle-${project.name}.html"))
     }
 }
 
