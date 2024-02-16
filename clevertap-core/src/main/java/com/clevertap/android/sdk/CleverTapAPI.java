@@ -223,6 +223,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param xiaomiAppID  Xiaomi App Id
      * @param xiaomiAppKey Xiaomi App Key
      */
+    @Deprecated
     public static void changeXiaomiCredentials(String xiaomiAppID, String xiaomiAppKey) {
         ManifestInfo.changeXiaomiCredentials(xiaomiAppID, xiaomiAppKey);
     }
@@ -2364,6 +2365,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                 and false to not receive any messages from CleverTap.
      */
     @SuppressWarnings("unused")
+    @Deprecated
     public void pushXiaomiRegistrationId(String regId,@NonNull String region, boolean register)  {
         if(TextUtils.isEmpty(region)){
             Logger.d("CleverTapApi : region must not be null or empty , use  MiPushClient.getAppRegion(context) to provide appropriate region");
@@ -3135,6 +3137,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                          2. {@link PushConstants#XIAOMI_MIUI_DEVICES} (int value = 2)<br>
      *                          3. {@link PushConstants#NO_DEVICES} (int value = 3)<br>
      */
+    @Deprecated
     public static void enableXiaomiPushOn(@XiaomiPush int xpsRunningDevices) {
         PushType.XPS.setRunningDevices(xpsRunningDevices);
     }
@@ -3146,6 +3149,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                          2. {@link XiaomiPush#XIAOMI_MIUI_DEVICES} (int value = 2)<br>
      *                          3. {@link XiaomiPush#NO_DEVICES} (int value = 3)<br>
      */
+    @Deprecated
     public static @XiaomiPush int getEnableXiaomiPushOn() {
         return PushType.XPS.getRunningDevices();
     }
