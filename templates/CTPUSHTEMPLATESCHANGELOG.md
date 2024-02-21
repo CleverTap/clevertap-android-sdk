@@ -5,10 +5,10 @@
 #### New features
 
 * Supports Android 14, made it compliant with Android 14 requirements. Details [here](https://developer.android.com/about/versions/14/summary)
-* Upgrades AGP to 8.2.2 for building the SDK and related proguard rules
+* Upgrades AGP to 8.2.2 for building the SDK and adds related consumer proguard rules
 
 #### Bug Fixes
-* Fixes Input box push template. Details [here](https://developer.clevertap.com/docs/push-templates-android#input-box-template)
+* Fixes [Input Box](https://developer.clevertap.com/docs/push-templates-android#input-box-template) push template. 
 
 ### Version 1.2.2 (January 15, 2024)
 

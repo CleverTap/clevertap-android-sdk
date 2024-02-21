@@ -4,7 +4,7 @@
 
 * [CleverTap Android SDK v6.1.0](docs/CTCORECHANGELOG.md)
 * [CleverTap Push Templates SDK v1.2.3](docs/CTPUSHTEMPLATESCHANGELOG.md).
-* [CleverTap Geofence SDK v1.3.0](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTGEOFENCECHANGELOG.md)
+* [CleverTap Geofence SDK v1.3.0](docs/CTGEOFENCECHANGELOG.md)
 * [CleverTap Huawei Push SDK v1.3.4](docs/CTHUAWEIPUSHCHANGELOG.md)
 
 ### January 15, 2024

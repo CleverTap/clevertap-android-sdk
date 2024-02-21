@@ -34,6 +34,6 @@
 
 7. When minifying is enabled for gradle wrapper 8.0+ and android gradle plugin 8.0.0+, R8 reports missing classes as errors (previously those were warnings) and the build fails.
 
-   * Upgrade to latest core and huawei SDKs to fix this issue.
-   * This occurs due to change in behaviour in the AGP
+   * Upgrade to `com.clevertap.android:clevertap-android-sdk` v6.1.0 and `com.clevertap.android:clevertap-hms-sdk` v1.3.4 to fix this issue.
+   * This occurs due to change in behaviour in the AGP`
      When R8 traces the program it will try to handle all the classes, methods and fields that it finds in the part of the program it considers live. Earlier during this tracing, it threw a warning which allowed building the apk. But these are now converted into errors. Details [here](https://developer.android.com/build/releases/past-releases/agp-8-0-0-release-notes)

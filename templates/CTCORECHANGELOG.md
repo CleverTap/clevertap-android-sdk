@@ -5,7 +5,7 @@
 #### New Features
 
 * Supports Android 14, made it compliant with Android 14 requirements. Details [here](https://developer.android.com/about/versions/14/summary)
-* Upgrades AGP to 8.2.2 for building the SDK and related proguard rules
+* Upgrades AGP to 8.2.2 for building the SDK and adds related consumer proguard rules
 * Deprecates Xiaomi public methods as we are sunsetting SDK. Details [here](https://dev.mi.com/distribute/doc/details?pId=1555).
 * Adds Accessibility ids for UI components of SDK
 * Migrates JobScheduler to WorkManager for Push Amplification.
@@ -22,7 +22,7 @@
 #### Bug Fixes
 
 * Fixes InApps crash in a rare activity destroyed race condition
-* Fixes Potential ANR in a race condition of lib initialisation in multithreaded setup
+* Fixes Potential ANR in a race condition of SDK initialisation in multithreaded setup
 
 ### Version 6.0.0 (January 15, 2024)
 
