@@ -8,6 +8,16 @@
 * Upgrades AGP to 8.2.2 for building the SDK and related proguard rules
 * Deprecates Xiaomi public methods as we are sunsetting SDK. Details [here](https://dev.mi.com/distribute/doc/details?pId=1555).
 * Adds Accessibility ids for UI components of SDK
+* Migrates JobScheduler to WorkManager for Push Amplification.
+
+#### Breaking API Changes
+
+* **CTPushAmpWorker breaks custom WorkerFactory implementation of an App**:
+    * If you are using custom `WorkFactory` implementation of `WorkManager` then make sure that you
+      correctly handle workers defined by CleverTap SDK and other third party dependencies.
+    * You must return `null` from `createWorker()` for any unknown workerClassName. Please check
+      implementation provided in the
+      blog [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
 
 #### Bug Fixes
 
@@ -118,7 +128,7 @@ Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.
       correctly handle workers defined by CleverTap SDK and other third party dependencies.
     * You must return `null` from `createWorker()` for any unknown workerClassName. Please check
       implementation provided in the
-      bolg [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
+      blog [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
 
 * **Behavioral change of `createNotification` methods**:
     * The following APIs now run on the caller's thread. Make sure to call it
