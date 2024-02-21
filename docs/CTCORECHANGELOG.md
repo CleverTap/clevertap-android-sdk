@@ -23,6 +23,7 @@
 
 * Fixes InApps crash in a rare activity destroyed race condition
 * Fixes Potential ANR in a race condition of SDK initialisation in multithreaded setup
+* Fixes [#456](https://github.com/CleverTap/clevertap-android-sdk/issues/428) - Build issues due to AGP 8
 
 ### Version 6.0.0 (January 15, 2024)
 
