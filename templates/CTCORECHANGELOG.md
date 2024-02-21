@@ -4,7 +4,7 @@
 
 #### New Features
 
-* Supports Android 14, made it compliant with Android 14 compilation requirements. Details [here](https://developer.android.com/about/versions/14/summary)
+* Supports Android 14, made it compliant with Android 14 requirements. Details [here](https://developer.android.com/about/versions/14/summary)
 * Upgrades AGP to 8.2.2 for building the SDK and related proguard rules
 * Deprecates Xiaomi public methods as we are sunsetting SDK. Details [here](https://dev.mi.com/distribute/doc/details?pId=1555).
 * Adds Accessibility ids for UI components of SDK
