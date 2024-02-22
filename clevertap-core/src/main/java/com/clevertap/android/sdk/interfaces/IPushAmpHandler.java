@@ -4,7 +4,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 /**
- * Generic Interface to handle push amplification for different types of notification messages, received from
+ * Generic Interface to handle Pull Notifications for different types of notification messages, received from
  * respective services or receivers(ex. FirebaseMessagingService).
  * <br><br>
  * Implement this interface if you want to support push amp for different types of notification messages.
@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 public interface IPushAmpHandler<T> {
 
     /**
-     *  Processes notification message for push amplification
+     *  Processes notification message for Pull Notifications
      * @param context application context
      * @param message notification message received from cloud messaging provider like firebase,xiaomi,huawei etc.
      */

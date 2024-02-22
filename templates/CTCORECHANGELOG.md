@@ -8,7 +8,7 @@
 * Upgrades AGP to 8.2.2 for building the SDK and adds related consumer proguard rules
 * Deprecates Xiaomi public methods as we are sunsetting SDK. Details [here](https://dev.mi.com/distribute/doc/details?pId=1555).
 * Adds Accessibility ids for UI components of SDK
-* Migrates JobScheduler to WorkManager for Push Amplification.
+* Migrates JobScheduler to WorkManager for Pull Notifications.
 
 #### Breaking API Changes
 
@@ -299,7 +299,7 @@ Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.
 Note : If you are facing `ClassNotFoundException` "org.jacoco.agent.rt.internal_28bab1d.Offline" after updating to 4.5.0, Please update the SDK to v4.5.1
 
 ### Version 4.4.0 (December 20, 2021)
-* Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(FCM),Custom Push Amplification Handling and Push Templates
+* Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(FCM),Custom Pull Notifications Handling and Push Templates
   * `CTFcmMessageHandler().createNotification(applicationContext, message)`
   * `CTFcmMessageHandler().processPushAmp(applicationContext, message)`
   * `CleverTapAPI.setNotificationHandler(notificationHandler)`
