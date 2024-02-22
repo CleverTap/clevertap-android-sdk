@@ -116,7 +116,7 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
      * {@inheritDoc}
      * <br><br>
      * Use this method if you are rendering notification by your own and wants to support your custom rendered
-     * notification for push amplification
+     * notification for Pull Notifications
      */
     @Override
     public void processPushAmp(final Context context, @NonNull final MiPushMessage message) {

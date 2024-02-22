@@ -93,7 +93,7 @@
 ### Version 1.0.0 (December 20, 2021)
 * Stable release! 🎉
 * Supports Xiaomi, Huawei notification messages out of the box
-* Supports Push Amplification out of the box
+* Supports Pull Notifications out of the box
 * Supports Android 12
 * Supports CleverTap Android SDK v4.4.0
 

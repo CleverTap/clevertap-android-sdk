@@ -468,11 +468,11 @@ context,messageBundle, "https://www.pushicons.com/icon",
         }
 ```
 
-#### Push Amplification
+#### Pull Notifications
 
-Starting with v3.4.0, the SDK supports Push Amplification. Push Amplification is a capability that
+Starting with v3.4.0, the SDK supports Pull Notifications. Pull Notifications is a capability that
 allows you to reach users on devices which suppress notifications via GCM/FCM. To allow your app to
-use CleverTap's Push Amplification via background ping service, add the following fields in your
+use CleverTap's Pull Notifications via background ping service, add the following fields in your
 app's `AndroidManifest.xml`
 
 ```xml
