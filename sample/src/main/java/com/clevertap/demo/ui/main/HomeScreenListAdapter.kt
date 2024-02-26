@@ -4,11 +4,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
-import com.clevertap.demo.databinding.CtFeatureFunctionsBinding
-import com.clevertap.demo.databinding.CtFeatureRowBinding
+import android.widget.TextView
+import com.clevertap.demo.R
 
+data class CtFeatureRowBinding(
+    val title: TextView
+)
+
+data class CtFeatureFunctionsBinding(
+    val fTitle: TextView
+)
 class HomeScreenListAdapter(
-    private val viewModel: HomeScreenViewModel, private val titleList: List<String>,
+    private val viewModel: HomeScreenViewModel,
+    private val titleList: List<String>,
     private val detailsList: Map<String, List<String>>
 ) : BaseExpandableListAdapter() {
 
@@ -19,21 +27,18 @@ class HomeScreenListAdapter(
     override fun hasStableIds(): Boolean = false
 
     override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View {
-        var convertViewShadow = convertView
-        val binding: CtFeatureRowBinding
 
-        if (convertViewShadow == null) {
-            val layoutInflater = LayoutInflater.from(parent?.context)
-            binding = CtFeatureRowBinding.inflate(layoutInflater, parent, false)
-            convertViewShadow = binding.root
-        } else {
-            binding = convertViewShadow.tag as CtFeatureRowBinding
-        }
+        val view = convertView
+            ?: LayoutInflater.from(parent?.context).inflate(R.layout.ct_feature_row, parent, false).also { view ->
+                val binding = CtFeatureRowBinding(
+                    title = view.findViewById(R.id.featureTitle)
+                )
+                view.tag = binding
+            }
 
-        binding.title = getGroup(groupPosition) as String
+        (view.tag as? CtFeatureRowBinding)?.title?.text = getGroup(groupPosition) as String
 
-        convertViewShadow.tag = binding
-        return convertViewShadow
+        return view
     }
 
     override fun getChildrenCount(groupPosition: Int): Int {
@@ -53,24 +58,23 @@ class HomeScreenListAdapter(
         convertView: View?,
         parent: ViewGroup?
     ): View {
-        var convertViewShadow = convertView
-        val binding: CtFeatureFunctionsBinding
 
-        if (convertViewShadow == null) {
-            val layoutInflater = LayoutInflater.from(parent?.context)
-            binding = CtFeatureFunctionsBinding.inflate(layoutInflater, parent, false)
-            convertViewShadow = binding.root
-        } else {
-            binding = convertViewShadow.tag as CtFeatureFunctionsBinding
+        val view = convertView
+            ?: LayoutInflater.from(parent?.context).inflate(R.layout.ct_feature_functions, parent, false).also { view ->
+                val binding = CtFeatureFunctionsBinding(
+                    fTitle = view.findViewById(R.id.functionTitle)
+                )
+                view.tag = binding
+            }
+        (view.tag as? CtFeatureFunctionsBinding)?.fTitle?.apply {
+            text = getChild(groupPosition, childPosition) as String
+            setOnClickListener(null)
+            setOnClickListener {
+                viewModel.onChildClick(groupPosition = groupPosition, childPosition = childPosition)
+            }
         }
 
-        binding.fTitle = getChild(groupPosition, childPosition) as String
-        binding.groupPosition = groupPosition
-        binding.childPosition = childPosition
-        binding.viewmodel = viewModel
-
-        convertViewShadow.tag = binding
-        return convertViewShadow
+        return view
     }
 
     override fun getChildId(groupPosition: Int, childPosition: Int): Long = childPosition.toLong()

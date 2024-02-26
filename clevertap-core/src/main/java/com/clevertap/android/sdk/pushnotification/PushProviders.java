@@ -6,20 +6,13 @@ import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
 
 import android.annotation.SuppressLint;
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.job.JobInfo;
-import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,6 +20,11 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.CTXtensions;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
@@ -42,8 +40,7 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
-import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
-import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
+import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpWorker;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
@@ -59,6 +56,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -68,6 +66,13 @@ import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
+
+    private static final int DEFAULT_FLEX_INTERVAL = 5;
+    private static final int PING_FREQUENCY_VALUE = 240;
+    private static final String PF_JOB_ID = "pfjobid";
+    private static final String PF_WORK_ID = "pfworkid";
+    private static final String PING_FREQUENCY = "pf";
+    private static final String inputFormat = "HH:mm";
 
     private final ArrayList<PushType> allEnabledPushTypes = new ArrayList<>();
 
@@ -360,9 +365,9 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     /**
-     * Stores silent push notification in DB for smooth working of Push Amplification
+     * Stores silent push notification in DB for smooth working of Pull Notifications
      * Background Job Service and also stores wzrk_pid to the DB to avoid duplication of Push
-     * Notifications from Push Amplification.
+     * Notifications from Pull Notifications.
      *
      * @param extras - Bundle
      */
@@ -417,16 +422,10 @@ public class PushProviders implements CTPushProviderListener {
             setPingFrequency(context, frequency);
             if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
                 Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-                task.execute("createOrResetJobScheduler", new Callable<Void>() {
+                task.execute("createOrResetWorker", new Callable<Void>() {
                     @Override
                     public Void call() {
-                        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-                            config.getLogger().verbose("Creating job");
-                            createOrResetJobScheduler(context);
-                        } else {
-                            config.getLogger().verbose("Resetting alarm");
-                            resetAlarmScheduler(context);
-                        }
+                        createOrResetWorker(true);
                         return null;
                     }
                 });
@@ -443,145 +442,122 @@ public class PushProviders implements CTPushProviderListener {
         return alreadyAvailable;
     }
 
-    public void runInstanceJobWork(final Context context, final JobParameters parameters) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("runningJobService", new Callable<Void>() {
-            @Override
-            public Void call() {
-                if (!isNotificationSupported()) {
-                    Logger.v(config.getAccountId(), "Token is not present, not running the Job");
-                    return null;
-                }
+    public void runPushAmpWork(final Context context) {
+        Logger.v(config.getAccountId(), "Pushamp - Running work request");
+        if (!isNotificationSupported()) {
+            Logger.v(config.getAccountId(), "Pushamp - Token is not present, not running the work request");
+            return;
+        }
 
-                Calendar now = Calendar.getInstance();
+        Calendar now = Calendar.getInstance();
 
-                int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
-                int minute = now.get(Calendar.MINUTE);
+        int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
+        int minute = now.get(Calendar.MINUTE);
 
-                Date currentTime = parseTimeToDate(hour + ":" + minute);
-                Date startTime = parseTimeToDate(Constants.DND_START);
-                Date endTime = parseTimeToDate(Constants.DND_STOP);
+        final SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
 
-                if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
-                    Logger.v(config.getAccountId(), "Job Service won't run in default DND hours");
-                    return null;
-                }
+        Date currentTime = parseTimeToDate(hour + ":" + minute, inputParser);
+        Date startTime = parseTimeToDate(Constants.DND_START, inputParser);
+        Date endTime = parseTimeToDate(Constants.DND_STOP, inputParser);
 
-                long lastTS = baseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
+        if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
+            Logger.v(config.getAccountId(), "Pushamp won't run in default DND hours");
+            return;
+        }
 
-                if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
-                    try {
-                        JSONObject eventObject = new JSONObject();
-                        eventObject.put("bk", 1);
-                        analyticsManager.sendPingEvent(eventObject);
+        long lastTS = baseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
 
-                        int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-                        if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                            flagsAlarmPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-                        }
-
-                        if (parameters == null) {
-                            int pingFrequency = getPingFrequency(context);
-                            AlarmManager alarmManager = (AlarmManager) context
-                                    .getSystemService(Context.ALARM_SERVICE);
-                            Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-                            cancelIntent.setPackage(context.getPackageName());
-                            PendingIntent alarmPendingIntent = PendingIntent
-                                    .getService(context, config.getAccountId().hashCode(), cancelIntent,
-                                            flagsAlarmPendingIntent);
-                            if (alarmManager != null) {
-                                alarmManager.cancel(alarmPendingIntent);
-                            }
-                            Intent alarmIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-                            alarmIntent.setPackage(context.getPackageName());
-                            PendingIntent alarmServicePendingIntent = PendingIntent
-                                    .getService(context, config.getAccountId().hashCode(), alarmIntent,
-                                            flagsAlarmPendingIntent);
-                            if (alarmManager != null) {
-                                if (pingFrequency != -1) {
-                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                                            SystemClock.elapsedRealtime() + (pingFrequency
-                                                    * Constants.ONE_MIN_IN_MILLIS),
-                                            Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmServicePendingIntent);
-                                }
-                            }
-                        }
-                    } catch (JSONException e) {
-                        Logger.v("Unable to raise background Ping event");
-                    }
-
-                }
-                return null;
+        if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
+            try {
+                JSONObject eventObject = new JSONObject();
+                eventObject.put("bk", 1);
+                analyticsManager.sendPingEvent(eventObject);
+                Logger.v(config.getAccountId(), "Pushamp - Successfully completed work request");
+            } catch (JSONException e) {
+                Logger.v("Pushamp - Unable to complete work request");
             }
-        });
+        }
     }
 
     @SuppressLint("MissingPermission")
     @RequiresApi(api = VERSION_CODES.LOLLIPOP)
-    private void createOrResetJobScheduler(Context context) {
+    private void stopJobScheduler(Context context) {
+        int existingJobId = StorageHelper.getInt(context, PF_JOB_ID, -1);
+        if (existingJobId != -1) {
+//          Cancel already running job. Possibly unnecessary
+            JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
+            jobScheduler.cancel(existingJobId);
+            StorageHelper.remove(context, PF_JOB_ID);
+        }
+    }
 
-        int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
-
+    private void createOrResetWorker(boolean isPingFrequencyUpdated) {
         //Disable push amp for devices below Api 26
         if (VERSION.SDK_INT < VERSION_CODES.O) {
-            if (existingJobId >= 0) {//cancel already running job
-                jobScheduler.cancel(existingJobId);
-                StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
-            }
-
-            config.getLogger()
-                    .debug(config.getAccountId(), "Push Amplification feature is not supported below Oreo");
+            config.getLogger().debug(config.getAccountId(), "Pushamp feature is not supported below Oreo");
             return;
         }
 
-        if (jobScheduler == null) {
-            return;
-        }
+        String existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "");
         int pingFrequency = getPingFrequency(context);
 
-        if (existingJobId < 0 && pingFrequency < 0) {
-            return; //no running job and nothing to create
-        }
-
-        if (pingFrequency < 0) { //running job but hard cancel
-            jobScheduler.cancel(existingJobId);
-            StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
+        // no running work and nothing to create
+        if (existingWorkName.equals("") && pingFrequency <= 0) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Pushamp - There is no running work and nothing to create");
             return;
         }
 
-        ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);
-        boolean needsCreate = (existingJobId < 0 && pingFrequency > 0);
-
-        //running job, no hard cancel so check for diff in ping frequency and recreate if needed
-        JobInfo existingJobInfo = getJobInfo(existingJobId, jobScheduler);
-        if (existingJobInfo != null
-                && existingJobInfo.getIntervalMillis() != pingFrequency * Constants.ONE_MIN_IN_MILLIS) {
-            jobScheduler.cancel(existingJobId);
-            StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
-            needsCreate = true;
+        // Running work exists but hard cancel
+        if (pingFrequency <= 0) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Pushamp - Cancelling worker as pingFrequency <=0 ");
+            stopWorker();
+            return;
         }
 
-        if (needsCreate) {
-            int jobid = config.getAccountId().hashCode();
-            JobInfo.Builder builder = new JobInfo.Builder(jobid, componentName);
-            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-            builder.setRequiresCharging(false);
+        try {
+            WorkManager workManager = WorkManager.getInstance(context);
 
-            builder.setPeriodic(pingFrequency * Constants.ONE_MIN_IN_MILLIS, 5 * Constants.ONE_MIN_IN_MILLIS);
-            builder.setRequiresBatteryNotLow(true);
+            // Create a work request only when it doesn't exist already or the ping frequency is updated
+            if (existingWorkName.equals("") || isPingFrequencyUpdated) {
+                Constraints constraints = new Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .setRequiresCharging(false)
+                        .setRequiresBatteryNotLow(true)
+                        .build();
 
-            if (Utils.hasPermission(context, "android.permission.RECEIVE_BOOT_COMPLETED")) {
-                builder.setPersisted(true);
+                PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(CTPushAmpWorker.class, pingFrequency,
+                        TimeUnit.MINUTES, DEFAULT_FLEX_INTERVAL, TimeUnit.MINUTES)
+                        .setConstraints(constraints)
+                        .build();
+
+                String workName = existingWorkName.equals("") ? config.getAccountId() : existingWorkName;
+
+                workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.REPLACE, request);
+                StorageHelper.putString(context, PF_WORK_ID, workName);
+                config.getLogger().debug(config.getAccountId(),
+                        "Pushamp - Finished scheduling periodic work request - " + workName + " with repeatInterval- "
+                                + pingFrequency + " minutes");
             }
+        } catch (Exception e) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Pushamp - Failed scheduling/cancelling periodic work request" + e);
+        }
+    }
 
-            JobInfo jobInfo = builder.build();
-            int resultCode = jobScheduler.schedule(jobInfo);
-            if (resultCode == JobScheduler.RESULT_SUCCESS) {
-                Logger.d(config.getAccountId(), "Job scheduled - " + jobid);
-                StorageHelper.putInt(context, Constants.PF_JOB_ID, jobid);
-            } else {
-                Logger.d(config.getAccountId(), "Job not scheduled - " + jobid);
+    private void stopWorker() {
+        String existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "");
+        if (!existingWorkName.equals("")) {
+            try {
+                WorkManager workManager = WorkManager.getInstance(context);
+                workManager.cancelUniqueWork(existingWorkName);
+                StorageHelper.putString(context, PF_WORK_ID, "");
+                config.getLogger().debug(config.getAccountId(),
+                        "Pushamp - Successfully cancelled work");
+            } catch (Exception e) {
+                config.getLogger().debug(config.getAccountId(),
+                        "Pushamp - Failure while cancelling work");
             }
         }
     }
@@ -741,8 +717,8 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private int getPingFrequency(Context context) {
-        return StorageHelper.getInt(context, Constants.PING_FREQUENCY,
-                Constants.PING_FREQUENCY_VALUE); //intentional global key because only one Job is running
+        return StorageHelper.getInt(context, PING_FREQUENCY,
+                PING_FREQUENCY_VALUE);
     }
 
     /**
@@ -762,21 +738,27 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void initPushAmp() {
-        if (config.isBackgroundSync() && !config
-                .isAnalyticsOnly()) {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-            task.execute("createOrResetJobScheduler", new Callable<Void>() {
-                @Override
-                public Void call() {
-                    if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-                        createOrResetJobScheduler(context);
-                    } else {
-                        createAlarmScheduler(context);
-                    }
-                    return null;
+        // Prevent PushAmp initialisation on xiaomi's thread
+        if(!Utils.isMainProcess(context, context.getPackageName()))
+            return;
+
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("createOrResetWorker", new Callable<Void>() {
+            @Override
+            public Void call() {
+                if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+                    stopJobScheduler(context);
                 }
-            });
-        }
+                if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
+                    createOrResetWorker(false);
+                } else {
+                    config.getLogger()
+                            .debug(config.getAccountId(), "Pushamp - Cancelling worker as background sync is disabled or config is analytics only");
+                    stopWorker();
+                }
+                return null;
+            }
+        });
     }
 
     private boolean isTimeBetweenDNDTime(Date startTime, Date stopTime, Date currentTime) {
@@ -831,10 +813,7 @@ public class PushProviders implements CTPushProviderListener {
         return true;
     }
 
-    private Date parseTimeToDate(String time) {
-
-        final String inputFormat = "HH:mm";
-        SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
+    private Date parseTimeToDate(String time, SimpleDateFormat inputParser) {
         try {
             return inputParser.parse(time);
         } catch (java.text.ParseException e) {
@@ -916,54 +895,8 @@ public class PushProviders implements CTPushProviderListener {
         cacheToken(token, pushType);
     }
 
-    private void resetAlarmScheduler(Context context) {
-        if (getPingFrequency(context) <= 0) {
-            stopAlarmScheduler(context);
-        } else {
-            stopAlarmScheduler(context);
-            createAlarmScheduler(context);
-        }
-    }
-
     private void setPingFrequency(Context context, int pingFrequency) {
-        StorageHelper.putInt(context, Constants.PING_FREQUENCY, pingFrequency);
-    }
-
-    private void createAlarmScheduler(Context context) {
-        int pingFrequency = getPingFrequency(context);
-        if (pingFrequency > 0) {
-            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            Intent intent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-            intent.setPackage(context.getPackageName());
-
-            int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                flagsAlarmPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-            }
-            PendingIntent alarmPendingIntent = PendingIntent
-                    .getService(context, config.getAccountId().hashCode(), intent,
-                            flagsAlarmPendingIntent);
-            if (alarmManager != null) {
-                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),
-                        Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmPendingIntent);
-            }
-        }
-    }
-
-    private void stopAlarmScheduler(Context context) {
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-        cancelIntent.setPackage(context.getPackageName());
-        int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (VERSION.SDK_INT >= VERSION_CODES.M) {
-            flagsAlarmPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-        }
-        PendingIntent alarmPendingIntent = PendingIntent
-                .getService(context, config.getAccountId().hashCode(), cancelIntent,
-                        flagsAlarmPendingIntent);
-        if (alarmManager != null && alarmPendingIntent != null) {
-            alarmManager.cancel(alarmPendingIntent);
-        }
+        StorageHelper.putInt(context, PING_FREQUENCY, pingFrequency);
     }
 
     @RestrictTo(Scope.LIBRARY)
@@ -976,16 +909,6 @@ public class PushProviders implements CTPushProviderListener {
     public @NonNull
     Object getPushRenderingLock() {
         return pushRenderingLock;
-    }
-
-    @RequiresApi(api = VERSION_CODES.LOLLIPOP)
-    private static JobInfo getJobInfo(int jobId, JobScheduler jobScheduler) {
-        for (JobInfo jobInfo : jobScheduler.getAllPendingJobs()) {
-            if (jobInfo.getId() == jobId) {
-                return jobInfo;
-            }
-        }
-        return null;
     }
 
     @RestrictTo(Scope.LIBRARY)

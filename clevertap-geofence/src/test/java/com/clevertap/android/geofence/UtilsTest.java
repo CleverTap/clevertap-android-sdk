@@ -4,9 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.SamePropertyValuesAs.*;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.Mockito.when;
 
 import android.Manifest;
 import android.content.Context;
@@ -24,53 +22,42 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.*;
-import org.junit.function.*;
-import org.junit.runner.*;
 import org.mockito.*;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.powermock.reflect.Whitebox;
-import org.powermock.reflect.internal.WhiteboxImpl;
-import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.util.ReflectionHelpers;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({FileUtils.class, CTGeofenceAPI.class, CleverTapAPI.class,
-        com.clevertap.android.sdk.Utils.class})
 public class UtilsTest extends BaseTestCase {
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
+    @Mock
+    private CleverTapAPI cleverTapAPI;
 
+    @Mock
     private CTGeofenceAPI ctGeofenceAPI;
 
+    private MockedStatic<CTGeofenceAPI> ctGeofenceAPIMockedStatic;
+
+    @Mock
     private Logger logger;
 
-    /* @Mock
-     private static Logger logger;*/
     private ShadowApplication shadowApplication;
+
+    @After
+    public void cleanup() {
+        ctGeofenceAPIMockedStatic.close();
+    }
 
     @Before
     public void setUp() throws Exception {
-        //MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(CTGeofenceAPI.class);
         super.setUp();
+        MockitoAnnotations.openMocks(this);
+
         shadowApplication = Shadows.shadowOf(application);
-        ctGeofenceAPI = Mockito.mock(CTGeofenceAPI.class);
+        ctGeofenceAPIMockedStatic = Mockito.mockStatic(CTGeofenceAPI.class);
 
         when(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI);
-        logger = new Logger(Logger.DEBUG);
         when(CTGeofenceAPI.getLogger()).thenReturn(logger);
-
     }
 
     @Test
@@ -86,15 +73,15 @@ public class UtilsTest extends BaseTestCase {
 
     @Test
     public void testHasBackgroundLocationPermission() {
+        ReflectionHelpers.setStaticField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.P);
 
         // when SDK Level is less than Q
-        Whitebox.setInternalState(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.P);
 
         boolean actualWhenSdkIsP = Utils.hasBackgroundLocationPermission(application);
         assertTrue("hasBackgroundLocationPermission must return true when sdk int is less than Q", actualWhenSdkIsP);
 
         // when SDK Level is greater than P and permission denied
-        Whitebox.setInternalState(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.Q);
+        ReflectionHelpers.setStaticField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.Q);
 
         shadowApplication.denyPermissions(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
         boolean actualWhenPermissionDenied = Utils.hasBackgroundLocationPermission(application);
@@ -105,7 +92,6 @@ public class UtilsTest extends BaseTestCase {
 
     @Test
     public void testHasPermission() {
-        //mockStatic(ContextCompat.class);
 
         ShadowApplication shadowApplication = Shadows.shadowOf(application);
 
@@ -122,7 +108,6 @@ public class UtilsTest extends BaseTestCase {
         assertTrue("hasPermission must return true when permission is granted", actualWhenPermissionGranted);
 
         // when permission not null and checkSelfPermission returns permission denied
-
         shadowApplication.denyPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
         boolean actualWhenPermissionDenied = Utils
                 .hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION);
@@ -131,43 +116,42 @@ public class UtilsTest extends BaseTestCase {
 
     @Test
     public void testInitCTGeofenceApiIfRequired() {
-        mockStatic(FileUtils.class);
 
         //when cleverTapApi and settings is null
 
-        when(FileUtils.readFromFile(any(Context.class), anyString())).thenReturn("");
-        when(FileUtils.getCachedFullPath(any(Context.class),
-                anyString())).thenReturn("");
+        try (MockedStatic<FileUtils> fileUtilsMockedStatic = Mockito.mockStatic(FileUtils.class)) {
+            fileUtilsMockedStatic.when(() -> FileUtils.readFromFile(any(Context.class), anyString())).thenReturn("");
+            fileUtilsMockedStatic.when(() -> FileUtils.getCachedFullPath(any(Context.class),
+                    anyString())).thenReturn("");
 
-        boolean actualWhenSettingsAndCTApiIsNull = Utils.initCTGeofenceApiIfRequired(application);
-        assertFalse("Must be false when cleverTapApi and settings is null", actualWhenSettingsAndCTApiIsNull);
+            boolean actualWhenSettingsAndCTApiIsNull = Utils.initCTGeofenceApiIfRequired(application);
+            assertFalse("Must be false when cleverTapApi and settings is null", actualWhenSettingsAndCTApiIsNull);
 
-        // when cleverTapApi is null and settings is not null
+            // when cleverTapApi is null and settings is not null
 
-        when(FileUtils.readFromFile(any(Context.class),
-                anyString())).thenReturn(CTGeofenceSettingsFake.getSettingsJsonString());
-        boolean actualWhenSettingsNonNullAndCTApiIsNull = Utils.initCTGeofenceApiIfRequired(application);
-        assertFalse("Must be false when cleverTapApi is null and settings is not null",
-                actualWhenSettingsNonNullAndCTApiIsNull);
+            fileUtilsMockedStatic.when(() -> FileUtils.readFromFile(any(Context.class),
+                    anyString())).thenReturn(CTGeofenceSettingsFake.getSettingsJsonString());
+            boolean actualWhenSettingsNonNullAndCTApiIsNull = Utils.initCTGeofenceApiIfRequired(application);
+            assertFalse("Must be false when cleverTapApi is null and settings is not null",
+                    actualWhenSettingsNonNullAndCTApiIsNull);
 
-        // when cleverTapApi is not null and settings is not null
+            // when cleverTapApi is not null and settings is not null
 
-        mockStatic(CleverTapAPI.class);
-        CleverTapAPI cleverTapAPI = Mockito.mock(CleverTapAPI.class);
+            try (MockedStatic<CleverTapAPI> clevertapApiMockedStatic = Mockito.mockStatic(CleverTapAPI.class)) {
 
-        when(CleverTapAPI.getGlobalInstance(any(Context.class), anyString()))
-                .thenReturn(cleverTapAPI);
+                clevertapApiMockedStatic.when(() -> CleverTapAPI.getGlobalInstance(any(Context.class), anyString()))
+                        .thenReturn(cleverTapAPI);
 
-        boolean actualWhenSettingsNonNullAndCTApiNonNull = Utils.initCTGeofenceApiIfRequired(application);
-        assertTrue("Must be true when cleverTapApi is not null and settings is not null",
-                actualWhenSettingsNonNullAndCTApiNonNull);
+                boolean actualWhenSettingsNonNullAndCTApiNonNull = Utils.initCTGeofenceApiIfRequired(application);
+                assertTrue("Must be true when cleverTapApi is not null and settings is not null",
+                        actualWhenSettingsNonNullAndCTApiNonNull);
 
-        // when cleverTapApi is not null
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "cleverTapAPI", cleverTapAPI);
-
-        boolean actualWhenCTApiNonNull = Utils.initCTGeofenceApiIfRequired(application);
-        assertTrue("Must be true when cleverTapApi is not null",
-                actualWhenCTApiNonNull);
+                // when cleverTapApi is not null
+                boolean actualWhenCTApiNonNull = Utils.initCTGeofenceApiIfRequired(application);
+                assertTrue("Must be true when cleverTapApi is not null",
+                        actualWhenCTApiNonNull);
+            }
+        }
 
     }
 
@@ -193,46 +177,48 @@ public class UtilsTest extends BaseTestCase {
 
     @Test
     public void testNotifyLocationUpdates() {
-        mockStatic(com.clevertap.android.sdk.Utils.class);
+        try (MockedStatic<com.clevertap.android.sdk.Utils> coreUtilsMockedStatic = Mockito.mockStatic(
+                com.clevertap.android.sdk.Utils.class)) {
 
-        CTLocationUpdatesListener locationUpdatesListener = Mockito.mock(CTLocationUpdatesListener.class);
+            CTLocationUpdatesListener locationUpdatesListener = Mockito.mock(CTLocationUpdatesListener.class);
 
-        Mockito.when(ctGeofenceAPI.getCtLocationUpdatesListener()).thenReturn(locationUpdatesListener);
+            when(ctGeofenceAPI.getCtLocationUpdatesListener()).thenReturn(locationUpdatesListener);
 
-        Utils.notifyLocationUpdates(application, Mockito.mock(Location.class));
+            Utils.notifyLocationUpdates(application, Mockito.mock(Location.class));
 
-        ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
+            ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
 
-        verifyStatic(com.clevertap.android.sdk.Utils.class);
-        com.clevertap.android.sdk.Utils.runOnUiThread(runnableArgumentCaptor.capture());
-
-        runnableArgumentCaptor.getValue().run();
-        Mockito.verify(locationUpdatesListener).onLocationUpdates(any(Location.class));
+            coreUtilsMockedStatic.verify(
+                    () -> com.clevertap.android.sdk.Utils.runOnUiThread(runnableArgumentCaptor.capture()));
+            runnableArgumentCaptor.getValue().run();
+            Mockito.verify(locationUpdatesListener).onLocationUpdates(any(Location.class));
+        }
     }
 
     @Test
     public void testReadSettingsFromFile() {
-//        mockStatic(FileUtils.class);
-//
-//        when(FileUtils.getCachedFullPath(any(Context.class),
-//                anyString())).thenReturn("");
-//
-//        // when settings in file is not blank
-//        when(FileUtils.readFromFile(any(Context.class),
-//                anyString())).thenReturn(CTGeofenceSettingsFake.getSettingsJsonString());
-//
-//        CTGeofenceSettings settingsActualWhenNotEmpty = Utils.readSettingsFromFile(application);
-//        CTGeofenceSettings settingsExpectedWhenNotEmpty =
-//                CTGeofenceSettingsFake.getSettings(CTGeofenceSettingsFake.getSettingsJsonObject());
-//
-//        assertThat(settingsActualWhenNotEmpty, samePropertyValuesAs(settingsExpectedWhenNotEmpty));
-//
-//        // when settings in file is blank
-//        when(FileUtils.readFromFile(any(Context.class),
-//                anyString())).thenReturn("");
-//
-//        CTGeofenceSettings settingsActualWhenEmpty = Utils.readSettingsFromFile(application);
-//        assertNull(settingsActualWhenEmpty);
+
+        try (MockedStatic<FileUtils> fileUtilsMockedStatic = Mockito.mockStatic(FileUtils.class)) {
+            fileUtilsMockedStatic.when(() -> FileUtils.getCachedFullPath(any(Context.class),
+                    anyString())).thenReturn("");
+
+            // when settings in file is not blank
+            fileUtilsMockedStatic.when(() -> FileUtils.readFromFile(any(Context.class),
+                    anyString())).thenReturn(CTGeofenceSettingsFake.getSettingsJsonString());
+
+            CTGeofenceSettings settingsActualWhenNotEmpty = Utils.readSettingsFromFile(application);
+            CTGeofenceSettings settingsExpectedWhenNotEmpty =
+                    CTGeofenceSettingsFake.getSettings(CTGeofenceSettingsFake.getSettingsJsonObject());
+
+            assertThat(settingsActualWhenNotEmpty, samePropertyValuesAs(settingsExpectedWhenNotEmpty));
+
+            // when settings in file is blank
+            when(FileUtils.readFromFile(any(Context.class),
+                    anyString())).thenReturn("");
+
+            CTGeofenceSettings settingsActualWhenEmpty = Utils.readSettingsFromFile(application);
+            assertNull(settingsActualWhenEmpty);
+        }
     }
 
     @Test
@@ -248,11 +234,10 @@ public class UtilsTest extends BaseTestCase {
             e.printStackTrace();
         }
 
-        JSONArray expectedSubArrayFull = geofenceArray;
-        JSONArray actualSubArrayFull = Utils.subArray(geofenceArray, 0, expectedSubArrayFull.length());
+        JSONArray actualSubArrayFull = Utils.subArray(geofenceArray, 0, geofenceArray.length());
 
         try {
-            JSONAssert.assertEquals(expectedSubArrayFull, actualSubArrayFull, true);
+            JSONAssert.assertEquals(geofenceArray, actualSubArrayFull, true);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -268,29 +253,41 @@ public class UtilsTest extends BaseTestCase {
 
         Assert.assertThrows("IllegalArgumentException must be thrown when fromIndex is greater than lastIndex",
                 IllegalArgumentException.class,
-                new ThrowingRunnable() {
-                    @Override
-                    public void run() throws Throwable {
-                        Utils.subArray(geofenceArray, geofenceArray.length(), 0);
-                    }
-                });
+                () -> Utils.subArray(geofenceArray, geofenceArray.length(), 0));
 
     }
 
     @Test
-    public void testWriteSettingsToFile() {
-        mockStatic(FileUtils.class);
+    public void testWriteSettingsToFileFailure() {
 
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "accountId", "4RW-Z6Z-485Z");
-        when(FileUtils.getCachedDirName(application)).thenReturn("");
+        try (MockedStatic<FileUtils> fileUtilsMockedStatic = Mockito.mockStatic(FileUtils.class)) {
+            when(FileUtils.getCachedDirName(application)).thenReturn("");
+            when(FileUtils.writeJsonToFile(any(), any(), any(), any())).thenReturn(false);
 
-        Utils.writeSettingsToFile(application,
-                CTGeofenceSettingsFake.getSettings(CTGeofenceSettingsFake.getSettingsJsonObject()));
-
-        verifyStatic(FileUtils.class);
-        FileUtils.writeJsonToFile(application, FileUtils.getCachedDirName(application),
-                CTGeofenceConstants.SETTINGS_FILE_NAME, CTGeofenceSettingsFake.getSettingsJsonObject());
-
+            Utils.writeSettingsToFile(application,
+                    CTGeofenceSettingsFake.getSettings(CTGeofenceSettingsFake.getSettingsJsonObject()));
+            fileUtilsMockedStatic.verify(
+                    () -> FileUtils.writeJsonToFile(application, FileUtils.getCachedDirName(application),
+                            CTGeofenceConstants.SETTINGS_FILE_NAME, CTGeofenceSettingsFake.getSettingsJsonObject()));
+            Mockito.verify(logger).debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Failed to write new settings to file");
+        }
     }
 
+    @Test
+    public void testWriteSettingsToFileSuccess() {
+
+        try (MockedStatic<FileUtils> fileUtilsMockedStatic = Mockito.mockStatic(FileUtils.class)) {
+            when(FileUtils.getCachedDirName(application)).thenReturn("");
+            when(FileUtils.writeJsonToFile(any(), any(), any(), any())).thenReturn(true);
+
+            Utils.writeSettingsToFile(application,
+                    CTGeofenceSettingsFake.getSettings(CTGeofenceSettingsFake.getSettingsJsonObject()));
+            fileUtilsMockedStatic.verify(
+                    () -> FileUtils.writeJsonToFile(application, FileUtils.getCachedDirName(application),
+                            CTGeofenceConstants.SETTINGS_FILE_NAME, CTGeofenceSettingsFake.getSettingsJsonObject()));
+            Mockito.verify(logger).debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "New settings successfully written to file");
+        }
+    }
 }

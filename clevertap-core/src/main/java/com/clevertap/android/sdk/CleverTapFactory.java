@@ -24,6 +24,7 @@ import com.clevertap.android.sdk.network.AppLaunchListener;
 import com.clevertap.android.sdk.network.CompositeBatchListener;
 import com.clevertap.android.sdk.network.FetchInAppListener;
 import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.network.api.CtApiProviderKt;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.response.InAppResponse;
@@ -67,11 +68,13 @@ class CleverTapFactory {
         DBManager baseDatabaseManager = new DBManager(config, ctLockManager);
         coreState.setDatabaseManager(baseDatabaseManager);
 
-        CryptHandler cryptHandler = new CryptHandler(config.getEncryptionLevel(), CryptHandler.EncryptionAlgorithm.AES, config.getAccountId());
+        CryptHandler cryptHandler = new CryptHandler(config.getEncryptionLevel(),
+                CryptHandler.EncryptionAlgorithm.AES, config.getAccountId());
         coreState.setCryptHandler(cryptHandler);
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("migratingEncryptionLevel", () -> {
-            CryptUtils.migrateEncryptionLevel(context, config, cryptHandler, baseDatabaseManager.loadDBAdapter(context));
+            CryptUtils.migrateEncryptionLevel(context, config, cryptHandler,
+                    baseDatabaseManager.loadDBAdapter(context));
             return null;
         });
 
@@ -84,7 +87,7 @@ class CleverTapFactory {
         DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
         coreState.setDeviceInfo(deviceInfo);
 
-        CTPreferenceCache.getInstance(context,config);
+        CTPreferenceCache.getInstance(context, config);
 
         BaseCallbackManager callbackManager = new CallbackManager(config, deviceInfo);
         coreState.setCallbackManager(callbackManager);
@@ -190,6 +193,7 @@ class CleverTapFactory {
                 validationResultStack,
                 controllerManager,
                 baseDatabaseManager,
+                CtApiProviderKt.provideDefaultTestCtApi(context, config, deviceInfo),
                 callbackManager,
                 ctLockManager,
                 validator,
@@ -282,11 +286,11 @@ class CleverTapFactory {
         LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
         coreState.setLocationManager(locationManager);
 
-        CTWorkManager ctWorkManager = new CTWorkManager(context,config);
+        CTWorkManager ctWorkManager = new CTWorkManager(context, config);
 
         PushProviders pushProviders = PushProviders
                 .load(context, config, baseDatabaseManager, validationResultStack,
-                        analyticsManager, controllerManager,ctWorkManager);
+                        analyticsManager, controllerManager, ctWorkManager);
         coreState.setPushProviders(pushProviders);
 
         ActivityLifeCycleManager activityLifeCycleManager = new ActivityLifeCycleManager(context, config,

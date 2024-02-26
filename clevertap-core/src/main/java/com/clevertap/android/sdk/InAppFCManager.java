@@ -122,21 +122,20 @@ public class InAppFCManager {
                         ++shownToday);
     }
 
-    public void attachToHeader(final Context context, JSONObject header) {
+    public int getShownTodayCount() {
+        return getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0);
+    }
+
+    public JSONArray getInAppsCount(final Context context) {
         try {
-            // Trigger reset for dates
-
-            header.put("imp", getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0));
-
             // tlc: [[targetID, todayCount, lifetime]]
             JSONArray arr = new JSONArray();
             final SharedPreferences prefs = StorageHelper
                     .getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
             final Map<String, ?> all = prefs.getAll();
-            for (String inapp : all.keySet()) {
-                final Object o = all.get(inapp);
-                if (o instanceof String) {
-                    final String[] parts = ((String) o).split(",");
+            for (Map.Entry<String,?> inapp : all.entrySet()) {
+                if (inapp.getValue() instanceof String) {
+                    final String[] parts = ((String) inapp.getValue()).split(",");
                     if (parts.length == 2) {
                         JSONArray a = new JSONArray();
                         a.put(0, inapp);
@@ -146,10 +145,10 @@ public class InAppFCManager {
                     }
                 }
             }
-
-            header.put("tlc", arr);
+            return arr;
         } catch (Throwable t) {
-            Logger.v("Failed to attach FC to header", t);
+            Logger.v("Failed to get in apps count", t);
+            return null;
         }
     }
 

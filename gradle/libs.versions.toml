@@ -1,12 +1,11 @@
 [versions]
 # Project
-android_compileSdk = "33"
-android_gradle_plugin = "7.4.2"
+android_compileSdk = "34"
+android_gradle_plugin = "8.2.2"
 android_minSdk = "19"
-android_targetSdk = "33"
 kotlin_plugin = "1.7.20"
 sonarqube_plugin = "3.3"
-android_buildTools = "33.0.0"
+android_buildTools = "34.0.0"
 detekt_gradle_plugin = "1.20.0-RC1"
 firebase_gradle_crashlytics = "2.8.1"
 
@@ -41,14 +40,9 @@ kotlin_test = "1.7.20" #check with kotlin_gradle_plugin
 junit_jupiter_api = "5.7.2"
 junit_jupiter_engine = "5.7.2"
 junit_platform_runner = "1.7.2"
-mockito_core = "3.5.11"
+mockito_core = "5.9.0"
 opentest4j = "1.2.0"
-powermock_api_mockito2 = "2.0.9"
-powermock_classloading_xstream = "2.0.9"
-powermock_core = "2.0.9"
-powermock_module_junit4 = "2.0.9"
-powermock_module_junit4_rule = "2.0.9"
-robolectric = "4.7.3"
+robolectric = "4.9"
 jsonassert = "1.5.0"
 xmlpull = "1.1.3.1"
 mockk = "1.13.5"
@@ -59,12 +53,12 @@ coroutines_test = "1.7.3"
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "6.0.0"
+clevertap_android_sdk = "6.1.0"
 clevertap_rendermax_sdk = "1.0.3"
-clevertap_geofence_sdk = "1.2.0"
-clevertap_hms_sdk = "1.3.3"
+clevertap_geofence_sdk = "1.3.0"
+clevertap_hms_sdk = "1.3.4"
 clevertap_xiaomi_sdk = "1.5.4"
-clevertap_push_templates_sdk = "1.2.2"
+clevertap_push_templates_sdk = "1.2.3"
 
 # Glide
 glide = "4.12.0"
@@ -85,10 +79,10 @@ gson = "2.8.6"
 firebase_messaging = "23.0.6"
 
 #GMS
-google_services = "4.3.3"
+google_services = "4.4.0"
 
 #HMS Push Plugin/Lib
-agcp = "1.9.0.300"
+agcp = "1.9.1.300"
 push = "6.11.0.300"
 
 #Catch Exception
@@ -134,13 +128,7 @@ test_junit_jupiter_api = { module = "org.junit.jupiter:junit-jupiter-api", versi
 test_junit_jupiter_engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit_jupiter_engine" }
 test_junit_platform_runner = { module = "org.junit.platform:junit-platform-runner", version.ref = "junit_platform_runner" }
 test_mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito_core" }
-test_mockito_inline = { module = "org.mockito:mockito-inline", version.ref = "mockito_core" }
 test_opentest4j = { module = "org.opentest4j:opentest4j", version.ref = "opentest4j" }
-test_powermock_api_mockito2 = { module = "org.powermock:powermock-api-mockito2", version.ref = "powermock_api_mockito2" }
-test_powermock_classloading_xstream = { module = "org.powermock:powermock-classloading-xstream", version.ref = "powermock_classloading_xstream" }
-test_powermock_core = { module = "org.powermock:powermock-core", version.ref = "powermock_core" }
-test_powermock_module_junit4 = { module = "org.powermock:powermock-module-junit4", version.ref = "powermock_module_junit4" }
-test_powermock_module_junit4_rule = { module = "org.powermock:powermock-module-junit4-rule", version.ref = "powermock_module_junit4_rule" }
 test_robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 test_jsonassert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonassert" }
 test_xmlpull = { module = "xmlpull:xmlpull", version.ref = "xmlpull" }
@@ -192,8 +180,6 @@ catch_exception = { module = "eu.codearte.catch-exception:catch-exception", vers
 
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]
-powermock = ["test_powermock_api_mockito2", "test_powermock_classloading_xstream", "test_powermock_core", "test_powermock_module_junit4", "test_powermock_module_junit4_rule"]
-mockito = ["test_mockito_core", "test_mockito_inline"]
 
 [plugins]
 sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }
