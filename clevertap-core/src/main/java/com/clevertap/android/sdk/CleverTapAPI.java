@@ -272,10 +272,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Pass Push Notification Payload to CleverTap for smooth functioning of Push Amplification
+     * Pass Push Notification Payload to CleverTap for smooth functioning of Pull Notifications
      *
      * @param context - Application Context
-     * @param extras  - Bundle received via FCM/Push Amplification
+     * @param extras  - Bundle received via FCM/Pull Notifications
      */
     @SuppressWarnings("unused")
     public static void processPushNotification(Context context, Bundle extras) {

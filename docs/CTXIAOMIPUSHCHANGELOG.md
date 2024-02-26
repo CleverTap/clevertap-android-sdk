@@ -35,7 +35,7 @@ With the Mi Push service's closure, CleverTap will cease offering Mi Push suppor
 * Updated Xiaomi Push SDK to v4.8.6
 
 ### Version 1.2.0 (December 20, 2021)
-* Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(XPS),Custom Push Amplification Handling and Push Templates.
+* Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(XPS),Custom Pull Notifications Handling and Push Templates.
   * `CTXiaomiMessageHandler().createNotification(applicationContext,message)`
   * `CTXiaomiMessageHandler().processPushAmp(applicationContext,message)`
 * Supports CleverTap Android SDK v4.4.0
