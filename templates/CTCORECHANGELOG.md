@@ -1,6 +1,14 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 6.1.1 (February 27, 2024)
+
+#### Bug Fixes
+* Fixes an issue of incorrect endpoint in the case of network handshake.
+* Fixes a bug in Client Side InApps with regards to frequency limits.
+
 ### Version 6.1.0 (February 21, 2024)
+> ⚠️ **NOTE**
+Please update to 6.1.1 and above
 
 #### New Features
 
