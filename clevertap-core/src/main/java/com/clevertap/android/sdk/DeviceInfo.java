@@ -807,12 +807,7 @@ public class DeviceInfo {
 
     private String _getDeviceID() {
         synchronized (deviceIDLock) {
-            if (this.config.isDefaultInstance()) {
-                String _new = StorageHelper.getString(this.context, getDeviceIdStorageKey(), null);
-                return _new != null ? _new : StorageHelper.getString(this.context, Constants.DEVICE_ID_TAG, null);
-            } else {
-                return StorageHelper.getString(this.context, getDeviceIdStorageKey(), null);
-            }
+            return StorageHelper.getString(this.context, getDeviceIdStorageKey(), null);
         }
     }
 
