@@ -503,8 +503,6 @@ public class DeviceInfo {
         this.library = null;
         this.customLocale = null;
         mCoreMetaData = coreMetaData;
-        onInitDeviceInfo(cleverTapID);
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
     }
 
     public void forceNewDeviceID() {
@@ -758,6 +756,7 @@ public class DeviceInfo {
     }
 
     void onInitDeviceInfo(final String cleverTapID) {
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
         Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(config).ioTask();
         taskDeviceCachedInfo.execute("getDeviceCachedInfo", new Callable<Void>() {
             @Override

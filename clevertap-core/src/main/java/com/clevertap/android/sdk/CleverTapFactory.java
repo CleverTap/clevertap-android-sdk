@@ -86,6 +86,7 @@ class CleverTapFactory {
 
         DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
         coreState.setDeviceInfo(deviceInfo);
+        deviceInfo.onInitDeviceInfo(cleverTapID);
 
         CTPreferenceCache.getInstance(context, config);
 
