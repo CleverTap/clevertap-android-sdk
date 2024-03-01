@@ -510,16 +510,19 @@ public class DeviceInfo {
         forceUpdateDeviceId(deviceID);
     }
 
-    public void forceUpdateCustomCleverTapID(String cleverTapID) {
+    public String forceUpdateCustomCleverTapID(String cleverTapID) {
         if (Utils.validateCTID(cleverTapID)) {
             getConfigLogger()
                     .info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
-            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID);
+            String id = Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID;
+            forceUpdateDeviceId(id);
+            return id;
         } else {
-            setOrGenerateFallbackDeviceID();
+            String fallbackId = generateFallbackDeviceID();
             removeDeviceID();
             String error = recordDeviceError(Constants.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
             getConfigLogger().info(config.getAccountId(), error);
+            return fallbackId;
         }
     }
 
@@ -766,22 +769,21 @@ public class DeviceInfo {
             }
         });
 
-        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+        Task<String> task = CTExecutorFactory.executors(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<String>() {
             // callback on main thread
             @Override
-            public void onSuccess(final Void aVoid) {
+            public void onSuccess(final String deviceId) {
                 getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
                         "DeviceID initialized successfully!" + Thread.currentThread());
                 // No need to put getDeviceID() on background thread because prefs already loaded
-                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
+                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(deviceId);
             }
         });
-        task.execute("initDeviceID", new Callable<Void>() {
+        task.execute("initDeviceID", new Callable<String>() {
             @Override
-            public Void call() throws Exception {
-                initDeviceID(cleverTapID);
-                return null;
+            public String call() throws Exception {
+                return initDeviceID(cleverTapID);
             }
         });
 
@@ -862,7 +864,7 @@ public class DeviceInfo {
         }
     }
 
-    private synchronized void generateDeviceID() {
+    private synchronized String generateDeviceID() {
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() called!");
         String generatedDeviceID;
         String adId = getGoogleAdID();
@@ -875,6 +877,7 @@ public class DeviceInfo {
         }
         forceUpdateDeviceId(generatedDeviceID);
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() done executing!");
+        return generatedDeviceID;
     }
 
     private String generateGUID() {
@@ -904,7 +907,7 @@ public class DeviceInfo {
         return Constants.FALLBACK_ID_TAG + ":" + this.config.getAccountId();
     }
 
-    private void initDeviceID(String cleverTapID) {
+    private String initDeviceID(String cleverTapID) {
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called initDeviceID()");
         //Show logging as per Manifest flag
         if (config.getEnableCustomCleverTapId()) {
@@ -928,27 +931,27 @@ public class DeviceInfo {
                 String error = recordDeviceError(Constants.UNABLE_TO_SET_CT_CUSTOM_ID, deviceID, cleverTapID);
                 getConfigLogger().info(config.getAccountId(), error);
             }
-            return;
+            return deviceID;
         }
 
         if (this.config.getEnableCustomCleverTapId()) {
-            forceUpdateCustomCleverTapID(cleverTapID);
-            return;
+            return forceUpdateCustomCleverTapID(cleverTapID);
         }
 
         if (!this.config.isUseGoogleAdId()) {
             getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Calling generateDeviceID()");
-            generateDeviceID();
+            String genId = generateDeviceID();
             getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called generateDeviceID()");
-            return;
+            return genId;
         }
 
         // fetch the googleAdID to generate GUID
         //has to be called on background thread
         fetchGoogleAdID();
-        generateDeviceID();
+        String genId = generateDeviceID();
 
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "initDeviceID() done executing!");
+        return genId;
     }
 
     private String recordDeviceError(int messageCode, String... varargs) {
@@ -961,18 +964,18 @@ public class DeviceInfo {
         StorageHelper.remove(this.context, getDeviceIdStorageKey());
     }
 
-    private synchronized void setOrGenerateFallbackDeviceID() {
-        if (getFallBackDeviceID() == null) {
-            synchronized (deviceIDLock) {
-                String fallbackDeviceID = Constants.ERROR_PROFILE_PREFIX + UUID.randomUUID().toString()
-                        .replace("-", "");
-                if (fallbackDeviceID.trim().length() > 2) {
-                    updateFallbackID(fallbackDeviceID);
-                } else {
-                    getConfigLogger()
-                            .verbose(this.config.getAccountId(), "Unable to generate fallback error device ID");
-                }
-            }
+    private synchronized String generateFallbackDeviceID() {
+        String existingId = getFallBackDeviceID();
+
+        if (existingId != null) {
+            return existingId;
+        }
+
+        synchronized (deviceIDLock) {
+            String fallbackDeviceID = Constants.ERROR_PROFILE_PREFIX + UUID.randomUUID().toString()
+                    .replace("-", "");
+            updateFallbackID(fallbackDeviceID);
+            return fallbackDeviceID;
         }
     }
 
