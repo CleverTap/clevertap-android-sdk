@@ -2767,13 +2767,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         StoreProvider storeProvider = StoreProvider.getInstance();
 
         if (storeRegistry.getInAppStore() == null) {
-            InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+            InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceId,
                     accountId);
             storeRegistry.setInAppStore(inAppStore);
             coreState.getCallbackManager().addChangeUserCallback(inAppStore);
         }
         if (storeRegistry.getImpressionStore() == null) {
-            ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo,
+            ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceId,
                     accountId);
             storeRegistry.setImpressionStore(impStore);
             coreState.getCallbackManager().addChangeUserCallback(impStore);

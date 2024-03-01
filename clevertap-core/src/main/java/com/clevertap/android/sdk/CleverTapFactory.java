@@ -125,14 +125,14 @@ class CleverTapFactory {
             }
             if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
                 if (storeRegistry.getInAppStore() == null) {
-                    InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                    InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo.getDeviceID(),
                             config.getAccountId());
                     storeRegistry.setInAppStore(inAppStore);
                     evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
                     callbackManager.addChangeUserCallback(inAppStore);
                 }
                 if (storeRegistry.getImpressionStore() == null) {
-                    ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo,
+                    ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo.getDeviceID(),
                             config.getAccountId());
                     storeRegistry.setImpressionStore(impStore);
                     callbackManager.addChangeUserCallback(impStore);
