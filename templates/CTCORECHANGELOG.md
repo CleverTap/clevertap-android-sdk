@@ -6,6 +6,16 @@
 * Fixes an issue of incorrect endpoint in the case of network handshake.
 * Fixes a bug in Client Side InApps with regards to frequency limits.
 
+For developers with [BACKGROUND_SYNC](https://developer.clevertap.com/docs/android-push#pull-notification) enabled in their previous app version and now upgrading to _clevertap-android-sdk v6.1.0+_, please add this to your `AndroidManifest.xml` to avoid `ClassNotFoundException` related crashes
+
+```xml
+<service 
+    android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService"
+    android:exported="false"
+    android:enabled="false"
+    tools:ignore="MissingClass"/>
+```
+
 ### Version 6.1.0 (February 21, 2024)
 > ⚠️ **NOTE**
 Please update to 6.1.1 and above
