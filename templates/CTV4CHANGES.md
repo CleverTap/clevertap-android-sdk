@@ -11,7 +11,7 @@
 * [Breaking changes](#%EF%B8%8F-breaking-changes)
     * [Firebase Messaging changes](#-firebase-messaging-changes)
     * [Push Notification changes](#-push-notification-changes)
-    * [Push Amplification changes](#-push-amplification-changes)
+    * [Pull Notifications changes](#-push-amplification-changes)
 * [Questions](#-questions)
 
 ## ♻️ Migration
@@ -149,7 +149,7 @@ New `AndroidManifest.xml` entries
 
 `com.clevertap.android.sdk.NotificationInfo` has been renamed to `com.clevertap.android.sdk.pushnotification.NotificationInfo`
 
-### 📲 Push Amplification changes
+### 📲 Pull Notifications changes
 
 The following `AndroidManifest.xml` entries are no longer needed to be added -
 
@@ -170,7 +170,7 @@ The following `AndroidManifest.xml` entries are no longer needed to be added -
     android:exported="false"/>
 ```
 
-To enable Push Amplification only the following entry is required in the `AndroidManifest.xml` file -
+To enable Pull Notifications only the following entry is required in the `AndroidManifest.xml` file -
 
 ```xml
 <meta-data

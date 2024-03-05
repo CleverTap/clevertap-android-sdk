@@ -5,7 +5,7 @@ on:
 
 jobs:
   lint-staticChecks-test-build:
-    if: startsWith(github.head_ref, 'task/')
+    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout the code from Repo
         uses: actions/checkout@v3
 
-      - name: Setup JDK 11.
+      - name: Setup JDK 17.
         uses: ./.github/mini_flows/setup_jdk
 
       - name: Run lint tests and Upload results

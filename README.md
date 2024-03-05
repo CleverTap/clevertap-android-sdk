@@ -25,17 +25,17 @@ To get started, sign up [here](https://clevertap.com/live-product-demo/)
 We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as dependency in your `build.gradle` file.
 
 ```groovy
-    dependencies {
-    implementation "com.clevertap.android:clevertap-android-sdk:6.0.0"
-}
+    dependencies {      
+         implementation "com.clevertap.android:clevertap-android-sdk:6.1.1"
+    }
 ```
 
 Alternatively, you can download and add the AAR file included in this repo in your Module libs directory and tell gradle to install it like this:
     
  ```groovy
-    dependencies {
-    implementation(name: "clevertap-android-sdk-6.0.0", ext: 'aar')
-}
+    dependencies {      
+        implementation (name: "clevertap-android-sdk-6.1.1", ext: 'aar')
+    }
 ```
 
 
@@ -45,9 +45,9 @@ Alternatively, you can download and add the AAR file included in this repo in yo
 Add the Firebase Messaging library and Android Support Library v4 as dependencies to your Module `build.gradle` file.
 
 ```groovy
-     dependencies {
-    implementation "com.clevertap.android:clevertap-android-sdk:6.0.0"
-    implementation "androidx.core:core:1.9.0"
+     dependencies {      
+         implementation "com.clevertap.android:clevertap-android-sdk:6.1.1"
+         implementation "androidx.core:core:1.9.0"
          implementation "com.google.firebase:firebase-messaging:23.0.6"
          implementation "com.google.android.gms:play-services-ads:22.3.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
      }
@@ -70,8 +70,8 @@ Also be sure to include the `google-services.json` classpath in your Project lev
         
          }       
          dependencies {      
-             classpath "com.android.tools.build:gradle:7.4.2"
-             classpath "com.google.gms:google-services:4.3.3"
+             classpath "com.android.tools.build:gradle:8.2.2"
+             classpath "com.google.gms:google-services:4.4.0"
         
              // NOTE: Do not place your application dependencies here; they belong       
              // in the individual module build.gradle files      
@@ -85,11 +85,11 @@ Add your FCM generated `google-services.json` file to your project and add the f
 apply plugin: 'com.google.gms.google-services'
 ```
 Interstitial InApp Notification templates support Audio and Video with the help of ExoPlayer. To enable Audio/Video in your Interstitial InApp Notifications, add the following dependencies in your `build.gradle` file :
-
+    
 ```groovy
-implementation "com.google.android.exoplayer:exoplayer:2.19.1"
-implementation "com.google.android.exoplayer:exoplayer-hls:2.19.1"
-implementation "com.google.android.exoplayer:exoplayer-ui:2.19.1"
+    implementation "com.google.android.exoplayer:exoplayer:2.19.1"
+    implementation "com.google.android.exoplayer:exoplayer-hls:2.19.1"
+    implementation "com.google.android.exoplayer:exoplayer-ui:2.19.1"
 ```  
 
 Once you've updated your module `build.gradle` file, make sure you have specified `mavenCentral()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.

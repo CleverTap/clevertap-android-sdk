@@ -1,5 +1,15 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.2.3 (February 21, 2024)
+
+#### New features
+
+* Supports Android 14, made it compliant with Android 14 requirements. Details [here](https://developer.android.com/about/versions/14/summary)
+* Upgrades AGP to 8.2.2 for building the SDK and adds related consumer proguard rules
+
+#### Bug Fixes
+* Fixes [Input Box](https://developer.clevertap.com/docs/push-templates-android#input-box-template) push template. 
+
 ### Version 1.2.2 (January 15, 2024)
 
 * Minor changes and improvements
@@ -83,7 +93,7 @@
 ### Version 1.0.0 (December 20, 2021)
 * Stable release! 🎉
 * Supports Xiaomi, Huawei notification messages out of the box
-* Supports Push Amplification out of the box
+* Supports Pull Notifications out of the box
 * Supports Android 12
 * Supports CleverTap Android SDK v4.4.0
 

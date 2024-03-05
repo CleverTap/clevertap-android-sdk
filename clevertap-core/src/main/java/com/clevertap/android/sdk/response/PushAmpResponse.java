@@ -47,7 +47,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
 
     @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
-        //Handle Push Amplification response
+        //Handle Pull Notifications response
         if (config.isAnalyticsOnly()) {
             logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing push amp response");
