@@ -1,41 +1,23 @@
 package com.clevertap.demo
 
 
-import android.app.NotificationManager
-import android.content.Context
-
-import android.content.Intent
-import android.os.Build
-
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.trace
 import androidx.fragment.app.commitNow
 import com.clevertap.android.sdk.*
-import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
-import com.clevertap.android.sdk.displayunits.DisplayUnitListener
-import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
-import com.clevertap.android.sdk.inapp.CTInAppNotification
-import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.demo.ui.main.HomeScreenFragment
-
-import dev.shreyaspatil.MaterialDialog.MaterialDialog.Builder
-import net.khirr.android.privacypolicy.PrivacyPolicyDialog
-import net.khirr.android.privacypolicy.PrivacyPolicyDialog.OnClickListener
-
-import com.clevertap.demo.ui.main.NotificationUtils
 import com.google.android.gms.common.wrappers.InstantApps.isInstantApp
-
-import org.json.JSONObject
-import java.util.HashMap
+import kotlin.system.measureNanoTime
 
 private const val TAG = "HomeScreenActivity"
 
-class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitListener, CTProductConfigListener,
+class HomeScreenActivity : AppCompatActivity()/*, CTInboxListener, DisplayUnitListener, CTProductConfigListener,
     CTFeatureFlagsListener, SyncListener, InAppNotificationListener,
     PushPermissionResponseListener,
-    InAppNotificationButtonListener {
+    InAppNotificationButtonListener*/ {
 
     var cleverTapDefaultInstance: CleverTapAPI? = null
 
@@ -43,6 +25,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_screen_activity)
 
+        Logger.v("onCreate() called for HomeScreenActivity")
         Log.i(TAG, "is Instant app? - ${isInstantApp(this)}")
         if (savedInstanceState == null) {
             supportFragmentManager.commitNow {
@@ -80,8 +63,9 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             CleverTapAPI.createNotification(applicationContext, bundle)
         }.start()*/
         initCleverTap()
+        Logger.v("build type",BuildConfig.BUILD_TYPE)
 
-        val isReadPolicy: Boolean
+        /*val isReadPolicy: Boolean
         val email: String?
 
         val sharedPref = getPreferences(Context.MODE_PRIVATE).apply {
@@ -124,18 +108,37 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             if (email == null) {
                 EmailDialogFragment().show(supportFragmentManager, "Email")
             }
-        }
+        }*/
     }
 
     private fun initCleverTap() {
 
+//        val nanoTimeStart = System.nanoTime()
+        trace("init CT"){
+//            val measureNanoTime = measureNanoTime {
+//                cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this)
+            val config = CleverTapInstanceConfig.createInstance(this, "TEST-R78-ZZK-955Z", "TEST-311-ba2")
+            cleverTapDefaultInstance = CleverTapAPI.instanceWithConfig(this, config)
+//            }
+//            Logger.v("nano time ct init = $measureNanoTime")
+        }
+        /*val nanoTimeEnd = System.nanoTime()
+        Logger.v("nano time ct init = ${nanoTimeEnd-nanoTimeStart}")*/
+//        Trace.beginAsyncSection()
+      /*  val handler = Handler()
+        handler.postDelayed( {
+            val config = CleverTapInstanceConfig.createInstance(this, "67Z-RRK-696Z", "322-1a6")
+            cleverTapDefaultInstance = CleverTapAPI.instanceWithConfig(this, config)
+        },10000)*/
+        /*val config = CleverTapInstanceConfig.createInstance(this, "67Z-RRK-696Z", "322-1a6")
+        cleverTapDefaultInstance = CleverTapAPI.instanceWithConfig(this, config)*/
         //Set Debug level for CleverTap
-        CleverTapAPI.setDebugLevel(VERBOSE)
+        //CleverTapAPI.setDebugLevel(VERBOSE)
 
         //Create CleverTap's default instance
-        cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this)
+        //cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this)
 
-        cleverTapDefaultInstance?.apply {
+     /*   cleverTapDefaultInstance?.apply {
             syncListener = this@HomeScreenActivity
             enableDeviceNetworkInfoReporting(true)
             //Set the Notification Inbox Listener
@@ -152,7 +155,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             inAppNotificationListener = this@HomeScreenActivity
 
             registerPushPermissionNotificationResponseListener(this@HomeScreenActivity)
-        }
+        }*/
 
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
         //Create config object for an additional instance
@@ -164,7 +167,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 //        var cleverTapInstanceTwo = CleverTapAPI.instanceWithConfig(this, config)
     }
 
-    override fun inboxDidInitialize() {
+    /*override fun inboxDidInitialize() {
         Log.i(TAG, "inboxDidInitialize() called")
     }
 
@@ -174,28 +177,29 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun onDisplayUnitsLoaded(units: ArrayList<CleverTapDisplayUnit>?) {
         Log.i(TAG, "onDisplayUnitsLoaded() called")
-    }
+    }*/
 
-    override fun onNewIntent(intent: Intent?) {
+   /* override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         Log.i("Playground", "onNewIntent()")
 
-        /**
+        *//**
          * On Android 12, Raise notification clicked event when Activity is already running in activity backstack
-         */
+         *//*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             cleverTapDefaultInstance?.pushNotificationClickedEvent(intent!!.extras)
         }
 
-        /**
-        * On Android 12, clear notification on CTA click when Activity is already running in activity backstack
         */
+    /**
+     * On Android 12, clear notification on CTA click when Activity is already running in activity backstack
+     *//*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             NotificationUtils.dismissNotification(intent, applicationContext)
         }
-    }
+    }*/
 
-    override fun onInit() {
+    /*override fun onInit() {
         Log.i(TAG, "onInit() called")
         //Must Call activate if you want to apply the last fetched values on init every time.
         cleverTapDefaultInstance?.productConfig()?.activate()
@@ -219,74 +223,79 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun profileDidInitialize(CleverTapID: String?) {
         Log.i(TAG, "profileDidInitialize() called")
-    }
+    }*/
 
-    private fun showLocationPermissionPolicyDialog(success : () -> Unit) {
-        val mDialog = Builder(this)
-            .setTitle("Location Privacy Policy")
-            .setMessage(getString(R.string.location_policy_message))
-            .setCancelable(false)
-            .setPositiveButton("Accept", R.drawable.thumb_up) { dialogInterface, which ->
-                dialogInterface.dismiss()
-                success()
-            }
-            .setNegativeButton(
-                "Deny", R.drawable.thumb_down
-            ) { dialogInterface, which ->
-                dialogInterface.dismiss()
-                finish()
-            }
-            .setAnimation(R.raw.location)
-            .build()
+    /* private fun showLocationPermissionPolicyDialog(success : () -> Unit) {
+         val mDialog = Builder(this)
+             .setTitle("Location Privacy Policy")
+             .setMessage(getString(R.string.location_policy_message))
+             .setCancelable(false)
+             .setPositiveButton("Accept", R.drawable.thumb_up) { dialogInterface, which ->
+                 dialogInterface.dismiss()
+                 success()
+             }
+             .setNegativeButton(
+                 "Deny", R.drawable.thumb_down
+             ) { dialogInterface, which ->
+                 dialogInterface.dismiss()
+                 finish()
+             }
+             .setAnimation(R.raw.location)
+             .build()
 
-        // Show Dialog
+         // Show Dialog
 
-        // Show Dialog
-        mDialog.show()
-    }
+         // Show Dialog
+         mDialog.show()
+     }
 
-    override fun beforeShow(extras: MutableMap<String, Any>?): Boolean {
-        Log.i(TAG, "InApp---> beforeShow() called")
-        return true
-    }
+     override fun beforeShow(extras: MutableMap<String, Any>?): Boolean {
+         Log.i(TAG, "InApp---> beforeShow() called")
+         return true
+     }
 
-    override fun onShow(ctInAppNotification: CTInAppNotification?) {
-        Log.i(TAG, "InApp---> onShow() called")
-    }
+     override fun onShow(ctInAppNotification: CTInAppNotification?) {
+         Log.i(TAG, "InApp---> onShow() called")
+     }
 
-    override fun onDismissed(
-        extras: MutableMap<String, Any>?,
-        actionExtras: MutableMap<String, Any>?
-    ) {
-        Log.i(TAG, "InApp---> onDismissed() called")
-    }
+     override fun onDismissed(
+         extras: MutableMap<String, Any>?,
+         actionExtras: MutableMap<String, Any>?
+     ) {
+         Log.i(TAG, "InApp---> onDismissed() called")
+     }
 
-    override fun onPushPermissionResponse(accepted: Boolean) {
-        Log.i(TAG, "InApp---> response() called  $accepted")
-        if(accepted){
-            Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show()
+     override fun onPushPermissionResponse(accepted: Boolean) {
+         Log.i(TAG, "InApp---> response() called  $accepted")
+         if(accepted){
+             Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show()
 
-            //For Android 13+ we need to create notification channel after notification permission is accepted
-            CleverTapAPI.createNotificationChannel(
-                this, "BRTesting", "Core",
-                "Core notifications", NotificationManager.IMPORTANCE_MAX, true
-            )
+             //For Android 13+ we need to create notification channel after notification permission is accepted
+             CleverTapAPI.createNotificationChannel(
+                 this, "BRTesting", "Core",
+                 "Core notifications", NotificationManager.IMPORTANCE_MAX, true
+             )
 
-            CleverTapAPI.createNotificationChannel(
-                this, "PTTesting", "Push templates",
-                "All push templates", NotificationManager.IMPORTANCE_MAX, true
-            )
-        }else{
-            Toast.makeText(this, "Permission denied!", Toast.LENGTH_SHORT).show()
-        }
-    }
+             CleverTapAPI.createNotificationChannel(
+                 this, "PTTesting", "Push templates",
+                 "All push templates", NotificationManager.IMPORTANCE_MAX, true
+             )
+         }else{
+             Toast.makeText(this, "Permission denied!", Toast.LENGTH_SHORT).show()
+         }
+     }
 
-    override fun onInAppButtonClick(payload: HashMap<String, String>?) {
-        Log.i(TAG, "onInAppButtonClick() called")
-    }
+     override fun onInAppButtonClick(payload: HashMap<String, String>?) {
+         Log.i(TAG, "onInAppButtonClick() called")
+     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        cleverTapDefaultInstance?.unregisterPushPermissionNotificationResponseListener(this)
+     override fun onDestroy() {
+         super.onDestroy()
+         cleverTapDefaultInstance?.unregisterPushPermissionNotificationResponseListener(this)
+     }*/
+
+    override fun onResume() {
+        super.onResume()
+        Logger.v("onResume() called for HomeScreenActivity")
     }
 }

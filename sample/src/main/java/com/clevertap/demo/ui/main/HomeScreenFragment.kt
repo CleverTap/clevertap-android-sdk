@@ -25,6 +25,7 @@ import com.clevertap.android.geofence.CTGeofenceAPI
 import com.clevertap.android.geofence.CTGeofenceSettings
 import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener
 import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.demo.BuildConfig
 import com.clevertap.demo.HomeScreenActivity
 import com.clevertap.demo.R
@@ -72,12 +73,12 @@ class HomeScreenFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         setupListAdapter()
-        val cleverTapInstance = (activity as? HomeScreenActivity)?.cleverTapDefaultInstance
+        //val cleverTapInstance = (activity as? HomeScreenActivity)?.cleverTapDefaultInstance
         val context = activity?.applicationContext!!
 
         viewModel.clickCommand.observe(viewLifecycleOwner, Observer<String> { commandPosition ->
             when (commandPosition) {
-                "6-0" -> startActivity(Intent(activity, WebViewActivity::class.java))
+                /*"6-0" -> startActivity(Intent(activity, WebViewActivity::class.java))
                 "7-0" -> { // init Geofence API
                     when {
                         // proceed only if cleverTap instance is not null
@@ -96,7 +97,11 @@ class HomeScreenFragment : Fragment() {
                         initCTGeofenceApi(cleverTapInstance!!)
                     }
                 }
-                "7-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
+                "7-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence*/
+                /*"7-2" -> {
+                    val config = CleverTapInstanceConfig.createInstance(context, "67Z-RRK-696Z", "322-1a6")
+                    val cleverTapDefaultInstance = CleverTapAPI.instanceWithConfig(context, config)
+                }*/
             }
         })
     }
@@ -106,7 +111,7 @@ class HomeScreenFragment : Fragment() {
             HomeScreenListAdapter(viewModel, HomeScreenModel.listData.keys.toList(), HomeScreenModel.listData)
         )
     }
-
+/*
     private fun initCTGeofenceApi(cleverTapInstance: CleverTapAPI) {
         val context = activity?.applicationContext!!
 
@@ -140,9 +145,9 @@ class HomeScreenFragment : Fragment() {
         }
     }
 
-    /**
+    *//**
      * Return the current state of the permissions needed.
-     */
+     *//*
     private fun checkPermissions(): Boolean {
         val applicationContext = activity?.applicationContext!!
         val fineLocationPermissionState = ContextCompat.checkSelfPermission(applicationContext, ACCESS_FINE_LOCATION)
@@ -219,5 +224,5 @@ class HomeScreenFragment : Fragment() {
 
             }
         }
-    }
+    }*/
 }

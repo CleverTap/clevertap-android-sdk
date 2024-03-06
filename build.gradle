@@ -21,6 +21,8 @@ buildscript {
 
 plugins {
     alias(libs.plugins.sonarqube)
+    id 'com.android.test' version '7.4.2' apply false
+    id 'org.jetbrains.kotlin.android' version '1.8.0' apply false
 }
 allprojects {
     repositories {
