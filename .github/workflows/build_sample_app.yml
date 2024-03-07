@@ -15,13 +15,13 @@ on:
         required: false
 
       build_release_apk:
-        description: Build Release APK
+        description: Build Signed Release APK
         type: boolean
         default: false
         required: false
 
       build_release_bundle:
-        description: Build Release Bundle
+        description: Build Signed Release Bundle
         type: boolean
         default: false
         required: false
@@ -44,8 +44,12 @@ jobs:
       - name: Decode secret files
         env:
           GOOGLE_SERVICES_BASE64: ${{ secrets.GOOGLE_SERVICES_BASE64 }}
+          SAMPLE_KEY_BASE64: ${{ secrets.SAMPLE_KEY_BASE64 }}
+          LOCAL_PROPERTIES_BASE64: ${{ secrets.LOCAL_PROPERTIES_BASE64 }}
         run: |
           echo "$GOOGLE_SERVICES_BASE64" | base64 --decode > sample/google-services.json
+          echo "$SAMPLE_KEY_BASE64" | base64 --decode > sample/SampleKey
+          echo "$LOCAL_PROPERTIES_BASE64" | base64 --decode > local.properties
 
       - name: Build Debug APK
         if: ${{ inputs.build_debug_apk}}
@@ -57,13 +61,13 @@ jobs:
         run: |
           ./gradlew :sample:bundleRemoteDebug
 
-      - name: Build Release APK
+      - name: Build Signed Release APK
         if: ${{ inputs.build_release_apk}}
         run: |
           ./gradlew :sample:assembleRemoteRelease
 
 
-      - name: Build Release Bundle
+      - name: Build Signed Release Bundle
         if: ${{ inputs.build_release_bundle}}
         run: |
           ./gradlew :sample:bundleRemoteRelease
@@ -82,7 +86,7 @@ jobs:
           name: sample-debug-bundle
           path: sample/build/outputs/bundle/remoteDebug/*.aab
 
-      - name: Upload Release APK
+      - name: Upload Signed Release APK
         if: ${{ inputs.build_release_apk}}
         uses: actions/upload-artifact@v3
         with:
@@ -90,7 +94,7 @@ jobs:
           path: sample/build/outputs/apk/remote/release/*.apk
 
 
-      - name: Upload Release Bundle
+      - name: Upload Signed Release Bundle
         if: ${{ inputs.build_release_bundle}}
         uses: actions/upload-artifact@v3
         with:
