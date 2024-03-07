@@ -1,0 +1,98 @@
+name: Sample App Build
+on:
+  workflow_dispatch:
+    inputs:
+      build_debug_apk:
+        description: Build Debug APK
+        type: boolean
+        default: true
+        required: false
+
+      build_debug_bundle:
+        description: Build Debug Bundle
+        type: boolean
+        default: false
+        required: false
+
+      build_release_apk:
+        description: Build Release APK
+        type: boolean
+        default: false
+        required: false
+
+      build_release_bundle:
+        description: Build Release Bundle
+        type: boolean
+        default: false
+        required: false
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Output Inputs
+        run: echo "${{ toJSON(inputs) }}"
+
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17.
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Decode secret files
+        env:
+          GOOGLE_SERVICES_BASE64: ${{ secrets.GOOGLE_SERVICES_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICES_BASE64" | base64 --decode > sample/google-services.json
+
+      - name: Build Debug APK
+        if: ${{ inputs.build_debug_apk}}
+        run: |
+          ./gradlew :sample:assembleRemoteDebug
+
+      - name: Build Debug Bundle
+        if: ${{ inputs.build_debug_bundle}}
+        run: |
+          ./gradlew :sample:bundleRemoteDebug
+
+      - name: Build Release APK
+        if: ${{ inputs.build_release_apk}}
+        run: |
+          ./gradlew :sample:assembleRemoteRelease
+
+
+      - name: Build Release Bundle
+        if: ${{ inputs.build_release_bundle}}
+        run: |
+          ./gradlew :sample:bundleRemoteRelease
+
+      - name: Upload Debug APK
+        if: ${{ inputs.build_debug_apk}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-debug-apk
+          path: sample/build/outputs/apk/remote/debug/*.apk
+
+      - name: Upload Debug Bundle
+        if: ${{ inputs.build_debug_bundle}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-debug-bundle
+          path: sample/build/outputs/bundle/remoteDebug/*.aab
+
+      - name: Upload Release APK
+        if: ${{ inputs.build_release_apk}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-release-apk
+          path: sample/build/outputs/apk/remote/release/*.apk
+
+
+      - name: Upload Release Bundle
+        if: ${{ inputs.build_release_bundle}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-release-bundle
+          path: sample/build/outputs/bundle/remoteRelease/*.aab
