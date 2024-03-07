@@ -44,6 +44,15 @@ android {
             }
         }
     }
+    signingConfigs {
+        create("sampleAppConfig") {
+            storeFile =  getCtProperty("com.clevertap.signing.storeFile")?.with {"${projectDir}/${it}" as File }
+            storePassword = getCtProperty("com.clevertap.signing.storePassword")
+            keyAlias = getCtProperty("com.clevertap.signing.keyAlias")
+            keyPassword = getCtProperty("com.clevertap.signing.keyPassword")
+        }
+    }
+
     buildTypes {
         named("debug") {
             minifyEnabled false
@@ -52,6 +61,7 @@ android {
         named("release") {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig = signingConfigs["sampleAppConfig"]
         }
     }
     tasks.withType(KotlinCompile).configureEach {
@@ -147,6 +157,12 @@ dependencies {
     stagingImplementation("com.clevertap.android:clevertap-xiaomi-sdk:1.5.4")
     stagingImplementation("com.clevertap.android:push-templates:1.2.3")
     stagingImplementation("com.clevertap.android:clevertap-hms-sdk:1.3.4")
+}
+
+String getCtProperty(String key) {
+    Properties localProperties = new Properties()
+    localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+    return localProperties[key] as String
 }
 
 apply plugin: 'com.google.gms.google-services'
