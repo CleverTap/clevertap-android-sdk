@@ -160,9 +160,12 @@ dependencies {
 }
 
 String getCtProperty(String key) {
-    Properties localProperties = new Properties()
-    localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
-    return localProperties[key] as String
+    def propertiesFile = project.rootProject.file('local.properties')
+    if (propertiesFile.exists()) {
+        Properties localProperties = new Properties()
+        localProperties.load(propertiesFile.newDataInputStream())
+        return localProperties[key] as String
+    }
 }
 
 apply plugin: 'com.google.gms.google-services'
