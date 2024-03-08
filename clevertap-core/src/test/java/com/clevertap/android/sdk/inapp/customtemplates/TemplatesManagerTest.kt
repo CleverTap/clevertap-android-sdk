@@ -1,14 +1,14 @@
 package com.clevertap.android.sdk.inapp.customtemplates
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.junit.*
 import org.junit.Test
 import org.junit.jupiter.api.*
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class TemplatesManagerTest : BaseTestCase() {
+class TemplatesManagerTest {
 
     @After
     fun cleanUp() {
@@ -39,7 +39,10 @@ class TemplatesManagerTest : BaseTestCase() {
             )
         }
 
-        val templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig)
+        val ctConfig1 = getMockedCtInstanceConfig("account1", "token1")
+        val ctConfig2 = getMockedCtInstanceConfig("account2", "token2")
+
+        val templatesManager = TemplatesManager.createInstance(ctConfig1)
 
         assertTrue(templatesManager.isTemplateRegistered(templateName1))
         assertTrue(templatesManager.isTemplateRegistered(templateName2))
@@ -47,8 +50,7 @@ class TemplatesManagerTest : BaseTestCase() {
 
         assertFalse(templatesManager.isTemplateRegistered("non-registered"))
 
-        val templatesManagerNewConfig =
-            TemplatesManager.createInstance(CleverTapInstanceConfig.createInstance(appCtx, "account", "token"))
+        val templatesManagerNewConfig = TemplatesManager.createInstance(ctConfig2)
 
         assertTrue(templatesManagerNewConfig.isTemplateRegistered(templateName1))
         assertTrue(templatesManagerNewConfig.isTemplateRegistered(templateName2))
@@ -73,7 +75,14 @@ class TemplatesManagerTest : BaseTestCase() {
             )
         }
         assertThrows<CustomTemplateException> {
-            TemplatesManager.createInstance(cleverTapInstanceConfig)
+            TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        }
+    }
+
+    private fun getMockedCtInstanceConfig(account: String, token: String): CleverTapInstanceConfig {
+        return mockk<CleverTapInstanceConfig>().apply {
+            every { accountId } returns account
+            every { accountToken } returns token
         }
     }
 }
