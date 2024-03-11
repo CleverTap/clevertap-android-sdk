@@ -15,7 +15,9 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        >
+        <profileable android:shell="true"/>
         <activity
             android:name=".HomeScreenActivity"
             android:exported="true"
@@ -49,15 +51,15 @@
             android:value="ca-app-pub-3940256099942544~3347511713" />
 
         <!-- Add meta data for CleverTap Account Id and Account Token -->
-        <meta-data
+       <!-- <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="YOUR ACCT ID" />
+            android:value="67Z-RRK-696Z" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="YOUR ACCT TOKEN" />
-        <meta-data
+            android:value="322-1a6" />-->
+        <!--<meta-data
             android:name="CLEVERTAP_REGION"
-            android:value="eu1"/>
+            android:value="eu1"/>-->
         <!--<meta-data
             android:name="CLEVERTAP_PROXY_DOMAIN"
             android:value="analytics.sdktesting.xyz"/>-->

@@ -25,8 +25,8 @@ import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
 import org.json.JSONObject
 import kotlin.system.measureTimeMillis
 
-class MyApplication : MultiDexApplication(), CTPushNotificationListener, ActivityLifecycleCallbacks,
-    InboxMessageButtonListener, InboxMessageListener {
+class MyApplication : MultiDexApplication()/*, CTPushNotificationListener, ActivityLifecycleCallbacks,
+    InboxMessageButtonListener, InboxMessageListener*/ {
 
     override fun onCreate() {
 
@@ -45,16 +45,17 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 .build()
         )*/
 
-        CleverTapAPI.setDebugLevel(VERBOSE)
+        //CleverTapAPI.setDebugLevel(VERBOSE)
         //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
         //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
-        TemplateRenderer.debugLevel = 3;
+        /*TemplateRenderer.debugLevel = 3;
         CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
-
-        val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
+*/
+//        ActivityLifecycleCallback.register(this)
+       /* val measureTimeMillis = measureTimeMillis { }
         println("Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds")
-
-        registerActivityLifecycleCallbacks(this)
+*/
+//        registerActivityLifecycleCallbacks(this)
         super.onCreate()
 
         ProviderInstaller.installIfNeededAsync(this, object : ProviderInstallListener {
@@ -81,7 +82,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             "YOUR SPIKY PROXY DOMAIN"
         )*/
 
-        val defaultInstance = CleverTapAPI.getDefaultInstance(this)
+       /* val defaultInstance = CleverTapAPI.getDefaultInstance(this)
         defaultInstance?.syncListener = object : SyncListener {
             override fun profileDataUpdated(updates: JSONObject?) {//no op
             }
@@ -102,14 +103,14 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             println(
                 "CleverTap DeviceID from Application class= $it"
             )
-        }
+        }*/
 
         /*println(
             "CleverTapAttribution Identifier from Application class= " +
                     "${defaultInstance?.cleverTapAttributionIdentifier}"
         )*/
 
-        CleverTapAPI.createNotificationChannel(
+        /*CleverTapAPI.createNotificationChannel(
             this, "BRTesting", "Core",
             "Core notifications", NotificationManager.IMPORTANCE_MAX, true
         )
@@ -120,20 +121,20 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         CleverTapAPI.createNotificationChannel(
             this, "BlockBRTesting", "Blocked Core",
             "Blocked Core notifications", NotificationManager.IMPORTANCE_NONE, true
-        )
+        )*/
     }
 
-    override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
+   /* override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
 
         Log.i("MyApplication", "onNotificationClickedPayloadReceived = $payload")
-    }
+    }*/
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
         MultiDex.install(this)
     }
 
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+   /* override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
 
         // On Android 12, clear notification on CTA click when Activity is already running in activity backstack
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -229,5 +230,5 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     private fun dismissAppInbox() {
         val defaultInstance = CleverTapAPI.getDefaultInstance(this)
         defaultInstance?.dismissAppInbox()
-    }
+    }*/
 }

@@ -21,6 +21,7 @@ buildscript {
 
 plugins {
     alias(libs.plugins.sonarqube)
+    id 'androidx.benchmark' version '1.2.3' apply false
 }
 allprojects {
     repositories {

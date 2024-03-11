@@ -1,6 +1,7 @@
 package com.clevertap.demo.ui.main
 
 import android.os.Looper
+import android.os.Trace
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
