@@ -263,4 +263,7 @@ class CustomTemplate private constructor(
     }
 }
 
-internal enum class CustomTemplateType { TEMPLATE, FUNCTION }
+internal enum class CustomTemplateType(val stringName: String) {
+    TEMPLATE("template"),
+    FUNCTION("function")
+}
