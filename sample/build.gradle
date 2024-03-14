@@ -44,12 +44,13 @@ android {
             }
         }
     }
+    Properties localProperties = loadLocalProperties()
     signingConfigs {
         create("sampleAppConfig") {
-            storeFile =  getCtProperty("com.clevertap.signing.storeFile")?.with {"${projectDir}/${it}" as File }
-            storePassword = getCtProperty("com.clevertap.signing.storePassword")
-            keyAlias = getCtProperty("com.clevertap.signing.keyAlias")
-            keyPassword = getCtProperty("com.clevertap.signing.keyPassword")
+            storeFile =  getCtProperty("com.clevertap.signing.storeFile", localProperties)?.with {"${projectDir}/${it}" as File }
+            storePassword = getCtProperty("com.clevertap.signing.storePassword", localProperties)
+            keyAlias = getCtProperty("com.clevertap.signing.keyAlias", localProperties)
+            keyPassword = getCtProperty("com.clevertap.signing.keyPassword", localProperties)
         }
     }
 
@@ -61,7 +62,11 @@ android {
         named("release") {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        signed {
+            initWith release
             signingConfig = signingConfigs["sampleAppConfig"]
+            matchingFallbacks = ['release']
         }
     }
     tasks.withType(KotlinCompile).configureEach {
@@ -159,13 +164,18 @@ dependencies {
     stagingImplementation("com.clevertap.android:clevertap-hms-sdk:1.3.4")
 }
 
-String getCtProperty(String key) {
+Properties loadLocalProperties() {
     def propertiesFile = project.rootProject.file('local.properties')
     if (propertiesFile.exists()) {
         Properties localProperties = new Properties()
         localProperties.load(propertiesFile.newDataInputStream())
-        return localProperties[key] as String
+        return localProperties
     }
+    return [:] // Return an empty map if properties file doesn't exist
+}
+
+static String getCtProperty(String key, Properties localProperties) {
+    return localProperties[key] as String
 }
 
 apply plugin: 'com.google.gms.google-services'

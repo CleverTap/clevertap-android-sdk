@@ -14,13 +14,13 @@ on:
         default: false
         required: false
 
-      build_release_apk:
+      build_signed_release_apk:
         description: Build Signed Release APK
         type: boolean
         default: false
         required: false
 
-      build_release_bundle:
+      build_signed_release_bundle:
         description: Build Signed Release Bundle
         type: boolean
         default: false
@@ -62,15 +62,15 @@ jobs:
           ./gradlew :sample:bundleRemoteDebug
 
       - name: Build Signed Release APK
-        if: ${{ inputs.build_release_apk}}
+        if: ${{ inputs.build_signed_release_apk}}
         run: |
-          ./gradlew :sample:assembleRemoteRelease
+          ./gradlew :sample:assembleRemoteSigned
 
 
       - name: Build Signed Release Bundle
-        if: ${{ inputs.build_release_bundle}}
+        if: ${{ inputs.build_signed_release_bundle}}
         run: |
-          ./gradlew :sample:bundleRemoteRelease
+          ./gradlew :sample:bundleRemoteSigned
 
       - name: Upload Debug APK
         if: ${{ inputs.build_debug_apk}}
@@ -87,16 +87,16 @@ jobs:
           path: sample/build/outputs/bundle/remoteDebug/*.aab
 
       - name: Upload Signed Release APK
-        if: ${{ inputs.build_release_apk}}
+        if: ${{ inputs.build_signed_release_apk}}
         uses: actions/upload-artifact@v3
         with:
-          name: sample-release-apk
-          path: sample/build/outputs/apk/remote/release/*.apk
+          name: sample-signed-release-apk
+          path: sample/build/outputs/apk/remote/signed/*.apk
 
 
       - name: Upload Signed Release Bundle
-        if: ${{ inputs.build_release_bundle}}
+        if: ${{ inputs.build_signed_release_bundle}}
         uses: actions/upload-artifact@v3
         with:
-          name: sample-release-bundle
-          path: sample/build/outputs/bundle/remoteRelease/*.aab
+          name: sample-signed-release-bundle
+          path: sample/build/outputs/bundle/remoteSigned/*.aab
