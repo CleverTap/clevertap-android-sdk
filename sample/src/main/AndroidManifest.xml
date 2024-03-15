@@ -53,16 +53,6 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />
 
-        <!-- Add meta data for CleverTap Account Id and Account Token -->
-       <!-- <meta-data
-            android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="TEST-R78-ZZK-955Z" />
-        <meta-data
-            android:name="CLEVERTAP_TOKEN"
-            android:value="TEST-311-ba2" />
-        <meta-data
-            android:name="CLEVERTAP_REGION"
-            android:value="eu1" />-->
         <!--
 <meta-data
             android:name="CLEVERTAP_PROXY_DOMAIN"

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <profileable
+            android:shell="true"
+            tools:targetApi="29" />
+
+
+        <!-- Add meta data for CleverTap Account Id and Account Token -->
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="TEST-R78-ZZK-955Z" />
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="TEST-311-ba2" />
+        <meta-data
+            android:name="CLEVERTAP_REGION"
+            android:value="eu1" />
+
+    </application>
+
+</manifest>

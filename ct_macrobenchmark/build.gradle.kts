@@ -30,7 +30,7 @@ android {
 
     }
 
-    flavorDimensions += "deps"
+    flavorDimensions += listOf("deps","macrobechmark")
     productFlavors {
         create("remote") {
            dimension = "deps"
@@ -48,6 +48,15 @@ android {
             repositories {
                 maven ( url = "https://oss.sonatype.org/content/groups/staging/" )
             }
+        }
+        create("getDefaultInstanceMB") {
+            dimension = "macrobechmark"
+        }
+        create("instanceWithConfigMB") {
+            dimension = "macrobechmark"
+        }
+        create("mainSource") {
+            dimension = "macrobechmark"
         }
     }
 
