@@ -193,7 +193,7 @@ class CleverTapFactory {
                 validationResultStack,
                 controllerManager,
                 baseDatabaseManager,
-                CtApiProviderKt.provideDefaultTestCtApi(context, config, deviceInfo),
+                CtApiProviderKt.provideDefaultCtApi(context, config, deviceInfo),
                 callbackManager,
                 ctLockManager,
                 validator,
