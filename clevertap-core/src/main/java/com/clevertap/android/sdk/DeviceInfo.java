@@ -583,7 +583,8 @@ public class DeviceInfo {
     }
 
     public String getDeviceID() {
-        return _getDeviceID() != null ? _getDeviceID() : getFallBackDeviceID();
+        String currentId = _getDeviceID();
+        return currentId != null ? currentId : getFallBackDeviceID();
     }
 
     public String getGoogleAdID() {
@@ -806,8 +807,12 @@ public class DeviceInfo {
     }
 
     private String _getDeviceID() {
-        synchronized (deviceIDLock) {
-            return StorageHelper.getString(this.context, getDeviceIdStorageKey(), null);
+        String _new = StorageHelper.getString(this.context, getDeviceIdStorageKey(), null);
+
+        if (this.config.isDefaultInstance()) {
+            return _new != null ? _new : StorageHelper.getString(this.context, Constants.DEVICE_ID_TAG, null);
+        } else {
+            return _new;
         }
     }
 
