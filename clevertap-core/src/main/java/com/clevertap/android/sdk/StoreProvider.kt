@@ -70,17 +70,17 @@ class StoreProvider {
      *
      * @param context The Android application context.
      * @param cryptHandler The handler used for encryption and decryption of In-App messages.
-     * @param deviceInfo The information about the device.
+     * @param deviceId The device id for user.
      * @param accountId The unique account identifier.
      * @return An instance of [InAppStore].
      */
     fun provideInAppStore(
         context: Context,
         cryptHandler: CryptHandler,
-        deviceInfo: DeviceInfo,
+        deviceId: String,
         accountId: String
     ): InAppStore {
-        val prefName = constructStorePreferenceName(STORE_TYPE_INAPP, deviceInfo.deviceID, accountId)
+        val prefName = constructStorePreferenceName(STORE_TYPE_INAPP, deviceId, accountId)
         return InAppStore(getCTPreference(context, prefName), cryptHandler)
     }
 
@@ -88,16 +88,16 @@ class StoreProvider {
      * Provides an instance of [ImpressionStore] using the given parameters.
      *
      * @param context The Android application context.
-     * @param deviceInfo The information about the device.
+     * @param deviceId The device id for user.
      * @param accountId The unique account identifier.
      * @return An instance of [ImpressionStore].
      */
     fun provideImpressionStore(
         context: Context,
-        deviceInfo: DeviceInfo,
+        deviceId: String,
         accountId: String
     ): ImpressionStore {
-        val prefName = constructStorePreferenceName(STORE_TYPE_IMPRESSION, deviceInfo.deviceID, accountId)
+        val prefName = constructStorePreferenceName(STORE_TYPE_IMPRESSION, deviceId, accountId)
         return ImpressionStore(getCTPreference(context, prefName))
     }
 
