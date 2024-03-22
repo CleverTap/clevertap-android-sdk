@@ -1,5 +1,16 @@
 ## CHANGE LOG.
 
+### February 27, 2024
+
+* [CleverTap Android SDK v6.1.1](docs/CTCORECHANGELOG.md)
+
+### February 21, 2024
+
+* [CleverTap Android SDK v6.1.0](docs/CTCORECHANGELOG.md)
+* [CleverTap Push Templates SDK v1.2.3](docs/CTPUSHTEMPLATESCHANGELOG.md).
+* [CleverTap Geofence SDK v1.3.0](docs/CTGEOFENCECHANGELOG.md)
+* [CleverTap Huawei Push SDK v1.3.4](docs/CTHUAWEIPUSHCHANGELOG.md)
+
 ### January 15, 2024
 
 * [CleverTap Android SDK v6.0.0](docs/CTCORECHANGELOG.md)
@@ -216,7 +227,7 @@
 * Use v3.8.2
 * Adds support for Product Config and Feature Flag as a part of Product Experiences feature
 * Fixed InApp center alignment issue for tablets
-* Adds support for custom handling payload when using Push Amplification.
+* Adds support for custom handling payload when using Pull Notifications.
 * Other bug fixes
 
 ### Version 3.7.2 (March 27, 2020)
@@ -257,7 +268,7 @@
 * Adds support for deep link query parameters in InApps.
 * Deprecated GCM.
 * Deprecated EventHandler, SessionHandler and DataHandler classes.
-* Workaround for below Oreo Android OS bug causing ANRs while using Push Amplification.
+* Workaround for below Oreo Android OS bug causing ANRs while using Pull Notifications.
 * Bug fixes and performance improvements
 
 ### Version 3.5.1 (May 24, 2019)
@@ -287,7 +298,7 @@
 
 ### Version 3.4.0 (January 14, 2019)
 * Adds support for App Inbox
-* Adds support for Push Amplification
+* Adds support for Pull Notifications
 * Workaround for Android O orientation bug in Native InApps
 * Fixes a bug which led to ANR on 2G network
 

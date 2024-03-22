@@ -1,5 +1,48 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 6.1.1 (February 27, 2024)
+
+#### Bug Fixes
+* Fixes an issue of incorrect endpoint in the case of network handshake.
+* Fixes a bug in Client Side InApps with regards to frequency limits.
+
+For developers with [BACKGROUND_SYNC](https://developer.clevertap.com/docs/android-push#pull-notification) enabled in their previous app version and now upgrading to _clevertap-android-sdk v6.1.0+_, please add this to your `AndroidManifest.xml` to avoid `ClassNotFoundException` related crashes
+
+```xml
+<service 
+    android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService"
+    android:exported="false"
+    android:enabled="false"
+    tools:ignore="MissingClass"/>
+```
+
+### Version 6.1.0 (February 21, 2024)
+> ⚠️ **NOTE**
+Please update to 6.1.1 and above
+
+#### New Features
+
+* Supports Android 14, made it compliant with Android 14 requirements. Details [here](https://developer.android.com/about/versions/14/summary)
+* Upgrades AGP to 8.2.2 for building the SDK and adds related consumer proguard rules
+* Deprecates Xiaomi public methods as we are sunsetting SDK. Details [here](https://dev.mi.com/distribute/doc/details?pId=1555).
+* Adds Accessibility ids for UI components of SDK
+* Migrates JobScheduler to WorkManager for Pull Notifications.
+
+#### Breaking API Changes
+
+* **CTPushAmpWorker breaks custom WorkerFactory implementation of an App**:
+    * If you are using custom `WorkFactory` implementation of `WorkManager` then make sure that you
+      correctly handle workers defined by CleverTap SDK and other third party dependencies.
+    * You must return `null` from `createWorker()` for any unknown workerClassName. Please check
+      implementation provided in the
+      blog [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
+
+#### Bug Fixes
+
+* Fixes InApps crash in a rare activity destroyed race condition
+* Fixes Potential ANR in a race condition of SDK initialisation in multithreaded setup
+* Fixes [#456](https://github.com/CleverTap/clevertap-android-sdk/issues/428) - Build issues due to AGP 8
+
 ### Version 6.0.0 (January 15, 2024)
 
 #### New Features
@@ -104,7 +147,7 @@ Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.
       correctly handle workers defined by CleverTap SDK and other third party dependencies.
     * You must return `null` from `createWorker()` for any unknown workerClassName. Please check
       implementation provided in the
-      bolg [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
+      blog [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
 
 * **Behavioral change of `createNotification` methods**:
     * The following APIs now run on the caller's thread. Make sure to call it
@@ -274,7 +317,7 @@ Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.
 Note : If you are facing `ClassNotFoundException` "org.jacoco.agent.rt.internal_28bab1d.Offline" after updating to 4.5.0, Please update the SDK to v4.5.1
 
 ### Version 4.4.0 (December 20, 2021)
-* Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(FCM),Custom Push Amplification Handling and Push Templates
+* Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(FCM),Custom Pull Notifications Handling and Push Templates
   * `CTFcmMessageHandler().createNotification(applicationContext, message)`
   * `CTFcmMessageHandler().processPushAmp(applicationContext, message)`
   * `CleverTapAPI.setNotificationHandler(notificationHandler)`

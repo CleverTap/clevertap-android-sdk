@@ -39,7 +39,7 @@ class StoreProviderTest {
         every { storeProvider.constructStorePreferenceName(STORE_TYPE_INAPP, mockDeviceInfo.deviceID, accountId) } returns prefName
 
         // Act
-        val inAppStore = storeProvider.provideInAppStore(mockContext, mockCryptHandler, mockDeviceInfo, accountId)
+        val inAppStore = storeProvider.provideInAppStore(mockContext, mockCryptHandler, mockDeviceInfo.deviceID, accountId)
 
         // Assert
         verify { storeProvider.getCTPreference(mockContext, prefName) }
@@ -54,7 +54,7 @@ class StoreProviderTest {
         every { storeProvider.constructStorePreferenceName(STORE_TYPE_IMPRESSION, mockDeviceInfo.deviceID, accountId) } returns prefName
 
         // Act
-        val impressionStore = storeProvider.provideImpressionStore(mockContext, mockDeviceInfo, accountId)
+        val impressionStore = storeProvider.provideImpressionStore(mockContext, mockDeviceInfo.deviceID, accountId)
 
         // Assert
         verify { storeProvider.getCTPreference(mockContext, prefName) }

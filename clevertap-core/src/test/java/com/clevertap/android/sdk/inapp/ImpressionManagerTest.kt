@@ -41,7 +41,7 @@ class ImpressionManagerTest : BaseTestCase() {
         `when`(deviceInfo.deviceID).thenReturn("device_id")
 
         impressionStore = StoreProvider.getInstance().provideImpressionStore(
-            appCtx, deviceInfo, "account_id"
+            appCtx, deviceInfo.deviceID, "account_id"
         )
 
         storeRegistry.impressionStore = impressionStore

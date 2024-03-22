@@ -8,6 +8,8 @@ import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTLocalInApp
+import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
+import com.clevertap.demo.ExampleVariables
 import java.util.Date
 
 class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel() {
@@ -20,6 +22,8 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
         Log.i("HomeScreenViewModel", "child click $groupPosition $childPosition")
         val commandPosition = "$groupPosition-$childPosition"
         clickCommand.value = commandPosition
+        val exampleVariables = ExampleVariables()
+
         when (commandPosition) {
             "0-0" -> {
                 cleverTapAPI?.pushEvent("testEventPushAmp")
@@ -492,6 +496,64 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.pushEvent("Header")
             }
 
+            "12-0" -> {
+                cleverTapAPI?.fetchInApps( object : FetchInAppsCallback {
+                    override fun onInAppsFetched(isSuccess: Boolean) {
+                        println("InAppsFetched = $isSuccess")
+                    }
+                })
+            }
+            "12-1" -> {
+                cleverTapAPI?.clearInAppResources(false)
+            }
+            "12-2" -> {
+                cleverTapAPI?.clearInAppResources(true)
+            }
+
+            "13-0" -> {
+                cleverTapAPI?.defineVariable("variableInt", 0)
+                cleverTapAPI?.defineVariable("variableBoolean", true)
+                cleverTapAPI?.defineVariable("variableFloat", 2.4f)
+            }
+            "13-1" -> {
+                cleverTapAPI?.fetchVariables { isSuccess -> println("Variables Fetched = $isSuccess") }
+            }
+            "13-2" -> {
+                cleverTapAPI?.syncVariables()
+            }
+            "13-3" -> {
+                cleverTapAPI?.parseVariables(exampleVariables)
+            }
+            "13-4" -> {
+                println("VariableInt = ${cleverTapAPI?.getVariable<Int>("variableInt")}")
+                println("VariableBoolean = ${cleverTapAPI?.getVariable<Boolean>("variableBoolean")}")
+                println("VariableFloat = ${cleverTapAPI?.getVariable<Float>("variableFloat")}")
+                println("ParsedVariableDouble = ${cleverTapAPI?.getVariable<Double>("var_double")}")
+            }
+            "13-5" -> {
+                println("VariableInt = ${cleverTapAPI?.getVariableValue("variableInt")}")
+                println("VariableBoolean = ${cleverTapAPI?.getVariableValue("variableBoolean")}")
+                println("VariableFloat = ${cleverTapAPI?.getVariableValue("variableFloat")}")
+                println("ParsedVariableDouble = ${cleverTapAPI?.getVariableValue("var_double")}")
+            }
+            "13-6" -> {
+
+                cleverTapAPI?.addVariablesChangedCallback(exampleVariables.variablesChangedCallback)
+            }
+            "13-7" -> {
+                cleverTapAPI?.removeVariablesChangedCallback(exampleVariables.variablesChangedCallback)
+
+            }
+            "13-8" -> {
+                cleverTapAPI?.addOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
+            }
+            "13-9" -> {
+                cleverTapAPI?.removeOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
+            }
+
+            "14-0" -> {
+                cleverTapAPI?.locale = "en_IN"
+            }
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }

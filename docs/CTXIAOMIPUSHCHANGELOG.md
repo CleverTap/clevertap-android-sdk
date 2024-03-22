@@ -1,3 +1,8 @@
+## ⚠️ Deprecation Notice
+> Xiaomi Corporation made a significant announcement recently, notifying users about discontinuing the Mi Push service beyond Mainland China due to operational concerns. You might have already received communication regarding this matter.
+Read the official announcement from the Xiaomi Corporation [here](https://dev.mi.com/distribute/doc/details?pId=1555).
+With the Mi Push service's closure, CleverTap will cease offering Mi Push support for Xiaomi devices. After the shutdown, Xiaomi devices will still receive push notifications through Firebase Cloud Messaging (FCM).
+
 ## CleverTap Xiaomi Push SDK CHANGE LOG
 
 ### Version 1.5.4 (October 12, 2023)
@@ -30,7 +35,7 @@
 * Updated Xiaomi Push SDK to v4.8.6
 
 ### Version 1.2.0 (December 20, 2021)
-* Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(XPS),Custom Push Amplification Handling and Push Templates.
+* Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(XPS),Custom Pull Notifications Handling and Push Templates.
   * `CTXiaomiMessageHandler().createNotification(applicationContext,message)`
   * `CTXiaomiMessageHandler().processPushAmp(applicationContext,message)`
 * Supports CleverTap Android SDK v4.4.0

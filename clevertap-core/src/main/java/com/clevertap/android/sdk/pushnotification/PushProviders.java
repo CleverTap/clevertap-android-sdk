@@ -365,9 +365,9 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     /**
-     * Stores silent push notification in DB for smooth working of Push Amplification
+     * Stores silent push notification in DB for smooth working of Pull Notifications
      * Background Job Service and also stores wzrk_pid to the DB to avoid duplication of Push
-     * Notifications from Push Amplification.
+     * Notifications from Pull Notifications.
      *
      * @param extras - Bundle
      */
