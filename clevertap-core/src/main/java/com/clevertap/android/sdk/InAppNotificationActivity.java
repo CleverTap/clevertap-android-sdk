@@ -306,6 +306,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         pushPermissionResultCallbackWeakReference = new WeakReference<>(callback);
     }
 
+    public void notifyPermissionDenied() {
+        pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
+    }
+
     private CTInAppBaseFullFragment createContentFragment() {
         CTInAppType type = inAppNotification.getInAppType();
         CTInAppBaseFullFragment viewFragment = null;
