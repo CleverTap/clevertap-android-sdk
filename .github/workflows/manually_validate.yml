@@ -74,45 +74,45 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Mandatory File Changes
-        if: ${{ github.event.inputs.check_mandatory }}
+        if: ${{ inputs.check_mandatory }}
         uses: ./.github/mini_flows/mandatory_filechanges
 
       - name: Setup JDK 17.
         uses: ./.github/mini_flows/setup_jdk
 
       - name: Run lint tests and Upload results
-        if: ${{ github.event.inputs.lint }}
+        if: ${{ inputs.lint }}
         uses: ./.github/mini_flows/lint
 
       - name: Static Code Check Via detekt
-        if: ${{ github.event.inputs.detekt }}
+        if: ${{ inputs.detekt }}
         uses: ./.github/mini_flows/codechecks_detekt
 
       - name: Static Code Check Via checkstyle
-        if: ${{ github.event.inputs.checkstyle }}
+        if: ${{ inputs.checkstyle }}
         uses: ./.github/mini_flows/codechecks_checkstyle
 
       - name: Unit Tests and Jacoco Coverage (DEBUG)
-        if: ${{ github.event.inputs.jacoco_debug }}
+        if: ${{ inputs.jacoco_debug }}
         uses: ./.github/mini_flows/test_and_coverage_debug
 
       - name: Unit Tests and Jacoco Coverage (RELEASE)
-        if: ${{ github.event.inputs.jacoco_release }}
+        if: ${{ inputs.jacoco_release }}
         uses: ./.github/mini_flows/test_and_coverage_release
 
       - name: Unit Tests(DEBUG)
-        if: ${{ github.event.inputs.test_debug }}
+        if: ${{ inputs.test_debug }}
         uses: ./.github/mini_flows/test_debug
 
       - name: Unit Tests(RELEASE)
-        if: ${{ github.event.inputs.test_release }}
+        if: ${{ inputs.test_release }}
         uses: ./.github/mini_flows/test_release
 
 
       - name: Build AARs (DEBUG)
-        if: ${{ github.event.inputs.build_debug }}
+        if: ${{ inputs.build_debug }}
         uses: ./.github/mini_flows/build_code_debug
 
       - name: Build AARs (RELEASE)
-        if: ${{ github.event.inputs.build_release }}
+        if: ${{ inputs.build_release }}
         uses: ./.github/mini_flows/build_code_release
