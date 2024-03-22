@@ -19,7 +19,7 @@ import org.json.JSONObject
 /**
  * This class is a utils class, mainly used to handle migration when encryption fails or encryption level is changed
  */
-object CryptUtils {
+internal object CryptUtils {
 
     /**
      * This method migrates the encryption level of the stored data for the current account ID
