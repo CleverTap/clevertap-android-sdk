@@ -10,11 +10,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ExpandableListView
 import android.widget.Toast
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -30,12 +31,16 @@ import com.clevertap.demo.R
 import com.clevertap.demo.ViewModelFactory
 import com.clevertap.demo.WebViewActivity
 import com.clevertap.demo.action
-import com.clevertap.demo.databinding.HomeScreenFragmentBinding
 import com.clevertap.demo.snack
 import org.json.JSONObject
 
 private const val TAG = "HomeScreenFragment"
 private const val PERMISSIONS_REQUEST_CODE = 34
+
+data class HomeScreenFragmentBinding(
+   val expandableListView: ExpandableListView,
+   val root: CoordinatorLayout
+)
 
 class HomeScreenFragment : Fragment() {
 
@@ -44,7 +49,6 @@ class HomeScreenFragment : Fragment() {
     }
 
     companion object {
-
         fun newInstance() = HomeScreenFragment()
     }
 
@@ -54,12 +58,15 @@ class HomeScreenFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        listItemBinding = HomeScreenFragmentBinding.inflate(layoutInflater, container, false).apply {
-            viewmodel = viewModel
-        }
+        val view = LayoutInflater.from(context).inflate(R.layout.home_screen_fragment, container, false)
+        listItemBinding = HomeScreenFragmentBinding(
+            expandableListView = view.findViewById(R.id.expandableListView),
+            root = view.findViewById(R.id.home_root)
+        )
+
         listItemBinding.expandableListView.isNestedScrollingEnabled = true
 
-        return listItemBinding.root
+        return view
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -95,14 +102,9 @@ class HomeScreenFragment : Fragment() {
     }
 
     private fun setupListAdapter() {
-        val viewModel = listItemBinding.viewmodel
-        if (viewModel != null) {
-            val listAdapter =
-                HomeScreenListAdapter(viewModel, HomeScreenModel.listData.keys.toList(), HomeScreenModel.listData)
-            listItemBinding.expandableListView.setAdapter(listAdapter)
-        } else {
-            Log.w(TAG, "ViewModel not initialized when attempting to set up adapter.")
-        }
+        listItemBinding.expandableListView.setAdapter(
+            HomeScreenListAdapter(viewModel, HomeScreenModel.listData.keys.toList(), HomeScreenModel.listData)
+        )
     }
 
     private fun initCTGeofenceApi(cleverTapInstance: CleverTapAPI) {

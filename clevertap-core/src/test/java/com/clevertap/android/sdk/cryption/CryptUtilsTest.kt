@@ -15,6 +15,8 @@ import org.json.JSONObject
 import org.junit.*
 import org.mockito.*
 import org.mockito.Mockito.*
+import org.mockito.Mockito.verify
+import org.mockito.kotlin.*
 import org.skyscreamer.jsonassert.JSONAssert
 import kotlin.test.assertEquals
 
@@ -278,11 +280,11 @@ class CryptUtilsTest : BaseTestCase() {
         )
         assertEquals(neexpectedCGK.toString(), actualCGK)
 
-        val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+        val captor = argumentCaptor<JSONObject>()
         val dbActual = JSONObject()
         dbActual.put("Email", encryptedIdentifier)
         verify(mockDBAdapter).storeUserProfile(anyString(), captor.capture())
-        JSONAssert.assertEquals(dbActual, captor.value, true)
+        JSONAssert.assertEquals(dbActual, captor.firstValue, true)
     }
 
     @Test
@@ -333,11 +335,11 @@ class CryptUtilsTest : BaseTestCase() {
         )
         assertEquals(neexpectedCGK.toString(), actualCGK)
 
-        val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+        val captor = argumentCaptor<JSONObject>()
         val dbActual = JSONObject()
         dbActual.put("Email", originalIdentifier)
         verify(mockDBAdapter).storeUserProfile(anyString(), captor.capture())
-        JSONAssert.assertEquals(dbActual, captor.value, true)
+        JSONAssert.assertEquals(dbActual, captor.firstValue, true)
 
     }
 
@@ -430,11 +432,11 @@ class CryptUtilsTest : BaseTestCase() {
         verify(mockCryptHandler).encryptionFlagStatus = 3
         assertEquals(3, get(Constants.KEY_ENCRYPTION_FLAG_STATUS, -1))
 
-        val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+        val captor = argumentCaptor<JSONObject>()
         val dbActual = JSONObject()
         dbActual.put("Email", encryptedIdentifier)
         verify(mockDBAdapter).storeUserProfile(anyString(), captor.capture())
-        JSONAssert.assertEquals(dbActual, captor.value, true)
+        JSONAssert.assertEquals(dbActual, captor.firstValue, true)
     }
 
     @Test
@@ -459,7 +461,7 @@ class CryptUtilsTest : BaseTestCase() {
             mockDBAdapter.fetchUserProfileById(config.accountId)
         ).thenReturn(db)
 
-        `when`(mockDBAdapter.storeUserProfile(anyString(), any())).thenReturn(-1L)
+        `when`(mockDBAdapter.storeUserProfile(anyString(), org.mockito.kotlin.any())).thenReturn(-1L)
 
         //--------Act----------
         migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
@@ -490,7 +492,7 @@ class CryptUtilsTest : BaseTestCase() {
             mockDBAdapter.fetchUserProfileById(config.accountId)
         ).thenReturn(db)
 
-        `when`(mockDBAdapter.storeUserProfile(anyString(), any())).thenReturn(-2L)
+        `when`(mockDBAdapter.storeUserProfile(anyString(), org.mockito.kotlin.any())).thenReturn(-2L)
 
         //--------Act----------
         migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)

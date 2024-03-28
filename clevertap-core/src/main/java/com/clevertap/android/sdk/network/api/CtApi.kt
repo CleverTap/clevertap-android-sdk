@@ -42,10 +42,20 @@ class CtApi(
         private set
 
     fun sendQueue(useSpikyDomain: Boolean, body: SendQueueRequestBody): Response =
-        httpClient.execute(createRequest("a1", body.toString(), useSpikyDomain, includeTs = true))
+        httpClient.execute(createRequest(
+            relativePath = "a1",
+            body = body.toString(),
+            useSpikyDomain = useSpikyDomain,
+            includeTs = true)
+        )
 
     fun performHandshakeForDomain(useSpikyDomain: Boolean): Response {
-        val request = createRequest("hello", null, useSpikyDomain, includeTs = false)
+        val request = createRequest(
+            relativePath = "hello",
+            body = null,
+            useSpikyDomain = useSpikyDomain,
+            includeTs = false
+        )
         logger.verbose(logTag, "Performing handshake with ${request.url}")
         return httpClient.execute(request)
     }
@@ -92,7 +102,7 @@ class CtApi(
     private fun getUriForPath(path: String, useSpikyDomain: Boolean, includeTs: Boolean): Uri {
         val builder = Uri.Builder()
             .scheme("https")
-            .authority(getActualDomain(useSpikyDomain))
+            .authority(getActualDomain(useSpikyDomain) ?: defaultDomain)
             .appendPath(path)
             .appendDefaultQueryParams()
         if (includeTs) {

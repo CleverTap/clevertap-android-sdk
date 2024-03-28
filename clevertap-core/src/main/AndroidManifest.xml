@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.clevertap.android.sdk"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Required runtime permission to display notifications on Android 13 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
@@ -18,12 +16,12 @@
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
 
         <receiver
-            android:name="com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver"
+            android:name=".pushnotification.CTPushNotificationReceiver"
             android:enabled="true"
             android:exported="false" />
 
         <service
-            android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService"
+            android:name=".pushnotification.amp.CTBackgroundIntentService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE">
             <intent-filter>
@@ -32,12 +30,12 @@
         </service>
 
         <service
-            android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService"
+            android:name=".pushnotification.amp.CTBackgroundJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <receiver
-            android:name="com.clevertap.android.sdk.pushnotification.fcm.CTFirebaseMessagingReceiver"
+            android:name=".pushnotification.fcm.CTFirebaseMessagingReceiver"
             android:exported="true"
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter android:priority="-1">

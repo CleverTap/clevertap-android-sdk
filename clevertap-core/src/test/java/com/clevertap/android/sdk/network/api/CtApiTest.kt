@@ -5,11 +5,13 @@ import org.junit.*
 import org.junit.runner.*
 import org.mockito.*
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class CtApiTest {
 
     private lateinit var ctApi: CtApi

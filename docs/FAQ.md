@@ -31,3 +31,9 @@
 
    * First ensure that your CleverTap push notifications integration is working properly as described in [this guide](https://developer.clevertap.com/docs/android#section-push-notifications).<br>
    * For Android 6.0 or higher due to [Doze-Standby](https://developer.android.com/training/monitoring-device-state/doze-standby) and For Android 9.0 or higher due to [App standby buckets](https://developer.android.com/topic/performance/appstandby) network connectivity for apps gets deferred by some time as described [here in Network Column](https://developer.android.com/topic/performance/power/power-details) which prevents SDK to connect to CleverTap servers for raising notifications.
+
+7. Why does the build fail for an app when minifying is enabled for gradle wrapper 8.0+ and android gradle plugin 8.0.0+?
+
+   * This occurs due to change in behaviour in the AGP`
+     When R8 traces the program it will try to handle all the classes, methods and fields that it finds in the part of the program it considers live. Earlier during this tracing, it threw a warning which allowed building the apk. But these are now converted into errors. Details [here](https://developer.android.com/build/releases/past-releases/agp-8-0-0-release-notes)
+   * Upgrade to `com.clevertap.android:clevertap-android-sdk` v6.1.0 and `com.clevertap.android:clevertap-hms-sdk` v1.3.4 to fix this issue.

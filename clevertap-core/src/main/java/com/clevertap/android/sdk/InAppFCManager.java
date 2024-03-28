@@ -133,12 +133,13 @@ public class InAppFCManager {
             final SharedPreferences prefs = StorageHelper
                     .getPreferences(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
             final Map<String, ?> all = prefs.getAll();
-            for (Map.Entry<String,?> inapp : all.entrySet()) {
-                if (inapp.getValue() instanceof String) {
-                    final String[] parts = ((String) inapp.getValue()).split(",");
+            for (Map.Entry<String, ?> inApp : all.entrySet()) {
+                //inApp: "targetID" -> "todayCount,lifetime"
+                if (inApp.getValue() instanceof String) {
+                    final String[] parts = ((String) inApp.getValue()).split(",");
                     if (parts.length == 2) {
                         JSONArray a = new JSONArray();
-                        a.put(0, inapp);
+                        a.put(0, inApp.getKey());
                         a.put(1, Integer.parseInt(parts[0]));
                         a.put(2, Integer.parseInt(parts[1]));
                         arr.put(a);

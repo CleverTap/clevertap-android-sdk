@@ -12,6 +12,7 @@
 
         <ImageView
             android:id="@+id/backgroundImage"
+            android:contentDescription="inapp_bg_img"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentLeft="true"
@@ -21,6 +22,7 @@
 
         <TextView
             android:id="@+id/cover_title"
+            android:contentDescription="inapp_title"
             android:layout_width="262dp"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
@@ -33,6 +35,7 @@
 
         <TextView
             android:id="@+id/cover_message"
+            android:contentDescription="inapp_message"
             android:layout_width="262dp"
             android:layout_height="wrap_content"
             android:layout_below="@+id/cover_title"
@@ -57,6 +60,7 @@
 
             <Button
                 android:id="@+id/cover_button1"
+                android:contentDescription="inapp_btn1"
                 android:layout_width="464dp"
                 android:layout_height="42dp"
                 android:textSize="20sp"
@@ -64,6 +68,7 @@
 
             <Button
                 android:id="@+id/cover_button2"
+                android:contentDescription="inapp_btn2"
                 android:layout_width="464dp"
                 android:layout_height="42dp"
                 android:layout_marginTop="20dp"
@@ -73,6 +78,7 @@
     </RelativeLayout>
 
     <com.clevertap.android.sdk.customviews.CloseImageView
+        android:contentDescription="inapp_close_btn"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"

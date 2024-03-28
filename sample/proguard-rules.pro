@@ -19,12 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
--dontwarn com.clevertap.android.sdk.**
 -keep class androidx.core.app.CoreComponentFactory { *; }
 -keep class com.xiaomi.mipush.**{*;}
 -keep class com.huawei.**{*;}
 
--ignorewarnings
 -keepattributes *Annotation*
 -keepattributes Exceptions
 -keepattributes InnerClasses
@@ -33,3 +31,4 @@
 -keep class com.hianalytics.android.**{*;}
 -keep class com.huawei.updatesdk.**{*;}
 -keep class com.huawei.hms.**{*;}
+-keep class com.clevertap.demo.ExampleVariables {*;}

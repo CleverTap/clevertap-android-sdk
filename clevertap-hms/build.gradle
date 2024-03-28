@@ -18,6 +18,18 @@ ext {
 
 apply from: "../gradle-scripts/commons.gradle"
 
+android {
+    namespace 'com.clevertap.android.hms'
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+}
+
 dependencies {
     compileOnly project(':clevertap-core')
     implementation (libs.huawei.push)
