@@ -18,8 +18,8 @@ android {
         applicationId "com.clevertap.demo"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 200005
-        versionName "1.6.2-full"
+        versionCode 200015
+        versionName "2.0.0-full"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -128,6 +128,7 @@ dependencies {
     // Declare the dependency for the Analytics library
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-analytics")
 /*
     implementation "com.android.tools.build:gradle:4.2.1"
     implementation "com.google.gms:google-services:4.3.3"// Google Services plugin

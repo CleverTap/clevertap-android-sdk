@@ -22,41 +22,25 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
+import com.google.firebase.analytics.FirebaseAnalytics
 import org.json.JSONObject
 import kotlin.system.measureTimeMillis
 
 class MyApplication : MultiDexApplication(), CTPushNotificationListener, ActivityLifecycleCallbacks,
     InboxMessageButtonListener, InboxMessageListener {
 
+        companion object {
+            private const val TAG = "MyApplication"
+        }
+
     override fun onCreate() {
-
-        /*StrictMode.setThreadPolicy(
-            StrictMode.ThreadPolicy.Builder()
-                .detectAll()   // or .detectAll() for all detectable problems
-                .penaltyLog()
-                //.penaltyDeath()
-                .build()
-        );
-        StrictMode.setVmPolicy(
-            StrictMode.VmPolicy.Builder()
-                .detectAll()
-                .penaltyLog()
-                //.penaltyDeath()
-                .build()
-        )*/
-
-        CleverTapAPI.setDebugLevel(VERBOSE)
-        //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
-        //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
-        TemplateRenderer.debugLevel = 3;
-        CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
-
-        val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
-        println("Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds")
-
-        registerActivityLifecycleCallbacks(this)
+        setupStrictMode()
+        cleverTapPreAppCreated()
         super.onCreate()
+        ctPostAppCreated()
+    }
 
+    private fun ctPostAppCreated() {
         ProviderInstaller.installIfNeededAsync(this, object : ProviderInstallListener {
             override fun onProviderInstalled() {}
             override fun onProviderInstallFailed(i: Int, intent: Intent?) {
@@ -64,7 +48,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             }
         })
 
-        /*val cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(
+        /*val ctInstance = CleverTapInstanceConfig.createInstance(
             applicationContext,
             "YOUR CLEVERTAP ACCOUNT ID",
             "YOUR CLEVERTAP TOKEN"
@@ -81,27 +65,32 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             "YOUR SPIKY PROXY DOMAIN"
         )*/
 
-        val defaultInstance = CleverTapAPI.getDefaultInstance(this)
-        defaultInstance?.syncListener = object : SyncListener {
-            override fun profileDataUpdated(updates: JSONObject?) {//no op
+        val ctInstance = CleverTapAPI.getDefaultInstance(this)
+        ctInstance?.apply {
+            syncListener = object : SyncListener {
+                override fun profileDataUpdated(updates: JSONObject?) {//no op
+                }
+
+                override fun profileDidInitialize(CleverTapID: String?) {
+                    println(
+                        "CleverTap DeviceID from Application class= $CleverTapID"
+                    )
+                }
             }
 
-            override fun profileDidInitialize(CleverTapID: String?) {
+            setInboxMessageButtonListener(this@MyApplication)
+            setCTInboxMessageListener(this@MyApplication)
+
+            ctPushNotificationListener = this@MyApplication
+
+            getCleverTapID { ctId ->
                 println(
-                    "CleverTap DeviceID from Application class= $CleverTapID"
+                    "CleverTap DeviceID from Application class= $ctId"
                 )
+                Log.i(TAG, "setting object id to firebase : $ctId")
+                FirebaseAnalytics.getInstance(this@MyApplication)
+                    .setUserProperty("ct_objectId", ctId)
             }
-        }
-
-        defaultInstance?.setInboxMessageButtonListener(this)
-        defaultInstance?.setCTInboxMessageListener(this)
-
-        defaultInstance?.ctPushNotificationListener = this
-
-        defaultInstance?.getCleverTapID {
-            println(
-                "CleverTap DeviceID from Application class= $it"
-            )
         }
 
         /*println(
@@ -123,8 +112,37 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         )
     }
 
-    override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
+    private fun cleverTapPreAppCreated() {
+        CleverTapAPI.setDebugLevel(VERBOSE)
+        //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
+        //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
+        TemplateRenderer.debugLevel = 3;
+        CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
 
+        val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
+        println("Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds")
+
+        registerActivityLifecycleCallbacks(this)
+    }
+
+    private fun setupStrictMode() {
+        /*StrictMode.setThreadPolicy(
+            StrictMode.ThreadPolicy.Builder()
+                .detectAll()   // or .detectAll() for all detectable problems
+                .penaltyLog()
+                //.penaltyDeath()
+                .build()
+        );
+        StrictMode.setVmPolicy(
+            StrictMode.VmPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+                //.penaltyDeath()
+                .build()
+        )*/
+    }
+
+    override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
         Log.i("MyApplication", "onNotificationClickedPayloadReceived = $payload")
     }
 
