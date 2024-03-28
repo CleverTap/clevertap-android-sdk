@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.utils;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
@@ -45,10 +44,5 @@ public class PackageUtils {
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
-    }
-
-    private static boolean isIntentResolved(Context context, Intent intent) {
-        return (intent != null
-                && context.getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null);
     }
 }
