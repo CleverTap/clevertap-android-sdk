@@ -103,17 +103,6 @@ public final class ManifestValidator {
                 } catch (Error error) {
                     Logger.v("FATAL : " + error.getMessage());
                 }
-            }else if(pushType == PushType.XPS){
-                try {
-                    // use class name string directly here to avoid class not found issues on class import
-                    validateReceiverInManifest((Application) context.getApplicationContext(),
-                            "com.clevertap.android.xps.XiaomiMessageReceiver");
-                } catch (Exception e) {
-                    Logger.v("Receiver/Service issue : " + e.toString());
-
-                } catch (Error error) {
-                    Logger.v("FATAL : " + error.getMessage());
-                }
             }
         }
 

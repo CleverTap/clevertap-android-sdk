@@ -44,10 +44,6 @@ public class ManifestInfo {
 
     private static String intentServiceName;
 
-    private static String xiaomiAppKey;
-
-    private static String xiaomiAppID;
-
     private final String devDefaultPushChannelId;
 
     private final String[] profileKeys;
@@ -119,14 +115,6 @@ public class ManifestInfo {
             intentServiceName = _getManifestStringValueForKey(metaData, Constants.LABEL_INTENT_SERVICE);
         }
 
-        if (xiaomiAppKey == null) {
-            xiaomiAppKey = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_KEY);
-        }
-
-        if (xiaomiAppID == null) {
-            xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
-        }
-
         devDefaultPushChannelId = _getManifestStringValueForKey(metaData, Constants.LABEL_DEFAULT_CHANNEL_ID);
 
         profileKeys = parseProfileKeys(metaData);
@@ -157,14 +145,6 @@ public class ManifestInfo {
 
     public String[] getProfileKeys() {
         return profileKeys;
-    }
-
-    public String getXiaomiAppID() {
-        return xiaomiAppID;
-    }
-
-    public String getXiaomiAppKey() {
-        return xiaomiAppKey;
     }
 
     boolean enableBeta() {
@@ -239,18 +219,6 @@ public class ManifestInfo {
         accountToken = token;
         proxyDomain = _proxyDomain;
         spikyProxyDomain = _spikyProxyDomain;
-    }
-
-    static void changeXiaomiCredentials(String xiaomiAppID, String xiaomiAppKey) {
-        if (ManifestInfo.xiaomiAppID != null || ManifestInfo.xiaomiAppKey != null) {
-            Logger.i("Xiaomi SDK already initialized with AppID:" + ManifestInfo.xiaomiAppID
-                    + " and AppKey:" + ManifestInfo.xiaomiAppKey + ". Cannot change credentials to "
-                    + xiaomiAppID + " and " + xiaomiAppKey);
-            return;
-        }
-
-        ManifestInfo.xiaomiAppID = xiaomiAppID;
-        ManifestInfo.xiaomiAppKey = xiaomiAppKey;
     }
 
     /**

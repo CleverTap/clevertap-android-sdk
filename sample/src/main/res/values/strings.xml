@@ -7,9 +7,6 @@
     <string name="inbox">Inbox</string>
     <string name="webview">WebView</string>
 
-    <string name="xiaomi_app_key">Your Xiaomi App Key</string>
-    <string name="xiaomi_app_id">Your Xiaomi App ID</string>
-
     <!-- Geofence -->
     <string name="ok">OK</string>
     <string name="permission_rationale">All the time location permission required for core functionality</string>

@@ -1,6 +1,5 @@
 # For CleverTap SDK's
 -keep class com.clevertap.android.sdk.pushnotification.fcm.FcmPushProvider{*;}
--keep class com.clevertap.android.xps.XiaomiPushProvider{*;}
 -keep class com.clevertap.android.hms.HmsPushProvider{*;}
 -keep class com.google.firebase.messaging.FirebaseMessagingService{*;}
 -keep class com.clevertap.android.sdk.pushnotification.CTNotificationIntentService{*;}

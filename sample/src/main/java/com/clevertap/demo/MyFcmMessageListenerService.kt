@@ -21,9 +21,6 @@ class MyFcmMessageListenerService : FirebaseMessagingService() {
         } else if (pushType.equals("hps")) {
             //CTHmsMessageHandler().createNotification(applicationContext,message)
             //CTHmsMessageHandler().processPushAmp(applicationContext,message)
-        } else if (pushType.equals("xps")) {
-            //CTXiaomiMessageHandler().createNotification(applicationContext,message)
-            //CTXiaomiMessageHandler().processPushAmp(applicationContext,message)
         }
     }
 

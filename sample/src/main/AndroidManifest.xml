@@ -65,15 +65,6 @@
             android:name="CLEVERTAP_SPIKY_PROXY_DOMAIN"
             android:value="push.sdktesting.xyz"/>-->
 
-        <!-- Xiaomi Push -->
-        <meta-data
-            android:name="CLEVERTAP_XIAOMI_APP_KEY"
-            android:value="@string/xiaomi_app_key" />
-
-        <meta-data
-            android:name="CLEVERTAP_XIAOMI_APP_ID"
-            android:value="@string/xiaomi_app_id" />
-
         <!-- android:name="CLEVERTAP_REGION" -->
         <!-- android:value="eu1"/> -->
         <!-- IMPORTANT: To force use Google AD ID to uniquely identify  users, use the following meta tag. GDPR mandates that if you are using this tag, there is prominent disclousure to your end customer in their application. Read more about GDPR here - https://clevertap.com/blog/in-preparation-of-gdpr-compliance/ -->
