@@ -20,6 +20,7 @@ import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.demo.ui.main.NotificationUtils
+import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
 import org.json.JSONObject
@@ -44,6 +45,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 //.penaltyDeath()
                 .build()
         )*/
+        ANRWatchDog().start()
 
         CleverTapAPI.setDebugLevel(VERBOSE)
         //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")

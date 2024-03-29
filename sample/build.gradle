@@ -97,6 +97,7 @@ dependencies {
     localImplementation(project(":clevertap-xps")) // For Xiaomi Push use
     localImplementation(project(":clevertap-pushtemplates"))
     localImplementation(project(":clevertap-hms")) // For Huawei Push use
+    localImplementation(implementation 'com.github.anrwatchdog:anrwatchdog:1.4.0')
 
     implementation("com.google.android.gms:play-services-location:21.0.0") // Needed for geofence
     implementation("androidx.work:work-runtime:2.7.1") // Needed for geofence
