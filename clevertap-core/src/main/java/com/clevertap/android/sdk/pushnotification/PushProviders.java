@@ -738,9 +738,6 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void initPushAmp() {
-        // Prevent PushAmp initialisation on xiaomi's thread
-        if(!Utils.isMainProcess(context, context.getPackageName()))
-            return;
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("createOrResetWorker", new Callable<Void>() {
