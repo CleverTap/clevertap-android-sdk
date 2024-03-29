@@ -26,7 +26,6 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueData;
 import com.clevertap.android.sdk.events.EventGroup;
@@ -135,7 +134,6 @@ public class NetworkManager extends BaseNetworkManager {
             CTLockManager ctLockManager,
             Validator validator,
             LocalDataStore localDataStore,
-            CryptHandler cryptHandler,
             InAppResponse inAppResponse,
             final CtApiWrapper ctApiWrapper) {
         this.context = context;
