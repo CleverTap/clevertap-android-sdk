@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CTXtensions;
@@ -274,6 +275,7 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     @Override
+    @WorkerThread
     public void initHandshake(final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
         // Always set this to 0 so that the handshake is not performed during a HTTP failure
         responseFailureCount = 0;
@@ -281,6 +283,7 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     @Override
+    @WorkerThread
     public boolean needsHandshakeForDomain(final EventGroup eventGroup) {
         final String domain = getDomain(eventGroup);
         boolean needHandshakeDueToFailure = responseFailureCount > 5;
@@ -306,10 +309,12 @@ public class NetworkManager extends BaseNetworkManager {
         StorageHelper.persist(editor);
     }
 
+    @WorkerThread
     int getCurrentRequestTimestamp() {
         return ctApi.getCurrentRequestTimestampSeconds();
     }
 
+    @WorkerThread
     public String getDomain(final EventGroup eventGroup) {
         return ctApi.getActualDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED);
     }
@@ -485,6 +490,7 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @WorkerThread
     private void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
             final Runnable handshakeSuccessCallback) {
 
@@ -511,6 +517,7 @@ public class NetworkManager extends BaseNetworkManager {
      *
      * @return True to continue sending requests, false otherwise.
      */
+    @WorkerThread
     private boolean processIncomingHeaders(final Context context, Response response) {
         final String muteCommand = response.getHeaderValue(Constants.HEADER_MUTE);
         if (muteCommand != null && muteCommand.trim().length() > 0) {
@@ -608,6 +615,7 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @WorkerThread
     private Response callApiForEventGroup(EventGroup eventGroup, SendQueueRequestBody body) {
         if (eventGroup == EventGroup.VARIABLES) {
             return ctApi.defineVars(body);
@@ -654,6 +662,7 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @WorkerThread
     private boolean handleSendQueueResponse(@NonNull Response response, SendQueueRequestBody body,
             EndpointId endpointId) {
         if (!response.isSuccess()) {
@@ -761,6 +770,7 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @WorkerThread
     private void setDomain(final Context context, String domainName) {
         logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
@@ -783,6 +793,7 @@ public class NetworkManager extends BaseNetworkManager {
         StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS), ts);
     }
 
+    @WorkerThread
     private void setSpikyDomain(final Context context, String spikyDomainName) {
         logger.verbose(config.getAccountId(), "Setting spiky domain to " + spikyDomainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
@@ -888,6 +899,7 @@ public class NetworkManager extends BaseNetworkManager {
         return newPrefs;
     }
 
+    @WorkerThread
     private void setMuted(final Context context, boolean mute) {
         if (mute) {
             final int now = (int) (System.currentTimeMillis() / 1000);

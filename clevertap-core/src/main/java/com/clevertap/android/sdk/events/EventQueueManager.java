@@ -5,6 +5,7 @@ import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 import android.content.Context;
 import android.location.Location;
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -122,6 +123,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         }
     }
 
+    @WorkerThread
     private void processDefineVarsEvent(Context context, JSONObject event) {
         sendImmediately(context, EventGroup.VARIABLES, event);
     }
@@ -232,9 +234,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         JSONArray singleEventQueue = new JSONArray().put(eventData);
 
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
-            networkManager.initHandshake(eventGroup, () -> {
-                networkManager.sendQueue(context, eventGroup, singleEventQueue, null);
-            });
+            networkManager.initHandshake(eventGroup, () ->
+                    networkManager.sendQueue(context, eventGroup, singleEventQueue, null));
         } else {
             networkManager.sendQueue(context, eventGroup, singleEventQueue, null);
         }
@@ -450,6 +451,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         return task.submit("queueEvent", new Callable<Void>() {
             @Override
+            @WorkerThread
             public Void call() {
 
                 Location userLocation = cleverTapMetaData.getLocationFromUser();
@@ -480,6 +482,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                             Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
                             task.execute("queueEventWithDelay", new Callable<Void>() {
                                 @Override
+                                @WorkerThread
                                 public Void call() {
                                     sessionManager.lazyCreateSession(context);
                                     pushInitialEventsAsync();
