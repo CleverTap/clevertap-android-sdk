@@ -24,7 +24,7 @@ import com.clevertap.android.sdk.network.AppLaunchListener;
 import com.clevertap.android.sdk.network.CompositeBatchListener;
 import com.clevertap.android.sdk.network.FetchInAppListener;
 import com.clevertap.android.sdk.network.NetworkManager;
-import com.clevertap.android.sdk.network.api.CtApiProviderKt;
+import com.clevertap.android.sdk.network.api.CtApiWrapper;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.response.InAppResponse;
@@ -186,6 +186,7 @@ class CleverTapFactory {
                 coreMetaData
         );
 
+        final CtApiWrapper ctApiWrapper = new CtApiWrapper(context, config, deviceInfo);
         NetworkManager networkManager = new NetworkManager(
                 context,
                 config,
@@ -194,13 +195,13 @@ class CleverTapFactory {
                 validationResultStack,
                 controllerManager,
                 baseDatabaseManager,
-                CtApiProviderKt.provideDefaultTestCtApi(context, config, deviceInfo),
                 callbackManager,
                 ctLockManager,
                 validator,
                 localDataStore,
                 cryptHandler,
-                inAppResponse
+                inAppResponse,
+                ctApiWrapper
         );
         coreState.setNetworkManager(networkManager);
 

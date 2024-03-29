@@ -32,7 +32,7 @@ import com.clevertap.android.sdk.db.QueueData;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
-import com.clevertap.android.sdk.network.api.CtApi;
+import com.clevertap.android.sdk.network.api.CtApiWrapper;
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody;
 import com.clevertap.android.sdk.network.http.Response;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
@@ -76,6 +76,8 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final CoreMetaData coreMetaData;
 
+    private final CtApiWrapper ctApiWrapper;
+
     private final BaseDatabaseManager databaseManager;
 
     private final DeviceInfo deviceInfo;
@@ -83,8 +85,6 @@ public class NetworkManager extends BaseNetworkManager {
     private final LocalDataStore localDataStore;
 
     private final Logger logger;
-
-    private final CtApi ctApi;
 
     private int responseFailureCount = 0;
 
@@ -131,13 +131,13 @@ public class NetworkManager extends BaseNetworkManager {
             ValidationResultStack validationResultStack,
             ControllerManager controllerManager,
             BaseDatabaseManager baseDatabaseManager,
-            CtApi ctApi,
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
             LocalDataStore localDataStore,
             CryptHandler cryptHandler,
-            InAppResponse inAppResponse) {
+            InAppResponse inAppResponse,
+            final CtApiWrapper ctApiWrapper) {
         this.context = context;
         this.config = config;
         this.deviceInfo = deviceInfo;
@@ -150,7 +150,7 @@ public class NetworkManager extends BaseNetworkManager {
         this.validationResultStack = validationResultStack;
         this.controllerManager = controllerManager;
         databaseManager = baseDatabaseManager;
-        this.ctApi = ctApi;
+        this.ctApiWrapper = ctApiWrapper;
 
         cleverTapResponses.add(inAppResponse);
         cleverTapResponses.add(new MetadataResponse(config, deviceInfo, this));
@@ -311,12 +311,12 @@ public class NetworkManager extends BaseNetworkManager {
 
     @WorkerThread
     int getCurrentRequestTimestamp() {
-        return ctApi.getCurrentRequestTimestampSeconds();
+        return ctApiWrapper.getCtApi().getCurrentRequestTimestampSeconds();
     }
 
     @WorkerThread
     public String getDomain(final EventGroup eventGroup) {
-        return ctApi.getActualDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED);
+        return ctApiWrapper.getCtApi().getActualDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED);
     }
 
     int getFirstRequestTimestamp() {
@@ -494,7 +494,7 @@ public class NetworkManager extends BaseNetworkManager {
     private void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
             final Runnable handshakeSuccessCallback) {
 
-        try (Response response = ctApi.performHandshakeForDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)) {
+        try (Response response = ctApiWrapper.getCtApi().performHandshakeForDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)) {
             if (response.isSuccess()) {
                 logger.verbose(config.getAccountId(), "Received success from handshake :)");
 
@@ -618,9 +618,9 @@ public class NetworkManager extends BaseNetworkManager {
     @WorkerThread
     private Response callApiForEventGroup(EventGroup eventGroup, SendQueueRequestBody body) {
         if (eventGroup == EventGroup.VARIABLES) {
-            return ctApi.defineVars(body);
+            return ctApiWrapper.getCtApi().defineVars(body);
         } else {
-            return ctApi.sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
+            return ctApiWrapper.getCtApi().sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
         }
     }
 
@@ -775,7 +775,7 @@ public class NetworkManager extends BaseNetworkManager {
         logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
                 domainName);
-        ctApi.setDomain(domainName);
+        ctApiWrapper.getCtApi().setDomain(domainName);
 
         if (callbackManager.getSCDomainListener() != null) {
             if (domainName != null) {
@@ -798,7 +798,7 @@ public class NetworkManager extends BaseNetworkManager {
         logger.verbose(config.getAccountId(), "Setting spiky domain to " + spikyDomainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
                 spikyDomainName);
-        ctApi.setSpikyDomain(spikyDomainName);
+        ctApiWrapper.getCtApi().setSpikyDomain(spikyDomainName);
     }
 
     /**
