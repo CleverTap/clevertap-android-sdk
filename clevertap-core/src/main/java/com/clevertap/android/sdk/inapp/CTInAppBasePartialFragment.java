@@ -17,16 +17,6 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
     void cleanup() {
         if (!Utils.isActivityDead(getActivity()) && !isCleanedUp.get()) {
             final FragmentManager fragmentManager = getFragmentManager();

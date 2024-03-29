@@ -729,6 +729,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             case CTInAppTypeInterstitialImageOnly:
             case CTInAppTypeHalfInterstitialImageOnly:
             case CTInAppTypeCoverImageOnly:
+            case CTInAppTypeFooterHTML:
+            case CTInAppTypeHeaderHTML:
+            case CTInAppTypeFooter:
+            case CTInAppTypeHeader:
 
                 Intent intent = new Intent(context, InAppNotificationActivity.class);
                 intent.putExtra(Constants.INAPP_KEY, inAppNotification);
@@ -750,49 +754,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                             " It is not setup to support in-app notifications yet.", t);
                 }
                 break;
-            case CTInAppTypeFooterHTML:
-                inAppFragment = new CTInAppHtmlFooterFragment();
-                break;
-            case CTInAppTypeHeaderHTML:
-                inAppFragment = new CTInAppHtmlHeaderFragment();
-                break;
-            case CTInAppTypeFooter:
-                inAppFragment = new CTInAppNativeFooterFragment();
-                break;
-            case CTInAppTypeHeader:
-                inAppFragment = new CTInAppNativeHeaderFragment();
-                break;
-            default:
+            case CTInAppTypeHTML:
                 Logger.d(config.getAccountId(), "Unknown InApp Type found: " + type);
                 currentlyDisplayingInApp = null;
-                return;
-        }
-
-        if (inAppFragment != null) {
-            Logger.d("Displaying In-App: " + inAppNotification.getJsonDescription());
-            try {
-                //noinspection Constant Conditions
-                FragmentTransaction fragmentTransaction = ((FragmentActivity) CoreMetaData.getCurrentActivity())
-                        .getSupportFragmentManager()
-                        .beginTransaction();
-                Bundle bundle = new Bundle();
-                bundle.putParcelable("inApp", inAppNotification);
-                bundle.putParcelable("config", config);
-                inAppFragment.setArguments(bundle);
-                fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
-                fragmentTransaction.add(android.R.id.content, inAppFragment, inAppNotification.getType());
-                Logger.v(config.getAccountId(), "calling InAppFragment " + inAppNotification.getCampaignId());
-                fragmentTransaction.commitNow();
-
-            } catch (ClassCastException e) {
-                Logger.v(config.getAccountId(),
-                        "Fragment not able to render, please ensure your Activity is an instance of AppCompatActivity"
-                                + e.getMessage());
-                currentlyDisplayingInApp = null;
-            } catch (Throwable t) {
-                Logger.v(config.getAccountId(), "Fragment not able to render", t);
-                currentlyDisplayingInApp = null;
-            }
+                break;
         }
     }
 

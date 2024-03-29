@@ -20,14 +20,19 @@ import android.view.WindowManager;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
-import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
+
+import com.clevertap.android.sdk.inapp.CTInAppBaseFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
+import com.clevertap.android.sdk.inapp.CTInAppHtmlFooterFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
+import com.clevertap.android.sdk.inapp.CTInAppHtmlHeaderFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlInterstitialFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeCoverFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeCoverImageFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeFooterFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeHeaderFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
@@ -126,7 +131,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             }
         }
 
-        CTInAppBaseFullFragment contentFragment;
+        CTInAppBaseFragment contentFragment;
         if (savedInstanceState == null) {
             contentFragment = createContentFragment();
             if (contentFragment != null) {
@@ -306,9 +311,9 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         pushPermissionResultCallbackWeakReference = new WeakReference<>(callback);
     }
 
-    private CTInAppBaseFullFragment createContentFragment() {
+    private CTInAppBaseFragment createContentFragment() {
         CTInAppType type = inAppNotification.getInAppType();
-        CTInAppBaseFullFragment viewFragment = null;
+        CTInAppBaseFragment viewFragment = null;
         switch (type) {
             case CTInAppTypeCoverHTML: {
                 viewFragment = new CTInAppHtmlCoverFragment();
@@ -499,6 +504,18 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 }
                 break;
             }
+            case CTInAppTypeFooterHTML:
+                viewFragment = new CTInAppHtmlFooterFragment();
+                break;
+            case CTInAppTypeHeaderHTML:
+                viewFragment = new CTInAppHtmlHeaderFragment();
+                break;
+            case CTInAppTypeFooter:
+                viewFragment = new CTInAppNativeFooterFragment();
+                break;
+            case CTInAppTypeHeader:
+                viewFragment = new CTInAppNativeHeaderFragment();
+                break;
             default: {
                 config.getLogger().verbose("InAppNotificationActivity: Unhandled InApp Type: " + type);
                 break;
