@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.events.EventGroup.VARIABLES
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApiTestProvider
+import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.MockHttpClient
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -26,6 +27,7 @@ import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
 import org.mockito.*
+import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -37,12 +39,15 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var networkManager: NetworkManager
     private lateinit var ctApi: CtApi
     private lateinit var mockHttpClient: MockHttpClient
+    @Mock private lateinit var ctApiWrapper : CtApiWrapper
 
     @Before
     fun setUpNetworkManager() {
+        MockitoAnnotations.openMocks(this)
         mockHttpClient = MockHttpClient()
         ctApi = CtApiTestProvider.provideTestCtApiForConfig(cleverTapInstanceConfig, mockHttpClient)
         networkManager = provideNetworkManager()
+        `when`(ctApiWrapper.ctApi).thenReturn(ctApi)
     }
 
     @Test
@@ -151,13 +156,12 @@ class NetworkManagerTest : BaseTestCase() {
             ValidationResultStack(),
             controllerManager,
             dbManager,
-            ctApi,
             callbackManager,
             lockManager,
             Validator(),
             localDataStore,
-            cryptHandler,
-            inAppResponse
+            inAppResponse,
+            ctApiWrapper
         )
     }
 }

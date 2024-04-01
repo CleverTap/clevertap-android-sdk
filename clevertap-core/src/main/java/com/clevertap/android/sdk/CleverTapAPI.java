@@ -1288,6 +1288,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param scDomainListener - the {@link SCDomainListener} instance
      */
     @RestrictTo(Scope.LIBRARY_GROUP)
+    @WorkerThread
     public void setSCDomainListener(SCDomainListener scDomainListener) {
         coreState.getCallbackManager().setSCDomainListener(scDomainListener);
 
