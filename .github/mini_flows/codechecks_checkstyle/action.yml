@@ -57,14 +57,3 @@ runs:
         path:  clevertap-pushtemplates/build/reports/checkstyle
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
-
-    - name: checkstyle-clevertap-xps
-      shell: bash
-      run: ./gradlew :clevertap-xps:checkstyle
-
-    - name: Upload AAR and apk files
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: checkstyle-clevertap-xps
-        path: clevertap-xps/build/reports/checkstyle
