@@ -20,6 +20,7 @@ import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.demo.ui.main.NotificationUtils
+import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -34,6 +35,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         }
 
     override fun onCreate() {
+        ANRWatchDog().start()
         setupStrictMode()
         cleverTapPreAppCreated()
         super.onCreate()
