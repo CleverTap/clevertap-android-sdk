@@ -48,8 +48,6 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         ANRWatchDog().start()
 
         CleverTapAPI.setDebugLevel(VERBOSE)
-        //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
-        //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
         TemplateRenderer.debugLevel = 3;
         CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
 

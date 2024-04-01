@@ -4,11 +4,11 @@ runs:
 
     - name: Run Unit Tests And Code Coverage (DEBUG)
       shell: bash
-      run: ./gradlew :clevertap-core:testDebugUnitTest :clevertap-geofence:testDebugUnitTest  :clevertap-hms:testDebugUnitTest  :clevertap-pushTemplates:testDebugUnitTest :clevertap-xps:testDebugUnitTest
+      run: ./gradlew :clevertap-core:testDebugUnitTest :clevertap-geofence:testDebugUnitTest  :clevertap-hms:testDebugUnitTest  :clevertap-pushTemplates:testDebugUnitTest
 
     - name: Run Unit Tests And Code Coverage (RELEASE)
       shell: bash
-      run: ./gradlew :clevertap-core:testReleaseUnitTest :clevertap-geofence:testReleaseUnitTest  :clevertap-hms:testReleaseUnitTest  :clevertap-pushTemplates:testReleaseUnitTest :clevertap-xps:testReleaseUnitTest
+      run: ./gradlew :clevertap-core:testReleaseUnitTest :clevertap-geofence:testReleaseUnitTest  :clevertap-hms:testReleaseUnitTest  :clevertap-pushTemplates:testReleaseUnitTest
 
     - name: Upload Unit tests
       if: always()
@@ -19,8 +19,6 @@ runs:
           clevertap-core/build/reports/tests
 
           clevertap-hms/build/reports/tests
-
-          clevertap-xps/build/reports/tests
 
           clevertap-geofence/build/reports/tests
 
