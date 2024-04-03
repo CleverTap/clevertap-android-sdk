@@ -2,10 +2,8 @@
 
 ### Version 6.2.0 (April 3, 2024)
 
-#### New Features
-* Extends the push primer callback to notify permission denial when cancel button is clicked on `PromptForSettings` alert dialog.
-
 #### Bug Fixes
+* Extends the push primer callback to notify permission denial when cancel button is clicked on `PromptForSettings` alert dialog.
 * Fixes [#576](https://github.com/CleverTap/clevertap-android-sdk/issues/576) - a crash due to `ClassNotFoundException` for `CTBackgroundJobService`. 
 * Fixes a crash due to `NullPointerException` related to `deviceInfo.deviceId`.
 * Fixes an ANR related to `isMainProcess` check.
