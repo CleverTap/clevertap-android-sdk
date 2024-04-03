@@ -8,7 +8,7 @@
 #### Bug Fixes
 * Fixes [#576](https://github.com/CleverTap/clevertap-android-sdk/issues/576) - a crash due to `ClassNotFoundException` for `CTBackgroundJobService`. 
 * Fixes a crash due to `NullPointerException` related to `deviceInfo.deviceId`.
-* Fixes a crash due to `NullPointerException` related to `isMainProcess` check.
+* Fixes an ANR related to `isMainProcess` check.
 * Fixes an ANR due to eager initialisation of `CtApi` triggered by DeviceId generation.
 
 #### Breaking API Changes
