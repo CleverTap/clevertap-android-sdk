@@ -6,7 +6,7 @@
 * Extends the push primer callback to notify permission denial when cancel button is clicked on `PromptForSettings` alert dialog.
 
 #### Bug Fixes
-* Fixes a crash due to `ClassNotFoundException` for `CTBackgroundJobService`.
+* Fixes a crash due to `ClassNotFoundException` for `CTBackgroundJobService`. [#576](https://github.com/CleverTap/clevertap-android-sdk/issues/576)
 * Fixes a crash due to `NullPointerException` related to `deviceInfo.deviceId`.
 * Fixes a crash due to `NullPointerException` related to `isMainProcess` check.
 * Fixes an ANR due to eager initialisation of `CtApi` triggered by DeviceId generation.
