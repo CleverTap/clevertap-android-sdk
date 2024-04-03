@@ -10,6 +10,7 @@ import android.content.SharedPreferences
 import android.location.Location
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
@@ -128,6 +129,7 @@ fun NotificationManager.getOrCreateChannel(
  * @param caller The caller.
  * @param context The application context.
  */
+@MainThread
 fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: String, context: Context) {
     val flushTask = CTExecutorFactory.executors(coreState.config).postAsyncSafelyTask<Void?>()
 

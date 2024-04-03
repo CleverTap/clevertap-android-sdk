@@ -24,7 +24,7 @@ import com.clevertap.android.sdk.network.AppLaunchListener;
 import com.clevertap.android.sdk.network.CompositeBatchListener;
 import com.clevertap.android.sdk.network.FetchInAppListener;
 import com.clevertap.android.sdk.network.NetworkManager;
-import com.clevertap.android.sdk.network.api.CtApiProviderKt;
+import com.clevertap.android.sdk.network.api.CtApiWrapper;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.response.InAppResponse;
@@ -86,6 +86,7 @@ class CleverTapFactory {
 
         DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
         coreState.setDeviceInfo(deviceInfo);
+        deviceInfo.onInitDeviceInfo(cleverTapID);
 
         CTPreferenceCache.getInstance(context, config);
 
@@ -124,14 +125,14 @@ class CleverTapFactory {
             }
             if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
                 if (storeRegistry.getInAppStore() == null) {
-                    InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo,
+                    InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo.getDeviceID(),
                             config.getAccountId());
                     storeRegistry.setInAppStore(inAppStore);
                     evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
                     callbackManager.addChangeUserCallback(inAppStore);
                 }
                 if (storeRegistry.getImpressionStore() == null) {
-                    ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo,
+                    ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceInfo.getDeviceID(),
                             config.getAccountId());
                     storeRegistry.setImpressionStore(impStore);
                     callbackManager.addChangeUserCallback(impStore);
@@ -185,6 +186,7 @@ class CleverTapFactory {
                 coreMetaData
         );
 
+        final CtApiWrapper ctApiWrapper = new CtApiWrapper(context, config, deviceInfo);
         NetworkManager networkManager = new NetworkManager(
                 context,
                 config,
@@ -193,13 +195,12 @@ class CleverTapFactory {
                 validationResultStack,
                 controllerManager,
                 baseDatabaseManager,
-                CtApiProviderKt.provideDefaultTestCtApi(context, config, deviceInfo),
                 callbackManager,
                 ctLockManager,
                 validator,
                 localDataStore,
-                cryptHandler,
-                inAppResponse
+                inAppResponse,
+                ctApiWrapper
         );
         coreState.setNetworkManager(networkManager);
 
