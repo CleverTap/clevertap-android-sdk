@@ -20,20 +20,6 @@
             android:enabled="true"
             android:exported="false" />
 
-        <service
-            android:name=".pushnotification.amp.CTBackgroundIntentService"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE">
-            <intent-filter>
-                <action android:name="com.clevertap.BG_EVENT" />
-            </intent-filter>
-        </service>
-
-        <service
-            android:name=".pushnotification.amp.CTBackgroundJobService"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-
         <receiver
             android:name=".pushnotification.fcm.CTFirebaseMessagingReceiver"
             android:exported="true"

@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk.network.api
 
 import android.content.Context
+import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient
 
+@WorkerThread
 internal fun provideDefaultCtApi(
     context: Context,
     config: CleverTapInstanceConfig,

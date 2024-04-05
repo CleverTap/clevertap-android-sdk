@@ -64,28 +64,6 @@ runs:
 
 
     #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
-    - name: jacocoTestReportRelease-clevertap-xps
-      if: always()
-      shell: bash
-      run: ./gradlew :clevertap-xps:jacocoTestReportRelease  -Pcoverage='true'
-
-    - name: Upload1
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: TestReportRelease-clevertap-xps
-        path: clevertap-xps/build/reports/tests
-
-    - name: Upload2
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: JacocoReportRelease-clevertap-xps
-        path: clevertap-xps/build/reports/jacoco
-
-
-
-    #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
     - name: jacocoTestReportRelease-clevertap-pushtemplates
       if: always()
       shell: bash

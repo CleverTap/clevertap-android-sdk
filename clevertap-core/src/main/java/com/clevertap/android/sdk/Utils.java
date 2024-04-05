@@ -31,6 +31,7 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
 import androidx.core.content.ContextCompat;
 import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest;
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader;
@@ -510,6 +511,7 @@ public final class Utils {
         haveVideoPlayerSupport = checkForExoPlayer();
     }
 
+    @WorkerThread
     public static boolean isMainProcess(Context context, String mainProcessName) {
 
         try {
