@@ -26,6 +26,24 @@ on:
         default: false
         required: false
 
+      account_id:
+        description: 'Clevertap Account ID'
+        type: string
+        default: ""
+        required: true
+
+      account_token:
+        description: 'Clevertap Account Token'
+        type: string
+        default: ""
+        required: true
+
+      account_region:
+        description: 'Clevertap Account Region'
+        type: string
+        default: eu1
+        required: true
+
 
 jobs:
   build:
@@ -50,6 +68,12 @@ jobs:
           echo "$GOOGLE_SERVICES_BASE64" | base64 --decode > sample/google-services.json
           echo "$SAMPLE_KEY_BASE64" | base64 --decode > sample/SampleKey
           echo "$LOCAL_PROPERTIES_BASE64" | base64 --decode > local.properties
+
+      - name: Replace Clevertap Credentials in AndroidManifest.xml
+        run: |
+          sed -i "s/YOUR ACCT ID/${{ github.event.inputs.account_id }}/g" sample/src/main/AndroidManifest.xml
+          sed -i "s/YOUR ACCT TOKEN/${{ github.event.inputs.account_token }}/g" sample/src/main/AndroidManifest.xml
+          sed -i "s/YOUR ACCT REGION/${{ github.event.inputs.account_region }}/g" sample/src/main/AndroidManifest.xml
 
       - name: Build Debug APK
         if: ${{ inputs.build_debug_apk}}
