@@ -54,11 +54,10 @@ coroutines_test = "1.7.3"
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "6.1.1"
+clevertap_android_sdk = "6.2.0"
 clevertap_rendermax_sdk = "1.0.3"
 clevertap_geofence_sdk = "1.3.0"
 clevertap_hms_sdk = "1.3.4"
-clevertap_xiaomi_sdk = "1.5.4"
 clevertap_push_templates_sdk = "1.2.3"
 
 # Glide
@@ -150,7 +149,6 @@ version_clevertap_android_sdk = { module = "com.clevertap.android:clevertap-andr
 version_clevertap_rendermax_sdk = { module = "com.clevertap.android:clevertap-rendermax-sdk", version.ref = "clevertap_rendermax_sdk" }
 version_clevertap_geofence_sdk = { module = "com.clevertap.android:clevertap-geofence-sdk", version.ref = "clevertap_geofence_sdk" }
 version_clevertap_hms_sdk = { module = "com.clevertap.android:clevertap-hms-sdk", version.ref = "clevertap_hms_sdk" }
-version_clevertap_xiaomi_sdk = { module = "com.clevertap.android:clevertap-xiaomi-sdk", version.ref = "clevertap_xiaomi_sdk" }
 version_clevertap_push_templates_sdk = { module = "com.clevertap.android:push-templates", version.ref = "clevertap_push_templates_sdk" }
 
 # Glide

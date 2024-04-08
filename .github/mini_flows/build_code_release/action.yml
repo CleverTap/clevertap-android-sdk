@@ -55,16 +55,3 @@ runs:
       with:
         name: assembleRelease-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/outputs/aar
-
-    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
-
-    - name: assembleRelease-clevertap-xps
-      shell: bash
-      run: ./gradlew :clevertap-xps:assembleRelease
-
-    - name: Upload AAR and apk files
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: assembleRelease-clevertap-xps
-        path: clevertap-xps/build/outputs/aar

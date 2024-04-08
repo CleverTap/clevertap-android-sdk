@@ -99,6 +99,7 @@ public class PushPermissionManager {
             return Unit.INSTANCE;
         }, () -> {
             if (activity instanceof InAppNotificationActivity) {
+                ((InAppNotificationActivity) activity).notifyPermissionDenied();
                 ((InAppNotificationActivity) activity).didDismiss(null);
             }
             return Unit.INSTANCE;

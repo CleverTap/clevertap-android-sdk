@@ -62,9 +62,7 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
-import com.clevertap.android.sdk.pushnotification.PushConstants.XiaomiPush;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
@@ -215,17 +213,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         ManifestInfo.changeCredentials(accountID, token, proxyDomain, spikyProxyDomain);
-    }
-
-    /**
-     * This method is used to change the credentials of Xiaomi app id and key programmatically.
-     *
-     * @param xiaomiAppID  Xiaomi App Id
-     * @param xiaomiAppKey Xiaomi App Key
-     */
-    @Deprecated
-    public static void changeXiaomiCredentials(String xiaomiAppID, String xiaomiAppKey) {
-        ManifestInfo.changeXiaomiCredentials(xiaomiAppID, xiaomiAppKey);
     }
 
     /**
@@ -1301,6 +1288,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param scDomainListener - the {@link SCDomainListener} instance
      */
     @RestrictTo(Scope.LIBRARY_GROUP)
+    @WorkerThread
     public void setSCDomainListener(SCDomainListener scDomainListener) {
         coreState.getCallbackManager().setSCDomainListener(scDomainListener);
 
@@ -2352,31 +2340,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getAnalyticsManager().pushProfile(profile);
     }
 
-    //Session
-
-    /**
-     * Sends the Xiaomi registration ID to CleverTap.
-     *
-     * @param regId    The Xiaomi registration ID
-     * @param region   The Server room region provided by Xiaomi. Value must be not null or empty
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    @Deprecated
-    public void pushXiaomiRegistrationId(String regId,@NonNull String region, boolean register)  {
-        if(TextUtils.isEmpty(region)){
-            Logger.d("CleverTapApi : region must not be null or empty , use  MiPushClient.getAppRegion(context) to provide appropriate region");
-        }else{
-            Logger.d("CleverTapAPI: client called pushXiaomiRegistrationId called with region:"+region);
-            PushType.XPS.setServerRegion(region);
-            coreState.getPushProviders().handleToken(regId, PushType.XPS, register);
-        }
-
-    }
-
     /**
      * Record a Screen View event
      *
@@ -3127,31 +3090,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
         }
 
-    }
-
-    /**
-     * Use this method if you want to run xiaomi sdk all devices, xiaomi only devices or turn off push on all devices.
-     * Default value is {@link PushConstants#ALL_DEVICES}
-     * @param xpsRunningDevices can be one of the following,<br>
-     *                          1. {@link PushConstants#ALL_DEVICES} (int value = 1)<br>
-     *                          2. {@link PushConstants#XIAOMI_MIUI_DEVICES} (int value = 2)<br>
-     *                          3. {@link PushConstants#NO_DEVICES} (int value = 3)<br>
-     */
-    @Deprecated
-    public static void enableXiaomiPushOn(@XiaomiPush int xpsRunningDevices) {
-        PushType.XPS.setRunningDevices(xpsRunningDevices);
-    }
-
-    /**
-     *
-     * @return one of the following,<br>
-     *                          1. {@link XiaomiPush#ALL_DEVICES} (int value = 1)<br>
-     *                          2. {@link XiaomiPush#XIAOMI_MIUI_DEVICES} (int value = 2)<br>
-     *                          3. {@link XiaomiPush#NO_DEVICES} (int value = 3)<br>
-     */
-    @Deprecated
-    public static @XiaomiPush int getEnableXiaomiPushOn() {
-        return PushType.XPS.getRunningDevices();
     }
 
     /**
