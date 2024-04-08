@@ -40,6 +40,7 @@ kotlin_test = "1.7.20" #check with kotlin_gradle_plugin
 junit_jupiter_api = "5.7.2"
 junit_jupiter_engine = "5.7.2"
 junit_platform_runner = "1.7.2"
+mockito_kotlin = "3.2.0"
 mockito_core = "5.9.0"
 opentest4j = "1.2.0"
 robolectric = "4.9"
@@ -53,11 +54,10 @@ coroutines_test = "1.7.3"
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "6.1.1"
+clevertap_android_sdk = "6.2.0"
 clevertap_rendermax_sdk = "1.0.3"
 clevertap_geofence_sdk = "1.3.0"
 clevertap_hms_sdk = "1.3.4"
-clevertap_xiaomi_sdk = "1.5.4"
 clevertap_push_templates_sdk = "1.2.3"
 
 # Glide
@@ -128,6 +128,8 @@ test_junit_jupiter_api = { module = "org.junit.jupiter:junit-jupiter-api", versi
 test_junit_jupiter_engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit_jupiter_engine" }
 test_junit_platform_runner = { module = "org.junit.platform:junit-platform-runner", version.ref = "junit_platform_runner" }
 test_mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito_core" }
+test_mockito_kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito_kotlin" }
+test_mockito_inline = { module = "org.mockito:mockito-inline", version.ref = "mockito_core" }
 test_opentest4j = { module = "org.opentest4j:opentest4j", version.ref = "opentest4j" }
 test_robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 test_jsonassert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonassert" }
@@ -147,7 +149,6 @@ version_clevertap_android_sdk = { module = "com.clevertap.android:clevertap-andr
 version_clevertap_rendermax_sdk = { module = "com.clevertap.android:clevertap-rendermax-sdk", version.ref = "clevertap_rendermax_sdk" }
 version_clevertap_geofence_sdk = { module = "com.clevertap.android:clevertap-geofence-sdk", version.ref = "clevertap_geofence_sdk" }
 version_clevertap_hms_sdk = { module = "com.clevertap.android:clevertap-hms-sdk", version.ref = "clevertap_hms_sdk" }
-version_clevertap_xiaomi_sdk = { module = "com.clevertap.android:clevertap-xiaomi-sdk", version.ref = "clevertap_xiaomi_sdk" }
 version_clevertap_push_templates_sdk = { module = "com.clevertap.android:push-templates", version.ref = "clevertap_push_templates_sdk" }
 
 # Glide

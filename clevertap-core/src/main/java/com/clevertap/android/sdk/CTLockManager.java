@@ -6,11 +6,11 @@ import androidx.annotation.RestrictTo.Scope;
 @RestrictTo(Scope.LIBRARY)
 public class CTLockManager {
 
-    private final Boolean eventLock = true;
+    private final Object eventLock = new Object();
 
     private final Object inboxControllerLock = new Object();
 
-    public Boolean getEventLock() {
+    public Object getEventLock() {
         return eventLock;
     }
 

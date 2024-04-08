@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CTXtensions;
@@ -25,14 +26,13 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
-import com.clevertap.android.sdk.db.QueueCursor;
+import com.clevertap.android.sdk.db.QueueData;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
-import com.clevertap.android.sdk.network.api.CtApi;
+import com.clevertap.android.sdk.network.api.CtApiWrapper;
 import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody;
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody;
 import com.clevertap.android.sdk.network.http.Response;
@@ -78,6 +78,8 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final CoreMetaData coreMetaData;
 
+    private final CtApiWrapper ctApiWrapper;
+
     private final BaseDatabaseManager databaseManager;
 
     private final DeviceInfo deviceInfo;
@@ -85,8 +87,6 @@ public class NetworkManager extends BaseNetworkManager {
     private final LocalDataStore localDataStore;
 
     private final Logger logger;
-
-    private final CtApi ctApi;
 
     private int responseFailureCount = 0;
 
@@ -133,13 +133,12 @@ public class NetworkManager extends BaseNetworkManager {
             ValidationResultStack validationResultStack,
             ControllerManager controllerManager,
             BaseDatabaseManager baseDatabaseManager,
-            CtApi ctApi,
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
             LocalDataStore localDataStore,
-            CryptHandler cryptHandler,
-            InAppResponse inAppResponse) {
+            InAppResponse inAppResponse,
+            final CtApiWrapper ctApiWrapper) {
         this.context = context;
         this.config = config;
         this.deviceInfo = deviceInfo;
@@ -152,7 +151,7 @@ public class NetworkManager extends BaseNetworkManager {
         this.validationResultStack = validationResultStack;
         this.controllerManager = controllerManager;
         databaseManager = baseDatabaseManager;
-        this.ctApi = ctApi;
+        this.ctApiWrapper = ctApiWrapper;
 
         cleverTapResponses.add(inAppResponse);
         cleverTapResponses.add(new MetadataResponse(config, deviceInfo, this));
@@ -180,8 +179,8 @@ public class NetworkManager extends BaseNetworkManager {
         config.getLogger()
                 .verbose(config.getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
-        QueueCursor cursor;
-        QueueCursor previousCursor = null;
+        QueueData cursor;
+        QueueData previousCursor = null;
         boolean loadMore = true;
 
         while (loadMore) {
@@ -277,6 +276,7 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     @Override
+    @WorkerThread
     public void initHandshake(final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
         // Always set this to 0 so that the handshake is not performed during a HTTP failure
         responseFailureCount = 0;
@@ -284,6 +284,7 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     @Override
+    @WorkerThread
     public boolean needsHandshakeForDomain(final EventGroup eventGroup) {
         final String domain = getDomain(eventGroup);
         boolean needHandshakeDueToFailure = responseFailureCount > 5;
@@ -309,12 +310,14 @@ public class NetworkManager extends BaseNetworkManager {
         StorageHelper.persist(editor);
     }
 
+    @WorkerThread
     int getCurrentRequestTimestamp() {
-        return ctApi.getCurrentRequestTimestampSeconds();
+        return ctApiWrapper.getCtApi().getCurrentRequestTimestampSeconds();
     }
 
+    @WorkerThread
     public String getDomain(final EventGroup eventGroup) {
-        return ctApi.getActualDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED);
+        return ctApiWrapper.getCtApi().getActualDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED);
     }
 
     int getFirstRequestTimestamp() {
@@ -488,10 +491,11 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @WorkerThread
     private void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
             final Runnable handshakeSuccessCallback) {
 
-        try (Response response = ctApi.performHandshakeForDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)) {
+        try (Response response = ctApiWrapper.getCtApi().performHandshakeForDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)) {
             if (response.isSuccess()) {
                 logger.verbose(config.getAccountId(), "Received success from handshake :)");
 
@@ -514,6 +518,7 @@ public class NetworkManager extends BaseNetworkManager {
      *
      * @return True to continue sending requests, false otherwise.
      */
+    @WorkerThread
     private boolean processIncomingHeaders(final Context context, Response response) {
         final String muteCommand = response.getHeaderValue(Constants.HEADER_MUTE);
         if (muteCommand != null && muteCommand.trim().length() > 0) {
@@ -609,7 +614,7 @@ public class NetworkManager extends BaseNetworkManager {
         final DefineTemplatesRequestBody body = new DefineTemplatesRequestBody(header, templates);
         logger.debug(config.getAccountId(), "Will define templates: " + body);
 
-        try (Response response = ctApi.defineTemplates(body)) {
+        try (Response response = ctApiWrapper.getCtApi().defineTemplates(body)) {
             if (response.isSuccess()) {
                 handleTemplateResponseSuccess(response);
                 return true;
@@ -634,11 +639,12 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @WorkerThread
     private Response callApiForEventGroup(EventGroup eventGroup, SendQueueRequestBody body) {
         if (eventGroup == EventGroup.VARIABLES) {
-            return ctApi.defineVars(body);
+            return ctApiWrapper.getCtApi().defineVars(body);
         } else {
-            return ctApi.sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
+            return ctApiWrapper.getCtApi().sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
         }
     }
 
@@ -691,6 +697,7 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @WorkerThread
     private boolean handleSendQueueResponse(@NonNull Response response, SendQueueRequestBody body,
             EndpointId endpointId) {
         if (!response.isSuccess()) {
@@ -798,11 +805,12 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @WorkerThread
     private void setDomain(final Context context, String domainName) {
         logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
                 domainName);
-        ctApi.setDomain(domainName);
+        ctApiWrapper.getCtApi().setDomain(domainName);
 
         if (callbackManager.getSCDomainListener() != null) {
             if (domainName != null) {
@@ -820,11 +828,12 @@ public class NetworkManager extends BaseNetworkManager {
         StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS), ts);
     }
 
+    @WorkerThread
     private void setSpikyDomain(final Context context, String spikyDomainName) {
         logger.verbose(config.getAccountId(), "Setting spiky domain to " + spikyDomainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
                 spikyDomainName);
-        ctApi.setSpikyDomain(spikyDomainName);
+        ctApiWrapper.getCtApi().setSpikyDomain(spikyDomainName);
     }
 
     /**
@@ -925,6 +934,7 @@ public class NetworkManager extends BaseNetworkManager {
         return newPrefs;
     }
 
+    @WorkerThread
     private void setMuted(final Context context, boolean mute) {
         if (mute) {
             final int now = (int) (System.currentTimeMillis() / 1000);
