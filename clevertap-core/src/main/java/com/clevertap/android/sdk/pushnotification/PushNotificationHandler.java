@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.pushnotification;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.XPS;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAccountIdFromNotificationBundle;
 
 import android.content.Context;
@@ -89,8 +88,6 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
             CleverTapAPI.tokenRefresh(applicationContext, token, FCM);
         } else if (pushType.equals(HPS.getType())) {
             CleverTapAPI.tokenRefresh(applicationContext, token, HPS);
-        } else if (pushType.equals(XPS.getType())) {
-            CleverTapAPI.tokenRefresh(applicationContext, token, XPS);
         }
         return true;
     }
