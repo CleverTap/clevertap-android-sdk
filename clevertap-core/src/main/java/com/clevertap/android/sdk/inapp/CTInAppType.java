@@ -21,7 +21,8 @@ public enum CTInAppType {
     CTInAppTypeAlert("alert-template"),
     CTInAppTypeCoverImageOnly("cover-image"),
     CTInAppTypeInterstitialImageOnly("interstitial-image"),
-    CTInAppTypeHalfInterstitialImageOnly("half-interstitial-image");
+    CTInAppTypeHalfInterstitialImageOnly("half-interstitial-image"),
+    CTInAppTypeCustomCodeTemplate("custom-code");
 
 
     private final String inAppType;
@@ -83,6 +84,9 @@ public enum CTInAppType {
             }
             case "half-interstitial-image": {
                 return CTInAppTypeHalfInterstitialImageOnly;
+            }
+            case "custom-code": {
+                return CTInAppTypeCustomCodeTemplate;
             }
             default:
                 return null;

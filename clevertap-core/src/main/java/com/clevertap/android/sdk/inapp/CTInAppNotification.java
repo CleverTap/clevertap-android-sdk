@@ -12,6 +12,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -123,6 +124,8 @@ public class CTInAppNotification implements Parcelable {
 
     private boolean fallBackToNotificationSettings = false;
 
+    private CustomTemplateInAppData customTemplateData;
+
     CTInAppNotification() {
     }
 
@@ -175,6 +178,7 @@ public class CTInAppNotification implements Parcelable {
             landscapeImageUrl = in.readString();
             _landscapeImageCacheKey = in.readString();
             timeToLive = in.readLong();
+            customTemplateData = in.readParcelable(CustomTemplateInAppData.class.getClassLoader());
 
         } catch (JSONException e) {
             // no-op
@@ -206,6 +210,10 @@ public class CTInAppNotification implements Parcelable {
 
     public boolean isExcludeFromCaps() {
         return excludeFromCaps;
+    }
+
+    public CustomTemplateInAppData getCustomTemplateData() {
+        return customTemplateData;
     }
 
     @Override
@@ -264,6 +272,7 @@ public class CTInAppNotification implements Parcelable {
         dest.writeString(landscapeImageUrl);
         dest.writeString(_landscapeImageCacheKey);
         dest.writeLong(timeToLive);
+        dest.writeParcelable(customTemplateData, flags);
     }
 
     void didDismiss(InAppResourceProvider resourceProvider) {
@@ -531,6 +540,11 @@ public class CTInAppNotification implements Parcelable {
                         this.buttonCount++;
                     }
                 }
+            }
+            if (CTInAppType.CTInAppTypeCustomCodeTemplate == inAppType) {
+                customTemplateData = new CustomTemplateInAppData(jsonObject);
+            } else {
+                customTemplateData = null;
             }
             switch (this.inAppType) {
                 case CTInAppTypeFooter:

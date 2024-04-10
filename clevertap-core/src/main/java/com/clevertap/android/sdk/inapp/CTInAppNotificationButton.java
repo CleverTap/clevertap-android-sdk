@@ -7,10 +7,12 @@ import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 @RestrictTo(Scope.LIBRARY)
 public class CTInAppNotificationButton implements Parcelable {
 
@@ -50,6 +52,8 @@ public class CTInAppNotificationButton implements Parcelable {
 
     private boolean fallbackToSettings;
 
+    private CustomTemplateInAppData customTemplateData;
+
     CTInAppNotificationButton() {
     }
 
@@ -70,6 +74,7 @@ public class CTInAppNotificationButton implements Parcelable {
         }
         error = in.readString();
         keyValues = in.readHashMap(null);
+        customTemplateData = in.readParcelable(CustomTemplateInAppData.class.getClassLoader());
     }
 
     @Override
@@ -99,6 +104,7 @@ public class CTInAppNotificationButton implements Parcelable {
         }
         dest.writeString(error);
         dest.writeMap(keyValues);
+        dest.writeParcelable(customTemplateData, flags);
     }
 
     public String getActionUrl() {
@@ -179,6 +185,10 @@ public class CTInAppNotificationButton implements Parcelable {
         this.textColor = textColor;
     }
 
+    public CustomTemplateInAppData getCustomTemplateData() {
+        return customTemplateData;
+    }
+
     CTInAppNotificationButton initWithJSON(JSONObject jsonObject) {
         try {
             this.jsonDescription = jsonObject;
@@ -203,6 +213,12 @@ public class CTInAppNotificationButton implements Parcelable {
                 type = actions.has(Constants.KEY_TYPE) ? actions.getString(Constants.KEY_TYPE) : "";
                 fallbackToSettings = actions.has(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) ?
                         actions.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) : false;
+
+                if (CTInAppType.CTInAppTypeCustomCodeTemplate == CTInAppType.fromString(type)) {
+                    customTemplateData = new CustomTemplateInAppData(actions);
+                } else {
+                    customTemplateData = null;
+                }
             }
 
             //Custom Key Value pairs
