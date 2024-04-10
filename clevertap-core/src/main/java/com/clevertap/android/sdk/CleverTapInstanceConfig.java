@@ -127,7 +127,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.fcmSenderId = config.fcmSenderId;
         this.packageName = config.packageName;
         this.beta = config.beta;
-        this.allowedPushTypes = config.allowedPushTypes;
         this.identityKeys = config.identityKeys;
         this.encryptionLevel = config.encryptionLevel;
     }
@@ -225,10 +224,6 @@ public class CleverTapInstanceConfig implements Parcelable {
             }
             if (configJsonObject.has(Constants.KEY_BETA)) {
                 this.beta = configJsonObject.getBoolean(Constants.KEY_BETA);
-            }
-            if (configJsonObject.has(Constants.KEY_ALLOWED_PUSH_TYPES)) {
-                this.allowedPushTypes = (ArrayList<String>) toList(
-                        configJsonObject.getJSONArray(Constants.KEY_ALLOWED_PUSH_TYPES));
             }
             if (configJsonObject.has(Constants.KEY_IDENTITY_TYPES)) {
                 this.identityKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
@@ -492,7 +487,6 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_ENABLE_CUSTOM_CT_ID, getEnableCustomCleverTapId());
             configJsonObject.put(Constants.KEY_PACKAGE_NAME, getPackageName());
             configJsonObject.put(Constants.KEY_BETA, isBeta());
-            configJsonObject.put(Constants.KEY_ALLOWED_PUSH_TYPES, toJsonArray(allowedPushTypes));
             configJsonObject.put(Constants.KEY_ENCRYPTION_LEVEL , getEncryptionLevel());
             return configJsonObject.toString();
         } catch (Throwable e) {
