@@ -1,6 +1,8 @@
 ## CHANGE LOG.
 
 ### April 3, 2024
+> ⚠️ **NOTE**
+6.2.0 produces a crash, please update to 6.2.1 and above.
 
 * [CleverTap Android SDK v6.2.0](docs/CTCORECHANGELOG.md)
 
