@@ -117,7 +117,6 @@ class ActivityLifeCycleManager {
             }
         }
         baseEventQueueManager.pushInitialEventsAsync();
-        inAppController.checkExistingInAppNotifications(activity);
         inAppController.checkPendingInAppNotifications(activity);
     }
 
