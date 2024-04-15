@@ -25,12 +25,6 @@ class NotificationBitmapDownloadRequestHandler(
             )
         }
 
-        // Simply stream the bitmap
-        if (!srcUrl.startsWith("http")) {
-            bitmapDownloadRequest.bitmapPath = "${Constants.ICON_BASE_URL}/$srcUrl"
-        }
-
-
         val downloadedBitmap: DownloadedBitmap = iBitmapDownloadRequestHandler.handleRequest(bitmapDownloadRequest)
 
         return Utils.getDownloadedBitmapPostFallbackIconCheck(fallbackToAppIcon, context, downloadedBitmap)
