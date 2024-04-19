@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.customtemplates
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Logger
 import io.mockk.*
 import org.junit.*
 import org.junit.Test
@@ -9,6 +10,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TemplatesManagerTest {
+
+    private val mockTemplatePresenter = mockk<TemplatePresenter>()
+    private val mockFunctionPresenter = mockk<FunctionPresenter>()
 
     @After
     fun cleanUp() {
@@ -25,15 +29,18 @@ class TemplatesManagerTest {
             templatesSet(
                 template {
                     name(templateName1)
+                    presenter(mockTemplatePresenter)
                     stringArgument("arg", "string")
                 },
                 template {
                     name(templateName2)
+                    presenter(mockTemplatePresenter)
                     booleanArgument("bool", false)
                     fileArgument("file")
                 },
                 function(isVisual = false) {
                     name(functionName1)
+                    presenter(mockFunctionPresenter)
                     intArgument("int", 10)
                 }
             )
@@ -65,13 +72,19 @@ class TemplatesManagerTest {
 
         TemplatesManager.register {
             templatesSet(
-                template { name(templateName) }
+                template {
+                    name(templateName)
+                    presenter(mockTemplatePresenter)
+                }
             )
         }
 
         TemplatesManager.register {
             templatesSet(
-                template { name(templateName) }
+                template {
+                    name(templateName)
+                    presenter(mockTemplatePresenter)
+                }
             )
         }
         assertThrows<CustomTemplateException> {
@@ -83,6 +96,7 @@ class TemplatesManagerTest {
         return mockk<CleverTapInstanceConfig>().apply {
             every { accountId } returns account
             every { accountToken } returns token
+            every { logger } returns mockk<Logger>()
         }
     }
 }

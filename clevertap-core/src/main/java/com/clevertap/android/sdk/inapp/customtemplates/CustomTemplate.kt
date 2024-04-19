@@ -19,6 +19,11 @@ class CustomTemplate private constructor(
     val name: String,
 
     /**
+     * The presenter associated with this template.
+     */
+    val presenter: CustomTemplatePresenter<*>,
+
+    /**
      * Whether the template has UI or not. If set to `true` the template is registered as part of the in-apps queue
      * and must be explicitly dismissed before other in-apps can be shown. If set to `false` the template is executed
      * directly and does not require dismissal nor it impedes other in-apps.
@@ -47,7 +52,7 @@ class CustomTemplate private constructor(
      * @param isVisual See [CustomTemplate.isVisual]
      */
     class FunctionBuilder(isVisual: Boolean) :
-        Builder<FunctionBuilder>(FUNCTION, allowHierarchicalNames = false, isVisual) {
+        Builder<FunctionPresenter, FunctionBuilder>(FUNCTION, allowHierarchicalNames = false, isVisual) {
 
         override val thisRef: FunctionBuilder = this
     }
@@ -73,7 +78,8 @@ class CustomTemplate private constructor(
      * builder.intArgument("map.b", 6)
      * ```
      */
-    class TemplateBuilder : Builder<TemplateBuilder>(TEMPLATE, allowHierarchicalNames = true, isVisual = true) {
+    class TemplateBuilder :
+        Builder<TemplatePresenter, TemplateBuilder>(TEMPLATE, allowHierarchicalNames = true, isVisual = true) {
 
         override val thisRef: TemplateBuilder = this
 
@@ -116,7 +122,7 @@ class CustomTemplate private constructor(
         }
     }
 
-    sealed class Builder<T : Builder<T>>(
+    sealed class Builder<P : CustomTemplatePresenter<*>, T : Builder<P, T>>(
         private val type: CustomTemplateType,
         private val allowHierarchicalNames: Boolean,
         private val isVisual: Boolean
@@ -128,6 +134,7 @@ class CustomTemplate private constructor(
         private val argsNames = mutableSetOf<String>()
         private val parentArgsNames = mutableSetOf<String>()
         private val args = mutableListOf<TemplateArgument>()
+        private var presenter: P? = null
 
         /**
          * The name for the template. It should be provided exactly once. It must be unique across template definitions.
@@ -191,10 +198,19 @@ class CustomTemplate private constructor(
             return thisRef
         }
 
+        /**
+         * The presenter for this template.
+         */
+        fun presenter(presenter: P): T {
+            this.presenter = presenter
+            return thisRef
+        }
+
         fun build(): CustomTemplate {
+            val presenter = this.presenter ?: throw CustomTemplateException("CustomTemplate must have a presenter")
             val name = templateName ?: throw CustomTemplateException("CustomTemplate must have a name")
 
-            return CustomTemplate(name, isVisual, args, type)
+            return CustomTemplate(name, presenter, isVisual, getOrderedArgs(), type)
         }
 
         internal fun addArgument(name: String, type: TemplateArgumentType, defaultValue: Any?) {
@@ -241,25 +257,25 @@ class CustomTemplate private constructor(
                 throw CustomTemplateException("Argument with name \"$name\" is already defined")
             }
         }
-    }
 
-    /**
-     * Arguments are ordered by the way they are added to the list. Arguments with common hierarchical path are
-     * ordered together after the first occurrence and then sorted alphabetically.
-     */
-    internal fun getOrderedArgs(): List<TemplateArgument> {
-        val orderedArgs = linkedMapOf<String, MutableList<TemplateArgument>>()
+        /**
+         * Arguments are ordered by the way they are added to the list. Arguments with common hierarchical path are
+         * ordered together after the first occurrence and then sorted alphabetically.
+         */
+        private fun getOrderedArgs(): List<TemplateArgument> {
+            val orderedArgs = linkedMapOf<String, MutableList<TemplateArgument>>()
 
-        for (arg in args) {
-            val argName: String = arg.name.split(".", limit = 2).first()
-            if (orderedArgs.contains(argName)) {
-                orderedArgs[argName]?.add(arg)
-            } else {
-                orderedArgs[argName] = mutableListOf(arg)
+            for (arg in args) {
+                val argName: String = arg.name.split(".", limit = 2).first()
+                if (orderedArgs.contains(argName)) {
+                    orderedArgs[argName]?.add(arg)
+                } else {
+                    orderedArgs[argName] = mutableListOf(arg)
+                }
             }
-        }
 
-        return orderedArgs.flatMap { it.value.toList().sortedBy { arg -> arg.name } }
+            return orderedArgs.flatMap { it.value.toList().sortedBy { arg -> arg.name } }
+        }
     }
 }
 

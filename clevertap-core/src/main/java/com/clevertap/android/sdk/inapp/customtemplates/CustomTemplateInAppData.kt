@@ -3,13 +3,15 @@ package com.clevertap.android.sdk.inapp.customtemplates
 import android.os.Parcel
 import android.os.Parcelable
 import android.os.Parcelable.Creator
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.copyFrom
+import com.clevertap.android.sdk.inapp.CTInAppType
 import com.clevertap.android.sdk.utils.getStringOrNull
 import com.clevertap.android.sdk.utils.readJson
 import com.clevertap.android.sdk.utils.writeJson
-import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONObject
 
-class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable {
+internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable {
 
     var templateName: String?
         private set
@@ -21,12 +23,16 @@ class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable 
         args = parcel?.readJson()
     }
 
-    constructor(json: JSONObject) : this(null) {
+    private constructor(json: JSONObject) : this(null) {
         setFieldsFromJson(json)
     }
 
-    fun getArguments(): Map<String, Any>? {
-        return JsonUtil.mapFromJson(args)
+    fun getArguments(): JSONObject? {
+        return args?.let {
+            val copy = JSONObject()
+            copy.copyFrom(it)
+            copy
+        }
     }
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
@@ -54,6 +60,19 @@ class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable 
 
         override fun newArray(size: Int): Array<CustomTemplateInAppData?> {
             return arrayOfNulls(size)
+        }
+
+        @JvmStatic
+        fun createFromJson(inApp: JSONObject?): CustomTemplateInAppData? {
+            if (inApp == null) {
+                return null
+            }
+            val inAppType = CTInAppType.fromString(inApp.optString(Constants.KEY_TYPE))
+            return if (CTInAppType.CTInAppTypeCustomCodeTemplate == inAppType) {
+                CustomTemplateInAppData(inApp)
+            } else {
+                null
+            }
         }
     }
 }

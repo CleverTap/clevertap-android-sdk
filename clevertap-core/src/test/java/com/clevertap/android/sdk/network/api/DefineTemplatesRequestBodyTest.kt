@@ -1,8 +1,11 @@
 package com.clevertap.android.sdk.network.api
 
+import com.clevertap.android.sdk.inapp.customtemplates.FunctionPresenter
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatePresenter
 import com.clevertap.android.sdk.inapp.customtemplates.function
 import com.clevertap.android.sdk.inapp.customtemplates.template
 import com.clevertap.android.sdk.inapp.customtemplates.templatesSet
+import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
@@ -20,6 +23,7 @@ class DefineTemplatesRequestBodyTest {
         val templates = templatesSet(
             template {
                 name("templateName1")
+                presenter(mockk<TemplatePresenter>())
                 booleanArgument("var1", true)
                 mapArgument(
                     "var2", mapOf(
@@ -32,6 +36,7 @@ class DefineTemplatesRequestBodyTest {
             },
             function(true) {
                 name("templateName2")
+                presenter(mockk<FunctionPresenter>())
                 floatArgument("var1", 12.5f)
             }
         )

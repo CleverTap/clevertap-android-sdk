@@ -214,11 +214,7 @@ public class CTInAppNotificationButton implements Parcelable {
                 fallbackToSettings = actions.has(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) ?
                         actions.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) : false;
 
-                if (CTInAppType.CTInAppTypeCustomCodeTemplate == CTInAppType.fromString(type)) {
-                    customTemplateData = new CustomTemplateInAppData(actions);
-                } else {
-                    customTemplateData = null;
-                }
+                customTemplateData = CustomTemplateInAppData.createFromJson(jsonObject);
             }
 
             //Custom Key Value pairs
