@@ -693,7 +693,8 @@ public class DeviceInfo {
     }
 
     public boolean isErrorDeviceId() {
-        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
+        final String deviceID = getDeviceID();
+        return deviceID != null && deviceID.startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
     public boolean isLimitAdTrackingEnabled() {
