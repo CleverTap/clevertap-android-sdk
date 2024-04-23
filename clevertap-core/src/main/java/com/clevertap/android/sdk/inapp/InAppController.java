@@ -706,7 +706,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             return;
         }
 
-        boolean isHtmlType = inAppNotification.getType().equals(Constants.KEY_CUSTOM_HTML);
+        boolean isHtmlType = inAppNotification.getType() != null && inAppNotification.getType().equals(Constants.KEY_CUSTOM_HTML);
         if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
             Logger.d(config.getAccountId(),
                     "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp");
