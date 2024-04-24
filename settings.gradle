@@ -1,3 +1,10 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
 plugins {
     id "com.gradle.enterprise" version "3.6.3"
 }
@@ -15,3 +22,5 @@ gradleEnterprise {
     }
 }
 include ':instantapp'
+include ':ct_macrobenchmark'
+include ':benchmark-app'

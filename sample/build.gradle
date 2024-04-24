@@ -43,6 +43,7 @@ android {
                 maven { url 'https://oss.sonatype.org/content/groups/staging/' }
             }
         }
+
     }
     Properties localProperties = loadLocalProperties()
     signingConfigs {
@@ -144,6 +145,7 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
+    implementation libs.profileinstaller
 /*
     implementation "com.android.tools.build:gradle:4.2.1"
     implementation "com.google.gms:google-services:4.3.3"// Google Services plugin
