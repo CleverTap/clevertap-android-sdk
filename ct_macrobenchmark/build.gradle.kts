@@ -1,6 +1,6 @@
 plugins {
     id("com.android.test")
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.kotlinAndroid)
 }
 allprojects {
     repositories {
@@ -23,41 +23,10 @@ android {
     defaultConfig {
         minSdk = 24
         targetSdk = 33
-        missingDimensionStrategy("remote","deps")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 //        testInstrumentationRunnerArguments["androidx.benchmark.compilation.enabled"] = "false"
         testInstrumentationRunnerArguments["androidx.benchmark.startupProfiles.enable"] = "false"
 
-    }
-
-    flavorDimensions += listOf("deps","macrobechmark")
-    productFlavors {
-        create("remote") {
-           dimension = "deps"
-            //applicationIdSuffix = ".remote"
-            //versionNameSuffix = "-remote"
-        }
-        create("local") {
-            dimension = "deps"
-        }
-        create("staging") {
-            dimension = "deps"
-            //applicationIdSuffix = ".staging"
-            //versionNameSuffix = "-staging"
-
-            repositories {
-                maven ( url = "https://oss.sonatype.org/content/groups/staging/" )
-            }
-        }
-        create("getDefaultInstanceMB") {
-            dimension = "macrobechmark"
-        }
-        create("instanceWithConfigMB") {
-            dimension = "macrobechmark"
-        }
-        create("mainSource") {
-            dimension = "macrobechmark"
-        }
     }
 
     buildTypes {
@@ -71,7 +40,7 @@ android {
         }
     }
 
-    targetProjectPath = ":sample"
+    targetProjectPath = ":benchmark-app"
     experimentalProperties["android.experimental.self-instrumenting"] = true
 }
 

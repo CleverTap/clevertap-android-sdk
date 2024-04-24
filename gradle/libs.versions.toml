@@ -4,6 +4,7 @@ android_compileSdk = "34"
 android_gradle_plugin = "8.2.2"
 android_minSdk = "19"
 kotlin_plugin = "1.7.20"
+profileinstaller = "1.3.1"
 sonarqube_plugin = "3.3"
 android_buildTools = "34.0.0"
 detekt_gradle_plugin = "1.20.0-RC1"
@@ -87,6 +88,10 @@ push = "6.11.0.300"
 
 #Catch Exception
 catch_exception = "2.0"
+kotlin = "1.8.0"
+lifecycle-runtime-ktx = "2.7.0"
+activity-compose = "1.8.2"
+compose-bom = "2023.08.00"
 
 
 [libraries]
@@ -114,6 +119,7 @@ android_material = { module = "com.google.android.material:material", version.re
 
 
 # Test
+profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 test_espresso_core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso_core" }
 test_ext_junit = { module = "androidx.test.ext:junit", version.ref = "test_ext_junit" }
 test_core = { module = "androidx.test:core", version.ref = "test_core" }
@@ -177,9 +183,20 @@ huawei_push = { module = "com.huawei.hms:push", version.ref = "push" }
 
 #Catch Exception
 catch_exception = { module = "eu.codearte.catch-exception:catch-exception", version.ref = "catch_exception" }
+lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime-ktx" }
+activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
+ui = { group = "androidx.compose.ui", name = "ui" }
+ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+material3 = { group = "androidx.compose.material3", name = "material3" }
 
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]
 
 [plugins]
 sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

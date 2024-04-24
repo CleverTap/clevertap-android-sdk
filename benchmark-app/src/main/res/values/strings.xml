@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Benchmark App</string>
+    <string name="xiaomi_app_key">key</string>
+    <string name="xiaomi_app_id">val</string>
+</resources>

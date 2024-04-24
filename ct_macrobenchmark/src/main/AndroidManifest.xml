@@ -2,6 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <queries>
-        <package android:name="com.clevertap.demo" />
+        <package android:name="com.clevertap.android.benchmark.app" />
     </queries>
 </manifest>

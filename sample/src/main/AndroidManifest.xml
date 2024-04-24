@@ -17,10 +17,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <profileable
-            android:shell="true"
-            tools:targetApi="29" />
-
         <activity
             android:name=".HomeScreenActivity"
             android:exported="true"

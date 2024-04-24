@@ -24,7 +24,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     //flavorDimensionList "version", "deps"
-    flavorDimensions  = ["deps","macrobechmark"]
+    flavorDimensions += "deps"
     productFlavors {
         create("remote") {
             dimension("deps")
@@ -43,15 +43,7 @@ android {
                 maven { url 'https://oss.sonatype.org/content/groups/staging/' }
             }
         }
-        create("getDefaultInstanceMB") {
-            dimension("macrobechmark")
-        }
-        create("instanceWithConfigMB") {
-            dimension("macrobechmark")
-        }
-        create("mainSource") {
-            dimension("macrobechmark")
-        }
+
     }
     buildTypes {
         named("debug") {
@@ -63,13 +55,7 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        benchmark {
-            signingConfig signingConfigs.debug
-            matchingFallbacks = ['release']
-            debuggable false
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
+
     }
     tasks.withType(KotlinCompile).configureEach {
         kotlinOptions {
@@ -130,7 +116,7 @@ dependencies {
     //Mandatory if you are using Notification Inbox
     implementation("com.google.android.material:material:1.4.0")
     implementation("androidx.fragment:fragment:1.3.6")
-    implementation("androidx.appcompat:appcompat:1.6.0-rc01")
+    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.recyclerview:recyclerview:1.2.1")
     implementation("androidx.viewpager:viewpager:1.0.0")
 
@@ -145,7 +131,7 @@ dependencies {
     // Declare the dependency for the Analytics library
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-crashlytics")
-    implementation "androidx.profileinstaller:profileinstaller:1.3.1"
+    implementation libs.profileinstaller
 /*
     implementation "com.android.tools.build:gradle:4.2.1"
     implementation "com.google.gms:google-services:4.3.3"// Google Services plugin
