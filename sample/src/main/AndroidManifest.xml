@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Add Permissions needed for CleverTap -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -49,22 +48,22 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />
 
-        <!--
-<meta-data
+        <!-- Add meta data for CleverTap Account Id and Account Token -->
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="YOUR ACCT ID" />
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="YOUR ACCT TOKEN" />
+        <meta-data
+            android:name="CLEVERTAP_REGION"
+            android:value="YOUR ACCT REGION"/>
+        <!--<meta-data
             android:name="CLEVERTAP_PROXY_DOMAIN"
             android:value="analytics.sdktesting.xyz"/>-->
         <!--<meta-data
             android:name="CLEVERTAP_SPIKY_PROXY_DOMAIN"
             android:value="push.sdktesting.xyz"/>-->
-
-        <!-- Xiaomi Push -->
-        <meta-data
-            android:name="CLEVERTAP_XIAOMI_APP_KEY"
-            android:value="@string/xiaomi_app_key" />
-
-        <meta-data
-            android:name="CLEVERTAP_XIAOMI_APP_ID"
-            android:value="@string/xiaomi_app_id" />
 
         <!-- android:name="CLEVERTAP_REGION" -->
         <!-- android:value="eu1"/> -->

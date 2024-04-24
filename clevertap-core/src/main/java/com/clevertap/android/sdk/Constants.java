@@ -41,8 +41,6 @@ public interface Constants {
     String LABEL_PACKAGE_NAME = "CLEVERTAP_APP_PACKAGE";
     String LABEL_BETA = "CLEVERTAP_BETA";
     String LABEL_INTENT_SERVICE = "CLEVERTAP_INTENT_SERVICE";
-    String LABEL_XIAOMI_APP_KEY = "CLEVERTAP_XIAOMI_APP_KEY";
-    String LABEL_XIAOMI_APP_ID = "CLEVERTAP_XIAOMI_APP_ID";
     String LABEL_ENCRYPTION_LEVEL = "CLEVERTAP_ENCRYPTION_LEVEL";
     String LABEL_DEFAULT_CHANNEL_ID = "CLEVERTAP_DEFAULT_CHANNEL_ID";
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_ID = "fcm_fallback_notification_channel";
@@ -238,7 +236,6 @@ public interface Constants {
     String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
     String KEY_BETA = "beta";
     String KEY_PACKAGE_NAME = "packageName";
-    String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
     String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";

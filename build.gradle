@@ -57,7 +57,6 @@ task copyTemplates {
     props.put("clevertap_rendermax_sdk", libs.version.clevertap.rendermax.sdk.get())
     props.put("clevertap_geofence_sdk", libs.version.clevertap.geofence.sdk.get())
     props.put("clevertap_hms_sdk", libs.version.clevertap.hms.sdk.get())
-    props.put("clevertap_xiaomi_sdk", libs.version.clevertap.xiaomi.sdk.get())
     props.put("push_templates", libs.version.clevertap.push.templates.sdk.get())
     props.put("play_services_location", libs.play.services.location.get())
     props.put("work_runtime", libs.androidx.work.runtime.get())

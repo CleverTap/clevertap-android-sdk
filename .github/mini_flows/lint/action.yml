@@ -55,16 +55,3 @@ runs:
       with:
         name: lint-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/reports/lint-results-debug.html
-
-    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
-
-    - name: lint-clevertap-xps
-      shell: bash
-      run: ./gradlew :clevertap-xps:lint
-
-    - name: Upload AAR and apk files
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: lint-clevertap-xps
-        path: clevertap-xps/build/reports/lint-results-debug.html

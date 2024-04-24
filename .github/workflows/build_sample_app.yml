@@ -1,0 +1,126 @@
+name: Sample App Build
+on:
+  workflow_dispatch:
+    inputs:
+      build_debug_apk:
+        description: Build Debug APK
+        type: boolean
+        default: true
+        required: false
+
+      build_debug_bundle:
+        description: Build Debug Bundle
+        type: boolean
+        default: false
+        required: false
+
+      build_signed_release_apk:
+        description: Build Signed Release APK
+        type: boolean
+        default: false
+        required: false
+
+      build_signed_release_bundle:
+        description: Build Signed Release Bundle
+        type: boolean
+        default: false
+        required: false
+
+      account_id:
+        description: 'Clevertap Account ID'
+        type: string
+        default: ""
+        required: true
+
+      account_token:
+        description: 'Clevertap Account Token'
+        type: string
+        default: ""
+        required: true
+
+      account_region:
+        description: 'Clevertap Account Region'
+        type: string
+        default: eu1
+        required: true
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Output Inputs
+        run: echo "${{ toJSON(inputs) }}"
+
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17.
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Decode secret files
+        env:
+          GOOGLE_SERVICES_BASE64: ${{ secrets.GOOGLE_SERVICES_BASE64 }}
+          SAMPLE_KEY_BASE64: ${{ secrets.SAMPLE_KEY_BASE64 }}
+          LOCAL_PROPERTIES_BASE64: ${{ secrets.LOCAL_PROPERTIES_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICES_BASE64" | base64 --decode > sample/google-services.json
+          echo "$SAMPLE_KEY_BASE64" | base64 --decode > sample/SampleKey
+          echo "$LOCAL_PROPERTIES_BASE64" | base64 --decode > local.properties
+
+      - name: Replace Clevertap Credentials in AndroidManifest.xml
+        run: |
+          sed -i "s/YOUR ACCT ID/${{ github.event.inputs.account_id }}/g" sample/src/main/AndroidManifest.xml
+          sed -i "s/YOUR ACCT TOKEN/${{ github.event.inputs.account_token }}/g" sample/src/main/AndroidManifest.xml
+          sed -i "s/YOUR ACCT REGION/${{ github.event.inputs.account_region }}/g" sample/src/main/AndroidManifest.xml
+
+      - name: Build Debug APK
+        if: ${{ inputs.build_debug_apk}}
+        run: |
+          ./gradlew :sample:assembleRemoteDebug
+
+      - name: Build Debug Bundle
+        if: ${{ inputs.build_debug_bundle}}
+        run: |
+          ./gradlew :sample:bundleRemoteDebug
+
+      - name: Build Signed Release APK
+        if: ${{ inputs.build_signed_release_apk}}
+        run: |
+          ./gradlew :sample:assembleRemoteSigned
+
+
+      - name: Build Signed Release Bundle
+        if: ${{ inputs.build_signed_release_bundle}}
+        run: |
+          ./gradlew :sample:bundleRemoteSigned
+
+      - name: Upload Debug APK
+        if: ${{ inputs.build_debug_apk}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-debug-apk
+          path: sample/build/outputs/apk/remote/debug/*.apk
+
+      - name: Upload Debug Bundle
+        if: ${{ inputs.build_debug_bundle}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-debug-bundle
+          path: sample/build/outputs/bundle/remoteDebug/*.aab
+
+      - name: Upload Signed Release APK
+        if: ${{ inputs.build_signed_release_apk}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-signed-release-apk
+          path: sample/build/outputs/apk/remote/signed/*.apk
+
+
+      - name: Upload Signed Release Bundle
+        if: ${{ inputs.build_signed_release_bundle}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-signed-release-bundle
+          path: sample/build/outputs/bundle/remoteSigned/*.aab

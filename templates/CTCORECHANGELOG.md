@@ -1,12 +1,32 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 6.2.1 (April 11, 2024)
+This hotfix release addresses the following issue in `v6.2.0`:
+
+#### Bug Fixes
+* Fixes a crash `IllegalArgumentException` caused by `allowedPushType` XPS enum.
+
+### Version 6.2.0 (April 3, 2024)
+> ⚠️ **NOTE**
+6.2.0 produces a crash, please update to 6.2.1 and above.
+
+#### Bug Fixes
+* Extends the push primer callback to notify permission denial when cancel button is clicked on `PromptForSettings` alert dialog.
+* Fixes [#576](https://github.com/CleverTap/clevertap-android-sdk/issues/576) - a crash due to `ClassNotFoundException` for `CTBackgroundJobService`. 
+* Fixes a crash due to `NullPointerException` related to `deviceInfo.deviceId`.
+* Fixes an ANR related to `isMainProcess` check.
+* Fixes an ANR due to eager initialisation of `CtApi` triggered by DeviceId generation.
+
+#### Breaking API Changes
+* Removes all Xiaomi related public methods as the Xiaomi SDK has been discontinued. Details [here](https://developer.clevertap.com/docs/discontinuation-of-xiaomi-push-service).
+
 ### Version 6.1.1 (February 27, 2024)
 
 #### Bug Fixes
 * Fixes an issue of incorrect endpoint in the case of network handshake.
 * Fixes a bug in Client Side InApps with regards to frequency limits.
 
-For developers with [BACKGROUND_SYNC](https://developer.clevertap.com/docs/android-push#pull-notification) enabled in their previous app version and now upgrading to _clevertap-android-sdk v6.1.0+_, please add this to your `AndroidManifest.xml` to avoid `ClassNotFoundException` related crashes
+For developers with [BACKGROUND_SYNC](https://developer.clevertap.com/docs/android-push#pull-notification) enabled in their previous app version and now upgrading to _clevertap-android-sdk v6.1.0_ or _clevertap-android-sdk v6.1.1_ , please add this to your `AndroidManifest.xml` to avoid `ClassNotFoundException` related crashes
 
 ```xml
 <service 
