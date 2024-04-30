@@ -16,10 +16,14 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
     var templateName: String?
         private set
 
+    private var templateId: String?
+    private var templateDescription: String?
     private var args: JSONObject?
 
     init {
         templateName = parcel?.readString()
+        templateId = parcel?.readString()
+        templateDescription = parcel?.readString()
         args = parcel?.readJson()
     }
 
@@ -37,6 +41,8 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeString(templateName)
+        dest.writeString(templateId)
+        dest.writeString(templateDescription)
         dest.writeJson(args)
     }
 
@@ -44,14 +50,25 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
         return 0
     }
 
+    fun writeFieldsToJson(json: JSONObject) {
+        json.put(KEY_TEMPLATE_NAME, templateName)
+        json.put(KEY_TEMPLATE_ID, templateId)
+        json.put(KEY_TEMPLATE_DESCRIPTION, templateDescription)
+        json.put(KEY_VARS, args)
+    }
+
     private fun setFieldsFromJson(json: JSONObject) {
         templateName = json.getStringOrNull(KEY_TEMPLATE_NAME)
+        templateId = json.getStringOrNull(KEY_TEMPLATE_ID)
+        templateDescription = json.getStringOrNull(KEY_TEMPLATE_DESCRIPTION)
         args = json.optJSONObject(KEY_VARS)
     }
 
     companion object CREATOR : Creator<CustomTemplateInAppData> {
 
         private const val KEY_TEMPLATE_NAME = "templateName"
+        private const val KEY_TEMPLATE_ID = "templateId"
+        private const val KEY_TEMPLATE_DESCRIPTION = "templateDescription"
         private const val KEY_VARS = "vars"
 
         override fun createFromParcel(parcel: Parcel): CustomTemplateInAppData {

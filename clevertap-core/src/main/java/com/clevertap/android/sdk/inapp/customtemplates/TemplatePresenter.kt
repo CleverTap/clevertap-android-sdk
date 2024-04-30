@@ -23,7 +23,10 @@ fun interface CustomTemplatePresenter<C : CustomTemplateContext> {
  * A handler of code templates [CustomTemplate] invocations. Its methods are called when the corresponding InApp
  * message should be presented to the user or closed.
  */
-interface TemplatePresenter : CustomTemplatePresenter<TemplateContext>
+interface TemplatePresenter : CustomTemplatePresenter<TemplateContext> {
+
+    fun onClose(context: TemplateContext)
+}
 
 /**
  * A handler of function [CustomTemplate] invocations, called when the function should be executed.

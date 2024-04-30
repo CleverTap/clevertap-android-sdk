@@ -48,11 +48,13 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
 
     fun isTemplateRegistered(templateName: String): Boolean = customTemplates.contains(templateName)
 
+    fun getTemplate(templateName: String): CustomTemplate? = customTemplates[templateName]
+
     fun presentTemplate(notification: CTInAppNotification, inAppListener: InAppListener) {
         val context = createContextFromInApp(notification, inAppListener) ?: return
         val template = customTemplates[context.templateName]
         if (template == null) {
-            logger.info("[CustomTemplates] Cannot find template with name ${context.templateName}")
+            logger.info("CustomTemplates", "Cannot find template with name ${context.templateName}")
             return
         }
 
@@ -71,19 +73,36 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
         }
     }
 
+    fun closeTemplate(notification: CTInAppNotification, inAppListener: InAppListener) {
+        val context = createContextFromInApp(notification, inAppListener) ?: return
+        val template = customTemplates[context.templateName]
+        if (template == null) {
+            logger.info("CustomTemplates", "Cannot find template with name ${context.templateName}")
+            return
+        }
+        //only TemplateContext has onClose
+        val presenter = template.presenter
+        if (presenter is TemplatePresenter && context is TemplateContext) {
+            presenter.onClose(context)
+        }
+    }
+
     private fun createContextFromInApp(
         notification: CTInAppNotification,
         inAppListener: InAppListener
     ): CustomTemplateContext? {
         val templateName = notification.customTemplateData?.templateName
         if (templateName == null) {
-            logger.debug("[CustomTemplates] Cannot create TemplateContext from notification without template name")
+            logger.debug("CustomTemplates", "Cannot create TemplateContext from notification without template name")
             return null
         }
 
         val template = customTemplates[templateName]
         if (template == null) {
-            logger.debug("[CustomTemplates] Cannot create TemplateContext for non-registered template: $templateName")
+            logger.debug(
+                "CustomTemplates",
+                "Cannot create TemplateContext for non-registered template: $templateName"
+            )
             return null
         }
 
