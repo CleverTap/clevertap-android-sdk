@@ -119,6 +119,48 @@ sealed class CustomTemplateContext private constructor(
     }
 
     /**
+     * Retrieve a map of all arguments under [name]. Map arguments will be combined with dot notation arguments. All
+     * values are converted to their defined type in the [CustomTemplate]. Action arguments are mapped to their
+     * name as [String]. Returns `null` if no arguments are found for the requested map.
+     */
+    fun getMap(name: String): Map<String, Any>? {
+        val mapPrefix = "$name."
+        val mapContent = argumentValues.filterKeys { key ->
+            key.startsWith(mapPrefix)
+        }
+        if (mapContent.isEmpty()) {
+            return null
+        }
+
+        val map = mutableMapOf<String, Any>()
+        for ((key, value) in mapContent) {
+            val keyParts = key.removePrefix(mapPrefix).split(".")
+
+            val keyValue: Any = if (value is CTInAppAction) {
+                value.customTemplateInAppData?.templateName ?: value.type?.toString() ?: ""
+            } else {
+                value
+            }
+
+            var currentMap: MutableMap<String, Any> = map
+            for ((index, keyPart) in keyParts.withIndex()) {
+                if (index == keyParts.lastIndex) {
+                    currentMap[keyPart] = keyValue
+                } else {
+                    @Suppress("UNCHECKED_CAST") var innerMap = currentMap[keyPart] as? MutableMap<String, Any>
+                    if (innerMap == null) {
+                        innerMap = mutableMapOf()
+                        currentMap[keyPart] = innerMap
+                    }
+                    currentMap = innerMap
+                }
+            }
+        }
+
+        return map
+    }
+
+    /**
      * Notify the SDK that the current [CustomTemplate] is presented.
      */
     open fun setPresented() {
@@ -231,48 +273,6 @@ sealed class CustomTemplateContext private constructor(
             } else {
                 logger.debug("CustomTemplates", "Cannot trigger action")
             }
-        }
-
-        /**
-         * Retrieve a map of all arguments under [name]. Map arguments will be combined with dot notation arguments. All
-         * values are converted to their defined type in the [CustomTemplate]. Action arguments are mapped to their
-         * name as [String]. Returns `null` if no arguments are found for the requested map.
-         */
-        fun getMap(name: String): Map<String, Any>? {
-            val mapPrefix = "$name."
-            val mapContent = argumentValues.filterKeys { key ->
-                key.startsWith(mapPrefix)
-            }
-            if (mapContent.isEmpty()) {
-                return null
-            }
-
-            val map = mutableMapOf<String, Any>()
-            for ((key, value) in mapContent) {
-                val keyParts = key.removePrefix(mapPrefix).split(".")
-
-                val keyValue: Any = if (value is CTInAppAction) {
-                    value.customTemplateInAppData?.templateName ?: value.type?.toString() ?: ""
-                } else {
-                    value
-                }
-
-                var currentMap: MutableMap<String, Any> = map
-                for ((index, keyPart) in keyParts.withIndex()) {
-                    if (index == keyParts.lastIndex) {
-                        currentMap[keyPart] = keyValue
-                    } else {
-                        @Suppress("UNCHECKED_CAST") var innerMap = currentMap[keyPart] as? MutableMap<String, Any>
-                        if (innerMap == null) {
-                            innerMap = mutableMapOf()
-                            currentMap[keyPart] = innerMap
-                        }
-                        currentMap = innerMap
-                    }
-                }
-            }
-
-            return map
         }
     }
 

@@ -76,6 +76,15 @@ class CustomTemplateContextTest {
 
         val innermostMap = templateContext.getMap("map.innerMap.innermostMap")!!
         verifyInnermostMap(notificationVars, innermostMap)
+
+        val functionContext = CustomTemplateContext.createContext(
+            template = functionDefinition,
+            notification = createCtInAppNotification(functionNotificationJson),
+            inAppListener = mockk(),
+            logger = mockk()
+        )
+
+        assertEquals(VARS_OVERRIDE_STRING, functionContext.getMap("map")?.get("string"))
     }
 
     @Test
@@ -234,8 +243,8 @@ class CustomTemplateContextTest {
         mapArgument(
             "map", mapOf(
                 "float" to 15.6.toFloat(),
+                "innerMap.boolean" to false,
                 "innerMap" to mapOf(
-                    "boolean" to false,
                     "string" to "Default",
                     "noOverrideInt" to 15
                 )
@@ -322,6 +331,7 @@ class CustomTemplateContextTest {
                     "byte": $VARS_OVERRIDE_BYTE,
                     "long": $VARS_OVERRIDE_LONG,
                     "double": $VARS_OVERRIDE_DOUBLE,
+                    "map.string": "$VARS_OVERRIDE_STRING",
                     "overrideWithoutDefinitionBoolean": false
                 }
             }
@@ -337,6 +347,11 @@ class CustomTemplateContextTest {
         longArgument("long", 5435050)
         doubleArgument("double", 12.5)
         intArgument("noOverrideInt", 35)
+        mapArgument(
+            "map", mapOf(
+                "string" to "Default"
+            )
+        )
     }
 
     companion object {

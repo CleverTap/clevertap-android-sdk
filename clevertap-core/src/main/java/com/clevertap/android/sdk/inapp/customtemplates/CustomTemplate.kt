@@ -48,19 +48,45 @@ class CustomTemplate private constructor(
     }
 
     /**
-     * Builder for [CustomTemplate] functions. Function arguments' names cannot contain "."
-     * @param isVisual See [CustomTemplate.isVisual]
+     * Builder for [CustomTemplate] functions. See [Builder]
+     * @param isVisual Whether the function will present UI. See [CustomTemplate.isVisual]
+     *
      */
-    class FunctionBuilder(isVisual: Boolean) :
-        Builder<FunctionPresenter, FunctionBuilder>(FUNCTION, allowHierarchicalNames = false, isVisual) {
+    class FunctionBuilder(isVisual: Boolean) : Builder<FunctionPresenter, FunctionBuilder>(FUNCTION, isVisual) {
 
         override val thisRef: FunctionBuilder = this
     }
 
     /**
-     * Builder for [CustomTemplate] code templates. "." characters in template arguments' names denote hierarchical
-     * structure. They are treated the same way as the keys provided by [mapArgument]. If a higher-level name (to the left
-     * of a . symbol) matches a map argument's name it is treated the same as if the argument was part of the map itself.
+     * Builder for [CustomTemplate] code templates. See [Builder].
+     */
+    class TemplateBuilder : Builder<TemplatePresenter, TemplateBuilder>(TEMPLATE, isVisual = true) {
+
+        override val thisRef: TemplateBuilder = this
+
+        /**
+         * Action arguments are specified by name only. When the [CustomTemplate] is triggered, the configured action
+         * can be executed through
+         * [TemplateContext.triggerActionArgument][CustomTemplateContext.TemplateContext.triggerActionArgument].
+         * Action values could either be a predefined action (like close or open-url) or а registered
+         * [CustomTemplate] function.
+         *
+         * @see [CustomTemplateContext.TemplateContext]
+         * @see [FunctionBuilder]
+         * @see [CleverTapAPI.registerCustomInAppTemplates]
+         */
+        fun actionArgument(name: String): TemplateBuilder {
+            addArgument(name, ACTION, null)
+            return this
+        }
+    }
+
+    /**
+     * Builder for [CustomTemplate]s creation. [Name][name] and [presenter] must be set before calling [build].
+     * Arguments can be specified by using one of the *argument methods. Argument names must be unique. "." characters
+     * in template arguments' names denote hierarchical structure. They are treated the same way as the keys within
+     * maps passed to [mapArgument]. If a higher-level name (to the left of a . symbol) matches a map argument's name
+     * it is treated the same as if the argument was part of the map itself.
      *
      * For example, the following code snippets define identical arguments:
      * ```
@@ -77,54 +103,17 @@ class CustomTemplate private constructor(
      * builder.intArgument("map.a", 5)
      * builder.intArgument("map.b", 6)
      * ```
+     *
+     * Methods of this class throw [CustomTemplateException] for invalid states or parameters. Exceptions of this
+     * type are not meant to be caught since defined templates must be correct when the sdk is running. If such an
+     * exception is thrown the template definition should be changed instead of handling the error.
+     *
+     * @see [CustomTemplate]
+     * @see [CustomTemplateException]
+     * @see [CustomTemplatePresenter]
      */
-    class TemplateBuilder :
-        Builder<TemplatePresenter, TemplateBuilder>(TEMPLATE, allowHierarchicalNames = true, isVisual = true) {
-
-        override val thisRef: TemplateBuilder = this
-
-        /**
-         * Add a map structure to the arguments of the [CustomTemplate]. The [name] should be unique across all
-         * arguments and also all keys in [value] should form unique names across all arguments.
-         *
-         * @param value The map must be non-empty. Values can be of type [Byte], [Short], [Int], [Long], [Float],
-         * [Double], [Boolean], [String] or another [Map]<String, Any> which values can also be of the same types.
-         */
-        fun mapArgument(name: String, value: Map<String, Any>): TemplateBuilder {
-            if (value.isEmpty()) {
-                throw CustomTemplateException("Map argument must not be empty")
-            }
-
-            for (mapEntry in value) {
-                val argValue = mapEntry.value
-                val argName = "$name.${mapEntry.key}"
-
-                @Suppress("UNCHECKED_CAST")
-                when (argValue) {
-                    is Byte -> byteArgument(argName, argValue)
-                    is Short -> shortArgument(argName, argValue)
-                    is Int -> intArgument(argName, argValue)
-                    is Long -> longArgument(argName, argValue)
-                    is Float -> floatArgument(argName, argValue)
-                    is Double -> doubleArgument(argName, argValue)
-                    is Boolean -> booleanArgument(argName, argValue)
-                    is String -> stringArgument(argName, argValue)
-                    is Map<*, *> -> mapArgument(argName, argValue as Map<String, Any>)
-                    else -> throw CustomTemplateException("Unsupported value type ${argValue.javaClass} for argument $argName")
-                }
-            }
-            return this
-        }
-
-        fun actionArgument(name: String): TemplateBuilder {
-            addArgument(name, ACTION, null)
-            return this
-        }
-    }
-
     sealed class Builder<P : CustomTemplatePresenter<*>, T : Builder<P, T>>(
         private val type: CustomTemplateType,
-        private val allowHierarchicalNames: Boolean,
         private val isVisual: Boolean
     ) {
 
@@ -139,6 +128,8 @@ class CustomTemplate private constructor(
         /**
          * The name for the template. It should be provided exactly once. It must be unique across template definitions.
          * Must be non-blank.
+         *
+         * @throws [CustomTemplateException] if the name is already set or the provided name is blank
          */
         fun name(name: String): T {
             if (templateName != null) {
@@ -199,13 +190,53 @@ class CustomTemplate private constructor(
         }
 
         /**
+         * Add a map structure to the arguments of the [CustomTemplate]. The [name] should be unique across all
+         * arguments and also all keys in [value] should form unique names across all arguments.
+         *
+         * @param value The map must be non-empty. Values can be of type [Byte], [Short], [Int], [Long], [Float],
+         * [Double], [Boolean], [String] or another [Map]<String, Any> which values can also be of the same types.
+         */
+        fun mapArgument(name: String, value: Map<String, Any>): T {
+            if (value.isEmpty()) {
+                throw CustomTemplateException("Map argument must not be empty")
+            }
+
+            for (mapEntry in value) {
+                val argValue = mapEntry.value
+                val argName = "$name.${mapEntry.key}"
+
+                @Suppress("UNCHECKED_CAST") when (argValue) {
+                    is Byte -> byteArgument(argName, argValue)
+                    is Short -> shortArgument(argName, argValue)
+                    is Int -> intArgument(argName, argValue)
+                    is Long -> longArgument(argName, argValue)
+                    is Float -> floatArgument(argName, argValue)
+                    is Double -> doubleArgument(argName, argValue)
+                    is Boolean -> booleanArgument(argName, argValue)
+                    is String -> stringArgument(argName, argValue)
+                    is Map<*, *> -> mapArgument(argName, argValue as Map<String, Any>)
+                    else -> throw CustomTemplateException("Unsupported value type ${argValue.javaClass} for argument $argName")
+                }
+            }
+            return thisRef
+        }
+
+        /**
          * The presenter for this template.
+         *
+         * @see [CustomTemplatePresenter]
          */
         fun presenter(presenter: P): T {
             this.presenter = presenter
             return thisRef
         }
 
+        /**
+         * Creates the [CustomTemplate] with the previously defined name, arguments and presenter. Name and presenter
+         * must be set before calling this method.
+         *
+         * @throws CustomTemplateException if name or presenter were not set
+         */
         fun build(): CustomTemplate {
             val presenter = this.presenter ?: throw CustomTemplateException("CustomTemplate must have a presenter")
             val name = templateName ?: throw CustomTemplateException("CustomTemplate must have a name")
@@ -218,10 +249,6 @@ class CustomTemplate private constructor(
                 throw CustomTemplateException("Argument name must not be blank")
             }
 
-            if (!allowHierarchicalNames && name.contains(".")) {
-                throw CustomTemplateException("Argument name must not contain \".\"")
-            }
-
             if (name.startsWith(".") || name.endsWith(".") || name.contains("..")) {
                 throw CustomTemplateException("Argument name must not begin or end with a \".\" nor have consecutive \".\"")
             }
@@ -230,10 +257,7 @@ class CustomTemplate private constructor(
                 throw CustomTemplateException("Argument with name \"$name\" is already defined")
             }
 
-            if (allowHierarchicalNames) {
-                trackParentNames(name)
-            }
-
+            trackParentNames(name)
             args.add(TemplateArgument(name, type, defaultValue))
             argsNames.add(name)
         }
@@ -260,7 +284,7 @@ class CustomTemplate private constructor(
 
         /**
          * Arguments are ordered by the way they are added to the list. Arguments with common hierarchical path are
-         * ordered together after the first occurrence and then sorted alphabetically.
+         * ordered together, sorted alphabetically, on the index of the first occurrence of the parent name.
          */
         private fun getOrderedArgs(): List<TemplateArgument> {
             val orderedArgs = linkedMapOf<String, MutableList<TemplateArgument>>()
