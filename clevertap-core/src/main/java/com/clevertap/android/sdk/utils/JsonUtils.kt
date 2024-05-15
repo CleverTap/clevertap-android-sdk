@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.utils
 
 import android.os.Parcel
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -28,4 +29,15 @@ fun Parcel.readJson(): JSONObject? {
 
 fun Parcel.writeJson(json: JSONObject?) {
     writeString(json?.toString())
+}
+
+fun JSONArray.filterObjects(predicate: (element: JSONObject) -> Boolean): JSONArray {
+    val filteredArray = JSONArray()
+    for (i in 0 until length()) {
+        val element = optJSONObject(i)
+        if (element != null && predicate(element)) {
+            filteredArray.put(element)
+        }
+    }
+    return filteredArray
 }

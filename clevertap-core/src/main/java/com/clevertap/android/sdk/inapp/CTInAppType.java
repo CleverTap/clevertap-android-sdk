@@ -38,7 +38,7 @@ public enum CTInAppType {
     }
 
     @SuppressWarnings({"unused"})
-    static CTInAppType fromString(String type) {
+    public static CTInAppType fromString(String type) {
         switch (type) {
             case "html": {
                 return CTInAppTypeHTML;

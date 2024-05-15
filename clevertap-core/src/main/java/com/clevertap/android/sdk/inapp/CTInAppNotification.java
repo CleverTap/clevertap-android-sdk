@@ -541,11 +541,8 @@ public class CTInAppNotification implements Parcelable {
                     }
                 }
             }
-            if (CTInAppType.CTInAppTypeCustomCodeTemplate == inAppType) {
-                customTemplateData = new CustomTemplateInAppData(jsonObject);
-            } else {
-                customTemplateData = null;
-            }
+            customTemplateData = CustomTemplateInAppData.createFromJson(jsonObject);
+
             switch (this.inAppType) {
                 case CTInAppTypeFooter:
                 case CTInAppTypeHeader:

@@ -36,6 +36,8 @@ import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
@@ -44,6 +46,7 @@ import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.JsonUtilsKt;
 import com.clevertap.android.sdk.variables.JsonUtil;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -133,6 +136,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final EvaluationManager evaluationManager;
 
+    private final TemplatesManager templatesManager;
+
     private InAppState inAppState;
 
     private HashSet<String> inappActivityExclude = null;
@@ -168,7 +173,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             final DeviceInfo deviceInfo,
             InAppQueue inAppQueue,
             final EvaluationManager evaluationManager,
-            InAppResourceProvider resourceProvider
+            InAppResourceProvider resourceProvider,
+            TemplatesManager templatesManager
     ) {
         this.context = context;
         this.config = config;
@@ -183,6 +189,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.resourceProvider = resourceProvider;
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
+        this.templatesManager = templatesManager;
         this.onAppLaunchEventSent = () -> {
             final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
                     deviceInfo.getAppLaunchedFields());
@@ -449,9 +456,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         showInAppNotificationIfAny();
     }
 
+    @WorkerThread
     public void addInAppNotificationsToQueue(JSONArray inappNotifs) {
         try {
-            inAppQueue.enqueueAll(inappNotifs);
+            JSONArray filteredNotifs = filterNonRegisteredCustomTemplates(inappNotifs);
+            inAppQueue.enqueueAll(filteredNotifs);
 
             // Fire the first notification, if any
             showNotificationIfAvailable(context);
@@ -762,6 +771,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             case CTInAppTypeHeader:
                 inAppFragment = new CTInAppNativeHeaderFragment();
                 break;
+            case CTInAppTypeCustomCodeTemplate:
+                inAppController.presentTemplate(inAppNotification);
+                return;
             default:
                 Logger.d(config.getAccountId(), "Unknown InApp Type found: " + type);
                 currentlyDisplayingInApp = null;
@@ -834,5 +846,23 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         if (serverSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(serverSideInAppsToDisplay);
         }
+    }
+
+    private void presentTemplate(final CTInAppNotification inAppNotification) {
+        templatesManager.presentTemplate(inAppNotification, this);
+    }
+
+    private JSONArray filterNonRegisteredCustomTemplates(JSONArray inAppNotifications) {
+        return JsonUtilsKt.filterObjects(inAppNotifications, jsonObject -> {
+            CustomTemplateInAppData templateInAppData = CustomTemplateInAppData.createFromJson(jsonObject);
+            if (templateInAppData != null && templateInAppData.getTemplateName() != null
+                    && !templatesManager.isTemplateRegistered(templateInAppData.getTemplateName())) {
+                logger.info("CustomTemplates: skipping not registered template with name "
+                        + templateInAppData.getTemplateName());
+                return false;
+            } else {
+                return true;
+            }
+        });
     }
 }

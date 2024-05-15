@@ -26,7 +26,7 @@ private fun Collection<CustomTemplate>.toJSON(): JSONObject {
                     put("type", template.type.stringName)
                     if (template.args.isNotEmpty()) {
                         putObject("vars") {
-                            template.getOrderedArgs().forEachIndexed { index, arg ->
+                            template.args.forEachIndexed { index, arg ->
                                 putObject(arg.name) {
                                     arg.defaultValue?.let {
                                         put("defaultValue", it)
