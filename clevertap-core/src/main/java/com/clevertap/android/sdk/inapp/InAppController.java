@@ -368,7 +368,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 break;
             case CLOSE:
                 if (CTInAppType.CTInAppTypeCustomCodeTemplate == inAppNotification.getInAppType()) {
-                    templatesManager.closeTemplate(inAppNotification, this);
+                    templatesManager.closeTemplate(inAppNotification);
                 }
                 // SDK In-Apps are dismissed in CTInAppBaseFragment::handleButtonClick or CTInAppNotificationActivity
                 break;
@@ -793,7 +793,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             return;
         }
 
-        boolean isHtmlType = inAppNotification.getType().equals(Constants.KEY_CUSTOM_HTML);
+        boolean isHtmlType = Constants.KEY_CUSTOM_HTML.equals(inAppNotification.getType());
         if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
             Logger.d(config.getAccountId(),
                     "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp");

@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.sdk.inapp.InAppActionType.OPEN_URL
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.createCtInAppNotification
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.ContextDismissListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.TemplateContext
 import io.mockk.*
@@ -23,6 +24,7 @@ class CustomTemplateContextTest {
             template = templateDefinition,
             notification = createCtInAppNotification(templateNotificationJson),
             inAppListener = mockk(),
+            dismissListener = mockk(),
             logger = mockk()
         )
 
@@ -32,6 +34,7 @@ class CustomTemplateContextTest {
             template = functionDefinition,
             notification = createCtInAppNotification(functionNotificationJson),
             inAppListener = mockk(),
+            dismissListener = mockk(),
             logger = mockk()
         )
 
@@ -81,6 +84,7 @@ class CustomTemplateContextTest {
             template = functionDefinition,
             notification = createCtInAppNotification(functionNotificationJson),
             inAppListener = mockk(),
+            dismissListener = mockk(),
             logger = mockk()
         )
 
@@ -180,6 +184,19 @@ class CustomTemplateContextTest {
     }
 
     @Test
+    fun `setDismissed should notify dismissListener exactly once`() {
+        val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val dismissListener = mockk<ContextDismissListener>(relaxed = true)
+        val templateContext = createTestTemplateContext(mockInAppListener, dismissListener)
+
+        templateContext.setDismissed()
+        verify(exactly = 1) { dismissListener.onDismissContext(templateContext) }
+
+        templateContext.setDismissed()
+        verify(exactly = 1) { dismissListener.onDismissContext(templateContext) }
+    }
+
+    @Test
     fun `setPresented should notify InAppListener`() {
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
         val templateContext = createTestTemplateContext(mockInAppListener)
@@ -222,10 +239,14 @@ class CustomTemplateContextTest {
 
     private fun createMockInAppListener() = mockk<InAppListener>(relaxed = true)
 
-    private fun createTestTemplateContext(inAppListener: InAppListener = mockk()) = TemplateContext(
+    private fun createTestTemplateContext(
+        inAppListener: InAppListener = mockk(),
+        dismissListener: ContextDismissListener? = null
+    ) = TemplateContext(
         templateDefinition,
         createCtInAppNotification(templateNotificationJson),
         inAppListener,
+        dismissListener,
         mockk<Logger>(relaxed = true)
     )
 

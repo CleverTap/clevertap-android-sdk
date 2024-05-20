@@ -5,12 +5,15 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.createCtInAppNotification
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
 import org.junit.Test
 import org.junit.jupiter.api.*
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TemplatesManagerTest {
@@ -97,6 +100,30 @@ class TemplatesManagerTest {
     }
 
     @Test
+    fun `getTemplate should return registered templates by name`() {
+        TemplatesManager.register {
+            templatesSet(
+                function(isVisual = false) {
+                    name(SIMPLE_FUNCTION_NAME)
+                    presenter(mockk())
+                    stringArgument("string", "Default")
+                },
+                template {
+                    name(SIMPLE_TEMPLATE_NAME)
+                    presenter(mockk())
+                    stringArgument("string", "Default")
+                }
+            )
+        }
+
+        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+
+        assertEquals(SIMPLE_FUNCTION_NAME, templatesManager.getTemplate(SIMPLE_FUNCTION_NAME)?.name)
+        assertEquals(SIMPLE_TEMPLATE_NAME, templatesManager.getTemplate(SIMPLE_TEMPLATE_NAME)?.name)
+        assertNull(templatesManager.getTemplate("non-registered"))
+    }
+
+    @Test
     fun `presentTemplate should trigger presenter onPresent`() {
         val functionPresenter = mockk<FunctionPresenter>(relaxed = true)
         val templatePresenter = mockk<TemplatePresenter>(relaxed = true)
@@ -155,7 +182,56 @@ class TemplatesManagerTest {
     }
 
     @Test
-    fun `closeTemplate should trigger presenter onClose`() {
+    fun `getActiveContextForTemplate should return the same context for currently active templates until they are dismissed`() {
+        val functionPresenter = object : FunctionPresenter {
+            var templatesManager: TemplatesManager? = null
+
+            override fun onPresent(context: FunctionContext) {
+                assertTrue { context === templatesManager?.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME) }
+            }
+        }
+
+        TemplatesManager.register {
+            templatesSet(
+                function(isVisual = false) {
+                    name(SIMPLE_FUNCTION_NAME)
+                    presenter(functionPresenter)
+                    stringArgument("string", "Default")
+                }
+            )
+        }
+
+        val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        functionPresenter.templatesManager = templatesManager
+
+        templatesManager.presentTemplate(createCtInAppNotification(simpleFunctionNotificationJson), mockInAppListener)
+        val context = templatesManager.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME)
+        assertEquals(SIMPLE_FUNCTION_NAME, context?.templateName)
+
+        context?.setDismissed()
+        assertNull(templatesManager.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME))
+    }
+
+    @Test
+    fun `getActiveContextForTemplate should return null for non-active templates`() {
+        TemplatesManager.register {
+            templatesSet(
+                function(isVisual = false) {
+                    name(SIMPLE_FUNCTION_NAME)
+                    presenter(mockk(relaxed = true))
+                    stringArgument("string", "Default")
+                }
+            )
+        }
+
+        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        assertNull(templatesManager.getActiveContextForTemplate(SIMPLE_TEMPLATE_NAME))
+        assertNull(templatesManager.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME))
+    }
+
+    @Test
+    fun `closeTemplate should trigger presenter onClose for currently active templates`() {
         val templatePresenter = mockk<TemplatePresenter>(relaxed = true)
 
         TemplatesManager.register {
@@ -170,9 +246,36 @@ class TemplatesManagerTest {
 
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
         val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        val notification = createCtInAppNotification(simpleTemplateNotificationJson)
 
-        templatesManager.closeTemplate(createCtInAppNotification(simpleTemplateNotificationJson), mockInAppListener)
+        templatesManager.presentTemplate(notification, mockInAppListener)
+        templatesManager.closeTemplate(notification)
         verify { templatePresenter.onClose(any()) }
+    }
+
+    @Test
+    fun `closeTemplate should not trigger presenter onClose for not currently active templates`() {
+        val templatePresenter = mockk<TemplatePresenter>(relaxed = true)
+
+        TemplatesManager.register {
+            templatesSet(
+                template {
+                    name(SIMPLE_TEMPLATE_NAME)
+                    presenter(templatePresenter)
+                    stringArgument("string", "Default")
+                }
+            )
+        }
+        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+
+        // not registered template
+        templatesManager.closeTemplate(createCtInAppNotification(simpleFunctionNotificationJson))
+        verify { templatePresenter wasNot called }
+
+        // not active template
+        val notification = createCtInAppNotification(simpleTemplateNotificationJson)
+        templatesManager.closeTemplate(notification)
+        verify { templatePresenter wasNot called }
     }
 
     private fun getMockedCtInstanceConfig(account: String, token: String): CleverTapInstanceConfig {
