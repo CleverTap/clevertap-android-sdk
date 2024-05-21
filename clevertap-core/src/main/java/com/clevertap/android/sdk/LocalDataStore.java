@@ -15,7 +15,6 @@ import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
 
-import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -444,12 +443,9 @@ public class LocalDataStore {
                         JSONObject profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(accountID, deviceInfo.getDeviceID());
 
                         if (profile == null) {
-                            List<JSONObject> profiles = dbAdapter.fetchUserProfilesByAccountId(accountID);
-                            if(profiles.size() != 1) {
+                            profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(accountID, "");
+                            if(profile == null)
                                 return;
-                            }
-
-                            profile = profiles.get(0);
                             dbAdapter.updateDeviceIdForProfile(accountID, deviceInfo.getDeviceID());
                         }
 
@@ -671,6 +667,7 @@ public class LocalDataStore {
             PROFILE_FIELDS_IN_THIS_SESSION.clear();
         }
 
+        // Load the older profile from cache into the db
         inflateLocalProfileAsync(context);
 
     }
