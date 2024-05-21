@@ -850,6 +850,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 inAppFragment = new CTInAppNativeHeaderFragment();
                 break;
             case CTInAppTypeCustomCodeTemplate:
+                //TODO CustomTemplates download all file arguments before presenting
                 inAppController.presentTemplate(inAppNotification);
                 return;
             default:
@@ -953,8 +954,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         if (templateInAppData != null && templateInAppData.getTemplateName() != null) {
             CustomTemplate template = templatesManager.getTemplate(templateInAppData.getTemplateName());
             if (template != null) {
+                // When a custom in-app template is triggered as an action we need to present it.
+                // Since all related methods operate with either CTInAppNotification or its json representation, here
+                // we create a copy of the notification that initiated the triggering and add the action as its
+                // template data.
                 CTInAppNotification notificationFromAction = notification.copy();
-                notificationFromAction.setCustomTemplateData(templateInAppData);
+                CustomTemplateInAppData actionTemplateData = templateInAppData.copy();
+                actionTemplateData.setAction(true);
+                notificationFromAction.setCustomTemplateData(actionTemplateData);
                 if (template.isVisual()) {
                     addInAppNotificationInFrontOfQueue(notificationFromAction.getJsonDescription());
                 } else {

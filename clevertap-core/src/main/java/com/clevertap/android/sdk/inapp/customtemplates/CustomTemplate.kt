@@ -47,6 +47,14 @@ class CustomTemplate private constructor(
         return name.hashCode()
     }
 
+    override fun toString(): String {
+        return "CustomTemplate {\nname = $name,\nisVisual = $isVisual,\ntype = $type,\nargs = {\n${
+            args.joinToString(",\n") {
+                "\t${it.name} = ${it.defaultValue ?: it.type}"
+            }
+        }\n}}"
+    }
+
     /**
      * Builder for [CustomTemplate] functions. See [Builder]
      * @param isVisual Whether the function will present UI. See [CustomTemplate.isVisual]

@@ -41,8 +41,21 @@ sealed class CustomTemplateContext private constructor(
             logger: Logger
         ): CustomTemplateContext {
             return when (template.type) {
-                TEMPLATE -> TemplateContext(template, notification, inAppListener, dismissListener, logger)
-                FUNCTION -> FunctionContext(template, notification, inAppListener, dismissListener, logger)
+                TEMPLATE -> TemplateContext(
+                    template = template,
+                    notification = notification,
+                    inAppListener = inAppListener,
+                    dismissListener = dismissListener,
+                    logger = logger
+                )
+
+                FUNCTION -> FunctionContext(
+                    template = template,
+                    notification = notification,
+                    inAppListener = inAppListener,
+                    dismissListener = dismissListener,
+                    logger = logger
+                )
             }
         }
     }
@@ -50,7 +63,7 @@ sealed class CustomTemplateContext private constructor(
     val templateName = template.name
     protected val argumentValues = mergeArguments(template.args, notification.customTemplateData?.getArguments())
     internal val inAppListenerRef = WeakReference(inAppListener)
-    private val isVisual = template.isVisual
+    private val isAction = notification.customTemplateData?.isAction ?: false
 
     /**
      * Retrieve a [String] argument by [name].
@@ -166,10 +179,16 @@ sealed class CustomTemplateContext private constructor(
         return map
     }
 
+    //TODO CustomTemplates add getFile(name: String) method for retrieving file arguments
+
     /**
      * Notify the SDK that the current [CustomTemplate] is presented.
      */
     open fun setPresented() {
+        if (isAction) {
+            return
+        }
+
         val listener = inAppListenerRef.get()
         if (listener != null) {
             listener.inAppNotificationDidShow(notification, null)
@@ -187,7 +206,7 @@ sealed class CustomTemplateContext private constructor(
         dismissListener?.onDismissContext(this)
         dismissListener = null
 
-        if (!isVisual) {
+        if (isAction) {
             return
         }
 
@@ -234,7 +253,7 @@ sealed class CustomTemplateContext private constructor(
                         else -> overrides.getDouble(argument.name)
                     }
                 }
-                //TODO add FILE handling when implemented
+                //TODO CustomTemplates add FILE handling when implemented
                 FILE -> null
                 ACTION -> CTInAppAction.createFromJson(
                     overrides.optJSONObject(argument.name)?.optJSONObject(ARGS_KEY_ACTIONS)
@@ -254,7 +273,7 @@ sealed class CustomTemplateContext private constructor(
     }
 
     override fun toString(): String {
-        return "CustomTemplateContext {\ntemplateName = $templateName,\nisVisual = $isVisual,\nargs = {\n${
+        return "CustomTemplateContext {\ntemplateName = $templateName,\nargs = {\n${
             argumentValues.map {
                 "\t${it.key} = ${
                     if (it.value is CTInAppAction) {

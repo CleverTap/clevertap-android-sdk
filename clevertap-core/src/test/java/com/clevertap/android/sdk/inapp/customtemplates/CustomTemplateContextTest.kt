@@ -220,6 +220,24 @@ class CustomTemplateContextTest {
         verify(exactly = 1) { mockInAppListener.inAppNotificationDidDismiss(any(), any(), any()) }
     }
 
+    @Test
+    fun `setPresented and setDismissed should not call InAppListener for templates that are triggered as actions`() {
+        val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val notification = createCtInAppNotification(functionNotificationJson)
+        notification.customTemplateData.isAction = true
+        val functionContext = CustomTemplateContext.createContext(
+            template = functionDefinition,
+            notification = notification,
+            inAppListener = mockInAppListener,
+            dismissListener = mockk(relaxed = true),
+            logger = mockk(relaxed = true)
+        )
+
+        functionContext.setPresented()
+        functionContext.setDismissed()
+        verify { mockInAppListener wasNot called }
+    }
+
     private fun verifyInnerMap(vars: JSONObject, map: Map<String, Any>) {
         assertEquals(vars.getBoolean("map.innerMap.boolean"), map["boolean"])
         assertEquals(vars.getString("map.innerMap.string"), map["string"])

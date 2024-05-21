@@ -206,10 +206,10 @@ class TemplatesManagerTest {
         functionPresenter.templatesManager = templatesManager
 
         templatesManager.presentTemplate(createCtInAppNotification(simpleFunctionNotificationJson), mockInAppListener)
-        val context = templatesManager.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME)
-        assertEquals(SIMPLE_FUNCTION_NAME, context?.templateName)
+        val context = templatesManager.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME)!!
+        assertEquals(SIMPLE_FUNCTION_NAME, context.templateName)
 
-        context?.setDismissed()
+        context.setDismissed()
         assertNull(templatesManager.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME))
     }
 
