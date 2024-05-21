@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
 
+import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,13 +55,15 @@ public class LocalDataStore {
 
     private final String eventNamespace = "local_events";
 
+    private final DeviceInfo deviceInfo;
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler) {
+
+    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
         this.cryptHandler = cryptHandler;
-        inflateLocalProfileAsync(context);
+        this.deviceInfo = deviceInfo;
     }
 
     @WorkerThread
@@ -426,7 +429,7 @@ public class LocalDataStore {
     }
 
     // local cache/profile key expiry handling
-    private void inflateLocalProfileAsync(final Context context) {
+    void inflateLocalProfileAsync(final Context context) {
 
         final String accountID = this.config.getAccountId();
 
@@ -438,10 +441,16 @@ public class LocalDataStore {
                 }
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
                     try {
-                        JSONObject profile = dbAdapter.fetchUserProfileById(accountID);
+                        JSONObject profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(accountID, deviceInfo.getDeviceID());
 
                         if (profile == null) {
-                            return;
+                            List<JSONObject> profiles = dbAdapter.fetchUserProfilesByAccountId(accountID);
+                            if(profiles.size() != 1) {
+                                return;
+                            }
+
+                            profile = profiles.get(0);
+                            dbAdapter.updateDeviceIdForProfile(accountID, deviceInfo.getDeviceID());
                         }
 
                         Iterator<?> keys = profile.keys();
@@ -546,7 +555,7 @@ public class LocalDataStore {
                     if (!passFlag)
                         CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_DB_SUCCESS, cryptHandler);
 
-                    long status = dbAdapter.storeUserProfile(profileID, jsonObjectEncrypted);
+                    long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);
                     getConfigLogger().verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);
                 }
@@ -662,8 +671,8 @@ public class LocalDataStore {
             PROFILE_FIELDS_IN_THIS_SESSION.clear();
         }
 
-        final String accountID = getUserProfileID();
-        dbAdapter.removeUserProfile(accountID);
+        inflateLocalProfileAsync(context);
+
     }
 
     private void setLocalCacheExpiryInterval(final Context context, final int ttl) {

@@ -132,19 +132,29 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     }
 
     @Synchronized
-    fun fetchUserProfileById(id: String?): JSONObject? {
-        if (id == null) {
-            return null
+    fun fetchUserProfilesByAccountId(accountId: String?): List<JSONObject> {
+        if (accountId == null) {
+            return emptyList()
         }
+
+        val profiles = mutableListOf<JSONObject>()
         val tName = USER_PROFILES.tableName
-        var profileString: String? = null
+
         try {
-            dbHelper.readableDatabase.query(tName, null, "${Column.ID} = ?", arrayOf(id), null, null, null)
+            dbHelper.readableDatabase.query(tName, null, "${Column.ID} = ?", arrayOf(accountId), null, null, null)
                 ?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val dataIndex = cursor.getColumnIndex(Column.DATA)
-                        if (dataIndex >= 0) {
-                            profileString = cursor.getString(dataIndex)
+                    val dataIndex = cursor.getColumnIndex(Column.DATA)
+                    if (dataIndex >= 0) {
+                        while (cursor.moveToNext()) {
+                            val profileString = cursor.getString(dataIndex)
+                            profileString?.let {
+                                try {
+                                    val jsonObject = JSONObject(it)
+                                    profiles.add(jsonObject)
+                                } catch (e: JSONException) {
+                                    logger.verbose("Error parsing JSON for profile", e)
+                                }
+                            }
                         }
                     }
                 }
@@ -152,12 +162,66 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
 
+        return profiles
+    }
+
+    @Synchronized
+    fun fetchUserProfileByAccountIdAndDeviceID(accountId: String?, deviceId: String?): JSONObject? {
+        if (accountId == null || deviceId == null) {
+            return null
+        }
+        val tName = USER_PROFILES.tableName
+        var profileString: String? = null
+        try {
+            dbHelper.readableDatabase.query(
+                tName,
+                null,
+                "${Column.ID} = ? AND ${Column.DEVICE_ID} = ?",
+                arrayOf(accountId, deviceId),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val dataIndex = cursor.getColumnIndex(Column.DATA)
+                    if (dataIndex >= 0) {
+                        profileString = cursor.getString(dataIndex)
+                    }
+                }
+            }
+        } catch (e: SQLiteException) {
+            logger.verbose("Could not fetch records out of database $tName.", e)
+        }
         return profileString?.let {
             try {
                 JSONObject(it)
             } catch (e: JSONException) {
                 null
             }
+        }
+    }
+
+    @Synchronized
+    fun updateDeviceIdForProfile(accountId: String?, deviceId: String?): Boolean {
+        if (accountId == null || deviceId == null) {
+            return false
+        }
+
+        val tName = USER_PROFILES.tableName
+        val cv = ContentValues()
+        cv.put(Column.DEVICE_ID, deviceId)
+
+        return try {
+            val rowsAffected = dbHelper.writableDatabase.update(
+                tName,
+                cv,
+                "${Column.ID} = ?",
+                arrayOf(accountId)
+            )
+            rowsAffected > 0
+        } catch (e: SQLiteException) {
+            logger.verbose("Could not update deviceId in database $tName.", e)
+            false
         }
     }
 
@@ -320,8 +384,8 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
      */
     @WorkerThread
     @Synchronized
-    fun storeUserProfile(id: String?, obj: JSONObject): Long {
-        if (id == null) {
+    fun storeUserProfile(id: String?, deviceId: String?, obj: JSONObject): Long {
+        if (id == null ||deviceId == null) {
             return DB_UPDATE_ERROR
         }
         if (!belowMemThreshold()) {
@@ -329,9 +393,12 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
             return DB_OUT_OF_MEMORY_ERROR
         }
         val tableName = USER_PROFILES.tableName
+
+        logger.verbose("Device ID for inserting userProfile is", deviceId)
         val cv = ContentValues()
         cv.put(Column.DATA, obj.toString())
         cv.put(Column.ID, id)
+        cv.put(Column.DEVICE_ID, deviceId)
 
         return try {
             dbHelper.writableDatabase.insertWithOnConflict(tableName, null, cv, SQLiteDatabase.CONFLICT_REPLACE)

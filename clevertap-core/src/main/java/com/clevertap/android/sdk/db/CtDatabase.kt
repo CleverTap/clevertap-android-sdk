@@ -63,6 +63,7 @@ class DatabaseHelper internal constructor(context: Context, dbName: String?, pri
                 executeStatement(db, PUSH_NOTIFICATIONS_TIME_INDEX)
                 executeStatement(db, INBOX_MESSAGES_COMP_ID_USERID_INDEX)
                 executeStatement(db, NOTIFICATION_VIEWED_INDEX)
+                migrateUserProfilesTable(db)
             }
 
             2 -> {
@@ -70,8 +71,20 @@ class DatabaseHelper internal constructor(context: Context, dbName: String?, pri
                 executeStatement(db, DROP_TABLE_PUSH_NOTIFICATION_VIEWED)
                 executeStatement(db, CREATE_NOTIFICATION_VIEWED_TABLE)
                 executeStatement(db, NOTIFICATION_VIEWED_INDEX)
+                migrateUserProfilesTable(db)
+            }
+
+            3 -> {
+                migrateUserProfilesTable(db)
             }
         }
+    }
+
+    private fun migrateUserProfilesTable(db: SQLiteDatabase) {
+        executeStatement(db, CREATE_TEMP_USER_PROFILES_TABLE)
+        executeStatement(db, COPY_USER_PROFILES_DATA)
+        executeStatement(db, DROP_USER_PROFILES_TABLE)
+        executeStatement(db, RENAME_USER_PROFILES_TABLE)
     }
 
     @SuppressLint("UsableSpace")
@@ -118,6 +131,7 @@ object Column {
     const val USER_ID = "messageUser"
     const val CAMPAIGN = "campaignId"
     const val WZRKPARAMS = "wzrkParams"
+    const val DEVICE_ID = "deviceID"
 }
 
 private val CREATE_EVENTS_TABLE = """
@@ -133,13 +147,6 @@ private val CREATE_PROFILE_EVENTS_TABLE = """
         ${Column.ID} INTEGER PRIMARY KEY AUTOINCREMENT,
         ${Column.DATA} STRING NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL
-    );
-"""
-
-private val CREATE_USER_PROFILES_TABLE = """
-    CREATE TABLE ${USER_PROFILES.tableName} (
-        ${Column.ID} STRING UNIQUE PRIMARY KEY,
-        ${Column.DATA} STRING NOT NULL
     );
 """
 
@@ -212,3 +219,34 @@ private val DROP_TABLE_UNINSTALL_TS = "DROP TABLE IF EXISTS ${UNINSTALL_TS.table
 private val DROP_TABLE_INBOX_MESSAGES = "DROP TABLE IF EXISTS ${INBOX_MESSAGES.tableName}"
 
 private val DROP_TABLE_PUSH_NOTIFICATION_VIEWED = "DROP TABLE IF EXISTS ${PUSH_NOTIFICATION_VIEWED.tableName}"
+
+private val CREATE_USER_PROFILES_TABLE = """
+    CREATE TABLE ${USER_PROFILES.tableName} (
+        ${Column.DEVICE_ID} STRING NOT NULL,
+        ${Column.ID} STRING NOT NULL,
+        ${Column.DATA} STRING NOT NULL,
+        PRIMARY KEY (${Column.ID}, ${Column.DEVICE_ID})
+    );
+"""
+
+private val CREATE_TEMP_USER_PROFILES_TABLE = """
+    CREATE TABLE temp_${USER_PROFILES.tableName} (
+        ${Column.ID} STRING NOT NULL,
+        ${Column.DEVICE_ID} STRING NOT NULL,
+        ${Column.DATA} STRING NOT NULL,
+        PRIMARY KEY (${Column.ID}, ${Column.DEVICE_ID})
+    );
+"""
+
+private val COPY_USER_PROFILES_DATA = """
+    INSERT INTO temp_${USER_PROFILES.tableName} (${Column.ID}, ${Column.DEVICE_ID}, ${Column.DATA})
+    SELECT ${Column.ID}, '', ${Column.DATA} FROM ${USER_PROFILES.tableName};
+"""
+
+private val DROP_USER_PROFILES_TABLE = """
+    DROP TABLE ${USER_PROFILES.tableName};
+"""
+
+private val RENAME_USER_PROFILES_TABLE = """
+    ALTER TABLE temp_${USER_PROFILES.tableName} RENAME TO ${USER_PROFILES.tableName};
+"""

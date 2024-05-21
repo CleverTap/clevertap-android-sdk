@@ -81,12 +81,12 @@ class CleverTapFactory {
         EventMediator eventMediator = new EventMediator(context, config, coreMetaData);
         coreState.setEventMediator(eventMediator);
 
-        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler);
-        coreState.setLocalDataStore(localDataStore);
-
         DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
         coreState.setDeviceInfo(deviceInfo);
         deviceInfo.onInitDeviceInfo(cleverTapID);
+
+        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler, deviceInfo);
+        coreState.setLocalDataStore(localDataStore);
 
         CTPreferenceCache.getInstance(context, config);
 
