@@ -47,6 +47,8 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
 
     fun isTemplateRegistered(templateName: String): Boolean = customTemplates.contains(templateName)
 
+    fun getAllRegisteredTemplates() = customTemplates.values
+
     fun getTemplate(templateName: String): CustomTemplate? = customTemplates[templateName]
 
     fun getActiveContextForTemplate(templateName: String): CustomTemplateContext? = activeContexts[templateName]
