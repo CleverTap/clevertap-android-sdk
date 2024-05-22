@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
 import static com.clevertap.android.sdk.Utils.getSCDomain;
+import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
@@ -15,6 +16,7 @@ import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.media.AudioAttributes;
@@ -58,6 +60,7 @@ import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
+import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -72,7 +75,6 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.Var;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
@@ -1005,6 +1007,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return fromAccountId(context, _accountId);
     }
 
+    private static boolean isDevelopmentMode(@NonNull Context context) {
+        return 0 != (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE);
+    }
+
     @RestrictTo(Scope.LIBRARY)
     public static void runJobWork(Context context) {
         if (instances == null) {
@@ -1087,6 +1093,47 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return null;
         }
         return coreState.getTemplatesManager().getActiveContextForTemplate(templateName);
+    }
+
+    /**
+     * Sync all currently registered templates (through {@link #registerCustomInAppTemplates(TemplateProducer)} to the
+     * backend. Use this method to transfer template definitions from the SDK to the CT dashboard. This method can
+     * only be called from a debug build of the application and the current logged-in user must be marked as a
+     * test profile through the web dashboard.
+     */
+    public void syncRegisteredInAppTemplates() {
+        if (!isDevelopmentMode()) {
+            getConfigLogger().debug("CustomTemplates",
+                    "Your app is NOT in development mode, templates will not be synced");
+            return;
+        }
+
+        if (coreState == null) {
+            getConfigLogger().debug("CustomTemplates", "coreState is null, templates cannot be synced");
+            return;
+        }
+
+        if (coreState.getNetworkManager() == null) {
+            getConfigLogger().debug("CustomTemplates", "networkManager is null, templates cannot be synced");
+            return;
+        }
+
+        if (coreState.getTemplatesManager() == null) {
+            getConfigLogger().debug("CustomTemplates", "templateManager is null, templates cannot be synced");
+            return;
+        }
+
+        TemplatesManager templatesManager = coreState.getTemplatesManager();
+        BaseNetworkManager networkManager = coreState.getNetworkManager();
+
+        getCleverTapID(x -> {
+            // getCleverTapID is executed on the main thread
+            Task<Void> task = CTExecutorFactory.executors(getConfig()).postAsyncSafelyTask();
+            task.execute("DefineTemplates", () -> {
+                networkManager.defineTemplates(context, templatesManager.getAllRegisteredTemplates());
+                return null;
+            });
+        });
     }
 
     /**
@@ -2833,11 +2880,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         getConfigLogger().verbose(accountId + ":async_deviceID",
                 "Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         coreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
-
-        if (coreState.getCallbackManager().getOnInitCleverTapIDListener() != null) {
-            coreState.getCallbackManager().getOnInitCleverTapIDListener().onInitCleverTapID(deviceId);
-        }
-
+        coreState.getCallbackManager().notifyCleverTapIDChanged(deviceId);
     }
 
     private CleverTapInstanceConfig getConfig() {
@@ -3055,31 +3098,35 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Returns a unique identifier by which CleverTap identifies this user, on Main thread Callback.
+     * Subscribe to receive a unique identifier by which CleverTap identifies this user. The listener is called on the
+     * main thread and it is invoked each time the id changes until the listener is removed through
+     * {@link #removeCleverTapIDListener(OnInitCleverTapIDListener)}
      *
      * @param onInitCleverTapIDListener non-null callback to retrieve identifier on main thread.
      */
     public void getCleverTapID(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
         Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(getConfig()).ioTask();
-        taskDeviceCachedInfo.execute("getCleverTapID", new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                String deviceID = coreState.getDeviceInfo().getDeviceID();
-                if (deviceID != null) {
-                    onInitCleverTapIDListener.onInitCleverTapID(deviceID);
-                } else {
-                    /**
-                     * If cleverTapID not yet generated during first init then set listener, through which
-                     * cleverTapID will be notified when it's generated and ready to use from deviceIDCreated()
-                     *
-                     * Setting callback here makes sure that callback will be give only once, either from
-                     * getCleverTapID() or deviceIDCreated()
-                     */
-                    coreState.getCallbackManager().setOnInitCleverTapIDListener(onInitCleverTapIDListener);
-                }
-                return null;
+        taskDeviceCachedInfo.execute("getCleverTapID", () -> {
+            String deviceID = coreState.getDeviceInfo().getDeviceID();
+            if (deviceID != null) {
+                runOnUiThread(() -> onInitCleverTapIDListener.onInitCleverTapID(deviceID));
             }
+            coreState.getCallbackManager().addOnInitCleverTapIDListener(onInitCleverTapIDListener);
+            return null;
         });
+    }
+
+    /**
+     * Remove a previously subscribed OnInitCleverTapIDListener.
+     * See {@link #getCleverTapID(OnInitCleverTapIDListener)}
+     *
+     * @param onInitCleverTapIDListener The same listener instance passed to
+     *                                  {@link #getCleverTapID(OnInitCleverTapIDListener)} that should be removed.
+     */
+    public void removeCleverTapIDListener(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
+        if (coreState != null && coreState.getCallbackManager() != null) {
+            coreState.getCallbackManager().removeOnInitCleverTapIDListener(onInitCleverTapIDListener);
+        }
     }
 
     //TODO: start synchronizing entire flow from here
@@ -3237,13 +3284,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Check if your app is in development mode. <br>
-     * the following function: {@link CleverTapAPI#syncVariables()} will only work if the app is in
-     * development mode and profile is set as a test profile in CT Dashboard.
+     * Some functions (like {@link CleverTapAPI#syncVariables()} and {@link CleverTapAPI#syncRegisteredInAppTemplates()})
+     * will only work if the app is in development mode and the current user profile is set as a test profile in CT
+     * Dashboard.
      *
-     * @return boolean True if development mode, false otherwise.
+     * @return <code>true</code> if the app is in development mode, <code>false</code> otherwise.
      */
-    boolean isDevelopmentMode() {
-        return CTVariables.isDevelopmentMode(context);
+    public boolean isDevelopmentMode() {
+        return context != null && isDevelopmentMode(context);
     }
 
     /**

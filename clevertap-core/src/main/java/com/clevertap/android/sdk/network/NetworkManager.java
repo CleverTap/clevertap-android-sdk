@@ -605,6 +605,8 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @Override
+    @WorkerThread
     public boolean defineTemplates(final Context context, Collection<CustomTemplate> templates) {
         final JSONObject header = getQueueHeader(context, null);
         if (header == null) {
