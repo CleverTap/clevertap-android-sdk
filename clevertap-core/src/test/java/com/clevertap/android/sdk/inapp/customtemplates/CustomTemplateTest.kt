@@ -82,17 +82,6 @@ class CustomTemplateTest {
     }
 
     @Test
-    fun `function builder should throw when arg name contains a dot`() {
-        assertThrows<CustomTemplateException> {
-            function(isVisual = false) {
-                name("function")
-                fileArgument("na.me")
-                presenter(mockFunctionPresenter)
-            }
-        }
-    }
-
-    @Test
     fun `builder should throw when blank argument name is provided`() {
         template {
             name("template")
@@ -146,7 +135,7 @@ class CustomTemplateTest {
     }
 
     @Test
-    fun `builder should throw when name is more than one time`() {
+    fun `builder should throw when name is set more than once`() {
         val name = "template"
         template {
             name(name)
@@ -313,5 +302,24 @@ class CustomTemplateTest {
         }
 
         assertEquals(expectedOrder, template.args.map { it.name })
+    }
+
+    @Test
+    fun `builder should support map keys with dots`() {
+        val expectedArgNames = listOf("e.g.h", "e.j.k.l")
+
+        val template = function(isVisual = false) {
+            name("name")
+            presenter(mockFunctionPresenter)
+            mapArgument(
+                "e",
+                mapOf(
+                    "g.h" to "Text",
+                    "j.k.l" to "Text"
+                )
+            )
+        }
+
+        assertEquals(expectedArgNames, template.args.map { it.name })
     }
 }
