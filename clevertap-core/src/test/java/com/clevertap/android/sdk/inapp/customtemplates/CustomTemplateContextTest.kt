@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.sdk.inapp.InAppActionType.OPEN_URL
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.createCtInAppNotification
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.ContextDismissListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.TemplateContext
 import io.mockk.*
@@ -23,6 +24,7 @@ class CustomTemplateContextTest {
             template = templateDefinition,
             notification = createCtInAppNotification(templateNotificationJson),
             inAppListener = mockk(),
+            dismissListener = mockk(),
             logger = mockk()
         )
 
@@ -32,6 +34,7 @@ class CustomTemplateContextTest {
             template = functionDefinition,
             notification = createCtInAppNotification(functionNotificationJson),
             inAppListener = mockk(),
+            dismissListener = mockk(),
             logger = mockk()
         )
 
@@ -81,6 +84,7 @@ class CustomTemplateContextTest {
             template = functionDefinition,
             notification = createCtInAppNotification(functionNotificationJson),
             inAppListener = mockk(),
+            dismissListener = mockk(),
             logger = mockk()
         )
 
@@ -180,6 +184,19 @@ class CustomTemplateContextTest {
     }
 
     @Test
+    fun `setDismissed should notify dismissListener exactly once`() {
+        val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val dismissListener = mockk<ContextDismissListener>(relaxed = true)
+        val templateContext = createTestTemplateContext(mockInAppListener, dismissListener)
+
+        templateContext.setDismissed()
+        verify(exactly = 1) { dismissListener.onDismissContext(templateContext) }
+
+        templateContext.setDismissed()
+        verify(exactly = 1) { dismissListener.onDismissContext(templateContext) }
+    }
+
+    @Test
     fun `setPresented should notify InAppListener`() {
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
         val templateContext = createTestTemplateContext(mockInAppListener)
@@ -203,6 +220,24 @@ class CustomTemplateContextTest {
         verify(exactly = 1) { mockInAppListener.inAppNotificationDidDismiss(any(), any(), any()) }
     }
 
+    @Test
+    fun `setPresented and setDismissed should not call InAppListener for templates that are triggered as actions`() {
+        val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val notification = createCtInAppNotification(functionNotificationJson)
+        notification.customTemplateData.isAction = true
+        val functionContext = CustomTemplateContext.createContext(
+            template = functionDefinition,
+            notification = notification,
+            inAppListener = mockInAppListener,
+            dismissListener = mockk(relaxed = true),
+            logger = mockk(relaxed = true)
+        )
+
+        functionContext.setPresented()
+        functionContext.setDismissed()
+        verify { mockInAppListener wasNot called }
+    }
+
     private fun verifyInnerMap(vars: JSONObject, map: Map<String, Any>) {
         assertEquals(vars.getBoolean("map.innerMap.boolean"), map["boolean"])
         assertEquals(vars.getString("map.innerMap.string"), map["string"])
@@ -222,10 +257,14 @@ class CustomTemplateContextTest {
 
     private fun createMockInAppListener() = mockk<InAppListener>(relaxed = true)
 
-    private fun createTestTemplateContext(inAppListener: InAppListener = mockk()) = TemplateContext(
+    private fun createTestTemplateContext(
+        inAppListener: InAppListener = mockk(),
+        dismissListener: ContextDismissListener? = null
+    ) = TemplateContext(
         templateDefinition,
         createCtInAppNotification(templateNotificationJson),
         inAppListener,
+        dismissListener,
         mockk<Logger>(relaxed = true)
     )
 

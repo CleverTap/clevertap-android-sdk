@@ -4,10 +4,12 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.InAppListener
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.ContextDismissListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.TemplateContext
 
-internal class TemplatesManager(templates: Collection<CustomTemplate>, private val logger: Logger) {
+internal class TemplatesManager(templates: Collection<CustomTemplate>, private val logger: Logger) :
+    ContextDismissListener {
 
     companion object {
 
@@ -40,15 +42,14 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
         }
     }
 
-    private val customTemplates: Map<String, CustomTemplate>
-
-    init {
-        customTemplates = templates.associateBy { template -> template.name }
-    }
+    private val customTemplates: Map<String, CustomTemplate> = templates.associateBy { template -> template.name }
+    private val activeContexts: MutableMap<String, CustomTemplateContext> = mutableMapOf()
 
     fun isTemplateRegistered(templateName: String): Boolean = customTemplates.contains(templateName)
 
     fun getTemplate(templateName: String): CustomTemplate? = customTemplates[templateName]
+
+    fun getActiveContextForTemplate(templateName: String): CustomTemplateContext? = activeContexts[templateName]
 
     fun presentTemplate(notification: CTInAppNotification, inAppListener: InAppListener) {
         val context = createContextFromInApp(notification, inAppListener) ?: return
@@ -61,30 +62,48 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
         when (val presenter = template.presenter) {
             is TemplatePresenter -> {
                 if (context is TemplateContext) {
+                    activeContexts[template.name] = context
                     presenter.onPresent(context)
                 }
             }
 
             is FunctionPresenter -> {
                 if (context is FunctionContext) {
+                    activeContexts[template.name] = context
                     presenter.onPresent(context)
                 }
             }
         }
     }
 
-    fun closeTemplate(notification: CTInAppNotification, inAppListener: InAppListener) {
-        val context = createContextFromInApp(notification, inAppListener) ?: return
-        val template = customTemplates[context.templateName]
-        if (template == null) {
-            logger.info("CustomTemplates", "Cannot find template with name ${context.templateName}")
+    fun closeTemplate(notification: CTInAppNotification) {
+        val templateName = notification.customTemplateData?.templateName
+        if (templateName == null) {
+            logger.debug("CustomTemplates", "Cannot close custom template from notification without template name")
             return
         }
+
+        val context = activeContexts[templateName]
+        if (context == null) {
+            logger.debug("CustomTemplates", "Cannot close custom template without active context")
+            return
+        }
+
+        val template = customTemplates[templateName]
+        if (template == null) {
+            logger.info("CustomTemplates", "Cannot find template with name $templateName")
+            return
+        }
+
         //only TemplateContext has onClose
         val presenter = template.presenter
         if (presenter is TemplatePresenter && context is TemplateContext) {
             presenter.onClose(context)
         }
+    }
+
+    override fun onDismissContext(context: CustomTemplateContext) {
+        activeContexts.remove(context.templateName)
     }
 
     private fun createContextFromInApp(
@@ -106,6 +125,12 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
             return null
         }
 
-        return CustomTemplateContext.createContext(template, notification, inAppListener, logger)
+        return CustomTemplateContext.createContext(
+            template,
+            notification,
+            inAppListener,
+            dismissListener = this,
+            logger
+        )
     }
 }

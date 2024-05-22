@@ -25,6 +25,7 @@ sealed class CustomTemplateContext private constructor(
     template: CustomTemplate,
     protected val notification: CTInAppNotification,
     inAppListener: InAppListener,
+    private var dismissListener: ContextDismissListener?,
     protected val logger: Logger
 ) {
 
@@ -33,11 +34,28 @@ sealed class CustomTemplateContext private constructor(
         private const val ARGS_KEY_ACTIONS = "actions"
 
         internal fun createContext(
-            template: CustomTemplate, notification: CTInAppNotification, inAppListener: InAppListener, logger: Logger
+            template: CustomTemplate,
+            notification: CTInAppNotification,
+            inAppListener: InAppListener,
+            dismissListener: ContextDismissListener?,
+            logger: Logger
         ): CustomTemplateContext {
             return when (template.type) {
-                TEMPLATE -> TemplateContext(template, notification, inAppListener, logger)
-                FUNCTION -> FunctionContext(template, notification, inAppListener, logger)
+                TEMPLATE -> TemplateContext(
+                    template = template,
+                    notification = notification,
+                    inAppListener = inAppListener,
+                    dismissListener = dismissListener,
+                    logger = logger
+                )
+
+                FUNCTION -> FunctionContext(
+                    template = template,
+                    notification = notification,
+                    inAppListener = inAppListener,
+                    dismissListener = dismissListener,
+                    logger = logger
+                )
             }
         }
     }
@@ -45,6 +63,7 @@ sealed class CustomTemplateContext private constructor(
     val templateName = template.name
     protected val argumentValues = mergeArguments(template.args, notification.customTemplateData?.getArguments())
     internal val inAppListenerRef = WeakReference(inAppListener)
+    private val isAction = notification.customTemplateData?.isAction ?: false
 
     /**
      * Retrieve a [String] argument by [name].
@@ -137,7 +156,7 @@ sealed class CustomTemplateContext private constructor(
             val keyParts = key.removePrefix(mapPrefix).split(".")
 
             val keyValue: Any = if (value is CTInAppAction) {
-                value.customTemplateInAppData?.templateName ?: value.type?.toString() ?: ""
+                getActionName(value)
             } else {
                 value
             }
@@ -160,10 +179,16 @@ sealed class CustomTemplateContext private constructor(
         return map
     }
 
+    //TODO CustomTemplates add getFile(name: String) method for retrieving file arguments
+
     /**
      * Notify the SDK that the current [CustomTemplate] is presented.
      */
     open fun setPresented() {
+        if (isAction) {
+            return
+        }
+
         val listener = inAppListenerRef.get()
         if (listener != null) {
             listener.inAppNotificationDidShow(notification, null)
@@ -177,7 +202,14 @@ sealed class CustomTemplateContext private constructor(
      * visible to the user until this method is called. Since the SDK can show only one InApp message at a time, all
      * other messages will be queued until the current one is dismissed.
      */
-    open fun setDismissed() {
+    fun setDismissed() {
+        dismissListener?.onDismissContext(this)
+        dismissListener = null
+
+        if (isAction) {
+            return
+        }
+
         val listener = inAppListenerRef.get()
         if (listener != null) {
             listener.inAppNotificationDidDismiss(null, notification, null)
@@ -221,7 +253,7 @@ sealed class CustomTemplateContext private constructor(
                         else -> overrides.getDouble(argument.name)
                     }
                 }
-                //TODO add FILE handling when implemented
+                //TODO CustomTemplates add FILE handling when implemented
                 FILE -> null
                 ACTION -> CTInAppAction.createFromJson(
                     overrides.optJSONObject(argument.name)?.optJSONObject(ARGS_KEY_ACTIONS)
@@ -240,12 +272,34 @@ sealed class CustomTemplateContext private constructor(
         return argumentValues[name] as? T
     }
 
+    override fun toString(): String {
+        return "CustomTemplateContext {\ntemplateName = $templateName,\nargs = {\n${
+            argumentValues.map {
+                "\t${it.key} = ${
+                    if (it.value is CTInAppAction) {
+                        "Action {${getActionName(it.value as? CTInAppAction)}}"
+                    } else {
+                        it.value.toString()
+                    }
+                }"
+            }.joinToString(",\n")
+        }\n}}"
+    }
+
+    private fun getActionName(action: CTInAppAction?): String {
+        return action?.customTemplateInAppData?.templateName ?: action?.type?.toString() ?: ""
+    }
+
     /**
      * See [CustomTemplateContext].
      */
     class TemplateContext internal constructor(
-        template: CustomTemplate, notification: CTInAppNotification, inAppListener: InAppListener, logger: Logger
-    ) : CustomTemplateContext(template, notification, inAppListener, logger) {
+        template: CustomTemplate,
+        notification: CTInAppNotification,
+        inAppListener: InAppListener,
+        dismissListener: ContextDismissListener?,
+        logger: Logger
+    ) : CustomTemplateContext(template, notification, inAppListener, dismissListener, logger) {
 
         /**
          * Trigger an action argument by name. Open url actions could require an [activityContext] to be launched
@@ -280,20 +334,17 @@ sealed class CustomTemplateContext private constructor(
      * See [CustomTemplateContext].
      */
     class FunctionContext internal constructor(
-        template: CustomTemplate, notification: CTInAppNotification, inAppListener: InAppListener, logger: Logger
-    ) : CustomTemplateContext(template, notification, inAppListener, logger) {
+        template: CustomTemplate,
+        notification: CTInAppNotification,
+        inAppListener: InAppListener,
+        dismissListener: ContextDismissListener?,
+        logger: Logger
+    ) : CustomTemplateContext(
+        template, notification, inAppListener, dismissListener, logger
+    )
 
-        private val isVisual = template.isVisual
+    internal fun interface ContextDismissListener {
 
-        /**
-         * Visual functions ([CustomTemplate.isVisual]` = true`) are considered as a message that is visible to the
-         * user. See [TemplateContext.setDismissed] for more details. Non-visual functions are executed directly and
-         * do not require to be explicitly dismissed.
-         */
-        override fun setDismissed() {
-            if (isVisual) {
-                super.setDismissed()
-            }
-        }
+        fun onDismissContext(context: CustomTemplateContext)
     }
 }

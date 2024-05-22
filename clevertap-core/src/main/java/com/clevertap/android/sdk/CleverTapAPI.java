@@ -37,8 +37,7 @@ import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
-import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
-import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplatesExtKt;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
@@ -1076,6 +1075,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public static synchronized void registerCustomInAppTemplates(TemplateProducer producer) {
         TemplatesManager.register(producer);
+    }
+
+    /**
+     * Retrieve a {@link CustomTemplateContext} for a template that is currently displaying. If the provided template
+     * name is not of a currently active template this method returns <code>null</code>.
+     */
+    @Nullable
+    public CustomTemplateContext getActiveContextForTemplate(@NonNull String templateName) {
+        if (coreState == null || coreState.getTemplatesManager() == null) {
+            return null;
+        }
+        return coreState.getTemplatesManager().getActiveContextForTemplate(templateName);
     }
 
     /**
