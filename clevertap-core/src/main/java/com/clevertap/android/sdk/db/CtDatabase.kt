@@ -95,26 +95,10 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
     private fun migrateUserProfilesTable(db: SQLiteDatabase) {
         executeStatement(db, CREATE_TEMP_USER_PROFILES_TABLE)
 
-        val cursor = db.query(USER_PROFILES.tableName, arrayOf(Column.ID, Column.DATA), null, null, null, null, null)
+        val deviceId = getDeviceIdForAccountIdFromPrefs(config.accountId)
+        val copyUserProfilesData = """INSERT INTO temp_${USER_PROFILES.tableName} (${Column.ID}, ${Column.DEVICE_ID}, ${Column.DATA}) SELECT ${Column.ID}, '$deviceId', ${Column.DATA} FROM ${USER_PROFILES.tableName};"""
 
-        cursor.use {
-            if (cursor.moveToFirst()) {
-                do {
-                    val userId = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
-                    val data = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
-                    val deviceId = getDeviceIdForAccountIdFromPrefs(userId)
-
-                    // Insert the data into the temporary table
-                    val insertStatement = "INSERT INTO temp_${USER_PROFILES.tableName} (${Column.ID}, ${Column.DEVICE_ID}, ${Column.DATA}) VALUES (?, ?, ?)"
-                    db.compileStatement(insertStatement).apply {
-                        bindString(1, userId)
-                        bindString(2, deviceId)
-                        bindString(3, data)
-                        execute()
-                    }
-                } while (cursor.moveToNext())
-            }
-        }
+        executeStatement(db, copyUserProfilesData)
         executeStatement(db, DROP_USER_PROFILES_TABLE)
         executeStatement(db, RENAME_USER_PROFILES_TABLE)
     }
