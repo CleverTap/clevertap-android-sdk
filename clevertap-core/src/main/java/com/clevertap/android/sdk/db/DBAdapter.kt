@@ -41,7 +41,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
 
     private val logger = config.logger
 
-    private val dbHelper: DatabaseHelper = DatabaseHelper(context, getDatabaseName(config), logger)
+    private val dbHelper: DatabaseHelper = DatabaseHelper(context, config, getDatabaseName(config), logger)
 
     private var rtlDirtyFlag = true
 
@@ -198,30 +198,6 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
             } catch (e: JSONException) {
                 null
             }
-        }
-    }
-
-    @Synchronized
-    fun updateDeviceIdForProfile(accountId: String?, deviceId: String?): Boolean {
-        if (accountId == null || deviceId == null) {
-            return false
-        }
-
-        val tName = USER_PROFILES.tableName
-        val cv = ContentValues()
-        cv.put(Column.DEVICE_ID, deviceId)
-
-        return try {
-            val rowsAffected = dbHelper.writableDatabase.update(
-                tName,
-                cv,
-                "${Column.ID} = ?",
-                arrayOf(accountId)
-            )
-            rowsAffected > 0
-        } catch (e: SQLiteException) {
-            logger.verbose("Could not update deviceId in database $tName.", e)
-            false
         }
     }
 
@@ -394,7 +370,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         }
         val tableName = USER_PROFILES.tableName
 
-        logger.verbose("Device ID for inserting userProfile is", deviceId)
+        logger.verbose("Inserting or updating userProfile for accountID = $id + deviceID = $deviceId")
         val cv = ContentValues()
         cv.put(Column.DATA, obj.toString())
         cv.put(Column.ID, id)

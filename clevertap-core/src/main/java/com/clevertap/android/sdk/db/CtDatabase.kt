@@ -4,7 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.Table.EVENTS
 import com.clevertap.android.sdk.db.Table.INBOX_MESSAGES
 import com.clevertap.android.sdk.db.Table.PROFILE_EVENTS
@@ -15,12 +18,12 @@ import com.clevertap.android.sdk.db.Table.USER_PROFILES
 import java.io.File
 import kotlin.math.max
 
-class DatabaseHelper internal constructor(context: Context, dbName: String?, private val logger: Logger) :
+class DatabaseHelper internal constructor(val context: Context, val config: CleverTapInstanceConfig, dbName: String?, private val logger: Logger) :
     SQLiteOpenHelper(context, dbName, null, DATABASE_VERSION) {
 
     companion object {
 
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4
         private const val DB_LIMIT = 20 * 1024 * 1024 //20mb
     }
 
@@ -80,9 +83,38 @@ class DatabaseHelper internal constructor(context: Context, dbName: String?, pri
         }
     }
 
+    private fun getDeviceIdForAccountIdFromPrefs(accountId: String): String {
+        val baseKey = Constants.DEVICE_ID_TAG + ":" + accountId
+        val fallbackKey = Constants.FALLBACK_ID_TAG + ":" + accountId
+
+        return StorageHelper.getString(context, baseKey, null)
+            ?: if (config.isDefaultInstance) StorageHelper.getString(context, baseKey, null) else null
+                ?: StorageHelper.getString(context, fallbackKey, "")
+    }
+
     private fun migrateUserProfilesTable(db: SQLiteDatabase) {
         executeStatement(db, CREATE_TEMP_USER_PROFILES_TABLE)
-        executeStatement(db, COPY_USER_PROFILES_DATA)
+
+        val cursor = db.query(USER_PROFILES.tableName, arrayOf(Column.ID, Column.DATA), null, null, null, null, null)
+
+        cursor.use {
+            if (cursor.moveToFirst()) {
+                do {
+                    val userId = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
+                    val data = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
+                    val deviceId = getDeviceIdForAccountIdFromPrefs(userId)
+
+                    // Insert the data into the temporary table
+                    val insertStatement = "INSERT INTO temp_${USER_PROFILES.tableName} (${Column.ID}, ${Column.DEVICE_ID}, ${Column.DATA}) VALUES (?, ?, ?)"
+                    db.compileStatement(insertStatement).apply {
+                        bindString(1, userId)
+                        bindString(2, deviceId)
+                        bindString(3, data)
+                        execute()
+                    }
+                } while (cursor.moveToNext())
+            }
+        }
         executeStatement(db, DROP_USER_PROFILES_TABLE)
         executeStatement(db, RENAME_USER_PROFILES_TABLE)
     }
@@ -236,11 +268,6 @@ private val CREATE_TEMP_USER_PROFILES_TABLE = """
         ${Column.DATA} STRING NOT NULL,
         PRIMARY KEY (${Column.ID}, ${Column.DEVICE_ID})
     );
-"""
-
-private val COPY_USER_PROFILES_DATA = """
-    INSERT INTO temp_${USER_PROFILES.tableName} (${Column.ID}, ${Column.DEVICE_ID}, ${Column.DATA})
-    SELECT ${Column.ID}, '', ${Column.DATA} FROM ${USER_PROFILES.tableName};
 """
 
 private val DROP_USER_PROFILES_TABLE = """

@@ -443,10 +443,7 @@ public class LocalDataStore {
                         JSONObject profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(accountID, deviceInfo.getDeviceID());
 
                         if (profile == null) {
-                            profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(accountID, "");
-                            if(profile == null)
-                                return;
-                            dbAdapter.updateDeviceIdForProfile(accountID, deviceInfo.getDeviceID());
+                            return;
                         }
 
                         Iterator<?> keys = profile.keys();
