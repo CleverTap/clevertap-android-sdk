@@ -237,7 +237,6 @@ public interface Constants {
     String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
     String KEY_BETA = "beta";
     String KEY_PACKAGE_NAME = "packageName";
-    String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
     String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
