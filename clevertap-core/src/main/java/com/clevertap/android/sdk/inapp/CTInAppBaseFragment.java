@@ -77,22 +77,12 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     abstract void cleanup();
 
-    Bundle didClick(CTInAppNotificationButton button) {
-        return actionTriggered(button.getAction(), button.getText(), null);
-    }
-
-    Bundle actionTriggered(CTInAppAction action, String callToAction, @Nullable Bundle additionalData) {
-        InAppListener listener = getListener();
-        if (listener != null) {
-            return listener.inAppNotificationActionTriggered(
-                    inAppNotification,
-                    action,
-                    callToAction,
-                    additionalData,
-                    getActivity());
-        } else {
-            return null;
-        }
+    public void triggerAction(
+            @NonNull CTInAppAction action,
+            @Nullable String callToAction,
+            @Nullable Bundle additionalData) {
+        Bundle actionData = notifyActionTriggered(action, callToAction != null ? callToAction : "", additionalData);
+        didDismiss(actionData);
     }
 
     void openActionUrl(String url) {
@@ -112,8 +102,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
             CTInAppAction action = CTInAppAction.createOpenUrlAction(url);
             config.getLogger().debug("Executing call to action for in-app: " + url);
-            Bundle actionData = actionTriggered(action, callToAction != null ? callToAction : "", formData);
-            didDismiss(actionData);
+            triggerAction(action, callToAction != null ? callToAction : "", formData);
         } catch (Throwable t) {
             config.getLogger().debug("Error parsing the in-app notification action!", t);
         }
@@ -190,4 +179,24 @@ public abstract class CTInAppBaseFragment extends Fragment {
         return provider;
     }
 
+    private Bundle didClick(CTInAppNotificationButton button) {
+        return notifyActionTriggered(button.getAction(), button.getText(), null);
+    }
+
+    private Bundle notifyActionTriggered(
+            @NonNull CTInAppAction action,
+            @NonNull String callToAction,
+            @Nullable Bundle additionalData) {
+        InAppListener listener = getListener();
+        if (listener != null) {
+            return listener.inAppNotificationActionTriggered(
+                    inAppNotification,
+                    action,
+                    callToAction,
+                    additionalData,
+                    getActivity());
+        } else {
+            return null;
+        }
+    }
 }
