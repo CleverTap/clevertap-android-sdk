@@ -409,6 +409,16 @@ public class CTInAppNotification implements Parcelable {
 
     }
 
+    CTInAppNotification copy() {
+        //TODO implement copying of all fields instead of parsing the json
+        return new CTInAppNotification().initWithJSON(jsonDescription, videoSupported);
+    }
+
+    void setCustomTemplateData(CustomTemplateInAppData inAppData) {
+        customTemplateData = inAppData;
+        customTemplateData.writeFieldsToJson(jsonDescription);
+    }
+
     boolean isDarkenScreen() {
         return darkenScreen;
     }

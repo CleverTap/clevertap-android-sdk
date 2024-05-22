@@ -9,9 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -36,6 +38,7 @@ import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
@@ -57,6 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
@@ -333,24 +337,90 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     @Override
-    public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-            HashMap<String, String> keyValueMap) {
-        analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, formData);
-        if (keyValueMap != null && !keyValueMap.isEmpty()) {
-            if (callbackManager.getInAppNotificationButtonListener() != null) {
-                callbackManager.getInAppNotificationButtonListener().onInAppButtonClick(keyValueMap);
-            }
+    @NonNull
+    public Bundle inAppNotificationActionTriggered(
+            @NonNull final CTInAppNotification inAppNotification,
+            @NonNull final CTInAppAction action,
+            @NonNull final String callToAction,
+            @Nullable final Bundle additionalData,
+            @Nullable final Context activityContext) {
+        Bundle data;
+        if (additionalData != null) {
+            data = new Bundle(additionalData);
+        } else {
+            data = new Bundle();
         }
+        data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
+        data.putString(Constants.KEY_C2A, callToAction);
+
+        // send clicked event
+        analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, data);
+
+        InAppActionType type = action.getType();
+        if (type == null) {
+            logger.debug("Triggered in-app action without type");
+            return data;
+        }
+
+        switch (type) {
+            case CUSTOM_CODE:
+                triggerCustomTemplateAction(inAppNotification, action.getCustomTemplateInAppData());
+                break;
+            case CLOSE:
+                if (CTInAppType.CTInAppTypeCustomCodeTemplate == inAppNotification.getInAppType()) {
+                    templatesManager.closeTemplate(inAppNotification, this);
+                }
+                // SDK In-Apps are dismissed in CTInAppBaseFragment::handleButtonClick or CTInAppNotificationActivity
+                break;
+            case OPEN_URL:
+                String actionUrl = action.getActionUrl();
+                if (actionUrl != null) {
+                    openUrl(actionUrl, activityContext);
+                } else {
+                    logger.debug("Cannot trigger open url action without url value");
+                }
+                break;
+            case KEY_VALUES:
+                if (action.getKeyValues() != null && !action.getKeyValues().isEmpty()) {
+                    if (callbackManager.getInAppNotificationButtonListener() != null) {
+                        callbackManager.getInAppNotificationButtonListener().onInAppButtonClick(action.getKeyValues());
+                    }
+                }
+                break;
+        }
+
+        return data;
+    }
+
+    @Nullable
+    @Override
+    public Bundle inAppNotificationDidClick(
+            @NonNull final CTInAppNotification inAppNotification,
+            @NonNull final CTInAppNotificationButton button,
+            @Nullable final Context activityContext) {
+        if (button.getAction() == null) {
+            return null;
+        }
+        return inAppNotificationActionTriggered(
+                inAppNotification,
+                button.getAction(),
+                button.getText(),
+                null,
+                activityContext);
     }
 
     @Override
-    public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
-            final Bundle formData) {
+    public void inAppNotificationDidDismiss(@Nullable final Context context,
+            @NonNull final CTInAppNotification inAppNotification,
+            @Nullable final Bundle formData) {
         inAppNotification.didDismiss(resourceProvider);
 
         if (controllerManager.getInAppFCManager() != null) {
             controllerManager.getInAppFCManager().didDismiss(inAppNotification);
-            logger.verbose(config.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
+            String templateName = inAppNotification.getCustomTemplateData() != null
+                    ? inAppNotification.getCustomTemplateData().getTemplateName() : "";
+            logger.verbose(config.getAccountId(),
+                    "InApp Dismissed: " + inAppNotification.getCampaignId() + "  " + templateName);
         } else {
             logger.verbose(config.getAccountId(), "Not calling InApp Dismissed: " + inAppNotification.getCampaignId()
                     + " because InAppFCManager is null");
@@ -392,7 +462,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     //InApp
     @Override
-    public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
+    public void inAppNotificationDidShow(@NonNull CTInAppNotification inAppNotification, @Nullable Bundle formData) {
         controllerManager.getInAppFCManager().didShow(context, inAppNotification);
         analyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData);
 
@@ -520,6 +590,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             // We won't get here
             logger.verbose(config.getAccountId(), "InApp: Couldn't parse JSON array string from prefs", t);
         }
+    }
+
+    private void addInAppNotificationInFrontOfQueue(JSONObject inApp) {
+        if (isNonRegisteredCustomTemplate(inApp)) {
+            return;
+        }
+        inAppQueue.insertInFront(inApp);
+        showNotificationIfAvailable(context);
     }
 
     private boolean canShowInAppOnActivity() {
@@ -853,16 +931,72 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     private JSONArray filterNonRegisteredCustomTemplates(JSONArray inAppNotifications) {
-        return JsonUtilsKt.filterObjects(inAppNotifications, jsonObject -> {
-            CustomTemplateInAppData templateInAppData = CustomTemplateInAppData.createFromJson(jsonObject);
-            if (templateInAppData != null && templateInAppData.getTemplateName() != null
-                    && !templatesManager.isTemplateRegistered(templateInAppData.getTemplateName())) {
-                logger.info("CustomTemplates: skipping not registered template with name "
-                        + templateInAppData.getTemplateName());
-                return false;
+        return JsonUtilsKt.filterObjects(inAppNotifications, jsonObject -> !isNonRegisteredCustomTemplate(jsonObject));
+    }
+
+    private boolean isNonRegisteredCustomTemplate(JSONObject inApp) {
+        CustomTemplateInAppData customTemplateData = CustomTemplateInAppData.createFromJson(inApp);
+        boolean isNonRegistered = customTemplateData != null && customTemplateData.getTemplateName() != null
+                && !templatesManager.isTemplateRegistered(customTemplateData.getTemplateName());
+
+        if (isNonRegistered) {
+            logger.info("CustomTemplates",
+                    "Template with name \"" + customTemplateData.getTemplateName() +
+                            "\" is not registered and cannot be presented");
+        }
+
+        return isNonRegistered;
+    }
+
+    private void triggerCustomTemplateAction(CTInAppNotification notification,
+            CustomTemplateInAppData templateInAppData) {
+        if (templateInAppData != null && templateInAppData.getTemplateName() != null) {
+            CustomTemplate template = templatesManager.getTemplate(templateInAppData.getTemplateName());
+            if (template != null) {
+                CTInAppNotification notificationFromAction = notification.copy();
+                notificationFromAction.setCustomTemplateData(templateInAppData);
+                if (template.isVisual()) {
+                    addInAppNotificationInFrontOfQueue(notificationFromAction.getJsonDescription());
+                } else {
+                    presentTemplate(notificationFromAction);
+                }
             } else {
-                return true;
+                logger.debug("Cannot present non-registered template with name: "
+                        + templateInAppData.getTemplateName());
             }
-        });
+        } else {
+            logger.debug("Cannot present template without name.");
+        }
+    }
+
+    private void openUrl(String url, @Nullable Context launchContext) {
+        try {
+            Uri uri = Uri.parse(url.replace("\n", "").replace("\r", ""));
+            Set<String> queryParamSet = uri.getQueryParameterNames();
+            Bundle queryBundle = new Bundle();
+            if (queryParamSet != null && !queryParamSet.isEmpty()) {
+                for (String queryName : queryParamSet) {
+                    queryBundle.putString(queryName, uri.getQueryParameter(queryName));
+                }
+            }
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            if (!queryBundle.isEmpty()) {
+                intent.putExtras(queryBundle);
+            }
+
+            if (launchContext == null) {
+                launchContext = context;
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
+
+            Utils.setPackageNameFromResolveInfoList(launchContext, intent);
+            launchContext.startActivity(intent);
+        } catch (Exception e) {
+            if (url.startsWith(Constants.WZRK_URL_SCHEMA)) {
+                // Ignore logging CT scheme actions
+                return;
+            }
+            logger.debug("No activity found to open url: " + url);
+        }
     }
 }

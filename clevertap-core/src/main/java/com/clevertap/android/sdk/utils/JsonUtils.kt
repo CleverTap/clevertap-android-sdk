@@ -19,6 +19,18 @@ fun JSONObject.getStringOrNull(name: String): String? {
     }
 }
 
+fun JSONArray.prepend(value: Any) {
+    var index = 0
+    var shiftItem: Any = value
+    while (index < length()) {
+        val currentItem = get(index)
+        put(index, shiftItem)
+        shiftItem = currentItem
+        index++
+    }
+    put(shiftItem)
+}
+
 fun Parcel.readJson(): JSONObject? {
     return try {
         readString()?.let { JSONObject(it) }

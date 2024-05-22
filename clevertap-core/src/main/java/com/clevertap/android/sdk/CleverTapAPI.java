@@ -37,6 +37,10 @@ import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplatesExtKt;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
@@ -1034,6 +1038,44 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         for (CleverTapAPI instance : getAvailableInstances(context)) {
             instance.coreState.getPushProviders().doTokenRefresh(token, pushType);
         }
+    }
+
+    /**
+     * Register {@link com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate CustomTemplates} through a
+     * {@link TemplateProducer}. See {@link com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate.Builder
+     * CustomTemplate.Builder}. Templates must be registered before the {@link CleverTapAPI} instance, that would use
+     * them, is created. A common place for this initialization is in {@link Application#onCreate()}. If your
+     * application uses multiple {@link CleverTapAPI} instance, use the {@link CleverTapInstanceConfig} within the
+     * TemplateProducer to differentiate which templates should be registered to which {@link CleverTapAPI}
+     * instances.This method can be called multiple times with different TemplateProducers, however all of the
+     * produced templates must have unique names.
+     * <br/><br/>
+     * Example usage:
+     * <br/>
+     * Java:
+     * <pre>
+     * CleverTapAPI.registerCustomInAppTemplates(ctConfig -> CustomTemplatesExtKt.templatesSet(
+     *                 new CustomTemplate.TemplateBuilder()
+     *                         .name("template")
+     *                         .presenter()
+     *                         .stringArgument("string", "Text")
+     *                         .build()));
+     * </pre>
+     * Kotlin:
+     * <pre>
+     * CleverTapAPI.registerCustomInAppTemplates {
+     *     setOf(
+     *         template {
+     *             name("template")
+     *             presenter()
+     *             stringArgument("string", "Text")
+     *         })
+     * }
+     * </pre>
+     * @param producer The {@link TemplateProducer} that would create a set of templates
+     */
+    public static synchronized void registerCustomInAppTemplates(TemplateProducer producer) {
+        TemplatesManager.register(producer);
     }
 
     /**

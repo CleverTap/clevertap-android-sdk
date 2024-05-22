@@ -1,16 +1,42 @@
 package com.clevertap.android.sdk.inapp.customtemplates
 
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.InAppActionType.CLOSE
+import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
+import com.clevertap.android.sdk.inapp.InAppActionType.OPEN_URL
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.createCtInAppNotification
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.TemplateContext
 import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class CustomTemplateContextTest {
+
+    @Test
+    fun `createContext factory method should create contexts of correct types`() {
+        val templateContext = CustomTemplateContext.createContext(
+            template = templateDefinition,
+            notification = createCtInAppNotification(templateNotificationJson),
+            inAppListener = mockk(),
+            logger = mockk()
+        )
+
+        assertTrue(templateContext is TemplateContext)
+
+        val functionContext = CustomTemplateContext.createContext(
+            template = functionDefinition,
+            notification = createCtInAppNotification(functionNotificationJson),
+            inAppListener = mockk(),
+            logger = mockk()
+        )
+
+        assertTrue(functionContext is FunctionContext)
+    }
 
     @Test
     fun `getValue functions should apply overrides correctly`() {
@@ -70,6 +96,104 @@ class CustomTemplateContextTest {
         verifyInnermostMap(notificationVars, innermostMap)
     }
 
+    @Test
+    fun `getMap should include actions as action name or type`() {
+        val templateContext = createTestTemplateContext()
+
+        val actionsMap = templateContext.getMap("map.actions")!!
+        assertEquals(VARS_ACTION_FUNCTION_NAME, actionsMap["function"])
+        assertEquals(CLOSE.toString(), actionsMap["close"])
+    }
+
+    @Test
+    fun `triggerAction should trigger the correct action through inAppListener`() {
+        val mockInAppListener = createMockInAppListener()
+        val templateContext = createTestTemplateContext(mockInAppListener)
+
+        val closeActionArg = "map.actions.close"
+        templateContext.triggerActionArgument(closeActionArg)
+        verify {
+            mockInAppListener.inAppNotificationActionTriggered(
+                inAppNotification = any(),
+                action = match {
+                    it.type == CLOSE
+                },
+                callToAction = closeActionArg,
+                additionalData = any(),
+                activityContext = any()
+            )
+        }
+
+        templateContext.triggerActionArgument("map.actions.function")
+        verify {
+            mockInAppListener.inAppNotificationActionTriggered(
+                inAppNotification = any(),
+                action = match {
+                    it.type == CUSTOM_CODE && it.customTemplateInAppData?.templateName == VARS_ACTION_FUNCTION_NAME
+                },
+                callToAction = VARS_ACTION_FUNCTION_NAME,
+                additionalData = any(),
+                activityContext = any()
+            )
+        }
+
+        val openUrlActionArg = "map.actions.openUrl"
+        templateContext.triggerActionArgument(openUrlActionArg)
+        verify {
+            mockInAppListener.inAppNotificationActionTriggered(
+                inAppNotification = any(),
+                action = match {
+                    it.type == OPEN_URL && it.actionUrl == VARS_ACTION_OPEN_URL_ADDRESS
+                },
+                callToAction = openUrlActionArg,
+                additionalData = any(),
+                activityContext = any()
+            )
+        }
+    }
+
+    @Test
+    fun `triggerAction should not trigger inAppListener for non-existent action arguments`() {
+        val mockInAppListener = createMockInAppListener()
+        val templateContext = createTestTemplateContext(mockInAppListener)
+
+        templateContext.triggerActionArgument("nonexistent")
+        verify { mockInAppListener wasNot called }
+    }
+
+    @Test
+    fun `setDismissed should notify InAppListener`() {
+        val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val templateContext = createTestTemplateContext(mockInAppListener)
+
+        templateContext.setDismissed()
+        verify { mockInAppListener.inAppNotificationDidDismiss(any(), any(), any()) }
+    }
+
+    @Test
+    fun `setPresented should notify InAppListener`() {
+        val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val templateContext = createTestTemplateContext(mockInAppListener)
+
+        templateContext.setPresented()
+        verify { mockInAppListener.inAppNotificationDidShow(any(), any()) }
+    }
+
+    @Test
+    fun `InAppListener should not be called again after setDismissed`() {
+        val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val templateContext = createTestTemplateContext(mockInAppListener)
+
+        templateContext.setDismissed()
+        verify(exactly = 1) { mockInAppListener.inAppNotificationDidDismiss(any(), any(), any()) }
+
+        templateContext.setPresented()
+        verify(exactly = 0) { mockInAppListener.inAppNotificationDidShow(any(), any()) }
+
+        templateContext.setDismissed()
+        verify(exactly = 1) { mockInAppListener.inAppNotificationDidDismiss(any(), any(), any()) }
+    }
+
     private fun verifyInnerMap(vars: JSONObject, map: Map<String, Any>) {
         assertEquals(vars.getBoolean("map.innerMap.boolean"), map["boolean"])
         assertEquals(vars.getString("map.innerMap.string"), map["string"])
@@ -87,15 +211,17 @@ class CustomTemplateContextTest {
         assertEquals(true, map["noOverrideBoolean"])
     }
 
-    private fun createTestTemplateContext() = TemplateContext(
+    private fun createMockInAppListener() = mockk<InAppListener>(relaxed = true)
+
+    private fun createTestTemplateContext(inAppListener: InAppListener = mockk()) = TemplateContext(
         templateDefinition,
         createCtInAppNotification(templateNotificationJson),
-        mockk<InAppListener>(),
-        mockk<Logger>()
+        inAppListener,
+        mockk<Logger>(relaxed = true)
     )
 
     private val templateDefinition = template {
-        name("nestedArgsTemplate")
+        name(TEMPLATE_NAME_NESTED)
         presenter(mockk<TemplatePresenter>())
         booleanArgument("boolean", false)
         stringArgument("string", "Default")
@@ -129,13 +255,16 @@ class CustomTemplateContextTest {
             )
         )
         doubleArgument("map.innerMap.double", 0.0)
+        actionArgument("map.actions.function")
+        actionArgument("map.actions.close")
+        actionArgument("map.actions.openUrl")
     }
 
     private val templateNotificationJson = JSONObject(
         """
         {
-            "templateName": "nestedArgsTemplate",
-            "type": "custom-code",
+            "templateName": "$TEMPLATE_NAME_NESTED",
+            "type": "$CUSTOM_CODE",
             "vars": {
                 "boolean": $VARS_OVERRIDE_BOOLEAN,
                 "string": "$VARS_OVERRIDE_STRING",
@@ -143,6 +272,28 @@ class CustomTemplateContextTest {
                 "long": $VARS_OVERRIDE_LONG,
                 "double": $VARS_OVERRIDE_DOUBLE,
                 "overrideWithoutDefinitionBoolean": false,
+                "map.actions.close": {
+                    "actions": {
+                        "type": "$CLOSE"
+                    }
+                },
+                "map.actions.function": {
+                    "actions": {
+                        "templateName": "$VARS_ACTION_FUNCTION_NAME",
+                        "type": "$CUSTOM_CODE",
+                        "vars": {
+                            "boolean": $VARS_ACTION_OVERRIDE_BOOLEAN,
+                            "string": "$VARS_ACTION_OVERRIDE_STRING",
+                            "int": $VARS_ACTION_OVERRIDE_INT
+                        }
+                    }
+                },
+                "map.actions.openUrl": {
+                    "actions": {
+                        "type": "$OPEN_URL",
+                        "android": "$VARS_ACTION_OPEN_URL_ADDRESS"
+                    }
+                },
                 "map.short": 123,
                 "map.float": 15.6,
                 "map.innerMap.boolean": true,
@@ -160,12 +311,51 @@ class CustomTemplateContextTest {
     """.trimIndent()
     )
 
+    private val functionNotificationJson = JSONObject(
+        """
+            {
+                "templateName": "$FUNCTION_NAME_TOP_LEVEL",
+                "type": "$CUSTOM_CODE",
+                "vars": {
+                    "boolean": $VARS_OVERRIDE_BOOLEAN,
+                    "string": "$VARS_OVERRIDE_STRING",
+                    "byte": $VARS_OVERRIDE_BYTE,
+                    "long": $VARS_OVERRIDE_LONG,
+                    "double": $VARS_OVERRIDE_DOUBLE,
+                    "overrideWithoutDefinitionBoolean": false
+                }
+            }
+        """.trimIndent()
+    )
+
+    private val functionDefinition = function(isVisual = false) {
+        name(FUNCTION_NAME_TOP_LEVEL)
+        presenter(mockk())
+        booleanArgument("boolean", false)
+        stringArgument("string", "Default")
+        byteArgument("byte", 0)
+        longArgument("long", 5435050)
+        doubleArgument("double", 12.5)
+        intArgument("noOverrideInt", 35)
+    }
+
     companion object {
+
+        private const val TEMPLATE_NAME_NESTED = "nestedArgsTemplate"
 
         private const val VARS_OVERRIDE_BOOLEAN = true
         private const val VARS_OVERRIDE_STRING = "Text"
         private const val VARS_OVERRIDE_BYTE = 1.toByte()
         private const val VARS_OVERRIDE_LONG = 21474836475L
         private const val VARS_OVERRIDE_DOUBLE = 3402823466385285.0
+
+        private const val VARS_ACTION_FUNCTION_NAME = "function"
+        private const val VARS_ACTION_OVERRIDE_BOOLEAN = true
+        private const val VARS_ACTION_OVERRIDE_STRING = "Function text"
+        private const val VARS_ACTION_OVERRIDE_INT = 5421
+
+        private const val VARS_ACTION_OPEN_URL_ADDRESS = "https://clevertap.com"
+
+        private const val FUNCTION_NAME_TOP_LEVEL = "topLevelFunction"
     }
 }
