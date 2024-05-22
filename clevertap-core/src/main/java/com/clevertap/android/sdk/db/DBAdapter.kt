@@ -132,25 +132,27 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     }
 
     @Synchronized
-    fun fetchUserProfilesByAccountId(accountId: String?): List<JSONObject> {
+    fun fetchUserProfilesByAccountId(accountId: String?): Map<String,JSONObject> {
         if (accountId == null) {
-            return emptyList()
+            return emptyMap()
         }
 
-        val profiles = mutableListOf<JSONObject>()
+        val profiles = mutableMapOf<String, JSONObject>()
         val tName = USER_PROFILES.tableName
 
         try {
             dbHelper.readableDatabase.query(tName, null, "${Column.ID} = ?", arrayOf(accountId), null, null, null)
                 ?.use { cursor ->
                     val dataIndex = cursor.getColumnIndex(Column.DATA)
+                    val deviceId = cursor.getColumnIndex(Column.DEVICE_ID)
                     if (dataIndex >= 0) {
                         while (cursor.moveToNext()) {
                             val profileString = cursor.getString(dataIndex)
+                            val deviceIdString = cursor.getString(deviceId)
                             profileString?.let {
                                 try {
                                     val jsonObject = JSONObject(it)
-                                    profiles.add(jsonObject)
+                                    profiles.put(deviceIdString, jsonObject)
                                 } catch (e: JSONException) {
                                     logger.verbose("Error parsing JSON for profile", e)
                                 }

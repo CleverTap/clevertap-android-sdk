@@ -216,35 +216,38 @@ internal object CryptUtils {
         dbAdapter: DBAdapter
     ): Int {
         config.logger.verbose(config.accountId, "Migrating encryption level for user profile in DB")
+        val profiles = dbAdapter.fetchUserProfilesByAccountId(config.accountId)
+
         var migrationStatus = ENCRYPTION_FLAG_DB_SUCCESS
-        val profile =
-            dbAdapter.fetchUserProfileById(config.accountId) ?: return ENCRYPTION_FLAG_DB_SUCCESS
-        try {
-            for (piiKey in piiDBKeys) {
-                if (profile.has(piiKey)) {
-                    val value = profile[piiKey]
-                    if (value is String) {
-                        var crypted = if (encrypt)
-                            cryptHandler.encrypt(value, piiKey)
-                        else
-                            cryptHandler.decrypt(value, KEY_ENCRYPTION_MIGRATION)
-                        if (crypted == null) {
-                            config.logger.verbose(
-                                config.accountId,
-                                "Error migrating $piiKey entry in db profile"
-                            )
-                            crypted = value
-                            migrationStatus = ENCRYPTION_FLAG_FAIL
+        for(profileIterator in profiles) {
+            val profile = profileIterator.value
+            try {
+                for (piiKey in piiDBKeys) {
+                    if (profile.has(piiKey)) {
+                        val value = profile[piiKey]
+                        if (value is String) {
+                            var crypted = if (encrypt)
+                                cryptHandler.encrypt(value, piiKey)
+                            else
+                                cryptHandler.decrypt(value, KEY_ENCRYPTION_MIGRATION)
+                            if (crypted == null) {
+                                config.logger.verbose(
+                                    config.accountId,
+                                    "Error migrating $piiKey entry in db profile"
+                                )
+                                crypted = value
+                                migrationStatus = ENCRYPTION_FLAG_FAIL
+                            }
+                            profile.put(piiKey, crypted)
                         }
-                        profile.put(piiKey, crypted)
                     }
                 }
-            }
-            if (dbAdapter.storeUserProfile(config.accountId, profile) <= -1L)
+                if (dbAdapter.storeUserProfile(config.accountId, profileIterator.key, profile) <= -1L)
+                    migrationStatus = ENCRYPTION_FLAG_FAIL
+            } catch (e: Exception) {
+                config.logger.verbose(config.accountId, "Error migrating local DB profile: $e")
                 migrationStatus = ENCRYPTION_FLAG_FAIL
-        } catch (e: Exception) {
-            config.logger.verbose(config.accountId, "Error migrating local DB profile: $e")
-            migrationStatus = ENCRYPTION_FLAG_FAIL
+            }
         }
         return migrationStatus
     }
