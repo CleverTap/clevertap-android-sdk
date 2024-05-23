@@ -30,28 +30,31 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.Player;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.common.util.Util;
+import androidx.media3.datasource.DataSource;
+import androidx.media3.datasource.DefaultDataSource;
+import androidx.media3.datasource.DefaultHttpDataSource;
+import androidx.media3.datasource.TransferListener;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.hls.HlsMediaSource;
+import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
+import androidx.media3.exoplayer.trackselection.ExoTrackSelection;
+import androidx.media3.exoplayer.trackselection.TrackSelector;
+import androidx.media3.exoplayer.upstream.BandwidthMeter;
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
+import androidx.media3.ui.PlayerView;
+
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.gif.GifImageView;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.source.hls.HlsMediaSource;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.ExoTrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.ui.StyledPlayerView;
-import com.google.android.exoplayer2.upstream.BandwidthMeter;
-import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultDataSource;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
-import com.google.android.exoplayer2.upstream.TransferListener;
-import com.google.android.exoplayer2.util.Util;
+
 import java.util.ArrayList;
 
-public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFragment {
+@UnstableApi public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFragment {
 
     private static long mediaPosition = 0;
 
@@ -65,7 +68,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
 
     private ExoPlayer player;
 
-    private StyledPlayerView playerView;
+    private PlayerView playerView;
 
     private RelativeLayout relativeLayout;
 
@@ -355,7 +358,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         videoFrameLayout = relativeLayout.findViewById(R.id.video_frame);
         videoFrameLayout.setVisibility(View.VISIBLE);
 
-        playerView = new StyledPlayerView(this.context);
+        playerView = new PlayerView(this.context);
         fullScreenIcon = new ImageView(this.context);
         fullScreenIcon.setImageDrawable(
                 ResourcesCompat.getDrawable(this.context.getResources(), R.drawable.ct_ic_fullscreen_expand, null));
@@ -406,7 +409,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
             layoutParams.setMargins(0, iconTop, iconRight, 0);
             fullScreenIcon.setLayoutParams(layoutParams);
         }
-        playerView.setShowBuffering(StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING);
+        playerView.setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING);
         playerView.setUseArtwork(true);
         playerView.setControllerAutoShow(false);
         videoFrameLayout.addView(playerView);

@@ -21,22 +21,23 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.common.util.Util;
+import androidx.media3.datasource.DataSource;
+import androidx.media3.datasource.DefaultDataSource;
+import androidx.media3.datasource.DefaultHttpDataSource;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.hls.HlsMediaSource;
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
+import androidx.media3.ui.PlayerView;
 import androidx.recyclerview.widget.RecyclerView;
 import com.clevertap.android.sdk.R;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.source.hls.HlsMediaSource;
-import com.google.android.exoplayer2.ui.StyledPlayerView;
-import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultDataSource;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
-import com.google.android.exoplayer2.util.Util;
+import androidx.media3.common.MediaItem;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-@RestrictTo(Scope.LIBRARY)
+@UnstableApi @RestrictTo(Scope.LIBRARY)
 public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     Context context;
@@ -70,7 +71,7 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         readDot = itemView.findViewById(R.id.read_circle);
     }
 
-    public boolean addMediaPlayer(StyledPlayerView videoSurfaceView) {
+    public boolean addMediaPlayer(PlayerView videoSurfaceView) {
         if (!requiresMediaPlayer) {
             return false;
         }
@@ -154,7 +155,7 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         }
 
         videoSurfaceView.requestFocus();
-        videoSurfaceView.setShowBuffering(StyledPlayerView.SHOW_BUFFERING_NEVER);
+        videoSurfaceView.setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER);
         DefaultBandwidthMeter defaultBandwidthMeter = new DefaultBandwidthMeter.Builder(context).build();
 
         Context ctx = this.context;
