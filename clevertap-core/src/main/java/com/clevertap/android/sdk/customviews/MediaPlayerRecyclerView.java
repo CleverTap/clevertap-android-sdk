@@ -12,21 +12,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
+import androidx.media3.exoplayer.trackselection.ExoTrackSelection;
+import androidx.media3.exoplayer.trackselection.TrackSelector;
+import androidx.media3.ui.AspectRatioFrameLayout;
+import androidx.media3.ui.PlayerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.ExoTrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
-import com.google.android.exoplayer2.ui.StyledPlayerView;
+import androidx.media3.common.Player;
 
-@RestrictTo(Scope.LIBRARY)
+@UnstableApi @RestrictTo(Scope.LIBRARY)
 public class MediaPlayerRecyclerView extends RecyclerView {
 
     ExoPlayer player;
@@ -36,7 +37,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
     private CTInboxBaseMessageViewHolder playingHolder;
 
     //surface view for playing video
-    private StyledPlayerView videoSurfaceView;
+    private PlayerView videoSurfaceView;
 
     /**
      * {@inheritDoc}
@@ -172,7 +173,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
 
     private void initialize(Context context) {
         appContext = context.getApplicationContext();
-        videoSurfaceView = new StyledPlayerView(appContext);
+        videoSurfaceView = new PlayerView(appContext);
         videoSurfaceView.setBackgroundColor(Color.TRANSPARENT);
         if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);

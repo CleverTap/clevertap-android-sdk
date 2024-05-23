@@ -34,7 +34,11 @@ android {
 
 dependencies {
     compileOnly(libs.firebase.messaging)
-    compileOnly(libs.bundles.exoplayer)
+    //compileOnly(libs.bundles.exoplayer)
+
+    compileOnly("androidx.media3:media3-exoplayer:1.1.1")
+    compileOnly("androidx.media3:media3-exoplayer-hls:1.1.1")
+    compileOnly("androidx.media3:media3-ui:1.1.1")
     compileOnly(libs.glide)
     //for notification
     compileOnly(libs.androidx.core.core)

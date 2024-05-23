@@ -439,7 +439,7 @@ public final class Utils {
         try {
             className = Class.forName("com.google.android.exoplayer2.ExoPlayer");
             className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
-            className = Class.forName("com.google.android.exoplayer2.ui.StyledPlayerView");
+            className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
 
             Logger.d("ExoPlayer is present");
             exoPlayerPresent = true;
