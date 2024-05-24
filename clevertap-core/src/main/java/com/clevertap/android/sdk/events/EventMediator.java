@@ -1,17 +1,25 @@
 package com.clevertap.android.sdk.events;
 
+import static com.clevertap.android.sdk.Constants.KEY_NEW_VALUE;
+import static com.clevertap.android.sdk.Constants.KEY_OLD_VALUE;
+import static com.clevertap.android.sdk.Constants.keysToSkipForUserAttributesEvaluation;
+
 import android.content.Context;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
+import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.ProfileValueHandler;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.variables.JsonUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,9 +31,15 @@ public class EventMediator {
 
     private final Context context;
 
-    public EventMediator(Context context, CleverTapInstanceConfig config, CoreMetaData coreMetaData) {
+    private final LocalDataStore localDataStore;
+
+    private final ProfileValueHandler profileValueHandler;
+
+    public EventMediator(Context context, CleverTapInstanceConfig config, CoreMetaData coreMetaData, LocalDataStore localDataStore, ProfileValueHandler profileValueHandler) {
         this.context = context;
         this.config = config;
+        this.localDataStore = localDataStore;
+        this.profileValueHandler = profileValueHandler;
         cleverTapMetaData = coreMetaData;
     }
 
@@ -83,6 +97,10 @@ public class EventMediator {
         return event.has(Constants.KEY_EVT_NAME);
     }
 
+    public boolean isProfileEvent(JSONObject event) {
+        return event.has(Constants.KEY_EVT_NAME);
+    }
+
     public String getEventName(JSONObject event) {
         try {
             return event.getString(Constants.KEY_EVT_NAME);
@@ -131,6 +149,63 @@ public class EventMediator {
         } catch (JSONException e) {
             return new HashMap<>();
         }
+    }
+
+    public Map<String, Map<String, Object>> getUserAttributeChangeProperties(final JSONObject event) {
+        Map<String, Map<String, Object>> userAttributesChangeProperties = new HashMap<>();
+        JSONObject profile = event.optJSONObject(Constants.PROFILE);
+
+        if(profile == null)
+            return userAttributesChangeProperties;
+
+        Iterator<?> keys = profile.keys();
+
+        while (keys.hasNext()) {
+            try {
+                String key = (String) keys.next();
+
+                //Todo - Check if these default fields need to be considered for evaluation as a product requirement
+                if (keysToSkipForUserAttributesEvaluation.contains(key)) {
+                    continue;
+                }
+                Object oldValue = localDataStore.getProfileValueForKey(key);
+                Object newValue = profile.get(key);
+
+                //TODO - Add Date related parsing
+                if(newValue instanceof JSONObject) {
+                    JSONObject obj = (JSONObject) newValue;
+                    String commandIdentifier = obj.keys().next();
+                    switch(commandIdentifier) {
+                        case Constants.COMMAND_INCREMENT:
+                        case Constants.COMMAND_DECREMENT:
+                            newValue = profileValueHandler.handleIncrementDecrementValues((Number) obj.get(commandIdentifier), commandIdentifier, (Number) oldValue);
+                            break;
+                        case Constants.COMMAND_DELETE:
+                            newValue = null;
+                            break;
+                        case Constants.COMMAND_SET:
+                        case Constants.COMMAND_ADD:
+                        case Constants.COMMAND_REMOVE:
+                            newValue = profileValueHandler.computeMultiValues(key, ((JSONArray) obj.get(commandIdentifier)), commandIdentifier, oldValue);
+                            break;
+                    }
+                }
+
+                Map<String, Object> properties = new HashMap<>();
+                if(oldValue != null)
+                    properties.put(KEY_OLD_VALUE, oldValue);
+                if(newValue != null)
+                    properties.put(KEY_NEW_VALUE, newValue);
+
+                userAttributesChangeProperties.put(key, properties);
+            } catch (JSONException e) {
+                // no-op
+            }
+        }
+
+
+        localDataStore.setProfileFields(userAttributesChangeProperties);
+        return userAttributesChangeProperties;
     }
 
     /**
