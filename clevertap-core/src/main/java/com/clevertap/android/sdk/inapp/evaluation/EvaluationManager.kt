@@ -242,8 +242,7 @@ class EvaluationManager constructor(
         storeRegistry.inAppStore?.let { store ->
             for(event in events) {
                 if(event.eventProperties[Constants.KEY_OLD_VALUE] != event.eventProperties[Constants.KEY_NEW_VALUE])
-                // Retrieve client-side in-app notifications from storage and evaluate them against the event.
-                 eligibleInApps.addAll(evaluate(event, store.readClientSideInApps().toList()))
+                    eligibleInApps.addAll(evaluate(event, store.readClientSideInApps().toList()))
             }
 
             // Sort eligible client-side in-app notifications by priority.
