@@ -467,6 +467,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                             eventMediator.getEventProperties(event), userLocation);
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     Map<String, Map<String,Object>> userAttributeChangeProperties = eventMediator.getUserAttributeChangeProperties(event);
+                    controllerManager.getInAppController()
+                            .onQueueProfileEvent(userAttributeChangeProperties, userLocation);
                 } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
                     // in case device is online only evaluate non-appLaunched events
                     controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),

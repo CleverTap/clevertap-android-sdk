@@ -95,6 +95,8 @@ class TriggerAdapter(triggerJSON: JSONObject) {
      */
     val geoRadiusArray: JSONArray? = triggerJSON.optJSONArray(Constants.KEY_GEO_RADIUS_PROPERTIES)
 
+    val profileAttrName: String? = triggerJSON.optString(Constants.KEY_PROFILE_ATTR_NAME, null)
+
     /**
      * Get the count of event property trigger conditions.
      */

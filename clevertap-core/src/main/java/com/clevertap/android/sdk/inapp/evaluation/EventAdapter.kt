@@ -29,7 +29,8 @@ class EventAdapter(
     val eventName: String,
     val eventProperties: Map<String, Any>,
     val items: List<Map<String, Any>?> = listOf(), // for chargedEvent only
-    val userLocation: Location? = null
+    val userLocation: Location? = null,
+    val profileAttrName: String? = null
 ) {
 
     private val systemPropToKey = mapOf(
