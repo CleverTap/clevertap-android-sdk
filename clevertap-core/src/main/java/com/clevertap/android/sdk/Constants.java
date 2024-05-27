@@ -305,6 +305,7 @@ public interface Constants {
     String COMMAND_DELETE = "$delete";
     String COMMAND_INCREMENT = "$incr";
     String COMMAND_DECREMENT = "$decr";
+    String DATE_PREFIX = "$D_";
     String GUID_PREFIX_GOOGLE_AD_ID = "__g";
     String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
     String ERROR_PROFILE_PREFIX = "__i";

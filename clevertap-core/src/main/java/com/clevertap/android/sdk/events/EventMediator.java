@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.events;
 
+import static com.clevertap.android.sdk.Constants.DATE_PREFIX;
 import static com.clevertap.android.sdk.Constants.KEY_NEW_VALUE;
 import static com.clevertap.android.sdk.Constants.KEY_OLD_VALUE;
 import static com.clevertap.android.sdk.Constants.keysToSkipForUserAttributesEvaluation;
@@ -171,7 +172,6 @@ public class EventMediator {
                 Object oldValue = localDataStore.getProfileValueForKey(key);
                 Object newValue = profile.get(key);
 
-                //TODO - Add Date related parsing
                 if(newValue instanceof JSONObject) {
                     JSONObject obj = (JSONObject) newValue;
                     String commandIdentifier = obj.keys().next();
@@ -188,6 +188,11 @@ public class EventMediator {
                         case Constants.COMMAND_REMOVE:
                             newValue = profileValueHandler.computeMultiValues(key, ((JSONArray) obj.get(commandIdentifier)), commandIdentifier, oldValue);
                             break;
+                    }
+                }
+                else if(newValue instanceof String) {
+                    if(((String) newValue).startsWith(DATE_PREFIX)) {
+                        newValue = ((String) newValue).substring(DATE_PREFIX.length());
                     }
                 }
 
