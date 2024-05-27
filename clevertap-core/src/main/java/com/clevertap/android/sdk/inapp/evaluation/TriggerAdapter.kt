@@ -95,6 +95,10 @@ class TriggerAdapter(triggerJSON: JSONObject) {
      */
     val geoRadiusArray: JSONArray? = triggerJSON.optJSONArray(Constants.KEY_GEO_RADIUS_PROPERTIES)
 
+    /**
+     * The string associated with the attribute name for changes in the user-profile
+     * Used for user attribute changes trigger conditions
+     */
     val profileAttrName: String? = triggerJSON.optString(Constants.KEY_PROFILE_ATTR_NAME, null)
 
     /**
