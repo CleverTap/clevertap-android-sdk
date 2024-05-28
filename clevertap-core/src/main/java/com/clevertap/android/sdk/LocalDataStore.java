@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.Constants.KEY_NEW_VALUE;
 import static com.clevertap.android.sdk.Constants.piiDBKeys;
 
 import android.annotation.SuppressLint;
@@ -114,7 +115,7 @@ public class LocalDataStore {
         return getProfileValueForKey(key);
     }
 
-    Object getProfileValueForKey(String key) {
+    public Object getProfileValueForKey(String key) {
         return _getProfileProperty(key);
     }
 
@@ -196,10 +197,6 @@ public class LocalDataStore {
 
     void setProfileField(String key, Object value) {
         setProfileField(key, value, false, true);
-    }
-
-    void setProfileFields(JSONObject fields) {
-        setProfileFields(fields, false);
     }
 
     //Not used.Remove later
@@ -526,8 +523,7 @@ public class LocalDataStore {
             @Override
             public void run() {
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-                    HashMap<String, Object> profile = PROFILE_FIELDS_IN_THIS_SESSION;
-
+                    HashMap<String, Object> profile = new HashMap<>(PROFILE_FIELDS_IN_THIS_SESSION);
                     boolean passFlag = true;
                     // Encrypts only the pii keys before storing to DB
                     for (String piiKey : piiDBKeys) {
@@ -693,8 +689,21 @@ public class LocalDataStore {
         }
     }
 
+    public void setProfileFields(Map<String,Map<String, Object>> fields) {
+        for (Map.Entry<String, Map<String,Object>> entry : fields.entrySet()) {
+            String key = entry.getKey();
+            Map<String, Object> property = entry.getValue();
+            Object newValue = property.get(KEY_NEW_VALUE);
+            if(newValue == null) {
+                removeProfileField(key);
+            }
+            setProfileField(key, newValue, false, false);
+        }
+        persistLocalProfileAsync();
+    }
+
     @SuppressWarnings("rawtypes")
-    private void setProfileFields(JSONObject fields, Boolean fromUpstream) {
+    private void setProfileFields(JSONObject fields) {
         if (fields == null) {
             return;
         }
@@ -704,7 +713,7 @@ public class LocalDataStore {
 
             while (keys.hasNext()) {
                 String key = keys.next().toString();
-                setProfileField(key, fields.get(key), fromUpstream, false);
+                setProfileField(key, fields.get(key), true, false);
             }
             persistLocalProfileAsync();
 
@@ -889,7 +898,7 @@ public class LocalDataStore {
 
             // save the changed fields locally
             if (fieldsToUpdateLocally.length() > 0) {
-                setProfileFields(fieldsToUpdateLocally, true);
+                setProfileFields(fieldsToUpdateLocally);
             }
 
             return profileUpdates;

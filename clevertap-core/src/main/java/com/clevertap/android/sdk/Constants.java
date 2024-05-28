@@ -157,6 +157,10 @@ public interface Constants {
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";
     String CHARGED_EVENT = "Charged";
+    String PROFILE = "profile";
+    String USER_ATTRIBUTE_CHANGE = "UserAttributeChange";
+    String KEY_NEW_VALUE = "newValue";
+    String KEY_OLD_VALUE = "oldValue";
     String KEY_ITEMS = "Items";
     String KEY_MUTED = "comms_mtd";
     int EMPTY_NOTIFICATION_ID = -1000;
@@ -221,6 +225,7 @@ public interface Constants {
     String KEY_EVENT_PROPERTIES = "eventProperties";
     String KEY_ITEM_PROPERTIES = "itemProperties";
     String KEY_GEO_RADIUS_PROPERTIES = "geoRadius";
+    String KEY_PROFILE_ATTR_NAME = "profileAttrName";
     String KEY_PROPERTY_VALUE = "propertyValue";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
@@ -391,6 +396,8 @@ public interface Constants {
     HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME));
     HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
     HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
+
+    HashSet<String> keysToSkipForUserAttributesEvaluation = new HashSet<>(Arrays.asList("cc", "tz", "Carrier"));
 
 
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;

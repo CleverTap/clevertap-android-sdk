@@ -31,6 +31,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -464,6 +465,12 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     // in case device is offline just evaluate all events
                     controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
                             eventMediator.getEventProperties(event), userLocation);
+                } else if (eventType == Constants.PROFILE_EVENT) {
+                    // in case profile event, evaluate for user attribute changes
+                    Map<String, Map<String, Object>> userAttributeChangedProperties
+                            = eventMediator.getUserAttributeChangeProperties(event);
+                    controllerManager.getInAppController()
+                            .onQueueProfileEvent(userAttributeChangedProperties, userLocation);
                 } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
                     // in case device is online only evaluate non-appLaunched events
                     controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),

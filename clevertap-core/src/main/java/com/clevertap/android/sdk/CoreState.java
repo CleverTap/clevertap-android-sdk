@@ -74,6 +74,8 @@ public class CoreState extends CleverTapState {
 
     private StoreRegistry storeRegistry;
 
+    private ProfileValueHandler profileValueHandler;
+
     public CTVariables getCTVariables() {
         return ctVariables;
     }
@@ -311,6 +313,14 @@ public class CoreState extends CleverTapState {
 
     public void setCryptHandler(final CryptHandler cryptHandler) {
         this.cryptHandler = cryptHandler;
+    }
+
+    public void setProfileValueHandler(final ProfileValueHandler profileValueHandler) {
+        this.profileValueHandler = profileValueHandler;
+    }
+
+    public ProfileValueHandler getProfileValueHandler() {
+        return profileValueHandler;
     }
 
     /**
