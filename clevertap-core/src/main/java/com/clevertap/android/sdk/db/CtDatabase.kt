@@ -6,6 +6,9 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Constants.COMMAND_ADD
+import com.clevertap.android.sdk.Constants.COMMAND_SET
+import com.clevertap.android.sdk.Constants.DATE_PREFIX
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.Table.EVENTS
@@ -15,6 +18,8 @@ import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATIONS
 import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.db.Table.UNINSTALL_TS
 import com.clevertap.android.sdk.db.Table.USER_PROFILES
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.File
 import kotlin.math.max
 
@@ -96,11 +101,61 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
         executeStatement(db, CREATE_TEMP_USER_PROFILES_TABLE)
 
         val deviceId = getDeviceIdForAccountIdFromPrefs(config.accountId)
-        val copyUserProfilesData = """INSERT INTO temp_${USER_PROFILES.tableName} (${Column.ID}, ${Column.DEVICE_ID}, ${Column.DATA}) SELECT ${Column.ID}, '$deviceId', ${Column.DATA} FROM ${USER_PROFILES.tableName};"""
 
-        executeStatement(db, copyUserProfilesData)
+        // Query to select all data from the old user profiles table
+        val selectQuery = "SELECT ${Column.ID}, ${Column.DATA} FROM ${USER_PROFILES.tableName};"
+        val cursor = db.rawQuery(selectQuery, null)
+
+        cursor.use {
+            if (cursor.moveToFirst()) {
+                val id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
+                val dataString = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
+                val updatedDataString = migrateDataString(dataString)
+
+                // Insert the modified data into the temporary table
+                val insertQuery = """INSERT INTO temp_${USER_PROFILES.tableName} (${Column.ID}, ${Column.DEVICE_ID}, ${Column.DATA})
+                                 VALUES ('$id', '$deviceId', '$updatedDataString');"""
+                executeStatement(db, insertQuery)
+            }
+        }
+
         executeStatement(db, DROP_USER_PROFILES_TABLE)
         executeStatement(db, RENAME_USER_PROFILES_TABLE)
+    }
+
+    /**
+     * This function migrates the data column for the userProfiles table
+     * Removes the "$D_" prefix from date related property values
+     * Removes the "$set" and "$add" key from incorrectly stored multi-valued properties
+     */
+    private fun migrateDataString(dataString: String): String {
+        return try {
+            val jsonObject = JSONObject(dataString)
+            val keys = jsonObject.keys()
+
+            while (keys.hasNext()) {
+                val key = keys.next()
+                var value = jsonObject.get(key)
+
+                if (value is String && value.startsWith(DATE_PREFIX)) {
+                    value = value.removePrefix(DATE_PREFIX)
+                    jsonObject.put(key, value)
+                }
+
+                if (value is JSONObject) {
+                    if(value.has(COMMAND_SET))
+                        jsonObject.put(key, value.getJSONArray(COMMAND_SET))
+                    else if(value.has(COMMAND_ADD))
+                        jsonObject.put(key, value.getJSONArray(COMMAND_ADD))
+                }
+            }
+
+            jsonObject.toString()
+        } catch (e: JSONException) {
+            // Return the original string if an error occurs
+            logger.verbose("Error while migrating data column for userProfiles table for data = $dataString", e)
+            dataString
+        }
     }
 
     @SuppressLint("UsableSpace")
