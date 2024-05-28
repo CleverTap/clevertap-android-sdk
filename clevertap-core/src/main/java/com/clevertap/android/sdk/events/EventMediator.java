@@ -98,10 +98,6 @@ public class EventMediator {
         return event.has(Constants.KEY_EVT_NAME);
     }
 
-    public boolean isProfileEvent(JSONObject event) {
-        return event.has(Constants.KEY_EVT_NAME);
-    }
-
     public String getEventName(JSONObject event) {
         try {
             return event.getString(Constants.KEY_EVT_NAME);
