@@ -118,15 +118,13 @@ class EvaluationManager constructor(
      *         This array includes in-app notifications that meet the criteria for display.
      */
     fun evaluateOnProfileAttributeChange(eventProperties: Map<String, Map<String, Any>>, userLocation: Location?): JSONArray {
-        val eventAdapterList: MutableList<EventAdapter> = mutableListOf()
-
-        for (eventProperty in eventProperties) {
-            val event = EventAdapter(
+        val eventAdapterList = eventProperties.map { eventProperty ->
+            EventAdapter(
                 eventName = eventProperty.key + Constants.USER_ATTRIBUTE_CHANGE,
                 eventProperties = eventProperty.value,
                 userLocation = userLocation,
-                profileAttrName = eventProperty.key);
-            eventAdapterList.add(event)
+                profileAttrName = eventProperty.key
+            )
         }
         evaluateServerSide(eventAdapterList)
         return evaluateClientSide(eventAdapterList)
@@ -255,7 +253,7 @@ class EvaluationManager constructor(
         // Access the in-app store from the store registry.
         val eligibleInApps = mutableListOf<JSONObject>()
         storeRegistry.inAppStore?.let { store ->
-            for(event in events) {
+            events.forEach { event ->
                 // Only for CS In-Apps check if oldValue != newValue
                 if(event.eventProperties[Constants.KEY_OLD_VALUE] != event.eventProperties[Constants.KEY_NEW_VALUE])
                     eligibleInApps.addAll(evaluate(event, store.readClientSideInApps().toList()))
