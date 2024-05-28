@@ -74,7 +74,7 @@ class EvaluationManager constructor(
      *         This array includes in-app notifications that meet the criteria for display.
      */
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
-        val event = EventAdapter(eventName, eventProperties, userLocation = userLocation)
+        val event = listOf(EventAdapter(eventName, eventProperties, userLocation = userLocation))
         evaluateServerSide(event)
         return evaluateClientSide(event)
     }
@@ -97,10 +97,39 @@ class EvaluationManager constructor(
         items: List<Map<String, Any>>,
         userLocation: Location?
     ): JSONArray {
-        val event = EventAdapter(Constants.CHARGED_EVENT, details, items, userLocation = userLocation)
+        val event = listOf(EventAdapter(Constants.CHARGED_EVENT, details, items, userLocation = userLocation))
         evaluateServerSide(event)
         return evaluateClientSide(event)
     }
+
+
+    /**
+     * Evaluates in-app notifications based on a profile event that corresponds to any profile attribute changes, incorporating the event name,
+     * additional properties associated with the event, the user's location and the profile attribute name.
+     * The key of an eventProperty is the profile attribute name that has been invoked in the profile event.
+     *
+     * This method creates an [EventAdapter] instance representing the specified event with the provided details,
+     * evaluates the event against server-side, and then proceeds to evaluate it client-side.
+     *
+     * @param eventProperties Additional properties associated with the event, provided as a map.
+     * @param userLocation The location of the user triggering the event, if available.
+     *
+     * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
+     *         This array includes in-app notifications that meet the criteria for display.
+     */
+    fun evaluateOnProfileAttributeChange(eventProperties: Map<String, Map<String, Any>>, userLocation: Location?): JSONArray {
+        val eventAdapterList = eventProperties.map { eventProperty ->
+            EventAdapter(
+                eventName = eventProperty.key + Constants.USER_ATTRIBUTE_CHANGE,
+                eventProperties = eventProperty.value,
+                userLocation = userLocation,
+                profileAttrName = eventProperty.key
+            )
+        }
+        evaluateServerSide(eventAdapterList)
+        return evaluateClientSide(eventAdapterList)
+    }
+
 
     /**
      * Evaluates client-side in-app notifications for the "App Launched" event,
@@ -117,7 +146,7 @@ class EvaluationManager constructor(
      */
     // onBatchSent with App Launched event in batch
     fun evaluateOnAppLaunchedClientSide(eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
+        val event = listOf(EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation))
         return evaluateClientSide(event)
     }
 
@@ -171,19 +200,22 @@ class EvaluationManager constructor(
     /**
      * Evaluates server side in-app notifications based on the provided event.
      *
-     * This method retrieves server-side in-app notifications metadata from the storage, evaluates them against the provided event,
+     * This method retrieves server-side in-app notifications metadata from the storage, evaluates them against the provided list of events (multiple events in the case of profile events),
      * and updates the list of evaluated server-side campaign IDs. The updated list is then saved back to storage.
      *
-     * @param event The [EventAdapter] representing the event triggering the server-side in-app notification evaluation.
+     * @param event The [List<EventAdapter>] representing the list of events triggering the server-side in-app notification evaluation.
      */
     @VisibleForTesting
-    internal fun evaluateServerSide(event: EventAdapter) {
+    internal fun evaluateServerSide(events: List<EventAdapter>) {
         // Flag to track if the list of evaluated server-side campaign IDs has been updated.
         var updated = false
+        val eligibleInApps = mutableListOf<JSONObject>()
         // Access the in-app store from the store registry.
         storeRegistry.inAppStore?.let { store ->
             // Retrieve server-side in-app notifications metadata from storage and evaluate them against the event.
-            val eligibleInApps = evaluate(event, store.readServerSideInAppsMetaData().toList())
+            for(event in events) {
+                eligibleInApps.addAll(evaluate(event, store.readServerSideInAppsMetaData().toList()))
+            }
 
             // Iterate through eligible server-side in-app notifications.
             eligibleInApps.forEach { inApp ->
@@ -205,23 +237,27 @@ class EvaluationManager constructor(
     /**
      * Evaluates client side in-app notifications based on the provided event.
      *
-     * This method retrieves client-side in-app notifications from the storage, evaluates them against the provided event.
-     * The resulting eligible in-app notifications are sorted by priority, and the method handles the suppression
+     * This method retrieves client-side in-app notifications from the storage, evaluates them against the provided list of events (multiple events in the case of profile events).
+     * The resulting eligible in-app notifications are accumulated and sorted by priority, and the method handles the suppression
      * and updating of TTLs (Time to Live).
      *
-     * @param event The [EventAdapter] representing the event triggering the client-side in-app notification evaluation.
+     * @param event The [List<EventAdapter>] representing the list of events triggering the client-side in-app notification evaluation
      *
      * @return A JSONArray containing the evaluated and prioritized in-app notifications for client-side rendering.
      *         This array includes in-app notifications that meet the criteria for display.
      */
     @VisibleForTesting
-    internal fun evaluateClientSide(event: EventAdapter): JSONArray {
+    internal fun evaluateClientSide(events: List<EventAdapter>): JSONArray {
         // Flag to track if the list of suppressed client-side in-app IDs has been updated.
         var updated = false
         // Access the in-app store from the store registry.
+        val eligibleInApps = mutableListOf<JSONObject>()
         storeRegistry.inAppStore?.let { store ->
-            // Retrieve client-side in-app notifications from storage and evaluate them against the event.
-            val eligibleInApps = evaluate(event, store.readClientSideInApps().toList())
+            events.forEach { event ->
+                // Only for CS In-Apps check if oldValue != newValue
+                if(event.eventProperties[Constants.KEY_OLD_VALUE] != event.eventProperties[Constants.KEY_NEW_VALUE])
+                    eligibleInApps.addAll(evaluate(event, store.readClientSideInApps().toList()))
+            }
 
             // Sort eligible client-side in-app notifications by priority.
             sortByPriority(eligibleInApps).forEach { inApp ->
