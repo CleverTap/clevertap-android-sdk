@@ -6,6 +6,7 @@ import android.net.NetworkInfo.DetailedState
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
 import com.clevertap.android.sdk.events.EventQueueManager
+import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.login.IdentityRepo
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.login.LoginInfoProvider
@@ -109,9 +110,9 @@ class EventQueueManagerTest : BaseTestCase() {
                     cleverTapInstanceConfig
                 )
             )
-            `when`(corestate.eventMediator.shouldDropEvent(json, Constants.PROFILE_EVENT))
+            `when`(corestate.eventMediator.shouldDropEvent(json, Constants.PING_EVENT))
                 .thenReturn(false)
-            doNothing().`when`(eventQueueManager).addToQueue(application, json, Constants.PROFILE_EVENT)
+            doNothing().`when`(eventQueueManager).addToQueue(application, json, Constants.PING_EVENT)
             doNothing().`when`(eventQueueManager).pushInitialEventsAsync()
             doNothing().`when`(corestate.sessionManager).lazyCreateSession(application)
 
@@ -132,12 +133,12 @@ class EventQueueManagerTest : BaseTestCase() {
                 )
             )
             val captor = ArgumentCaptor.forClass(Runnable::class.java)
-            `when`(corestate.eventMediator.shouldDropEvent(json, Constants.PROFILE_EVENT))
+            `when`(corestate.eventMediator.shouldDropEvent(json, Constants.PING_EVENT))
                 .thenReturn(false)
 
-            `when`(corestate.eventMediator.shouldDeferProcessingEvent(json, Constants.PROFILE_EVENT))
+            `when`(corestate.eventMediator.shouldDeferProcessingEvent(json, Constants.PING_EVENT))
                 .thenReturn(true)
-            doNothing().`when`(eventQueueManager).addToQueue(application, json, Constants.PROFILE_EVENT)
+            doNothing().`when`(eventQueueManager).addToQueue(application, json, Constants.PING_EVENT)
             doNothing().`when`(eventQueueManager).pushInitialEventsAsync()
             doNothing().`when`(corestate.sessionManager).lazyCreateSession(application)
 
@@ -150,6 +151,38 @@ class EventQueueManagerTest : BaseTestCase() {
             verify(corestate.sessionManager).lazyCreateSession(application)
             verify(eventQueueManager).pushInitialEventsAsync()
             verify(eventQueueManager).addToQueue(application, json, Constants.PING_EVENT)
+        }
+    }
+
+    @Test
+    fun test_queueEvent_for_profileEvent_will_process_further_and_add_to_queue_when_event_should_not_be_dropped() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(
+                MockCTExecutors(
+                    cleverTapInstanceConfig
+                )
+            )
+            val captor = ArgumentCaptor.forClass(Runnable::class.java)
+            val mockInAppController = mock(InAppController::class.java)
+            `when`(corestate.eventMediator.shouldDropEvent(json, Constants.PROFILE_EVENT))
+                .thenReturn(false)
+
+            `when`(corestate.eventMediator.shouldDropEvent(json, Constants.PROFILE_EVENT))
+                .thenReturn(false)
+
+            `when`(corestate.controllerManager.inAppController)
+                .thenReturn(mockInAppController)
+
+            doNothing().`when`(eventQueueManager).addToQueue(application, json, Constants.PROFILE_EVENT)
+            doNothing().`when`(eventQueueManager).pushInitialEventsAsync()
+            doNothing().`when`(corestate.sessionManager).lazyCreateSession(application)
+
+            eventQueueManager.queueEvent(application, json, Constants.PROFILE_EVENT)
+
+            verify(mockInAppController).onQueueProfileEvent(any(), any())
+            verify(corestate.sessionManager).lazyCreateSession(application)
+            verify(eventQueueManager).pushInitialEventsAsync()
+            verify(eventQueueManager).addToQueue(application, json, Constants.PROFILE_EVENT)
         }
     }
 
