@@ -28,7 +28,7 @@ class EventMediatorTest {
 
     @Test
     fun testGetChargedEventItemDetails() {
-        val eventMediator = EventMediator(null, null, null)
+        val eventMediator = EventMediator(null, null, null, null, null)
 
         val itemDetails = eventMediator.getChargedEventItemDetails(sampleEvent)
 
@@ -62,7 +62,7 @@ class EventMediatorTest {
 
     @Test
     fun testGetChargedEventDetails() {
-        val yourClass = EventMediator(null, null, null)
+        val yourClass = EventMediator(null, null, null, null, null)
 
         val chargedDetails = yourClass.getChargedEventDetails(sampleEvent)
 

@@ -51,7 +51,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val userLocation = mockk<Location>()
 
         // Capture the created EventAdapter
-        val eventAdapterSlot = slot<EventAdapter>()
+        val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
         every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(JSONObject(mapOf("resultKey" to "resultValue")))
 
@@ -60,7 +60,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         // Assert
         // Verify that the captured EventAdapter has the expected properties
-        val capturedEventAdapter = eventAdapterSlot.captured
+        val capturedEventAdapter = eventAdapterSlot.captured[0]
         assertEquals(eventName, capturedEventAdapter.eventName)
         assertEquals(eventProperties, capturedEventAdapter.eventProperties)
         assertEquals(userLocation, capturedEventAdapter.userLocation)
@@ -82,7 +82,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val userLocation = mockk<Location>()
 
         // Capture the created EventAdapter
-        val eventAdapterSlot = slot<EventAdapter>()
+        val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateClientSide(capture(eventAdapterSlot)) } returns JSONArray().put(
             JSONObject(
                 mapOf("resultKey" to "resultValue")
@@ -94,7 +94,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         // Assert
         // Verify that the captured EventAdapter has the expected properties for app launched event
-        val capturedEventAdapter = eventAdapterSlot.captured
+        val capturedEventAdapter = eventAdapterSlot.captured[0]
         assertEquals(Constants.APP_LAUNCHED_EVENT, capturedEventAdapter.eventName)
         assertEquals(emptyMap(), capturedEventAdapter.eventProperties)
         assertEquals(userLocation, capturedEventAdapter.userLocation)
@@ -110,7 +110,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val userLocation = mockk<Location>()
 
         // Capture the created EventAdapter
-        val eventAdapterSlot = slot<EventAdapter>()
+        val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
         every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(JSONObject(mapOf("resultKey" to "resultValue")))
 
@@ -119,7 +119,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         // Assert
         // Verify that the captured EventAdapter has the expected event type
-        val capturedEventAdapter = eventAdapterSlot.captured
+        val capturedEventAdapter = eventAdapterSlot.captured[0]
         assertEquals(Constants.CHARGED_EVENT, capturedEventAdapter.eventName)
 
         assertNotNull(result)
@@ -427,7 +427,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(0, evaluateClientSide.length())
         assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
@@ -446,7 +446,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(1, evaluateClientSide.length())
         assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
@@ -465,7 +465,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(1, evaluateClientSide.length())
         assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
@@ -481,7 +481,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(1, evaluateClientSide.length())
         assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
@@ -553,7 +553,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        evaluationManager.evaluateServerSide(EventAdapter("", mapOf()))
+        evaluationManager.evaluateServerSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(0, evaluationManager.evaluatedServerSideCampaignIds.size)
     }
@@ -567,7 +567,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        evaluationManager.evaluateServerSide(EventAdapter("", mapOf()))
+        evaluationManager.evaluateServerSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(1, evaluationManager.evaluatedServerSideCampaignIds.size)
     }

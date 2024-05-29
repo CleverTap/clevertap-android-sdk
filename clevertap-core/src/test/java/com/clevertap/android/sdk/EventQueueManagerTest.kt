@@ -115,11 +115,11 @@ class EventQueueManagerTest : BaseTestCase() {
             doNothing().`when`(eventQueueManager).pushInitialEventsAsync()
             doNothing().`when`(corestate.sessionManager).lazyCreateSession(application)
 
-            eventQueueManager.queueEvent(application, json, Constants.PROFILE_EVENT)
+            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
 
             verify(corestate.sessionManager).lazyCreateSession(application)
             verify(eventQueueManager).pushInitialEventsAsync()
-            verify(eventQueueManager).addToQueue(application, json, Constants.PROFILE_EVENT)
+            verify(eventQueueManager).addToQueue(application, json, Constants.PING_EVENT)
         }
     }
 
@@ -141,7 +141,7 @@ class EventQueueManagerTest : BaseTestCase() {
             doNothing().`when`(eventQueueManager).pushInitialEventsAsync()
             doNothing().`when`(corestate.sessionManager).lazyCreateSession(application)
 
-            eventQueueManager.queueEvent(application, json, Constants.PROFILE_EVENT)
+            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
 
             verify(corestate.mainLooperHandler).postDelayed(captor.capture(), ArgumentMatchers.anyLong())
 
@@ -149,7 +149,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             verify(corestate.sessionManager).lazyCreateSession(application)
             verify(eventQueueManager).pushInitialEventsAsync()
-            verify(eventQueueManager).addToQueue(application, json, Constants.PROFILE_EVENT)
+            verify(eventQueueManager).addToQueue(application, json, Constants.PING_EVENT)
         }
     }
 
