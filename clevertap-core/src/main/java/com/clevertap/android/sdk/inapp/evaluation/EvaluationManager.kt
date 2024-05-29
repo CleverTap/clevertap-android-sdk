@@ -203,7 +203,7 @@ class EvaluationManager constructor(
      * This method retrieves server-side in-app notifications metadata from the storage, evaluates them against the provided list of events (multiple events in the case of profile events),
      * and updates the list of evaluated server-side campaign IDs. The updated list is then saved back to storage.
      *
-     * @param event The [List<EventAdapter>] representing the list of events triggering the server-side in-app notification evaluation.
+     * @param events The [List<EventAdapter>] representing the list of events triggering the server-side in-app notification evaluation.
      */
     @VisibleForTesting
     internal fun evaluateServerSide(events: List<EventAdapter>) {
@@ -241,7 +241,7 @@ class EvaluationManager constructor(
      * The resulting eligible in-app notifications are accumulated and sorted by priority, and the method handles the suppression
      * and updating of TTLs (Time to Live).
      *
-     * @param event The [List<EventAdapter>] representing the list of events triggering the client-side in-app notification evaluation
+     * @param events The [List<EventAdapter>] representing the list of events triggering the client-side in-app notification evaluation
      *
      * @return A JSONArray containing the evaluated and prioritized in-app notifications for client-side rendering.
      *         This array includes in-app notifications that meet the criteria for display.
@@ -254,8 +254,10 @@ class EvaluationManager constructor(
         val eligibleInApps = mutableListOf<JSONObject>()
         storeRegistry.inAppStore?.let { store ->
             events.forEach { event ->
-                // Only for CS In-Apps check if oldValue != newValue
-                if(event.eventProperties[Constants.KEY_OLD_VALUE] != event.eventProperties[Constants.KEY_NEW_VALUE])
+                // Only for CS In-Apps check if oldValue != newValue for userAttribute events
+                val oldValue = event.eventProperties[Constants.KEY_OLD_VALUE]
+                val newValue = event.eventProperties[Constants.KEY_NEW_VALUE]
+                if (newValue?.equals(oldValue) ?: true)
                     eligibleInApps.addAll(evaluate(event, store.readClientSideInApps().toList()))
             }
 
