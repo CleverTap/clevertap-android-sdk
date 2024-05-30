@@ -128,7 +128,6 @@ public class CTInboxListViewFragment extends Fragment {
 
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
-            setMediaRecyclerView(mediaRecyclerView);
             mediaRecyclerView.setVisibility(View.VISIBLE);
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
             mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));

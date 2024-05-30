@@ -247,11 +247,9 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @Override
     public void onResume() {
         super.onResume();
-        if (!inAppNotification.getMediaList().isEmpty()) {
-            if (player == null && (inAppNotification.getMediaList().get(0).isVideo() || inAppNotification.getMediaList().get(0).isAudio())) {
-                prepareMedia();
-                playMedia();
-            }
+        if (player == null && (inAppNotification.hasStreamMedia())) {
+            prepareMedia();
+            playMedia();
         }
     }
 
