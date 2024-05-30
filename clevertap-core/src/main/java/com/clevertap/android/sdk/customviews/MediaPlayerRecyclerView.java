@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder;
+
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
@@ -29,14 +30,13 @@ import com.google.android.exoplayer2.ui.StyledPlayerView;
 @RestrictTo(Scope.LIBRARY)
 public class MediaPlayerRecyclerView extends RecyclerView {
 
-    ExoPlayer player;
-
     private Context appContext;
 
     private CTInboxBaseMessageViewHolder playingHolder;
 
     //surface view for playing video
     private StyledPlayerView videoSurfaceView;
+    ExoPlayer player;
 
     /**
      * {@inheritDoc}
@@ -49,8 +49,10 @@ public class MediaPlayerRecyclerView extends RecyclerView {
     /**
      * {@inheritDoc}
      */
-    public MediaPlayerRecyclerView(Context context,
-            AttributeSet attrs) {
+    public MediaPlayerRecyclerView(
+            Context context,
+            AttributeSet attrs
+    ) {
         super(context, attrs);
         initialize(context);
     }
@@ -58,9 +60,11 @@ public class MediaPlayerRecyclerView extends RecyclerView {
     /**
      * {@inheritDoc}
      */
-    public MediaPlayerRecyclerView(Context context,
+    public MediaPlayerRecyclerView(
+            Context context,
             AttributeSet attrs,
-            int defStyleAttr) {
+            int defStyleAttr
+    ) {
         super(context, attrs, defStyleAttr);
         initialize(context);
     }
