@@ -703,7 +703,7 @@ public class LocalDataStore {
     }
 
     @SuppressWarnings("rawtypes")
-    private void setProfileFields(JSONObject fields) {
+    void setProfileFields(JSONObject fields) {
         if (fields == null) {
             return;
         }
