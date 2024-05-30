@@ -260,7 +260,7 @@ class EvaluationManager constructor(
                 // Only for CS In-Apps check if oldValue != newValue for userAttribute events
                 val oldValue = event.eventProperties[Constants.KEY_OLD_VALUE]
                 val newValue = event.eventProperties[Constants.KEY_NEW_VALUE]
-                if (newValue?.equals(oldValue) ?: true)
+                if (newValue == null || newValue !=  oldValue)
                     eligibleInApps.addAll(evaluate(event, store.readClientSideInApps().toList()))
             }
 
