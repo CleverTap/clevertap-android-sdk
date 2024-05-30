@@ -318,10 +318,10 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     }
 
     /**
-     * remove the user profile with id from the db.
+     * remove all the user profiles with account id from the db.
      */
     @Synchronized
-    fun removeUserProfile(id: String?) {
+    fun removeUserProfilesForAccountId(id: String?) {
         if (id == null) {
             return
         }

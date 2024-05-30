@@ -828,7 +828,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         //Todo - Check if appFields are required from product for evaluation
         final Map<String, Object> appFieldsWithChargedEventProperties = JsonUtil.mapFromJson(
                 deviceInfo.getAppLaunchedFields());
-        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnProfileAttributeChange(
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnUserAttributeChange(
                 userAttributeChangedProperties, location);
         if (clientSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(clientSideInAppsToDisplay);

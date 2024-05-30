@@ -117,7 +117,10 @@ class EvaluationManager constructor(
      * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
      *         This array includes in-app notifications that meet the criteria for display.
      */
-    fun evaluateOnProfileAttributeChange(eventProperties: Map<String, Map<String, Any>>, userLocation: Location?): JSONArray {
+    fun evaluateOnUserAttributeChange(
+        eventProperties: Map<String, Map<String, Any>>,
+        userLocation: Location?
+    ): JSONArray {
         val eventAdapterList = eventProperties.map { eventProperty ->
             EventAdapter(
                 eventName = eventProperty.key + Constants.USER_ATTRIBUTE_CHANGE,
@@ -213,7 +216,7 @@ class EvaluationManager constructor(
         // Access the in-app store from the store registry.
         storeRegistry.inAppStore?.let { store ->
             // Retrieve server-side in-app notifications metadata from storage and evaluate them against the event.
-            for(event in events) {
+            for (event in events) {
                 eligibleInApps.addAll(evaluate(event, store.readServerSideInAppsMetaData().toList()))
             }
 
