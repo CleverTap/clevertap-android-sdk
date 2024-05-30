@@ -12,6 +12,7 @@ import java.io.File
 internal class InAppResourceProvider constructor(
     private val images: File,
     private val gifs: File,
+    private val allFileTypesDir: File,
     private val logger: ILogger? = null,
     private val ctCaches: CTCaches = CTCaches.instance(logger = logger),
     private val fileToBitmap : (file: File?) -> Bitmap? = { file ->
@@ -32,12 +33,14 @@ internal class InAppResourceProvider constructor(
     ) : this(
             images = context.getDir(IMAGE_DIRECTORY_NAME, Context.MODE_PRIVATE),
             gifs = context.getDir(GIF_DIRECTORY_NAME, Context.MODE_PRIVATE),
+            allFileTypesDir = context.getDir(ALL_FILE_TYPES_DIRECTORY_NAME, Context.MODE_PRIVATE),
             logger = logger,
             ctCaches = CTCaches.instance(logger = logger)
     )
     companion object {
         private const val IMAGE_DIRECTORY_NAME = "CleverTap.Images."
         private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
+        private const val ALL_FILE_TYPES_DIRECTORY_NAME = "CleverTap.Files."
     }
 
     fun saveImage(cacheKey: String, bitmap: Bitmap, bytes: ByteArray) {
@@ -55,6 +58,14 @@ internal class InAppResourceProvider constructor(
 
         val gifDiskCache = ctCaches.gifCacheDisk(dir = gifs)
         gifDiskCache.add(cacheKey, bytes)
+    }
+
+    fun saveFile(cacheKey: String, bytes: ByteArray) {
+        val fileDiskCache = ctCaches.fileCacheDisk(dir = allFileTypesDir)
+        val savedFile = fileDiskCache.addAndReturnFileInstance(cacheKey, bytes)
+
+        val fileMemoryCache = ctCaches.fileLruCache()
+        fileMemoryCache.add(cacheKey, savedFile)
     }
 
     fun isImageCached(url: String) : Boolean {
@@ -125,6 +136,32 @@ internal class InAppResourceProvider constructor(
         val gifDiskCache = ctCaches.gifCacheDisk(dir = gifs)
 
         return fileToBytes(gifDiskCache.get(cacheKey))
+    }
+
+    fun cachedFileInBytes(cacheKey: String?): ByteArray? {
+        return fileToBytes(cachedFileInstance(cacheKey))
+    }
+
+    fun cachedFilePath(cacheKey: String?): String? {
+        return cachedFileInstance(cacheKey)?.absolutePath
+    }
+
+    fun cachedFileInstance(cacheKey: String?): File? {
+        if (cacheKey == null) {
+            logger?.verbose("File for null key requested")
+            return null
+        }
+        // Try in memory
+        val fileMemoryCache = ctCaches.fileLruCache()
+        val fileInstance = fileMemoryCache.get(cacheKey)
+
+        if (fileInstance != null) {
+            return fileInstance
+        }
+
+        val fileDiskCache = ctCaches.fileCacheDisk(dir = allFileTypesDir)
+
+        return fileDiskCache.get(cacheKey)
     }
 
     fun fetchInAppImage(url: String): Bitmap? {
@@ -202,6 +239,32 @@ internal class InAppResourceProvider constructor(
 
     }
 
+    fun fetchFile(url: String) : ByteArray? {
+        val cachedFile = cachedFileInBytes(url)
+
+        if (cachedFile != null) {
+            logger?.verbose("Returning requested $url file from cache with size ${cachedFile.size}")
+            return cachedFile
+        }
+
+        val downloadedFile = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
+
+        return when (downloadedFile.status) {
+
+            DownloadedBitmap.Status.SUCCESS -> {
+                saveFile(cacheKey = url, bytes = downloadedFile.bytes!!)
+                logger?.verbose("Returning requested $url file with network, saved in cache")
+                downloadedFile.bytes
+            }
+
+            else -> {
+                logger?.verbose("There was a problem fetching data for file, status:${downloadedFile.status}")
+                null
+            }
+        }
+
+    }
+
     fun deleteImage(cacheKey: String) {
         val imageMemoryCache = ctCaches.imageCache()
         val bitmap = imageMemoryCache.remove(cacheKey)
@@ -231,6 +294,22 @@ internal class InAppResourceProvider constructor(
 
         if (b) {
             logger?.verbose("successfully removed gif $cacheKey from file cache")
+        }
+    }
+
+    fun deleteFile(cacheKey: String) {
+        val fileMemoryCache = ctCaches.fileLruCache()
+        val bytes = fileMemoryCache.remove(cacheKey)
+
+        if (bytes != null) {
+            logger?.verbose("successfully removed file $cacheKey from memory cache")
+        }
+
+        val fileDiskCache = ctCaches.fileCacheDisk(dir = allFileTypesDir)
+        val b = fileDiskCache.remove(cacheKey)
+
+        if (b) {
+            logger?.verbose("successfully removed file $cacheKey from file disk cache")
         }
     }
 }

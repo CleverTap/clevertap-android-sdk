@@ -11,7 +11,6 @@ import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
@@ -33,7 +32,7 @@ class InAppImagePreloaderCoroutineTest {
     private val testScheduler = TestCoroutineScheduler()
     private val dispatchers = TestDispatchers(testScheduler)
 
-    private val inAppImagePreloaderCoroutine = InAppImagePreloaderCoroutine(
+    private val inAppImagePreloaderCoroutine = FilePreloaderCoroutine(
         inAppImageProvider = inAppResourceProvider,
         logger = logger,
         dispatchers = dispatchers

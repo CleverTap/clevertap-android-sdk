@@ -21,7 +21,7 @@ class InAppImagePreloaderExecutorsTest {
 
     private val logger = TestLogger()
 
-    private val inAppImagePreloader = InAppImagePreloaderExecutors(
+    private val inAppImagePreloader = FilePreloaderExecutors(
         inAppImageProvider = inAppResourceProvider,
         logger = logger,
         executor = executors

@@ -11,9 +11,10 @@ import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
-import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
+import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderExecutors;
+import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
+import com.clevertap.android.sdk.inapp.store.preference.FileStore;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
@@ -71,6 +72,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             final ImpressionStore impressionStore = storeRegistry.getImpressionStore();
             final InAppStore inAppStore = storeRegistry.getInAppStore();
             final InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
+            final FileStore fileStore = storeRegistry.getFilesStore();
             final LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
 
             if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null) {
@@ -129,10 +131,10 @@ public class InAppResponse extends CleverTapResponseDecorator {
             //InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
             //InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
 
-            InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(inAppResourceProvider, logger);
+            FilePreloaderStrategy preloadStrategy = new FilePreloaderExecutors(inAppResourceProvider, logger);
             InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
 
-            InAppImageRepoImpl assetRepo = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore, legacyInAppStore);
+            FileResourcesRepoImpl assetRepo = new FileResourcesRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore, fileStore, legacyInAppStore);
             assetRepo.fetchAllImages(res.getPreloadImages());
             assetRepo.fetchAllGifs(res.getPreloadGifs());
             // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)

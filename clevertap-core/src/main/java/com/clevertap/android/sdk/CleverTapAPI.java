@@ -45,9 +45,10 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
-import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
+import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderExecutors;
+import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
+import com.clevertap.android.sdk.inapp.store.preference.FileStore;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
@@ -3520,24 +3521,26 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
+        FileStore fileStore = storeRegistry.getFilesStore();
         LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
 
-        if (inAppAssetStore == null || legacyInAppStore == null) {
+        if (inAppAssetStore == null || legacyInAppStore == null || fileStore == null) {
             logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
             return;
         }
 
         InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
         InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
-        InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(
+        FilePreloaderStrategy preloadStrategy = new FilePreloaderExecutors(
                 inAppResourceProvider,
                 logger
         );
 
-        InAppImageRepoImpl impl = new InAppImageRepoImpl(
+        FileResourcesRepoImpl impl = new FileResourcesRepoImpl(
                 cleanupStrategy,
                 preloadStrategy,
                 inAppAssetStore,
+                fileStore,
                 legacyInAppStore
         );
         if (expiredOnly) {

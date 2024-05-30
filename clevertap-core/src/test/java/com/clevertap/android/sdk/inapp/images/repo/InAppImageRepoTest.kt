@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy
+import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import io.mockk.every
@@ -12,11 +12,11 @@ import org.junit.Test
 class InAppImageRepoTest {
 
     private val inAppImageCleanupStrategy = mockk<InAppCleanupStrategy>(relaxed = true)
-    private val preloaderStrategy = mockk<InAppImagePreloaderStrategy>(relaxed = true)
+    private val preloaderStrategy = mockk<FilePreloaderStrategy>(relaxed = true)
     private val inAppAssetStore = mockk<InAppAssetsStore>(relaxed = true)
     private val legacyInAppStore = mockk<LegacyInAppStore>(relaxed = true)
 
-    private val inAppImageRepoImpl = InAppImageRepoImpl(
+    private val mFileResourcesRepoImpl = FileResourcesRepoImpl(
         cleanupStrategy = inAppImageCleanupStrategy,
         preloaderStrategy = preloaderStrategy,
         inAppAssetsStore = inAppAssetStore,
@@ -26,7 +26,7 @@ class InAppImageRepoTest {
     @Test
     fun `fetch all images use case`() {
         val urls = listOf("url1", "url2", "url3")
-        inAppImageRepoImpl.fetchAllImages(urls)
+        mFileResourcesRepoImpl.fetchAllImages(urls)
 
         verify {
             preloaderStrategy.preloadImages(urls, any())
@@ -36,7 +36,7 @@ class InAppImageRepoTest {
     @Test
     fun `fetch all gifs use case`() {
         val urls = listOf("url1", "url2", "url3")
-        inAppImageRepoImpl.fetchAllGifs(urls)
+        mFileResourcesRepoImpl.fetchAllGifs(urls)
 
         verify {
             preloaderStrategy.preloadGifs(urls, any())
@@ -54,8 +54,8 @@ class InAppImageRepoTest {
         val validUrls = setOf("url1", "url2", "url3", "url_valid_not_in_response")
         val allUrls = expiredUrls + validUrls
 
-        val fourteenDaysFromNow = System.currentTimeMillis() + InAppImageRepoImpl.EXPIRY_OFFSET_MILLIS
-        val oneDayAgo = System.currentTimeMillis() - InAppImageRepoImpl.DAY_IN_MILLIS
+        val fourteenDaysFromNow = System.currentTimeMillis() + FileResourcesRepoImpl.EXPIRY_OFFSET_MILLIS
+        val oneDayAgo = System.currentTimeMillis() - FileResourcesRepoImpl.DAY_IN_MILLIS
 
         // setup asset store
         every { inAppAssetStore.getAllAssetUrls() } returns allUrls
@@ -65,7 +65,7 @@ class InAppImageRepoTest {
         }
 
         // invoke method to test
-        inAppImageRepoImpl.cleanupStaleImages(responseUrls)
+        mFileResourcesRepoImpl.cleanupStaleImages(responseUrls)
 
         // assert
         verify { inAppImageCleanupStrategy.clearAssets(expiredUrls.toList(), any()) }

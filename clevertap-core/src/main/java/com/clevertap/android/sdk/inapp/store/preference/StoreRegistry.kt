@@ -15,5 +15,6 @@ data class StoreRegistry constructor(
     var inAppStore: InAppStore? = null,
     var impressionStore: ImpressionStore? = null,
     var legacyInAppStore: LegacyInAppStore? = null,
-    var inAppAssetsStore: InAppAssetsStore? = null
+    var inAppAssetsStore: InAppAssetsStore? = null,
+    var filesStore: FileStore? = null
 )

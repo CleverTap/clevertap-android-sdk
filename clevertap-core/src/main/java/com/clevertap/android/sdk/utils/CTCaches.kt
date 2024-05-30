@@ -20,6 +20,8 @@ class CTCaches private constructor(
         private val lock2 = Any()
         private val lock3 = Any()
         private val lock4 = Any()
+        private val lock5 = Any()
+        private val lock6 = Any()
 
         fun instance(
             config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
@@ -43,9 +45,11 @@ class CTCaches private constructor(
 
     private var imageCache: LruCache<Bitmap>? = null
     private var gifCache: LruCache<ByteArray>? = null
+    private var fileLruCache: LruCache<File>? = null
 
     private var imageFileCache: FileCache? = null
     private var gifFileCache: FileCache? = null
+    private var fileCacheDisk: FileCache? = null
 
     fun imageCache(): LruCache<Bitmap> {
         if (imageCache == null) {
@@ -67,6 +71,17 @@ class CTCaches private constructor(
             }
         }
         return gifCache!!
+    }
+
+    fun fileLruCache(): LruCache<File> {
+        if (fileLruCache == null) {
+            synchronized(lock5) {
+                if (fileLruCache == null) {
+                    fileLruCache = LruCache(maxSize = fileLruCacheSize())
+                }
+            }
+        }
+        return fileLruCache!!
     }
 
     fun imageCacheDisk(dir: File): FileCache {
@@ -99,6 +114,21 @@ class CTCaches private constructor(
         return gifFileCache!!
     }
 
+    fun fileCacheDisk(dir: File): FileCache {
+        if (fileCacheDisk == null) {
+            synchronized(lock6) {
+                if (fileCacheDisk == null) {
+                    fileCacheDisk = FileCache(
+                        directory = dir,
+                        maxFileSizeKb = config.maxFileSizeDiskKB.toInt(),
+                        logger = logger
+                    )
+                }
+            }
+        }
+        return fileCacheDisk!!
+    }
+
     fun imageCacheSize(): Int {
         val selected = max(config.optimistic, config.minImageCacheKb).toInt()
 
@@ -111,6 +141,14 @@ class CTCaches private constructor(
         val selected = max(config.optimistic, config.minGifCacheKb).toInt()
 
         logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minGifCacheKb}, selected = $selected")
+
+        return selected
+    }
+
+    fun fileLruCacheSize(): Int {
+        val selected = max(config.optimistic, config.minFileSizeCacheKB).toInt()
+
+        logger?.verbose(" File cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minFileSizeCacheKB}, selected = $selected")
 
         return selected
     }
@@ -129,19 +167,25 @@ class CTCaches private constructor(
 data class CTCachesConfig(
     val minImageCacheKb: Long,
     val minGifCacheKb: Long,
+    val minFileSizeCacheKB: Long,
     val optimistic: Long,
-    val maxImageSizeDiskKb: Long
+    val maxImageSizeDiskKb: Long,
+    val maxFileSizeDiskKB: Long
 ) {
     companion object {
         const val IMAGE_CACHE_MIN_KB : Long = 20 * 1024
         const val GIF_CACHE_MIN_KB : Long = 5 * 1024
+        const val FILE_CACHE_MIN_KB : Long = 15 * 1024
         const val IMAGE_SIZE_MAX_DISK : Long = 5 * 1024
+        const val FILE_SIZE_MAX_DISK : Long = 15 * 1024
 
         val DEFAULT_CONFIG = CTCachesConfig(
             minImageCacheKb = IMAGE_CACHE_MIN_KB,
             minGifCacheKb = GIF_CACHE_MIN_KB,
+            minFileSizeCacheKB = FILE_CACHE_MIN_KB,
             optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32),
-            maxImageSizeDiskKb = IMAGE_SIZE_MAX_DISK
+            maxImageSizeDiskKb = IMAGE_SIZE_MAX_DISK,
+            maxFileSizeDiskKB = FILE_SIZE_MAX_DISK
         )
     }
 }

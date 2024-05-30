@@ -12,12 +12,12 @@ import kotlinx.coroutines.launch
 import kotlin.system.measureTimeMillis
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
+internal class FilePreloaderCoroutine @JvmOverloads constructor(
     override val inAppImageProvider: InAppResourceProvider,
     override val logger: ILogger? = null,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
     override val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
-) : InAppImagePreloaderStrategy {
+) : FilePreloaderStrategy {
 
     private val jobs: MutableList<Job> = mutableListOf()
     private val handler = CoroutineExceptionHandler { _, throwable ->
@@ -35,6 +35,14 @@ internal class InAppImagePreloaderCoroutine @JvmOverloads constructor(
         preloadAssets(urls, successBlock) { url ->
             inAppImageProvider.fetchInAppGif(url)
         }
+    }
+
+    override fun preloadFiles(
+        urls: List<String>,
+        successBlock: (url: String) -> Unit,
+        failureBlock: (url: String) -> Unit
+    ) {
+        TODO("Not yet implemented")
     }
 
     private fun preloadAssets(
