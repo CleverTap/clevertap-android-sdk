@@ -368,11 +368,7 @@ class AnalyticsManagerTest : BaseTestCase() {
 
     @Test
     fun test_addMultiValuesForKey_when_EmptyKey_emptyValueError() {
-        val validationResult = ValidationResult()
-        validationResult.`object` = ""
-        validationResult.errorCode = 0
-        `when`(validator.cleanMultiValuePropertyKey(""))
-            .thenReturn(validationResult)
+        mockCleanMultiValuePropertyKey("", 0)
 
         //Act
         mockStatic(CTExecutorFactory::class.java).use {
@@ -390,17 +386,12 @@ class AnalyticsManagerTest : BaseTestCase() {
 
     @Test
     fun test_addMultiValuesForKey_when_CorrectKey_pushesBasicProfile() {
-        val validationResult = ValidationResult()
-        validationResult.`object` = "abc"
-        validationResult.errorCode = 0
         val commandObj = JSONObject()
         commandObj.put(Constants.COMMAND_ADD, JSONArray(arrayListOf("a")))
         val fields = JSONObject()
         fields.put("abc", commandObj)
 
-
-        `when`(validator.cleanMultiValuePropertyKey("abc"))
-            .thenReturn(validationResult)
+        mockCleanMultiValuePropertyKey("abc", 0)
 
         //Act
         mockStatic(CTExecutorFactory::class.java).use {
@@ -418,17 +409,12 @@ class AnalyticsManagerTest : BaseTestCase() {
 
     @Test
     fun test_removeMultiValuesForKey_when_CorrectKey_pushesBasicProfile() {
-        val validationResult = ValidationResult()
-        validationResult.`object` = "abc"
-        validationResult.errorCode = 0
         val commandObj = JSONObject()
         commandObj.put(Constants.COMMAND_REMOVE, JSONArray(arrayListOf("a")))
         val fields = JSONObject()
         fields.put("abc", commandObj)
 
-
-        `when`(validator.cleanMultiValuePropertyKey("abc"))
-            .thenReturn(validationResult)
+        mockCleanMultiValuePropertyKey("abc", 0)
 
         //Act
         mockStatic(CTExecutorFactory::class.java).use {
@@ -446,17 +432,14 @@ class AnalyticsManagerTest : BaseTestCase() {
 
     @Test
     fun test_setMultiValuesForKey_when_CorrectKey_pushesBasicProfile() {
-        val validationResult = ValidationResult()
-        validationResult.`object` = "abc"
-        validationResult.errorCode = 0
+
         val commandObj = JSONObject()
         commandObj.put(Constants.COMMAND_SET, JSONArray(arrayListOf("a")))
         val fields = JSONObject()
         fields.put("abc", commandObj)
 
 
-        `when`(validator.cleanMultiValuePropertyKey("abc"))
-            .thenReturn(validationResult)
+        mockCleanMultiValuePropertyKey("abc", 0)
 
         //Act
         mockStatic(CTExecutorFactory::class.java).use {
@@ -646,6 +629,14 @@ class AnalyticsManagerTest : BaseTestCase() {
         `when`(validator.cleanObjectValue(value, Profile))
             .thenReturn(ValidationResult().apply {
                 `object` = value
+                errorCode = errCode
+            })
+    }
+
+    private fun mockCleanMultiValuePropertyKey(key: String?, errCode: Int) {
+        `when`(validator.cleanMultiValuePropertyKey(key))
+            .thenReturn(ValidationResult().apply {
+                `object` = key
                 errorCode = errCode
             })
     }
