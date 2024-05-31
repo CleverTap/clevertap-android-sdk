@@ -84,7 +84,7 @@ class AnalyticsManagerTest : BaseTestCase() {
 
     @Test
     fun test_decrementValue_negativeValue_throwsMalformedValueError() {
-        mockCleanObjectKey("abc", 512)
+        mockCleanObjectKey("abc", 0)
         analyticsManagerSUT.decrementValue("abc", -10)
 
         val captor = ArgumentCaptor.forClass(ValidationResult::class.java)
