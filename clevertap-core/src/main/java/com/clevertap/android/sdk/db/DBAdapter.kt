@@ -131,6 +131,12 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         return pushIds.toTypedArray<String?>()
     }
 
+    /**
+     * Retrieves all user profiles based on the accountId
+     *
+     * @param accountId String userId
+     * @return Map representing the fetched profile, keys of this map will be the deviceIDs and the values will be the corresponding profiles
+     */
     @Synchronized
     fun fetchUserProfilesByAccountId(accountId: String?): Map<String,JSONObject> {
         if (accountId == null) {
@@ -167,6 +173,13 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         return profiles
     }
 
+    /**
+     * Retrieves an user profile based on the accountId and deviceId
+     *
+     * @param accountId String userId
+     * @param deviceId String deviceId
+     * @return JSONObject representing the fetched profile
+     */
     @Synchronized
     fun fetchUserProfileByAccountIdAndDeviceID(accountId: String?, deviceId: String?): JSONObject? {
         if (accountId == null || deviceId == null) {
@@ -318,7 +331,9 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     }
 
     /**
-     * remove all the user profiles with account id from the db.
+     * removes all the user profiles with account id from the db.
+     *
+     * @param id the accountId for which the profiles are to be removed
      */
     @Synchronized
     fun removeUserProfilesForAccountId(id: String?) {
@@ -355,15 +370,17 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     }
 
     /**
-     * Adds a JSON string representing to the DB.
+     * Adds a JSON string representing the profile to the DB.
      *
+     * @param id the accountId for this profile
+     * @param deviceId the deviceId for this profile
      * @param obj the JSON to record
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
     @WorkerThread
     @Synchronized
     fun storeUserProfile(id: String?, deviceId: String?, obj: JSONObject): Long {
-        if (id == null ||deviceId == null) {
+        if (id == null || deviceId == null) {
             return DB_UPDATE_ERROR
         }
         if (!belowMemThreshold()) {

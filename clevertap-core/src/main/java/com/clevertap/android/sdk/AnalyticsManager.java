@@ -966,13 +966,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         key = cleanKey;
-
-        try {
-            _validateAndPushMultiValue(values, key, command);
-        } catch (Throwable t) {
-            config.getLogger()
-                    .verbose(config.getAccountId(), "Error handling multi value operation for key " + key, t);
-        }
+        _pushMultiValue(values, key, command);
     }
 
     private void _constructIncrementDecrementValues(Number value, String key, String command) {
@@ -1149,7 +1143,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    private void _validateAndPushMultiValue(ArrayList<String> originalValues, String key, String command) {
+    private void _pushMultiValue(ArrayList<String> originalValues, String key, String command) {
         try {
             // push to server
             JSONObject commandObj = new JSONObject();
