@@ -208,13 +208,16 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
-    void configureWithMessage(final CTInboxMessage inboxMessage, final CTInboxListViewFragment parent,
-            final int position) {
+    void configureWithMessage(
+            final CTInboxMessage inboxMessage,
+            final CTInboxListViewFragment parent,
+            final int position
+    ) {
         context = parent.getContext();
         parentWeakReference = new WeakReference<>(parent);
         message = inboxMessage;
         firstContentItem = message.getInboxMessageContents().get(0);
-        requiresMediaPlayer = firstContentItem.mediaIsAudio() || firstContentItem.mediaIsVideo();
+        requiresMediaPlayer = firstContentItem.mediaIsStreamable();
     }
 
     int getImageBackgroundColor() {
@@ -227,29 +230,17 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     void hideOneButton(Button mainButton, Button secondaryButton, Button tertiaryButton) {
         tertiaryButton.setVisibility(View.GONE);
-        LinearLayout.LayoutParams mainLayoutParams = new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.MATCH_PARENT, 3);
-        mainButton.setLayoutParams(mainLayoutParams);
-        LinearLayout.LayoutParams secondaryLayoutParams = new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.MATCH_PARENT, 3);
-        secondaryButton.setLayoutParams(secondaryLayoutParams);
-        LinearLayout.LayoutParams tertiaryLayoutParams = new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.MATCH_PARENT, 0);
-        tertiaryButton.setLayoutParams(tertiaryLayoutParams);
+        mainButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 3));
+        secondaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 3));
+        tertiaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0));
     }
 
     void hideTwoButtons(Button mainButton, Button secondaryButton, Button tertiaryButton) {
         secondaryButton.setVisibility(View.GONE);
         tertiaryButton.setVisibility(View.GONE);
-        LinearLayout.LayoutParams mainLayoutParams = new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.MATCH_PARENT, 6);
-        mainButton.setLayoutParams(mainLayoutParams);
-        LinearLayout.LayoutParams secondaryLayoutParams = new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.MATCH_PARENT, 0);
-        secondaryButton.setLayoutParams(secondaryLayoutParams);
-        LinearLayout.LayoutParams tertiaryLayoutParams = new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.MATCH_PARENT, 0);
-        tertiaryButton.setLayoutParams(tertiaryLayoutParams);
+        mainButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 6));
+        secondaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        tertiaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0));
     }
 
     public boolean needsMediaPlayer() {
