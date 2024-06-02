@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.video
+package com.clevertap.android.sdk.video.inapps
 
 import android.content.Context
 import android.util.TypedValue
@@ -58,7 +58,7 @@ class ExoplayerHandle {
         player = ExoPlayer.Builder(context).setTrackSelector(trackSelector).build().apply {
             setMediaSource(hlsMediaSource)
             prepare()
-            setRepeatMode(Player.REPEAT_MODE_ONE)
+            repeatMode = Player.REPEAT_MODE_ONE
             seekTo(mediaPosition)
         }
     }
@@ -112,9 +112,9 @@ class ExoplayerHandle {
     }
 
     fun pause() {
-        if (player != null) {
-            player!!.stop()
-            player!!.release()
+        player?.let { ep ->
+            ep.stop()
+            ep.release()
             player = null
         }
     }

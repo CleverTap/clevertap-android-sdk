@@ -32,7 +32,7 @@ import androidx.core.content.res.ResourcesCompat;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.gif.GifImageView;
-import com.clevertap.android.sdk.video.ExoplayerHandle;
+import com.clevertap.android.sdk.video.inapps.ExoplayerHandle;
 import java.util.ArrayList;
 
 public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFragment {

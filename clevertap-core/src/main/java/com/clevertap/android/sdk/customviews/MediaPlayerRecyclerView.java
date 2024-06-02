@@ -1,12 +1,9 @@
 package com.clevertap.android.sdk.customviews;
 import android.content.Context;
-import android.content.res.Configuration;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AbsListView;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -14,18 +11,14 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.clevertap.android.sdk.R;
-import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder;
 
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.ExoTrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
+import com.clevertap.android.sdk.video.inbox.ExoplayerHandle;
 import com.google.android.exoplayer2.ui.StyledPlayerView;
+
+import kotlin.jvm.functions.Function0;
 
 @RestrictTo(Scope.LIBRARY)
 public class MediaPlayerRecyclerView extends RecyclerView {
@@ -35,8 +28,36 @@ public class MediaPlayerRecyclerView extends RecyclerView {
     private CTInboxBaseMessageViewHolder playingHolder;
 
     //surface view for playing video
-    private StyledPlayerView videoSurfaceView;
-    ExoPlayer player;
+    private ExoplayerHandle handle = new ExoplayerHandle();
+
+    private Rect rect = new Rect();
+
+    private OnScrollListener onScrollListener = new OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+            if (newState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
+                playVideo();
+            }
+        }
+
+        @Override
+        public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
+        }
+    };
+    private OnChildAttachStateChangeListener onChildAttachStateChangeListener = new OnChildAttachStateChangeListener() {
+        @Override
+        public void onChildViewAttachedToWindow(@NonNull View view) {
+        }
+
+        @Override
+        public void onChildViewDetachedFromWindow(@NonNull View view) {
+            if (playingHolder != null && playingHolder.itemView.equals(view)) {
+                stop();
+            }
+        }
+    };;
 
     /**
      * {@inheritDoc}
@@ -70,76 +91,49 @@ public class MediaPlayerRecyclerView extends RecyclerView {
     }
 
     public void onPausePlayer() {
-        if (player != null) {
-            player.setPlayWhenReady(false);
-        }
+        handle.setPlayWhenReady(false);
     }
 
     public void onRestartPlayer() {
-        if (videoSurfaceView == null) {
-            initialize(appContext);
-            playVideo();
-        }
+        initialize(appContext);
+        playVideo();
     }
 
     public void playVideo() {
-        if (videoSurfaceView == null) {
-            return;
-        }
         CTInboxBaseMessageViewHolder targetHolder = findBestVisibleMediaHolder();
+
+        // Case 1 : No viewholder has video item in it
         if (targetHolder == null) {
-            stop();
             removeVideoView();
             return;
         }
 
+        // Case 2 : Found viewholder is same with surface and player attached
         if (playingHolder != null && playingHolder.itemView.equals(targetHolder.itemView)) {
-            Rect rect = new Rect();
             boolean measured = playingHolder.itemView.getGlobalVisibleRect(rect);
             int visibleHeight = measured ? rect.height() : 0;
-            if (player != null) {
-                boolean play = visibleHeight >= 400;
-                if (play) {
-                    if (playingHolder.shouldAutoPlay()) {
-                        player.setPlayWhenReady(true);
-                    }
-                } else {
-                    player.setPlayWhenReady(false);
-                }
-
+            boolean play = visibleHeight >= 400;
+            if (play && playingHolder.shouldAutoPlay()) {
+                handle.setPlayWhenReady(true);
+            } else {
+                handle.setPlayWhenReady(false);
             }
             return;
         }
 
+        // Case 3: Video has to be played in different view holder so we remove and reattch to correct one
         removeVideoView();
-        boolean addedVideo = targetHolder.addMediaPlayer(videoSurfaceView);
+        boolean addedVideo = targetHolder.addMediaPlayer((StyledPlayerView)handle.player()); // todo cast check is hacky
         if (addedVideo) {
             playingHolder = targetHolder;
         }
     }
 
-    public void release() {
-        if (player != null) {
-            player.stop();
-            player.release();
-            player = null;
-        }
-        playingHolder = null;
-        videoSurfaceView = null;
-    }
-
-    @SuppressWarnings("unused")
-    public void removePlayer() {
-        if (videoSurfaceView != null) {
-            removeVideoView();
-            videoSurfaceView = null;
-        }
-    }
-
     public void stop() {
-        if (player != null) {
+        /*if (player != null) {
             player.stop();
-        }
+        }*/
+        handle.pause();
         playingHolder = null;
     }
 
@@ -162,7 +156,6 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                 if (!holder.needsMediaPlayer()) {
                     continue;
                 }
-                Rect rect = new Rect();
                 boolean measured = holder.itemView.getGlobalVisibleRect(rect);
                 int height = measured ? rect.height() : 0;
                 if (height > bestHeight) {
@@ -176,104 +169,58 @@ public class MediaPlayerRecyclerView extends RecyclerView {
 
     private void initialize(Context context) {
         appContext = context.getApplicationContext();
-        videoSurfaceView = new StyledPlayerView(appContext);
-        videoSurfaceView.setBackgroundColor(Color.TRANSPARENT);
-        if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
-        } else {
-            videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
-        }
-        videoSurfaceView.setUseArtwork(true);
-        Drawable artwork = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_audio, null);
-        videoSurfaceView.setDefaultArtwork(artwork);
 
-        ExoTrackSelection.Factory videoTrackSelectionFactory =
-                new AdaptiveTrackSelection.Factory();
-        TrackSelector trackSelector =
-                new DefaultTrackSelector(appContext, videoTrackSelectionFactory);
+        handle.initExoplayer(context, bufferingStarted(), playerReady());
+        handle.initPlayerView(context, artworkAsset());
 
-        player = new ExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
-        player.setVolume(0f); // start off muted
-        videoSurfaceView.setUseController(true);
-        videoSurfaceView.setControllerAutoShow(false);
-        videoSurfaceView.setPlayer(player);
+        recyclerViewListeners();
+    }
 
-        addOnScrollListener(new RecyclerView.OnScrollListener() {
+    private Function0<Void> bufferingStarted() {
+        return new Function0<Void>() {
             @Override
-            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                if (newState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
-                    playVideo();
+            public Void invoke() {
+                if (playingHolder != null) {
+                    playingHolder.playerBuffering();
                 }
+                return null;
             }
+        };
+    }
 
+    private Function0<Void> playerReady() {
+        return new Function0<Void>() {
             @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-            }
-        });
-
-        addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
-            @Override
-            public void onChildViewAttachedToWindow(@NonNull View view) {
-            }
-
-            @Override
-            public void onChildViewDetachedFromWindow(@NonNull View view) {
-                if (playingHolder != null && playingHolder.itemView.equals(view)) {
-                    stop();
+            public Void invoke() {
+                if (playingHolder != null) {
+                    playingHolder.playerReady();
                 }
+                return null;
             }
-        });
-        player.addListener(new Player.Listener() {
+        };
+    }
+
+    private Function0<Drawable> artworkAsset() {
+        return new Function0<Drawable>() {
             @Override
-            public void onPlaybackStateChanged(final int playbackState) {
-                switch (playbackState) {
-                    case Player.STATE_BUFFERING:
-                        if (playingHolder != null) {
-                            playingHolder.playerBuffering();
-                        }
-                        break;
-                    case Player.STATE_ENDED:
-                        if (player != null) {
-                            player.seekTo(0);
-                            player.setPlayWhenReady(false);
-                            if (videoSurfaceView != null) {
-                                videoSurfaceView.showController();
-                            }
-                        }
-                        break;
-                    case Player.STATE_READY:
-                        if (playingHolder != null) {
-                            playingHolder.playerReady();
-                        }
-                        break;
-                    case Player.STATE_IDLE:
-                    default:
-                        break;
-                }
+            public Drawable invoke() {
+                return ResourcesCompat.getDrawable(appContext.getResources(), R.drawable.ct_audio, null);
             }
-        });
+        };
+    }
+
+    private void recyclerViewListeners() {
+        removeOnScrollListener(onScrollListener);
+        removeOnChildAttachStateChangeListener(onChildAttachStateChangeListener);
+        addOnScrollListener(onScrollListener);
+        addOnChildAttachStateChangeListener(onChildAttachStateChangeListener);
     }
 
     private void removeVideoView() {
-        if (videoSurfaceView == null) {
-            return;
-        }
-        ViewGroup parent = (ViewGroup) videoSurfaceView.getParent();
-        if (parent == null) {
-            return;
-        }
-        int index = parent.indexOfChild(videoSurfaceView);
-        if (index >= 0) {
-            parent.removeViewAt(index);
-            if (player != null) {
-                player.stop();
-            }
-            if (playingHolder != null) {
-                playingHolder.playerRemoved();
-                playingHolder = null;
-            }
+        handle.pause();
+        if (playingHolder != null) {
+            playingHolder.playerRemoved(); // removes all the views from video container
+            playingHolder = null;
         }
     }
 }

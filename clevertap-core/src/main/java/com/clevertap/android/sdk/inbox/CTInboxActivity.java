@@ -206,7 +206,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
                             .getItem(tab.getPosition());
                     if (fragment.getMediaRecyclerView() != null) {
-                        fragment.getMediaRecyclerView().onRestartPlayer();
+                        fragment.getMediaRecyclerView().onRestartPlayer(); // todo check if this is needed as fragment might be resumed.
                     }
                 }
 
