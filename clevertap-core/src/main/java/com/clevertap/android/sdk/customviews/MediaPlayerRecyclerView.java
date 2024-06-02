@@ -23,16 +23,13 @@ import kotlin.jvm.functions.Function0;
 @RestrictTo(Scope.LIBRARY)
 public class MediaPlayerRecyclerView extends RecyclerView {
 
-    private Context appContext;
-
     private CTInboxBaseMessageViewHolder playingHolder;
 
-    //surface view for playing video
-    private ExoplayerHandle handle = new ExoplayerHandle();
+    private final ExoplayerHandle handle = new ExoplayerHandle();
 
-    private Rect rect = new Rect();
+    private final Rect rect = new Rect();
 
-    private OnScrollListener onScrollListener = new OnScrollListener() {
+    private final OnScrollListener onScrollListener = new OnScrollListener() {
         @Override
         public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
             super.onScrollStateChanged(recyclerView, newState);
@@ -46,7 +43,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
             super.onScrolled(recyclerView, dx, dy);
         }
     };
-    private OnChildAttachStateChangeListener onChildAttachStateChangeListener = new OnChildAttachStateChangeListener() {
+    private final OnChildAttachStateChangeListener onChildAttachStateChangeListener = new OnChildAttachStateChangeListener() {
         @Override
         public void onChildViewAttachedToWindow(@NonNull View view) {
         }
@@ -64,7 +61,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
      */
     public MediaPlayerRecyclerView(Context context) {
         super(context);
-        initialize(context);
+        initialize();
     }
 
     /**
@@ -75,7 +72,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
             AttributeSet attrs
     ) {
         super(context, attrs);
-        initialize(context);
+        initialize();
     }
 
     /**
@@ -87,7 +84,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
             int defStyleAttr
     ) {
         super(context, attrs, defStyleAttr);
-        initialize(context);
+        initialize();
     }
 
     public void onPausePlayer() {
@@ -95,7 +92,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
     }
 
     public void onRestartPlayer() {
-        initialize(appContext);
+        initialize();
         playVideo();
     }
 
@@ -167,11 +164,10 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         return bestHolder;
     }
 
-    private void initialize(Context context) {
-        appContext = context.getApplicationContext();
+    private void initialize() {
 
-        handle.initExoplayer(context, bufferingStarted(), playerReady());
-        handle.initPlayerView(context, artworkAsset());
+        handle.initExoplayer(getContext().getApplicationContext(), bufferingStarted(), playerReady());
+        handle.initPlayerView(getContext().getApplicationContext(), artworkAsset());
 
         recyclerViewListeners();
     }
@@ -204,7 +200,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         return new Function0<Drawable>() {
             @Override
             public Drawable invoke() {
-                return ResourcesCompat.getDrawable(appContext.getResources(), R.drawable.ct_audio, null);
+                return ResourcesCompat.getDrawable(getResources(), R.drawable.ct_audio, null);
             }
         };
     }
