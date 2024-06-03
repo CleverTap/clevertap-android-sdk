@@ -53,8 +53,6 @@ import org.json.JSONObject;
 
 public final class Utils {
 
-    public static boolean haveVideoPlayerSupport = checkForExoPlayer();
-
     public static boolean containsIgnoreCase(Collection<String> collection, String key) {
         if (collection == null || key == null) {
             return false;
@@ -426,34 +424,6 @@ public final class Utils {
         drawable.draw(canvas);
 
         return bitmap;
-    }
-
-    /**
-     * Method to check whether app has ExoPlayer dependencies
-     *
-     * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
-     */
-    private static boolean checkForExoPlayer() {
-        boolean exoPlayerPresent = false;
-        Class className = null;
-        try {
-            className = Class.forName("com.google.android.exoplayer2.ExoPlayer");
-            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
-            className = Class.forName("com.google.android.exoplayer2.ui.StyledPlayerView");
-
-            Logger.d("ExoPlayer is present");
-            exoPlayerPresent = true;
-        } catch (Throwable t) {
-            Logger.d("ExoPlayer library files are missing!!!");
-            Logger.d(
-                    "Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.");
-            if (className != null) {
-                Logger.d("ExoPlayer classes not found " + className.getName());
-            } else {
-                Logger.d("ExoPlayer classes not found");
-            }
-        }
-        return exoPlayerPresent;
     }
 
     private static @NonNull DownloadedBitmap getAppIcon(final Context context) throws NullPointerException {

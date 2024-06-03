@@ -45,6 +45,8 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.variables.JsonUtil;
+import com.clevertap.android.sdk.video.VideoLibChecker;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,7 +76,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
         private JSONObject jsonObject;
 
-        private final boolean videoSupport = Utils.haveVideoPlayerSupport;
+        private final boolean videoSupport = VideoLibChecker.INSTANCE.haveVideoPlayerSupport;
 
         NotificationPrepareRunnable(InAppController inAppController, JSONObject jsonObject) {
             this.inAppControllerWeakReference = new WeakReference<>(inAppController);

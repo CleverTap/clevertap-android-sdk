@@ -15,6 +15,8 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
+import com.clevertap.android.sdk.video.VideoLibChecker;
+
 import java.util.concurrent.Callable;
 import org.json.JSONArray;
 
@@ -195,11 +197,16 @@ public class ControllerManager {
                 return;
             }
             if (deviceInfo.getDeviceID() != null) {
-                setCTInboxController(new CTInboxController(config, deviceInfo.getDeviceID(),
-                        baseDatabaseManager.loadDBAdapter(context),
-                        ctLockManager,
-                        callbackManager,
-                        Utils.haveVideoPlayerSupport));
+                setCTInboxController(
+                        new CTInboxController(
+                                config,
+                                deviceInfo.getDeviceID(),
+                                baseDatabaseManager.loadDBAdapter(context),
+                                ctLockManager,
+                                callbackManager,
+                                VideoLibChecker.INSTANCE.haveVideoPlayerSupport
+                        )
+                );
                 callbackManager._notifyInboxInitialized();
             } else {
                 config.getLogger().info("CRITICAL : No device ID found!");
