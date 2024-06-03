@@ -116,7 +116,7 @@ class ExoplayerHandle {
         }
     }
 
-    fun playerVolume(): Float = player?.let { ep -> ep.volume } ?: 0f
+    fun playerVolume(): Float = player?.volume ?: 0f
 
     fun handleMute() {
         player?.let { ep ->
