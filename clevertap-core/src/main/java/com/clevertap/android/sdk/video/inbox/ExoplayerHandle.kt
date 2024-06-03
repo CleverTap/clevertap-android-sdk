@@ -112,7 +112,7 @@ class ExoplayerHandle {
 
             useController = true
             controllerAutoShow = false
-            player = player
+            player = this@ExoplayerHandle.player
         }
     }
 
