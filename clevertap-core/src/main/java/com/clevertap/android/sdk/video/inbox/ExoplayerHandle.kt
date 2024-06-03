@@ -57,8 +57,8 @@ class ExoplayerHandle {
                             }
 
                             Player.STATE_ENDED -> if (player != null) {
-                                player!!.seekTo(0)
-                                player!!.playWhenReady = false
+                                seekTo(0)
+                                playWhenReady = false
                                 videoSurfaceView?.showController()
                             }
 
@@ -157,7 +157,7 @@ class ExoplayerHandle {
             ep.setMediaSource(hlsMediaSource)
             ep.prepare()
             if (isMediaAudio) {
-                videoSurfaceView!!.showController() //show controller for audio as it is not autoplay
+                videoSurfaceView?.showController() //show controller for audio as it is not autoplay
                 ep.playWhenReady = false
                 ep.volume = 1f
             } else if (isMediaVideo) {
