@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.Constants.KEY_NEW_VALUE;
 import static com.clevertap.android.sdk.Constants.piiDBKeys;
 
 import android.annotation.SuppressLint;
@@ -689,15 +688,21 @@ public class LocalDataStore {
         }
     }
 
-    public void setProfileFields(Map<String,Map<String, Object>> fields) {
-        for (Map.Entry<String, Map<String,Object>> entry : fields.entrySet()) {
+
+    /**
+     * This function centrally updates the profile fields both in the local cache and the local db
+     *
+     * @param fields, a map of key value pairs to be updated locally. The value will be null if that key needs to be
+     *                removed
+     */
+    public void updateProfileFields(Map<String, Object> fields) {
+        for (Map.Entry<String, Object> entry : fields.entrySet()) {
             String key = entry.getKey();
-            Map<String, Object> property = entry.getValue();
-            Object newValue = property.get(KEY_NEW_VALUE);
-            if(newValue == null) {
+            Object newValue = entry.getValue();
+            if (newValue == null) {
                 removeProfileField(key);
             }
-            setProfileField(key, newValue, false, false);
+            setProfileField(key, newValue);
         }
         persistLocalProfileAsync();
     }

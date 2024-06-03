@@ -151,6 +151,7 @@ public class EventMediator {
 
     public Map<String, Map<String, Object>> getUserAttributeChangeProperties(final JSONObject event) {
         Map<String, Map<String, Object>> userAttributesChangeProperties = new HashMap<>();
+        Map<String, Object> fieldsToPersistLocally = new HashMap<>();
         JSONObject profile = event.optJSONObject(Constants.PROFILE);
 
         if(profile == null)
@@ -200,13 +201,14 @@ public class EventMediator {
                     properties.put(KEY_NEW_VALUE, newValue);
 
                 userAttributesChangeProperties.put(key, properties);
+                fieldsToPersistLocally.put(key, newValue);
             } catch (JSONException e) {
                 // no-op
             }
         }
 
 
-        localDataStore.setProfileFields(userAttributesChangeProperties);
+        localDataStore.updateProfileFields(fieldsToPersistLocally);
         return userAttributesChangeProperties;
     }
 
