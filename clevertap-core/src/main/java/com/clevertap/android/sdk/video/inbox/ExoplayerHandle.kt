@@ -38,32 +38,35 @@ class ExoplayerHandle {
 
         val videoTrackSelectionFactory: ExoTrackSelection.Factory = AdaptiveTrackSelection.Factory()
         val trackSelector: TrackSelector = DefaultTrackSelector(context, videoTrackSelectionFactory)
-        player = ExoPlayer.Builder(context).setTrackSelector(trackSelector).build()
 
-        player!!.volume = 0f // start off muted
+        player = ExoPlayer.Builder(context)
+            .setTrackSelector(trackSelector)
+            .build()
+            .apply {
+                volume = 0f // start off muted
+                addListener(object : Player.Listener {
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        when (playbackState) {
+                            Player.STATE_BUFFERING -> {
+                                buffering.invoke()
+                            }
 
-        player!!.addListener(object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                when (playbackState) {
-                    Player.STATE_BUFFERING -> {
-                        buffering.invoke()
+                            Player.STATE_ENDED -> if (player != null) {
+                                player!!.seekTo(0)
+                                player!!.playWhenReady = false
+                                videoSurfaceView?.showController()
+                            }
+
+                            Player.STATE_READY -> {
+                                playerReady.invoke()
+                            }
+
+                            Player.STATE_IDLE -> {}
+                            else -> {}
+                        }
                     }
-
-                    Player.STATE_ENDED -> if (player != null) {
-                        player!!.seekTo(0)
-                        player!!.playWhenReady = false
-                        videoSurfaceView?.showController()
-                    }
-
-                    Player.STATE_READY -> {
-                        playerReady.invoke()
-                    }
-
-                    Player.STATE_IDLE -> {}
-                    else -> {}
-                }
+                })
             }
-        })
     }
 
     fun videoSurface(): View {
