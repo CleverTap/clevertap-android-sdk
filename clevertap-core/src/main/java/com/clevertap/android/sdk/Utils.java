@@ -53,7 +53,7 @@ import org.json.JSONObject;
 
 public final class Utils {
 
-    public static boolean haveVideoPlayerSupport;
+    public static boolean haveVideoPlayerSupport = checkForExoPlayer();
 
     public static boolean containsIgnoreCase(Collection<String> collection, String key) {
         if (collection == null || key == null) {
@@ -505,10 +505,6 @@ public final class Utils {
             intent.setData(Uri.parse("package:" + context.getPackageName()));
         }
         context.startActivity(intent);
-    }
-
-    static {
-        haveVideoPlayerSupport = checkForExoPlayer();
     }
 
     @WorkerThread
