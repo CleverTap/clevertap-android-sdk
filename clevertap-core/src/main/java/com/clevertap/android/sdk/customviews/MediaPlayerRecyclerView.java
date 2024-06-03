@@ -16,9 +16,9 @@ import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder;
 
 import com.clevertap.android.sdk.video.inbox.ExoplayerHandle;
-import com.google.android.exoplayer2.ui.StyledPlayerView;
 
 import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function3;
 
 @RestrictTo(Scope.LIBRARY)
 public class MediaPlayerRecyclerView extends RecyclerView {
@@ -120,7 +120,31 @@ public class MediaPlayerRecyclerView extends RecyclerView {
 
         // Case 3: Video has to be played in different view holder so we remove and reattch to correct one
         removeVideoView();
-        boolean addedVideo = targetHolder.addMediaPlayer((StyledPlayerView)handle.player()); // todo cast check is hacky
+        float currentVolume = handle.playerVolume();
+        boolean addedVideo = targetHolder.addMediaPlayer(
+                currentVolume,
+                new Function0<Float>() {
+                    @Override
+                    public Float invoke() {
+                        handle.handleMute();
+                        return handle.playerVolume();
+                    }
+                },
+                new Function3<String, Boolean, Boolean, Void>() {
+                    @Override
+                    public Void invoke(String uri, Boolean isMediaAudio, Boolean isMediaVideo) {
+                        handle.startPlaying(
+                                getContext(),
+                                uri,
+                                isMediaAudio,
+                                isMediaVideo
+                        );
+                        return null;
+                    }
+                },
+                handle.player()
+        );
+        handle.playMedia();
         if (addedVideo) {
             playingHolder = targetHolder;
         }

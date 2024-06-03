@@ -23,18 +23,12 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.clevertap.android.sdk.R;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.source.hls.HlsMediaSource;
-import com.google.android.exoplayer2.ui.StyledPlayerView;
-import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultDataSource;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
-import com.google.android.exoplayer2.util.Util;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function3;
 
 @RestrictTo(Scope.LIBRARY)
 public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
@@ -70,7 +64,12 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         readDot = itemView.findViewById(R.id.read_circle);
     }
 
-    public boolean addMediaPlayer(StyledPlayerView videoSurfaceView) {
+    public boolean addMediaPlayer(
+            float currentVolume,
+            Function0<Float> muteClick,
+            Function3<String, Boolean, Boolean, Void> playMedia,
+            View videoSurfaceView
+    ) {
         if (!requiresMediaPlayer) {
             return false;
         }
@@ -109,20 +108,13 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             progressBarFrameLayout.setVisibility(View.VISIBLE);
         }
 
-        final ExoPlayer player =(ExoPlayer) videoSurfaceView.getPlayer();
-        float currentVolume = 0;
-        if (player != null) {
-            currentVolume = player.getVolume();
-        }
         if (firstContentItem.mediaIsVideo()) {
             muteIcon = new ImageView(context);
             muteIcon.setVisibility(View.GONE);
             if (currentVolume > 0) {
-                muteIcon.setImageDrawable(
-                        ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_on, null));
+                muteIcon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_on, null));
             } else {
-                muteIcon.setImageDrawable(
-                        ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_off, null));
+                muteIcon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_off, null));
             }
 
             int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
@@ -133,54 +125,20 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             layoutParams.setMargins(0, iconTop, iconRight, 0);
             layoutParams.gravity = Gravity.END;
             muteIcon.setLayoutParams(layoutParams);
+
             muteIcon.setOnClickListener(v -> {
-                float currentVolume1 = 0;
-                if (player != null) {
-                    currentVolume1 = player.getVolume();
-                }
+                float currentVolume1 = muteClick.invoke();
+
                 if (currentVolume1 > 0) {
-                    player.setVolume(0f);
-                    muteIcon.setImageDrawable(
-                            ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_off, null));
+                    muteIcon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_off, null));
                 } else if (currentVolume1 == 0) {
-                    if (player != null) {
-                        player.setVolume(1);
-                    }
-                    muteIcon.setImageDrawable(
-                            ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_on, null));
+                    muteIcon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_on, null));
                 }
             });
             frameLayout.addView(muteIcon);
         }
 
-        videoSurfaceView.requestFocus();
-        videoSurfaceView.setShowBuffering(StyledPlayerView.SHOW_BUFFERING_NEVER);
-        DefaultBandwidthMeter defaultBandwidthMeter = new DefaultBandwidthMeter.Builder(context).build();
-
-        Context ctx = this.context;
-        String userAgent = Util.getUserAgent(ctx,ctx.getPackageName());
-        String uriString = firstContentItem.getMedia();
-        MediaItem mediaItem = MediaItem.fromUri(uriString);
-        DefaultHttpDataSource.Factory  dsf = new DefaultHttpDataSource.Factory().setUserAgent(userAgent).setTransferListener(defaultBandwidthMeter);
-        DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(ctx,dsf);
-
-
-        if (uriString != null) {
-            HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem);
-            // Prepare the player with the source.
-            if (player != null) {
-                player.setMediaSource(hlsMediaSource);
-                player.prepare();
-                if (firstContentItem.mediaIsAudio()) {
-                    videoSurfaceView.showController();//show controller for audio as it is not autoplay
-                    player.setPlayWhenReady(false);
-                    player.setVolume(1f);
-                } else if (firstContentItem.mediaIsVideo()) {
-                    player.setPlayWhenReady(true);
-                    player.setVolume(currentVolume);
-                }
-            }
-        }
+        playMedia.invoke(firstContentItem.getMedia(), firstContentItem.mediaIsAudio(), firstContentItem.mediaIsVideo());
         return true;
     }
 
