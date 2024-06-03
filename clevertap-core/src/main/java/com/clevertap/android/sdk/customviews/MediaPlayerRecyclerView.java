@@ -123,24 +123,18 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         float currentVolume = handle.playerVolume();
         boolean addedVideo = targetHolder.addMediaPlayer(
                 currentVolume,
-                new Function0<Float>() {
-                    @Override
-                    public Float invoke() {
-                        handle.handleMute();
-                        return handle.playerVolume();
-                    }
+                () -> {
+                    handle.handleMute();
+                    return handle.playerVolume();
                 },
-                new Function3<String, Boolean, Boolean, Void>() {
-                    @Override
-                    public Void invoke(String uri, Boolean isMediaAudio, Boolean isMediaVideo) {
-                        handle.startPlaying(
-                                getContext(),
-                                uri,
-                                isMediaAudio,
-                                isMediaVideo
-                        );
-                        return null;
-                    }
+                (uri, isMediaAudio, isMediaVideo) -> {
+                    handle.startPlaying(
+                            getContext(),
+                            uri,
+                            isMediaAudio,
+                            isMediaVideo
+                    );
+                    return null;
                 },
                 handle.player()
         );
