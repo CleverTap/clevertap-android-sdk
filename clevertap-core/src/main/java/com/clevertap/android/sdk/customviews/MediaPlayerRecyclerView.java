@@ -191,36 +191,25 @@ public class MediaPlayerRecyclerView extends RecyclerView {
     }
 
     private Function0<Void> bufferingStarted() {
-        return new Function0<Void>() {
-            @Override
-            public Void invoke() {
-                if (playingHolder != null) {
-                    playingHolder.playerBuffering();
-                }
-                return null;
+        return () -> {
+            if (playingHolder != null) {
+                playingHolder.playerBuffering();
             }
+            return null;
         };
     }
 
     private Function0<Void> playerReady() {
-        return new Function0<Void>() {
-            @Override
-            public Void invoke() {
-                if (playingHolder != null) {
-                    playingHolder.playerReady();
-                }
-                return null;
+        return () -> {
+            if (playingHolder != null) {
+                playingHolder.playerReady();
             }
+            return null;
         };
     }
 
     private Function0<Drawable> artworkAsset() {
-        return new Function0<Drawable>() {
-            @Override
-            public Drawable invoke() {
-                return ResourcesCompat.getDrawable(getResources(), R.drawable.ct_audio, null);
-            }
-        };
+        return () -> ResourcesCompat.getDrawable(getResources(), R.drawable.ct_audio, null);
     }
 
     private void recyclerViewListeners() {
