@@ -85,7 +85,7 @@ class ProfileValueHandler(
         return numberValueType
     }
 
-    fun computeMultiValues(key: String, values: JSONArray?, command: String, existingValues: Any?): JSONArray? {
+    fun handleMultiValues(key: String, values: JSONArray?, command: String, existingValues: Any?): JSONArray? {
         val currentValues = _constructExistingMultiValue(key, command, existingValues)
         val newValues = _cleanMultiValues(key, CTJsonConverter.toList(values!!) as ArrayList<String>)
         if (currentValues == null || newValues == null) {
