@@ -113,18 +113,23 @@ class EvaluationManager constructor(
      *
      * @param eventProperties Additional properties associated with the event, provided as a map.
      * @param userLocation The location of the user triggering the event, if available.
+     * @param appFields Additional system properties for the event required for evaluation.
      *
      * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
      *         This array includes in-app notifications that meet the criteria for display.
      */
     fun evaluateOnUserAttributeChange(
         eventProperties: Map<String, Map<String, Any>>,
-        userLocation: Location?
+        userLocation: Location?,
+        appFields: Map<String, Any>
     ): JSONArray {
         val eventAdapterList = eventProperties.map { eventProperty ->
+            val mergedEventProperties = eventProperty.value.toMutableMap().apply {
+                putAll(appFields)
+            }
             EventAdapter(
                 eventName = eventProperty.key + Constants.USER_ATTRIBUTE_CHANGE,
-                eventProperties = eventProperty.value,
+                eventProperties = mergedEventProperties,
                 userLocation = userLocation,
                 profileAttrName = eventProperty.key
             )

@@ -825,11 +825,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     @WorkerThread
     public void onQueueProfileEvent(final Map<String, Map<String, Object>> userAttributeChangedProperties,
             Location location) {
-        //Todo - Check if appFields are required from product for evaluation
-        final Map<String, Object> appFieldsWithChargedEventProperties = JsonUtil.mapFromJson(
+        final Map<String, Object> appFields = JsonUtil.mapFromJson(
                 deviceInfo.getAppLaunchedFields());
         final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnUserAttributeChange(
-                userAttributeChangedProperties, location);
+                userAttributeChangedProperties, location, appFields);
         if (clientSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(clientSideInAppsToDisplay);
         }
