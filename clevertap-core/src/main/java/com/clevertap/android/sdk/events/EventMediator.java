@@ -149,7 +149,7 @@ public class EventMediator {
         }
     }
 
-    public Map<String, Map<String, Object>> getUserAttributeChangeProperties(final JSONObject event) {
+    public Map<String, Map<String, Object>> computeUserAttributeChangeProperties(final JSONObject event) {
         Map<String, Map<String, Object>> userAttributesChangeProperties = new HashMap<>();
         Map<String, Object> fieldsToPersistLocally = new HashMap<>();
         JSONObject profile = event.optJSONObject(Constants.PROFILE);
@@ -186,13 +186,13 @@ public class EventMediator {
                         case Constants.COMMAND_SET:
                         case Constants.COMMAND_ADD:
                         case Constants.COMMAND_REMOVE:
-                            newValue = profileValueHandler.computeMultiValues(key,
+                            newValue = profileValueHandler.handleMultiValues(key,
                                     ((JSONArray) obj.get(commandIdentifier)), commandIdentifier, oldValue);
                             break;
                     }
                 } else if (newValue instanceof String) {
                     if (((String) newValue).startsWith(DATE_PREFIX)) {
-                        newValue = ((String) newValue).substring(DATE_PREFIX.length());
+                        newValue = Long.parseLong(((String) newValue).substring(DATE_PREFIX.length()));
                     }
                 }
 
@@ -206,6 +206,7 @@ public class EventMediator {
                     properties.put(KEY_NEW_VALUE, newValue);
                 }
 
+                // Properties will be empty for multi-valued attributes, hence skip
                 if (!properties.isEmpty()) {
                     userAttributesChangeProperties.put(key, properties);
                 }

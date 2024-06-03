@@ -468,7 +468,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     // in case profile event, evaluate for user attribute changes
                     Map<String, Map<String, Object>> userAttributeChangedProperties
-                            = eventMediator.getUserAttributeChangeProperties(event);
+                            = eventMediator.computeUserAttributeChangeProperties(event);
                     controllerManager.getInAppController()
                             .onQueueProfileEvent(userAttributeChangedProperties, userLocation);
                 } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {

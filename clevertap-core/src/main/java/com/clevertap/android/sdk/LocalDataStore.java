@@ -696,6 +696,9 @@ public class LocalDataStore {
      *                removed
      */
     public void updateProfileFields(Map<String, Object> fields) {
+        if(fields.isEmpty())
+            return;
+
         for (Map.Entry<String, Object> entry : fields.entrySet()) {
             String key = entry.getKey();
             Object newValue = entry.getValue();
