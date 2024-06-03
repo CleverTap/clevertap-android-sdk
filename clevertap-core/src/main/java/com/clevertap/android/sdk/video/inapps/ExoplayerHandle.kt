@@ -76,25 +76,8 @@ class ExoplayerHandle {
             return
         }
 
-        val playerWidth = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            if (isTablet) {
-                408f
-            } else {
-                240f
-            },
-            context.resources.displayMetrics
-        ).toInt()
-
-        val playerHeight = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            if (isTablet) {
-                299f
-            } else {
-                134f
-            },
-            context.resources.displayMetrics
-        ).toInt()
+        val playerWidth = playerWidth(context = context, isTablet = isTablet)
+        val playerHeight = playerHeight(context = context, isTablet = isTablet)
 
         playerView = StyledPlayerView(context).apply {
             playerViewLayoutParams = FrameLayout.LayoutParams(playerWidth, playerHeight)
@@ -145,5 +128,35 @@ class ExoplayerHandle {
 
     fun videoSurface(): View {
         return playerView!!
+    }
+
+    private fun playerWidth(
+        context: Context,
+        isTablet: Boolean
+    ) : Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            if (isTablet) {
+                408f
+            } else {
+                240f
+            },
+            context.resources.displayMetrics
+        ).toInt()
+    }
+
+    private fun playerHeight(
+        context: Context,
+        isTablet: Boolean
+    ) : Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            if (isTablet) {
+                299f
+            } else {
+                134f
+            },
+            context.resources.displayMetrics
+        ).toInt()
     }
 }
