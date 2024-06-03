@@ -23,9 +23,10 @@ import androidx.media3.exoplayer.upstream.BandwidthMeter
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.PlayerView
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 
 @UnstableApi
-class Media3Handle {
+class Media3Handle : InAppVideoPlayerHandle {
     private var player: ExoPlayer? = null
     private var playerView: PlayerView? = null
 
@@ -33,7 +34,7 @@ class Media3Handle {
 
     private var mediaPosition = 0L
 
-    fun initExoplayer(
+    override fun initExoplayer(
         context: Context,
         url: String
     ) {
@@ -62,7 +63,7 @@ class Media3Handle {
         }
     }
 
-    fun initPlayerView(
+    override fun initPlayerView(
         context: Context,
         isTablet: Boolean
     ) {
@@ -87,7 +88,7 @@ class Media3Handle {
         }
     }
 
-    fun play() {
+    override fun play() {
         playerView?.let { pv ->
             pv.requestFocus()
             pv.visibility = View.VISIBLE
@@ -98,7 +99,7 @@ class Media3Handle {
         }
     }
 
-    fun pause() {
+    override fun pause() {
         player?.let { ep ->
             ep.stop()
             ep.release()
@@ -106,13 +107,13 @@ class Media3Handle {
         }
     }
 
-    fun savePosition() {
+    override fun savePosition() {
         if (player != null) {
             mediaPosition = player!!.currentPosition
         }
     }
 
-    fun switchToFullScreen(isFullScreen: Boolean) {
+    override fun switchToFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
             playerViewLayoutParams = playerView!!.layoutParams
         } else {
@@ -120,7 +121,7 @@ class Media3Handle {
         }
     }
 
-    fun videoSurface(): View {
+    override fun videoSurface(): View {
         return playerView!!
     }
 

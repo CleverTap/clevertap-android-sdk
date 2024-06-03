@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.view.View
+import com.clevertap.android.sdk.video.InboxVideoPlayerHandle
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -26,12 +27,12 @@ import com.google.android.exoplayer2.util.Util
  * All the player and surface related functionality to be limited to this class to we can have multiple
  * handles for video/audio support.
  */
-class ExoplayerHandle {
+class ExoplayerHandle : InboxVideoPlayerHandle {
 
     private var videoSurfaceView: StyledPlayerView? = null
     private var player: ExoPlayer? = null
 
-    fun initExoplayer(
+    override fun initExoplayer(
         context: Context,
         buffering: () -> Void,
         playerReady: () -> Void,
@@ -73,17 +74,17 @@ class ExoplayerHandle {
             }
     }
 
-    fun videoSurface(): View {
+    override fun videoSurface(): View {
         return videoSurfaceView!!
     }
 
-    fun setPlayWhenReady(play: Boolean) {
+    override fun setPlayWhenReady(play: Boolean) {
         player?.let { ep ->
             ep.playWhenReady = play
         }
     }
 
-    fun pause() {
+    override fun pause() {
         player?.let { ep ->
             ep.stop()
             ep.release()
@@ -92,7 +93,7 @@ class ExoplayerHandle {
         videoSurfaceView = null
     }
 
-    fun initPlayerView(
+    override fun initPlayerView(
         context: Context,
         artworkAsset: () -> Drawable,
     ) {
@@ -116,9 +117,9 @@ class ExoplayerHandle {
         }
     }
 
-    fun playerVolume(): Float = player?.volume ?: 0f
+    override fun playerVolume(): Float = player?.volume ?: 0f
 
-    fun handleMute() {
+    override fun handleMute() {
         player?.let { ep ->
             val playerVolume = playerVolume()
 
@@ -130,7 +131,7 @@ class ExoplayerHandle {
         }
     }
 
-    fun startPlaying(
+    override fun startPlaying(
         ctx: Context,
         uriString: String,
         isMediaAudio: Boolean,

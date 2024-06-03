@@ -21,14 +21,15 @@ import androidx.media3.exoplayer.trackselection.TrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import com.clevertap.android.sdk.video.InboxVideoPlayerHandle
 
 @UnstableApi
-class Media3Handle {
+class Media3Handle: InboxVideoPlayerHandle {
 
     private var videoSurfaceView: PlayerView? = null
     private var player: ExoPlayer? = null
 
-    fun initExoplayer(
+    override fun initExoplayer(
         context: Context,
         buffering: () -> Void,
         playerReady: () -> Void,
@@ -70,17 +71,17 @@ class Media3Handle {
             }
     }
 
-    fun videoSurface(): View {
+    override fun videoSurface(): View {
         return videoSurfaceView!!
     }
 
-    fun setPlayWhenReady(play: Boolean) {
+    override fun setPlayWhenReady(play: Boolean) {
         player?.let { ep ->
             ep.playWhenReady = play
         }
     }
 
-    fun pause() {
+    override fun pause() {
         player?.let { ep ->
             ep.stop()
             ep.release()
@@ -89,7 +90,7 @@ class Media3Handle {
         videoSurfaceView = null
     }
 
-    fun initPlayerView(
+    override fun initPlayerView(
         context: Context,
         artworkAsset: () -> Drawable,
     ) {
@@ -113,9 +114,9 @@ class Media3Handle {
         }
     }
 
-    fun playerVolume(): Float = player?.let { ep -> ep.volume } ?: 0f
+    override fun playerVolume(): Float = player?.let { ep -> ep.volume } ?: 0f
 
-    fun handleMute() {
+    override fun handleMute() {
         player?.let { ep ->
             val playerVolume = playerVolume()
 
@@ -127,7 +128,7 @@ class Media3Handle {
         }
     }
 
-    fun startPlaying(
+    override fun startPlaying(
         ctx: Context,
         uriString: String,
         isMediaAudio: Boolean,

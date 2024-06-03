@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.content.res.ResourcesCompat
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -28,7 +29,7 @@ import com.google.android.exoplayer2.util.Util
  * All the player and surface related functionality to be limited to this class to we can have multiple
  * handles for video/audio support.
  */
-class ExoplayerHandle {
+class ExoplayerHandle : InAppVideoPlayerHandle {
 
     private var player: ExoPlayer? = null
     private var playerView: StyledPlayerView? = null
@@ -37,7 +38,7 @@ class ExoplayerHandle {
 
     private var mediaPosition = 0L
 
-    fun initExoplayer(
+    override fun initExoplayer(
         context: Context,
         url: String
     ) {
@@ -66,7 +67,7 @@ class ExoplayerHandle {
         }
     }
 
-    fun initPlayerView(
+    override fun initPlayerView(
         context: Context,
         isTablet: Boolean
     ) {
@@ -91,7 +92,7 @@ class ExoplayerHandle {
         }
     }
 
-    fun play() {
+    override fun play() {
         playerView?.let { pv ->
             pv.requestFocus()
             pv.visibility = View.VISIBLE
@@ -102,7 +103,7 @@ class ExoplayerHandle {
         }
     }
 
-    fun pause() {
+    override fun pause() {
         player?.let { ep ->
             ep.stop()
             ep.release()
@@ -110,13 +111,13 @@ class ExoplayerHandle {
         }
     }
 
-    fun savePosition() {
+    override fun savePosition() {
         if (player != null) {
             mediaPosition = player!!.currentPosition
         }
     }
 
-    fun switchToFullScreen(isFullScreen: Boolean) {
+    override fun switchToFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
             playerViewLayoutParams = playerView!!.layoutParams
         } else {
@@ -124,11 +125,11 @@ class ExoplayerHandle {
         }
     }
 
-    fun videoSurface(): View {
+    override fun videoSurface(): View {
         return playerView!!
     }
 
-    private fun playerWidth(
+    fun playerWidth(
         context: Context,
         isTablet: Boolean
     ) : Int {
@@ -143,7 +144,7 @@ class ExoplayerHandle {
         ).toInt()
     }
 
-    private fun playerHeight(
+    fun playerHeight(
         context: Context,
         isTablet: Boolean
     ) : Int {
