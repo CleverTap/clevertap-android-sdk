@@ -22,6 +22,11 @@ import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.util.Util
 
+/**
+ * Handle wrapping exoplayer library used to render video and audio for Inbox feature.
+ * All the player and surface related functionality to be limited to this class to we can have multiple
+ * handles for video/audio support.
+ */
 class ExoplayerHandle {
 
     private var videoSurfaceView: StyledPlayerView? = null
