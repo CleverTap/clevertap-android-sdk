@@ -5,7 +5,6 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.view.View
-import com.clevertap.android.sdk.inbox.CTInboxActivity
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -102,10 +101,11 @@ class ExoplayerHandle {
         }
         videoSurfaceView = StyledPlayerView(context).apply {
             setBackgroundColor(Color.TRANSPARENT)
-            if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+
+            resizeMode = if (context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                AspectRatioFrameLayout.RESIZE_MODE_FILL
             } else {
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                AspectRatioFrameLayout.RESIZE_MODE_FIT
             }
             useArtwork = true
             defaultArtwork = artworkAsset.invoke()
@@ -143,7 +143,7 @@ class ExoplayerHandle {
         // Prepare the player with the source.
         player?.let { ep ->
             val defaultBandwidthMeter = DefaultBandwidthMeter.Builder(ctx).build()
-            val userAgent = Util.getUserAgent(ctx, ctx.getPackageName())
+            val userAgent = Util.getUserAgent(ctx, ctx.packageName)
             val mediaItem: MediaItem = MediaItem.fromUri(uriString)
             val dsf = DefaultHttpDataSource.Factory().setUserAgent(userAgent)
                 .setTransferListener(defaultBandwidthMeter)
