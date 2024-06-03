@@ -154,29 +154,31 @@ public class EventMediator {
         Map<String, Object> fieldsToPersistLocally = new HashMap<>();
         JSONObject profile = event.optJSONObject(Constants.PROFILE);
 
-        if(profile == null)
-            return userAttributesChangeProperties;
 
-        Iterator<?> keys = profile.keys();
+        if (profile == null) {
+            return userAttributesChangeProperties;
+        }
+
+        Iterator<String> keys = profile.keys();
 
         while (keys.hasNext()) {
-            try {
-                String key = (String) keys.next();
+            String key = keys.next();
 
-                //Todo - Check if these default fields need to be considered for evaluation as a product requirement
+            try {
                 if (keysToSkipForUserAttributesEvaluation.contains(key)) {
                     continue;
                 }
                 Object oldValue = localDataStore.getProfileValueForKey(key);
                 Object newValue = profile.get(key);
 
-                if(newValue instanceof JSONObject) {
+                if (newValue instanceof JSONObject) {
                     JSONObject obj = (JSONObject) newValue;
                     String commandIdentifier = obj.keys().next();
-                    switch(commandIdentifier) {
+                    switch (commandIdentifier) {
                         case Constants.COMMAND_INCREMENT:
                         case Constants.COMMAND_DECREMENT:
-                            newValue = profileValueHandler.handleIncrementDecrementValues((Number) obj.get(commandIdentifier), commandIdentifier, (Number) oldValue);
+                            newValue = profileValueHandler.handleIncrementDecrementValues(
+                                    (Number) obj.get(commandIdentifier), commandIdentifier, (Number) oldValue);
                             break;
                         case Constants.COMMAND_DELETE:
                             newValue = null;
@@ -184,29 +186,36 @@ public class EventMediator {
                         case Constants.COMMAND_SET:
                         case Constants.COMMAND_ADD:
                         case Constants.COMMAND_REMOVE:
-                            newValue = profileValueHandler.computeMultiValues(key, ((JSONArray) obj.get(commandIdentifier)), commandIdentifier, oldValue);
+                            newValue = profileValueHandler.computeMultiValues(key,
+                                    ((JSONArray) obj.get(commandIdentifier)), commandIdentifier, oldValue);
                             break;
                     }
-                }
-                else if(newValue instanceof String) {
-                    if(((String) newValue).startsWith(DATE_PREFIX)) {
+                } else if (newValue instanceof String) {
+                    if (((String) newValue).startsWith(DATE_PREFIX)) {
                         newValue = ((String) newValue).substring(DATE_PREFIX.length());
                     }
                 }
 
                 Map<String, Object> properties = new HashMap<>();
-                if(oldValue != null)
-                    properties.put(KEY_OLD_VALUE, oldValue);
-                if(newValue != null)
-                    properties.put(KEY_NEW_VALUE, newValue);
 
-                userAttributesChangeProperties.put(key, properties);
+                // Skip multivalued user attributes for evaluation
+                if (oldValue != null && !(oldValue instanceof JSONArray)) {
+                    properties.put(KEY_OLD_VALUE, oldValue);
+                }
+                if (newValue != null && !(newValue instanceof JSONArray)) {
+                    properties.put(KEY_NEW_VALUE, newValue);
+                }
+
+                if (!properties.isEmpty()) {
+                    userAttributesChangeProperties.put(key, properties);
+                }
+
                 fieldsToPersistLocally.put(key, newValue);
             } catch (JSONException e) {
-                // no-op
+                config.getLogger()
+                        .debug(config.getAccountId(), "Error getting user attribute changes for key: " + key + e);
             }
         }
-
 
         localDataStore.updateProfileFields(fieldsToPersistLocally);
         return userAttributesChangeProperties;
