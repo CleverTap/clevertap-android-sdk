@@ -273,7 +273,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     }
 
     private void closeFullscreenDialog() {
-        View playerView = handle.player();
+        View playerView = handle.videoSurface();
 
         handle.switchToFullScreen(false);
 
@@ -288,7 +288,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     }
 
     private void openFullscreenDialog() {
-        View playerView = handle.player();
+        View playerView = handle.videoSurface();
 
         imageViewLayoutParams = fullScreenIcon.getLayoutParams();
         handle.switchToFullScreen(true);
@@ -374,7 +374,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         }
 
         // add views to video container
-        videoFrameLayout.addView(handle.player());
+        videoFrameLayout.addView(handle.videoSurface());
         videoFrameLayout.addView(fullScreenIcon);
     }
 }

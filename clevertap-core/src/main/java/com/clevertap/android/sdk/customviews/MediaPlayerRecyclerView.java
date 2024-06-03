@@ -18,7 +18,6 @@ import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder;
 import com.clevertap.android.sdk.video.inbox.ExoplayerHandle;
 
 import kotlin.jvm.functions.Function0;
-import kotlin.jvm.functions.Function3;
 
 @RestrictTo(Scope.LIBRARY)
 public class MediaPlayerRecyclerView extends RecyclerView {
@@ -136,7 +135,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                     );
                     return null;
                 },
-                handle.player()
+                handle.videoSurface()
         );
         handle.playMedia();
         if (addedVideo) {

@@ -133,7 +133,7 @@ class ExoplayerHandle {
         }
     }
 
-    fun player(): View {
+    fun videoSurface(): View {
         return playerView!!
     }
 }
