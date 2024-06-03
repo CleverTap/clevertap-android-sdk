@@ -137,7 +137,6 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                 },
                 handle.videoSurface()
         );
-        handle.playMedia();
         if (addedVideo) {
             playingHolder = targetHolder;
         }
