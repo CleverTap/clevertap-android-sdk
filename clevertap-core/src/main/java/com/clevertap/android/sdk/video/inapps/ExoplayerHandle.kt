@@ -75,7 +75,6 @@ class ExoplayerHandle {
         if (playerView != null) {
             return
         }
-        playerView = StyledPlayerView(context)
 
         val playerWidth = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
@@ -97,23 +96,29 @@ class ExoplayerHandle {
             context.resources.displayMetrics
         ).toInt()
 
-        playerViewLayoutParams = FrameLayout.LayoutParams(playerWidth, playerHeight)
-        playerView!!.setLayoutParams(playerViewLayoutParams)
-        playerView!!.setShowBuffering(StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING)
-        playerView!!.useArtwork = true
-        playerView!!.controllerAutoShow = false
-        playerView!!.defaultArtwork = ResourcesCompat.getDrawable(
-            context.resources,
-            R.drawable.ct_audio,
-            null
-        )
+        playerView = StyledPlayerView(context).apply {
+            playerViewLayoutParams = FrameLayout.LayoutParams(playerWidth, playerHeight)
+            setLayoutParams(playerViewLayoutParams)
+            setShowBuffering(StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING)
+            useArtwork = true
+            controllerAutoShow = false
+            defaultArtwork = ResourcesCompat.getDrawable(
+                context.resources,
+                R.drawable.ct_audio,
+                null
+            )
+        }
     }
 
     fun play() {
-        playerView!!.requestFocus()
-        playerView!!.visibility = View.VISIBLE
-        playerView!!.player = player
-        player!!.playWhenReady = true
+        playerView?.let { pv ->
+            pv.requestFocus()
+            pv.visibility = View.VISIBLE
+            pv.player = player
+        }
+        player?.let {
+            it.playWhenReady = true
+        }
     }
 
     fun pause() {
