@@ -138,7 +138,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
                 var value = jsonObject.get(key)
 
                 if (value is String && value.startsWith(DATE_PREFIX)) {
-                    value = value.removePrefix(DATE_PREFIX)
+                    value = (value.removePrefix(DATE_PREFIX)).toLong()
                     jsonObject.put(key, value)
                 }
 
