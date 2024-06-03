@@ -30,14 +30,12 @@ import com.google.android.exoplayer2.util.Util
  */
 class ExoplayerHandle {
 
-    companion object {
-        var mediaPosition: Long = 0
-    }
-
     private var player: ExoPlayer? = null
     private var playerView: StyledPlayerView? = null
 
     private var playerViewLayoutParams: ViewGroup.LayoutParams? = null
+
+    private var mediaPosition = 0L
 
     fun initExoplayer(
         context: Context,
