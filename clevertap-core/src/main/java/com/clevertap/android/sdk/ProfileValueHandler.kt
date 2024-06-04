@@ -26,7 +26,8 @@ class ProfileValueHandler(
         var updatedValue: Number? = null
 
         /*When existing value is NOT present in local data store,
-         we check the give value number type and do the necessary operation*/if (existingValue == null) {
+         we check the give value number type and do the necessary operation*/
+        if (existingValue == null) {
             when (getNumberValueType(value)) {
                 DOUBLE_NUMBER -> if (command == Constants.COMMAND_INCREMENT) {
                     updatedValue = value.toDouble()
@@ -75,19 +76,18 @@ class ProfileValueHandler(
         (INT_NUMBER,DOUBLE_NUMBER,FLOAT_NUMBER)
     */
     private fun getNumberValueType(value: Number): NumberValueType? {
-        if (value == value.toInt()) {
-            numberValueType = INT_NUMBER
-        } else if (value == value.toDouble()) {
-            numberValueType = DOUBLE_NUMBER
-        } else if (value == value.toFloat()) {
-            numberValueType = FLOAT_NUMBER
+        return when (value) {
+            value.toInt() -> INT_NUMBER
+            value.toDouble() -> DOUBLE_NUMBER
+            value.toFloat() -> FLOAT_NUMBER
+            else -> numberValueType
         }
-        return numberValueType
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun handleMultiValues(key: String, values: JSONArray?, command: String, existingValues: Any?): JSONArray? {
-        val currentValues = _constructExistingMultiValue(key, command, existingValues)
-        val newValues = _cleanMultiValues(key, CTJsonConverter.toList(values!!) as ArrayList<String>)
+        val currentValues = constructExistingMultiValue(command, existingValues)
+        val newValues = cleanMultiValues(key, CTJsonConverter.toList(values!!) as ArrayList<String>)
         if (currentValues == null || newValues == null) {
             return null
         }
@@ -110,7 +110,7 @@ class ProfileValueHandler(
         } else localValues
     }
 
-    private fun _constructExistingMultiValue(key: String, command: String, existing: Any?): JSONArray? {
+    private fun constructExistingMultiValue(command: String, existing: Any?): JSONArray? {
         val remove = command == Constants.COMMAND_REMOVE
         val add = command == Constants.COMMAND_ADD
 
@@ -154,12 +154,12 @@ class ProfileValueHandler(
             returning null will signal that a remove operation should be aborted,
             as there is no valid promoted multi value to remove against
          */
-        val _default = if (add) JSONArray() else null
+        val default = if (add) JSONArray() else null
         val stringified = stringifyAndCleanScalarProfilePropValue(existing)
-        return if (stringified != null) JSONArray().put(stringified) else _default
+        return if (stringified != null) JSONArray().put(stringified) else default
     }
 
-    private fun _cleanMultiValues(key: String, values: ArrayList<String>?): JSONArray? {
+    private fun cleanMultiValues(key: String, values: ArrayList<String>?): JSONArray? {
         return try {
             if (values == null) {
                 return null
@@ -179,8 +179,8 @@ class ProfileValueHandler(
                 }
 
                 // reset the value
-                val _value = vr.getObject()
-                val cleanedValue = if (_value != null) vr.getObject().toString() else null
+                val vrValue = vr.getObject()
+                val cleanedValue = if (vrValue != null) vr.getObject().toString() else null
 
                 // if value is empty return
                 if (value.isEmpty()) {
@@ -213,8 +213,8 @@ class ProfileValueHandler(
             if (vr.errorCode != 0) {
                 validationResultStack.pushValidationResult(vr)
             }
-            val _value = vr.getObject()
-            cleanedValue = if (_value != null) vr.getObject().toString() else null
+            val vrValue = vr.getObject()
+            cleanedValue = if (vrValue != null) vr.getObject().toString() else null
         }
         return cleanedValue
     }
