@@ -31,16 +31,17 @@ internal class InAppResourceProvider(
     )
 
     constructor(
-            context: Context,
-            logger: ILogger? = null
+        context: Context,
+        logger: ILogger? = null
     ) : this(
-            images = context.getDir(IMAGE_DIRECTORY_NAME, Context.MODE_PRIVATE),
-            gifs = context.getDir(GIF_DIRECTORY_NAME, Context.MODE_PRIVATE),
-            allFileTypesDir = context.getDir(ALL_FILE_TYPES_DIRECTORY_NAME, Context.MODE_PRIVATE),
-            logger = logger
+        images = context.getDir(IMAGE_DIRECTORY_NAME, Context.MODE_PRIVATE),
+        gifs = context.getDir(GIF_DIRECTORY_NAME, Context.MODE_PRIVATE),
+        allFileTypesDir = context.getDir(ALL_FILE_TYPES_DIRECTORY_NAME, Context.MODE_PRIVATE),
+        logger = logger
     )
 
     companion object {
+
         private const val IMAGE_DIRECTORY_NAME = "CleverTap.Images."
         private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
         private const val ALL_FILE_TYPES_DIRECTORY_NAME = "CleverTap.Files."
@@ -48,71 +49,33 @@ internal class InAppResourceProvider(
 
     fun saveImage(cacheKey: String, bitmap: Bitmap, bytes: ByteArray) {
         val imageMAO = ImageMemoryAccessObject(ctCaches)
-        val savedFile = imageMAO.saveDiskMemory(cacheKey,bytes)
-        imageMAO.saveInMemory(cacheKey,Pair(bitmap,savedFile))
-        /*        val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
-                val savedFile = imageDiskCache.addAndReturnFileInstance(cacheKey, bytes)
-
-                val imageMemoryCache = ctCaches.imageCache()
-                imageMemoryCache.add(cacheKey, Pair(bitmap,savedFile))*/
-
+        val savedFile = imageMAO.saveDiskMemory(cacheKey, bytes)
+        imageMAO.saveInMemory(cacheKey, Pair(bitmap, savedFile))
     }
 
     fun saveGif(cacheKey: String, bytes: ByteArray) {
         val gifMAO = GifMemoryAccessObject(ctCaches)
         val savedFile = gifMAO.saveDiskMemory(cacheKey, bytes)
-        gifMAO.saveInMemory(cacheKey,Pair(bytes,savedFile))
-        /*val gifDiskCache = ctCaches.gifCacheDisk(dir = gifs)
-        val savedFile = gifDiskCache.addAndReturnFileInstance(cacheKey, bytes)
-
-        val gifMemoryCache = ctCaches.gifCache()
-        gifMemoryCache.add(cacheKey, Pair(bytes,savedFile))*/
-
+        gifMAO.saveInMemory(cacheKey, Pair(bytes, savedFile))
     }
 
     fun saveFile(cacheKey: String, bytes: ByteArray) {
         val fileMAO = FileMemoryAccessObject(ctCaches)
         val savedFile = fileMAO.saveDiskMemory(cacheKey, bytes)
-        fileMAO.saveInMemory(cacheKey,Pair(bytes,savedFile))
-        /*val fileDiskCache = ctCaches.fileCacheDisk(dir = allFileTypesDir)
-        val savedFile = fileDiskCache.addAndReturnFileInstance(cacheKey, bytes)
-
-        val fileMemoryCache = ctCaches.fileLruCache()
-        fileMemoryCache.add(cacheKey, Pair(bytes,savedFile))*/
+        fileMAO.saveInMemory(cacheKey, Pair(bytes, savedFile))
     }
 
-    fun isImageCached(url: String) : Boolean {
-
+    fun isImageCached(url: String): Boolean {
         return isFileCached(url)
-        /*
-        val imageMemoryCache = ctCaches.imageCache()
-
-        if (imageMemoryCache.get(url) != null) {
-            return true
-        }
-
-        val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
-        val file = imageDiskCache.get(url)
-
-        return (file != null)*/
     }
 
-    fun isGifCached(url: String) : Boolean {
+    fun isGifCached(url: String): Boolean {
         return isFileCached(url)
-        /*val gifMemoryCache = ctCaches.gifCache()
-
-        if (gifMemoryCache.get(url) != null) {
-            return true
-        }
-
-        val gifDiskCache = ctCaches.gifCacheDisk(dir = images)
-        val file = gifDiskCache.get(url)
-
-        return (file != null)*/
     }
-    fun isFileCached(url: String) : Boolean {
+
+    fun isFileCached(url: String): Boolean {
         val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            FileMemoryAccessObject(ctCaches),ImageMemoryAccessObject(ctCaches),
+            FileMemoryAccessObject(ctCaches), ImageMemoryAccessObject(ctCaches),
             GifMemoryAccessObject(ctCaches)
         )
 
@@ -148,8 +111,7 @@ internal class InAppResourceProvider(
         // Try in memory
         memoryAccessObjectList.forEach {
             val bitmap = it.fetchInMemoryAndTransform(cacheKey, TRANSFORM_TO_BITMAP)
-            if (bitmap is Bitmap)
-            {
+            if (bitmap is Bitmap) {
                 return bitmap
             }
         }
@@ -157,56 +119,12 @@ internal class InAppResourceProvider(
         // Try disk
         memoryAccessObjectList.forEach {
             val bitmap = it.fetchDiskMemoryAndTransform(cacheKey, TRANSFORM_TO_BITMAP)
-            if (bitmap is Bitmap)
-            {
+            if (bitmap is Bitmap) {
                 return bitmap
             }
         }
 
         return null
-/*
-        // Try in memory
-        val imageMemoryCache = ctCaches.imageCache()
-        val pair = imageMemoryCache.get(cacheKey)
-
-        if (pair != null) {
-            return pair.first
-        }
-        val gifMemoryCache = ctCaches.gifCache()
-        val pairGifCache = gifMemoryCache.get(cacheKey)
-
-        if (pairGifCache != null) {
-            return bytesToBitmap(pairGifCache.first)
-        }
-
-        val fileMemoryCache = ctCaches.fileLruCache()
-        val fileInstancePair = fileMemoryCache.get(cacheKey)
-
-        if (fileInstancePair != null) {
-            return bytesToBitmap(fileInstancePair.first)
-        }*/
-
-       /* // Try disk
-        val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
-        val file = imageDiskCache.get(cacheKey)
-
-        val bitmapFromFile = fileToBitmap(file)
-        if (bitmapFromFile != null) {
-            logger?.verbose("returning cached image for url : $cacheKey")
-            return bitmapFromFile
-        }
-
-        val gifDiskCache = ctCaches.gifCacheDisk(dir = gifs)
-
-        val bitmapFromDiskGif = fileToBitmap(gifDiskCache.get(cacheKey))
-        if (bitmapFromDiskGif!=null)
-        {
-            return bitmapFromDiskGif
-        }
-
-        val fileDiskCache = ctCaches.fileCacheDisk(dir = allFileTypesDir)
-
-        return fileToBitmap(fileDiskCache.get(cacheKey))*/
     }
 
     fun cachedGif(cacheKey: String?): ByteArray? {
@@ -221,8 +139,7 @@ internal class InAppResourceProvider(
         // Try in memory
         memoryAccessObjectList.forEach {
             val bytes = it.fetchInMemoryAndTransform(cacheKey, TRANSFORM_TO_BYTEARRAY)
-            if (bytes is ByteArray)
-            {
+            if (bytes is ByteArray) {
                 return bytes
             }
         }
@@ -230,8 +147,7 @@ internal class InAppResourceProvider(
         // Try disk
         memoryAccessObjectList.forEach {
             val bytes = it.fetchDiskMemoryAndTransform(cacheKey, TRANSFORM_TO_BYTEARRAY)
-            if (bytes is ByteArray)
-            {
+            if (bytes is ByteArray) {
                 return bytes
             }
         }
@@ -252,8 +168,7 @@ internal class InAppResourceProvider(
         // Try in memory
         memoryAccessObjectList.forEach {
             val bytes = it.fetchInMemoryAndTransform(cacheKey, TRANSFORM_TO_BYTEARRAY)
-            if (bytes is ByteArray)
-            {
+            if (bytes is ByteArray) {
                 return bytes
             }
         }
@@ -261,8 +176,7 @@ internal class InAppResourceProvider(
         // Try disk
         memoryAccessObjectList.forEach {
             val bytes = it.fetchDiskMemoryAndTransform(cacheKey, TRANSFORM_TO_BYTEARRAY)
-            if (bytes is ByteArray)
-            {
+            if (bytes is ByteArray) {
                 return bytes
             }
         }
@@ -287,8 +201,7 @@ internal class InAppResourceProvider(
         // Try in memory
         memoryAccessObjectList.forEach {
             val file = it.fetchInMemoryAndTransform(cacheKey, TRANSFORM_TO_FILE)
-            if (file is File)
-            {
+            if (file is File) {
                 return file
             }
         }
@@ -296,8 +209,7 @@ internal class InAppResourceProvider(
         // Try disk
         memoryAccessObjectList.forEach {
             val file = it.fetchDiskMemoryAndTransform(cacheKey, TRANSFORM_TO_FILE)
-            if (file is File)
-            {
+            if (file is File) {
                 return file
             }
         }
@@ -338,6 +250,7 @@ internal class InAppResourceProvider(
                     bytes = downloadedBitmap.bytes!!
                 )
             }
+
             else -> {
                 logger?.verbose("There was a problem fetching data for bitmap")
                 return null
@@ -353,7 +266,7 @@ internal class InAppResourceProvider(
         }
     }
 
-    fun fetchInAppGif(url: String) : ByteArray? {
+    fun fetchInAppGif(url: String): ByteArray? {
         val cachedGif = cachedGif(url)
 
         if (cachedGif != null) {
@@ -376,10 +289,9 @@ internal class InAppResourceProvider(
                 null
             }
         }
-
     }
 
-    fun fetchFile(url: String) : ByteArray? {
+    fun fetchFile(url: String): ByteArray? {
         val cachedFile = cachedFileInBytes(url)
 
         if (cachedFile != null) {
@@ -402,7 +314,6 @@ internal class InAppResourceProvider(
                 null
             }
         }
-
     }
 
     fun deleteImage(cacheKey: String) {
@@ -416,20 +327,6 @@ internal class InAppResourceProvider(
         if (b) {
             logger?.verbose("successfully removed $cacheKey from file cache")
         }
-
-/*        val imageMemoryCache = ctCaches.imageCache()
-        val bitmap = imageMemoryCache.remove(cacheKey)
-
-        if (bitmap != null) {
-            logger?.verbose("successfully removed $cacheKey from memory cache")
-        }
-
-        val imageDiskCache = ctCaches.imageCacheDisk(dir = images)
-        val b = imageDiskCache.remove(cacheKey)
-
-        if (b) {
-            logger?.verbose("successfully removed $cacheKey from file cache")
-        }*/
     }
 
     fun deleteGif(cacheKey: String) {
@@ -443,20 +340,6 @@ internal class InAppResourceProvider(
         if (b) {
             logger?.verbose("successfully removed gif $cacheKey from file cache")
         }
-   /*
-        val imageMemoryCache = ctCaches.gifCache()
-        val bytes = imageMemoryCache.remove(cacheKey)
-
-        if (bytes != null) {
-            logger?.verbose("successfully removed gif $cacheKey from memory cache")
-        }
-
-        val imageDiskCache = ctCaches.gifCacheDisk(dir = gifs)
-        val b = imageDiskCache.remove(cacheKey)
-
-        if (b) {
-            logger?.verbose("successfully removed gif $cacheKey from file cache")
-        }*/
     }
 
     fun deleteFile(cacheKey: String) {
@@ -471,19 +354,5 @@ internal class InAppResourceProvider(
         if (b) {
             logger?.verbose("successfully removed file $cacheKey from file disk cache")
         }
-
-        /*val fileMemoryCache = ctCaches.fileLruCache()
-        val bytes = fileMemoryCache.remove(cacheKey)
-
-        if (bytes != null) {
-            logger?.verbose("successfully removed file $cacheKey from memory cache")
-        }
-
-        val fileDiskCache = ctCaches.fileCacheDisk(dir = allFileTypesDir)
-        val b = fileDiskCache.remove(cacheKey)
-
-        if (b) {
-            logger?.verbose("successfully removed file $cacheKey from file disk cache")
-        }*/
     }
 }

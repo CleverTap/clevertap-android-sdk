@@ -20,6 +20,7 @@ internal class FileResourcesRepoImpl(
     private val lock = Any()
 
     companion object {
+
         const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
         private const val DAYS_FOR_EXPIRY = 14
 
@@ -62,10 +63,10 @@ internal class FileResourcesRepoImpl(
         }
         val successBlock: (url: String) -> Unit = { url ->
             synchronized(lock) {
-            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-            fileStore.saveFileUrl(url = url, expiry = expiry)
-            val callbacks = downloadInProgressUrls.remove(url)
-            callbacks?.forEach { it(url, true) }
+                val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
+                fileStore.saveFileUrl(url = url, expiry = expiry)
+                val callbacks = downloadInProgressUrls.remove(url)
+                callbacks?.forEach { it(url, true) }
             }
         }
         val failureBlock: (String) -> Unit = { url ->
@@ -106,6 +107,7 @@ internal class FileResourcesRepoImpl(
             completionCallback(allSuccessful, urlStatusMap)
         }
     }
+
     /**
      * Checks all existing cached data and check if it is in valid urls, if not evict item from cache
      */
