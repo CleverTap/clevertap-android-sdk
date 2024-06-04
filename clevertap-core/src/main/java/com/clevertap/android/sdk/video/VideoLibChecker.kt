@@ -2,11 +2,26 @@ package com.clevertap.android.sdk.video
 
 import com.clevertap.android.sdk.Logger
 
-// todo check logs which get printed
+// todo check logs which get printed if methods fail detecing media stream libs
 internal object VideoLibChecker {
 
+    private val hasExoplayer = checkForExoPlayer()
+    private val hasMedia3 = checkForMedia3()
+
     @JvmField
-    val haveVideoPlayerSupport = checkForExoPlayer()
+    val haveVideoPlayerSupport = hasExoplayer || hasMedia3
+
+    val mediaLibType = when {
+        hasMedia3 -> {
+            VideoLibraryIntegrated.MEDIA3
+        }
+        hasExoplayer -> {
+            VideoLibraryIntegrated.EXOPLAYER
+        }
+        else -> {
+            VideoLibraryIntegrated.NONE
+        }
+    }
 
     /**
      * Method to check whether app has ExoPlayer dependencies
@@ -24,9 +39,7 @@ internal object VideoLibChecker {
             exoPlayerPresent = true
         } catch (t: Throwable) {
             Logger.d("ExoPlayer library files are missing!!!")
-            Logger.d(
-                "Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation."
-            )
+            Logger.d("Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.")
             if (className != null) {
                 Logger.d("ExoPlayer classes not found " + className.getName())
             } else {
@@ -47,9 +60,7 @@ internal object VideoLibChecker {
             media3ExoplayerPresent = true
         } catch (t: Throwable) {
             Logger.d("Media3 ExoPlayer library files are missing!!!")
-            Logger.d(
-                "Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation."
-            )
+            Logger.d("Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.")
             if (className != null) {
                 Logger.d("ExoPlayer classes not found " + className.getName())
             } else {
@@ -61,5 +72,5 @@ internal object VideoLibChecker {
 }
 
 enum class VideoLibraryIntegrated {
-    EXOPLAYER, MEDIA3
+    EXOPLAYER, MEDIA3, NONE
 }
