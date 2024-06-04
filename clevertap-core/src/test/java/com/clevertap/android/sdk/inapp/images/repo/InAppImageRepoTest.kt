@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy
+import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
@@ -11,7 +11,7 @@ import org.junit.Test
 
 class InAppImageRepoTest {
 
-    private val inAppImageCleanupStrategy = mockk<InAppCleanupStrategy>(relaxed = true)
+    private val inAppImageCleanupStrategy = mockk<FileCleanupStrategy>(relaxed = true)
     private val preloaderStrategy = mockk<FilePreloaderStrategy>(relaxed = true)
     private val inAppAssetStore = mockk<InAppAssetsStore>(relaxed = true)
     private val legacyInAppStore = mockk<LegacyInAppStore>(relaxed = true)
@@ -68,7 +68,7 @@ class InAppImageRepoTest {
         mFileResourcesRepoImpl.cleanupStaleImages(responseUrls)
 
         // assert
-        verify { inAppImageCleanupStrategy.clearAssets(expiredUrls.toList(), any()) }
+        verify { inAppImageCleanupStrategy.clearInAppAssets(expiredUrls.toList(), any()) }
         verify { legacyInAppStore.updateAssetCleanupTs(any()) }
     }
 }

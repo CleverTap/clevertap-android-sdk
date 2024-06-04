@@ -7,12 +7,12 @@ import io.mockk.verify
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class InAppCleanupStrategyExecutorsTest {
+class FileCleanupStrategyExecutorsTest {
 
     private val inAppResourceProvider = mockk<InAppResourceProvider>(relaxed = true)
     private val executors = MockCTExecutors()
 
-    private val cleanupStrategy = InAppCleanupStrategyExecutors(
+    private val cleanupStrategy = FileCleanupStrategyExecutors(
         inAppResourceProvider = inAppResourceProvider,
         executor = executors
     )
@@ -24,7 +24,7 @@ class InAppCleanupStrategyExecutorsTest {
         val successUrls = mutableListOf<String>()
 
         // invoke method
-        cleanupStrategy.clearAssets(urls) { url ->
+        cleanupStrategy.clearInAppAssets(urls) { url ->
             successUrls.add(url)
         }
 

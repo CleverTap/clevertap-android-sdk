@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy
+import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
@@ -8,7 +9,7 @@ import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import java.util.concurrent.ConcurrentHashMap
 
 internal class FileResourcesRepoImpl(
-    override val cleanupStrategy: InAppCleanupStrategy,
+    override val cleanupStrategy: FileCleanupStrategy,
     override val preloaderStrategy: FilePreloaderStrategy,
     private val inAppAssetsStore: InAppAssetsStore,
     private val fileStore: FileStore,
@@ -48,6 +49,7 @@ internal class FileResourcesRepoImpl(
         preloaderStrategy.preloadGifs(urls, successBlock)
     }
 
+    @WorkerThread
     override fun fetchAllFiles(
         urls: List<String>,
         completionCallback: (status: Boolean, urlStatusMap: Map<String, Boolean>) -> Unit
@@ -121,7 +123,15 @@ internal class FileResourcesRepoImpl(
     }
 
     override fun cleanupStaleFiles(validUrls: List<String>) {
-        TODO("Not yet implemented")
+        val currentTime = System.currentTimeMillis()
+
+        if (currentTime - legacyInAppsStore.lastCleanupTsForFiles() < EXPIRY_OFFSET_MILLIS) {
+            // limiting cleanup once per 14 days
+            return
+        }
+
+        cleanupStaleFilesNow(validUrls, currentTime)
+        legacyInAppsStore.updateFileCleanupTs(currentTime)
     }
 
     @JvmOverloads
@@ -144,6 +154,25 @@ internal class FileResourcesRepoImpl(
     }
 
     @JvmOverloads
+    fun cleanupStaleFilesNow(
+        validUrls: List<String> = emptyList(),
+        currentTime: Long = System.currentTimeMillis()
+    ) {
+        val valid = validUrls.associateWith { it }
+
+        val allFileUrls = fileStore.getAllFileUrls()
+
+        val cleanupFileUrls = allFileUrls
+            .toMutableSet()
+            .filter { key ->
+                valid.contains(key).not()
+                        && (currentTime > fileStore.expiryForUrl(key))
+            }
+
+        cleanupAllFiles(cleanupFileUrls)
+    }
+
+    @JvmOverloads
     fun cleanupAllImages(
         cleanupUrls: List<String> = inAppAssetsStore.getAllAssetUrls().toList()
     ) {
@@ -151,6 +180,17 @@ internal class FileResourcesRepoImpl(
             inAppAssetsStore.clearAssetUrl(url)
         }
 
-        cleanupStrategy.clearAssets(cleanupUrls, successBlock)
+        cleanupStrategy.clearInAppAssets(cleanupUrls, successBlock)
+    }
+
+    @JvmOverloads
+    fun cleanupAllFiles(
+        cleanupUrls: List<String> = fileStore.getAllFileUrls().toList()
+    ) {
+        val successBlock: (url: String) -> Unit = { url ->
+            fileStore.clearFileUrl(url)
+        }
+
+        cleanupStrategy.clearFileAssets(cleanupUrls, successBlock)
     }
 }

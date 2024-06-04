@@ -9,8 +9,8 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
+import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy;
+import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyExecutors;
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderExecutors;
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
@@ -132,7 +132,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             //InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
 
             FilePreloaderStrategy preloadStrategy = new FilePreloaderExecutors(inAppResourceProvider, logger);
-            InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
+            FileCleanupStrategy cleanupStrategy = new FileCleanupStrategyExecutors(inAppResourceProvider);
 
             FileResourcesRepoImpl assetRepo = new FileResourcesRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore, fileStore, legacyInAppStore);
             assetRepo.fetchAllImages(res.getPreloadImages());

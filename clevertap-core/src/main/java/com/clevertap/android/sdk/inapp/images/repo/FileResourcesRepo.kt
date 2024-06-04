@@ -1,11 +1,11 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy
+import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 
 internal interface FileResourcesRepo {
 
-    val cleanupStrategy: InAppCleanupStrategy
+    val cleanupStrategy: FileCleanupStrategy
     val preloaderStrategy: FilePreloaderStrategy
 
     fun fetchAllImages(urls: List<String>)

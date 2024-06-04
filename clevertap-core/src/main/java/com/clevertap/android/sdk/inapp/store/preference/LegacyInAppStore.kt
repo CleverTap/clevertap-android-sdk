@@ -19,6 +19,7 @@ class LegacyInAppStore(private val ctPreference: ICTPreference, accountId: Strin
     companion object {
 
         private const val ASSETS_CLEANUP_TS_KEY = "last_assets_cleanup"
+        private const val FILES_CLEANUP_TS_KEY = "last_files_cleanup"
     }
 
     // Key for storing and retrieving legacy In-App messages
@@ -58,7 +59,15 @@ class LegacyInAppStore(private val ctPreference: ICTPreference, accountId: Strin
         ctPreference.writeLong(ASSETS_CLEANUP_TS_KEY, ts)
     }
 
+    fun updateFileCleanupTs(ts: Long) {
+        ctPreference.writeLong(FILES_CLEANUP_TS_KEY, ts)
+    }
+
     fun lastCleanupTs(): Long {
         return ctPreference.readLong(ASSETS_CLEANUP_TS_KEY, 0)
+    }
+
+    fun lastCleanupTsForFiles(): Long {
+        return ctPreference.readLong(FILES_CLEANUP_TS_KEY, 0)
     }
 }

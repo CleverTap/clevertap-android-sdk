@@ -7,14 +7,14 @@ import org.junit.Test
 import org.mockito.Mockito
 import kotlin.test.assertEquals
 
-class InAppCleanupStrategyCoroutineTest {
+class FileCleanupStrategyCoroutineTest {
 
     private val inAppResourceProvider = Mockito.mock(InAppResourceProvider::class.java)
 
     private val testScheduler = TestCoroutineScheduler()
     private val dispatchers = TestDispatchers(testScheduler)
 
-    private val cleanupStrategy = InAppCleanupStrategyCoroutine(
+    private val cleanupStrategy = FileCleanupStrategyCoroutine(
         inAppResourceProvider = inAppResourceProvider,
         dispatchers = dispatchers
     )
@@ -26,7 +26,7 @@ class InAppCleanupStrategyCoroutineTest {
         val successUrls = mutableListOf<String>()
 
         // invoke method
-        cleanupStrategy.clearAssets(urls) { url ->
+        cleanupStrategy.clearInAppAssets(urls) { url ->
             successUrls.add(url)
         }
 

@@ -43,8 +43,8 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
+import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy;
+import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyExecutors;
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderExecutors;
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
@@ -3530,7 +3530,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-        InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
+        FileCleanupStrategy cleanupStrategy = new FileCleanupStrategyExecutors(inAppResourceProvider);
         FilePreloaderStrategy preloadStrategy = new FilePreloaderExecutors(
                 inAppResourceProvider,
                 logger

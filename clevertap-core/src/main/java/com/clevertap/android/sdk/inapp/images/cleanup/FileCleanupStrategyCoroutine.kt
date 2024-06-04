@@ -10,13 +10,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 
-internal class InAppCleanupStrategyCoroutine @JvmOverloads constructor(
+internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
     override val inAppResourceProvider: InAppResourceProvider,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers()
-) : InAppCleanupStrategy {
+) : FileCleanupStrategy {
 
     private var jobs: MutableList<Job> = mutableListOf()
-    override fun clearAssets(urls: List<String>, successBlock: (url: String) -> Unit) {
+    override fun clearInAppAssets(urls: List<String>, successBlock: (url: String) -> Unit) {
         val job = CoroutineScope(dispatchers.io()).launch {
 
             val asyncTasks = mutableListOf<Deferred<Unit>>()
@@ -24,6 +24,22 @@ internal class InAppCleanupStrategyCoroutine @JvmOverloads constructor(
                 val deferred: Deferred<Unit> = async {
                     inAppResourceProvider.deleteImage(url)
                     inAppResourceProvider.deleteGif(url)
+                    successBlock.invoke(url)
+                }
+                asyncTasks.add(deferred)
+            }
+            asyncTasks.awaitAll()
+        }
+        jobs.add(job)
+    }
+
+    override fun clearFileAssets(urls: List<String>, successBlock: (url: String) -> Unit) {
+        val job = CoroutineScope(dispatchers.io()).launch {
+
+            val asyncTasks = mutableListOf<Deferred<Unit>>()
+            for (url in urls) {
+                val deferred: Deferred<Unit> = async {
+                    inAppResourceProvider.deleteFile(url)
                     successBlock.invoke(url)
                 }
                 asyncTasks.add(deferred)
