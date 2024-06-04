@@ -42,12 +42,15 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
         successBlock: (url: String) -> Unit,
         failureBlock: (url: String) -> Unit
     ) {
-        TODO("Not yet implemented")
+        preloadAssets(urls, successBlock,failureBlock) { url ->
+            inAppImageProvider.fetchFile(url)
+        }
     }
 
     private fun preloadAssets(
         urls: List<String>,
         successBlock: (url: String) -> Unit,
+        failureBlock: (url: String) -> Unit = {},
         assetBlock: (url: String) -> Any?
     ) {
         urls.forEach { url ->
@@ -58,6 +61,8 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
                     val fetchInAppImage = assetBlock(url)
                     if (fetchInAppImage != null) {
                         successBlock.invoke(url)
+                    } else {
+                        failureBlock.invoke(url)
                     }
                 }
 

@@ -29,7 +29,7 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         successBlock: (url: String) -> Unit,
         failureBlock: (url: String) -> Unit
     ) {
-        preloadAssets(urls, successBlock) { url ->
+        preloadAssets(urls, successBlock,failureBlock) { url ->
             inAppImageProvider.fetchFile(url)
         }
     }
