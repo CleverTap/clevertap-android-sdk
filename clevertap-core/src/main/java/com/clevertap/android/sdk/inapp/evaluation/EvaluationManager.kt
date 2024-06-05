@@ -108,7 +108,7 @@ class EvaluationManager constructor(
      * additional properties associated with the event, the user's location and the profile attribute name.
      * The key of an eventProperty is the profile attribute name that has been invoked in the profile event.
      *
-     * This method creates an [EventAdapter] instance representing the specified event with the provided details,
+     * This method creates an [EventAdapter] instance representing each user attribute with the provided details,
      * evaluates the event against server-side, and then proceeds to evaluate it client-side.
      *
      * @param eventProperties Additional properties associated with the event, provided as a map.
@@ -208,7 +208,7 @@ class EvaluationManager constructor(
     /**
      * Evaluates server side in-app notifications based on the provided event.
      *
-     * This method retrieves server-side in-app notifications metadata from the storage, evaluates them against the provided list of events (multiple events in the case of profile events),
+     * This method retrieves server-side in-app notifications metadata from the storage, evaluates them against the provided list of events (multiple events in the case of profile event),
      * and updates the list of evaluated server-side campaign IDs. The updated list is then saved back to storage.
      *
      * @param events The [List<EventAdapter>] representing the list of events triggering the server-side in-app notification evaluation.
@@ -245,13 +245,13 @@ class EvaluationManager constructor(
     /**
      * Evaluates client side in-app notifications based on the provided event.
      *
-     * This method retrieves client-side in-app notifications from the storage, evaluates them against the provided list of events (multiple events in the case of profile events).
+     * This method retrieves client-side in-app notifications from the storage, evaluates them against the provided list of events (multiple events in the case of profile event).
      * The resulting eligible in-app notifications are accumulated and sorted by priority, and the method handles the suppression
      * and updating of TTLs (Time to Live).
      *
      * @param events The [List<EventAdapter>] representing the list of events triggering the client-side in-app notification evaluation
      *
-     * @return A JSONArray containing the evaluated and prioritized in-app notifications for client-side rendering.
+     * @return A JSONArray containing the evaluated and single prioritized in-app notification for client-side rendering.
      *         This array includes in-app notifications that meet the criteria for display.
      */
     @VisibleForTesting

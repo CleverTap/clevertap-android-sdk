@@ -2730,6 +2730,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         CryptHandler cryptHandler = coreState.getCryptHandler();
         StoreProvider storeProvider = StoreProvider.getInstance();
 
+        // Inflate the local profile here as eviceId is required
         coreState.getLocalDataStore().inflateLocalProfileAsync(context);
 
         if (storeRegistry.getInAppStore() == null) {

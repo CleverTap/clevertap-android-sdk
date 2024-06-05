@@ -215,7 +215,7 @@ internal object CryptUtils {
         cryptHandler: CryptHandler,
         dbAdapter: DBAdapter
     ): Int {
-        config.logger.verbose(config.accountId, "Migrating encryption level for user profile in DB")
+        config.logger.verbose(config.accountId, "Migrating encryption level for user profiles in DB")
         val profiles = dbAdapter.fetchUserProfilesByAccountId(config.accountId)
 
         var migrationStatus = ENCRYPTION_FLAG_DB_SUCCESS
@@ -245,7 +245,7 @@ internal object CryptUtils {
                 if (dbAdapter.storeUserProfile(config.accountId, profileIterator.key, profile) <= -1L)
                     migrationStatus = ENCRYPTION_FLAG_FAIL
             } catch (e: Exception) {
-                config.logger.verbose(config.accountId, "Error migrating local DB profile: $e")
+                config.logger.verbose(config.accountId, "Error migrating local DB profile for $profileIterator.key: $e")
                 migrationStatus = ENCRYPTION_FLAG_FAIL
             }
         }

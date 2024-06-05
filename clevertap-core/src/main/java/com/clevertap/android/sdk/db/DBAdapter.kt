@@ -132,7 +132,8 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     }
 
     /**
-     * Retrieves all user profiles based on the accountId
+     * Retrieves all user profiles based on the accountId.
+     * Returns an emptyMap if no corresponding profile is found
      *
      * @param accountId String userId
      * @return Map representing the fetched profile, keys of this map will be the deviceIDs and the values will be the corresponding profiles
@@ -174,7 +175,8 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     }
 
     /**
-     * Retrieves an user profile based on the accountId and deviceId
+     * Retrieves a user profile based on the accountId and deviceId
+     * Returns null if no profile is found
      *
      * @param accountId String userId
      * @param deviceId String deviceId
@@ -331,7 +333,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     }
 
     /**
-     * removes all the user profiles with account id from the db.
+     * removes all the user profiles with given account id from the db.
      *
      * @param id the accountId for which the profiles are to be removed
      */
