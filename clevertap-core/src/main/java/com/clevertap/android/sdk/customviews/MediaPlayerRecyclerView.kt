@@ -12,13 +12,23 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder
+import com.clevertap.android.sdk.video.InboxVideoPlayerHandle
+import com.clevertap.android.sdk.video.VideoLibChecker
+import com.clevertap.android.sdk.video.VideoLibraryIntegrated
 import com.clevertap.android.sdk.video.inbox.ExoplayerHandle
+import com.clevertap.android.sdk.video.inbox.Media3Handle
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 class MediaPlayerRecyclerView : RecyclerView {
 
-    private var playingHolder: CTInboxBaseMessageViewHolder? = null
-    private val handle = ExoplayerHandle()
+    private val handle : InboxVideoPlayerHandle = when (VideoLibChecker.mediaLibType) {
+        VideoLibraryIntegrated.MEDIA3 -> {
+            Media3Handle()
+        }
+        else -> {
+            ExoplayerHandle()
+        }
+    }
     private val rect = Rect()
     private val onScrollListener: OnScrollListener = object : OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -39,6 +49,8 @@ class MediaPlayerRecyclerView : RecyclerView {
                 }
             }
         }
+
+    private var playingHolder: CTInboxBaseMessageViewHolder? = null
 
     /**
      * {@inheritDoc}
