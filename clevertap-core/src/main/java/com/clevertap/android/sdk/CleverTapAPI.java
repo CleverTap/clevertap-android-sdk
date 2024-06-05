@@ -3566,4 +3566,21 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
         return inAppResourceProvider.isFileCached(url);
     }
+
+    /**
+     * Retrieves the absolute file path associated with the given url.
+     *
+     * This method takes a url as a String parameter and returns the corresponding
+     * absolute file path as a String. The url parameter must not be null.
+     *
+     * @param url the url for which the file path is to be retrieved.
+     *            Must be a non-null String.
+     * @return the absolute file path corresponding to the given URL or null if file doesn't exist
+     */
+    @Nullable
+    public String getFilePathForUrl(@NonNull String url){
+        Logger logger = coreState.getConfig().getLogger();
+        InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
+        return inAppResourceProvider.cachedFilePath(url);
+    }
 }
