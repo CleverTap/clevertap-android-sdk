@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.images.repo
 
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
+import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import io.mockk.every
@@ -15,11 +16,13 @@ class InAppImageRepoTest {
     private val preloaderStrategy = mockk<FilePreloaderStrategy>(relaxed = true)
     private val inAppAssetStore = mockk<InAppAssetsStore>(relaxed = true)
     private val legacyInAppStore = mockk<LegacyInAppStore>(relaxed = true)
+    private val fileStore = mockk<FileStore>(relaxed = true)
 
     private val mFileResourcesRepoImpl = FileResourcesRepoImpl(
         cleanupStrategy = inAppImageCleanupStrategy,
         preloaderStrategy = preloaderStrategy,
         inAppAssetsStore = inAppAssetStore,
+        fileStore = fileStore,
         legacyInAppsStore = legacyInAppStore
     )
 
