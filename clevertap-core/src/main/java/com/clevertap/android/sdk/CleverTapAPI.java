@@ -3527,4 +3527,37 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             impl.cleanupAllImages();
         }
     }
+
+    /**
+     * Deletes all types of files which are preloaded for SDK features like custom in-app templates, app functions and
+     * variables etc.
+     *
+     * @param expiredOnly to clear only files which will not be needed further for SDK features like custom in-app
+     *                    templates, app functions and variables etc.
+     */
+    public void clearFileResources(boolean expiredOnly) {
+
+        Logger logger = coreState.getConfig().getLogger();
+
+        StoreRegistry storeRegistry = coreState.getStoreRegistry();
+        if (storeRegistry == null) {
+            logger.info(
+                    "There was a problem clearing file resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
+        if (impl == null) {
+            logger.info(
+                    "There was a problem clearing file resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        if (expiredOnly) {
+            impl.cleanupStaleFilesNow();
+        } else {
+            impl.cleanupAllFiles();
+        }
+
+    }
 }
