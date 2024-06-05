@@ -42,17 +42,10 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
-import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy;
-import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
-import com.clevertap.android.sdk.inapp.store.preference.FileStore;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
-import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -3516,33 +3509,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
         StoreRegistry storeRegistry = coreState.getStoreRegistry();
         if (storeRegistry == null) {
-            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+            logger.info(
+                    "There was a problem clearing resources because instance is not completely initialised, please try again after some time");
             return;
         }
 
-        InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
-        FileStore fileStore = storeRegistry.getFilesStore();
-        LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
-
-        if (inAppAssetStore == null || legacyInAppStore == null || fileStore == null) {
-            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
+        if (impl == null) {
+            logger.info(
+                    "There was a problem clearing resources because instance is not completely initialised, please try again after some time");
             return;
         }
 
-        InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-        FileCleanupStrategy cleanupStrategy = new FileCleanupStrategyExecutors(inAppResourceProvider);
-        FilePreloaderStrategy preloadStrategy = new FilePreloaderExecutors(
-                inAppResourceProvider,
-                logger
-        );
-
-        FileResourcesRepoImpl impl = new FileResourcesRepoImpl(
-                cleanupStrategy,
-                preloadStrategy,
-                inAppAssetStore,
-                fileStore,
-                legacyInAppStore
-        );
         if (expiredOnly) {
             impl.cleanupStaleImagesNow();
         } else {

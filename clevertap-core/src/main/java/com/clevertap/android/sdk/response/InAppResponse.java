@@ -8,11 +8,7 @@ import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
-import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy;
-import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.FileStore;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
@@ -75,7 +71,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
             final FileStore fileStore = storeRegistry.getFilesStore();
             final LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
 
-            if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null) {
+            if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null
+                    || fileStore == null) {
                 logger.verbose(config.getAccountId(), "Stores are not initialised, ignoring inapps!!!!");
                 return;
             }
@@ -126,24 +123,18 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 inAppStore.storeServerSideInAppsMetaData(ssInApps.getSecond());
             }
 
-            InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-
-            //InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderCoroutine(inAppResourceProvider, logger);
-            //InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyCoroutine(inAppResourceProvider);
-
-            FilePreloaderStrategy preloadStrategy = new FilePreloaderExecutors(inAppResourceProvider, logger);
-            FileCleanupStrategy cleanupStrategy = new FileCleanupStrategyExecutors(inAppResourceProvider);
-
-            FileResourcesRepoImpl assetRepo = new FileResourcesRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore, fileStore, legacyInAppStore);
-            assetRepo.fetchAllImages(res.getPreloadImages());
-            assetRepo.fetchAllGifs(res.getPreloadGifs());
-            // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
-
-            if (isFullResponse) {
-                logger.verbose(config.getAccountId(), "Handling cache eviction");
-                assetRepo.cleanupStaleImages(res.getPreloadAssets());
-            } else {
-                logger.verbose(config.getAccountId(), "Ignoring cache eviction");
+            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger,
+                    storeRegistry);
+            if (assetRepo != null) {
+                assetRepo.fetchAllImages(res.getPreloadImages());
+                assetRepo.fetchAllGifs(res.getPreloadGifs());
+                // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
+                if (isFullResponse) {
+                    logger.verbose(config.getAccountId(), "Handling cache eviction");
+                    assetRepo.cleanupStaleImages(res.getPreloadAssets());
+                } else {
+                    logger.verbose(config.getAccountId(), "Ignoring cache eviction");
+                }
             }
 
             String mode = res.getInAppMode();

@@ -16,6 +16,7 @@ internal class FileResourcesRepoImpl(
     private val legacyInAppsStore: LegacyInAppStore
 ) : FileResourcesRepo {
 
+    //if we want to call fetchAll() API using multiple instances of this class then downloadInProgressUrls must be static
     private val downloadInProgressUrls = ConcurrentHashMap<String, MutableList<(String, Boolean) -> Unit>>()
     private val lock = Any()
 
