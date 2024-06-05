@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.AbsListView
 import androidx.annotation.RestrictTo
 import androidx.core.content.res.ResourcesCompat
+import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.clevertap.android.sdk.R
@@ -18,6 +19,7 @@ import com.clevertap.android.sdk.video.VideoLibraryIntegrated
 import com.clevertap.android.sdk.video.inbox.ExoplayerHandle
 import com.clevertap.android.sdk.video.inbox.Media3Handle
 
+@UnstableApi
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 class MediaPlayerRecyclerView : RecyclerView {
 
