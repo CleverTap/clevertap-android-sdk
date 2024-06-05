@@ -31,8 +31,8 @@ class Media3Handle: InboxVideoPlayerHandle {
 
     override fun initExoplayer(
         context: Context,
-        buffering: () -> Void,
-        playerReady: () -> Void,
+        buffering: () -> Unit,
+        playerReady: () -> Unit,
     ) {
         if (player != null) {
             return
@@ -92,7 +92,7 @@ class Media3Handle: InboxVideoPlayerHandle {
 
     override fun initPlayerView(
         context: Context,
-        artworkAsset: () -> Drawable,
+        artworkAsset: () -> Drawable?,
     ) {
         if (videoSurfaceView != null) {
             return
