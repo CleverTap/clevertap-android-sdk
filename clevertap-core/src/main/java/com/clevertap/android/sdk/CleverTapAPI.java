@@ -42,6 +42,7 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
@@ -3558,6 +3559,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         } else {
             impl.cleanupAllFiles();
         }
+    }
 
+    public boolean isFileExistsForUrl(@NonNull String url){
+        Logger logger = coreState.getConfig().getLogger();
+        InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
+        return inAppResourceProvider.isFileCached(url);
     }
 }
