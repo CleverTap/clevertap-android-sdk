@@ -32,7 +32,12 @@ import androidx.core.content.res.ResourcesCompat;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.gif.GifImageView;
+import com.clevertap.android.sdk.video.InAppVideoPlayerHandle;
+import com.clevertap.android.sdk.video.VideoLibChecker;
+import com.clevertap.android.sdk.video.VideoLibraryIntegrated;
 import com.clevertap.android.sdk.video.inapps.ExoplayerHandle;
+import com.clevertap.android.sdk.video.inapps.Media3Handle;
+
 import java.util.ArrayList;
 
 public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFragment {
@@ -45,13 +50,23 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
 
     private GifImageView gifImageView;
 
-    private ExoplayerHandle handle = new ExoplayerHandle();
+    private InAppVideoPlayerHandle handle;
 
     private RelativeLayout relativeLayout;
 
     private FrameLayout videoFrameLayout;
 
     private ViewGroup.LayoutParams imageViewLayoutParams;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (VideoLibChecker.INSTANCE.mediaLibType == VideoLibraryIntegrated.MEDIA3) {
+            handle = new Media3Handle();
+        } else {
+            handle = new ExoplayerHandle();
+        }
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable

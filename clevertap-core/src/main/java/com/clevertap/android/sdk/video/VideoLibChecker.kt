@@ -11,6 +11,7 @@ internal object VideoLibChecker {
     @JvmField
     val haveVideoPlayerSupport = hasExoplayer || hasMedia3
 
+    @JvmField
     val mediaLibType = when {
         hasMedia3 -> {
             VideoLibraryIntegrated.MEDIA3
