@@ -34,8 +34,8 @@ class ExoplayerHandle : InboxVideoPlayerHandle {
 
     override fun initExoplayer(
         context: Context,
-        buffering: () -> Void,
-        playerReady: () -> Void,
+        buffering: () -> Unit,
+        playerReady: () -> Unit,
     ) {
         if (player != null) {
             return
@@ -95,7 +95,7 @@ class ExoplayerHandle : InboxVideoPlayerHandle {
 
     override fun initPlayerView(
         context: Context,
-        artworkAsset: () -> Drawable,
+        artworkAsset: () -> Drawable?,
     ) {
         if (videoSurfaceView != null) {
             return

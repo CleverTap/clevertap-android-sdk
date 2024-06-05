@@ -7,8 +7,8 @@ import android.view.View
 interface InboxVideoPlayerHandle {
     fun initExoplayer(
         context: Context,
-        buffering: () -> Void,
-        playerReady: () -> Void,
+        buffering: () -> Unit,
+        playerReady: () -> Unit,
     )
 
     fun videoSurface(): View
@@ -16,7 +16,7 @@ interface InboxVideoPlayerHandle {
     fun pause()
     fun initPlayerView(
         context: Context,
-        artworkAsset: () -> Drawable,
+        artworkAsset: () -> Drawable?,
     )
 
     fun playerVolume(): Float

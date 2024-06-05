@@ -1,227 +1,218 @@
-package com.clevertap.android.sdk.customviews;
-import android.content.Context;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.util.AttributeSet;
-import android.view.View;
-import android.widget.AbsListView;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
-import androidx.core.content.res.ResourcesCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+package com.clevertap.android.sdk.customviews
 
-import com.clevertap.android.sdk.R;
-import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder;
+import android.content.Context
+import android.graphics.Rect
+import android.graphics.drawable.Drawable
+import android.util.AttributeSet
+import android.view.View
+import android.widget.AbsListView
+import androidx.annotation.RestrictTo
+import androidx.core.content.res.ResourcesCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder
+import com.clevertap.android.sdk.video.inbox.ExoplayerHandle
 
-import com.clevertap.android.sdk.video.inbox.ExoplayerHandle;
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+class MediaPlayerRecyclerView : RecyclerView {
 
-import kotlin.jvm.functions.Function0;
-
-@RestrictTo(Scope.LIBRARY)
-public class MediaPlayerRecyclerView extends RecyclerView {
-
-    private CTInboxBaseMessageViewHolder playingHolder;
-
-    private final ExoplayerHandle handle = new ExoplayerHandle();
-
-    private final Rect rect = new Rect();
-
-    private final OnScrollListener onScrollListener = new OnScrollListener() {
-        @Override
-        public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-            super.onScrollStateChanged(recyclerView, newState);
+    private var playingHolder: CTInboxBaseMessageViewHolder? = null
+    private val handle = ExoplayerHandle()
+    private val rect = Rect()
+    private val onScrollListener: OnScrollListener = object : OnScrollListener() {
+        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+            super.onScrollStateChanged(recyclerView, newState)
             if (newState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
-                playVideo();
+                playVideo()
             }
         }
 
-        @Override
-        public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-            super.onScrolled(recyclerView, dx, dy);
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
         }
-    };
-    private final OnChildAttachStateChangeListener onChildAttachStateChangeListener = new OnChildAttachStateChangeListener() {
-        @Override
-        public void onChildViewAttachedToWindow(@NonNull View view) {
-        }
-
-        @Override
-        public void onChildViewDetachedFromWindow(@NonNull View view) {
-            if (playingHolder != null && playingHolder.itemView.equals(view)) {
-                stop();
+    }
+    private val onChildAttachStateChangeListener: OnChildAttachStateChangeListener =
+        object : OnChildAttachStateChangeListener {
+            override fun onChildViewAttachedToWindow(view: View) {}
+            override fun onChildViewDetachedFromWindow(view: View) {
+                playingHolder?.let { ph ->
+                    if (ph.itemView == view) {
+                        stop()
+                    }
+                }
             }
         }
-    };;
 
     /**
      * {@inheritDoc}
      */
-    public MediaPlayerRecyclerView(Context context) {
-        super(context);
-        initialize();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public MediaPlayerRecyclerView(
-            Context context,
-            AttributeSet attrs
-    ) {
-        super(context, attrs);
-        initialize();
+    constructor(context: Context) : super(context) {
+        initialize()
     }
 
     /**
      * {@inheritDoc}
      */
-    public MediaPlayerRecyclerView(
-            Context context,
-            AttributeSet attrs,
-            int defStyleAttr
-    ) {
-        super(context, attrs, defStyleAttr);
-        initialize();
+    constructor(
+        context: Context,
+        attrs: AttributeSet
+    ) : super(context, attrs) {
+        initialize()
     }
 
-    public void onPausePlayer() {
-        handle.setPlayWhenReady(false);
+    /**
+     * {@inheritDoc}
+     */
+    constructor(
+        context: Context,
+        attrs: AttributeSet,
+        defStyleAttr: Int
+    ) : super(context, attrs, defStyleAttr) {
+        initialize()
     }
 
-    public void onRestartPlayer() {
-        initialize();
-        playVideo();
+    fun onPausePlayer() {
+        handle.setPlayWhenReady(false)
     }
 
-    public void playVideo() {
-        CTInboxBaseMessageViewHolder targetHolder = findBestVisibleMediaHolder();
+    fun onRestartPlayer() {
+        initialize()
+        playVideo()
+    }
+
+    fun playVideo() {
+        val targetHolder = findBestVisibleMediaHolder()
 
         // Case 1 : No viewholder has video item in it
         if (targetHolder == null) {
-            removeVideoView();
-            return;
+            removeVideoView()
+            return
         }
 
         // Case 2 : Found viewholder is same with surface and player attached
-        if (playingHolder != null && playingHolder.itemView.equals(targetHolder.itemView)) {
-            boolean measured = playingHolder.itemView.getGlobalVisibleRect(rect);
-            int visibleHeight = measured ? rect.height() : 0;
-            boolean play = visibleHeight >= 400;
-            if (play && playingHolder.shouldAutoPlay()) {
-                handle.setPlayWhenReady(true);
+        playingHolder?.let { ph ->
+            if (ph.itemView == targetHolder.itemView) {
+                val measured = ph.itemView.getGlobalVisibleRect(rect)
+                val visibleHeight = if (measured) {
+                    rect.height()
+                } else {
+                    0
+                }
+                val play = visibleHeight >= 400
+                if (play && ph.shouldAutoPlay()) {
+                    handle.setPlayWhenReady(true)
+                } else {
+                    handle.setPlayWhenReady(false)
+                }
+                return
             } else {
-                handle.setPlayWhenReady(false);
+                // no-op
             }
-            return;
         }
 
         // Case 3: Video has to be played in different view holder so we remove and reattch to correct one
-        removeVideoView();
-        float currentVolume = handle.playerVolume();
-        boolean addedVideo = targetHolder.addMediaPlayer(
-                currentVolume,
-                () -> {
-                    handle.handleMute();
-                    return handle.playerVolume();
-                },
-                (uri, isMediaAudio, isMediaVideo) -> {
-                    handle.startPlaying(
-                            getContext(),
-                            uri,
-                            isMediaAudio,
-                            isMediaVideo
-                    );
-                    return null;
-                },
-                handle.videoSurface()
-        );
+        removeVideoView()
+        val currentVolume = handle.playerVolume()
+        val addedVideo = targetHolder.addMediaPlayer(
+            currentVolume,
+            {
+                handle.handleMute()
+                handle.playerVolume()
+            },
+            { uri: String, isMediaAudio: Boolean, isMediaVideo: Boolean ->
+                handle.startPlaying(
+                    ctx = context,
+                    uriString = uri,
+                    isMediaAudio = isMediaAudio,
+                    isMediaVideo = isMediaVideo
+                )
+                null
+            },
+            handle.videoSurface()
+        )
         if (addedVideo) {
-            playingHolder = targetHolder;
+            playingHolder = targetHolder
         }
     }
 
-    public void stop() {
+    fun stop() {
         /*if (player != null) {
             player.stop();
         }*/
-        handle.pause();
-        playingHolder = null;
+        handle.pause()
+        playingHolder = null
     }
 
-    private CTInboxBaseMessageViewHolder findBestVisibleMediaHolder() {
-        CTInboxBaseMessageViewHolder bestHolder = null;
+    private fun findBestVisibleMediaHolder(): CTInboxBaseMessageViewHolder? {
+        var bestHolder: CTInboxBaseMessageViewHolder? = null
+        val startPosition = (layoutManager as LinearLayoutManager?)?.findFirstVisibleItemPosition() ?: 0
+        val endPosition = (layoutManager as LinearLayoutManager?)?.findLastVisibleItemPosition() ?: 0
+        var bestHeight = 0
+        for (i in startPosition..endPosition) {
+            val pos = i - startPosition
+            val child = getChildAt(pos) ?: continue
 
-        //noinspection ConstantConditions
-        int startPosition = ((LinearLayoutManager) getLayoutManager()).findFirstVisibleItemPosition();
-        int endPosition = ((LinearLayoutManager) getLayoutManager()).findLastVisibleItemPosition();
-
-        int bestHeight = 0;
-        for (int i = startPosition; i <= endPosition; i++) {
-            int pos = i - startPosition;
-            View child = getChildAt(pos);
-            if (child == null) {
-                continue;
-            }
-            CTInboxBaseMessageViewHolder holder = (CTInboxBaseMessageViewHolder) child.getTag();
+            val holder = child.tag as? CTInboxBaseMessageViewHolder
             if (holder != null) {
                 if (!holder.needsMediaPlayer()) {
-                    continue;
+                    continue
                 }
-                boolean measured = holder.itemView.getGlobalVisibleRect(rect);
-                int height = measured ? rect.height() : 0;
+                val measured = holder.itemView.getGlobalVisibleRect(rect)
+                val height = if (measured) {
+                    rect.height()
+                } else {
+                    0
+                }
                 if (height > bestHeight) {
-                    bestHeight = height;
-                    bestHolder = holder;
+                    bestHeight = height
+                    bestHolder = holder
                 }
             }
         }
-        return bestHolder;
+        return bestHolder
     }
 
-    private void initialize() {
-
-        handle.initExoplayer(getContext().getApplicationContext(), bufferingStarted(), playerReady());
-        handle.initPlayerView(getContext().getApplicationContext(), artworkAsset());
-
-        recyclerViewListeners();
+    private fun initialize() {
+        handle.initExoplayer(
+            context = context.applicationContext,
+            buffering = ::bufferingStarted,
+            playerReady = ::playerReady
+        )
+        handle.initPlayerView(
+            context = context.applicationContext,
+            artworkAsset = ::artworkAsset
+        )
+        recyclerViewListeners()
     }
 
-    private Function0<Void> bufferingStarted() {
-        return () -> {
-            if (playingHolder != null) {
-                playingHolder.playerBuffering();
-            }
-            return null;
-        };
+    private fun bufferingStarted() {
+        playingHolder?.let { ph ->
+            ph.playerBuffering()
+        }
     }
 
-    private Function0<Void> playerReady() {
-        return () -> {
-            if (playingHolder != null) {
-                playingHolder.playerReady();
-            }
-            return null;
-        };
+    private fun playerReady() {
+        playingHolder?.let { ph ->
+            ph.playerReady()
+        }
     }
 
-    private Function0<Drawable> artworkAsset() {
-        return () -> ResourcesCompat.getDrawable(getResources(), R.drawable.ct_audio, null);
+    private fun artworkAsset(): Drawable {
+        return ResourcesCompat.getDrawable(resources, R.drawable.ct_audio, null)!!
     }
 
-    private void recyclerViewListeners() {
-        removeOnScrollListener(onScrollListener);
-        removeOnChildAttachStateChangeListener(onChildAttachStateChangeListener);
-        addOnScrollListener(onScrollListener);
-        addOnChildAttachStateChangeListener(onChildAttachStateChangeListener);
+    private fun recyclerViewListeners() {
+        removeOnScrollListener(onScrollListener)
+        removeOnChildAttachStateChangeListener(onChildAttachStateChangeListener)
+        addOnScrollListener(onScrollListener)
+        addOnChildAttachStateChangeListener(onChildAttachStateChangeListener)
     }
 
-    private void removeVideoView() {
-        handle.pause();
-        if (playingHolder != null) {
-            playingHolder.playerRemoved(); // removes all the views from video container
-            playingHolder = null;
+    private fun removeVideoView() {
+        handle.pause()
+        playingHolder?.let { ph ->
+            ph.playerRemoved() // removes all the views from video container
         }
     }
 }
