@@ -949,8 +949,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         return isNonRegistered;
     }
 
-    private void triggerCustomTemplateAction(CTInAppNotification notification,
-            CustomTemplateInAppData templateInAppData) {
+    private void triggerCustomTemplateAction(
+            CTInAppNotification notification,
+            CustomTemplateInAppData templateInAppData
+    ) {
         if (templateInAppData != null && templateInAppData.getTemplateName() != null) {
             CustomTemplate template = templatesManager.getTemplate(templateInAppData.getTemplateName());
             if (template != null) {
@@ -958,7 +960,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 // Since all related methods operate with either CTInAppNotification or its json representation, here
                 // we create a copy of the notification that initiated the triggering and add the action as its
                 // template data.
-                CTInAppNotification notificationFromAction = notification.copy();
+                CTInAppNotification notificationFromAction = notification.copyAsCustomCode();
                 CustomTemplateInAppData actionTemplateData = templateInAppData.copy();
                 actionTemplateData.setAction(true);
                 notificationFromAction.setCustomTemplateData(actionTemplateData);
