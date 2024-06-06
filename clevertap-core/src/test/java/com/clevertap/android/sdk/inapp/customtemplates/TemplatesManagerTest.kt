@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.createCtInAppNotification
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
 import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
@@ -144,17 +145,20 @@ class TemplatesManagerTest {
         }
 
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val mockInAppResourceProvider = mockk<InAppResourceProvider>(relaxed = true)
         val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
 
         templatesManager.presentTemplate(
             notification = createCtInAppNotification(simpleFunctionNotificationJson),
-            inAppListener = mockInAppListener
+            inAppListener = mockInAppListener,
+            resourceProvider = mockInAppResourceProvider
         )
         verify { functionPresenter.onPresent(any()) }
 
         templatesManager.presentTemplate(
             notification = createCtInAppNotification(simpleTemplateNotificationJson),
-            inAppListener = mockInAppListener
+            inAppListener = mockInAppListener,
+            resourceProvider = mockInAppResourceProvider
         )
         verify { templatePresenter.onPresent(any()) }
     }
@@ -174,9 +178,10 @@ class TemplatesManagerTest {
         }
 
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val mockInAppResourceProvider = mockk<InAppResourceProvider>(relaxed = true)
         val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
 
-        templatesManager.presentTemplate(createCtInAppNotification(simpleTemplateNotificationJson), mockInAppListener)
+        templatesManager.presentTemplate(createCtInAppNotification(simpleTemplateNotificationJson), mockInAppListener,mockInAppResourceProvider)
 
         verify { functionPresenter wasNot called }
     }
@@ -202,10 +207,11 @@ class TemplatesManagerTest {
         }
 
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val mockInAppResourceProvider = mockk<InAppResourceProvider>(relaxed = true)
         val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
         functionPresenter.templatesManager = templatesManager
 
-        templatesManager.presentTemplate(createCtInAppNotification(simpleFunctionNotificationJson), mockInAppListener)
+        templatesManager.presentTemplate(createCtInAppNotification(simpleFunctionNotificationJson), mockInAppListener,mockInAppResourceProvider)
         val context = templatesManager.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME)!!
         assertEquals(SIMPLE_FUNCTION_NAME, context.templateName)
 
@@ -245,10 +251,11 @@ class TemplatesManagerTest {
         }
 
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
+        val mockInAppResourceProvider = mockk<InAppResourceProvider>(relaxed = true)
         val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
         val notification = createCtInAppNotification(simpleTemplateNotificationJson)
 
-        templatesManager.presentTemplate(notification, mockInAppListener)
+        templatesManager.presentTemplate(notification, mockInAppListener,mockInAppResourceProvider)
         templatesManager.closeTemplate(notification)
         verify { templatePresenter.onClose(any()) }
     }

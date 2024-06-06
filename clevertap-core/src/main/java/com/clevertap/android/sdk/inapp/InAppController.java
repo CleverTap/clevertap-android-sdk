@@ -928,7 +928,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     private void presentTemplate(final CTInAppNotification inAppNotification) {
-        templatesManager.presentTemplate(inAppNotification, this);
+        templatesManager.presentTemplate(inAppNotification, this,resourceProvider);
     }
 
     private JSONArray filterNonRegisteredCustomTemplates(JSONArray inAppNotifications) {

@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.BOOL
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.FILE
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.NUMBER
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.STRING
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
 import org.json.JSONException
 import org.json.JSONObject
 import java.lang.ref.WeakReference
@@ -25,6 +26,7 @@ sealed class CustomTemplateContext private constructor(
     template: CustomTemplate,
     protected val notification: CTInAppNotification,
     inAppListener: InAppListener,
+    private val resourceProvider: InAppResourceProvider,
     private var dismissListener: ContextDismissListener?,
     protected val logger: Logger
 ) {
@@ -37,6 +39,7 @@ sealed class CustomTemplateContext private constructor(
             template: CustomTemplate,
             notification: CTInAppNotification,
             inAppListener: InAppListener,
+            resourceProvider: InAppResourceProvider,
             dismissListener: ContextDismissListener?,
             logger: Logger
         ): CustomTemplateContext {
@@ -45,6 +48,7 @@ sealed class CustomTemplateContext private constructor(
                     template = template,
                     notification = notification,
                     inAppListener = inAppListener,
+                    resourceProvider = resourceProvider,
                     dismissListener = dismissListener,
                     logger = logger
                 )
@@ -53,6 +57,7 @@ sealed class CustomTemplateContext private constructor(
                     template = template,
                     notification = notification,
                     inAppListener = inAppListener,
+                    resourceProvider = resourceProvider,
                     dismissListener = dismissListener,
                     logger = logger
                 )
@@ -179,7 +184,17 @@ sealed class CustomTemplateContext private constructor(
         return map
     }
 
-    //TODO CustomTemplates add getFile(name: String) method for retrieving file arguments
+    // TODO CustomTemplates add getFile(name: String) method for retrieving file arguments
+    /**
+     * Retrieve an absolute file path argument by [name].
+     *
+     * @return The argument value or `null` if no such argument is defined for the [CustomTemplate].
+     */
+    fun getFile(name: String): String? {
+        return getValue<String?>(name)?.let {
+            resourceProvider.cachedFilePath(it)
+        }
+    }
 
     /**
      * Notify the SDK that the current [CustomTemplate] is presented.
@@ -253,8 +268,8 @@ sealed class CustomTemplateContext private constructor(
                         else -> overrides.getDouble(argument.name)
                     }
                 }
-                //TODO CustomTemplates add FILE handling when implemented
-                FILE -> null
+                // TODO CustomTemplates add FILE handling when implemented
+                FILE -> overrides.getString(argument.name)
                 ACTION -> CTInAppAction.createFromJson(
                     overrides.optJSONObject(argument.name)?.optJSONObject(ARGS_KEY_ACTIONS)
                 )
@@ -297,9 +312,10 @@ sealed class CustomTemplateContext private constructor(
         template: CustomTemplate,
         notification: CTInAppNotification,
         inAppListener: InAppListener,
+        resourceProvider: InAppResourceProvider,
         dismissListener: ContextDismissListener?,
         logger: Logger
-    ) : CustomTemplateContext(template, notification, inAppListener, dismissListener, logger) {
+    ) : CustomTemplateContext(template, notification, inAppListener, resourceProvider, dismissListener, logger) {
 
         /**
          * Trigger an action argument by name. Open url actions could require an [activityContext] to be launched
@@ -337,10 +353,11 @@ sealed class CustomTemplateContext private constructor(
         template: CustomTemplate,
         notification: CTInAppNotification,
         inAppListener: InAppListener,
+        resourceProvider: InAppResourceProvider,
         dismissListener: ContextDismissListener?,
         logger: Logger
     ) : CustomTemplateContext(
-        template, notification, inAppListener, dismissListener, logger
+        template, notification, inAppListener, resourceProvider, dismissListener, logger
     )
 
     internal fun interface ContextDismissListener {

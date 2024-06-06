@@ -24,6 +24,7 @@ class CustomTemplateContextTest {
             template = templateDefinition,
             notification = createCtInAppNotification(templateNotificationJson),
             inAppListener = mockk(),
+            resourceProvider = mockk(),
             dismissListener = mockk(),
             logger = mockk()
         )
@@ -34,6 +35,7 @@ class CustomTemplateContextTest {
             template = functionDefinition,
             notification = createCtInAppNotification(functionNotificationJson),
             inAppListener = mockk(),
+            resourceProvider = mockk(),
             dismissListener = mockk(),
             logger = mockk()
         )
@@ -84,6 +86,7 @@ class CustomTemplateContextTest {
             template = functionDefinition,
             notification = createCtInAppNotification(functionNotificationJson),
             inAppListener = mockk(),
+            resourceProvider = mockk(),
             dismissListener = mockk(),
             logger = mockk()
         )
@@ -229,6 +232,7 @@ class CustomTemplateContextTest {
             template = functionDefinition,
             notification = notification,
             inAppListener = mockInAppListener,
+            resourceProvider = mockk(),
             dismissListener = mockk(relaxed = true),
             logger = mockk(relaxed = true)
         )
@@ -264,6 +268,7 @@ class CustomTemplateContextTest {
         templateDefinition,
         createCtInAppNotification(templateNotificationJson),
         inAppListener,
+        mockk(),
         dismissListener,
         mockk<Logger>(relaxed = true)
     )
