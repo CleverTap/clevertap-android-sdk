@@ -13,12 +13,12 @@ class FileMemoryV2(
 
     private var fileInMemory: LruCache<Pair<ByteArray, File>>? = null
     private var fileDiskMemory: FileCache? = null
-    private val lock1 = Any()
-    private val lock2 = Any()
+    private val inMemoryLock = Any()
+    private val diskMemoryLock = Any()
 
     override fun createInMemory(): LruCache<Pair<ByteArray, File>> {
         if (fileInMemory == null) {
-            synchronized(lock1) {
+            synchronized(inMemoryLock) {
                 if (fileInMemory == null) {
                     fileInMemory = LruCache(maxSize = inMemorySize())
                 }
@@ -29,7 +29,7 @@ class FileMemoryV2(
 
     override fun createDiskMemory(): FileCache {
         if (fileDiskMemory == null) {
-            synchronized(lock2) {
+            synchronized(diskMemoryLock) {
                 if (fileDiskMemory == null) {
                     fileDiskMemory = FileCache(
                         directory = config.diskDirectory,

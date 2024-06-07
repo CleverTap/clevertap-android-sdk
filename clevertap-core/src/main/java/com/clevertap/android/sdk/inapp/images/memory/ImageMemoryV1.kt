@@ -14,12 +14,12 @@ class ImageMemoryV1(
 
     private var imageInMemory: LruCache<Pair<Bitmap, File>>? = null
     private var imageDiskMemory: FileCache? = null
-    private val lock1 = Any()
-    private val lock2 = Any()
+    private val inMemoryLock = Any()
+    private val diskMemoryLock = Any()
 
     override fun createInMemory(): LruCache<Pair<Bitmap, File>> {
         if (imageInMemory == null) {
-            synchronized(lock1) {
+            synchronized(inMemoryLock) {
                 if (imageInMemory == null) {
                     imageInMemory = LruCache(maxSize = inMemorySize())
                 }
@@ -30,7 +30,7 @@ class ImageMemoryV1(
 
     override fun createDiskMemory(): FileCache {
         if (imageDiskMemory == null) {
-            synchronized(lock2) {
+            synchronized(diskMemoryLock) {
                 if (imageDiskMemory == null) {
                     imageDiskMemory = FileCache(
                         directory = config.diskDirectory,

@@ -13,12 +13,12 @@ class GifMemoryV1(
 
     private var gifInMemory: LruCache<Pair<ByteArray, File>>? = null
     private var gifDiskMemory: FileCache? = null
-    private val lock1 = Any()
-    private val lock2 = Any()
+    private val inMemoryLock = Any()
+    private val diskMemoryLock = Any()
 
     override fun createInMemory(): LruCache<Pair<ByteArray, File>> {
         if (gifInMemory == null) {
-            synchronized(lock1) {
+            synchronized(inMemoryLock) {
                 if (gifInMemory == null) {
                     gifInMemory = LruCache(maxSize = inMemorySize())
                 }
@@ -29,7 +29,7 @@ class GifMemoryV1(
 
     override fun createDiskMemory(): FileCache {
         if (gifDiskMemory == null) {
-            synchronized(lock2) {
+            synchronized(diskMemoryLock) {
                 if (gifDiskMemory == null) {
                     gifDiskMemory = FileCache(
                         directory = config.diskDirectory,
