@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.inapp.images.memory
 
 import android.graphics.Bitmap
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BITMAP
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BYTEARRAY
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_FILE
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
 
@@ -11,28 +14,26 @@ class ImageMemoryAccessObject(private val ctCaches: CTCaches) : MemoryAccessObje
         return imageInMemory.get(key)
     }
 
-    override fun fetchInMemoryAndTransform(key: String, transformTo: Int): Any? {
+    override fun fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any? {
         val pair = fetchInMemory(key)
         return pair?.let {
             when(transformTo)
             {
-                TRANSFORM_TO_BITMAP -> it.first
-                TRANSFORM_TO_BYTEARRAY -> bitmapToBytes(it.first)
-                TRANSFORM_TO_FILE -> it.second
-                else -> null
+                MEMORY_DATA_TRANSFORM_TO_BITMAP -> it.first
+                MEMORY_DATA_TRANSFORM_TO_BYTEARRAY -> bitmapToBytes(it.first)
+                MEMORY_DATA_TRANSFORM_TO_FILE -> it.second
             }
         }
     }
 
-    override fun fetchDiskMemoryAndTransform(key: String, transformTo: Int): Any? {
+    override fun fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any? {
         val file = fetchDiskMemory(key)
         return file?.let {
             when(transformTo)
             {
-                TRANSFORM_TO_BITMAP -> fileToBitmap(it)
-                TRANSFORM_TO_BYTEARRAY -> fileToBytes(it)
-                TRANSFORM_TO_FILE -> file
-                else -> null
+                MEMORY_DATA_TRANSFORM_TO_BITMAP -> fileToBitmap(it)
+                MEMORY_DATA_TRANSFORM_TO_BYTEARRAY -> fileToBytes(it)
+                MEMORY_DATA_TRANSFORM_TO_FILE -> file
             }
         }
     }

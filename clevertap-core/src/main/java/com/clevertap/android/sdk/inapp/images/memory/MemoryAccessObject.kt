@@ -6,9 +6,11 @@ import com.clevertap.android.sdk.inapp.images.hasValidBitmap
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-const val TRANSFORM_TO_BITMAP = 0
-const val TRANSFORM_TO_BYTEARRAY = 1
-const val TRANSFORM_TO_FILE = 2 // TODO(move to enum)
+enum class MemoryDataTransformationType {
+    MEMORY_DATA_TRANSFORM_TO_BITMAP,
+    MEMORY_DATA_TRANSFORM_TO_BYTEARRAY,
+    MEMORY_DATA_TRANSFORM_TO_FILE
+}
 
 val fileToBitmap: (file: File?) -> Bitmap? = { file ->
     if (file != null && file.hasValidBitmap()) {
@@ -50,7 +52,7 @@ interface MemoryAccessObject<T> {
      * @param transformTo The transformation identifier.
      * @return The transformed value, or null if not found.
      */
-    fun fetchInMemoryAndTransform(key: String, transformTo: Int): Any?
+    fun fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any?
 
     /**
      * Fetches a value from disk memory by key and transforms it.
@@ -58,7 +60,7 @@ interface MemoryAccessObject<T> {
      * @param transformTo The transformation identifier.
      * @return The transformed value, or null if not found.
      */
-    fun fetchDiskMemoryAndTransform(key: String, transformTo: Int): Any?
+    fun fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any?
 
     /**
      * Fetches a file from disk memory by key.

@@ -2,16 +2,15 @@ package com.clevertap.android.sdk.inapp.images
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.images.memory.FileMemoryAccessObject
 import com.clevertap.android.sdk.inapp.images.memory.GifMemoryAccessObject
 import com.clevertap.android.sdk.inapp.images.memory.ImageMemoryAccessObject
 import com.clevertap.android.sdk.inapp.images.memory.MemoryAccessObject
 import com.clevertap.android.sdk.inapp.images.memory.MemoryCreator
-import com.clevertap.android.sdk.inapp.images.memory.TRANSFORM_TO_BITMAP
-import com.clevertap.android.sdk.inapp.images.memory.TRANSFORM_TO_BYTEARRAY
-import com.clevertap.android.sdk.inapp.images.memory.TRANSFORM_TO_FILE
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BITMAP
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BYTEARRAY
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_FILE
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.ByteArrayOutputStream
@@ -111,7 +110,7 @@ internal class InAppResourceProvider(
         )
         // Try in memory
         memoryAccessObjectList.forEach {
-            val bitmap = it.fetchInMemoryAndTransform(cacheKey, TRANSFORM_TO_BITMAP)
+            val bitmap = it.fetchInMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BITMAP)
             if (bitmap is Bitmap) {
                 return bitmap
             }
@@ -119,7 +118,7 @@ internal class InAppResourceProvider(
 
         // Try disk
         memoryAccessObjectList.forEach {
-            val bitmap = it.fetchDiskMemoryAndTransform(cacheKey, TRANSFORM_TO_BITMAP)
+            val bitmap = it.fetchDiskMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BITMAP)
             if (bitmap is Bitmap) {
                 return bitmap
             }
@@ -139,7 +138,7 @@ internal class InAppResourceProvider(
         )
         // Try in memory
         memoryAccessObjectList.forEach {
-            val bytes = it.fetchInMemoryAndTransform(cacheKey, TRANSFORM_TO_BYTEARRAY)
+            val bytes = it.fetchInMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BYTEARRAY)
             if (bytes is ByteArray) {
                 return bytes
             }
@@ -147,7 +146,7 @@ internal class InAppResourceProvider(
 
         // Try disk
         memoryAccessObjectList.forEach {
-            val bytes = it.fetchDiskMemoryAndTransform(cacheKey, TRANSFORM_TO_BYTEARRAY)
+            val bytes = it.fetchDiskMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BYTEARRAY)
             if (bytes is ByteArray) {
                 return bytes
             }
@@ -168,7 +167,7 @@ internal class InAppResourceProvider(
         )
         // Try in memory
         memoryAccessObjectList.forEach {
-            val bytes = it.fetchInMemoryAndTransform(cacheKey, TRANSFORM_TO_BYTEARRAY)
+            val bytes = it.fetchInMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BYTEARRAY)
             if (bytes is ByteArray) {
                 return bytes
             }
@@ -176,7 +175,7 @@ internal class InAppResourceProvider(
 
         // Try disk
         memoryAccessObjectList.forEach {
-            val bytes = it.fetchDiskMemoryAndTransform(cacheKey, TRANSFORM_TO_BYTEARRAY)
+            val bytes = it.fetchDiskMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BYTEARRAY)
             if (bytes is ByteArray) {
                 return bytes
             }
@@ -201,7 +200,7 @@ internal class InAppResourceProvider(
         )
         // Try in memory
         memoryAccessObjectList.forEach {
-            val file = it.fetchInMemoryAndTransform(cacheKey, TRANSFORM_TO_FILE)
+            val file = it.fetchInMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_FILE)
             if (file is File) {
                 return file
             }
@@ -209,7 +208,7 @@ internal class InAppResourceProvider(
 
         // Try disk
         memoryAccessObjectList.forEach {
-            val file = it.fetchDiskMemoryAndTransform(cacheKey, TRANSFORM_TO_FILE)
+            val file = it.fetchDiskMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_FILE)
             if (file is File) {
                 return file
             }
