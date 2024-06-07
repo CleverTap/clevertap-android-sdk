@@ -26,8 +26,9 @@ internal class InAppResourceProvider(
 ) {
 
     private var ctCaches: CTCaches = CTCaches.instance(
-        MemoryCreator.createImageMemory(images, logger), MemoryCreator.createGifMemory(gifs, logger),
-        MemoryCreator.createFileMemory(allFileTypesDir, logger)
+        imageMemory = MemoryCreator.createImageMemory(images, logger),
+        gifMemory = MemoryCreator.createGifMemory(gifs, logger),
+        fileMemory = MemoryCreator.createFileMemory(allFileTypesDir, logger)
     )
 
     constructor(
