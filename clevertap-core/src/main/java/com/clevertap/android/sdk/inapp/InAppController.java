@@ -45,6 +45,9 @@ import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
 import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
@@ -140,6 +143,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final EvaluationManager evaluationManager;
 
+    private final StoreRegistry storeRegistry;
+
     private final TemplatesManager templatesManager;
 
     private InAppState inAppState;
@@ -148,7 +153,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final Logger logger;
 
-    private InAppResourceProvider resourceProvider;
+    private final InAppResourceProvider resourceProvider;
 
     private final MainLooperHandler mainLooperHandler;
 
@@ -178,8 +183,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             InAppQueue inAppQueue,
             final EvaluationManager evaluationManager,
             InAppResourceProvider resourceProvider,
-            TemplatesManager templatesManager
-    ) {
+            TemplatesManager templatesManager,
+            final StoreRegistry storeRegistry) {
         this.context = context;
         this.config = config;
         this.logger = this.config.getLogger();
@@ -194,6 +199,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
         this.templatesManager = templatesManager;
+        this.storeRegistry = storeRegistry;
         this.onAppLaunchEventSent = () -> {
             final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
                     deviceInfo.getAppLaunchedFields());
@@ -851,7 +857,23 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 break;
             case CTInAppTypeCustomCodeTemplate:
                 //TODO CustomTemplates download all file arguments before presenting
-                inAppController.presentTemplate(inAppNotification);
+                final List<String> fileUrls = inAppNotification.getCustomTemplateData()
+                        .getFileArgsUrls(inAppController.getTemplatesManager());
+                FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context,
+                        config.getLogger(),
+                        inAppController.getStoreRegistry());
+                if (assetRepo != null && !fileUrls.isEmpty()) {
+                    assetRepo.fetchAllFiles(fileUrls, (aBoolean, stringBooleanMap) -> {
+                        config.getLogger().verbose(config.getAccountId(),
+                                "file download status from showInApp() = " + aBoolean + " and url status map = "
+                                        + stringBooleanMap);
+                        if (aBoolean)
+                        {
+                            inAppController.presentTemplate(inAppNotification);
+                        }
+                        return null;
+                    });
+                }
                 return;
             default:
                 Logger.d(config.getAccountId(), "Unknown InApp Type found: " + type);
@@ -1005,5 +1027,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             }
             logger.debug("No activity found to open url: " + url);
         }
+    }
+
+    public TemplatesManager getTemplatesManager() {
+        return templatesManager;
+    }
+    public StoreRegistry getStoreRegistry() {
+        return storeRegistry;
     }
 }

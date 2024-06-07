@@ -274,7 +274,8 @@ class CleverTapFactory {
                 new InAppQueue(config, storeRegistry),
                 evaluationManager,
                 new InAppResourceProvider(context, config.getLogger()),
-                templatesManager
+                templatesManager,
+                storeRegistry
         );
 
         coreState.setInAppController(inAppController);
