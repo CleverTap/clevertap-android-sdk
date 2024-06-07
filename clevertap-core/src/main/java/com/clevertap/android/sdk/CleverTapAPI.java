@@ -3538,7 +3538,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public void clearFileResources(boolean expiredOnly) {
 
-        Logger logger = coreState.getConfig().getLogger();
+        Logger logger = getConfigLogger();
 
         StoreRegistry storeRegistry = coreState.getStoreRegistry();
         if (storeRegistry == null) {
