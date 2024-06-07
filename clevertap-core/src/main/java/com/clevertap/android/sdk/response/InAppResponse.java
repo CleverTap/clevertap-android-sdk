@@ -134,8 +134,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
             FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger,
                     storeRegistry);
             if (assetRepo != null) {
-                assetRepo.fetchAllImages(res.getPreloadImages());
-                assetRepo.fetchAllGifs(res.getPreloadGifs());
+                assetRepo.fetchAllInAppImagesV1(res.getPreloadImages());
+                assetRepo.fetchAllInAppGifsV1(res.getPreloadGifs());
                 // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
                 List<String> files = new ArrayList<>();
                 if (csInApps.getFirst()) {
@@ -161,7 +161,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
                 if (isFullResponse) {
                     logger.verbose(config.getAccountId(), "Handling cache eviction");
-                    assetRepo.cleanupStaleImages(res.getPreloadAssets());
+                    assetRepo.cleanupStaleInAppImagesAndGifsV1(res.getPreloadAssets());
                 } else {
                     logger.verbose(config.getAccountId(), "Ignoring cache eviction");
                 }

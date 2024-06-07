@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.inapp.images.preload
 import TestDispatchers
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -26,14 +26,14 @@ class InAppImagePreloaderCoroutineTest {
     private val byteArray = ByteArray(10) { pos ->
         pos.toByte()
     }
-    private val inAppResourceProvider = Mockito.mock(InAppResourceProvider::class.java)
+    private val mFileResourceProvider = Mockito.mock(FileResourceProvider::class.java)
     private val logger = TestLogger()
 
     private val testScheduler = TestCoroutineScheduler()
     private val dispatchers = TestDispatchers(testScheduler)
 
     private val inAppImagePreloaderCoroutine = FilePreloaderCoroutine(
-        inAppImageProvider = inAppResourceProvider,
+        fileResourceProvider = mFileResourceProvider,
         logger = logger,
         dispatchers = dispatchers
     )
@@ -45,7 +45,7 @@ class InAppImagePreloaderCoroutineTest {
         val successUrls = mutableListOf<String>()
 
         for (url in urls) {
-            Mockito.`when`(inAppResourceProvider.fetchInAppImage(url)).thenReturn(mockBitmap)
+            Mockito.`when`(mFileResourceProvider.fetchInAppImageV1(url)).thenReturn(mockBitmap)
         }
 
         val func = fun (url: String) {
@@ -53,12 +53,12 @@ class InAppImagePreloaderCoroutineTest {
             successUrls.add(url)
         }
 
-        inAppImagePreloaderCoroutine.preloadImages(urls, func)
+        inAppImagePreloaderCoroutine.preloadInAppImagesV1(urls, func)
         advanceUntilIdle()
 
         for (count in 0 until urls.size) {
             val url = urls[count]
-            Mockito.verify(inAppResourceProvider).fetchInAppImage(url)
+            Mockito.verify(mFileResourceProvider).fetchInAppImageV1(url)
         }
         assertEquals(urls.size, successUrls.size)
     }
@@ -70,7 +70,7 @@ class InAppImagePreloaderCoroutineTest {
         val successUrls = mutableListOf<String>()
 
         for (url in urls) {
-            Mockito.`when`(inAppResourceProvider.fetchInAppGif(url)).thenReturn(byteArray)
+            Mockito.`when`(mFileResourceProvider.fetchInAppGifV1(url)).thenReturn(byteArray)
         }
 
         val func = fun (url: String) {
@@ -78,12 +78,12 @@ class InAppImagePreloaderCoroutineTest {
             successUrls.add(url)
         }
 
-        inAppImagePreloaderCoroutine.preloadGifs(urls, func)
+        inAppImagePreloaderCoroutine.preloadInAppGifsV1(urls, func)
         advanceUntilIdle()
 
         for (count in 0 until urls.size) {
             val url = urls[count]
-            Mockito.verify(inAppResourceProvider).fetchInAppGif(url)
+            Mockito.verify(mFileResourceProvider).fetchInAppGifV1(url)
         }
         assertEquals(urls.size, successUrls.size)
     }

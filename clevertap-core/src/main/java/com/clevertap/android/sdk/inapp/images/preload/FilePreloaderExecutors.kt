@@ -1,26 +1,26 @@
 package com.clevertap.android.sdk.inapp.images.preload
 
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.CTExecutors
 
 internal class FilePreloaderExecutors @JvmOverloads constructor(
-    override val inAppImageProvider: InAppResourceProvider,
+    override val fileResourceProvider: FileResourceProvider,
     override val logger: ILogger? = null,
     private val executor: CTExecutors = CTExecutorFactory.executorResourceDownloader(),
-    override val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
+    override val config: FilePreloadConfig = FilePreloadConfig.default()
 ) : FilePreloaderStrategy {
 
-    override fun preloadImages(urls: List<String>, successBlock: (url: String) -> Unit) {
+    override fun preloadInAppImagesV1(urls: List<String>, successBlock: (url: String) -> Unit) {
         preloadAssets(urls, successBlock) { url ->
-            inAppImageProvider.fetchInAppImage(url)
+            fileResourceProvider.fetchInAppImageV1(url)
         }
     }
 
-    override fun preloadGifs(urls: List<String>, successBlock: (url: String) -> Unit) {
+    override fun preloadInAppGifsV1(urls: List<String>, successBlock: (url: String) -> Unit) {
         preloadAssets(urls, successBlock) { url ->
-            inAppImageProvider.fetchInAppGif(url)
+            fileResourceProvider.fetchInAppGifV1(url)
         }
     }
 
@@ -30,7 +30,7 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         failureBlock: (url: String) -> Unit
     ) {
         preloadAssets(urls, successBlock,failureBlock) { url ->
-            inAppImageProvider.fetchFile(url)
+            fileResourceProvider.fetchFile(url)
         }
     }
 

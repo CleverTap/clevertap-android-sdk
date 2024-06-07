@@ -44,7 +44,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
@@ -153,7 +153,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final Logger logger;
 
-    private final InAppResourceProvider resourceProvider;
+    private final FileResourceProvider resourceProvider;
 
     private final MainLooperHandler mainLooperHandler;
 
@@ -182,7 +182,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             final DeviceInfo deviceInfo,
             InAppQueue inAppQueue,
             final EvaluationManager evaluationManager,
-            InAppResourceProvider resourceProvider,
+            FileResourceProvider resourceProvider,
             TemplatesManager templatesManager,
             final StoreRegistry storeRegistry) {
         this.context = context;

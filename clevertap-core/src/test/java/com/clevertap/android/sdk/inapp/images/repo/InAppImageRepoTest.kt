@@ -29,20 +29,20 @@ class InAppImageRepoTest {
     @Test
     fun `fetch all images use case`() {
         val urls = listOf("url1", "url2", "url3")
-        mFileResourcesRepoImpl.fetchAllImages(urls)
+        mFileResourcesRepoImpl.fetchAllInAppImagesV1(urls)
 
         verify {
-            preloaderStrategy.preloadImages(urls, any())
+            preloaderStrategy.preloadInAppImagesV1(urls, any())
         }
     }
 
     @Test
     fun `fetch all gifs use case`() {
         val urls = listOf("url1", "url2", "url3")
-        mFileResourcesRepoImpl.fetchAllGifs(urls)
+        mFileResourcesRepoImpl.fetchAllInAppGifsV1(urls)
 
         verify {
-            preloaderStrategy.preloadGifs(urls, any())
+            preloaderStrategy.preloadInAppGifsV1(urls, any())
         }
     }
 
@@ -68,10 +68,10 @@ class InAppImageRepoTest {
         }
 
         // invoke method to test
-        mFileResourcesRepoImpl.cleanupStaleImages(responseUrls)
+        mFileResourcesRepoImpl.cleanupStaleInAppImagesAndGifsV1(responseUrls)
 
         // assert
-        verify { inAppImageCleanupStrategy.clearInAppAssets(expiredUrls.toList(), any()) }
+        verify { inAppImageCleanupStrategy.clearInAppImagesAndGifsV1(expiredUrls.toList(), any()) }
         verify { legacyInAppStore.updateAssetCleanupTs(any()) }
     }
 }

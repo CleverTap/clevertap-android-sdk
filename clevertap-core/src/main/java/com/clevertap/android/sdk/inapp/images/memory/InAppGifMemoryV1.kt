@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.utils.LruCache
 import java.io.File
 import kotlin.math.max
 
-class GifMemoryV1(
+class InAppGifMemoryV1(
     private val config: MemoryConfig,
     private val logger: ILogger? = null
 ) : Memory<ByteArray> {

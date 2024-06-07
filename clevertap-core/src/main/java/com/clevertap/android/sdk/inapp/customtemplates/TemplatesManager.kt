@@ -7,7 +7,7 @@ import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.ContextDismissListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.TemplateContext
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 
 internal class TemplatesManager(templates: Collection<CustomTemplate>, private val logger: Logger) :
     ContextDismissListener {
@@ -57,7 +57,7 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
     fun presentTemplate(
         notification: CTInAppNotification,
         inAppListener: InAppListener,
-        resourceProvider: InAppResourceProvider
+        resourceProvider: FileResourceProvider
     ) {
         val context = createContextFromInApp(notification, inAppListener,resourceProvider) ?: return
         val template = customTemplates[context.templateName]
@@ -116,7 +116,7 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
     private fun createContextFromInApp(
         notification: CTInAppNotification,
         inAppListener: InAppListener,
-        resourceProvider: InAppResourceProvider
+        resourceProvider: FileResourceProvider
     ): CustomTemplateContext? {
         val templateName = notification.customTemplateData?.templateName
         if (templateName == null) {

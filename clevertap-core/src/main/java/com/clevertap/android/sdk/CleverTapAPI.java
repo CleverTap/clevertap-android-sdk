@@ -42,7 +42,7 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
@@ -3523,9 +3523,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         if (expiredOnly) {
-            impl.cleanupStaleImagesNow();
+            impl.cleanupStaleInAppImagesAndGifsV1Now();
         } else {
-            impl.cleanupAllImages();
+            impl.cleanupAllInAppImagesAndGifsV1();
         }
     }
 
@@ -3569,8 +3569,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public boolean doesFileExistForUrl(@NonNull String url){
         Logger logger = getConfigLogger();
-        InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-        return inAppResourceProvider.isFileCached(url);
+        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
+        return fileResourceProvider.isFileCached(url);
     }
 
     /**
@@ -3586,7 +3586,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @Nullable
     public String getFilePathForUrl(@NonNull String url){
         Logger logger = getConfigLogger();
-        InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-        return inAppResourceProvider.cachedFilePath(url);
+        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
+        return fileResourceProvider.cachedFilePath(url);
     }
 }

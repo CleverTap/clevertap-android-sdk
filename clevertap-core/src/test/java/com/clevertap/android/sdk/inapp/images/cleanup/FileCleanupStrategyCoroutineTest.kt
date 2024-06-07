@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inapp.images.cleanup
 
 import TestDispatchers
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import org.junit.Test
 import org.mockito.Mockito
@@ -9,13 +9,13 @@ import kotlin.test.assertEquals
 
 class FileCleanupStrategyCoroutineTest {
 
-    private val inAppResourceProvider = Mockito.mock(InAppResourceProvider::class.java)
+    private val mFileResourceProvider = Mockito.mock(FileResourceProvider::class.java)
 
     private val testScheduler = TestCoroutineScheduler()
     private val dispatchers = TestDispatchers(testScheduler)
 
     private val cleanupStrategy = FileCleanupStrategyCoroutine(
-        inAppResourceProvider = inAppResourceProvider,
+        fileResourceProvider = mFileResourceProvider,
         dispatchers = dispatchers
     )
 
@@ -26,15 +26,15 @@ class FileCleanupStrategyCoroutineTest {
         val successUrls = mutableListOf<String>()
 
         // invoke method
-        cleanupStrategy.clearInAppAssets(urls) { url ->
+        cleanupStrategy.clearInAppImagesAndGifsV1(urls) { url ->
             successUrls.add(url)
         }
 
         advanceUntilIdle()
 
         urls.forEach { url ->
-            Mockito.verify(inAppResourceProvider).deleteImage(url)
-            Mockito.verify(inAppResourceProvider).deleteGif(url)
+            Mockito.verify(mFileResourceProvider).deleteImageMemoryV1(url)
+            Mockito.verify(mFileResourceProvider).deleteGifMemoryV1(url)
         }
 
         // assert

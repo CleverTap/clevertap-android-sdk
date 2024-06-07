@@ -13,7 +13,7 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import java.util.ArrayList;
 import java.util.Iterator;
 import org.json.JSONArray;
@@ -275,7 +275,7 @@ public class CTInAppNotification implements Parcelable {
         dest.writeParcelable(customTemplateData, flags);
     }
 
-    void didDismiss(InAppResourceProvider resourceProvider) {
+    void didDismiss(FileResourceProvider resourceProvider) {
     }
 
     String getBackgroundColor() {
@@ -448,11 +448,11 @@ public class CTInAppNotification implements Parcelable {
         return isTablet;
     }
 
-    void prepareForDisplay(InAppResourceProvider inAppResourceProvider) {
+    void prepareForDisplay(FileResourceProvider fileResourceProvider) {
 
         for (CTInAppNotificationMedia media : this.mediaList) {
             if (media.isGIF()) {
-                byte[] bytes = inAppResourceProvider.fetchInAppGif(media.getMediaUrl());
+                byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
                 if (bytes != null && bytes.length > 0) {
                     listener.notificationReady(this);
                     return;
@@ -461,7 +461,7 @@ public class CTInAppNotification implements Parcelable {
                 }
             } else if (media.isImage()) {
 
-                Bitmap bitmap = inAppResourceProvider.fetchInAppImage(media.getMediaUrl());
+                Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
                 if (bitmap != null) {
                     listener.notificationReady(this);
                     return;
@@ -659,15 +659,15 @@ public class CTInAppNotification implements Parcelable {
         }
     }
 
-    private void removeImageOrGif(InAppResourceProvider resourceProvider) {
+    private void removeImageOrGif(FileResourceProvider resourceProvider) {
         for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
             String mediaUrl = inAppMedia.getMediaUrl();
             if (mediaUrl != null) {
                 if (inAppMedia.isImage()) {
-                    resourceProvider.deleteImage(mediaUrl);
+                    resourceProvider.deleteImageMemoryV1(mediaUrl);
                     Logger.v("Deleted image - " + mediaUrl);
                 } else {
-                    resourceProvider.deleteGif(mediaUrl);
+                    resourceProvider.deleteGifMemoryV1(mediaUrl);
                     Logger.v("Deleted GIF - " + mediaUrl);
                 }
             }

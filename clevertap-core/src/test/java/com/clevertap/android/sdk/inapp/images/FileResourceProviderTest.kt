@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @Ignore
-class InAppResourceProviderTest {
+class FileResourceProviderTest {
 
     private val mockCache = Mockito.mock(CTCaches::class.java)
     private val mockBitmapPair = Pair(Mockito.mock(Bitmap::class.java), mockk<File>())
@@ -35,7 +35,7 @@ class InAppResourceProviderTest {
 
     private val bytes = byteArrayOf(0)
 
-    private val provider = InAppResourceProvider(
+    private val provider = FileResourceProvider(
         images,
         gifs,
         files,
@@ -76,7 +76,7 @@ class InAppResourceProviderTest {
 
         val key = "key"
 
-        provider.saveImage(
+        provider.saveInAppImageV1(
             cacheKey = key,
             bitmap = mockBitmap,
             bytes = bytes
@@ -95,7 +95,7 @@ class InAppResourceProviderTest {
 
         val key = "key"
 
-        provider.saveGif(
+        provider.saveInAppGifV1(
             cacheKey = key,
             bytes = bytes
         )
@@ -115,10 +115,10 @@ class InAppResourceProviderTest {
         val savedImage = Mockito.mock(File::class.java)
 
         Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmapPair)
-        val res1 = provider.isImageCached(url = url)
+        val res1 = provider.isInAppImageCachedV1(url = url)
         assertEquals(true, res1)
 
-        val op1 = provider.cachedImage(cacheKey = url)
+        val op1 = provider.cachedInAppImageV1(cacheKey = url)
         assertEquals(mockBitmap, op1)
 
         // reset image cache
@@ -129,10 +129,10 @@ class InAppResourceProviderTest {
         Mockito.`when`(savedImage.exists()).thenReturn(true)
 
         // assert
-        val res2 = provider.isImageCached(url = url)
+        val res2 = provider.isInAppImageCachedV1(url = url)
         assertEquals(true, res2)
 
-        val op2 = provider.cachedImage(cacheKey = url)
+        val op2 = provider.cachedInAppImageV1(cacheKey = url)
         assertEquals(mockBitmap, op2)
     }
 
@@ -143,16 +143,16 @@ class InAppResourceProviderTest {
         val savedGif = Mockito.mock(File::class.java)
 
         Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(mockBytesPair)
-        val res1 = provider.isGifCached(url = url)
+        val res1 = provider.isInAppGifCachedV1(url = url)
         assertEquals(true, res1)
 
-        val op1 = provider.cachedGif(cacheKey = url)
+        val op1 = provider.cachedInAppGifV1(cacheKey = url)
         assertEquals(bytes, op1)
 
         // reset gif cache
         Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(null)
 
-        val resNone = provider.isGifCached(url = url)
+        val resNone = provider.isInAppGifCachedV1(url = url)
         assertEquals(false, resNone)
 
         // setup
@@ -160,10 +160,10 @@ class InAppResourceProviderTest {
         Mockito.`when`(savedGif.exists()).thenReturn(true)
 
         // assert
-        val res2 = provider.isGifCached(url = url)
+        val res2 = provider.isInAppGifCachedV1(url = url)
         assertEquals(true, res2)
 
-        val op2 = provider.cachedGif(cacheKey = url)
+        val op2 = provider.cachedInAppGifV1(cacheKey = url)
         assertEquals(bytes, op2)
     }
 
@@ -175,7 +175,7 @@ class InAppResourceProviderTest {
         Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmapPair)
 
         // invocation
-        val bitmap = provider.fetchInAppImage(url = url, Bitmap::class.java)
+        val bitmap = provider.fetchInAppImageV1(url = url, Bitmap::class.java)
 
         // assertions
         assertEquals(mockBitmap, bitmap)
@@ -188,7 +188,7 @@ class InAppResourceProviderTest {
         val url = "key"
 
         // invocation
-        val bitmap = provider.fetchInAppImage(url = url, Bitmap::class.java)
+        val bitmap = provider.fetchInAppImageV1(url = url, Bitmap::class.java)
 
         // assertions
         assertEquals(mockBitmap, bitmap)
@@ -202,7 +202,7 @@ class InAppResourceProviderTest {
         Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(mockBytesPair)
 
         // invocation
-        val opBytes = provider.fetchInAppGif(url = url)
+        val opBytes = provider.fetchInAppGifV1(url = url)
 
         // assertions
         assertEquals(bytes, opBytes)
@@ -215,7 +215,7 @@ class InAppResourceProviderTest {
         val url = "key"
 
         // invocation
-        val opBytes = provider.fetchInAppGif(url = url)
+        val opBytes = provider.fetchInAppGifV1(url = url)
 
         // assertions
         assertEquals(bytes, opBytes)

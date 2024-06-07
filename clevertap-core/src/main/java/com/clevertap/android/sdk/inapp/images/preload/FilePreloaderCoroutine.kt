@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inapp.images.preload
 
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import com.clevertap.android.sdk.utils.DispatcherProvider
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -13,10 +13,10 @@ import kotlin.system.measureTimeMillis
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class FilePreloaderCoroutine @JvmOverloads constructor(
-    override val inAppImageProvider: InAppResourceProvider,
+    override val fileResourceProvider: FileResourceProvider,
     override val logger: ILogger? = null,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
-    override val config: InAppImagePreloadConfig = InAppImagePreloadConfig.default()
+    override val config: FilePreloadConfig = FilePreloadConfig.default()
 ) : FilePreloaderStrategy {
 
     private val jobs: MutableList<Job> = mutableListOf()
@@ -25,15 +25,15 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
     }
     private val scope = CoroutineScope(dispatchers.io().limitedParallelism(config.parallelDownloads))
 
-    override fun preloadImages(urls: List<String>, successBlock: (url: String) -> Unit) {
+    override fun preloadInAppImagesV1(urls: List<String>, successBlock: (url: String) -> Unit) {
         preloadAssets(urls, successBlock) { url ->
-            inAppImageProvider.fetchInAppImage(url)
+            fileResourceProvider.fetchInAppImageV1(url)
         }
     }
 
-    override fun preloadGifs(urls: List<String>, successBlock: (url: String) -> Unit) {
+    override fun preloadInAppGifsV1(urls: List<String>, successBlock: (url: String) -> Unit) {
         preloadAssets(urls, successBlock) { url ->
-            inAppImageProvider.fetchInAppGif(url)
+            fileResourceProvider.fetchInAppGifV1(url)
         }
     }
 
@@ -43,7 +43,7 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
         failureBlock: (url: String) -> Unit
     ) {
         preloadAssets(urls, successBlock,failureBlock) { url ->
-            inAppImageProvider.fetchFile(url)
+            fileResourceProvider.fetchFile(url)
         }
     }
 

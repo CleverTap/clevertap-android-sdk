@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationTyp
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
 
-class GifMemoryAccessObject(private val ctCaches: CTCaches): MemoryAccessObject<ByteArray> {
+class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches): MemoryAccessObject<ByteArray> {
 
     override fun fetchInMemory(key: String): Pair<ByteArray, File>? {
         val gifInMemory = ctCaches.gifCache()

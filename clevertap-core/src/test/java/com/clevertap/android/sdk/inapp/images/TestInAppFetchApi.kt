@@ -8,7 +8,7 @@ class TestInAppFetchApi(
     private val status: DownloadedBitmap.Status,
     private val downloadTime: Long,
     private val bytes: ByteArray? = null
-) : InAppImageFetchApiContract {
+) : FileFetchApiContract {
 
     companion object {
         fun success(bitmap: Bitmap, bytes: ByteArray?) = TestInAppFetchApi(
@@ -18,7 +18,7 @@ class TestInAppFetchApi(
                 bytes = bytes
         )
     }
-    override fun makeApiCallForInAppBitmap(url: String): DownloadedBitmap {
+    override fun makeApiCallForFile(url: String): DownloadedBitmap {
         return DownloadedBitmap(
             bitmap = bitmap,
             status = status,

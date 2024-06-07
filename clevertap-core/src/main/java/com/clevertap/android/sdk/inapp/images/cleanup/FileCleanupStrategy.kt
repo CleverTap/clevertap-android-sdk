@@ -1,13 +1,13 @@
 package com.clevertap.android.sdk.inapp.images.cleanup
 
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 
 internal interface FileCleanupStrategy{
 
-    val inAppResourceProvider: InAppResourceProvider
+    val fileResourceProvider: FileResourceProvider
 
-    fun clearInAppAssets(urls: List<String>, successBlock: (url: String) -> Unit)
-    fun clearFileAssets(urls: List<String>, successBlock: (url: String) -> Unit)
+    fun clearInAppImagesAndGifsV1(urls: List<String>, successBlock: (url: String) -> Unit)
+    fun clearFileAssetsV2(urls: List<String>, successBlock: (url: String) -> Unit)
 
     fun stop()
 }

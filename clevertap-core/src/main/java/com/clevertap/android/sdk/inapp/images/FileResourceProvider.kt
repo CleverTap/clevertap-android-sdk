@@ -4,8 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.images.memory.FileMemoryAccessObject
-import com.clevertap.android.sdk.inapp.images.memory.GifMemoryAccessObject
-import com.clevertap.android.sdk.inapp.images.memory.ImageMemoryAccessObject
+import com.clevertap.android.sdk.inapp.images.memory.InAppGifMemoryAccessObjectV1
+import com.clevertap.android.sdk.inapp.images.memory.InAppImageMemoryAccessObjectV1
 import com.clevertap.android.sdk.inapp.images.memory.MemoryAccessObject
 import com.clevertap.android.sdk.inapp.images.memory.MemoryCreator
 import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BITMAP
@@ -16,18 +16,18 @@ import com.clevertap.android.sdk.utils.CTCaches
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-internal class InAppResourceProvider(
+internal class FileResourceProvider(
     private val images: File,
     private val gifs: File,
     private val allFileTypesDir: File,
     private val logger: ILogger? = null,
-    private val inAppRemoteSource: InAppImageFetchApiContract = InAppImageFetchApi()
+    private val inAppRemoteSource: FileFetchApiContract = FileFetchApi()
 ) {
 
     private var ctCaches: CTCaches = CTCaches.instance(
-        imageMemory = MemoryCreator.createImageMemory(images, logger),
-        gifMemory = MemoryCreator.createGifMemory(gifs, logger),
-        fileMemory = MemoryCreator.createFileMemory(allFileTypesDir, logger)
+        inAppImageMemoryV1 = MemoryCreator.createInAppImageMemoryV1(images, logger),
+        inAppGifMemoryV1 = MemoryCreator.createInAppGifMemoryV1(gifs, logger),
+        fileMemory = MemoryCreator.createFileMemoryV2(allFileTypesDir, logger)
     )
 
     constructor(
@@ -41,20 +41,19 @@ internal class InAppResourceProvider(
     )
 
     companion object {
-
         private const val IMAGE_DIRECTORY_NAME = "CleverTap.Images."
         private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
         private const val ALL_FILE_TYPES_DIRECTORY_NAME = "CleverTap.Files."
     }
 
-    fun saveImage(cacheKey: String, bitmap: Bitmap, bytes: ByteArray) {
-        val imageMAO = ImageMemoryAccessObject(ctCaches)
+    fun saveInAppImageV1(cacheKey: String, bitmap: Bitmap, bytes: ByteArray) {
+        val imageMAO = InAppImageMemoryAccessObjectV1(ctCaches)
         val savedFile = imageMAO.saveDiskMemory(cacheKey, bytes)
         imageMAO.saveInMemory(cacheKey, Pair(bitmap, savedFile))
     }
 
-    fun saveGif(cacheKey: String, bytes: ByteArray) {
-        val gifMAO = GifMemoryAccessObject(ctCaches)
+    fun saveInAppGifV1(cacheKey: String, bytes: ByteArray) {
+        val gifMAO = InAppGifMemoryAccessObjectV1(ctCaches)
         val savedFile = gifMAO.saveDiskMemory(cacheKey, bytes)
         gifMAO.saveInMemory(cacheKey, Pair(bytes, savedFile))
     }
@@ -65,18 +64,18 @@ internal class InAppResourceProvider(
         fileMAO.saveInMemory(cacheKey, Pair(bytes, savedFile))
     }
 
-    fun isImageCached(url: String): Boolean {
+    fun isInAppImageCachedV1(url: String): Boolean {
         return isFileCached(url)
     }
 
-    fun isGifCached(url: String): Boolean {
+    fun isInAppGifCachedV1(url: String): Boolean {
         return isFileCached(url)
     }
 
     fun isFileCached(url: String): Boolean {
         val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            FileMemoryAccessObject(ctCaches), ImageMemoryAccessObject(ctCaches),
-            GifMemoryAccessObject(ctCaches)
+            FileMemoryAccessObject(ctCaches), InAppImageMemoryAccessObjectV1(ctCaches),
+            InAppGifMemoryAccessObjectV1(ctCaches)
         )
 
         // Try in memory
@@ -97,7 +96,7 @@ internal class InAppResourceProvider(
         return false
     }
 
-    fun cachedImage(cacheKey: String?): Bitmap? {
+    fun cachedInAppImageV1(cacheKey: String?): Bitmap? {
 
         if (cacheKey == null) {
             logger?.verbose("Bitmap for null key requested")
@@ -105,8 +104,8 @@ internal class InAppResourceProvider(
         }
 
         val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            ImageMemoryAccessObject(ctCaches), FileMemoryAccessObject(ctCaches),
-            GifMemoryAccessObject(ctCaches)
+            InAppImageMemoryAccessObjectV1(ctCaches), FileMemoryAccessObject(ctCaches),
+            InAppGifMemoryAccessObjectV1(ctCaches)
         )
         // Try in memory
         memoryAccessObjectList.forEach {
@@ -127,14 +126,14 @@ internal class InAppResourceProvider(
         return null
     }
 
-    fun cachedGif(cacheKey: String?): ByteArray? {
+    fun cachedInAppGifV1(cacheKey: String?): ByteArray? {
         if (cacheKey == null) {
             logger?.verbose("GIF for null key requested")
             return null
         }
         val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            GifMemoryAccessObject(ctCaches), FileMemoryAccessObject(ctCaches),
-            ImageMemoryAccessObject(ctCaches)
+            InAppGifMemoryAccessObjectV1(ctCaches), FileMemoryAccessObject(ctCaches),
+            InAppImageMemoryAccessObjectV1(ctCaches)
         )
         // Try in memory
         memoryAccessObjectList.forEach {
@@ -162,8 +161,8 @@ internal class InAppResourceProvider(
         }
         val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
             FileMemoryAccessObject(ctCaches),
-            GifMemoryAccessObject(ctCaches),
-            ImageMemoryAccessObject(ctCaches)
+            InAppGifMemoryAccessObjectV1(ctCaches),
+            InAppImageMemoryAccessObjectV1(ctCaches)
         )
         // Try in memory
         memoryAccessObjectList.forEach {
@@ -195,8 +194,8 @@ internal class InAppResourceProvider(
         }
         val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
             FileMemoryAccessObject(ctCaches),
-            GifMemoryAccessObject(ctCaches),
-            ImageMemoryAccessObject(ctCaches)
+            InAppGifMemoryAccessObjectV1(ctCaches),
+            InAppImageMemoryAccessObjectV1(ctCaches)
         )
         // Try in memory
         memoryAccessObjectList.forEach {
@@ -216,17 +215,17 @@ internal class InAppResourceProvider(
         return null
     }
 
-    fun fetchInAppImage(url: String): Bitmap? {
-        return fetchInAppImage(url = url, clazz = Bitmap::class.java)
+    fun fetchInAppImageV1(url: String): Bitmap? {
+        return fetchInAppImageV1(url = url, clazz = Bitmap::class.java)
     }
 
     /**
      * Function that would fetch and cache bitmap image into Memory and File cache and return it.
      * If image is found in cache, the cached image is returned.
      */
-    fun <T> fetchInAppImage(url: String, clazz: Class<T>): T? {
+    fun <T> fetchInAppImageV1(url: String, clazz: Class<T>): T? {
 
-        val cachedImage: Bitmap? = cachedImage(url)
+        val cachedImage: Bitmap? = cachedInAppImageV1(url)
 
         if (cachedImage != null) {
             if (clazz.isAssignableFrom(Bitmap::class.java)) {
@@ -239,12 +238,12 @@ internal class InAppResourceProvider(
             }
         }
 
-        val downloadedBitmap = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
+        val downloadedBitmap = inAppRemoteSource.makeApiCallForFile(url = url)
 
         when (downloadedBitmap.status) {
 
             DownloadedBitmap.Status.SUCCESS -> {
-                saveImage(
+                saveInAppImageV1(
                     cacheKey = url,
                     bitmap = downloadedBitmap.bitmap!!,
                     bytes = downloadedBitmap.bytes!!
@@ -266,20 +265,20 @@ internal class InAppResourceProvider(
         }
     }
 
-    fun fetchInAppGif(url: String): ByteArray? {
-        val cachedGif = cachedGif(url)
+    fun fetchInAppGifV1(url: String): ByteArray? {
+        val cachedGif = cachedInAppGifV1(url)
 
         if (cachedGif != null) {
             logger?.verbose("Returning requested $url gif from cache with size ${cachedGif.size}")
             return cachedGif
         }
 
-        val downloadedGif = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
+        val downloadedGif = inAppRemoteSource.makeApiCallForFile(url = url)
 
         return when (downloadedGif.status) {
 
             DownloadedBitmap.Status.SUCCESS -> {
-                saveGif(cacheKey = url, bytes = downloadedGif.bytes!!)
+                saveInAppGifV1(cacheKey = url, bytes = downloadedGif.bytes!!)
                 logger?.verbose("Returning requested $url gif with network, saved in cache")
                 downloadedGif.bytes
             }
@@ -299,7 +298,7 @@ internal class InAppResourceProvider(
             return cachedFile
         }
 
-        val downloadedFile = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
+        val downloadedFile = inAppRemoteSource.makeApiCallForFile(url = url)
 
         return when (downloadedFile.status) {
 
@@ -316,8 +315,8 @@ internal class InAppResourceProvider(
         }
     }
 
-    fun deleteImage(cacheKey: String) {
-        val imageMAO = ImageMemoryAccessObject(ctCaches)
+    fun deleteImageMemoryV1(cacheKey: String) {
+        val imageMAO = InAppImageMemoryAccessObjectV1(ctCaches)
         val pair = imageMAO.removeInMemory(cacheKey)
         if (pair != null) {
             logger?.verbose("successfully removed $cacheKey from memory cache")
@@ -329,9 +328,9 @@ internal class InAppResourceProvider(
         }
     }
 
-    fun deleteGif(cacheKey: String) {
+    fun deleteGifMemoryV1(cacheKey: String) {
 
-        val gifMAO = GifMemoryAccessObject(ctCaches)
+        val gifMAO = InAppGifMemoryAccessObjectV1(ctCaches)
         val bytes = gifMAO.removeInMemory(cacheKey)
         if (bytes != null) {
             logger?.verbose("successfully removed gif $cacheKey from memory cache")
@@ -342,7 +341,7 @@ internal class InAppResourceProvider(
         }
     }
 
-    fun deleteFile(cacheKey: String) {
+    fun deleteFileMemoryV2(cacheKey: String) {
         val fileMAO = FileMemoryAccessObject(ctCaches)
         val bytes = fileMAO.removeInMemory(cacheKey)
 

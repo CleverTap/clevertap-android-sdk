@@ -18,7 +18,7 @@ internal class FileResourcesRepoImpl(
 
     //if we want to call fetchAll() API using multiple instances of this class then downloadInProgressUrls must be static
     private val downloadInProgressUrls = ConcurrentHashMap<String, MutableList<(String, Boolean) -> Unit>>()
-    private val lock = Any()
+    private val fetchAllFilesLock = Any()
 
     companion object {
 
@@ -32,23 +32,23 @@ internal class FileResourcesRepoImpl(
     /**
      * Fetches all images in parallel and registers successful url in repo
      */
-    override fun fetchAllImages(urls: List<String>) {
+    override fun fetchAllInAppImagesV1(urls: List<String>) {
 
         val successBlock: (url: String) -> Unit = { url ->
             val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
             inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)// uncommon
         }
 
-        preloaderStrategy.preloadImages(urls, successBlock)
+        preloaderStrategy.preloadInAppImagesV1(urls, successBlock)
     }
 
-    override fun fetchAllGifs(urls: List<String>) {
+    override fun fetchAllInAppGifsV1(urls: List<String>) {
         val successBlock: (url: String) -> Unit = { url ->
             val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
             inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
         }
 
-        preloaderStrategy.preloadGifs(urls, successBlock)
+        preloaderStrategy.preloadInAppGifsV1(urls, successBlock)
     }
 
     @WorkerThread
@@ -63,7 +63,7 @@ internal class FileResourcesRepoImpl(
             checkCompletion(urls.size, urlStatusMap, completionCallback)
         }
         val successBlock: (url: String) -> Unit = { url ->
-            synchronized(lock) {
+            synchronized(fetchAllFilesLock) {
                 val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
                 fileStore.saveFileUrl(url = url, expiry = expiry)
                 val callbacks = downloadInProgressUrls.remove(url)
@@ -71,13 +71,13 @@ internal class FileResourcesRepoImpl(
             }
         }
         val failureBlock: (String) -> Unit = { url ->
-            synchronized(lock) {
+            synchronized(fetchAllFilesLock) {
                 val callbacks = downloadInProgressUrls.remove(url)
                 callbacks?.forEach { it(url, false) }
             }
         }
 
-        synchronized(lock) {
+        synchronized(fetchAllFilesLock) {
             if (downloadInProgressUrls.isEmpty()) {
                 urls.forEach { url ->
                     downloadInProgressUrls[url] = mutableListOf(newCompletionCallback)
@@ -112,7 +112,7 @@ internal class FileResourcesRepoImpl(
     /**
      * Checks all existing cached data and check if it is in valid urls, if not evict item from cache
      */
-    override fun cleanupStaleImages(validUrls: List<String>) {
+    override fun cleanupStaleInAppImagesAndGifsV1(validUrls: List<String>) {
 
         val currentTime = System.currentTimeMillis()
 
@@ -121,7 +121,7 @@ internal class FileResourcesRepoImpl(
             return
         }
 
-        cleanupStaleImagesNow(validUrls, currentTime)
+        cleanupStaleInAppImagesAndGifsV1Now(validUrls, currentTime)
         legacyInAppsStore.updateAssetCleanupTs(currentTime)
     }
 
@@ -138,7 +138,7 @@ internal class FileResourcesRepoImpl(
     }
 
     @JvmOverloads
-    fun cleanupStaleImagesNow(
+    fun cleanupStaleInAppImagesAndGifsV1Now(
         validUrls: List<String> = emptyList(),
         currentTime: Long = System.currentTimeMillis()
     ) {
@@ -153,7 +153,7 @@ internal class FileResourcesRepoImpl(
                         && (currentTime > inAppAssetsStore.expiryForUrl(key))
             }
 
-        cleanupAllImages(cleanupUrls)
+        cleanupAllInAppImagesAndGifsV1(cleanupUrls)
     }
 
     @JvmOverloads
@@ -176,14 +176,14 @@ internal class FileResourcesRepoImpl(
     }
 
     @JvmOverloads
-    fun cleanupAllImages(
+    fun cleanupAllInAppImagesAndGifsV1(
         cleanupUrls: List<String> = inAppAssetsStore.getAllAssetUrls().toList()
     ) {
         val successBlock: (url: String) -> Unit = { url ->
             inAppAssetsStore.clearAssetUrl(url)
         }
 
-        cleanupStrategy.clearInAppAssets(cleanupUrls, successBlock)
+        cleanupStrategy.clearInAppImagesAndGifsV1(cleanupUrls, successBlock)
     }
 
     @JvmOverloads
@@ -194,6 +194,6 @@ internal class FileResourcesRepoImpl(
             fileStore.clearFileUrl(url)
         }
 
-        cleanupStrategy.clearFileAssets(cleanupUrls, successBlock)
+        cleanupStrategy.clearFileAssetsV2(cleanupUrls, successBlock)
     }
 }

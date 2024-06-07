@@ -12,7 +12,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.BOOL
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.FILE
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.NUMBER
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.STRING
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import org.json.JSONException
 import org.json.JSONObject
 import java.lang.ref.WeakReference
@@ -26,7 +26,7 @@ sealed class CustomTemplateContext private constructor(
     template: CustomTemplate,
     protected val notification: CTInAppNotification,
     inAppListener: InAppListener,
-    private val resourceProvider: InAppResourceProvider,
+    private val resourceProvider: FileResourceProvider,
     private var dismissListener: ContextDismissListener?,
     protected val logger: Logger
 ) {
@@ -39,7 +39,7 @@ sealed class CustomTemplateContext private constructor(
             template: CustomTemplate,
             notification: CTInAppNotification,
             inAppListener: InAppListener,
-            resourceProvider: InAppResourceProvider,
+            resourceProvider: FileResourceProvider,
             dismissListener: ContextDismissListener?,
             logger: Logger
         ): CustomTemplateContext {
@@ -312,7 +312,7 @@ sealed class CustomTemplateContext private constructor(
         template: CustomTemplate,
         notification: CTInAppNotification,
         inAppListener: InAppListener,
-        resourceProvider: InAppResourceProvider,
+        resourceProvider: FileResourceProvider,
         dismissListener: ContextDismissListener?,
         logger: Logger
     ) : CustomTemplateContext(template, notification, inAppListener, resourceProvider, dismissListener, logger) {
@@ -353,7 +353,7 @@ sealed class CustomTemplateContext private constructor(
         template: CustomTemplate,
         notification: CTInAppNotification,
         inAppListener: InAppListener,
-        resourceProvider: InAppResourceProvider,
+        resourceProvider: FileResourceProvider,
         dismissListener: ContextDismissListener?,
         logger: Logger
     ) : CustomTemplateContext(

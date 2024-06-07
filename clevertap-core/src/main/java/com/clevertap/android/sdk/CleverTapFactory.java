@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.store.preference.FileStore;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
@@ -273,7 +273,7 @@ class CleverTapFactory {
                 deviceInfo,
                 new InAppQueue(config, storeRegistry),
                 evaluationManager,
-                new InAppResourceProvider(context, config.getLogger()),
+                new FileResourceProvider(context, config.getLogger()),
                 templatesManager,
                 storeRegistry
         );

@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.inapp.images.memory
 
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.Logger
 import java.io.File
 
 class MemoryCreator {
@@ -20,14 +19,14 @@ class MemoryCreator {
          * @param logger The logger for logging purposes.
          * @return An instance of GifMemory.
          */
-        fun createGifMemory(diskMemoryLocation: File, logger: ILogger?): Memory<ByteArray> {
+        fun createInAppGifMemoryV1(diskMemoryLocation: File, logger: ILogger?): Memory<ByteArray> {
             val defaultGifConfig = MemoryConfig(
                 GIF_CACHE_MIN_KB,
                 Runtime.getRuntime().maxMemory() / (1024 * 32),
                 IMAGE_SIZE_MAX_DISK,
                 diskMemoryLocation
             )
-            return GifMemoryV1(defaultGifConfig, logger)
+            return InAppGifMemoryV1(defaultGifConfig, logger)
         }
 
         /**
@@ -36,14 +35,14 @@ class MemoryCreator {
          * @param logger The logger for logging purposes.
          * @return An instance of ImageMemory.
          */
-        fun createImageMemory(diskMemoryLocation: File, logger: ILogger?): Memory<Bitmap> {
+        fun createInAppImageMemoryV1(diskMemoryLocation: File, logger: ILogger?): Memory<Bitmap> {
             val defaultImageConfig = MemoryConfig(
                 IMAGE_CACHE_MIN_KB,
                 Runtime.getRuntime().maxMemory() / (1024 * 32),
                 IMAGE_SIZE_MAX_DISK,
                 diskMemoryLocation
             )
-            return ImageMemoryV1(defaultImageConfig, logger)
+            return InAppImageMemoryV1(defaultImageConfig, logger)
         }
 
         /**
@@ -52,7 +51,7 @@ class MemoryCreator {
          * @param logger The logger for logging purposes.
          * @return An instance of FileMemory.
          */
-        fun createFileMemory(diskMemoryLocation: File, logger: ILogger?): Memory<ByteArray> {
+        fun createFileMemoryV2(diskMemoryLocation: File, logger: ILogger?): Memory<ByteArray> {
             val defaultFileConfig = MemoryConfig(
                 FILE_CACHE_MIN_KB,
                 Runtime.getRuntime().maxMemory() / (1024 * 32),

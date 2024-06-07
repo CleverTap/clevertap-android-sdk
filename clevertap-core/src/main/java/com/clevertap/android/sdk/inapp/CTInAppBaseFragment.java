@@ -12,7 +12,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.customviews.CloseImageView;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.utils.UriHelper;
 import java.lang.ref.WeakReference;
 import java.net.URLDecoder;
@@ -44,7 +44,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     private DidClickForHardPermissionListener didClickForHardPermissionListener;
 
-    private InAppResourceProvider provider;
+    private FileResourceProvider provider;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -58,7 +58,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             if (config != null) {
                 logger = config.getLogger();
             }
-            provider = new InAppResourceProvider(context, logger);
+            provider = new FileResourceProvider(context, logger);
             currentOrientation = getResources().getConfiguration().orientation;
             generateListener();
             /*Initialize the below listener only when in app has InAppNotification activity as their host activity
@@ -175,7 +175,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
         }
     }
 
-    public InAppResourceProvider resourceProvider() {
+    public FileResourceProvider resourceProvider() {
         return provider;
     }
 

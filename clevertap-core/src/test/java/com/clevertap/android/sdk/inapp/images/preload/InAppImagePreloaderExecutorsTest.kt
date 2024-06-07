@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.inapp.images.preload
 
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.task.MockCTExecutors
 import io.mockk.every
 import io.mockk.mockk
@@ -16,13 +16,13 @@ class InAppImagePreloaderExecutorsTest {
     private val byteArray = ByteArray(10) { pos ->
         pos.toByte()
     }
-    private val inAppResourceProvider = mockk<InAppResourceProvider>()
+    private val mFileResourceProvider = mockk<FileResourceProvider>()
     private val executors = MockCTExecutors()
 
     private val logger = TestLogger()
 
     private val inAppImagePreloader = FilePreloaderExecutors(
-        inAppImageProvider = inAppResourceProvider,
+        fileResourceProvider = mFileResourceProvider,
         logger = logger,
         executor = executors
     )
@@ -34,18 +34,18 @@ class InAppImagePreloaderExecutorsTest {
 
         for (url in urls) {
             every {
-                inAppResourceProvider.fetchInAppImage(url)
+                mFileResourceProvider.fetchInAppImageV1(url)
             } returns mockBitmap
         }
 
-        inAppImagePreloader.preloadImages(urls) { url ->
+        inAppImagePreloader.preloadInAppImagesV1(urls) { url ->
             successUrls.add(url)
         }
 
         for (count in 0 until urls.size) {
             val url = urls[count]
             verify {
-                inAppResourceProvider.fetchInAppImage(url)
+                mFileResourceProvider.fetchInAppImageV1(url)
             }
         }
         assertEquals(urls.size, successUrls.size)
@@ -58,18 +58,18 @@ class InAppImagePreloaderExecutorsTest {
 
         for (url in urls) {
             every {
-                inAppResourceProvider.fetchInAppGif(url)
+                mFileResourceProvider.fetchInAppGifV1(url)
             } returns byteArray
         }
 
-        inAppImagePreloader.preloadGifs(urls) { url ->
+        inAppImagePreloader.preloadInAppGifsV1(urls) { url ->
             successUrls.add(url)
         }
 
         for (count in 0 until urls.size) {
             val url = urls[count]
             verify {
-                inAppResourceProvider.fetchInAppGif(url)
+                mFileResourceProvider.fetchInAppGifV1(url)
             }
         }
         assertEquals(urls.size, successUrls.size)
