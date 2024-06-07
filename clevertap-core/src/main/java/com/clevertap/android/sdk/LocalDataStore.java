@@ -47,7 +47,6 @@ public class LocalDataStore {
 
     private final DeviceInfo deviceInfo;
 
-
     LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo) {
         this.context = context;
         this.config = config;
@@ -101,10 +100,6 @@ public class LocalDataStore {
         }
     }
 
-    public Object getProfileProperty(String key) {
-        return _getProfileProperty(key);
-    }
-
     @WorkerThread
     public void persistEvent(Context context, JSONObject event, int type) {
 
@@ -120,8 +115,6 @@ public class LocalDataStore {
             getConfigLogger().verbose(getConfigAccountId(), "Failed to sync with upstream", t);
         }
     }
-
-
 
     @WorkerThread
     public void setDataSyncFlag(JSONObject event) {
@@ -171,8 +164,7 @@ public class LocalDataStore {
         }
     }
 
-    private Object _getProfileProperty(String key) {
-
+    public Object getProfileProperty(String key) {
         if (key == null) {
             return null;
         }
@@ -190,48 +182,6 @@ public class LocalDataStore {
                 return null;
             }
         }
-    }
-
-    private void _removeProfileField(String key) {
-
-        if (key == null) {
-            return;
-        }
-
-        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            try {
-                PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
-
-            } catch (Throwable t) {
-                getConfigLogger()
-                        .verbose(getConfigAccountId(), "Failed to remove local profile value for key " + key, t);
-            }
-        }
-    }
-
-    private JSONObject buildChangeFromOldValueToNewValue(Object oldValue, Object newValue) {
-
-        if (oldValue == null && newValue == null) {
-            return null;
-        }
-
-        JSONObject keyUpdates = new JSONObject();
-
-        try {
-            // if newValue is null means its been removed, represent that as -1
-            Object _newVal = (newValue != null) ? newValue : -1;
-            keyUpdates.put("newValue", _newVal);
-
-            if (oldValue != null) {
-                keyUpdates.put("oldValue", oldValue);
-            }
-
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to create profile changed values object", t);
-            return null;
-        }
-
-        return keyUpdates;
     }
 
     private EventDetail decodeEventDetails(String name, String encoded) {
@@ -329,8 +279,7 @@ public class LocalDataStore {
                         }
 
                         getConfigLogger().verbose(getConfigAccountId(),
-                                "Local Data Store - Inflated local profile " + PROFILE_FIELDS_IN_THIS_SESSION
-                                        .toString());
+                                "Local Data Store - Inflated local profile " + PROFILE_FIELDS_IN_THIS_SESSION);
 
                     } catch (Throwable t) {
                         //no-op
@@ -474,8 +423,19 @@ public class LocalDataStore {
 
     }
 
+    private void _removeProfileField(String key) {
+        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
+            try {
+                PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
+            } catch (Throwable t) {
+                getConfigLogger()
+                        .verbose(getConfigAccountId(), "Failed to remove local profile value for key " + key, t);
+            }
+        }
+    }
+
     private void _setProfileField(String key, Object value) {
-        if (key == null || value == null) {
+        if (value == null) {
             return;
         }
         try {
@@ -512,89 +472,5 @@ public class LocalDataStore {
 
     private String stringify(Object value) {
         return (value == null) ? "" : value.toString();
-    }
-
-    //Not used.Remove later
-    @SuppressWarnings({"rawtypes", "ConstantConditions"})
-    private JSONObject syncEventsFromUpstream(Context context, JSONObject events) {
-        try {
-            JSONObject eventUpdates = null;
-            String namespace;
-            if (!this.config.isDefaultInstance()) {
-                namespace = eventNamespace + ":" + this.config.getAccountId();
-            } else {
-                namespace = eventNamespace;
-            }
-            SharedPreferences prefs = StorageHelper.getPreferences(context, namespace);
-            Iterator keys = events.keys();
-            SharedPreferences.Editor editor = prefs.edit();
-
-            while (keys.hasNext()) {
-                String event = keys.next().toString();
-                String encoded = getStringFromPrefs(event, encodeEventDetails(0, 0, 0), namespace);
-
-                EventDetail ed = decodeEventDetails(event, encoded);
-
-                JSONArray upstream = events.getJSONArray(event);
-                if (upstream == null || upstream.length() < 3) {
-                    getConfigLogger().verbose(getConfigAccountId(), "Corrupted upstream event detail");
-                    continue;
-                }
-
-                int upstreamCount, first, last;
-                try {
-                    upstreamCount = upstream.getInt(0);
-                    first = upstream.getInt(1);
-                    last = upstream.getInt(2);
-                } catch (Throwable t) {
-                    getConfigLogger().verbose(getConfigAccountId(),
-                            "Failed to parse upstream event message: " + upstream.toString());
-                    continue;
-                }
-
-                if (upstreamCount > ed.getCount()) {
-                    editor.putString(storageKeyWithSuffix(event), encodeEventDetails(first, last, upstreamCount));
-                    getConfigLogger()
-                            .verbose(getConfigAccountId(), "Accepted update for event " + event + " from upstream");
-
-                    try {
-                        if (eventUpdates == null) {
-                            eventUpdates = new JSONObject();
-                        }
-
-                        JSONObject evUpdate = new JSONObject();
-
-                        JSONObject countUpdate = new JSONObject();
-                        countUpdate.put("oldValue", ed.getCount());
-                        countUpdate.put("newValue", upstreamCount);
-                        evUpdate.put("count", countUpdate);
-
-                        JSONObject firstUpdate = new JSONObject();
-                        firstUpdate.put("oldValue", ed.getFirstTime());
-                        firstUpdate.put("newValue", upstream.getInt(1));
-                        evUpdate.put("firstTime", firstUpdate);
-
-                        JSONObject lastUpdate = new JSONObject();
-                        lastUpdate.put("oldValue", ed.getLastTime());
-                        lastUpdate.put("newValue", upstream.getInt(2));
-                        evUpdate.put("lastTime", lastUpdate);
-
-                        eventUpdates.put(event, evUpdate);
-
-                    } catch (Throwable t) {
-                        getConfigLogger().verbose(getConfigAccountId(), "Couldn't set event updates", t);
-                    }
-
-                } else {
-                    getConfigLogger()
-                            .verbose(getConfigAccountId(), "Rejected update for event " + event + " from upstream");
-                }
-            }
-            StorageHelper.persist(editor);
-            return eventUpdates;
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Couldn't sync events from upstream", t);
-            return null;
-        }
     }
 }
