@@ -3568,7 +3568,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return true if a file exists for the specified url, false otherwise.
      */
     public boolean doesFileExistForUrl(@NonNull String url){
-        Logger logger = coreState.getConfig().getLogger();
+        Logger logger = getConfigLogger();
         InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
         return inAppResourceProvider.isFileCached(url);
     }
