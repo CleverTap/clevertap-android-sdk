@@ -3506,7 +3506,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public void clearInAppResources(boolean expiredOnly) {
 
-        Logger logger = coreState.getConfig().getLogger();
+        Logger logger = getConfigLogger();
 
         StoreRegistry storeRegistry = coreState.getStoreRegistry();
         if (storeRegistry == null) {
@@ -3585,7 +3585,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public String getFilePathForUrl(@NonNull String url){
-        Logger logger = coreState.getConfig().getLogger();
+        Logger logger = getConfigLogger();
         InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
         return inAppResourceProvider.cachedFilePath(url);
     }
