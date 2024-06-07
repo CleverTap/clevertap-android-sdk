@@ -193,6 +193,7 @@ class CleverTapFactory {
                 false,
                 storeRegistry,
                 triggersManager,
+                templatesManager,
                 coreMetaData
         );
 
@@ -239,6 +240,7 @@ class CleverTapFactory {
                 true,
                 storeRegistry,
                 triggersManager,
+                templatesManager,
                 coreMetaData
         );
 

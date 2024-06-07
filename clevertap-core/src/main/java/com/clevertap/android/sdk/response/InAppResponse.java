@@ -7,6 +7,8 @@ import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.TriggerManager;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
@@ -18,6 +20,8 @@ import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import kotlin.Pair;
 import org.json.JSONArray;
@@ -35,6 +39,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final StoreRegistry storeRegistry;
 
+    private final TemplatesManager templatesManager;
+
     private final TriggerManager triggerManager;
 
     private final CoreMetaData coreMetaData;
@@ -45,6 +51,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             final boolean isSendTest,
             StoreRegistry storeRegistry,
             TriggerManager triggerManager,
+            final TemplatesManager templatesManager,
             CoreMetaData coreMetaData
     ) {
         this.config = config;
@@ -54,6 +61,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
         this.storeRegistry = storeRegistry;
         this.triggerManager = triggerManager;
         this.coreMetaData = coreMetaData;
+        this.templatesManager = templatesManager;
     }
 
     @Override
@@ -129,6 +137,28 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 assetRepo.fetchAllImages(res.getPreloadImages());
                 assetRepo.fetchAllGifs(res.getPreloadGifs());
                 // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
+                List<String> files = new ArrayList<>();
+                if (csInApps.getFirst()) {
+                    for (int i = 0; i < csInApps.getSecond().length(); i++) {
+                        final CustomTemplateInAppData customTemplateInAppData
+                                = CustomTemplateInAppData.createFromJson(csInApps.getSecond().getJSONObject(i));
+                        if (customTemplateInAppData != null) {
+                            final List<String> fileArgs = customTemplateInAppData.getFileArgsUrls(
+                                    templatesManager);
+                            files.addAll(fileArgs);
+                        }
+                    }
+                    if (!files.isEmpty())
+                    {
+                        assetRepo.fetchAllFiles(files, (aBoolean, stringBooleanMap) -> {
+                            logger.verbose(config.getAccountId(),
+                                    "file download status from InAppResponse = " + aBoolean + " and url status map = "
+                                            + stringBooleanMap);
+                            return null;
+                        });
+                    }
+                }
+
                 if (isFullResponse) {
                     logger.verbose(config.getAccountId(), "Handling cache eviction");
                     assetRepo.cleanupStaleImages(res.getPreloadAssets());
