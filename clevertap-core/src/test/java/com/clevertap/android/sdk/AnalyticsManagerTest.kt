@@ -102,7 +102,7 @@ class AnalyticsManagerTest : BaseTestCase() {
 
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
 
-        `when`(coreState.localDataStore.getProfileValueForKey("int_score"))
+        `when`(coreState.localDataStore.getProfileProperty("int_score"))
             .thenReturn(10)
 
         analyticsManagerSUT.incrementValue("int_score", 10)
@@ -119,7 +119,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         val updateObj = JSONObject().put("double_score", commandObj)
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
 
-        `when`(coreState.localDataStore.getProfileValueForKey("double_score"))
+        `when`(coreState.localDataStore.getProfileProperty("double_score"))
             .thenReturn(10.25)
 
         analyticsManagerSUT.incrementValue("double_score", 10.25)
@@ -136,7 +136,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         val updateObj = JSONObject().put("float_score", commandObj)
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
 
-        `when`(coreState.localDataStore.getProfileValueForKey("float_score"))
+        `when`(coreState.localDataStore.getProfileProperty("float_score"))
             .thenReturn(10.25f)
 
         analyticsManagerSUT.incrementValue("float_score", 10.25f)
@@ -168,7 +168,7 @@ class AnalyticsManagerTest : BaseTestCase() {
 
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
 
-        `when`(coreState.localDataStore.getProfileValueForKey("decr_int_score"))
+        `when`(coreState.localDataStore.getProfileProperty("decr_int_score"))
             .thenReturn(30)
 
         analyticsManagerSUT.decrementValue("decr_int_score", 10)
@@ -186,7 +186,7 @@ class AnalyticsManagerTest : BaseTestCase() {
 
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
 
-        `when`(coreState.localDataStore.getProfileValueForKey("decr_double_score"))
+        `when`(coreState.localDataStore.getProfileProperty("decr_double_score"))
             .thenReturn(20.25)
 
         analyticsManagerSUT.decrementValue("decr_double_score", 10.50)
@@ -204,7 +204,7 @@ class AnalyticsManagerTest : BaseTestCase() {
 
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
 
-        `when`(coreState.localDataStore.getProfileValueForKey("decr_float_score"))
+        `when`(coreState.localDataStore.getProfileProperty("decr_float_score"))
             .thenReturn(20.25f)
 
         analyticsManagerSUT.decrementValue("decr_float_score", 10.50f)

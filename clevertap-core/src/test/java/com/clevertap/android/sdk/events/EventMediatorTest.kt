@@ -125,9 +125,9 @@ class EventMediatorTest {
                 .put("prop3", true)
         )
 
-        every { localDataStore.getProfileValueForKey("prop1") } returns "oldValue1"
-        every { localDataStore.getProfileValueForKey("prop2") } returns 2
-        every { localDataStore.getProfileValueForKey("prop3") } returns null
+        every { localDataStore.getProfileProperty("prop1") } returns "oldValue1"
+        every { localDataStore.getProfileProperty("prop2") } returns 2
+        every { localDataStore.getProfileProperty("prop3") } returns null
 
         val userAttributeChangeProperties = eventMediator.computeUserAttributeChangeProperties(profileEvent)
 
@@ -156,7 +156,7 @@ class EventMediatorTest {
         )
 
 
-        every { localDataStore.getProfileValueForKey("deleteProp") } returns "oldValue1"
+        every { localDataStore.getProfileProperty("deleteProp") } returns "oldValue1"
 
         val userAttributeChangeProperties = eventMediator.computeUserAttributeChangeProperties(profileEvent)
 
@@ -179,8 +179,8 @@ class EventMediatorTest {
 
         )
 
-        every { localDataStore.getProfileValueForKey("incrProp") } returns 10
-        every { localDataStore.getProfileValueForKey("decrProp") } returns 20.5
+        every { localDataStore.getProfileProperty("incrProp") } returns 10
+        every { localDataStore.getProfileProperty("decrProp") } returns 20.5
         every { profileValueHandler.handleIncrementDecrementValues(10, Constants.COMMAND_INCREMENT, 10) } returns 20
         every {
             profileValueHandler.handleIncrementDecrementValues(
@@ -216,9 +216,9 @@ class EventMediatorTest {
                 .put("removeProp", JSONObject().put(Constants.COMMAND_REMOVE, JSONArray().put("a").put("b")))
         )
 
-        every { localDataStore.getProfileValueForKey("setProp") } returns JSONArray().put("old")
-        every { localDataStore.getProfileValueForKey("addProp") } returns JSONArray().put("old")
-        every { localDataStore.getProfileValueForKey("removeProp") } returns JSONArray().put("a").put("b").put("old")
+        every { localDataStore.getProfileProperty("setProp") } returns JSONArray().put("old")
+        every { localDataStore.getProfileProperty("addProp") } returns JSONArray().put("old")
+        every { localDataStore.getProfileProperty("removeProp") } returns JSONArray().put("a").put("b").put("old")
 
         every {
             profileValueHandler.handleMultiValues(
@@ -271,7 +271,7 @@ class EventMediatorTest {
         )
 
 
-        every { localDataStore.getProfileValueForKey("dateProp") } returns 3456L
+        every { localDataStore.getProfileProperty("dateProp") } returns 3456L
 
         val userAttributeChangeProperties = eventMediator.computeUserAttributeChangeProperties(profileEvent)
 

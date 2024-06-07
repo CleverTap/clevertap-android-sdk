@@ -159,7 +159,6 @@ class NetworkManagerTest : BaseTestCase() {
             callbackManager,
             lockManager,
             Validator(),
-            localDataStore,
             inAppResponse,
             ctApiWrapper
         )
