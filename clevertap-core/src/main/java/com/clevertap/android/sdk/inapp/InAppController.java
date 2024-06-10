@@ -727,8 +727,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
-    private static void checkPendingNotifications(final Context context, final CleverTapInstanceConfig config,
-            final InAppController inAppController) {
+    private static void checkPendingNotifications(
+            final Context context,
+            final CleverTapInstanceConfig config,
+            final InAppController inAppController
+    ) {
         Logger.v(config.getAccountId(), "checking Pending Notifications");
         if (pendingNotifications != null && !pendingNotifications.isEmpty()) {
             try {
@@ -748,8 +751,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     //InApp
-    private static void inAppDidDismiss(Context context, CleverTapInstanceConfig config,
-            CTInAppNotification inAppNotification, InAppController inAppController) {
+    private static void inAppDidDismiss(
+            Context context,
+            CleverTapInstanceConfig config,
+            CTInAppNotification inAppNotification,
+            InAppController inAppController
+    ) {
         Logger.v(config.getAccountId(), "Running inAppDidDismiss");
         if (currentlyDisplayingInApp != null && (currentlyDisplayingInApp.getCampaignId()
                 .equals(inAppNotification.getCampaignId()))) {
@@ -774,8 +781,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     //InApp
-    private static void showInApp(Context context, final CTInAppNotification inAppNotification,
-            CleverTapInstanceConfig config, InAppController inAppController) {
+    private static void showInApp(
+            Context context,
+            final CTInAppNotification inAppNotification,
+            CleverTapInstanceConfig config,
+            InAppController inAppController
+    ) {
 
         Logger.v(config.getAccountId(), "Attempting to show next In-App");
 
