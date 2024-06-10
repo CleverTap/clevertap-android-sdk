@@ -18,7 +18,11 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit,
         failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit
     ) {
-        preloadAssets(urlMetas, successBlock, failureBlock) { urlMeta: Pair<String, CtCacheType> ->
+        preloadAssets(
+            urlMetas = urlMetas,
+            successBlock = successBlock,
+            failureBlock = failureBlock
+        ) { urlMeta: Pair<String, CtCacheType> ->
 
             val url = urlMeta.first
 
