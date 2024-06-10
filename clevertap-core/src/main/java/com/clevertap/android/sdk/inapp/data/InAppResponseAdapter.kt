@@ -3,6 +3,8 @@ package com.clevertap.android.sdk.inapp.data
 import android.content.res.Configuration
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
 import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.orEmptyArray
@@ -14,8 +16,9 @@ import org.json.JSONObject
 /**
  * Class that wraps functionality for response and return relevant methods to get data
  */
-class InAppResponseAdapter(
-    responseJson: JSONObject
+internal class InAppResponseAdapter(
+    responseJson: JSONObject,
+    templatesManager: TemplatesManager
 ) {
 
     companion object {
@@ -36,6 +39,7 @@ class InAppResponseAdapter(
 
     val preloadImages: List<String>
     val preloadGifs: List<String>
+    val preloadFiles: List<String>
     val preloadAssets: List<String>
 
     val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_JSON_RESPONSE_KEY)
@@ -49,23 +53,29 @@ class InAppResponseAdapter(
     init {
         val imageList = mutableListOf<String>()
         val gifList = mutableListOf<String>()
+        val filesList = mutableListOf<String>()
 
-        //fetchMediaUrls(legacyInApps, list)
-        //fetchMediaUrls(appLaunchServerSideInApps, list)
-        fetchMediaUrls(clientSideInApps, imageList, gifList)
+        fetchMediaUrls(
+            imageList = imageList,
+            gifList = gifList
+        )
+        fetchFilesUrlsForTemplates(
+            filesList = filesList,
+            templatesManager = templatesManager
+        )
 
         preloadImages = imageList
         preloadGifs = gifList
+        preloadFiles = filesList
         preloadAssets = imageList + gifList
     }
 
     private fun fetchMediaUrls(
-        data: Pair<Boolean, JSONArray?>,
         imageList: MutableList<String>,
         gifList: MutableList<String>
     ) {
-        if (data.first) {
-            data.second?.iterator<JSONObject> { jsonObject ->
+        if (clientSideInApps.first) {
+            clientSideInApps.second?.iterator<JSONObject> { jsonObject ->
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
 
                 if (portrait != null) {
@@ -92,6 +102,20 @@ class InAppResponseAdapter(
                             gifList.add(landscapeMedia.mediaUrl)
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private fun fetchFilesUrlsForTemplates(filesList: MutableList<String>, templatesManager: TemplatesManager) {
+        if (clientSideInApps.first) {
+            for (i in 0 until clientSideInApps.second!!.length()) {
+                val customTemplateInAppData = createFromJson(clientSideInApps.second!!.getJSONObject(i))
+                if (customTemplateInAppData != null) {
+                    val fileArgs = customTemplateInAppData.getFileArgsUrls(
+                        templatesManager
+                    )
+                    filesList.addAll(fileArgs)
                 }
             }
         }

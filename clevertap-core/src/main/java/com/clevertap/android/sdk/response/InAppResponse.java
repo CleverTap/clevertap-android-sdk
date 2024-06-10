@@ -7,7 +7,6 @@ import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.TriggerManager;
-import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
@@ -20,7 +19,6 @@ import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import kotlin.Pair;
@@ -72,7 +70,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
     ) {
         try {
 
-            InAppResponseAdapter res = new InAppResponseAdapter(response);
+            InAppResponseAdapter res = new InAppResponseAdapter(response, templatesManager);
             final ImpressionStore impressionStore = storeRegistry.getImpressionStore();
             final InAppStore inAppStore = storeRegistry.getInAppStore();
             final InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
@@ -136,26 +134,16 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 assetRepo.fetchAllInAppImagesV1(res.getPreloadImages());
                 assetRepo.fetchAllInAppGifsV1(res.getPreloadGifs());
                 // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
-                List<String> files = new ArrayList<>();
-                if (csInApps.getFirst()) {
-                    for (int i = 0; i < csInApps.getSecond().length(); i++) {
-                        final CustomTemplateInAppData customTemplateInAppData
-                                = CustomTemplateInAppData.createFromJson(csInApps.getSecond().getJSONObject(i));
-                        if (customTemplateInAppData != null) {
-                            final List<String> fileArgs = customTemplateInAppData.getFileArgsUrls(
-                                    templatesManager);
-                            files.addAll(fileArgs);
-                        }
-                    }
-                    if (!files.isEmpty())
-                    {
-                        assetRepo.fetchAllFiles(files, (aBoolean, stringBooleanMap) -> {
-                            logger.verbose(config.getAccountId(),
-                                    "file download status from InAppResponse = " + aBoolean + " and url status map = "
-                                            + stringBooleanMap);
-                            return null;
-                        });
-                    }
+
+                List<String> preloadFiles = res.getPreloadFiles();
+                if (!preloadFiles.isEmpty()) {
+                    assetRepo.fetchAllFiles(preloadFiles, (aBoolean, stringBooleanMap) -> {
+                        logger.verbose(
+                                config.getAccountId(),
+                                "file download status from InAppResponse = " + aBoolean + " and url status map = " + stringBooleanMap
+                        );
+                        return null;
+                    });
                 }
 
                 if (isFullResponse) {
