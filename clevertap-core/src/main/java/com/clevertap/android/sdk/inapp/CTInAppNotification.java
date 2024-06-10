@@ -643,21 +643,6 @@ public class CTInAppNotification implements Parcelable {
         }
     }
 
-    private void removeImageOrGif(FileResourceProvider resourceProvider) {
-        for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
-            String mediaUrl = inAppMedia.getMediaUrl();
-            if (mediaUrl != null) {
-                if (inAppMedia.isImage()) {
-                    resourceProvider.deleteImageMemoryV1(mediaUrl);
-                    Logger.v("Deleted image - " + mediaUrl);
-                } else {
-                    resourceProvider.deleteGifMemoryV1(mediaUrl);
-                    Logger.v("Deleted GIF - " + mediaUrl);
-                }
-            }
-        }
-    }
-
     private boolean validateNotifBundle(Bundle notif) {
         try {
             final Bundle w = notif.getBundle(Constants.INAPP_WINDOW);
