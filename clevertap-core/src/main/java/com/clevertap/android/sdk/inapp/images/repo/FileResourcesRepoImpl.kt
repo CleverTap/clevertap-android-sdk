@@ -180,7 +180,6 @@ internal class FileResourcesRepoImpl constructor(
             inAppAssetsStore.clearAssetUrl(url)
         }
 
-        // todo fixme
-        cleanupStrategy.clearFileAssetsV2(cleanupUrls, successBlock)
+        cleanupStrategy.clearFileAssets(cleanupUrls, successBlock)
     }
 }
