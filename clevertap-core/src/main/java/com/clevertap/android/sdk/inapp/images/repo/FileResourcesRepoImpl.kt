@@ -1,12 +1,13 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
-import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.max
 
 internal class FileResourcesRepoImpl constructor(
     override val cleanupStrategy: FileCleanupStrategy,
@@ -29,29 +30,7 @@ internal class FileResourcesRepoImpl constructor(
         const val EXPIRY_OFFSET_MILLIS = DAY_IN_MILLIS * DAYS_FOR_EXPIRY
     }
 
-    /**
-     * Fetches all images in parallel and registers successful url in repo
-     */
-    override fun fetchAllInAppImagesV1(urls: List<String>) {
-
-        val successBlock: (url: String) -> Unit = { url ->
-            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-            inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)// uncommon
-        }
-
-        preloaderStrategy.preloadInAppImagesV1(urls, successBlock)
-    }
-
-    override fun fetchAllInAppGifsV1(urls: List<String>) {
-        val successBlock: (url: String) -> Unit = { url ->
-            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-            inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
-        }
-
-        preloaderStrategy.preloadInAppGifsV1(urls, successBlock)
-    }
-
-    @WorkerThread
+    /*@WorkerThread
     override fun fetchAllFiles(
         urls: List<String>,
         completionCallback: (status: Boolean, urlStatusMap: Map<String, Boolean>) -> Unit
@@ -96,6 +75,30 @@ internal class FileResourcesRepoImpl constructor(
                 preloaderStrategy.preloadFiles(filteredUrls, successBlock, failureBlock)
             }
         }
+    }*/
+
+    override fun preloadFilesAndCache(
+        urls: List<Pair<String, CtCacheType>>,
+    ) {
+        val successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
+            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
+
+            when (meta.second) {
+                CtCacheType.IMAGE,
+                CtCacheType.GIF -> {
+                    inAppAssetsStore.saveAssetUrl(url = meta.first, expiry = expiry)
+                    fileStore.saveFileUrl(url = meta.first, expiry = expiry)
+                }
+                CtCacheType.FILES -> {
+                    fileStore.saveFileUrl(url = meta.first, expiry = expiry)
+                }
+            }
+
+        }
+        preloaderStrategy.preloadFilesAndCache(
+            urls = urls,
+            successBlock = successBlock
+        )
     }
 
     private fun checkCompletion(
@@ -108,24 +111,9 @@ internal class FileResourcesRepoImpl constructor(
             completionCallback(allSuccessful, urlStatusMap)
         }
     }
-
-    /**
-     * Checks all existing cached data and check if it is in valid urls, if not evict item from cache
-     */
-    override fun cleanupStaleInAppImagesAndGifsV1(validUrls: List<String>) {
-
-        val currentTime = System.currentTimeMillis()
-
-        if (currentTime - legacyInAppsStore.lastCleanupTs() < EXPIRY_OFFSET_MILLIS) {
-            // limiting cleanup once per 14 days
-            return
-        }
-
-        cleanupStaleInAppImagesAndGifsV1Now(validUrls, currentTime)
-        legacyInAppsStore.updateAssetCleanupTs(currentTime)
-    }
-
-    override fun cleanupStaleFiles(validUrls: List<String>) {
+    override fun cleanupStaleFiles(
+        urls: List<String>
+    ) {
         val currentTime = System.currentTimeMillis()
 
         if (currentTime - legacyInAppsStore.lastCleanupTsForFiles() < EXPIRY_OFFSET_MILLIS) {
@@ -133,67 +121,66 @@ internal class FileResourcesRepoImpl constructor(
             return
         }
 
-        cleanupStaleFilesNow(validUrls, currentTime)
+        cleanupStaleFilesNow(
+            validUrls = urls,
+            currentTime = currentTime
+        )
         legacyInAppsStore.updateFileCleanupTs(currentTime)
     }
 
-    @JvmOverloads
-    fun cleanupStaleInAppImagesAndGifsV1Now(
-        validUrls: List<String> = emptyList(),
-        currentTime: Long = System.currentTimeMillis()
-    ) {
-        val valid = validUrls.associateWith { it }
-
-        val allAssetUrls = inAppAssetsStore.getAllAssetUrls()
-
-        val cleanupUrls = allAssetUrls
-            .toMutableSet()
-            .filter { key ->
-                valid.contains(key).not()
-                        && (currentTime > inAppAssetsStore.expiryForUrl(key))
+    override fun cleanupExpiredInAppsResources() {
+        cleanupStaleFilesNow(
+            allFileUrls = inAppAssetsStore.getAllAssetUrls(),
+            expiryTs = { key ->
+                inAppAssetsStore.expiryForUrl(key)
             }
-
-        cleanupAllInAppImagesAndGifsV1(cleanupUrls)
+        )
     }
 
-    @JvmOverloads
-    fun cleanupStaleFilesNow(
+    override fun cleanupInAppsResources() {
+        cleanupStaleFilesNow(
+            allFileUrls = inAppAssetsStore.getAllAssetUrls(),
+            expiryTs = { key ->
+                inAppAssetsStore.expiryForUrl(key)
+            }
+        )
+    }
+
+    private fun cleanupStaleFilesNow(
         validUrls: List<String> = emptyList(),
-        currentTime: Long = System.currentTimeMillis()
+        currentTime: Long = System.currentTimeMillis(),
+        allFileUrls: Set<String> = fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls(),
+        expiryTs: (url: String) -> Long = { key ->
+            max(fileStore.expiryForUrl(key), inAppAssetsStore.expiryForUrl(key))
+        }
     ) {
         val valid = validUrls.associateWith { it }
-
-        val allFileUrls = fileStore.getAllFileUrls()
 
         val cleanupFileUrls = allFileUrls
             .toMutableSet()
             .filter { key ->
-                valid.contains(key).not()
-                        && (currentTime > fileStore.expiryForUrl(key))
+
+                // check if url is still valid, if so then dont clear
+                val first = valid.contains(key).not()
+
+                // check current time is greater than expiry for url
+                val second = currentTime > expiryTs(key)
+
+                first && second
             }
 
         cleanupAllFiles(cleanupFileUrls)
     }
 
-    @JvmOverloads
-    fun cleanupAllInAppImagesAndGifsV1(
-        cleanupUrls: List<String> = inAppAssetsStore.getAllAssetUrls().toList()
-    ) {
-        val successBlock: (url: String) -> Unit = { url ->
-            inAppAssetsStore.clearAssetUrl(url)
-        }
-
-        cleanupStrategy.clearInAppImagesAndGifsV1(cleanupUrls, successBlock)
-    }
-
-    @JvmOverloads
-    fun cleanupAllFiles(
-        cleanupUrls: List<String> = fileStore.getAllFileUrls().toList()
+    private fun cleanupAllFiles(
+        cleanupUrls: List<String>
     ) {
         val successBlock: (url: String) -> Unit = { url ->
             fileStore.clearFileUrl(url)
+            inAppAssetsStore.clearAssetUrl(url)
         }
 
+        // todo fixme
         cleanupStrategy.clearFileAssetsV2(cleanupUrls, successBlock)
     }
 }

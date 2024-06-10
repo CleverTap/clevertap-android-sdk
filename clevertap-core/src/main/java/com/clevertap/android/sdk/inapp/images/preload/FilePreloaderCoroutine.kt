@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.images.preload
 
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import com.clevertap.android.sdk.utils.DispatcherProvider
@@ -25,48 +26,47 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
     }
     private val scope = CoroutineScope(dispatchers.io().limitedParallelism(config.parallelDownloads))
 
-    override fun preloadInAppImagesV1(urls: List<String>, successBlock: (url: String) -> Unit) {
-        preloadAssets(urls, successBlock) { url ->
-            fileResourceProvider.fetchInAppImageV1(url)
-        }
-    }
-
-    override fun preloadInAppGifsV1(urls: List<String>, successBlock: (url: String) -> Unit) {
-        preloadAssets(urls, successBlock) { url ->
-            fileResourceProvider.fetchInAppGifV1(url)
-        }
-    }
-
-    override fun preloadFiles(
-        urls: List<String>,
-        successBlock: (url: String) -> Unit,
-        failureBlock: (url: String) -> Unit
+    override fun preloadFilesAndCache(
+        urls: List<Pair<String, CtCacheType>>,
+        successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit,
+        failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit
     ) {
-        preloadAssets(urls, successBlock,failureBlock) { url ->
-            fileResourceProvider.fetchFile(url)
+        preloadAssets(
+            urls = urls,
+            successBlock = successBlock,
+            failureBlock = failureBlock
+        ) { urlMeta: Pair<String, CtCacheType> ->
+
+            val url = urlMeta.first
+
+            when (urlMeta.second) {
+                CtCacheType.IMAGE -> fileResourceProvider.fetchInAppImageV1(url)
+                CtCacheType.GIF -> fileResourceProvider.fetchInAppGifV1(url)
+                CtCacheType.FILES -> fileResourceProvider.fetchFile(url)
+            }
         }
     }
 
     private fun preloadAssets(
-        urls: List<String>,
-        successBlock: (url: String) -> Unit,
-        failureBlock: (url: String) -> Unit = {},
-        assetBlock: (url: String) -> Any?
+        urls: List<Pair<String, CtCacheType>>,
+        successBlock: (meta: Pair<String, CtCacheType>) -> Unit,
+        failureBlock: (meta: Pair<String, CtCacheType>) -> Unit = {},
+        assetBlock: (meta: Pair<String, CtCacheType>) -> Any?
     ) {
-        urls.forEach { url ->
+        urls.forEach { meta: Pair<String, CtCacheType> ->
             val job = scope.launch(handler) {
-                logger?.verbose("started asset url fetch $url")
+                logger?.verbose("started asset url fetch $meta")
 
                 val mils = measureTimeMillis {
-                    val fetchInAppImage = assetBlock(url)
+                    val fetchInAppImage = assetBlock(meta)
                     if (fetchInAppImage != null) {
-                        successBlock.invoke(url)
+                        successBlock.invoke(meta)
                     } else {
-                        failureBlock.invoke(url)
+                        failureBlock.invoke(meta)
                     }
                 }
 
-                logger?.verbose("finished asset url fetch $url in $mils ms")
+                logger?.verbose("finished asset url fetch $meta in $mils ms")
             }
             jobs.add(job)
         }

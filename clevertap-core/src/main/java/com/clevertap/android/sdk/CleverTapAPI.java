@@ -3523,9 +3523,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         if (expiredOnly) {
-            impl.cleanupStaleInAppImagesAndGifsV1Now();
+            impl.cleanupExpiredInAppsResources();
         } else {
-            impl.cleanupAllInAppImagesAndGifsV1();
+            impl.cleanupInAppsResources();
         }
     }
 
@@ -3555,9 +3555,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         if (expiredOnly) {
-            impl.cleanupStaleFilesNow();
+            impl.cleanupStaleFiles();
         } else {
-            impl.cleanupAllFiles();
+            impl.cleanupStaleFiles(); // todo this also only clears expired ones. fixme
         }
     }
 

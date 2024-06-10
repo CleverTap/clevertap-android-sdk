@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
@@ -128,25 +129,15 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 inAppStore.storeServerSideInAppsMetaData(ssInApps.getSecond());
             }
 
-            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
-            assetRepo.fetchAllInAppImagesV1(res.getPreloadImages());
-            assetRepo.fetchAllInAppGifsV1(res.getPreloadGifs());
-            // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
+            List<Pair<String, CtCacheType>> preloadAssetsMeta = res.getPreloadAssetsMeta();
 
-            List<String> preloadFiles = res.getPreloadFiles();
-            if (!preloadFiles.isEmpty()) {
-                assetRepo.fetchAllFiles(preloadFiles, (aBoolean, stringBooleanMap) -> {
-                    logger.verbose(
-                            config.getAccountId(),
-                            "file download status from InAppResponse = " + aBoolean + " and url status map = " + stringBooleanMap
-                    );
-                    return null;
-                });
-            }
+            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
+            assetRepo.preloadFilesAndCache(preloadAssetsMeta);
+
 
             if (isFullResponse) {
                 logger.verbose(config.getAccountId(), "Handling cache eviction");
-                assetRepo.cleanupStaleInAppImagesAndGifsV1(res.getPreloadAssets());
+                assetRepo.cleanupStaleFiles(res.getPreloadAssets());
             } else {
                 logger.verbose(config.getAccountId(), "Ignoring cache eviction");
             }

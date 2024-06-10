@@ -42,6 +42,8 @@ internal class InAppResponseAdapter(
     val preloadFiles: List<String>
     val preloadAssets: List<String>
 
+    val preloadAssetsMeta: List<Pair<String, CtCacheType>>
+
     val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_JSON_RESPONSE_KEY)
 
     val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
@@ -67,7 +69,9 @@ internal class InAppResponseAdapter(
         preloadImages = imageList
         preloadGifs = gifList
         preloadFiles = filesList
-        preloadAssets = imageList + gifList
+
+        preloadAssets = imageList + gifList + filesList
+        preloadAssetsMeta = imageList.map { Pair(it, CtCacheType.IMAGE) } + gifList.map { Pair(it, CtCacheType.GIF) } + filesList.map { Pair(it, CtCacheType.FILES) } // todo no need to copy over and over
     }
 
     private fun fetchMediaUrls(
@@ -115,7 +119,7 @@ internal class InAppResponseAdapter(
                     val fileArgs = customTemplateInAppData.getFileArgsUrls(
                         templatesManager
                     )
-                    filesList.addAll(fileArgs)
+                    filesList.addAll(fileArgs.map { it.first })
                 }
             }
         }
@@ -128,6 +132,10 @@ internal class InAppResponseAdapter(
     val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "")
 
     val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_STALE_KEY)
+}
+
+enum class CtCacheType {
+    IMAGE, GIF, FILES
 }
 
 

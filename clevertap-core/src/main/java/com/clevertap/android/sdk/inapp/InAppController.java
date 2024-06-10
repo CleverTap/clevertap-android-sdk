@@ -41,6 +41,7 @@ import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
@@ -65,6 +66,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
+
+import kotlin.Pair;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function2;
@@ -857,22 +860,17 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 break;
             case CTInAppTypeCustomCodeTemplate:
                 //TODO CustomTemplates download all file arguments before presenting
-                final List<String> fileUrls = inAppNotification.getCustomTemplateData()
+                final List<Pair<String, CtCacheType>> fileUrls = inAppNotification.getCustomTemplateData()
                         .getFileArgsUrls(inAppController.getTemplatesManager());
-                FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context,
+                FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(
+                        context,
                         config.getLogger(),
-                        inAppController.getStoreRegistry());
-                if (assetRepo != null && !fileUrls.isEmpty()) {
-                    assetRepo.fetchAllFiles(fileUrls, (aBoolean, stringBooleanMap) -> {
-                        config.getLogger().verbose(config.getAccountId(),
-                                "file download status from showInApp() = " + aBoolean + " and url status map = "
-                                        + stringBooleanMap);
-                        if (aBoolean)
-                        {
-                            inAppController.presentTemplate(inAppNotification);
-                        }
-                        return null;
-                    });
+                        inAppController.getStoreRegistry()
+                );
+                if (!fileUrls.isEmpty()) {
+                    assetRepo.preloadFilesAndCache(fileUrls);
+                    // todo success callback for all completion fixme
+                    //inAppController.presentTemplate(inAppNotification);
                 }
                 return;
             default:
