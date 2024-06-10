@@ -14,11 +14,11 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
 ) : FilePreloaderStrategy {
 
     override fun preloadFilesAndCache(
-        urls: List<Pair<String, CtCacheType>>,
+        urlMetas: List<Pair<String, CtCacheType>>,
         successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit,
         failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit
     ) {
-        preloadAssets(urls, successBlock, failureBlock) { urlMeta: Pair<String, CtCacheType> ->
+        preloadAssets(urlMetas, successBlock, failureBlock) { urlMeta: Pair<String, CtCacheType> ->
 
             val url = urlMeta.first
 
@@ -31,12 +31,12 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
     }
 
     private fun preloadAssets(
-        urls: List<Pair<String, CtCacheType>>,
+        urlMetas: List<Pair<String, CtCacheType>>,
         successBlock: (meta: Pair<String, CtCacheType>) -> Unit,
         failureBlock: (meta: Pair<String, CtCacheType>) -> Unit = {},
         assetBlock: (meta: Pair<String, CtCacheType>) -> Any?
     ) {
-        for (url in urls) {
+        for (url in urlMetas) {
             val task = executor.ioTaskNonUi<Unit>()
 
             task.execute("tag") {

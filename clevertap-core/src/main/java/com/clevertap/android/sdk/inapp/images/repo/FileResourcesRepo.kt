@@ -10,7 +10,7 @@ internal interface FileResourcesRepo {
     val preloaderStrategy: FilePreloaderStrategy
 
     fun preloadFilesAndCache(
-        urls: List<Pair<String, CtCacheType>>,
+        urlMeta: List<Pair<String, CtCacheType>>,
     )
 
     fun cleanupStaleFiles() = cleanupStaleFiles(emptyList())

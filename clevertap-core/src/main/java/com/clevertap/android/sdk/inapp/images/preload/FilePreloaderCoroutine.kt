@@ -27,12 +27,12 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
     private val scope = CoroutineScope(dispatchers.io().limitedParallelism(config.parallelDownloads))
 
     override fun preloadFilesAndCache(
-        urls: List<Pair<String, CtCacheType>>,
+        urlMetas: List<Pair<String, CtCacheType>>,
         successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit,
         failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit
     ) {
         preloadAssets(
-            urls = urls,
+            urlMetas = urlMetas,
             successBlock = successBlock,
             failureBlock = failureBlock
         ) { urlMeta: Pair<String, CtCacheType> ->
@@ -48,12 +48,12 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
     }
 
     private fun preloadAssets(
-        urls: List<Pair<String, CtCacheType>>,
+        urlMetas: List<Pair<String, CtCacheType>>,
         successBlock: (meta: Pair<String, CtCacheType>) -> Unit,
         failureBlock: (meta: Pair<String, CtCacheType>) -> Unit = {},
         assetBlock: (meta: Pair<String, CtCacheType>) -> Any?
     ) {
-        urls.forEach { meta: Pair<String, CtCacheType> ->
+        urlMetas.forEach { meta: Pair<String, CtCacheType> ->
             val job = scope.launch(handler) {
                 logger?.verbose("started asset url fetch $meta")
 

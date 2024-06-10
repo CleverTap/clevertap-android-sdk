@@ -12,9 +12,8 @@ internal interface FilePreloaderStrategy {
 
     val config: FilePreloadConfig
 
-    fun preloadFilesAndCache(urls: List<Pair<String, CtCacheType>>,) = preloadFilesAndCache(urls, {}, {})
     fun preloadFilesAndCache(
-        urls: List<Pair<String, CtCacheType>>,
+        urlMetas: List<Pair<String, CtCacheType>>,
         successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = {},
         failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = {}
     )

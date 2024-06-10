@@ -78,7 +78,7 @@ internal class FileResourcesRepoImpl constructor(
     }*/
 
     override fun preloadFilesAndCache(
-        urls: List<Pair<String, CtCacheType>>,
+        urlMeta: List<Pair<String, CtCacheType>>,
     ) {
         val successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
             val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
@@ -96,7 +96,7 @@ internal class FileResourcesRepoImpl constructor(
 
         }
         preloaderStrategy.preloadFilesAndCache(
-            urls = urls,
+            urlMetas = urlMeta,
             successBlock = successBlock
         )
     }

@@ -871,15 +871,15 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 break;
             case CTInAppTypeCustomCodeTemplate:
                 //TODO CustomTemplates download all file arguments before presenting
-                final List<Pair<String, CtCacheType>> fileUrls = inAppNotification.getCustomTemplateData()
+                final List<Pair<String, CtCacheType>> fileUrlMetas = inAppNotification.getCustomTemplateData()
                         .getFileArgsUrls(inAppController.getTemplatesManager());
                 FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(
                         context,
                         config.getLogger(),
                         inAppController.getStoreRegistry()
                 );
-                if (!fileUrls.isEmpty()) {
-                    assetRepo.preloadFilesAndCache(fileUrls);
+                if (!fileUrlMetas.isEmpty()) {
+                    assetRepo.preloadFilesAndCache(fileUrlMetas);
                     // todo success callback for all completion fixme
                     //inAppController.presentTemplate(inAppNotification);
                 }
