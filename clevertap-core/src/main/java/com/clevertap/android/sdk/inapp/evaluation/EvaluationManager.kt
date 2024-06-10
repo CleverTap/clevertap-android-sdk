@@ -8,6 +8,8 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
@@ -41,12 +43,12 @@ import java.util.Locale
  * @property limitsMatcher An instance of [LimitsMatcher] to match limits for in-app notifications.
  * @property storeRegistry An instance of [StoreRegistry] to access storage for in-app notifications.
  */
-@RestrictTo(LIBRARY)
-class EvaluationManager constructor(
+internal class EvaluationManager(
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
     private val limitsMatcher: LimitsMatcher,
     private val storeRegistry: StoreRegistry,
+    private val templatesManager: TemplatesManager
 ) : NetworkHeadersListener {
 
     // Internal list to track server-side evaluated campaign IDs.
@@ -320,6 +322,11 @@ class EvaluationManager constructor(
         val eligibleInApps: MutableList<JSONObject> = mutableListOf()
 
         for (inApp in inappNotifs) {
+            val templateName = CustomTemplateInAppData.createFromJson(inApp)?.templateName
+            if (templateName != null && !templatesManager.isTemplateRegistered(templateName)) {
+                continue
+            }
+
             val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
 
             val matchesTrigger =

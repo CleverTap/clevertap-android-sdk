@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response
 
-class CtApi(
+internal class CtApi(
     private val httpClient: CtHttpClient,
     val defaultDomain: String,
     var domain: String?,
@@ -63,6 +63,11 @@ class CtApi(
     fun defineVars(body: SendQueueRequestBody): Response =
         httpClient.execute(
             createRequest("defineVars", body.toString(), useSpikyDomain = false, includeTs = true)
+        )
+
+    fun defineTemplates(body: DefineTemplatesRequestBody): Response =
+        httpClient.execute(
+            createRequest("defineTemplates", body.toString(), useSpikyDomain = false, includeTs = true)
         )
 
     fun getActualDomain(useSpikyDomain: Boolean): String? {

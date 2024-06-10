@@ -73,6 +73,7 @@ public interface Constants {
     String APP_LAUNCHED_EVENT = "App Launched";
     String ERROR_KEY = "wzrk_error";
     int PUSH_DELAY_MS = 1000;
+    String WZRK_URL_SCHEMA = "wzrk://";
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
     String INAPP_IMAGE_INTERSTITIAL_TYPE = "image-interstitial";

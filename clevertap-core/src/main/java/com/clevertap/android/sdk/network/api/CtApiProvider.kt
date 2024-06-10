@@ -9,7 +9,7 @@ import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient
 
 @WorkerThread
-fun provideDefaultTestCtApi(
+internal fun provideDefaultCtApi(
     context: Context,
     config: CleverTapInstanceConfig,
     deviceInfo: DeviceInfo

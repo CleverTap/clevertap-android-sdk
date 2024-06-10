@@ -9,12 +9,14 @@ import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
 import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
+import org.robolectric.shadows.ShadowLooper
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -158,13 +160,28 @@ class CallbackManagerTest : BaseTestCase() {
         assertEquals(listener, callbackManager.syncListener)
     }
 
-
-
     @Test
-    fun test_getterSetterOnInitCleverTapIDListener() {
-        val listener = OnInitCleverTapIDListener { }
-        callbackManager.onInitCleverTapIDListener = listener
-        assertEquals(listener, callbackManager.onInitCleverTapIDListener)
+    fun test_OnInitListenersInvokedOnNotify_when_PreviouslySubscribed() {
+        val ctId = "newId"
+        val listener1 = mockk<OnInitCleverTapIDListener>(relaxed = true)
+        val listener2 = mockk<OnInitCleverTapIDListener>(relaxed = true)
+        callbackManager.addOnInitCleverTapIDListener(listener1)
+        callbackManager.addOnInitCleverTapIDListener(listener2)
+        callbackManager.notifyCleverTapIDChanged(ctId)
+
+        ShadowLooper.runUiThreadTasks()
+        verify { listener1.onInitCleverTapID(ctId) }
+        verify { listener2.onInitCleverTapID(ctId) }
+
+        val ctId2 = "newId2"
+        callbackManager.removeOnInitCleverTapIDListener(listener1)
+        callbackManager.notifyCleverTapIDChanged(ctId2)
+
+        ShadowLooper.runUiThreadTasks()
+        verify(inverse = true) { listener1.onInitCleverTapID(ctId2) }
+        verify { listener2.onInitCleverTapID(ctId2) }
+
+        callbackManager.removeOnInitCleverTapIDListener(listener2)
     }
 
     @Test

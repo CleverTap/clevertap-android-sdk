@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.InAppQueue;
 import com.clevertap.android.sdk.inapp.TriggerManager;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
@@ -43,6 +44,9 @@ class CleverTapFactory {
     static CoreState getCoreState(Context context, CleverTapInstanceConfig cleverTapInstanceConfig,
             String cleverTapID) {
         CoreState coreState = new CoreState(context);
+
+        TemplatesManager templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig);
+        coreState.setTemplatesManager(templatesManager);
 
         StoreRegistry storeRegistry = new StoreRegistry();
         storeRegistry.setLegacyInAppStore(StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
@@ -114,7 +118,8 @@ class CleverTapFactory {
                 triggersMatcher,
                 triggersManager,
                 limitsMatcher,
-                storeRegistry
+                storeRegistry,
+                templatesManager
         );
         coreState.setEvaluationManager(evaluationManager);
 
@@ -263,7 +268,8 @@ class CleverTapFactory {
                 deviceInfo,
                 new InAppQueue(config, storeRegistry),
                 evaluationManager,
-                new InAppResourceProvider(context, config.getLogger())
+                new InAppResourceProvider(context, config.getLogger()),
+                templatesManager
         );
 
         coreState.setInAppController(inAppController);

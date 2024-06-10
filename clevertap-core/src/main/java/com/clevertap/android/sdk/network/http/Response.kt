@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.network.http
 
-import org.json.JSONException
-import org.json.JSONObject
 import java.io.Closeable
 import java.io.InputStream
 import java.io.Reader
