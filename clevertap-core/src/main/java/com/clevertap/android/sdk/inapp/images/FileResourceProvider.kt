@@ -64,14 +64,6 @@ internal class FileResourceProvider(
         fileMAO.saveInMemory(cacheKey, Pair(bytes, savedFile))
     }
 
-    fun isInAppImageCachedV1(url: String): Boolean {
-        return isFileCached(url)
-    }
-
-    fun isInAppGifCachedV1(url: String): Boolean {
-        return isFileCached(url)
-    }
-
     fun isFileCached(url: String): Boolean {
         val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
             FileMemoryAccessObject(ctCaches), InAppImageMemoryAccessObjectV1(ctCaches),
@@ -315,43 +307,23 @@ internal class FileResourceProvider(
         }
     }
 
-    fun deleteImageMemoryV1(cacheKey: String) {
-        val imageMAO = InAppImageMemoryAccessObjectV1(ctCaches)
-        val pair = imageMAO.removeInMemory(cacheKey)
-        if (pair != null) {
-            logger?.verbose("successfully removed $cacheKey from memory cache")
-        }
+    fun deleteAsset(cacheKey: String) {
+        val memories = listOf(
+            InAppImageMemoryAccessObjectV1(ctCaches),
+            InAppGifMemoryAccessObjectV1(ctCaches),
+            FileMemoryAccessObject(ctCaches)
+        )
 
-        val b = imageMAO.removeDiskMemory(cacheKey)
-        if (b) {
-            logger?.verbose("successfully removed $cacheKey from file cache")
-        }
-    }
+        memories.forEach { mao ->
+            val pair = mao.removeInMemory(cacheKey)
+            if (pair != null) {
+                logger?.verbose("successfully removed $cacheKey from memory cache")
+            }
 
-    fun deleteGifMemoryV1(cacheKey: String) {
-
-        val gifMAO = InAppGifMemoryAccessObjectV1(ctCaches)
-        val bytes = gifMAO.removeInMemory(cacheKey)
-        if (bytes != null) {
-            logger?.verbose("successfully removed gif $cacheKey from memory cache")
-        }
-        val b = gifMAO.removeDiskMemory(cacheKey)
-        if (b) {
-            logger?.verbose("successfully removed gif $cacheKey from file cache")
-        }
-    }
-
-    fun deleteFileMemoryV2(cacheKey: String) {
-        val fileMAO = FileMemoryAccessObject(ctCaches)
-        val bytes = fileMAO.removeInMemory(cacheKey)
-
-        if (bytes != null) {
-            logger?.verbose("successfully removed file $cacheKey from memory cache")
-        }
-        val b = fileMAO.removeDiskMemory(cacheKey)
-
-        if (b) {
-            logger?.verbose("successfully removed file $cacheKey from file disk cache")
+            val b = mao.removeDiskMemory(cacheKey)
+            if (b) {
+                logger?.verbose("successfully removed $cacheKey from file cache")
+            }
         }
     }
 }
