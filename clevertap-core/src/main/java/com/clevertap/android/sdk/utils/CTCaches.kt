@@ -7,7 +7,7 @@ import java.io.File
 /**
  * We have 3 caches in CT, image cache, gif cache, general file cache with different size configs
  */
-class CTCaches private constructor(
+internal class CTCaches private constructor(
     private val inAppImageMemoryV1: Memory<Bitmap>,
     private val inAppGifMemoryV1: Memory<ByteArray>,
     private val fileMemory: Memory<ByteArray>
