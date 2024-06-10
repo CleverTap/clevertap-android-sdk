@@ -53,10 +53,13 @@ class CleverTapFactory {
         final StoreProvider storeProvider = StoreProvider.getInstance();
         String accountId = cleverTapInstanceConfig.getAccountId();
 
-        StoreRegistry storeRegistry = new StoreRegistry();
-        storeRegistry.setLegacyInAppStore(storeProvider.provideLegacyInAppStore(context, accountId));
-        storeRegistry.setInAppAssetsStore(storeProvider.provideInAppAssetsStore(context, accountId));
-        storeRegistry.setFilesStore(storeProvider.provideFileStore(context, accountId));
+        StoreRegistry storeRegistry = new StoreRegistry(
+                null,
+                null,
+                storeProvider.provideLegacyInAppStore(context, accountId),
+                storeProvider.provideInAppAssetsStore(context, accountId),
+                storeProvider.provideFileStore(context, accountId)
+        );
 
         coreState.setStoreRegistry(storeRegistry);
 

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
 import android.content.Context
+import androidx.annotation.NonNull
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
@@ -13,33 +14,35 @@ internal class FileResourcesRepoFactory {
     companion object {
 
         @JvmStatic
+        @NonNull
         fun createFileResourcesRepo(
             context: Context,
             logger: Logger,
             storeRegistry: StoreRegistry
-        ): FileResourcesRepoImpl? {
+        ): FileResourcesRepoImpl {
 
             val inAppAssetStore = storeRegistry.inAppAssetsStore
             val fileStore = storeRegistry.filesStore
             val legacyInAppStore = storeRegistry.legacyInAppStore
 
-            if (inAppAssetStore == null || legacyInAppStore == null || fileStore == null) {
-                return null
-            }
-
-            val fileResourceProvider = FileResourceProvider(context, logger)
-            val cleanupStrategy: FileCleanupStrategy = FileCleanupStrategyExecutors(fileResourceProvider)
+            val fileResourceProvider = FileResourceProvider(
+                context = context,
+                logger = logger
+            )
+            val cleanupStrategy: FileCleanupStrategy = FileCleanupStrategyExecutors(
+                fileResourceProvider = fileResourceProvider
+            )
             val preloadStrategy: FilePreloaderStrategy = FilePreloaderExecutors(
-                fileResourceProvider,
-                logger
+                fileResourceProvider = fileResourceProvider,
+                logger = logger
             )
 
             return FileResourcesRepoImpl(
-                cleanupStrategy,
-                preloadStrategy,
-                inAppAssetStore,
-                fileStore,
-                legacyInAppStore
+                cleanupStrategy = cleanupStrategy,
+                preloaderStrategy = preloadStrategy,
+                inAppAssetsStore = inAppAssetStore,
+                fileStore = fileStore,
+                legacyInAppsStore = legacyInAppStore
             )
         }
     }
