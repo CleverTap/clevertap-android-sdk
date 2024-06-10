@@ -77,8 +77,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             final FileStore fileStore = storeRegistry.getFilesStore();
             final LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
 
-            if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null
-                    || fileStore == null) {
+            if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null || fileStore == null) {
                 logger.verbose(config.getAccountId(), "Stores are not initialised, ignoring inapps!!!!");
                 return;
             }
@@ -130,28 +129,26 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
-            if (assetRepo != null) {
-                assetRepo.fetchAllInAppImagesV1(res.getPreloadImages());
-                assetRepo.fetchAllInAppGifsV1(res.getPreloadGifs());
-                // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
+            assetRepo.fetchAllInAppImagesV1(res.getPreloadImages());
+            assetRepo.fetchAllInAppGifsV1(res.getPreloadGifs());
+            // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
 
-                List<String> preloadFiles = res.getPreloadFiles();
-                if (!preloadFiles.isEmpty()) {
-                    assetRepo.fetchAllFiles(preloadFiles, (aBoolean, stringBooleanMap) -> {
-                        logger.verbose(
-                                config.getAccountId(),
-                                "file download status from InAppResponse = " + aBoolean + " and url status map = " + stringBooleanMap
-                        );
-                        return null;
-                    });
-                }
+            List<String> preloadFiles = res.getPreloadFiles();
+            if (!preloadFiles.isEmpty()) {
+                assetRepo.fetchAllFiles(preloadFiles, (aBoolean, stringBooleanMap) -> {
+                    logger.verbose(
+                            config.getAccountId(),
+                            "file download status from InAppResponse = " + aBoolean + " and url status map = " + stringBooleanMap
+                    );
+                    return null;
+                });
+            }
 
-                if (isFullResponse) {
-                    logger.verbose(config.getAccountId(), "Handling cache eviction");
-                    assetRepo.cleanupStaleInAppImagesAndGifsV1(res.getPreloadAssets());
-                } else {
-                    logger.verbose(config.getAccountId(), "Ignoring cache eviction");
-                }
+            if (isFullResponse) {
+                logger.verbose(config.getAccountId(), "Handling cache eviction");
+                assetRepo.cleanupStaleInAppImagesAndGifsV1(res.getPreloadAssets());
+            } else {
+                logger.verbose(config.getAccountId(), "Ignoring cache eviction");
             }
 
             String mode = res.getInAppMode();
