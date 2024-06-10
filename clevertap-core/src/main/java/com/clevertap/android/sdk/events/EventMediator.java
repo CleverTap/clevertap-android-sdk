@@ -175,7 +175,7 @@ public class EventMediator {
                 if (keysToSkipForUserAttributesEvaluation.contains(key)) {
                     continue;
                 }
-                Object oldValue = localDataStore.getProfileValueForKey(key);
+                Object oldValue = localDataStore.getProfileProperty(key);
                 Object newValue = profile.get(key);
 
                 // if newValue is a JSONObject, it will have a structure of {"$command":value}.

@@ -201,7 +201,6 @@ class CleverTapFactory {
                 callbackManager,
                 ctLockManager,
                 validator,
-                localDataStore,
                 inAppResponse,
                 ctApiWrapper
         );
