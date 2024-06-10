@@ -49,8 +49,15 @@ class CleverTapFactory {
         TemplatesManager templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig);
         coreState.setTemplatesManager(templatesManager);
 
+        // create storeRegistry, preferences for features
+        final StoreProvider storeProvider = StoreProvider.getInstance();
+        String accountId = cleverTapInstanceConfig.getAccountId();
+
         StoreRegistry storeRegistry = new StoreRegistry();
-        storeRegistry.setLegacyInAppStore(StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
+        storeRegistry.setLegacyInAppStore(storeProvider.provideLegacyInAppStore(context, accountId));
+        storeRegistry.setInAppAssetsStore(storeProvider.provideInAppAssetsStore(context, accountId));
+        storeRegistry.setFilesStore(storeProvider.provideFileStore(context, accountId));
+
         coreState.setStoreRegistry(storeRegistry);
 
         CoreMetaData coreMetaData = new CoreMetaData();
@@ -121,18 +128,9 @@ class CleverTapFactory {
         );
         coreState.setEvaluationManager(evaluationManager);
 
-        final StoreProvider storeProvider = StoreProvider.getInstance();
-
         Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
         taskInitStores.execute("initStores", () -> {
-            if (storeRegistry.getInAppAssetsStore() == null) {
-                InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, config.getAccountId());
-                storeRegistry.setInAppAssetsStore(assetsStore);
-            }
-            if (storeRegistry.getFilesStore() == null) {
-                FileStore filesStore = storeProvider.provideFileStore(context, config.getAccountId());
-                storeRegistry.setFilesStore(filesStore);
-            }
+
             if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
                 if (storeRegistry.getInAppStore() == null) {
                     InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo.getDeviceID(),
