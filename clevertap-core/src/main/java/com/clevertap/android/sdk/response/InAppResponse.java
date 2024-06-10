@@ -131,8 +131,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 inAppStore.storeServerSideInAppsMetaData(ssInApps.getSecond());
             }
 
-            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger,
-                    storeRegistry);
+            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
             if (assetRepo != null) {
                 assetRepo.fetchAllInAppImagesV1(res.getPreloadImages());
                 assetRepo.fetchAllInAppGifsV1(res.getPreloadGifs());

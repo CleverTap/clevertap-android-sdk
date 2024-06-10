@@ -24,7 +24,11 @@ class CTCaches private constructor(
             if (ctCaches == null) {
                 synchronized(this) {
                     if (ctCaches == null) {
-                        ctCaches = CTCaches(inAppImageMemoryV1, inAppGifMemoryV1, fileMemory)
+                        ctCaches = CTCaches(
+                            inAppImageMemoryV1 = inAppImageMemoryV1,
+                            inAppGifMemoryV1 = inAppGifMemoryV1,
+                            fileMemory = fileMemory
+                        )
                     }
                 }
             }

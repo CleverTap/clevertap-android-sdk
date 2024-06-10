@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import java.util.concurrent.ConcurrentHashMap
 
-internal class FileResourcesRepoImpl(
+internal class FileResourcesRepoImpl constructor(
     override val cleanupStrategy: FileCleanupStrategy,
     override val preloaderStrategy: FilePreloaderStrategy,
     private val inAppAssetsStore: InAppAssetsStore,

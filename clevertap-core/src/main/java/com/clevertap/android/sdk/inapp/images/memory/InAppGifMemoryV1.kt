@@ -6,6 +6,25 @@ import com.clevertap.android.sdk.utils.LruCache
 import java.io.File
 import kotlin.math.max
 
+// CTCaches - SDK Class - all features -> inapp, templates
+
+// 2 features:
+// Inapps -> InAppResorceProvider, InAppsRepo
+// Templates -> FileResorceProvider, FileResourcesRepoImpl
+// m modueles
+
+
+// Step 3
+// Inapps -> FileResorceProvider, FileResourcesRepoImpl
+
+// Step 4
+// Inapps -> getInappImage() -> inappresprov.getInappImage -> if null -> FileResorceProvider.getInappImage
+
+
+// FileResourceImpl
+// FileResourceProvicer
+// Gif, Image, File cache
+
 class InAppGifMemoryV1(
     private val config: MemoryConfig,
     private val logger: ILogger? = null
@@ -43,7 +62,10 @@ class InAppGifMemoryV1(
     }
 
     override fun inMemorySize(): Int {
-        val selected = max(config.optimistic, config.minInMemorySizeKB).toInt()
+        val selected = max(
+            a = config.optimistic,
+            b = config.minInMemorySizeKB
+        ).toInt()
 
         logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")
 
