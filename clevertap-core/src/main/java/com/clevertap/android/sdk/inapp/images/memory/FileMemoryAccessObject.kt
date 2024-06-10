@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationTyp
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
 
-class FileMemoryAccessObject(private val ctCaches: CTCaches): MemoryAccessObject<ByteArray> {
+internal class FileMemoryAccessObject(private val ctCaches: CTCaches): MemoryAccessObject<ByteArray> {
 
     override fun fetchInMemory(key: String): Pair<ByteArray, File>? {
         val fileInMemory = ctCaches.fileLruCache()
