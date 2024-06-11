@@ -62,7 +62,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val userLocation = mockk<Location>()
 
         // Capture the created EventAdapter
-        val eventAdapterSlot = slot<EventAdapter>()
+        val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
         every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(JSONObject(mapOf("resultKey" to "resultValue")))
 
@@ -71,7 +71,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         // Assert
         // Verify that the captured EventAdapter has the expected properties
-        val capturedEventAdapter = eventAdapterSlot.captured
+        val capturedEventAdapter = eventAdapterSlot.captured[0]
         assertEquals(eventName, capturedEventAdapter.eventName)
         assertEquals(eventProperties, capturedEventAdapter.eventProperties)
         assertEquals(userLocation, capturedEventAdapter.userLocation)
@@ -93,7 +93,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val userLocation = mockk<Location>()
 
         // Capture the created EventAdapter
-        val eventAdapterSlot = slot<EventAdapter>()
+        val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateClientSide(capture(eventAdapterSlot)) } returns JSONArray().put(
             JSONObject(
                 mapOf("resultKey" to "resultValue")
@@ -105,7 +105,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         // Assert
         // Verify that the captured EventAdapter has the expected properties for app launched event
-        val capturedEventAdapter = eventAdapterSlot.captured
+        val capturedEventAdapter = eventAdapterSlot.captured[0]
         assertEquals(Constants.APP_LAUNCHED_EVENT, capturedEventAdapter.eventName)
         assertEquals(emptyMap(), capturedEventAdapter.eventProperties)
         assertEquals(userLocation, capturedEventAdapter.userLocation)
@@ -122,7 +122,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val userLocation = mockk<Location>()
 
         // Capture the created EventAdapter
-        val eventAdapterSlot = slot<EventAdapter>()
+        val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
         every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(JSONObject(mapOf("resultKey" to "resultValue")))
 
@@ -131,7 +131,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         // Assert
         // Verify that the captured EventAdapter has the expected event type
-        val capturedEventAdapter = eventAdapterSlot.captured
+        val capturedEventAdapter = eventAdapterSlot.captured[0]
         assertEquals(Constants.CHARGED_EVENT, capturedEventAdapter.eventName)
 
         assertNotNull(result)
@@ -439,7 +439,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(0, evaluateClientSide.length())
         assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
@@ -458,7 +458,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(1, evaluateClientSide.length())
         assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
@@ -477,7 +477,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(1, evaluateClientSide.length())
         assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
@@ -493,10 +493,216 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        val evaluateClientSide = evaluationManager.evaluateClientSide(EventAdapter("", mapOf()))
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(1, evaluateClientSide.length())
         assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide for multiple events if inapp suppressed then duplicate entries added to suppressed list`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide =
+            evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf()), EventAdapter("", mapOf())))
+
+        assertEquals(0, evaluateClientSide.length())
+        assertEquals(2, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide for multiple events when 1st inapp is suppressed while other not then return after suppressing only one`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+            .put(Constants.INAPP_SUPPRESSED, true)
+        val inApp2 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 10L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1, inApp2)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide =
+            evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf()), EventAdapter("", mapOf())))
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide for multiple events when both inapps are not suppressed returns only one inapp`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val inApp2 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 10L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1, inApp2)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        val evaluateClientSide =
+            evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf()), EventAdapter("", mapOf())))
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide for multiple events if inapp not suppressed and not elligible then does return after evaluation`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns emptyList()
+
+        val evaluateClientSide =
+            evaluationManager.evaluateClientSide(listOf(EventAdapter("", mapOf()), EventAdapter("", mapOf())))
+
+        assertEquals(0, evaluateClientSide.length())
+        assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide for multiple events if one triggers and the other doesn't then return inApps`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1)
+        val event1 = EventAdapter("event1", mapOf())
+        val event2 = EventAdapter("event2", mapOf())
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(event1, any()) } returns inApps
+        every { evaluationManager.evaluate(event2, any()) } returns emptyList()
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(event1, event2))
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide for multiple events if both trigger but one is supressed`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inAppSup = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val event1 = EventAdapter("event1", mapOf())
+        val event2 = EventAdapter("event2", mapOf())
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(event1, any()) } returns listOf(inAppSup)
+        every { evaluationManager.evaluate(event2, any()) } returns listOf(inApp1)
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(event1, event2))
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide for multiple events if both trigger but one suppressed inapp has lower priority`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 100)
+
+        val inAppSup = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val event1 = EventAdapter("event1", mapOf())
+        val event2 = EventAdapter("event2", mapOf())
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(event1, any()) } returns listOf(inAppSup)
+        every { evaluationManager.evaluate(event2, any()) } returns listOf(inApp1)
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(event1, event2))
+
+        assertEquals(1, evaluateClientSide.length())
+        assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide for events with newValue and oldValue same`() {
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val event1 =
+            EventAdapter("event1", mapOf("oldValue" to "a", "newValue" to "a"), profileAttrName = "event1_CTChange")
+        every { storeRegistry.inAppStore } returns mockInAppStore
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(event1))
+
+        assertEquals(0, evaluateClientSide.length())
+        assertEquals(0, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateClientSide for events with newValue and oldValue different`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val event1 =
+            EventAdapter("event1", mapOf("oldValue" to "a", "newValue" to "b"), profileAttrName = "event1_CTChange")
+
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(event1, any()) } returns listOf(inApp1)
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(event1))
+
+        assertEquals(1, evaluateClientSide.length())
+    }
+
+    @Test
+    fun `test evaluateClientSide for events with newValue null and oldValue non-null`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val event1 = EventAdapter("event1", mapOf("oldValue" to "a"), profileAttrName = "event1_CTChange")
+
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(event1, any()) } returns listOf(inApp1)
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(event1))
+
+        assertEquals(1, evaluateClientSide.length())
+    }
+
+    @Test
+    fun `test evaluateClientSide for events with newValue non-null and oldValue null`() {
+        val inApp1 = JSONObject()
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val event1 = EventAdapter("event1", mapOf("newValue" to "a"), profileAttrName = "event1_CTChange")
+
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(event1, any()) } returns listOf(inApp1)
+
+        val evaluateClientSide = evaluationManager.evaluateClientSide(listOf(event1))
+
+        assertEquals(1, evaluateClientSide.length())
     }
 
     @Test
@@ -565,7 +771,7 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        evaluationManager.evaluateServerSide(EventAdapter("", mapOf()))
+        evaluationManager.evaluateServerSide(listOf(EventAdapter("", mapOf())))
 
         assertEquals(0, evaluationManager.evaluatedServerSideCampaignIds.size)
     }
@@ -579,7 +785,52 @@ class EvaluationManagerTest : BaseTestCase() {
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
-        evaluationManager.evaluateServerSide(EventAdapter("", mapOf()))
+        evaluationManager.evaluateServerSide(listOf(EventAdapter("", mapOf())))
+
+        assertEquals(1, evaluationManager.evaluatedServerSideCampaignIds.size)
+    }
+
+    @Test
+    fun `test evaluateServerSide for multiple events when campaignId is 0 then don't add id to evaluatedServerSideCampaignIds`() {
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, 0)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        evaluationManager.evaluateServerSide(listOf(EventAdapter("", mapOf()), EventAdapter("", mapOf())))
+
+        assertEquals(0, evaluationManager.evaluatedServerSideCampaignIds.size)
+    }
+
+    @Test
+    fun `test evaluateServerSide for multiple inapps when campaignId is not 0 then add duplicate ids to evaluatedServerSideCampaignIds`() {
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, 123)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inApps = listOf(inApp1)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns inApps
+
+        evaluationManager.evaluateServerSide(listOf(EventAdapter("", mapOf()), EventAdapter("", mapOf())))
+
+        assertEquals(2, evaluationManager.evaluatedServerSideCampaignIds.size)
+    }
+
+    @Test
+    fun `test evaluateServerSide for multiple inapps when campaignId is not 0 and only one event evaluates then add id to evaluatedServerSideCampaignIds`() {
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, 123)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+
+        val event1 = EventAdapter("event1", mapOf())
+        val event2 = EventAdapter("event2", mapOf())
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(event1, any()) } returns listOf()
+        every { evaluationManager.evaluate(event2, any()) } returns listOf(inApp1)
+
+        evaluationManager.evaluateServerSide(listOf(event1, event2))
 
         assertEquals(1, evaluationManager.evaluatedServerSideCampaignIds.size)
     }
