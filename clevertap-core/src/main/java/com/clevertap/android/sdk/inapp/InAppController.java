@@ -105,7 +105,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay(resourceProvider);
+            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(
+                    context,
+                    config.getLogger(),
+                    storeRegistry
+            );
+            inAppNotification.prepareForDisplay(resourceProvider,templatesManager,assetRepo,config);
         }
     }
 
@@ -870,24 +875,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 inAppFragment = new CTInAppNativeHeaderFragment();
                 break;
             case CTInAppTypeCustomCodeTemplate:
-                final List<Pair<String, CtCacheType>> fileUrlMetas = inAppNotification.getCustomTemplateData()
-                        .getFileArgsUrls(inAppController.getTemplatesManager());
-                FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(
-                        context,
-                        config.getLogger(),
-                        inAppController.getStoreRegistry()
-                );
-                if (!fileUrlMetas.isEmpty()) {
-                    assetRepo.preloadFilesAndCache(fileUrlMetas, (aBoolean, stringBooleanMap) -> {
-                        config.getLogger().verbose(config.getAccountId(),
-                                "file download status from showInApp() = " + aBoolean + " and url status map = "
-                                        + stringBooleanMap);
-                        if (aBoolean) {
-                            inAppController.presentTemplate(inAppNotification);
-                        }
-                        return null;
-                    });
-                }
+                inAppController.presentTemplate(inAppNotification);
                 return;
             default:
                 Logger.d(config.getAccountId(), "Unknown InApp Type found: " + type);
