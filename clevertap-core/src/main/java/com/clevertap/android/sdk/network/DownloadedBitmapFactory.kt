@@ -39,4 +39,15 @@ object DownloadedBitmapFactory {
             bytes = data
         )
     }
+    fun successBytes(
+        downloadTime: Long,
+        data: ByteArray
+    ): DownloadedBitmap {
+        return DownloadedBitmap(
+            bitmap = null,
+            status = SUCCESS,
+            downloadTime = downloadTime,
+            bytes = data
+        )
+    }
 }
