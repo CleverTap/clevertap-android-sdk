@@ -507,6 +507,8 @@ class AnalyticsManagerTest : BaseTestCase() {
         val validPhone = "+1234"
         val profile = mapOf("Phone" to validPhone)
 
+        `when`(coreState.deviceInfo.deviceID).thenReturn("1234")
+
         mockCleanObjectKey("Phone", 0)
         mockCleanObjectValue(validPhone, 0)
 
@@ -533,6 +535,8 @@ class AnalyticsManagerTest : BaseTestCase() {
         mockCleanObjectKey("Phone", 0)
 
         mockCleanObjectValue(invalidPhone, 0)
+
+        `when`(coreState.deviceInfo.deviceID).thenReturn("1234")
         //Act
         mockStatic(CTExecutorFactory::class.java).use {
             `when`(CTExecutorFactory.executors(any())).thenReturn(
@@ -561,6 +565,8 @@ class AnalyticsManagerTest : BaseTestCase() {
         mockCleanObjectValue("value1", 0)
         mockCleanObjectValue("value2", 0)
 
+        `when`(coreState.deviceInfo.deviceID).thenReturn("1234")
+
         //Act
         mockStatic(CTExecutorFactory::class.java).use {
             `when`(CTExecutorFactory.executors(any())).thenReturn(
@@ -585,6 +591,8 @@ class AnalyticsManagerTest : BaseTestCase() {
 
         mockCleanObjectKey("key1", 0)
         mockCleanObjectKey("key2", 0)
+
+        `when`(coreState.deviceInfo.deviceID).thenReturn("1234")
 
         `when`(validator.cleanObjectValue(any(Validator::class.java), any()))
             .thenThrow(IllegalArgumentException())
@@ -616,6 +624,8 @@ class AnalyticsManagerTest : BaseTestCase() {
 
         mockCleanObjectValue("value1", 0)
         mockCleanObjectValue("value2", 0)
+
+        `when`(coreState.deviceInfo.deviceID).thenReturn("1234")
 
         //Act
         mockStatic(CTExecutorFactory::class.java).use {
