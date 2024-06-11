@@ -5,13 +5,12 @@ import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.events.EventDetail
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
-import org.junit.Test;
-import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.junit.*
+import org.junit.runner.*
+import org.mockito.*
+import org.mockito.kotlin.*
 import org.robolectric.RobolectricTestRunner
-import java.util.ArrayList
 import kotlin.test.*
-
 
 @RunWith(RobolectricTestRunner::class)
 class LocalDataStoreTest : BaseTestCase() {
@@ -22,14 +21,17 @@ class LocalDataStoreTest : BaseTestCase() {
     private lateinit var localDataStoreWithConfig: LocalDataStore
     private lateinit var localDataStoreWithConfigSpy: LocalDataStore
     private lateinit var cryptHandler : CryptHandler
+    private lateinit var deviceInfo : DeviceInfo
 
     override fun setUp() {
         super.setUp()
+        val metaData = CoreMetaData()
         defConfig = CleverTapInstanceConfig.createDefaultInstance(appCtx, "id", "token", "region")
         cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
-        localDataStoreWithDefConfig = LocalDataStore(appCtx, defConfig, cryptHandler)
+        deviceInfo = MockDeviceInfo(appCtx, defConfig, "id", metaData)
+        localDataStoreWithDefConfig = LocalDataStore(appCtx, defConfig, cryptHandler, deviceInfo)
         config = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
-        localDataStoreWithConfig = LocalDataStore(appCtx, config, cryptHandler)
+        localDataStoreWithConfig = LocalDataStore(appCtx, config, cryptHandler, deviceInfo)
         localDataStoreWithConfigSpy = Mockito.spy(localDataStoreWithConfig)
     }
 
@@ -130,26 +132,31 @@ class LocalDataStoreTest : BaseTestCase() {
     }
 
     @Test
-    fun test_getProfileProperty_when_FunctionIsCalledWithSomeKey_should_CallGetProfileValueForKey() {
-        localDataStoreWithConfigSpy.getProfileProperty("key")
-        Mockito.verify(localDataStoreWithConfigSpy, Mockito.times(1)).getProfileValueForKey("key")
+    fun test_getProfileProperty_when_FunctionIsCalledWithSomeKey_should_ReturnAssociatedValue() {
+        localDataStoreWithConfig.updateProfileFields(mapOf("key" to "val"))
+        assertEquals("val", localDataStoreWithConfig.getProfileProperty("key"))
     }
 
     @Test
-    fun test_getProfileValueForKey_when_FunctionIsCalledWithSomeKey_should_ReturnAssociatedValue() {
-        // since getProfileValueForKey() calls _getProfileProperty() which is a private function,
-        // we can't further test it or verify its calling. we can only verify the working of _getProfileProperty
+    fun test_getProfileProperty_when_FunctionIsCalledWithNullKey_should_ReturnNull() {
         localDataStoreWithConfig.getProfileProperty(null).let {
-            println(it)
             assertNull(it)
         }
-        localDataStoreWithConfig.setProfileField("key", "val")
-        localDataStoreWithConfig.getProfileProperty("key").let {
-            println(it)
-            assertNotNull(it)
-            assertEquals("val", it)
-        }
+    }
 
+    @Test
+    fun test_getProfileProperty_when_FunctionIsCalledWithIncorrectKey_should_ReturnNull() {
+        localDataStoreWithConfig.updateProfileFields(mapOf("key" to "val"))
+
+        assertNull(localDataStoreWithConfig.getProfileProperty("key1"))
+    }
+
+
+    @Test
+    fun test_getProfileProperty_when_FunctionIsCalledWithCorrectKeyAndEncryptedValue_should_ReturnNull() {
+        localDataStoreWithConfig.updateProfileFields(mapOf("key" to "[abcd]"))
+
+        assertNull(localDataStoreWithConfig.getProfileProperty("key"))
     }
 
     @Test
@@ -187,62 +194,6 @@ class LocalDataStoreTest : BaseTestCase() {
         Mockito.verify(jsonSpy, Mockito.times(1)).getString("evtName")
         valueForKey = prefs.getString("someVal:id","")
         assertEquals(expectedVal,valueForKey)
-
-    }
-
-    @Test
-    fun test_removeProfileField_when_KeyIsPassed_should_RemoveKeyFromPROFILE_FIELDS_IN_THIS_SESSION() {
-        //this function is a wrapper around private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  and therefore cannot be tested further
-
-        //------
-
-        //testing private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  via current function removeProfileField("key")
-
-        //1. if null is passed, this will return without changing any value of LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION
-
-        //2. if not null key is passed,and key is present in LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION , it will remove that key
-
-        localDataStoreWithConfig.setProfileField("key", "abc")
-        val originalVal = localDataStoreWithConfig.getProfileValueForKey("key")
-        assertEquals("abc", originalVal)
-        localDataStoreWithConfig.removeProfileField("key")
-        var updatedValue = localDataStoreWithConfig.getProfileValueForKey("key")
-        assertNull(updatedValue)
-
-        //3. if not null key is passed,and key is not present in LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION , it will return without changing anything
-        localDataStoreWithConfig.setProfileField("key", "abc")
-        localDataStoreWithConfig.removeProfileField("key2")
-        updatedValue = localDataStoreWithConfig.getProfileValueForKey("key")
-        assertNotNull(updatedValue)
-    }
-
-    @Test
-    fun test_removeProfileFields_when_KeysArePassed_should_RemoveKeyFromPROFILE_FIELDS_IN_THIS_SESSION() {
-        //this function is a wrapper around private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  and therefore cannot be tested further
-
-        //------
-
-        //testing private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  via current function removeProfileField("key")
-
-        //1. if null is passed, this will return without changing any value of LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION
-
-        var keys: ArrayList<String>? = null
-        localDataStoreWithConfig.removeProfileFields(keys)
-        //2. if not null keys are passed,and keys are present in LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION , it will remove those keys
-
-        keys = arrayListOf("k1", "k2")
-        localDataStoreWithConfig.setProfileField(keys[0], "val1")
-        localDataStoreWithConfig.setProfileField(keys[1], "val2")
-        localDataStoreWithConfig.removeProfileFields(keys)
-        localDataStoreWithConfig.getProfileValueForKey(keys[0]).let { assertNull(it) }
-        localDataStoreWithConfig.getProfileValueForKey(keys[1]).let { assertNull(it) }
-
-        //3. if not null keys are passed,and those keys are not present in LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION , it will return without changing anything
-        localDataStoreWithConfig.setProfileField(keys[0], "val1")
-        localDataStoreWithConfig.setProfileField(keys[1], "val2")
-        localDataStoreWithConfig.removeProfileFields(arrayListOf("keyX", "keyX"))
-        localDataStoreWithConfig.getProfileValueForKey(keys[0]).let { assertEquals("val1", it) }
-        localDataStoreWithConfig.getProfileValueForKey(keys[1]).let { assertEquals("val2", it) }
 
     }
 
@@ -306,53 +257,19 @@ class LocalDataStoreTest : BaseTestCase() {
     }
 
     @Test
-    fun test_setProfileField_when_FunctionIsCalledWithKeyAndValue_should_UpdatePROFILE_FIELDS_IN_THIS_SESSIONMap() {
-        // since this is a wrapper around a private function, it could not be properly tested.
+    fun test_setProfileFields_when_MapsIsPassed_should_SetTheKeysInPROFILE_FIELDS_IN_THIS_SESSIONMap() {
+        val fieldMap = mapOf(
+            "key1" to "value1",
+            "key2" to true,
+            "key3" to null,
+            "key4" to 2
+        )
 
-        //testing private function setProfileField(...)'s limited features
+        localDataStoreWithConfig.updateProfileFields(fieldMap)
 
-        // when either key or value is null , the internal private function returns without changing PROFILE_FIELDS_IN_THIS_SESSION map
-        localDataStoreWithConfig.setProfileField("key1", null)
-        localDataStoreWithConfig.setProfileField(null, "hi")
-        assertNull(localDataStoreWithConfig.getProfileProperty("key1"))
-        assertNull(localDataStoreWithConfig.getProfileProperty(null))
-
-        // when key and value are not null, it sets the value on PROFILE_FIELDS_IN_THIS_SESSION map
-        localDataStoreWithConfig.setProfileField("key1", "vvv")
-        assertNotNull(localDataStoreWithConfig.getProfileProperty("key1"))
-        assertEquals("vvv", localDataStoreWithConfig.getProfileProperty("key1"))
-    }
-
-    @Test
-    fun test_setProfileFields_when_JsonWithKeysArePassed_should_SetTheKeysInPROFILE_FIELDS_IN_THIS_SESSIONMap() {
-        val json = JSONObject()
-        val jsonSpy = Mockito.spy(json)
-
-        // when json is null, it returns without further execution. verified by checking if json.keys() is called
-        //localDataStoreWithConfig.setProfileFields(null)
-
-        //when json has some keys, it will set the keys in PROFILE_FIELDS_IN_THIS_SESSION map
-        json.put("key1", 1).put("key2", "hi").put("key3", true)
-        localDataStoreWithConfig.setProfileFields(jsonSpy)
-        Mockito.verify(jsonSpy, Mockito.atLeastOnce()).keys()
-        assertEquals(1, localDataStoreWithConfig.getProfileProperty("key1"))
-        assertEquals("hi", localDataStoreWithConfig.getProfileProperty("key2"))
-        assertEquals(true, localDataStoreWithConfig.getProfileProperty("key3"))
-    }
-
-    @Test
-    fun test_syncWithUpstream_when_ABC_should_XYZ(){
-        val ctxSpy = Mockito.spy(appCtx)
-        var json = JSONObject()
-        var jsonSpy = Mockito.spy(json)
-
-        // 1. when json does not have "evpr" key, the function returns without further execution
-        localDataStoreWithConfig.syncWithUpstream(ctxSpy,jsonSpy)
-        Mockito.verify(jsonSpy,Mockito.never()).getJSONObject("evpr")
-
-        json.put("evpr",JSONObject())
-        localDataStoreWithConfig.syncWithUpstream(ctxSpy,jsonSpy)
-        Mockito.verify(jsonSpy,Mockito.atLeastOnce()).getJSONObject("evpr")
-
+        assertEquals("value1", localDataStoreWithConfig.getProfileProperty("key1"))
+        assertEquals(true, localDataStoreWithConfig.getProfileProperty("key2"))
+        assertNull(localDataStoreWithConfig.getProfileProperty("key3"))
+        assertEquals(2, localDataStoreWithConfig.getProfileProperty("key4"))
     }
 }
