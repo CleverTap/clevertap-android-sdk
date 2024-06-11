@@ -36,7 +36,8 @@ public class EventMediator {
 
     private final ProfileValueHandler profileValueHandler;
 
-    public EventMediator(Context context, CleverTapInstanceConfig config, CoreMetaData coreMetaData, LocalDataStore localDataStore, ProfileValueHandler profileValueHandler) {
+    public EventMediator(Context context, CleverTapInstanceConfig config, CoreMetaData coreMetaData,
+            LocalDataStore localDataStore, ProfileValueHandler profileValueHandler) {
         this.context = context;
         this.config = config;
         this.localDataStore = localDataStore;
@@ -46,7 +47,7 @@ public class EventMediator {
 
     public boolean shouldDeferProcessingEvent(JSONObject event, int eventType) {
         //noinspection SimplifiableIfStatement
-        if(eventType == Constants.DEFINE_VARS_EVENT){
+        if (eventType == Constants.DEFINE_VARS_EVENT) {
             return false;
         }
         if (config.isCreatedPostAppLaunch()) {
@@ -149,11 +150,17 @@ public class EventMediator {
         }
     }
 
+    /**
+     * This function computes the newValue and the oldValue for each user attribute of the event
+     * It also updates the user properties in the local cache and db
+     *
+     * @param event - profile event
+     * @return - a map representing the oldValue and newValue of each user-attribute in event
+     */
     public Map<String, Map<String, Object>> computeUserAttributeChangeProperties(final JSONObject event) {
         Map<String, Map<String, Object>> userAttributesChangeProperties = new HashMap<>();
         Map<String, Object> fieldsToPersistLocally = new HashMap<>();
         JSONObject profile = event.optJSONObject(Constants.PROFILE);
-
 
         if (profile == null) {
             return userAttributesChangeProperties;
@@ -171,6 +178,8 @@ public class EventMediator {
                 Object oldValue = localDataStore.getProfileProperty(key);
                 Object newValue = profile.get(key);
 
+                // if newValue is a JSONObject, it will have a structure of {"$command":value}.
+                // In such a case handle this command to compute newValue
                 if (newValue instanceof JSONObject) {
                     JSONObject obj = (JSONObject) newValue;
                     String commandIdentifier = obj.keys().next();
@@ -191,6 +200,7 @@ public class EventMediator {
                             break;
                     }
                 } else if (newValue instanceof String) {
+                    // Remove the date prefix before evaluation and persisting
                     if (((String) newValue).startsWith(DATE_PREFIX)) {
                         newValue = Long.parseLong(((String) newValue).substring(DATE_PREFIX.length()));
                     }
@@ -206,7 +216,7 @@ public class EventMediator {
                     properties.put(KEY_NEW_VALUE, newValue);
                 }
 
-                // Properties will be empty for multi-valued attributes, hence skip
+                // Skip evaluation if both newValue or oldValue are null
                 if (!properties.isEmpty()) {
                     userAttributesChangeProperties.put(key, properties);
                 }

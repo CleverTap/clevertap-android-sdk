@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 import android.location.Location
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.TriggerOperator.Equals
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
@@ -32,6 +33,7 @@ class EvaluationManagerTest : BaseTestCase() {
     private lateinit var limitsMatcher: LimitsMatcher
     private lateinit var evaluationManager: EvaluationManager
     private lateinit var storeRegistry: StoreRegistry
+    private lateinit var templatesManager: TemplatesManager
 
     override fun setUp() {
         super.setUp()
@@ -40,7 +42,16 @@ class EvaluationManagerTest : BaseTestCase() {
         triggersManager = mockk(relaxed = true)
         limitsMatcher = mockk(relaxed = true)
         storeRegistry = mockk(relaxed = true)
-        evaluationManager = spyk(EvaluationManager(triggersMatcher, triggersManager, limitsMatcher, storeRegistry))
+        templatesManager = mockk(relaxed = true)
+        evaluationManager = spyk(
+            EvaluationManager(
+                triggersMatcher = triggersMatcher,
+                triggersManager = triggersManager,
+                limitsMatcher = limitsMatcher,
+                storeRegistry = storeRegistry,
+                templatesManager = templatesManager
+            )
+        )
     }
 
     @Test

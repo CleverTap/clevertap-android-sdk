@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.InAppController;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
@@ -73,6 +74,8 @@ public class CoreState extends CleverTapState {
     private CryptHandler cryptHandler;
 
     private StoreRegistry storeRegistry;
+
+    private TemplatesManager templatesManager;
 
     private ProfileValueHandler profileValueHandler;
 
@@ -313,6 +316,14 @@ public class CoreState extends CleverTapState {
 
     public void setCryptHandler(final CryptHandler cryptHandler) {
         this.cryptHandler = cryptHandler;
+    }
+
+    public TemplatesManager getTemplatesManager() {
+        return templatesManager;
+    }
+
+    public void setTemplatesManager(final TemplatesManager templatesManager) {
+        this.templatesManager = templatesManager;
     }
 
     public void setProfileValueHandler(final ProfileValueHandler profileValueHandler) {

@@ -59,7 +59,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
         logger.verbose("Upgrading CleverTap DB to version $newVersion")
         when (oldVersion) {
             1 -> {
-                // For DB Version 2, just adding Push Notifications, Uninstall TS and Inbox Messages tables and related indices
+                // For DB Version 2, just adding Push Notifications, Uninstall TS and Inbox Messages tables and related indices and migrating userProfiles table
                 executeStatement(db, DROP_TABLE_UNINSTALL_TS)
                 executeStatement(db, DROP_TABLE_INBOX_MESSAGES)
                 executeStatement(db, DROP_TABLE_PUSH_NOTIFICATION_VIEWED)
@@ -75,7 +75,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
             }
 
             2 -> {
-                // For DB Version 3, just adding Push Notification Viewed table and index
+                // For DB Version 3, just adding Push Notification Viewed table and index and migrating userProfiles table
                 executeStatement(db, DROP_TABLE_PUSH_NOTIFICATION_VIEWED)
                 executeStatement(db, CREATE_NOTIFICATION_VIEWED_TABLE)
                 executeStatement(db, NOTIFICATION_VIEWED_INDEX)
@@ -83,6 +83,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
             }
 
             3 -> {
+                // For DB Version 4, just migrate userProfiles table
                 migrateUserProfilesTable(db)
             }
         }
@@ -97,6 +98,13 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
                 ?: StorageHelper.getString(context, fallbackKey, "")
     }
 
+    /**
+     * This function migrates the userProfiles table to a new schema with a composite primary key of _id + deviceId
+     * The older schema only had _id as the primary key
+     * While migrating, the deviceId is back-filled and also the data string is corrected in format
+     *
+     * @param db
+     */
     private fun migrateUserProfilesTable(db: SQLiteDatabase) {
         executeStatement(db, CREATE_TEMP_USER_PROFILES_TABLE)
 
@@ -113,7 +121,8 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
                 val updatedDataString = migrateDataString(dataString)
 
                 // Insert the modified data into the temporary table
-                val insertQuery = """INSERT INTO temp_${USER_PROFILES.tableName} (${Column.ID}, ${Column.DEVICE_ID}, ${Column.DATA})
+                val insertQuery =
+                    """INSERT INTO temp_${USER_PROFILES.tableName} (${Column.ID}, ${Column.DEVICE_ID}, ${Column.DATA})
                                  VALUES ('$id', '$deviceId', '$updatedDataString');"""
                 executeStatement(db, insertQuery)
             }
@@ -143,9 +152,9 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
                 }
 
                 if (value is JSONObject) {
-                    if(value.has(COMMAND_SET))
+                    if (value.has(COMMAND_SET))
                         jsonObject.put(key, value.getJSONArray(COMMAND_SET))
-                    else if(value.has(COMMAND_ADD))
+                    else if (value.has(COMMAND_ADD))
                         jsonObject.put(key, value.getJSONArray(COMMAND_ADD))
                 }
             }

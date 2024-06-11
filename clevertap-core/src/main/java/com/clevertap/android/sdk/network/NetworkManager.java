@@ -28,9 +28,11 @@ import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueData;
 import com.clevertap.android.sdk.events.EventGroup;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.network.api.CtApiWrapper;
+import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody;
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody;
 import com.clevertap.android.sdk.network.http.Response;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
@@ -52,6 +54,7 @@ import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -595,6 +598,31 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
+    @Override
+    @WorkerThread
+    public boolean defineTemplates(final Context context, Collection<CustomTemplate> templates) {
+        final JSONObject header = getQueueHeader(context, null);
+        if (header == null) {
+            return false;
+        }
+
+        final DefineTemplatesRequestBody body = new DefineTemplatesRequestBody(header, templates);
+        logger.debug(config.getAccountId(), "Will define templates: " + body);
+
+        try (Response response = ctApiWrapper.getCtApi().defineTemplates(body)) {
+            if (response.isSuccess()) {
+                handleTemplateResponseSuccess(response);
+                return true;
+            } else {
+                handleVarsOrTemplatesResponseError(response, "CustomTemplates");
+                return false;
+            }
+        } catch (Exception e) {
+            logger.debug(config.getAccountId(), "An exception occurred while defining templates.", e);
+            return false;
+        }
+    }
+
     private void applyQueueHeaderListeners(JSONObject queueHeader, EndpointId endpointId) {
         if (queueHeader != null) {
             for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
@@ -626,28 +654,39 @@ public class NetworkManager extends BaseNetworkManager {
                     .processResponse(bodyJson, bodyString, this.context);
             return true;
         } else {
-            handleVariablesResponseError(response);
+            handleVarsOrTemplatesResponseError(response, "Variables");
             return false;
         }
     }
 
-    private void handleVariablesResponseError(Response response) {
+    private void handleVarsOrTemplatesResponseError(Response response, String logTag) {
         switch (response.getCode()) {
             case 400:
                 JSONObject errorStreamJson = CTXtensions.toJsonOrNull(response.readBody());
                 if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
                     String errorMessage = errorStreamJson.optString("error");
-                    logger.info("variables", "Error while syncing vars: " + errorMessage);
+                    logger.info(logTag, "Error while syncing: " + errorMessage);
                 } else {
-                    logger.info("variables", "Error while syncing vars.");
+                    logger.info(logTag, "Error while syncing.");
                 }
                 return;
             case 401:
-                logger.info("variables", "Unauthorized access from a non-test profile. "
+                logger.info(logTag, "Unauthorized access from a non-test profile. "
                         + "Please mark this profile as a test profile from the CleverTap dashboard.");
                 return;
             default:
-                logger.info("variables", "Response code " + response.getCode() + " while syncing vars.");
+                logger.info(logTag, "Response code " + response.getCode() + " while syncing.");
+        }
+    }
+
+    private void handleTemplateResponseSuccess(Response response) {
+        logger.info(config.getAccountId(), "Custom templates defined successfully.");
+        JSONObject body = CTXtensions.toJsonOrNull(response.readBody());
+        if (body != null) {
+            String warnings = body.optString("error");
+            if (!TextUtils.isEmpty(warnings)) {
+                logger.info(config.getAccountId(), "Custom templates warnings: " + warnings);
+            }
         }
     }
 

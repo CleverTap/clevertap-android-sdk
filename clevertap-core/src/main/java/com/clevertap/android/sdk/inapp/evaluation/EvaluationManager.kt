@@ -8,6 +8,8 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
@@ -41,12 +43,12 @@ import java.util.Locale
  * @property limitsMatcher An instance of [LimitsMatcher] to match limits for in-app notifications.
  * @property storeRegistry An instance of [StoreRegistry] to access storage for in-app notifications.
  */
-@RestrictTo(LIBRARY)
-class EvaluationManager constructor(
+internal class EvaluationManager(
     private val triggersMatcher: TriggersMatcher,
     private val triggersManager: TriggerManager,
     private val limitsMatcher: LimitsMatcher,
     private val storeRegistry: StoreRegistry,
+    private val templatesManager: TemplatesManager
 ) : NetworkHeadersListener {
 
     // Internal list to track server-side evaluated campaign IDs.
@@ -108,7 +110,7 @@ class EvaluationManager constructor(
      * additional properties associated with the event, the user's location and the profile attribute name.
      * The key of an eventProperty is the profile attribute name that has been invoked in the profile event.
      *
-     * This method creates an [EventAdapter] instance representing the specified event with the provided details,
+     * This method creates an [EventAdapter] instance representing each user attribute with the provided details,
      * evaluates the event against server-side, and then proceeds to evaluate it client-side.
      *
      * @param eventProperties Additional properties associated with the event, provided as a map.
@@ -208,7 +210,7 @@ class EvaluationManager constructor(
     /**
      * Evaluates server side in-app notifications based on the provided event.
      *
-     * This method retrieves server-side in-app notifications metadata from the storage, evaluates them against the provided list of events (multiple events in the case of profile events),
+     * This method retrieves server-side in-app notifications metadata from the storage, evaluates them against the provided list of events (multiple events in the case of profile event),
      * and updates the list of evaluated server-side campaign IDs. The updated list is then saved back to storage.
      *
      * @param events The [List<EventAdapter>] representing the list of events triggering the server-side in-app notification evaluation.
@@ -245,13 +247,13 @@ class EvaluationManager constructor(
     /**
      * Evaluates client side in-app notifications based on the provided event.
      *
-     * This method retrieves client-side in-app notifications from the storage, evaluates them against the provided list of events (multiple events in the case of profile events).
+     * This method retrieves client-side in-app notifications from the storage, evaluates them against the provided list of events (multiple events in the case of profile event).
      * The resulting eligible in-app notifications are accumulated and sorted by priority, and the method handles the suppression
      * and updating of TTLs (Time to Live).
      *
      * @param events The [List<EventAdapter>] representing the list of events triggering the client-side in-app notification evaluation
      *
-     * @return A JSONArray containing the evaluated and prioritized in-app notifications for client-side rendering.
+     * @return A JSONArray containing the evaluated and single prioritized in-app notification for client-side rendering.
      *         This array includes in-app notifications that meet the criteria for display.
      */
     @VisibleForTesting
@@ -320,6 +322,11 @@ class EvaluationManager constructor(
         val eligibleInApps: MutableList<JSONObject> = mutableListOf()
 
         for (inApp in inappNotifs) {
+            val templateName = CustomTemplateInAppData.createFromJson(inApp)?.templateName
+            if (templateName != null && !templatesManager.isTemplateRegistered(templateName)) {
+                continue
+            }
+
             val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
 
             val matchesTrigger =
