@@ -870,7 +870,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 inAppFragment = new CTInAppNativeHeaderFragment();
                 break;
             case CTInAppTypeCustomCodeTemplate:
-                //TODO CustomTemplates download all file arguments before presenting
                 final List<Pair<String, CtCacheType>> fileUrlMetas = inAppNotification.getCustomTemplateData()
                         .getFileArgsUrls(inAppController.getTemplatesManager());
                 FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(
@@ -879,9 +878,15 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                         inAppController.getStoreRegistry()
                 );
                 if (!fileUrlMetas.isEmpty()) {
-                    assetRepo.preloadFilesAndCache(fileUrlMetas);
-                    // todo success callback for all completion fixme
-                    //inAppController.presentTemplate(inAppNotification);
+                    assetRepo.preloadFilesAndCache(fileUrlMetas, (aBoolean, stringBooleanMap) -> {
+                        config.getLogger().verbose(config.getAccountId(),
+                                "file download status from showInApp() = " + aBoolean + " and url status map = "
+                                        + stringBooleanMap);
+                        if (aBoolean) {
+                            inAppController.presentTemplate(inAppNotification);
+                        }
+                        return null;
+                    });
                 }
                 return;
             default:

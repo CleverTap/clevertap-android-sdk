@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
+import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
@@ -30,26 +31,38 @@ internal class FileResourcesRepoImpl constructor(
         const val EXPIRY_OFFSET_MILLIS = DAY_IN_MILLIS * DAYS_FOR_EXPIRY
     }
 
-    /*@WorkerThread
-    override fun fetchAllFiles(
-        urls: List<String>,
+    @WorkerThread
+    override fun preloadFilesAndCache(
+        urlMeta: List<Pair<String, CtCacheType>>,
         completionCallback: (status: Boolean, urlStatusMap: Map<String, Boolean>) -> Unit
     ) {
         val urlStatusMap = ConcurrentHashMap<String, Boolean>()
 
         val newCompletionCallback: (String, Boolean) -> Unit = { url, status ->
             urlStatusMap[url] = status
-            checkCompletion(urls.size, urlStatusMap, completionCallback)
+            checkCompletion(urlMeta.size, urlStatusMap, completionCallback)
         }
-        val successBlock: (url: String) -> Unit = { url ->
+        val successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
+            val url = meta.first
             synchronized(fetchAllFilesLock) {
                 val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-                fileStore.saveFileUrl(url = url, expiry = expiry)
+
+                when (meta.second) {
+                    CtCacheType.IMAGE,
+                    CtCacheType.GIF -> {
+                        inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
+                        fileStore.saveFileUrl(url = url, expiry = expiry)
+                    }
+                    CtCacheType.FILES -> {
+                        fileStore.saveFileUrl(url = url, expiry = expiry)
+                    }
+                }
+
                 val callbacks = downloadInProgressUrls.remove(url)
                 callbacks?.forEach { it(url, true) }
             }
         }
-        val failureBlock: (String) -> Unit = { url ->
+        val failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = { (url,_) ->
             synchronized(fetchAllFilesLock) {
                 val callbacks = downloadInProgressUrls.remove(url)
                 callbacks?.forEach { it(url, false) }
@@ -58,47 +71,33 @@ internal class FileResourcesRepoImpl constructor(
 
         synchronized(fetchAllFilesLock) {
             if (downloadInProgressUrls.isEmpty()) {
-                urls.forEach { url ->
+                urlMeta.forEach { (url,_) ->
                     downloadInProgressUrls[url] = mutableListOf(newCompletionCallback)
                 }
-                preloaderStrategy.preloadFiles(urls, successBlock, failureBlock)
+                preloaderStrategy.preloadFilesAndCache(
+                    urlMetas = urlMeta,
+                    successBlock = successBlock,
+                    failureBlock = failureBlock
+                )
             } else {
-                val filteredUrls = mutableListOf<String>()
-                urls.forEach { url ->
+                val filteredUrlsMeta = mutableListOf<Pair<String,CtCacheType>>()
+                urlMeta.forEach { meta ->
+                    val url = meta.first
                     if (downloadInProgressUrls.containsKey(url)) {
                         downloadInProgressUrls[url]?.add(newCompletionCallback)
                     } else {
                         downloadInProgressUrls[url] = mutableListOf(newCompletionCallback)
-                        filteredUrls.add(url)
+                        filteredUrlsMeta.add(meta)
                     }
                 }
-                preloaderStrategy.preloadFiles(filteredUrls, successBlock, failureBlock)
+                preloaderStrategy.preloadFilesAndCache(
+                    urlMetas = filteredUrlsMeta,
+                    successBlock = successBlock,
+                    failureBlock = failureBlock
+                )
             }
         }
-    }*/
 
-    override fun preloadFilesAndCache(
-        urlMeta: List<Pair<String, CtCacheType>>,
-    ) {
-        val successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
-            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-
-            when (meta.second) {
-                CtCacheType.IMAGE,
-                CtCacheType.GIF -> {
-                    inAppAssetsStore.saveAssetUrl(url = meta.first, expiry = expiry)
-                    fileStore.saveFileUrl(url = meta.first, expiry = expiry)
-                }
-                CtCacheType.FILES -> {
-                    fileStore.saveFileUrl(url = meta.first, expiry = expiry)
-                }
-            }
-
-        }
-        preloaderStrategy.preloadFilesAndCache(
-            urlMetas = urlMeta,
-            successBlock = successBlock
-        )
     }
 
     private fun checkCompletion(
@@ -116,7 +115,7 @@ internal class FileResourcesRepoImpl constructor(
     ) {
         val currentTime = System.currentTimeMillis()
 
-        if (currentTime - legacyInAppsStore.lastCleanupTsForFiles() < EXPIRY_OFFSET_MILLIS) {
+        if (currentTime - legacyInAppsStore.lastCleanupTs() < EXPIRY_OFFSET_MILLIS) {
             // limiting cleanup once per 14 days
             return
         }
@@ -125,7 +124,7 @@ internal class FileResourcesRepoImpl constructor(
             validUrls = urls,
             currentTime = currentTime
         )
-        legacyInAppsStore.updateFileCleanupTs(currentTime)
+        legacyInAppsStore.updateAssetCleanupTs(currentTime)
     }
 
     override fun cleanupExpiredInAppsResources() {

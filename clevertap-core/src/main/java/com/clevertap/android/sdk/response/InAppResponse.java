@@ -131,9 +131,16 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             List<Pair<String, CtCacheType>> preloadAssetsMeta = res.getPreloadAssetsMeta();
 
-            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
-            assetRepo.preloadFilesAndCache(preloadAssetsMeta);
-
+            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger,
+                    storeRegistry);
+            if (!preloadAssetsMeta.isEmpty()) {
+                assetRepo.preloadFilesAndCache(preloadAssetsMeta, (aBoolean, stringBooleanMap) -> {
+                    logger.verbose(config.getAccountId(),
+                            "file download status from InAppResponse = " + aBoolean + " and url status map = "
+                                    + stringBooleanMap);
+                    return null;
+                });
+            }
 
             if (isFullResponse) {
                 logger.verbose(config.getAccountId(), "Handling cache eviction");

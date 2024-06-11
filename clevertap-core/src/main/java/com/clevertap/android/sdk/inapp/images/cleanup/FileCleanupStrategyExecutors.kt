@@ -18,9 +18,7 @@ internal class FileCleanupStrategyExecutors @JvmOverloads constructor(
             val task = executor.ioTaskNonUi<Unit>()
 
             task.execute(TAG) {
-                fileResourceProvider.deleteImageMemoryV1(url)
-                fileResourceProvider.deleteGifMemoryV1(url)
-                fileResourceProvider.deleteFileMemoryV2(url)
+                fileResourceProvider.deleteAsset(url)
                 successBlock.invoke(url)
             }
         }
