@@ -29,6 +29,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.media3.common.util.UnstableApi;
+
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.gif.GifImageView;
@@ -40,7 +42,7 @@ import com.clevertap.android.sdk.video.inapps.Media3Handle;
 
 import java.util.ArrayList;
 
-public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFragment {
+@UnstableApi public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFragment {
 
     private boolean exoPlayerFullscreen = false;
 
@@ -61,7 +63,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (VideoLibChecker.INSTANCE.mediaLibType == VideoLibraryIntegrated.MEDIA3) {
+        if (VideoLibChecker.mediaLibType == VideoLibraryIntegrated.MEDIA3) {
             handle = new Media3Handle();
         } else {
             handle = new ExoplayerHandle();
