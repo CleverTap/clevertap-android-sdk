@@ -209,7 +209,7 @@ class CryptUtilsTest : BaseTestCase() {
         migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
 
         verify(mockCryptHandler).encryptionFlagStatus = 3
-        verify(mockDBAdapter).fetchUserProfileById("id")
+        verify(mockDBAdapter).fetchUserProfilesByAccountId("id")
     }
 
     @Test
@@ -253,11 +253,14 @@ class CryptUtilsTest : BaseTestCase() {
         ).thenReturn(originalIdentifier)
 
         // DB
-        val db = JSONObject()
-        db.put("Email", originalIdentifier)
+        val db = mutableMapOf<String, JSONObject>()
+        val data = JSONObject()
+        data.put("Email", originalIdentifier)
+        db["deviceID1"] = data
+        db["deviceID2"] = data
 
         `when`(
-            mockDBAdapter.fetchUserProfileById(config.accountId)
+            mockDBAdapter.fetchUserProfilesByAccountId(config.accountId)
         ).thenReturn(db)
 
         // pref
@@ -280,11 +283,17 @@ class CryptUtilsTest : BaseTestCase() {
         )
         assertEquals(neexpectedCGK.toString(), actualCGK)
 
-        val captor = argumentCaptor<JSONObject>()
+        val captorData = argumentCaptor<JSONObject>()
+        val captorDeviceID = argumentCaptor<String>()
         val dbActual = JSONObject()
         dbActual.put("Email", encryptedIdentifier)
-        verify(mockDBAdapter).storeUserProfile(anyString(), captor.capture())
-        JSONAssert.assertEquals(dbActual, captor.firstValue, true)
+
+        verify(mockDBAdapter, Mockito.times(2)).storeUserProfile(anyString(), captorDeviceID.capture(), captorData.capture())
+
+        assertEquals("deviceID1", captorDeviceID.firstValue)
+        JSONAssert.assertEquals(dbActual, captorData.firstValue, true)
+        assertEquals("deviceID2", captorDeviceID.secondValue)
+        JSONAssert.assertEquals(dbActual, captorData.secondValue, true)
     }
 
     @Test
@@ -308,11 +317,14 @@ class CryptUtilsTest : BaseTestCase() {
         ).thenReturn(originalIdentifier)
 
         // DB
-        val db = JSONObject()
-        db.put("Email", encryptedIdentifier)
+        val db = mutableMapOf<String, JSONObject>()
+        val data = JSONObject()
+        data.put("Email", encryptedIdentifier)
+        db["deviceID1"] = data
+        db["deviceID2"] = data
 
         `when`(
-            mockDBAdapter.fetchUserProfileById(config.accountId)
+            mockDBAdapter.fetchUserProfilesByAccountId(config.accountId)
         ).thenReturn(db)
 
         // pref
@@ -335,11 +347,17 @@ class CryptUtilsTest : BaseTestCase() {
         )
         assertEquals(neexpectedCGK.toString(), actualCGK)
 
-        val captor = argumentCaptor<JSONObject>()
+        val captorData = argumentCaptor<JSONObject>()
+        val captorDeviceID = argumentCaptor<String>()
         val dbActual = JSONObject()
         dbActual.put("Email", originalIdentifier)
-        verify(mockDBAdapter).storeUserProfile(anyString(), captor.capture())
-        JSONAssert.assertEquals(dbActual, captor.firstValue, true)
+
+        verify(mockDBAdapter, Mockito.times(2)).storeUserProfile(anyString(), captorDeviceID.capture(), captorData.capture())
+
+        assertEquals("deviceID1", captorDeviceID.firstValue)
+        JSONAssert.assertEquals(dbActual, captorData.firstValue, true)
+        assertEquals("deviceID2", captorDeviceID.secondValue)
+        JSONAssert.assertEquals(dbActual, captorData.secondValue, true)
 
     }
 
@@ -414,11 +432,15 @@ class CryptUtilsTest : BaseTestCase() {
         put(CACHED_GUIDS_KEY, cachedGuidJsonObj.toString())
 
         // DB
-        val db = JSONObject()
-        db.put("Email", originalIdentifier)
+        val db = mutableMapOf<String, JSONObject>()
+        val data = JSONObject()
+        data.put("Email", originalIdentifier)
+        db["deviceID1"] = data
+        db["deviceID2"] = data
+
 
         `when`(
-            mockDBAdapter.fetchUserProfileById(config.accountId)
+            mockDBAdapter.fetchUserProfilesByAccountId(config.accountId)
         ).thenReturn(db)
 
         //--------Act----------
@@ -432,11 +454,17 @@ class CryptUtilsTest : BaseTestCase() {
         verify(mockCryptHandler).encryptionFlagStatus = 3
         assertEquals(3, get(Constants.KEY_ENCRYPTION_FLAG_STATUS, -1))
 
-        val captor = argumentCaptor<JSONObject>()
+        val captorData = argumentCaptor<JSONObject>()
+        val captorDeviceID = argumentCaptor<String>()
         val dbActual = JSONObject()
         dbActual.put("Email", encryptedIdentifier)
-        verify(mockDBAdapter).storeUserProfile(anyString(), captor.capture())
-        JSONAssert.assertEquals(dbActual, captor.firstValue, true)
+
+        verify(mockDBAdapter, Mockito.times(2)).storeUserProfile(anyString(), captorDeviceID.capture(), captorData.capture())
+
+        assertEquals("deviceID1", captorDeviceID.firstValue)
+        JSONAssert.assertEquals(dbActual, captorData.firstValue, true)
+        assertEquals("deviceID2", captorDeviceID.secondValue)
+        JSONAssert.assertEquals(dbActual, captorData.secondValue, true)
     }
 
     @Test
@@ -454,14 +482,17 @@ class CryptUtilsTest : BaseTestCase() {
             mockCryptHandler.encrypt(anyString(), anyString())
         ).thenReturn(encryptedIdentifier)
 
-        val db = JSONObject()
-        db.put("Email", originalIdentifier)
+        val db = mutableMapOf<String, JSONObject>()
+        val data1 = JSONObject()
+        data1.put("Email", originalIdentifier)
+        db["deviceID1"] = data1
+
 
         `when`(
-            mockDBAdapter.fetchUserProfileById(config.accountId)
+            mockDBAdapter.fetchUserProfilesByAccountId(config.accountId)
         ).thenReturn(db)
 
-        `when`(mockDBAdapter.storeUserProfile(anyString(), org.mockito.kotlin.any())).thenReturn(-1L)
+        `when`(mockDBAdapter.storeUserProfile(anyString(), anyString(), org.mockito.kotlin.any())).thenReturn(-1L)
 
         //--------Act----------
         migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
@@ -485,14 +516,17 @@ class CryptUtilsTest : BaseTestCase() {
             mockCryptHandler.encrypt(anyString(), anyString())
         ).thenReturn(encryptedIdentifier)
 
-        val db = JSONObject()
-        db.put("Email", originalIdentifier)
+        val db = mutableMapOf<String, JSONObject>()
+        val data1 = JSONObject()
+        data1.put("Email", originalIdentifier)
+        db["deviceID1"] = data1
+
 
         `when`(
-            mockDBAdapter.fetchUserProfileById(config.accountId)
+            mockDBAdapter.fetchUserProfilesByAccountId(config.accountId)
         ).thenReturn(db)
 
-        `when`(mockDBAdapter.storeUserProfile(anyString(), org.mockito.kotlin.any())).thenReturn(-2L)
+        `when`(mockDBAdapter.storeUserProfile(anyString(), anyString(),  org.mockito.kotlin.any())).thenReturn(-2L)
 
         //--------Act----------
         migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
@@ -516,11 +550,14 @@ class CryptUtilsTest : BaseTestCase() {
             mockCryptHandler.encrypt(anyString(), anyString())
         ).thenReturn(null)
 
-        val db = JSONObject()
-        db.put("Email", originalIdentifier)
+        val db = mutableMapOf<String, JSONObject>()
+        val data1 = JSONObject()
+        data1.put("Email", originalIdentifier)
+        db["deviceID1"] = data1
+
 
         `when`(
-            mockDBAdapter.fetchUserProfileById(config.accountId)
+            mockDBAdapter.fetchUserProfilesByAccountId(config.accountId)
         ).thenReturn(db)
 
         val cachedGuidJsonObj = JSONObject()
@@ -533,6 +570,61 @@ class CryptUtilsTest : BaseTestCase() {
 
         //--------Assert----------
         assertEquals(0, get(Constants.KEY_ENCRYPTION_FLAG_STATUS, 0))
+    }
+
+    @Test
+    fun `testMigration when encryptionLevel changes and encryption fails for only one profile in db then encryptionFlagStatus bit for DB should be 0`() {
+        //--------Arrange----------
+        val encryptedIdentifier = "encryptedIdentifier"
+        val originalIdentifier = "originalIdentifier"
+        val failOriginalIdentifier = "failOriginalIdentifier"
+
+        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+
+        put(Constants.KEY_ENCRYPTION_LEVEL, 0)
+        put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_FAIL)
+
+        // Only fail for one identifier
+        `when`(
+            mockCryptHandler.encrypt(failOriginalIdentifier, "Email")
+        ).thenReturn(null)
+        `when`(
+            mockCryptHandler.encrypt(originalIdentifier, "Email")
+        ).thenReturn(encryptedIdentifier)
+
+        val db = mutableMapOf<String, JSONObject>()
+        val data1 = JSONObject()
+        data1.put("Email", originalIdentifier)
+
+        val data2 = JSONObject()
+        data2.put("Email", failOriginalIdentifier)
+        db["deviceID1"] = data1
+        db["deviceID2"] = data2
+
+
+        `when`(
+            mockDBAdapter.fetchUserProfilesByAccountId(config.accountId)
+        ).thenReturn(db)
+
+        //--------Act----------
+        migrateEncryptionLevel(application, config, mockCryptHandler, mockDBAdapter)
+
+        //--------Assert----------
+        assertEquals(1, get(Constants.KEY_ENCRYPTION_FLAG_STATUS, 0))
+
+        val captorData = argumentCaptor<JSONObject>()
+        val captorDeviceID = argumentCaptor<String>()
+        val dbActual1 = JSONObject()
+        dbActual1.put("Email", encryptedIdentifier)
+        val dbActual2 = JSONObject()
+        dbActual2.put("Email", failOriginalIdentifier)
+
+        verify(mockDBAdapter, Mockito.times(2)).storeUserProfile(anyString(), captorDeviceID.capture(), captorData.capture())
+
+        assertEquals("deviceID1", captorDeviceID.firstValue)
+        JSONAssert.assertEquals(dbActual1, captorData.firstValue, true)
+        assertEquals("deviceID2", captorDeviceID.secondValue)
+        JSONAssert.assertEquals(dbActual2, captorData.secondValue, true)
     }
 
     private fun <T> put(key: String, value: T) {

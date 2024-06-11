@@ -1116,7 +1116,7 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
-    fun testMatch_WhenEventNameDoesNotMatch_ShouldReturnFalse() {
+    fun `testMatch_When EventNameDoesNotMatch and BothProfileAttrNames are Null_ShouldReturnFalse`() {
         val trigger = createTriggerAdapter("EventA")
         val event = createEventAdapter("EventB")
 
@@ -1124,9 +1124,66 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
-    fun testMatch_WhenEventNameMatchesAndNoProperties_ShouldReturnTrue() {
+    fun `testMatch_When EventNameMatches and BothProfileAttrNames are Null And NoProperties_ShouldReturnTrue`() {
         val trigger = createTriggerAdapter("EventA")
         val event = createEventAdapter("EventA")
+
+        assertTrue(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun `testMatch_When EventNameDoesNotMatch and TriggerProfileAttrName is Null_ShouldReturnFalse`() {
+        val trigger = createTriggerAdapter("EventA")
+        val event = createEventAdapter("EventB", profileAttrName = "attrA")
+
+        assertFalse(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun `testMatch_When EventNameDoesNotMatch and EventProfileAttrName is Null_ShouldReturnFalse`() {
+        val trigger = createTriggerAdapter("EventA", profileAttrName = "attrB")
+        val event = createEventAdapter("EventB")
+
+        assertFalse(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun `testMatch_When EventNameMatches and TriggerProfileAttrName is Null and NoProperties_ShouldReturnTrue`() {
+        val trigger = createTriggerAdapter("EventA")
+        val event = createEventAdapter("EventA", profileAttrName = "attrA")
+
+        assertTrue(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun `testMatch_When EventNameMatches and EventProfileAttrName is Null and NoProperties_ShouldReturnTrue`() {
+        val trigger = createTriggerAdapter("EventA", profileAttrName = "attrA")
+        val event = createEventAdapter("EventA")
+
+        assertTrue(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun `testMatch_When EventNameMatches and ProfileAttrNameDoesNotMatch and NoProperties_ShouldReturnTrue`() {
+        val trigger = createTriggerAdapter("EventA", profileAttrName = "attrA")
+        val event = createEventAdapter("EventA", profileAttrName = "attrB")
+
+        assertTrue(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun `testMatch_When EventNameDoesNotMatch and ProfileAttrNameDoesNotMatch_ShouldReturnFalse`() {
+        val trigger = createTriggerAdapter("EventA", profileAttrName = "attrA")
+        val event = createEventAdapter("EventB", profileAttrName = "attrB")
+
+        assertFalse(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun `testMatch_When EventNameMatches and ProfileAttrNameMatches and NoProperties_ShouldReturnTrue`() {
+        val trigger = createTriggerAdapter("EventA", profileAttrName = "attrA")
+
+        val event = createEventAdapter("EventA", profileAttrName = "attrA")
 
         assertTrue(triggersMatcher.match(trigger, event))
     }
@@ -1165,6 +1222,67 @@ class TriggersMatcherTest : BaseTestCase() {
         )
 
         assertFalse(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun `testMatch_When EventNameDoesNotMatch and TriggerProfileAttrNameMatches and PropertyConditions are NotMet _ShouldReturnFalse`() {
+
+        val trigger = createTriggerAdapter(
+            "EventA", listOf(
+                TriggerCondition("oldValue", TriggerOperator.Equals, TriggerValue("Value1")),
+                TriggerCondition("newValue", TriggerOperator.Equals, TriggerValue("Value2"))
+            ),
+            profileAttrName = "attrA"
+        )
+        val event = createEventAdapter(
+            "EventA", mapOf(
+                "oldValue" to "DifferentValue1",
+                "newValue" to "SomeValue2"
+            ), profileAttrName = "attrA"
+        )
+
+        assertFalse(triggersMatcher.match(trigger, event))
+    }
+
+
+    @Test
+    fun `testMatch_When EventNameDoesNotMatch and TriggerProfileAttrNameMatches and PropertyConditions are Met _ShouldReturnTrue`() {
+
+        val trigger = createTriggerAdapter(
+            "EventA", listOf(
+                TriggerCondition("oldValue", TriggerOperator.Equals, TriggerValue("Value1")),
+                TriggerCondition("newValue", TriggerOperator.Equals, TriggerValue("Value2"))
+            ),
+            profileAttrName = "attrA"
+        )
+        val event = createEventAdapter(
+            "EventA", mapOf(
+                "oldValue" to "Value1",
+                "newValue" to "Value2"
+            ), profileAttrName = "attrA"
+        )
+
+        assertTrue(triggersMatcher.match(trigger, event))
+    }
+
+    @Test
+    fun `testMatch_When EventNameDoesNotMatch and TriggerProfileAttrNameMatches with DifferentCASE and PropertyConditions are Met _ShouldReturnTrue`() {
+
+        val trigger = createTriggerAdapter(
+            "EventA", listOf(
+                TriggerCondition("oldValue", TriggerOperator.Equals, TriggerValue("Value1")),
+                TriggerCondition("newValue", TriggerOperator.Equals, TriggerValue("Value2"))
+            ),
+            profileAttrName = "AtTrA"
+        )
+        val event = createEventAdapter(
+            "EventA", mapOf(
+                "oldValue" to "Value1",
+                "newValue" to "Value2"
+            ), profileAttrName = "attrA"
+        )
+
+        assertTrue(triggersMatcher.match(trigger, event))
     }
 
     @Test
@@ -1396,19 +1514,23 @@ class TriggersMatcherTest : BaseTestCase() {
         eventName: String,
         eventProperties: Map<String, Any> = emptyMap(),
         items: List<Map<String, Any>> = emptyList(),
-        userLocation: Location? = null
+        userLocation: Location? = null,
+        profileAttrName: String? = null
     ): EventAdapter {
-        return EventAdapter(eventName, eventProperties, items, userLocation)
+        return EventAdapter(eventName, eventProperties, items, userLocation, profileAttrName)
     }
 
     private fun createTriggerAdapter(
         eventName: String,
         propertyConditions: List<TriggerCondition> = emptyList(),
         itemConditions: List<TriggerCondition> = emptyList(),
-        geoRadiusConditions: List<TriggerGeoRadius> = emptyList()
+        geoRadiusConditions: List<TriggerGeoRadius> = emptyList(),
+        profileAttrName: String? = null
     ): TriggerAdapter {
         val triggerJSON = JSONObject().apply {
             put("eventName", eventName)
+            if(profileAttrName != null)
+                put("profileAttrName",profileAttrName)
             if (propertyConditions.isNotEmpty()) {
                 put(
                     "eventProperties",

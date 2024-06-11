@@ -77,6 +77,8 @@ public class CoreState extends CleverTapState {
 
     private TemplatesManager templatesManager;
 
+    private ProfileValueHandler profileValueHandler;
+
     public CTVariables getCTVariables() {
         return ctVariables;
     }
@@ -322,6 +324,14 @@ public class CoreState extends CleverTapState {
 
     public void setTemplatesManager(final TemplatesManager templatesManager) {
         this.templatesManager = templatesManager;
+    }
+
+    public void setProfileValueHandler(final ProfileValueHandler profileValueHandler) {
+        this.profileValueHandler = profileValueHandler;
+    }
+
+    public ProfileValueHandler getProfileValueHandler() {
+        return profileValueHandler;
     }
 
     /**
