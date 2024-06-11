@@ -48,6 +48,7 @@ public class CTInAppNotificationButton implements Parcelable {
 
     @SuppressWarnings("unchecked")
     protected CTInAppNotificationButton(Parcel in) {
+        text = in.readString();
         textColor = in.readString();
         backgroundColor = in.readString();
         borderColor = in.readString();
@@ -72,6 +73,7 @@ public class CTInAppNotificationButton implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(text);
         dest.writeString(textColor);
         dest.writeString(backgroundColor);
         dest.writeString(borderColor);
@@ -86,74 +88,29 @@ public class CTInAppNotificationButton implements Parcelable {
         dest.writeParcelable(action, flags);
     }
 
-    public String getActionUrl() {
-        return action != null ? action.getActionUrl() : null;
-    }
-
 
     String getBackgroundColor() {
         return backgroundColor;
-    }
-
-    void setBackgroundColor(String backgroundColor) {
-        this.backgroundColor = backgroundColor;
     }
 
     String getBorderColor() {
         return borderColor;
     }
 
-    @SuppressWarnings({"unused"})
-    void setBorderColor(String borderColor) {
-        this.borderColor = borderColor;
-    }
-
     String getBorderRadius() {
         return borderRadius;
-    }
-
-    @SuppressWarnings({"unused"})
-    void setBorderRadius(String borderRadius) {
-        this.borderRadius = borderRadius;
     }
 
     String getError() {
         return error;
     }
 
-    void setError(String error) {
-        this.error = error;
-    }
-
-    @SuppressWarnings({"unused"})
-    JSONObject getJsonDescription() {
-        return jsonDescription;
-    }
-
-    @SuppressWarnings({"unused"})
-    void setJsonDescription(JSONObject jsonDescription) {
-        this.jsonDescription = jsonDescription;
-    }
-
     public String getText() {
         return text;
     }
 
-    void setText(String text) {
-        this.text = text;
-    }
-
     String getTextColor() {
         return textColor;
-    }
-
-    public String getType() {
-        return action != null && action.getType() != null ? action.getType().toString() : null;
-    }
-
-    @SuppressWarnings({"unused"})
-    void setTextColor(String textColor) {
-        this.textColor = textColor;
     }
 
     public CTInAppAction getAction() {
