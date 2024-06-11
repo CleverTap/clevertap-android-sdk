@@ -53,6 +53,8 @@ import java.util.ArrayList;
     private InAppVideoPlayerHandle handle;
 
     private RelativeLayout relativeLayout;
+    private FrameLayout fl;
+    private CloseImageView closeImageView;
 
     private FrameLayout videoFrameLayout;
 
@@ -70,9 +72,8 @@ import java.util.ArrayList;
 
     @Nullable
     @Override
+    @SuppressLint("ResourceType")
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-
-        ArrayList<Button> inAppButtons = new ArrayList<>();
 
         View inAppView;
         if (inAppNotification.isTablet() && isTablet()) {
@@ -82,12 +83,115 @@ import java.util.ArrayList;
             inAppView = inflater.inflate(R.layout.inapp_interstitial, container, false);
         }
 
-        final FrameLayout fl = inAppView.findViewById(R.id.inapp_interstitial_frame_layout);
-
-        @SuppressLint("ResourceType") final CloseImageView closeImageView = fl.findViewById(199272);
+        // Find views
+        fl = inAppView.findViewById(R.id.inapp_interstitial_frame_layout);
+        closeImageView = fl.findViewById(199272);
         relativeLayout = fl.findViewById(R.id.interstitial_relative_layout);
-        relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
 
+        // Container backgrounds
+        relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
+        fl.setBackground(new ColorDrawable(0xBB000000));
+
+        // Container size
+        resizeContainer(fl, closeImageView);
+
+        // Inapps data binding
+        setMediaForInApp();
+        setTitleAndMessage();
+        setButtons();
+        handleCloseButton();
+
+        return inAppView;
+    }
+
+    private void handleCloseButton() {
+        if (!inAppNotification.isHideCloseButton()) {
+            closeImageView.setOnClickListener(null);
+            closeImageView.setVisibility(View.GONE);
+        } else {
+            closeImageView.setVisibility(View.VISIBLE);
+            closeImageView.setOnClickListener(v -> {
+                didDismiss(null);
+                if (gifImageView != null) {
+                    gifImageView.clear();
+                }
+                Activity activity  = getActivity();
+                if(activity!=null) activity.finish();
+            });
+        }
+    }
+
+    private void setButtons() {
+        ArrayList<Button> buttonViews = new ArrayList<>();
+        LinearLayout linearLayout = relativeLayout.findViewById(R.id.interstitial_linear_layout);
+        Button mainButton = linearLayout.findViewById(R.id.interstitial_button1);
+        buttonViews.add(mainButton);
+        Button secondaryButton = linearLayout.findViewById(R.id.interstitial_button2);
+        buttonViews.add(secondaryButton);
+
+        ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
+        if (buttons.size() == 1) {
+            if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+                mainButton.setVisibility(View.GONE);
+            } else if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+                mainButton.setVisibility(View.INVISIBLE);
+            }
+            setupInAppButton(secondaryButton, buttons.get(0), 0);
+        } else if (!buttons.isEmpty()) {
+            for (int i = 0; i < buttons.size(); i++) {
+                if (i >= 2) {
+                    continue; // only show 2 buttons
+                }
+                CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
+                Button button = buttonViews.get(i);
+                setupInAppButton(button, inAppNotificationButton, i);
+            }
+        }
+    }
+
+    private void setTitleAndMessage() {
+        TextView textView1 = relativeLayout.findViewById(R.id.interstitial_title);
+        textView1.setText(inAppNotification.getTitle());
+        textView1.setTextColor(Color.parseColor(inAppNotification.getTitleColor()));
+
+        TextView textView2 = relativeLayout.findViewById(R.id.interstitial_message);
+        textView2.setText(inAppNotification.getMessage());
+        textView2.setTextColor(Color.parseColor(inAppNotification.getMessageColor()));
+    }
+
+    private void setMediaForInApp() {
+        if (!inAppNotification.getMediaList().isEmpty()) {
+            CTInAppNotificationMedia media = inAppNotification.getMediaList().get(0);
+            if (media.isImage()) {
+                Bitmap image = resourceProvider().cachedImage(media.getMediaUrl());
+                if (image != null) {
+                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
+                    imageView.setVisibility(View.VISIBLE);
+                    imageView.setImageBitmap(image);
+                }
+            } else if (media.isGIF()) {
+                byte[] gifByteArray = resourceProvider().cachedGif(media.getMediaUrl());
+                if (gifByteArray != null) {
+                    gifImageView = relativeLayout.findViewById(R.id.gifImage);
+                    gifImageView.setVisibility(View.VISIBLE);
+                    gifImageView.setBytes(gifByteArray);
+                    gifImageView.startAnimation();
+                }
+            } else if (media.isVideo()) {
+                prepareMedia();
+                playMedia();
+            } else if (media.isAudio()) {
+                prepareMedia();
+                playMedia();
+                disableFullScreenButton();
+            }
+        }
+    }
+
+    private void resizeContainer(
+            FrameLayout fl,
+            CloseImageView closeImageView
+    ) {
         switch (currentOrientation) {
             case Configuration.ORIENTATION_PORTRAIT:
                 relativeLayout.getViewTreeObserver()
@@ -144,85 +248,6 @@ import java.util.ArrayList;
                         });
                 break;
         }
-
-        if (!inAppNotification.getMediaList().isEmpty()) {
-            CTInAppNotificationMedia media = inAppNotification.getMediaList().get(0);
-            if (media.isImage()) {
-                Bitmap image = resourceProvider().cachedImage(media.getMediaUrl());
-                if (image != null) {
-                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-                    imageView.setVisibility(View.VISIBLE);
-                    imageView.setImageBitmap(image);
-                }
-            } else if (media.isGIF()) {
-                byte[] gifByteArray = resourceProvider().cachedGif(media.getMediaUrl());
-                if (gifByteArray != null) {
-                    gifImageView = relativeLayout.findViewById(R.id.gifImage);
-                    gifImageView.setVisibility(View.VISIBLE);
-                    gifImageView.setBytes(gifByteArray);
-                    gifImageView.startAnimation();
-                }
-            } else if (media.isVideo()) {
-                prepareMedia();
-                playMedia();
-            } else if (media.isAudio()) {
-                prepareMedia();
-                playMedia();
-                disableFullScreenButton();
-            }
-        }
-
-        LinearLayout linearLayout = relativeLayout.findViewById(R.id.interstitial_linear_layout);
-        Button mainButton = linearLayout.findViewById(R.id.interstitial_button1);
-        inAppButtons.add(mainButton);
-        Button secondaryButton = linearLayout.findViewById(R.id.interstitial_button2);
-        inAppButtons.add(secondaryButton);
-
-        TextView textView1 = relativeLayout.findViewById(R.id.interstitial_title);
-        textView1.setText(inAppNotification.getTitle());
-        textView1.setTextColor(Color.parseColor(inAppNotification.getTitleColor()));
-
-        TextView textView2 = relativeLayout.findViewById(R.id.interstitial_message);
-        textView2.setText(inAppNotification.getMessage());
-        textView2.setTextColor(Color.parseColor(inAppNotification.getMessageColor()));
-
-        ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
-        if (buttons.size() == 1) {
-            if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-                mainButton.setVisibility(View.GONE);
-            } else if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-                mainButton.setVisibility(View.INVISIBLE);
-            }
-            setupInAppButton(secondaryButton, buttons.get(0), 0);
-        } else if (!buttons.isEmpty()) {
-            for (int i = 0; i < buttons.size(); i++) {
-                if (i >= 2) {
-                    continue; // only show 2 buttons
-                }
-                CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
-                Button button = inAppButtons.get(i);
-                setupInAppButton(button, inAppNotificationButton, i);
-            }
-        }
-
-        fl.setBackground(new ColorDrawable(0xBB000000));
-
-        closeImageView.setOnClickListener(v -> {
-            didDismiss(null);
-            if (gifImageView != null) {
-                gifImageView.clear();
-            }
-            Activity activity  = getActivity();
-            if(activity!=null) activity.finish();
-        });
-
-        if (!inAppNotification.isHideCloseButton()) {
-            closeImageView.setVisibility(View.GONE);
-        } else {
-            closeImageView.setVisibility(View.VISIBLE);
-        }
-
-        return inAppView;
     }
 
     @Override
@@ -264,11 +289,6 @@ import java.util.ArrayList;
             gifImageView.clear();
         }
         handle.pause();
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
     }
 
     @Override
