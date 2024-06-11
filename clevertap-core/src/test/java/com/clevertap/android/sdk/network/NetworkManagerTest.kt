@@ -164,7 +164,7 @@ class NetworkManagerTest : BaseTestCase() {
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
         val cryptHandler = CryptHandler(0, AES, cleverTapInstanceConfig.accountId)
         val localDataStore =
-            LocalDataStoreProvider.provideLocalDataStore(appCtx, cleverTapInstanceConfig, cryptHandler)
+            LocalDataStoreProvider.provideLocalDataStore(appCtx, cleverTapInstanceConfig, cryptHandler, deviceInfo)
         val triggersManager = TriggerManager(appCtx, cleverTapInstanceConfig.accountId, deviceInfo)
         val inAppResponse =
             InAppResponse(
@@ -188,7 +188,6 @@ class NetworkManagerTest : BaseTestCase() {
             callbackManager,
             lockManager,
             Validator(),
-            localDataStore,
             inAppResponse,
             ctApiWrapper
         )

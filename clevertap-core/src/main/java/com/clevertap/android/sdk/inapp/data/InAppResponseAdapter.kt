@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
 import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.safeGetJSONArray
+import com.clevertap.android.sdk.safeGetJSONArrayOrNullIfEmpty
 import com.clevertap.android.sdk.toList
 import org.json.JSONArray
 import org.json.JSONObject
@@ -37,20 +38,16 @@ internal class InAppResponseAdapter(
         }
     }
 
+    val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
+    val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
+    val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
+    val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    
     val preloadImages: List<String>
     val preloadGifs: List<String>
     val preloadFiles: List<String>
     val preloadAssets: List<String>
-
     val preloadAssetsMeta: List<Pair<String, CtCacheType>>
-
-    val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_JSON_RESPONSE_KEY)
-
-    val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
-
-    val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
-
-    val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
 
     init {
         val imageList = mutableListOf<String>()
@@ -131,7 +128,7 @@ internal class InAppResponseAdapter(
 
     val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "")
 
-    val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_STALE_KEY)
+    val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)
 }
 
 enum class CtCacheType {
