@@ -681,7 +681,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void pushProfile(final Map<String, Object> profile) {
-        if (profile == null || profile.isEmpty()) {
+        if (profile == null || profile.isEmpty() || deviceInfo.getDeviceID() == null) {
             return;
         }
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
