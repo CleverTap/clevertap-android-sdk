@@ -484,6 +484,25 @@ class AnalyticsManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun test_pushProfile_when_nullDeviceId_noAction() {
+        val profile = mapOf("key1" to "value1", "key2" to "value2")
+        `when`(coreState.deviceInfo.deviceID).thenReturn(null)
+
+        //Act
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(any())).thenReturn(
+                MockCTExecutors(cleverTapInstanceConfig)
+            )
+            analyticsManagerSUT.pushProfile(profile)
+        }
+
+        //Assert
+        verifyNoInteractions(validator)
+    }
+
+
+
+    @Test
     fun test_pushProfile_when_validPhone_pushesProfile() {
         val validPhone = "+1234"
         val profile = mapOf("Phone" to validPhone)
