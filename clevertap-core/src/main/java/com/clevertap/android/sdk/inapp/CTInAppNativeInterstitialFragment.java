@@ -95,9 +95,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                             @Override
                             public void onGlobalLayout() {
-                                final RelativeLayout relativeLayout1 = fl
-                                        .findViewById(R.id.interstitial_relative_layout);
-                                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1
+                                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout
                                         .getLayoutParams();
                                 if (inAppNotification.isTablet() && isTablet()) {
                                     // tablet layout on tablet
@@ -110,7 +108,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                                                 closeImageView);
                                     } else {
                                         // mobile layout on mobile
-                                        redrawInterstitialInApp(relativeLayout1, layoutParams, closeImageView);
+                                        redrawInterstitialInApp(relativeLayout, layoutParams, closeImageView);
                                     }
                                 }
 
