@@ -105,12 +105,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
             inAppNotification.listener = inAppControllerWeakReference.get();
-            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(
-                    context,
-                    config.getLogger(),
-                    storeRegistry
-            );
-            inAppNotification.prepareForDisplay(resourceProvider,templatesManager,assetRepo,config);
+            inAppNotification.prepareForDisplay(resourceProvider,templatesManager);
         }
     }
 
