@@ -23,7 +23,6 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
@@ -49,7 +48,6 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
-import com.clevertap.android.sdk.response.SyncUpstreamResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
@@ -83,8 +81,6 @@ public class NetworkManager extends BaseNetworkManager {
     private final BaseDatabaseManager databaseManager;
 
     private final DeviceInfo deviceInfo;
-
-    private final LocalDataStore localDataStore;
 
     private final Logger logger;
 
@@ -136,7 +132,6 @@ public class NetworkManager extends BaseNetworkManager {
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
-            LocalDataStore localDataStore,
             InAppResponse inAppResponse,
             final CtApiWrapper ctApiWrapper) {
         this.context = context;
@@ -144,7 +139,6 @@ public class NetworkManager extends BaseNetworkManager {
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
         this.validator = validator;
-        this.localDataStore = localDataStore;
         logger = this.config.getLogger();
 
         this.coreMetaData = coreMetaData;
@@ -164,7 +158,6 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponses.add(new FeatureFlagResponse(config, controllerManager));
         cleverTapResponses.add(new ProductConfigResponse(config, coreMetaData, controllerManager));
         cleverTapResponses.add(new GeofenceResponse(config, callbackManager));
-        cleverTapResponses.add(new SyncUpstreamResponse(localDataStore, logger, config.getAccountId()));
     }
 
     /**
@@ -659,8 +652,6 @@ public class NetworkManager extends BaseNetworkManager {
 
             new ARPResponse(config, this, validator, controllerManager)
                     .processResponse(bodyJson, bodyString, this.context);
-            new SyncUpstreamResponse(localDataStore, logger, config.getAccountId())
-                    .processResponse(bodyJson, bodyString, context);
             return true;
         } else {
             handleVarsOrTemplatesResponseError(response, "Variables");

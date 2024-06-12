@@ -1893,7 +1893,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Return the user profile property value for the specified key
+     * Return the user profile property value for the specified key.
+     * Date related property values are returned as number of seconds since January 1, 1970, 00:00:00 GMT
      *
      * @param name String
      * @return {@link JSONArray}, String or null
@@ -2828,6 +2829,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         DeviceInfo deviceInfo = coreState.getDeviceInfo();
         CryptHandler cryptHandler = coreState.getCryptHandler();
         StoreProvider storeProvider = StoreProvider.getInstance();
+
+        // Inflate the local profile here as eviceId is required
+        coreState.getLocalDataStore().inflateLocalProfileAsync(context);
 
         if (storeRegistry.getInAppStore() == null) {
             InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceId,

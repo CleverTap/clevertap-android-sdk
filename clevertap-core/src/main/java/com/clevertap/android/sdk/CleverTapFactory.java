@@ -82,15 +82,18 @@ class CleverTapFactory {
             return null;
         });
 
-        EventMediator eventMediator = new EventMediator(context, config, coreMetaData);
-        coreState.setEventMediator(eventMediator);
-
-        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler);
-        coreState.setLocalDataStore(localDataStore);
-
         DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
         coreState.setDeviceInfo(deviceInfo);
         deviceInfo.onInitDeviceInfo(cleverTapID);
+
+        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler, deviceInfo);
+        coreState.setLocalDataStore(localDataStore);
+
+        ProfileValueHandler profileValueHandler = new ProfileValueHandler(validator, validationResultStack);
+        coreState.setProfileValueHandler(profileValueHandler);
+
+        EventMediator eventMediator = new EventMediator(context, config, coreMetaData, localDataStore, profileValueHandler);
+        coreState.setEventMediator(eventMediator);
 
         CTPreferenceCache.getInstance(context, config);
 
@@ -203,7 +206,6 @@ class CleverTapFactory {
                 callbackManager,
                 ctLockManager,
                 validator,
-                localDataStore,
                 inAppResponse,
                 ctApiWrapper
         );
@@ -244,7 +246,6 @@ class CleverTapFactory {
                 validator,
                 validationResultStack,
                 coreMetaData,
-                localDataStore,
                 deviceInfo,
                 callbackManager,
                 controllerManager,

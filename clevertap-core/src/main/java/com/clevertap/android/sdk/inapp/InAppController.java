@@ -913,6 +913,18 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
+    @WorkerThread
+    public void onQueueProfileEvent(final Map<String, Map<String, Object>> userAttributeChangedProperties,
+            Location location) {
+        final Map<String, Object> appFields = JsonUtil.mapFromJson(
+                deviceInfo.getAppLaunchedFields());
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnUserAttributeChange(
+                userAttributeChangedProperties, location, appFields);
+        if (clientSideInAppsToDisplay.length() > 0) {
+            addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+        }
+    }
+
     public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps,
             Location userLocation)
             throws JSONException {
