@@ -131,22 +131,116 @@ class DBAdapterTest : BaseTestCase() {
     }
 
     @Test
-    fun test_fetchUserProfileById_when_calledWithUserId_should_returnUserProfile() {
+    fun test_fetchUserProfilesByAccountId_when_calledWithAccountID_should_returnUserProfiles() {
         //assumption: profile is already stored
         dbAdapter.storeUserProfile(
-            "userID",
+            "accountID",
+            "deviceID1",
             JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
 
+        dbAdapter.storeUserProfile(
+            "accountID",
+            "deviceID2",
+            JSONObject().also { it.put("name", "wick") }.also { it.put("father", "akshay") })
+
         //validation : profile is fetched
-        dbAdapter.fetchUserProfileById("userID")!!.let {
-            assertEquals("john", it.getString("name"))
-            assertEquals("daniel", it.getString("father"))
+        dbAdapter.fetchUserProfilesByAccountId("accountID").let {
+            assertEquals("john", it["deviceID1"]?.getString("name")!!)
+            assertEquals("daniel", it["deviceID1"]?.getString("father")!!)
+
+            assertEquals("wick", it["deviceID2"]?.getString("name")!!)
+            assertEquals("akshay", it["deviceID2"]?.getString("father")!!)
         }
+
         //assertion : profile is not already stored or incorrect user id is passed
-        // validation: null is returned
-        assertNull(dbAdapter.fetchUserProfileById(null))
-        assertNull(dbAdapter.fetchUserProfileById("notAvaialble"))
+        //validation: empty map is returned
+        assertEquals(emptyMap(), dbAdapter.fetchUserProfilesByAccountId(null))
+        assertEquals(emptyMap(), dbAdapter.fetchUserProfilesByAccountId("notAvailable"))
     }
+
+    @Test
+    fun test_fetchUserProfilesByAccountIdAndDeviceId_when_NullAccountID_returnsNull() {
+        //assumption: profile is already stored
+        dbAdapter.storeUserProfile(
+            "accountID",
+            "deviceID1",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+
+        val profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(null, "deviceID1")
+
+        //validation: null is returned
+        assertEquals(null, profile)
+    }
+
+    @Test
+    fun test_fetchUserProfilesByAccountIdAndDeviceId_when_NullDeviceId_returnsNull() {
+        //assumption: profile is already stored
+        dbAdapter.storeUserProfile(
+            "accountID",
+            "deviceID1",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+
+        val profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID("accountID", null)
+
+        //validation: null is returned
+        assertNull(profile)
+    }
+
+    @Test
+    fun test_fetchUserProfilesByAccountIdAndDeviceId_when_CorrectDeviceIdAndAccountId_returnsProfile() {
+        //assumption: profile is already stored
+        dbAdapter.storeUserProfile(
+            "accountID",
+            "deviceID1",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+
+        val profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID("accountID", deviceId = "deviceID1")
+
+        //validation: correct profile is returned
+        assertEquals("john", profile?.getString("name"))
+        assertEquals("daniel", profile?.getString("father"))
+    }
+
+    @Test
+    fun test_fetchUserProfilesByAccountIdAndDeviceId_when_IncorrectDeviceId_returnsNull() {
+        //assumption: profile is already stored
+        dbAdapter.storeUserProfile(
+            "accountID",
+            "deviceID1",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+
+        val profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID("accountID", deviceId = "inc-deviceID1")
+
+        assertNull(profile)
+    }
+
+    @Test
+    fun test_fetchUserProfilesByAccountIdAndDeviceId_when_IncorrectAccountId_returnsNull() {
+        //assumption: profile is already stored
+        dbAdapter.storeUserProfile(
+            "accountID",
+            "deviceID1",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+
+        val profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID("inc-accountID", deviceId = "deviceID1")
+
+        assertNull(profile)
+    }
+
+    @Test
+    fun test_fetchUserProfilesByAccountIdAndDeviceId_when_IncorrectAccountIdAndDeviceId_returnsNull() {
+        //assumption: profile is already stored
+        dbAdapter.storeUserProfile(
+            "accountID",
+            "deviceID1",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+
+        val profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID("inc-accountID", deviceId = "inc-deviceID1")
+
+        assertNull(profile)
+    }
+
+
 
     @Test
     fun test_getLastUninstallTimestamp_when_FunctionIsCalled_should_ReturnTheLastUninstallTime() {
@@ -253,18 +347,25 @@ class DBAdapterTest : BaseTestCase() {
     }
 
     @Test
-    fun test_removeUserProfile() {
+    fun test_removeUserProfiles() {
         // assumption
         dbAdapter.storeUserProfile(
             "userID",
+            "deviceID1",
             JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
-        assertNotNull(dbAdapter.fetchUserProfileById("userID"))
+
+        dbAdapter.storeUserProfile(
+            "userID",
+            "deviceID2",
+            JSONObject().also { it.put("name", "wick") }.also { it.put("father", "akshay") })
+
+        assertNotNull(dbAdapter.fetchUserProfilesByAccountId("userID"))
 
         //test
-        dbAdapter.removeUserProfile("userID")
+        dbAdapter.removeUserProfilesForAccountId("userID")
 
         //validation
-        assertNull(dbAdapter.fetchUserProfileById("userID"))
+        assertEquals(emptyMap(), dbAdapter.fetchUserProfilesByAccountId("userID"))
     }
 
     @Test
@@ -272,14 +373,30 @@ class DBAdapterTest : BaseTestCase() {
         // test
         dbAdapter.storeUserProfile(
             "userID",
-            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
+            "deviceID",
+            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") }).let { numberOfRows ->
+            assertEquals(numberOfRows, 1)
+        }
 
         //validation
-        dbAdapter.fetchUserProfileById("userID").let {
+        dbAdapter.fetchUserProfileByAccountIdAndDeviceID("userID", "deviceID").let {
             assertNotNull(it)
             assertEquals("john", it.getString("name"))
             assertEquals("daniel", it.getString("father"))
+        }
+    }
 
+    @Test
+    fun test_storeUserProfile_nullAccountID_returnsDB_UPDATE_EROOR() {
+        dbAdapter.storeUserProfile(null, "deviceID", JSONObject()).let {
+            assertEquals(-1, it)
+        }
+    }
+
+    @Test
+    fun test_storeUserProfile_nullDeviceID_returnsDB_UPDATE_EROOR() {
+        dbAdapter.storeUserProfile("accountID", null, JSONObject()).let {
+            assertEquals(-1, it)
         }
     }
 

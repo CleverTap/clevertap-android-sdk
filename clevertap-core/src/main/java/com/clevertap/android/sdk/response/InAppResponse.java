@@ -8,9 +8,9 @@ import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
+import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
 import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderExecutors;
 import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
 import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
@@ -21,7 +21,6 @@ import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-
 import java.util.concurrent.Callable;
 import kotlin.Pair;
 import org.json.JSONArray;
@@ -136,6 +135,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             InAppImageRepoImpl assetRepo = new InAppImageRepoImpl(cleanupStrategy, preloadStrategy, inAppAssetStore, legacyInAppStore);
             assetRepo.fetchAllImages(res.getPreloadImages());
             assetRepo.fetchAllGifs(res.getPreloadGifs());
+            // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
 
             if (isFullResponse) {
                 logger.verbose(config.getAccountId(), "Handling cache eviction");

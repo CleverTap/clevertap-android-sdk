@@ -216,9 +216,22 @@ inline fun <reified T> JSONArray.iterator(foreach: (element: T) -> Unit) {
  *         The first value of the Pair is `true` if the JSONArray is not null and not empty, `false` otherwise.
  *         The second value of the Pair is the non-empty JSONArray if it exists, or `null` otherwise.
  */
-fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
+fun JSONObject.safeGetJSONArrayOrNullIfEmpty(key: String): Pair<Boolean, JSONArray?> {
     val list: JSONArray = optJSONArray(key) ?: return Pair(false, null)
     return Pair(list.length() > 0, list.takeIf { it.length() > 0 })
+}
+
+/**
+ * Safely retrieves a JSONArray from the JSONObject using the specified [key].
+ *
+ * @param key The key to retrieve the JSONArray.
+ * @return A [Pair] indicating success and the retrieved JSONArray.
+ *         The first value of the Pair is `true` if the JSONArray is not null, `false` otherwise.
+ *         The second value of the Pair is the non-null JSONArray if it exists, or `null` otherwise.
+ */
+fun JSONObject.safeGetJSONArray(key: String): Pair<Boolean, JSONArray?> {
+    val list: JSONArray = optJSONArray(key) ?: return Pair(false, null)
+    return Pair(list.length() >= 0, list.takeIf { it.length() >= 0 })
 }
 
 /**

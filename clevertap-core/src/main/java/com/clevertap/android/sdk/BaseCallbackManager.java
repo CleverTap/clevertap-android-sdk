@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
@@ -106,9 +107,11 @@ public abstract class BaseCallbackManager {
 
     public abstract void setSyncListener(SyncListener syncListener);
 
-    public abstract OnInitCleverTapIDListener getOnInitCleverTapIDListener();
+    public abstract void addOnInitCleverTapIDListener(@NonNull OnInitCleverTapIDListener listener);
 
-    public abstract void setOnInitCleverTapIDListener(OnInitCleverTapIDListener onInitCleverTapIDListener);
+    public abstract void removeOnInitCleverTapIDListener(@NonNull OnInitCleverTapIDListener listener);
+
+    public abstract void notifyCleverTapIDChanged(String id);
 
     public abstract FetchVariablesCallback getFetchVariablesCallback();
 

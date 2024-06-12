@@ -4,6 +4,7 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.utils.prepend
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -57,6 +58,19 @@ class InAppQueue(
                 )
             }
         }
+        saveQueue(currentQueue)
+    }
+
+    /**
+     * Insert a single In-App message in front of the queue.
+     *
+     * @param jsonObject The In-App message to insert.
+     */
+    @WorkerThread
+    @Synchronized
+    fun insertInFront(jsonObject: JSONObject) {
+        val currentQueue = getQueue()
+        currentQueue.prepend(jsonObject)
         saveQueue(currentQueue)
     }
 

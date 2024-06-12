@@ -2,6 +2,9 @@ package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
+import android.os.Handler;
+import android.os.Looper;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -49,7 +52,8 @@ public class CallbackManager extends BaseCallbackManager {
 
     private NotificationRenderedListener notificationRenderedListener;
 
-    private OnInitCleverTapIDListener onInitCleverTapIDListener;
+    //TODO this list could be a synchronized set
+    private final List<OnInitCleverTapIDListener> onInitCleverTapIDListeners = new ArrayList<>();
 
     @Deprecated
     private WeakReference<CTProductConfigListener> productConfigListener;
@@ -265,14 +269,23 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public OnInitCleverTapIDListener getOnInitCleverTapIDListener() {
-        return onInitCleverTapIDListener;
+    public void addOnInitCleverTapIDListener(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
+        onInitCleverTapIDListeners.add(onInitCleverTapIDListener);
     }
 
     @Override
-    public void setOnInitCleverTapIDListener(final OnInitCleverTapIDListener onInitCleverTapIDListener) {
-        this.onInitCleverTapIDListener = onInitCleverTapIDListener;
+    public void removeOnInitCleverTapIDListener(@NonNull final OnInitCleverTapIDListener listener) {
+        onInitCleverTapIDListeners.remove(listener);
     }
+
+    @Override
+    public void notifyCleverTapIDChanged(final String id) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        for (OnInitCleverTapIDListener listener : onInitCleverTapIDListeners) {
+            mainHandler.post(() -> listener.onInitCleverTapID(id));
+        }
+    }
+
     //Profile
     @Override
     public void notifyUserProfileInitialized(String deviceID) {

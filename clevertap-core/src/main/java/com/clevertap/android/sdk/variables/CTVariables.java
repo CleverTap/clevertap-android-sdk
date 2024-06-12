@@ -103,10 +103,6 @@ public class CTVariables {
         varCache.clearUserContent();
     }
 
-    public static boolean isDevelopmentMode(Context context) {
-        return 0 != (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE);
-    }
-
     /**
      * Note: it is necessary to call the listeners immediately after user adds a listener using this function
      * because there is no guarantee that the newly added listener is going to be called later. <br><br>

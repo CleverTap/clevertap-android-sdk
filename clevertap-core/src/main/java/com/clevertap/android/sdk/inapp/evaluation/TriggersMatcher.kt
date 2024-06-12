@@ -50,7 +50,8 @@ class TriggersMatcher {
      */
     @VisibleForTesting
     internal fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean {
-        if (event.eventName != trigger.eventName) {
+        // Evaluate further if either the eventNames match or the profileAttrName's match. Make sure both profileAttrName's are not null and equal
+        if (event.eventName != trigger.eventName && (event.profileAttrName == null || !event.profileAttrName.equals(trigger.profileAttrName, true))) {
             return false
         }
 

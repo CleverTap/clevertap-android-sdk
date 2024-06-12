@@ -296,6 +296,33 @@ class TriggerAdapterTest {
     }
 
     @Test
+    fun testProfileAttrNameWithNonNullProfileAttributeName() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        triggerJSON.put(Constants.KEY_PROFILE_ATTR_NAME, "SampleAttr")
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val profileAttrName = triggerAdapter.profileAttrName
+
+        // Assert
+        assertEquals("SampleAttr", profileAttrName)
+    }
+
+    @Test
+    fun testProfileAttrNameWithNonNullProfileAttributeNameNull() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val profileAttrName = triggerAdapter.profileAttrName
+
+        // Assert
+        assertNull(profileAttrName)
+    }
+
+    @Test
     fun testPropertiesWithNonNullProperties() {
         // Arrange
         val triggerJSON = JSONObject()

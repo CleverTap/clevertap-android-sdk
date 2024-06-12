@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.DeviceInfo
  * @param config The configuration for the CleverTap instance.
  * @param deviceInfo The device information required for CleverTap initialization.
  */
-class CtApiWrapper internal constructor(
+internal class CtApiWrapper(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
     private val deviceInfo: DeviceInfo
@@ -23,6 +23,6 @@ class CtApiWrapper internal constructor(
 
     @get:WorkerThread
     val ctApi: CtApi by lazy {
-        provideDefaultTestCtApi(context, config, deviceInfo)
+        provideDefaultCtApi(context, config, deviceInfo)
     }
 }

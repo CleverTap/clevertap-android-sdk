@@ -125,6 +125,32 @@ class NetworkManagerTest : BaseTestCase() {
         assertFalse(networkManager.sendQueue(appCtx, VARIABLES, getSampleJsonArrayOfJsonObjects(1), null))
     }
 
+    @Test
+    fun `defineTemplates should return false when error response code is received`() {
+        mockHttpClient.responseCode = 400
+        mockHttpClient.responseBody = getErrorJson().toString()
+        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+
+        mockHttpClient.responseCode = 401
+        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+
+        mockHttpClient.responseCode = 500
+        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+    }
+
+    @Test
+    fun `defineTemplates should return false when http call results in an exception`() {
+        mockHttpClient.alwaysThrowOnExecute = true
+        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+    }
+
+    @Test
+    fun `defineTemplates should return true when success response code is received`() {
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = getErrorJson().toString()
+        assertTrue(networkManager.defineTemplates(appCtx, emptyList()))
+    }
+
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
@@ -136,7 +162,7 @@ class NetworkManagerTest : BaseTestCase() {
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
         val cryptHandler = CryptHandler(0, AES, cleverTapInstanceConfig.accountId)
         val localDataStore =
-            LocalDataStoreProvider.provideLocalDataStore(appCtx, cleverTapInstanceConfig, cryptHandler)
+            LocalDataStoreProvider.provideLocalDataStore(appCtx, cleverTapInstanceConfig, cryptHandler, deviceInfo)
         val triggersManager = TriggerManager(appCtx, cleverTapInstanceConfig.accountId, deviceInfo)
         val inAppResponse =
             InAppResponse(
@@ -159,9 +185,14 @@ class NetworkManagerTest : BaseTestCase() {
             callbackManager,
             lockManager,
             Validator(),
-            localDataStore,
             inAppResponse,
             ctApiWrapper
         )
+    }
+
+    private fun getErrorJson(): JSONObject {
+        return JSONObject().apply {
+            put("error", "Error")
+        }
     }
 }

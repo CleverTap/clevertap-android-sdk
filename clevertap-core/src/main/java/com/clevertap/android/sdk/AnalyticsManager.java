@@ -7,7 +7,6 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
@@ -55,8 +54,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final DeviceInfo deviceInfo;
 
-    private final LocalDataStore localDataStore;
-
     private final ValidationResultStack validationResultStack;
 
     private final Validator validator;
@@ -69,19 +66,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
-    private NumberValueType numberValueType;
-
-    enum NumberValueType {
-        INT_NUMBER, FLOAT_NUMBER, DOUBLE_NUMBER
-    }
-
     AnalyticsManager(Context context,
                      CleverTapInstanceConfig config,
                      BaseEventQueueManager baseEventQueueManager,
                      Validator validator,
                      ValidationResultStack validationResultStack,
                      CoreMetaData coreMetaData,
-                     LocalDataStore localDataStore,
                      DeviceInfo deviceInfo,
                      BaseCallbackManager callbackManager, ControllerManager controllerManager,
                      final CTLockManager ctLockManager,
@@ -92,7 +82,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.validator = validator;
         this.validationResultStack = validationResultStack;
         this.coreMetaData = coreMetaData;
-        this.localDataStore = localDataStore;
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
         this.ctLockManager = ctLockManager;
@@ -692,7 +681,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void pushProfile(final Map<String, Object> profile) {
-        if (profile == null || profile.isEmpty()) {
+        if (profile == null || profile.isEmpty() || deviceInfo.getDeviceID() == null) {
             return;
         }
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
@@ -939,119 +928,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         });
     }
 
-    private JSONArray _cleanMultiValues(ArrayList<String> values, String key) {
-
-        try {
-            if (values == null || key == null) {
-                return null;
-            }
-
-            JSONArray cleanedValues = new JSONArray();
-            ValidationResult vr;
-
-            // loop through and clean the new values
-            for (String value : values) {
-                value = (value == null) ? "" : value;  // so we will generate a validation error later on
-
-                // validate value
-                vr = validator.cleanMultiValuePropertyValue(value);
-
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    validationResultStack.pushValidationResult(vr);
-                }
-
-                // reset the value
-                Object _value = vr.getObject();
-                value = (_value != null) ? vr.getObject().toString() : null;
-
-                // if value is empty generate an error and return
-                if (value == null || value.isEmpty()) {
-                    _generateEmptyMultiValueError(key);
-                    // Abort
-                    return null;
-                }
-                // add to the newValues to be merged
-                cleanedValues.put(value);
-            }
-
-            return cleanedValues;
-
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error cleaning multi values for key " + key, t);
-            _generateEmptyMultiValueError(key);
-            return null;
-        }
-    }
-
-    private JSONArray _constructExistingMultiValue(String key, String command) {
-
-        boolean remove = command.equals(Constants.COMMAND_REMOVE);
-        boolean add = command.equals(Constants.COMMAND_ADD);
-
-        // only relevant for add's and remove's; a set overrides the existing value, so return a new array
-        if (!remove && !add) {
-            return new JSONArray();
-        }
-
-        Object existing = _getProfilePropertyIgnorePersonalizationFlag(key);
-
-        // if there is no existing value
-        if (existing == null) {
-            // if its a remove then return null to abort operation
-            // no point in running remove against a nonexistent value
-            if (remove) {
-                return null;
-            }
-
-            // otherwise return an empty array
-            return new JSONArray();
-        }
-
-        // value exists
-
-        // the value should only ever be a JSONArray or scalar (String really)
-
-        // if its already a JSONArray return that
-        if (existing instanceof JSONArray) {
-            return (JSONArray) existing;
-        }
-
-        // handle a scalar value as the existing value
-        /*
-            if its an add, our rule is to promote the scalar value to multi value and include the cleaned stringified
-            scalar value as the first element of the resulting array
-
-            NOTE: the existing scalar value is currently limited to 120 bytes; when adding it to a multi value
-            it is subject to the current 40 byte limit
-
-            if its a remove, our rule is to delete the key from the local copy
-            if the cleaned stringified existing value is equal to any of the cleaned values passed to the remove method
-
-            if its an add, return an empty array as the default,
-            in the event the existing scalar value fails stringifying/cleaning
-
-            returning null will signal that a remove operation should be aborted,
-            as there is no valid promoted multi value to remove against
-         */
-
-        JSONArray _default = (add) ? new JSONArray() : null;
-
-        String stringified = _stringifyAndCleanScalarProfilePropValue(existing);
-
-        return (stringified != null) ? new JSONArray().put(stringified) : _default;
-    }
-
     private void _generateInvalidMultiValueKeyError(String key) {
         ValidationResult error = ValidationResultFactory.create(523, Constants.INVALID_MULTI_VALUE_KEY, key);
         validationResultStack.pushValidationResult(error);
         config.getLogger().debug(config.getAccountId(),
                 "Invalid multi-value property key " + key + " profile multi value operation aborted");
-    }
-
-    // use for internal profile getter doesn't do the personalization check
-    private Object _getProfilePropertyIgnorePersonalizationFlag(String key) {
-        return localDataStore.getProfileValueForKey(key);
     }
 
     private void _handleMultiValues(ArrayList<String> values, String key, String command) {
@@ -1085,16 +966,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         key = cleanKey;
-
-        try {
-            JSONArray currentValues = _constructExistingMultiValue(key, command);
-            JSONArray newValues = _cleanMultiValues(values, key);
-            _validateAndPushMultiValue(currentValues, newValues, values, key, command);
-
-        } catch (Throwable t) {
-            config.getLogger()
-                    .verbose(config.getAccountId(), "Error handling multi value operation for key " + key, t);
-        }
+        _pushMultiValue(values, key, command);
     }
 
     private void _constructIncrementDecrementValues(Number value, String key, String command) {
@@ -1131,10 +1003,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 validationResultStack.pushValidationResult(vr);
             }
 
-            Number updatedValue = _handleIncrementDecrementValues(key,value,command);
-            //Save updated values locally
-            localDataStore.setProfileField(key, updatedValue);
-
             // push to server
             JSONObject commandObj = new JSONObject().put(command, value);
             JSONObject updateObj = new JSONObject().put(key, commandObj);
@@ -1146,86 +1014,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     }
 
-    private Number _handleIncrementDecrementValues(@NonNull String key, Number value, String command){
-        Number updatedValue = null;
-        Number existingValue = (Number) _getProfilePropertyIgnorePersonalizationFlag(key);
-
-        /*When existing value is NOT present in local data store,
-         we check the give value number type and do the necessary operation*/
-        if (existingValue == null) {
-            switch (getNumberValueType(value)){
-                case DOUBLE_NUMBER:
-                    if (command.equals(Constants.COMMAND_INCREMENT)){
-                        updatedValue = value.doubleValue();
-                    }else if (command.equals(Constants.COMMAND_DECREMENT)){
-                        updatedValue = -value.doubleValue();
-                    }
-                    break;
-                case FLOAT_NUMBER:
-                    if (command.equals(Constants.COMMAND_INCREMENT)){
-                        updatedValue = value.floatValue();
-                    }else if (command.equals(Constants.COMMAND_DECREMENT)){
-                        updatedValue = -value.floatValue();
-                    }
-                    break;
-                default:
-                    if (command.equals(Constants.COMMAND_INCREMENT)){
-                        updatedValue = value.intValue();
-                    }else if (command.equals(Constants.COMMAND_DECREMENT)){
-                        updatedValue = -value.intValue();
-                    }
-                    break;
-
-            }
-            return updatedValue;
-
-        }
-
-        /*When existing value is present in local data store,
-         we check the existing number type and do the necessary operation*/
-        switch (getNumberValueType(existingValue)){
-            case DOUBLE_NUMBER:
-                if (command.equals(Constants.COMMAND_INCREMENT)){
-                    updatedValue = existingValue.doubleValue() + value.doubleValue();
-                }else if (command.equals(Constants.COMMAND_DECREMENT)){
-                    updatedValue = existingValue.doubleValue() - value.doubleValue();
-                }
-                break;
-            case FLOAT_NUMBER:
-                if (command.equals(Constants.COMMAND_INCREMENT)){
-                    updatedValue = existingValue.floatValue() + value.floatValue();
-                }else if (command.equals(Constants.COMMAND_DECREMENT)){
-                    updatedValue = existingValue.floatValue() - value.floatValue();
-                }
-                break;
-            default:
-                if (command.equals(Constants.COMMAND_INCREMENT)){
-                    updatedValue = existingValue.intValue() + value.intValue();
-                }else if (command.equals(Constants.COMMAND_DECREMENT)){
-                    updatedValue = existingValue.intValue() - value.intValue();
-                }
-                break;
-
-        }
-        return updatedValue;
-    }
-
-    /*
-        Based on the number value type returns the associated enum
-        (INT_NUMBER,DOUBLE_NUMBER,FLOAT_NUMBER)
-    */
-    private NumberValueType getNumberValueType(Number value){
-        if (value.equals(value.intValue())) {
-            numberValueType = NumberValueType.INT_NUMBER;
-        } else if (value.equals(value.doubleValue())) {
-            numberValueType = NumberValueType.DOUBLE_NUMBER;
-        } else if (value.equals(value.floatValue())) {
-            numberValueType = NumberValueType.FLOAT_NUMBER;
-        }
-        return numberValueType;
-    }
-
-
     private void _push(Map<String, Object> profile) {
         if (profile == null || profile.isEmpty()) {
             return;
@@ -1234,7 +1022,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             ValidationResult vr;
             JSONObject customProfile = new JSONObject();
-            JSONObject fieldsToUpdateLocally = new JSONObject();
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
 
@@ -1297,18 +1084,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     }
                 }
 
-                // add to the local profile update object
-                fieldsToUpdateLocally.put(key, value);
                 customProfile.put(key, value);
             }
 
             config.getLogger()
                     .verbose(config.getAccountId(), "Constructed custom profile: " + customProfile.toString());
-
-            // update local profile values
-            if (fieldsToUpdateLocally.length() > 0) {
-                localDataStore.setProfileFields(fieldsToUpdateLocally);
-            }
 
             baseEventQueueManager.pushBasicProfile(customProfile, false);
 
@@ -1348,9 +1128,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 return;
             }
 
-            // remove from the local profile
-            localDataStore.removeProfileField(key);
-
             // send the delete command
             JSONObject command = new JSONObject().put(Constants.COMMAND_DELETE, true);
             JSONObject update = new JSONObject().put(key, command);
@@ -1366,59 +1143,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    private String _stringifyAndCleanScalarProfilePropValue(Object value) {
-        String val = CTJsonConverter.toJsonString(value);
-
-        if (val != null) {
-            ValidationResult vr = validator.cleanMultiValuePropertyValue(val);
-
-            // Check for an error
-            if (vr.getErrorCode() != 0) {
-                validationResultStack.pushValidationResult(vr);
-            }
-
-            Object _value = vr.getObject();
-            val = (_value != null) ? vr.getObject().toString() : null;
-        }
-
-        return val;
-    }
-
-    private void _validateAndPushMultiValue(JSONArray currentValues, JSONArray newValues,
-            ArrayList<String> originalValues, String key, String command) {
-
+    private void _pushMultiValue(ArrayList<String> originalValues, String key, String command) {
         try {
-
-            // if any of these are null, indicates some problem along the way so abort operation
-            if (currentValues == null || newValues == null || originalValues == null || key == null
-                    || command == null) {
-                return;
-            }
-
-            String mergeOperation = command.equals(Constants.COMMAND_REMOVE) ? Validator.REMOVE_VALUES_OPERATION
-                    : Validator.ADD_VALUES_OPERATION;
-
-            // merge currentValues and newValues
-            ValidationResult vr = validator
-                    .mergeMultiValuePropertyForKey(currentValues, newValues, mergeOperation, key);
-
-            // Check for an error
-            if (vr.getErrorCode() != 0) {
-                validationResultStack.pushValidationResult(vr);
-            }
-
-            // set the merged local values array
-            JSONArray localValues = (JSONArray) vr.getObject();
-
-            // update local profile
-            // remove an empty array
-            if (localValues == null || localValues.length() <= 0) {
-                localDataStore.removeProfileField(key);
-            } else {
-                // not empty so save to local profile
-                localDataStore.setProfileField(key, localValues);
-            }
-
             // push to server
             JSONObject commandObj = new JSONObject();
             commandObj.put(command, new JSONArray(originalValues));
