@@ -458,25 +458,26 @@ public class CTInAppNotification implements Parcelable {
         return isTablet;
     }
 
-    void prepareForDisplay(FileResourceProvider fileResourceProvider, final TemplatesManager templatesManager,
-            final FileResourcesRepoImpl assetRepo, final CleverTapInstanceConfig config) {
+    void prepareForDisplay(
+            FileResourceProvider fileResourceProvider,
+            final TemplatesManager templatesManager
+    ) {
+        if (inAppType.equals(CTInAppType.CTInAppTypeCustomCodeTemplate)) {
+            final List<Pair<String, CtCacheType>> fileUrlMetas = customTemplateData.getFileArgsUrls(templatesManager);
 
-        if (inAppType.equals(CTInAppType.CTInAppTypeCustomCodeTemplate))
-        {
-            final List<Pair<String, CtCacheType>> fileUrlMetas = customTemplateData
-                    .getFileArgsUrls(templatesManager);
-            if (!fileUrlMetas.isEmpty()) {
-                assetRepo.preloadFilesAndCache(fileUrlMetas, (aBoolean, stringBooleanMap) -> {
-                    config.getLogger().verbose(config.getAccountId(),
-                            "file download status from prepareForDisplay() = " + aBoolean + " and url status map = "
-                                    + stringBooleanMap);
-                    if (!aBoolean) {
-                        this.error = "Error processing Custom Code Template as files not downloaded successfully";
-                    }
-                    listener.notificationReady(this);
-                    return null;
-                });
+            int index = 0;
+            while (index < fileUrlMetas.size()) {
+                Pair<String, CtCacheType> data = fileUrlMetas.get(index);
+                byte[] bytes = fileResourceProvider.fetchFile(data.getFirst());
+
+                if (bytes == null) {
+                    // download fail
+                    this.error = "some error";
+                    break;
+                }
+                index++;
             }
+            listener.notificationReady(this);
         } else {
             for (CTInAppNotificationMedia media : this.mediaList) {
                 if (media.isGIF()) {
