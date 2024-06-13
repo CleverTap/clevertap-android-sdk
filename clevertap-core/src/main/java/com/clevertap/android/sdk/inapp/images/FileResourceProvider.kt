@@ -99,91 +99,27 @@ internal class FileResourceProvider(
      * If image is found in cache, the cached image is returned.
      */
     fun fetchInAppImageV1(url: String): Bitmap? {
-
-        val cachedImage: Bitmap? = cachedInAppImageV1(url)
-
-        if (cachedImage != null) {
-            logger?.verbose("Returning requested $url bitmap from cache")
-            return cachedImage
-        }
-
-        val downloadedBitmap = inAppRemoteSource.makeApiCallForFile(Pair(url,IMAGE))
-
-        return when (downloadedBitmap.status) {
-
-            DownloadedBitmap.Status.SUCCESS -> {
-                saveData(
-                    cacheKey = url,
-                    data = Pair(downloadedBitmap.bitmap!!, downloadedBitmap.bytes!!),
-                    mao = imageMAO
-                )
-                logger?.verbose("Returning requested $url bitmap with network, saved in cache")
-                downloadedBitmap.bitmap
-            }
-
-            else -> {
-                logger?.verbose("There was a problem fetching data for bitmap")
-                 null
-            }
-        }
+        return fetchData(
+            urlMeta = Pair(url, IMAGE),
+            mao = imageMAO,
+            cachedDataFetcherBlock = ::cachedInAppImageV1
+        ) { Pair(it.bitmap!!, it.bytes!!) }
     }
 
     fun fetchInAppGifV1(url: String): ByteArray? {
-        val cachedGif = cachedInAppGifV1(url)
-
-        if (cachedGif != null) {
-            logger?.verbose("Returning requested $url gif from cache with size ${cachedGif.size}")
-            return cachedGif
-        }
-
-        val downloadedGif = inAppRemoteSource.makeApiCallForFile(Pair(url,GIF))
-
-        return when (downloadedGif.status) {
-
-            DownloadedBitmap.Status.SUCCESS -> {
-                saveData(
-                    cacheKey = url,
-                    data = Pair(downloadedGif.bytes!!, downloadedGif.bytes),
-                    mao = gifMAO
-                )
-                logger?.verbose("Returning requested $url gif with network, saved in cache")
-                downloadedGif.bytes
-            }
-
-            else -> {
-                logger?.verbose("There was a problem fetching data for bitmap, status:${downloadedGif.status}")
-                null
-            }
-        }
+        return fetchData(
+            urlMeta = Pair(url, GIF),
+            mao = gifMAO,
+            cachedDataFetcherBlock = ::cachedInAppGifV1
+        ) { Pair(it.bytes!!, it.bytes) }
     }
 
     fun fetchFile(url: String): ByteArray? {
-        val cachedFile = cachedFileInBytes(url)
-
-        if (cachedFile != null) {
-            logger?.verbose("Returning requested $url file from cache with size ${cachedFile.size}")
-            return cachedFile
-        }
-
-        val downloadedFile = inAppRemoteSource.makeApiCallForFile(Pair(url,FILES))
-
-        return when (downloadedFile.status) {
-
-            DownloadedBitmap.Status.SUCCESS -> {
-                saveData(
-                    cacheKey = url,
-                    data = Pair(downloadedFile.bytes!!, downloadedFile.bytes),
-                    mao = fileMAO
-                )
-                logger?.verbose("Returning requested $url file with network, saved in cache")
-                downloadedFile.bytes
-            }
-
-            else -> {
-                logger?.verbose("There was a problem fetching data for file, status:${downloadedFile.status}")
-                null
-            }
-        }
+        return fetchData(
+            urlMeta = Pair(url, FILES),
+            mao = fileMAO,
+            cachedDataFetcherBlock = ::cachedFileInBytes
+        ) { Pair(it.bytes!!, it.bytes) }
     }
 
     fun deleteAsset(cacheKey: String) {
@@ -221,6 +157,38 @@ internal class FileResourceProvider(
                 it.fetchInMemoryAndTransform(cacheKey, transformationType)
             } ?: firstNotNullOfOrNull {/* Try disk */
                 it.fetchDiskMemoryAndTransform(cacheKey, transformationType)
+            }
+        }
+    }
+
+    private fun <T> fetchData(
+        urlMeta: Pair<String, CtCacheType>,
+        mao: MemoryAccessObject<T>,
+        cachedDataFetcherBlock: (String) -> T?,
+        dataToSaveBlock: (DownloadedBitmap) -> Pair<T, ByteArray>
+    ): T? {
+        val cachedData = cachedDataFetcherBlock(urlMeta.first)
+
+        if (cachedData != null) {
+            logger?.verbose("Returning requested ${urlMeta.first} ${urlMeta.second.name} from cache")
+            return cachedData
+        }
+
+        val downloadedData = inAppRemoteSource.makeApiCallForFile(urlMeta)
+        val dataToSave = dataToSaveBlock(downloadedData)
+        return when (downloadedData.status) {
+            DownloadedBitmap.Status.SUCCESS -> {
+                saveData(
+                    cacheKey = urlMeta.first,
+                    data = dataToSave,
+                    mao = mao
+                )
+                logger?.verbose("Returning requested ${urlMeta.first} ${urlMeta.second.name} with network, saved in cache")
+                dataToSave.first
+            }
+            else -> {
+                logger?.verbose("There was a problem fetching data for ${urlMeta.second.name}, status: ${downloadedData.status}")
+                null
             }
         }
     }
