@@ -59,19 +59,9 @@ internal class FileResourceProvider(
         private const val ALL_FILE_TYPES_DIRECTORY_NAME = "CleverTap.Files."
     }
 
-    fun saveInAppImageV1(cacheKey: String, bitmap: Bitmap, bytes: ByteArray) {
-        val savedFile = imageMAO.saveDiskMemory(cacheKey, bytes)
-        imageMAO.saveInMemory(cacheKey, Pair(bitmap, savedFile))
-    }
-
-    fun saveInAppGifV1(cacheKey: String, bytes: ByteArray) {
-        val savedFile = gifMAO.saveDiskMemory(cacheKey, bytes)
-        gifMAO.saveInMemory(cacheKey, Pair(bytes, savedFile))
-    }
-
-    fun saveFile(cacheKey: String, bytes: ByteArray) {
-        val savedFile = fileMAO.saveDiskMemory(cacheKey, bytes)
-        fileMAO.saveInMemory(cacheKey, Pair(bytes, savedFile))
+    private fun <T> saveData(cacheKey : String, data : Pair<T,ByteArray>,mao : MemoryAccessObject<T>){
+        val savedFile = mao.saveDiskMemory(cacheKey, data.second)
+        mao.saveInMemory(cacheKey,Pair(data.first,savedFile))
     }
 
     fun isFileCached(url: String): Boolean {
@@ -122,10 +112,10 @@ internal class FileResourceProvider(
         return when (downloadedBitmap.status) {
 
             DownloadedBitmap.Status.SUCCESS -> {
-                saveInAppImageV1(
+                saveData(
                     cacheKey = url,
-                    bitmap = downloadedBitmap.bitmap!!,
-                    bytes = downloadedBitmap.bytes!!
+                    data = Pair(downloadedBitmap.bitmap!!, downloadedBitmap.bytes!!),
+                    mao = imageMAO
                 )
                 logger?.verbose("Returning requested $url bitmap with network, saved in cache")
                 downloadedBitmap.bitmap
@@ -151,7 +141,11 @@ internal class FileResourceProvider(
         return when (downloadedGif.status) {
 
             DownloadedBitmap.Status.SUCCESS -> {
-                saveInAppGifV1(cacheKey = url, bytes = downloadedGif.bytes!!)
+                saveData(
+                    cacheKey = url,
+                    data = Pair(downloadedGif.bytes!!, downloadedGif.bytes),
+                    mao = gifMAO
+                )
                 logger?.verbose("Returning requested $url gif with network, saved in cache")
                 downloadedGif.bytes
             }
@@ -176,7 +170,11 @@ internal class FileResourceProvider(
         return when (downloadedFile.status) {
 
             DownloadedBitmap.Status.SUCCESS -> {
-                saveFile(cacheKey = url, bytes = downloadedFile.bytes!!)
+                saveData(
+                    cacheKey = url,
+                    data = Pair(downloadedFile.bytes!!, downloadedFile.bytes),
+                    mao = fileMAO
+                )
                 logger?.verbose("Returning requested $url file with network, saved in cache")
                 downloadedFile.bytes
             }

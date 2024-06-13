@@ -83,7 +83,7 @@ interface MemoryAccessObject<T> {
      * @param data The data to save as a byte array.
      * @return The saved file if successful, or null otherwise.
      */
-    fun saveDiskMemory(key: String, data: ByteArray): File?
+    fun saveDiskMemory(key: String, data: ByteArray): File
 
     /**
      * Removes a file from disk memory by key.
