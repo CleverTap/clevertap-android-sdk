@@ -1,9 +1,9 @@
 package com.clevertap.android.sdk.inapp.images.memory
 
 import android.graphics.Bitmap
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BITMAP
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BYTEARRAY
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_FILE
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToBitmap
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToByteArray
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToFile
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
 
@@ -14,26 +14,28 @@ internal class InAppImageMemoryAccessObjectV1(private val ctCaches: CTCaches) : 
         return imageInMemory.get(key)
     }
 
-    override fun fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any? {
+    @Suppress("UNCHECKED_CAST")
+    override fun <A> fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType<A>): A? {
         val pair = fetchInMemory(key)
         return pair?.let {
             when(transformTo)
             {
-                MEMORY_DATA_TRANSFORM_TO_BITMAP -> it.first
-                MEMORY_DATA_TRANSFORM_TO_BYTEARRAY -> bitmapToBytes(it.first)
-                MEMORY_DATA_TRANSFORM_TO_FILE -> it.second
+                ToBitmap -> it.first as? A
+                ToByteArray -> bitmapToBytes(it.first as Bitmap) as? A
+                ToFile -> it.second as? A
             }
         }
     }
 
-    override fun fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any? {
+    @Suppress("UNCHECKED_CAST")
+    override fun <A> fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType<A>): A? {
         val file = fetchDiskMemory(key)
         return file?.let {
             when(transformTo)
             {
-                MEMORY_DATA_TRANSFORM_TO_BITMAP -> fileToBitmap(it)
-                MEMORY_DATA_TRANSFORM_TO_BYTEARRAY -> fileToBytes(it)
-                MEMORY_DATA_TRANSFORM_TO_FILE -> file
+                ToBitmap -> fileToBitmap(it) as? A
+                ToByteArray -> fileToBytes(it) as? A
+                ToFile -> it as? A
             }
         }
     }
