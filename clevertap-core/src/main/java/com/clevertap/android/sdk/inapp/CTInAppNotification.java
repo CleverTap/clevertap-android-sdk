@@ -457,20 +457,16 @@ public class CTInAppNotification implements Parcelable {
         for (CTInAppNotificationMedia media : this.mediaList) {
             if (media.isGIF()) {
                 byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
-                if (bytes != null && bytes.length > 0) {
-                    listener.notificationReady(this);
-                    return;
-                } else {
+                if (bytes == null || bytes.length == 0) {
                     this.error = "Error processing GIF";
+                    break;
                 }
             } else if (media.isImage()) {
 
                 Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
-                if (bitmap != null) {
-                    listener.notificationReady(this);
-                    return;
-                } else {
+                if (bitmap == null) {
                     this.error = "Error processing image as bitmap was NULL";
+                    break;
                 }
             } else if (media.isVideo() || media.isAudio()) {
                 if (!this.videoSupported) {
