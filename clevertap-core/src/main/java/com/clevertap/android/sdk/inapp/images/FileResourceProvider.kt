@@ -65,27 +65,13 @@ internal class FileResourceProvider(
     }
 
     fun isFileCached(url: String): Boolean {
-        val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            FileMemoryAccessObject(ctCaches), InAppImageMemoryAccessObjectV1(ctCaches),
-            InAppGifMemoryAccessObjectV1(ctCaches)
-        )
-
-        // Try in memory
-        memoryAccessObjectList.forEach {
-            val pair = it.fetchInMemory(url)
-            if (pair != null) {
-                return true
+        return (mapOfMAO[FILES]?.run {
+            firstNotNullOfOrNull {// Try in memory
+                it.fetchInMemory(url)
+            } ?: firstNotNullOfOrNull {/* Try disk */
+                it.fetchDiskMemory(url)
             }
-        }
-
-        // Try disk
-        memoryAccessObjectList.forEach {
-            val file = it.fetchDiskMemory(url)
-            if (file != null) {
-                return true
-            }
-        }
-        return false
+        }) != null
     }
 
     fun cachedInAppImageV1(cacheKey: String?): Bitmap? = fetchCachedData(Pair(cacheKey,IMAGE), ToBitmap)
