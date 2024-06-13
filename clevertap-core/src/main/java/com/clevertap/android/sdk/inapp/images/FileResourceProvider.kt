@@ -117,7 +117,7 @@ internal class FileResourceProvider(
             return cachedImage
         }
 
-        val downloadedBitmap = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
+        val downloadedBitmap = inAppRemoteSource.makeApiCallForFile(Pair(url,IMAGE))
 
         return when (downloadedBitmap.status) {
 
@@ -146,7 +146,7 @@ internal class FileResourceProvider(
             return cachedGif
         }
 
-        val downloadedGif = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
+        val downloadedGif = inAppRemoteSource.makeApiCallForFile(Pair(url,GIF))
 
         return when (downloadedGif.status) {
 
@@ -171,7 +171,7 @@ internal class FileResourceProvider(
             return cachedFile
         }
 
-        val downloadedFile = inAppRemoteSource.makeApiCallForFile(url = url)
+        val downloadedFile = inAppRemoteSource.makeApiCallForFile(Pair(url,FILES))
 
         return when (downloadedFile.status) {
 
