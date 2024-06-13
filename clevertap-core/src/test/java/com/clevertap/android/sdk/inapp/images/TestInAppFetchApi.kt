@@ -26,4 +26,8 @@ class TestInAppFetchApi(
             bytes = bytes,
         )
     }
+
+    override fun makeApiCallForInAppBitmap(url: String): DownloadedBitmap {
+        TODO("Not yet implemented")
+    }
 }
