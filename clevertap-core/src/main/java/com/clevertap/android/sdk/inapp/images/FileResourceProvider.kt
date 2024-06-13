@@ -122,14 +122,8 @@ internal class FileResourceProvider(
         ) { Pair(it.bytes!!, it.bytes) }
     }
 
-    fun deleteAsset(cacheKey: String) {
-        val memories = listOf(
-            InAppImageMemoryAccessObjectV1(ctCaches),
-            InAppGifMemoryAccessObjectV1(ctCaches),
-            FileMemoryAccessObject(ctCaches)
-        )
-
-        memories.forEach { mao ->
+    fun deleteData(cacheKey: String) {
+        mapOfMAO[IMAGE]?.forEach { mao ->
             val pair = mao.removeInMemory(cacheKey)
             if (pair != null) {
                 logger?.verbose("successfully removed $cacheKey from memory cache")

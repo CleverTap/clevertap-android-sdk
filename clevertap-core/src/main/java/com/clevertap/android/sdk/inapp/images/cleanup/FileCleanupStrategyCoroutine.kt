@@ -26,7 +26,7 @@ internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
             val asyncTasks = mutableListOf<Deferred<Unit>>()
             for (url in urls) {
                 val deferred: Deferred<Unit> = async {
-                    fileResourceProvider.deleteAsset(url)
+                    fileResourceProvider.deleteData(url)
                     successBlock.invoke(url)
                 }
                 asyncTasks.add(deferred)
