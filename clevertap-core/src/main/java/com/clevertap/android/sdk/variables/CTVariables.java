@@ -115,7 +115,7 @@ public class CTVariables {
             variablesChangedCallbacks.add(callback);
         }
 
-        if (hasVarsRequestCompleted()) {
+        if (hasVarsRequestCompleted) {
             callback.variablesChanged();
         }
     }

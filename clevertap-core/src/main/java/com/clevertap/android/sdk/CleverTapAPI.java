@@ -70,6 +70,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.Var;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
@@ -3304,6 +3305,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public <T> Var<T> defineVariable(String name, T defaultValue) {
         return Var.define(name, defaultValue,coreState.getCTVariables());
+    }
+
+    /**
+     * Defines a new file variable. In
+     * that case it is better to use the @Variable annotation instead of this method.
+     * // todo check annotation and documentation
+     *
+     * @param name Name of the variable.
+     * @return Returns the Var instance.
+     */
+    public Var<String> defineFileVariable(String name) {
+        return Var.define(name, null , CTVariableUtils.FILE, coreState.getCTVariables());
     }
 
     /**

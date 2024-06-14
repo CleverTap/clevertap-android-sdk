@@ -70,7 +70,7 @@ public class Var<T> {
             log("Variable name starts or ends with a `.` which is not allowed: " + name);
             return null;
         }
-        if (defaultValue == null) {
+        if (!kind.equals(CTVariableUtils.FILE) && defaultValue == null) {
             Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '"
                     + name + "'.");
             return null;

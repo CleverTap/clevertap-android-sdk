@@ -91,7 +91,7 @@ public class VarCache {
         Object mergedValue = mergedMap.get(firstComponent);
 
         boolean shouldMerge =
-            (defaultValue == null && mergedValue != null) ||
+            (defaultValue == null && mergedValue != null) || // todo defaultValue == null check for filetype
                 (defaultValue != null && !defaultValue.equals(mergedValue));
 
         if (shouldMerge) {
