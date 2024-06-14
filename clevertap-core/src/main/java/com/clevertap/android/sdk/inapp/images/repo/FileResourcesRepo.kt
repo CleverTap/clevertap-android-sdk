@@ -11,7 +11,7 @@ internal interface FileResourcesRepo {
 
     fun preloadFilesAndCache(
         urlMeta: List<Pair<String, CtCacheType>>,
-        completionCallback: (status: Boolean, urlStatusMap: Map<String, Boolean>) -> Unit
+        completionCallback: (urlStatusMap: Map<String, Boolean>) -> Unit
     )
 
     fun cleanupStaleFiles() = cleanupStaleFiles(emptyList())
