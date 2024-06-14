@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.images
 
 import android.graphics.Bitmap
+import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.network.DownloadedBitmap
 
 class TestInAppFetchApi(
@@ -18,7 +19,7 @@ class TestInAppFetchApi(
                 bytes = bytes
         )
     }
-    override fun makeApiCallForFile(url: String): DownloadedBitmap {
+    override fun makeApiCallForFile(urlMeta: Pair<String, CtCacheType>): DownloadedBitmap {
         return DownloadedBitmap(
             bitmap = bitmap,
             status = status,

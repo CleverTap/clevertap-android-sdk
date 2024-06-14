@@ -16,30 +16,17 @@ internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
 ) : FileCleanupStrategy {
 
     private var jobs: MutableList<Job> = mutableListOf()
-    override fun clearInAppImagesAndGifsV1(urls: List<String>, successBlock: (url: String) -> Unit) {
+
+    override fun clearFileAssets(
+        urls: List<String>,
+        successBlock: (url: String) -> Unit
+    ) {
         val job = CoroutineScope(dispatchers.io()).launch {
 
             val asyncTasks = mutableListOf<Deferred<Unit>>()
             for (url in urls) {
                 val deferred: Deferred<Unit> = async {
-                    fileResourceProvider.deleteImageMemoryV1(url)
-                    fileResourceProvider.deleteGifMemoryV1(url)
-                    successBlock.invoke(url)
-                }
-                asyncTasks.add(deferred)
-            }
-            asyncTasks.awaitAll()
-        }
-        jobs.add(job)
-    }
-
-    override fun clearFileAssetsV2(urls: List<String>, successBlock: (url: String) -> Unit) {
-        val job = CoroutineScope(dispatchers.io()).launch {
-
-            val asyncTasks = mutableListOf<Deferred<Unit>>()
-            for (url in urls) {
-                val deferred: Deferred<Unit> = async {
-                    fileResourceProvider.deleteFileMemoryV2(url)
+                    fileResourceProvider.deleteData(url)
                     successBlock.invoke(url)
                 }
                 asyncTasks.add(deferred)

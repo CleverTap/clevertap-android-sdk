@@ -1,40 +1,40 @@
 package com.clevertap.android.sdk.inapp.images.memory
 
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BITMAP
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BYTEARRAY
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_FILE
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToBitmap
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToByteArray
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToFile
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
 
-class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches): MemoryAccessObject<ByteArray> {
+internal class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches): MemoryAccessObject<ByteArray> {
 
     override fun fetchInMemory(key: String): Pair<ByteArray, File>? {
         val gifInMemory = ctCaches.gifCache()
         return gifInMemory.get(key)
     }
 
-    override fun fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any? {
+    @Suppress("UNCHECKED_CAST")
+    override fun <A> fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType<A>): A? {
         val pair = fetchInMemory(key)
         return pair?.let {
             when(transformTo)
             {
-                MEMORY_DATA_TRANSFORM_TO_BITMAP -> bytesToBitmap(it.first)
-                MEMORY_DATA_TRANSFORM_TO_BYTEARRAY -> it.first
-                MEMORY_DATA_TRANSFORM_TO_FILE -> it.second
-                else -> null
+                ToBitmap -> bytesToBitmap(it.first) as? A
+                ToByteArray -> it.first as? A
+                ToFile -> it.second as? A
             }
         }
     }
 
-    override fun fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any? {
+    @Suppress("UNCHECKED_CAST")
+    override fun <A> fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType<A>): A? {
         val file = fetchDiskMemory(key)
         return file?.let {
             when(transformTo)
             {
-                MEMORY_DATA_TRANSFORM_TO_BITMAP -> fileToBitmap(it)
-                MEMORY_DATA_TRANSFORM_TO_BYTEARRAY -> fileToBytes(it)
-                MEMORY_DATA_TRANSFORM_TO_FILE -> file
-                else -> null
+                ToBitmap -> fileToBitmap(it) as? A
+                ToByteArray -> fileToBytes(it) as? A
+                ToFile -> it as? A
             }
         }
     }

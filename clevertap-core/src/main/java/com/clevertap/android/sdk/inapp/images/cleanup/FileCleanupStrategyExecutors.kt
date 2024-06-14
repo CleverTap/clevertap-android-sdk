@@ -10,27 +10,15 @@ internal class FileCleanupStrategyExecutors @JvmOverloads constructor(
 ) : FileCleanupStrategy {
 
     companion object {
-        private const val TAG = "InAppCleanupStrategyExecutors"
+        private const val TAG = "fileCleanupExecutor"
     }
-    override fun clearInAppImagesAndGifsV1(urls: List<String>, successBlock: (url: String) -> Unit) {
 
+    override fun clearFileAssets(urls: List<String>, successBlock: (url: String) -> Unit) {
         for (url in urls) {
             val task = executor.ioTaskNonUi<Unit>()
 
             task.execute(TAG) {
-                fileResourceProvider.deleteImageMemoryV1(url)
-                fileResourceProvider.deleteGifMemoryV1(url)
-                successBlock.invoke(url)
-            }
-        }
-    }
-
-    override fun clearFileAssetsV2(urls: List<String>, successBlock: (url: String) -> Unit) {
-        for (url in urls) {
-            val task = executor.ioTaskNonUi<Unit>()
-
-            task.execute("fileCleanupExecutor") {
-                fileResourceProvider.deleteFileMemoryV2(url)
+                fileResourceProvider.deleteData(url)
                 successBlock.invoke(url)
             }
         }

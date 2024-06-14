@@ -11,10 +11,10 @@ package com.clevertap.android.sdk.inapp.store.preference
  *
  * @constructor Creates a StoreRegistry with optional instances of different stores.
  */
-data class StoreRegistry constructor(
+data class StoreRegistry(
     var inAppStore: InAppStore? = null,
     var impressionStore: ImpressionStore? = null,
-    var legacyInAppStore: LegacyInAppStore? = null,
-    var inAppAssetsStore: InAppAssetsStore? = null,
-    var filesStore: FileStore? = null
+    val legacyInAppStore: LegacyInAppStore,
+    val inAppAssetsStore: InAppAssetsStore,
+    val filesStore: FileStore
 )

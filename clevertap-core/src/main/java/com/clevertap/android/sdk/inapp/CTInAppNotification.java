@@ -10,12 +10,18 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import kotlin.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -452,33 +458,54 @@ public class CTInAppNotification implements Parcelable {
         return isTablet;
     }
 
-    void prepareForDisplay(FileResourceProvider fileResourceProvider) {
+    void prepareForDisplay(
+            FileResourceProvider fileResourceProvider,
+            final TemplatesManager templatesManager
+    ) {
+        if (inAppType.equals(CTInAppType.CTInAppTypeCustomCodeTemplate)) {
+            final List<Pair<String, CtCacheType>> fileUrlMetas = customTemplateData.getFileArgsUrls(templatesManager);
 
-        for (CTInAppNotificationMedia media : this.mediaList) {
-            if (media.isGIF()) {
-                byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
-                if (bytes != null && bytes.length > 0) {
-                    listener.notificationReady(this);
-                    return;
-                } else {
-                    this.error = "Error processing GIF";
-                }
-            } else if (media.isImage()) {
+            int index = 0;
+            while (index < fileUrlMetas.size()) {
+                Pair<String, CtCacheType> data = fileUrlMetas.get(index);
+                byte[] bytes = fileResourceProvider.fetchFile(data.getFirst());
 
-                Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
-                if (bitmap != null) {
-                    listener.notificationReady(this);
-                    return;
-                } else {
-                    this.error = "Error processing image as bitmap was NULL";
+                if (bytes == null) {
+                    // download fail
+                    this.error = "some error";
+                    break;
                 }
-            } else if (media.isVideo() || media.isAudio()) {
-                if (!this.videoSupported) {
-                    this.error = "InApp Video/Audio is not supported";
+                index++;
+            }
+            listener.notificationReady(this);
+        } else {
+            for (CTInAppNotificationMedia media : this.mediaList) {
+                if (media.isGIF()) {
+                    byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
+                    if (bytes != null && bytes.length > 0) {
+                        listener.notificationReady(this);
+                        return;
+                    } else {
+                        this.error = "Error processing GIF";
+                    }
+                } else if (media.isImage()) {
+
+                    Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
+                    if (bitmap != null) {
+                        listener.notificationReady(this);
+                        return;
+                    } else {
+                        this.error = "Error processing image as bitmap was NULL";
+                    }
+                } else if (media.isVideo() || media.isAudio()) {
+                    if (!this.videoSupported) {
+                        this.error = "InApp Video/Audio is not supported";
+                    }
                 }
             }
+            listener.notificationReady(this);
         }
-        listener.notificationReady(this);
+
     }
 
     private void configureWithJson(JSONObject jsonObject) {
@@ -640,21 +667,6 @@ public class CTInAppNotification implements Parcelable {
             }
         } catch (JSONException e) {
             this.error = "Invalid JSON";
-        }
-    }
-
-    private void removeImageOrGif(FileResourceProvider resourceProvider) {
-        for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
-            String mediaUrl = inAppMedia.getMediaUrl();
-            if (mediaUrl != null) {
-                if (inAppMedia.isImage()) {
-                    resourceProvider.deleteImageMemoryV1(mediaUrl);
-                    Logger.v("Deleted image - " + mediaUrl);
-                } else {
-                    resourceProvider.deleteGifMemoryV1(mediaUrl);
-                    Logger.v("Deleted GIF - " + mediaUrl);
-                }
-            }
         }
     }
 
