@@ -243,13 +243,11 @@ public class Var<T> {
         }
     }
 
-    private void triggerFileIsReady() {
+    public void triggerFileIsReady() {
         synchronized (fileReadyHandlers) {
             for (VariableCallback<T> callback : fileReadyHandlers) {
                 callback.setVariable(this);
-
-                // todo post on ui thread
-                //OperationQueue.sharedInstance().addUiOperation(callback);
+                Utils.runOnUiThread(callback);
             }
         }
     }

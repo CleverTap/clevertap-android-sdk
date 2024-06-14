@@ -57,10 +57,12 @@ internal class FileResourcesRepoImpl constructor(
     @WorkerThread
     override fun preloadFilesAndCache(
         urlMeta: List<Pair<String, CtCacheType>>,
-        completionCallback: (urlStatusMap: Map<String, Boolean>) -> Unit
+        completionCallback: (urlStatusMap: Map<String, Boolean>) -> Unit,
+        successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit,
+        failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit
     ) {
 
-        val successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
+        val successBlockk: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
             val url = meta.first
             val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
 
@@ -77,11 +79,14 @@ internal class FileResourcesRepoImpl constructor(
             synchronized(fetchAllFilesLock) {
                 downloadInProgressUrls.put(meta.first, DownloadState.SUCCESSFUL)
             }
+
+            successBlock.invoke(meta)
         }
-        val failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
+        val failureBlockk: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
             synchronized(fetchAllFilesLock) {
                 downloadInProgressUrls.put(meta.first, DownloadState.FAILED)
             }
+            failureBlock.invoke(meta)
         }
 
         val started : (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
@@ -92,8 +97,8 @@ internal class FileResourcesRepoImpl constructor(
 
         preloaderStrategy.preloadFilesAndCache(
             urlMetas = urlMeta,
-            successBlock = successBlock,
-            failureBlock = failureBlock,
+            successBlock = successBlockk,
+            failureBlock = failureBlockk,
             startedBlock = started,
             preloadFinished = completionCallback
         )

@@ -10,12 +10,17 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONObject;
+import kotlin.Pair;
 
 /**
  * Variable cache.
@@ -47,11 +52,14 @@ public class VarCache {
     // README: Do not forget reset the value of new fields in the reset() method.
 
     private final Context variablesCtx;
+
+    private final FileResourcesRepoImpl fileResourcesRepoImpl;
     private final CleverTapInstanceConfig instanceConfig;
 
-    public VarCache(CleverTapInstanceConfig config, Context ctx) {
+    public VarCache(CleverTapInstanceConfig config, Context ctx, FileResourcesRepoImpl fileResourcesRepoImpl) {
         this.variablesCtx = ctx;
         this.instanceConfig = config;
+        this.fileResourcesRepoImpl = fileResourcesRepoImpl;
     }
 
     private void storeDataInCache(@NonNull String data){
@@ -190,6 +198,7 @@ public class VarCache {
         storeDataInCache(variablesCipher);
     }
 
+    /** @noinspection unchecked*/
     private void applyVariableDiffs(Map<String, Object> diffs) {
         log("applyVariableDiffs() called with: diffs = [" + diffs + "]");
         if (diffs != null) {
@@ -199,14 +208,64 @@ public class VarCache {
 
             // Update variables with new values. Have to copy the dictionary because a
             // dictionary variable may add a new sub-variable, modifying the variable dictionary.
-            for (String name : new HashMap<>(vars).keySet()) {
+            HashMap<String, Var<?>> entries = new HashMap<>(vars);
+
+            HashMap<String, Var<String>> filesMap = new HashMap<>();
+
+            for (Map.Entry<String, Var<?>> entry : entries.entrySet()) {
+                String name = entry.getKey();
                 Var<?> var = vars.get(name);
                 if (var != null) {
+
                     var.update();
+
+                    if (var.kind().equals(CTVariableUtils.FILE)) {
+                        filesMap.put(var.name(), (Var<String>) var);
+                    }
                 }
             }
+            startFilesDownload(filesMap);
+        }
+    }
+
+    // todo null checks
+    private void startFilesDownload(HashMap<String, Var<String>> filesMap) {
+
+        ArrayList<Pair<String, CtCacheType>> urls = new ArrayList<>();
+        HashMap<String, String> urlToName = new HashMap<>();
+
+        for (Map.Entry<String, Var<String>> entry : filesMap.entrySet()) {
+            String name = entry.getKey();
+            Var<String> var = (Var<String>) vars.get(name);
+            String url = var.value();
+            urls.add(new Pair<>(name, CtCacheType.FILES));
+            urlToName.put(url, name);
         }
 
+        fileResourcesRepoImpl.preloadFilesAndCache(
+                urls,
+                downloadAllBlock -> {
+                    // triggered only if successful
+                    globalCallbacksRunnableForFiles.run();
+                    return null;
+                },
+                successPerFile -> {
+                    String url = successPerFile.getFirst();
+                    String tempName = urlToName.get(url);
+
+                    if (tempName != null) {
+                        Var<?> var = vars.get(tempName);
+                        if (var != null) {
+                            var.triggerFileIsReady();
+                        }
+                    }
+                    return null;
+                },
+                failurePerFile -> {
+                    // noop since we do not handle failures
+                    return null;
+                }
+        );
     }
 
     private synchronized void triggerGlobalCallbacks() {
