@@ -37,6 +37,8 @@ public class Var<T> {
 
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
 
+    private final List<VariableCallback<T>> fileReadyHandlers = new ArrayList<>();
+
     private static boolean printedCallbackWarning;
 
     public Var(CTVariables ctVariables) {
@@ -241,6 +243,17 @@ public class Var<T> {
         }
     }
 
+    private void triggerFileIsReady() {
+        synchronized (fileReadyHandlers) {
+            for (VariableCallback<T> callback : fileReadyHandlers) {
+                callback.setVariable(this);
+
+                // todo post on ui thread
+                //OperationQueue.sharedInstance().addUiOperation(callback);
+            }
+        }
+    }
+
     public Number numberValue() {
         warnIfNotStarted();
         return numberValue;
@@ -253,5 +266,22 @@ public class Var<T> {
 
     void clearStartFlag() {
         hadStarted = false;
+    }
+
+    public void addFileReadyHandler(@NonNull VariableCallback<T> handler) {
+        synchronized (fileReadyHandlers) {
+            fileReadyHandlers.add(handler);
+        }
+    }
+
+    /**
+     * Removes file ready handler for a given variable.
+     *
+     * @param handler Handler to be removed.
+     */
+    public void removeFileReadyHandler(@NonNull VariableCallback<T> handler) {
+        synchronized (fileReadyHandlers) {
+            fileReadyHandlers.remove(handler);
+        }
     }
 }
