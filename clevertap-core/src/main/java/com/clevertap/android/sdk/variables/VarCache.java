@@ -38,6 +38,7 @@ public class VarCache {
     private final Map<String, String> defaultKinds = new HashMap<>();
 
     private Runnable globalCallbacksRunnable = null;
+    private Runnable globalCallbacksRunnableForFiles = null;
 
     private Map<String, Object> diffs = new HashMap<>();
 
@@ -214,6 +215,12 @@ public class VarCache {
         }
     }
 
+    private synchronized void triggerGlobalCallbacksForFiles() {
+        if (globalCallbacksRunnableForFiles != null) {
+            globalCallbacksRunnableForFiles.run();
+        }
+    }
+
     public JSONObject getDefineVarsData(){
         return CTVariableUtils.getFlatVarsJson(valuesFromClient,defaultKinds);
     }
@@ -246,6 +253,10 @@ public class VarCache {
 
     public synchronized void setGlobalCallbacksRunnable(Runnable runnable) {
         globalCallbacksRunnable = runnable;
+    }
+
+    public synchronized void setGlobalCallbacksRunnableForFiles(Runnable runnable) {
+        globalCallbacksRunnableForFiles = runnable;
     }
 
 }

@@ -28,19 +28,8 @@ public class CTVariables {
     private boolean hasVarsRequestCompleted = false;
     private final List<VariablesChangedCallback> variablesChangedCallbacks = new ArrayList<>();
     private final List<VariablesChangedCallback> oneTimeVariablesChangedCallbacks = new ArrayList<>();
-    private final Runnable triggerGlobalCallbacks = () -> {
-        synchronized (variablesChangedCallbacks) {
-            for (VariablesChangedCallback callback : variablesChangedCallbacks) {
-                Utils.runOnUiThread(callback);
-            }
-        }
-        synchronized (oneTimeVariablesChangedCallbacks) {
-            for (VariablesChangedCallback callback : oneTimeVariablesChangedCallbacks) {
-                Utils.runOnUiThread(callback);
-            }
-            oneTimeVariablesChangedCallbacks.clear();
-        }
-    };
+    private final List<VariablesChangedCallback> variablesChangedCallbacksNoDownloadsPending = new ArrayList<>();
+    private final List<VariablesChangedCallback> oneTimeVariablesChangedCallbacksNoDownloadsPending = new ArrayList<>();
 
     private final VarCache varCache;
 
@@ -50,7 +39,35 @@ public class CTVariables {
 
     public CTVariables(final VarCache varCache) {
         this.varCache = varCache;
+        Runnable triggerGlobalCallbacks = () -> {
+            synchronized (variablesChangedCallbacks) {
+                for (VariablesChangedCallback callback : variablesChangedCallbacks) {
+                    Utils.runOnUiThread(callback);
+                }
+            }
+            synchronized (oneTimeVariablesChangedCallbacks) {
+                for (VariablesChangedCallback callback : oneTimeVariablesChangedCallbacks) {
+                    Utils.runOnUiThread(callback);
+                }
+                oneTimeVariablesChangedCallbacks.clear();
+            }
+        };
+
+        Runnable triggerGlobalCallbacksForFiles = () -> {
+            synchronized (variablesChangedCallbacksNoDownloadsPending) {
+                for (VariablesChangedCallback callback : variablesChangedCallbacksNoDownloadsPending) {
+                    Utils.runOnUiThread(callback);
+                }
+            }
+            synchronized (oneTimeVariablesChangedCallbacksNoDownloadsPending) {
+                for (VariablesChangedCallback callback : oneTimeVariablesChangedCallbacksNoDownloadsPending) {
+                    Utils.runOnUiThread(callback);
+                }
+                oneTimeVariablesChangedCallbacksNoDownloadsPending.clear();
+            }
+        };
         this.varCache.setGlobalCallbacksRunnable(triggerGlobalCallbacks);
+        this.varCache.setGlobalCallbacksRunnableForFiles(triggerGlobalCallbacksForFiles);
     }
 
     public void init() {
@@ -133,6 +150,40 @@ public class CTVariables {
         } else {
             synchronized (oneTimeVariablesChangedCallbacks) {
                 oneTimeVariablesChangedCallbacks.add(callback);
+            }
+        }
+    }
+
+    /**
+     * Note: it is necessary to call the listeners immediately after user adds a listener using this function
+     * because there is no guarantee that the newly added listener is going to be called later. <br><br>
+     * we only receive variable data (and trigger handlers) on certain event calls that happens asynchronously,
+     * so if client registers the listeners after such events have triggered,
+     * they should still be able to get those previously updated values
+     */
+    public void onVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        synchronized (variablesChangedCallbacksNoDownloadsPending) {
+            variablesChangedCallbacksNoDownloadsPending.add(callback);
+        }
+
+        if (hasVarsRequestCompleted) {
+            callback.variablesChanged();
+        }
+    }
+
+    /**
+     * Note: Following the similar logic as mentioned in the comment on {@link #addVariablesChangedCallback},
+     * if a user adds a OneTimeVariablesChangedHandler using this function AFTER the variable data is received,
+     * (and one time handlers already triggered), the user will not have their newly
+     * added handlers triggered ever. therefore, it is necessary to trigger the user's handlers
+     * immediately once this function is called
+     */
+    public void onceVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        if (hasVarsRequestCompleted) {
+            callback.variablesChanged();
+        } else {
+            synchronized (oneTimeVariablesChangedCallbacksNoDownloadsPending) {
+                oneTimeVariablesChangedCallbacksNoDownloadsPending.add(callback);
             }
         }
     }

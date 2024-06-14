@@ -3479,6 +3479,30 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Adds a callback to be invoked when variables are initialised with server values and file
+     * downloads are also completed for file type variables (if any) registered with
+     * {@link #defineFileVariable}.
+     * Will be called each time new values are fetched.
+     *
+     * @param callback Callback to register.
+     */
+    public void onVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().onVariablesChangedAndNoDownloadsPending(callback);
+    }
+
+    /**
+     * Adds a callback to be invoked when variables are initialised with server values and file
+     * downloads are also completed for file type variables (if any) registered with
+     * {@link #defineFileVariable}.
+     * WWill be called only once and then removed.
+     *
+     * @param callback Callback to register.
+     */
+    public void onceVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().onceVariablesChangedAndNoDownloadsPending(callback);
+    }
+
+    /**
      *  Removes all previously registered callbacks.
      */
     public void removeAllVariablesChangedCallbacks() {
