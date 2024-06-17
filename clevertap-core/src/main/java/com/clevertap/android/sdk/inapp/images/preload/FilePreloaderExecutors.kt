@@ -57,8 +57,9 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
 
         for (url in urlMetas) {
             val task = executor.ioTaskNonUi<Unit>()
+            task.addOnSuccessListener { countDownLatch.countDown() }
+            task.addOnFailureListener { countDownLatch.countDown() }
             task.execute("tag") {
-                countDownLatch.countDown()
                 startedBlock.invoke(url)
                 val bitmap = assetBlock(url)
                 if (bitmap != null) {
