@@ -56,7 +56,11 @@ public class VarCache {
     private final FileResourcesRepoImpl fileResourcesRepoImpl;
     private final CleverTapInstanceConfig instanceConfig;
 
-    public VarCache(CleverTapInstanceConfig config, Context ctx, FileResourcesRepoImpl fileResourcesRepoImpl) {
+    public VarCache(
+            CleverTapInstanceConfig config,
+            Context ctx,
+            FileResourcesRepoImpl fileResourcesRepoImpl
+    ) {
         this.variablesCtx = ctx;
         this.instanceConfig = config;
         this.fileResourcesRepoImpl = fileResourcesRepoImpl;
@@ -246,7 +250,7 @@ public class VarCache {
                 urls,
                 downloadAllBlock -> {
                     // triggered only if successful
-                    globalCallbacksRunnableForFiles.run();
+                    triggerGlobalCallbacksForFiles();
                     return null;
                 },
                 successPerFile -> {
