@@ -56,7 +56,7 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         }.toMutableMap()
 
         for (url in urlMetas) {
-            val task = executor.ioTaskNonUi<Unit>()
+            val task = executor.ioTaskWithCallbackOnCurrentThread<Unit>()
             task.addOnSuccessListener { countDownLatch.countDown() }
             task.addOnFailureListener { countDownLatch.countDown() }
             task.execute("tag") {
