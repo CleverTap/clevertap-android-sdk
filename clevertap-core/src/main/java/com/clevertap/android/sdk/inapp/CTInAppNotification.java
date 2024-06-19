@@ -472,7 +472,7 @@ public class CTInAppNotification implements Parcelable {
 
                 if (bytes == null) {
                     // download fail
-                    this.error = "some error";
+                    this.error = "Error processing the custom code in-app template: file download failed.";
                     break;
                 }
                 index++;
