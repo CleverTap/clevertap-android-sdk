@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.media3.common.util.UnstableApi;
 
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.gif.GifImageView;
@@ -53,10 +54,11 @@ import java.util.ArrayList;
     private InAppVideoPlayerHandle handle;
 
     private RelativeLayout relativeLayout;
-    private FrameLayout fl;
     private CloseImageView closeImageView;
 
     private FrameLayout videoFrameLayout;
+
+    private FrameLayout videoFrameInDialog;
 
     private ViewGroup.LayoutParams imageViewLayoutParams;
 
@@ -84,9 +86,10 @@ import java.util.ArrayList;
         }
 
         // Find views
-        fl = inAppView.findViewById(R.id.inapp_interstitial_frame_layout);
+        FrameLayout fl = inAppView.findViewById(R.id.inapp_interstitial_frame_layout);
         closeImageView = fl.findViewById(199272);
         relativeLayout = fl.findViewById(R.id.interstitial_relative_layout);
+        videoFrameLayout = relativeLayout.findViewById(R.id.video_frame);
 
         // Container backgrounds
         relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
@@ -178,14 +181,45 @@ import java.util.ArrayList;
                     gifImageView.startAnimation();
                 }
             } else if (media.isVideo()) {
+                initFullScreenIconForStream();
                 prepareMedia();
                 playMedia();
             } else if (media.isAudio()) {
+                initFullScreenIconForStream();
                 prepareMedia();
                 playMedia();
                 disableFullScreenButton();
             }
         }
+    }
+
+    private void initFullScreenIconForStream() {
+        // inflate full screen icon for video control
+        fullScreenIcon = new ImageView(this.context);
+        fullScreenIcon.setImageDrawable(ResourcesCompat.getDrawable(this.context.getResources(), R.drawable.ct_ic_fullscreen_expand, null));
+        fullScreenIcon.setOnClickListener(v -> {
+            if (!exoPlayerFullscreen) {
+                openFullscreenDialog();
+            } else {
+                closeFullscreenDialog();
+            }
+        });
+
+        // icon layout params wrt tablet/phone
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+
+        int iconSide;
+        if (inAppNotification.isTablet() && isTablet()) {
+            iconSide = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
+        } else {
+            iconSide = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, displayMetrics);
+        }
+        int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, displayMetrics);
+        int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, displayMetrics);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconSide, iconSide);
+        layoutParams.gravity = Gravity.END;
+        layoutParams.setMargins(0, iconTop, iconRight, 0);
+        fullScreenIcon.setLayoutParams(layoutParams);
     }
 
     private void resizeContainer(
@@ -310,10 +344,10 @@ import java.util.ArrayList;
         handle.switchToFullScreen(false);
 
         fullScreenIcon.setLayoutParams(imageViewLayoutParams);
+        videoFrameInDialog.removeAllViews();
         videoFrameLayout.addView(playerView);
         videoFrameLayout.addView(fullScreenIcon);
         exoPlayerFullscreen = false;
-
         // dismiss full screen dialog
         fullScreenDialog.dismiss();
         fullScreenIcon.setImageDrawable(ContextCompat.getDrawable(this.context, R.drawable.ct_ic_fullscreen_expand));
@@ -326,8 +360,7 @@ import java.util.ArrayList;
         handle.switchToFullScreen(true);
 
         // clear views from container
-        videoFrameLayout.removeView(playerView);
-        videoFrameLayout.removeView(fullScreenIcon);
+        videoFrameLayout.removeAllViews();
 
         if (fullScreenDialog == null) {
             // create full screen dialog and show
@@ -345,7 +378,12 @@ import java.util.ArrayList;
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
         );
-        fullScreenDialog.addContentView(playerView, fullScreenParams);
+        if (videoFrameInDialog != null) {
+            videoFrameInDialog = new FrameLayout(context);
+        }
+        videoFrameInDialog.addView(playerView);
+
+        fullScreenDialog.addContentView(videoFrameInDialog, fullScreenParams);
         exoPlayerFullscreen = true;
         fullScreenDialog.show();
     }
@@ -359,7 +397,7 @@ import java.util.ArrayList;
                 context,
                 inAppNotification.isTablet() && isTablet()
         );
-        streamContainer();
+        addViewsForStreamMedia();
 
         handle.initExoplayer(
                 context,
@@ -367,46 +405,19 @@ import java.util.ArrayList;
         );
     }
 
-    private void streamContainer() {
+    private void addViewsForStreamMedia() {
         // make video container visible
-        videoFrameLayout = relativeLayout.findViewById(R.id.video_frame);
         videoFrameLayout.setVisibility(View.VISIBLE);
 
-        // inflate full screen icon
-        fullScreenIcon = new ImageView(this.context);
-        fullScreenIcon.setImageDrawable(ResourcesCompat.getDrawable(this.context.getResources(), R.drawable.ct_ic_fullscreen_expand, null));
-        fullScreenIcon.setOnClickListener(v -> {
-            if (!exoPlayerFullscreen) {
-                openFullscreenDialog();
-            } else {
-                closeFullscreenDialog();
-            }
-        });
-
-        // icon layout params wrt tablet/phone
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        if (inAppNotification.isTablet() && isTablet()) {
-            int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
-            int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
-            layoutParams.gravity = Gravity.END;
-            int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, displayMetrics);
-            int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, displayMetrics);
-            layoutParams.setMargins(0, iconTop, iconRight, 0);
-            fullScreenIcon.setLayoutParams(layoutParams);
-        } else {
-            int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, displayMetrics);
-            int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, displayMetrics);
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
-            layoutParams.gravity = Gravity.END;
-            int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, displayMetrics);
-            int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, displayMetrics);
-            layoutParams.setMargins(0, iconTop, iconRight, 0);
-            fullScreenIcon.setLayoutParams(layoutParams);
-        }
-
         // add views to video container
-        videoFrameLayout.addView(handle.videoSurface());
-        videoFrameLayout.addView(fullScreenIcon);
+        View videoSurface = handle.videoSurface();
+
+        if (videoFrameLayout.getChildCount() == 0) {
+            videoFrameLayout.addView(videoSurface);
+            videoFrameLayout.addView(fullScreenIcon);
+        } else {
+            //noop
+            Logger.d("Video views and controls are already added, not re-attaching");
+        }
     }
 }
