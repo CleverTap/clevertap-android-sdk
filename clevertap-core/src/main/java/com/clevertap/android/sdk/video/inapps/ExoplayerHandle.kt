@@ -34,7 +34,12 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
     private var player: ExoPlayer? = null
     private var playerView: StyledPlayerView? = null
 
-    private var playerViewLayoutParams: ViewGroup.LayoutParams? = null
+    private var playerViewLayoutParamsNormal: ViewGroup.LayoutParams? = null
+    private var playerViewLayoutParamsFullScreen =
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
 
     private var mediaPosition = 0L
 
@@ -79,8 +84,8 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         val playerHeight = playerHeight(context = context, isTablet = isTablet)
 
         playerView = StyledPlayerView(context).apply {
-            playerViewLayoutParams = FrameLayout.LayoutParams(playerWidth, playerHeight)
-            setLayoutParams(playerViewLayoutParams)
+            playerViewLayoutParamsNormal = FrameLayout.LayoutParams(playerWidth, playerHeight)
+            setLayoutParams(playerViewLayoutParamsNormal)
             setShowBuffering(StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING)
             useArtwork = true
             controllerAutoShow = false
@@ -119,9 +124,10 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
 
     override fun switchToFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
-            playerViewLayoutParams = playerView!!.layoutParams
+            playerViewLayoutParamsNormal = playerView!!.layoutParams
+            playerView!!.layoutParams = playerViewLayoutParamsFullScreen
         } else {
-            playerView!!.setLayoutParams(playerViewLayoutParams)
+            playerView!!.layoutParams = playerViewLayoutParamsNormal
         }
     }
 

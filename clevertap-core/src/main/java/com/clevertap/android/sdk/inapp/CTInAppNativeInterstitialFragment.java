@@ -359,7 +359,7 @@ import java.util.ArrayList;
         imageViewLayoutParams = fullScreenIcon.getLayoutParams();
         handle.switchToFullScreen(true);
 
-        // clear views from container
+        // clear views from inapp container
         videoFrameLayout.removeAllViews();
 
         if (fullScreenDialog == null) {
@@ -373,7 +373,7 @@ import java.util.ArrayList;
                     super.onBackPressed();
                 }
             };
-            ViewGroup.LayoutParams fullScreenParams = new ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams fullScreenParams = new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
             );
