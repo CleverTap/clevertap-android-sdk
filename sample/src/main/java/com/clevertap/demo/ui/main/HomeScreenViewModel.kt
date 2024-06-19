@@ -26,10 +26,8 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
         when (commandPosition) {
             "0-0" -> {
-                //cleverTapAPI?.pushEvent("testEventPushAmp")
-                //cleverTapAPI?.pushEvent("BlockBRTesting")
-                //cleverTapAPI?.pushEvent("Interstitial Video")
-                cleverTapAPI?.pushEvent("audio")
+                cleverTapAPI?.pushEvent("testEventPushAmp")
+                cleverTapAPI?.pushEvent("BlockBRTesting")
             }
             "0-1" -> {
                 //Record an event with properties

@@ -363,6 +363,7 @@ import java.util.ArrayList;
         videoFrameLayout.removeAllViews();
 
         if (fullScreenDialog == null) {
+            // create only once
             // create full screen dialog and show
             fullScreenDialog = new Dialog(this.context, android.R.style.Theme_Black_NoTitleBar_Fullscreen) {
                 public void onBackPressed() {
@@ -372,18 +373,14 @@ import java.util.ArrayList;
                     super.onBackPressed();
                 }
             };
-        }
-
-        ViewGroup.LayoutParams fullScreenParams = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-        );
-        if (videoFrameInDialog != null) {
+            ViewGroup.LayoutParams fullScreenParams = new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+            );
             videoFrameInDialog = new FrameLayout(context);
+            fullScreenDialog.addContentView(videoFrameInDialog, fullScreenParams);
         }
         videoFrameInDialog.addView(playerView);
-
-        fullScreenDialog.addContentView(videoFrameInDialog, fullScreenParams);
         exoPlayerFullscreen = true;
         fullScreenDialog.show();
     }
