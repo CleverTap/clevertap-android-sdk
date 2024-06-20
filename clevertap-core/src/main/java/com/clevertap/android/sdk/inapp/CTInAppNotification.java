@@ -512,7 +512,7 @@ public class CTInAppNotification implements Parcelable {
         try {
             this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject.getString(Constants.INAPP_ID_IN_PAYLOAD) : "";
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "";
-            this.type = jsonObject.getString(Constants.KEY_TYPE);
+            this.type = jsonObject.getString(Constants.KEY_TYPE);// won't be null based on initWithJSON()
             this.isLocalInApp = jsonObject.has(IS_LOCAL_INAPP) && jsonObject.getBoolean(IS_LOCAL_INAPP);
             this.fallBackToNotificationSettings = jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS) && jsonObject.getBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS);
             this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 || jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
