@@ -52,6 +52,24 @@ internal class FileResourcesRepoImpl constructor(
             }
         }
         private val fetchAllFilesLock = Any()
+        @JvmStatic
+        fun saveUrlExpiryToStore(urlMeta: Pair<String, CtCacheType>, storePair: Pair<FileStore, InAppAssetsStore>){
+            val url = urlMeta.first
+            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
+            val fileStore = storePair.first
+            val inAppAssetsStore = storePair.second
+
+            when (urlMeta.second) {
+                CtCacheType.IMAGE,
+                CtCacheType.GIF -> {
+                    inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
+                    fileStore.saveFileUrl(url = url, expiry = expiry)
+                }
+                CtCacheType.FILES -> {
+                    fileStore.saveFileUrl(url = url, expiry = expiry)
+                }
+            }
+        }
     }
 
     @WorkerThread
@@ -63,19 +81,7 @@ internal class FileResourcesRepoImpl constructor(
     ) {
 
         val successBlockk: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
-            val url = meta.first
-            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-
-            when (meta.second) {
-                CtCacheType.IMAGE,
-                CtCacheType.GIF -> {
-                    inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
-                    fileStore.saveFileUrl(url = url, expiry = expiry)
-                }
-                CtCacheType.FILES -> {
-                    fileStore.saveFileUrl(url = url, expiry = expiry)
-                }
-            }
+            saveUrlExpiryToStore(meta,Pair(fileStore, inAppAssetsStore))
             synchronized(fetchAllFilesLock) {
                 downloadInProgressUrls.put(meta.first, DownloadState.SUCCESSFUL)
             }

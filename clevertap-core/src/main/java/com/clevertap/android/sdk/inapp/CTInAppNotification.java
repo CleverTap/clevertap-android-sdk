@@ -10,7 +10,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
@@ -18,6 +17,9 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
+import com.clevertap.android.sdk.inapp.store.preference.FileStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -460,17 +462,23 @@ public class CTInAppNotification implements Parcelable {
 
     void prepareForDisplay(
             FileResourceProvider fileResourceProvider,
-            final TemplatesManager templatesManager
-    ) {
+            final TemplatesManager templatesManager,
+            final StoreRegistry storeRegistry) {
+
+        final Pair<FileStore,InAppAssetsStore> storePair = new Pair<>(storeRegistry.getFilesStore(),
+                storeRegistry.getInAppAssetsStore());
+
         if (inAppType.equals(CTInAppType.CTInAppTypeCustomCodeTemplate)) {
             final List<Pair<String, CtCacheType>> fileUrlMetas = customTemplateData.getFileArgsUrls(templatesManager);
 
             int index = 0;
             while (index < fileUrlMetas.size()) {
-                Pair<String, CtCacheType> data = fileUrlMetas.get(index);
-                byte[] bytes = fileResourceProvider.fetchFile(data.getFirst());
+                Pair<String, CtCacheType> urlMeta = fileUrlMetas.get(index);
+                byte[] bytes = fileResourceProvider.fetchFile(urlMeta.getFirst());
 
-                if (bytes == null) {
+                if (bytes != null && bytes.length > 0) {
+                    FileResourcesRepoImpl.saveUrlExpiryToStore(urlMeta,storePair);
+                } else {
                     // download fail
                     this.error = "Error processing the custom code in-app template: file download failed.";
                     break;
@@ -480,18 +488,20 @@ public class CTInAppNotification implements Parcelable {
             listener.notificationReady(this);
         } else {
             for (CTInAppNotificationMedia media : this.mediaList) {
+                final String url = media.getMediaUrl();
                 if (media.isGIF()) {
-                    byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
+                    byte[] bytes = fileResourceProvider.fetchInAppGifV1(url);
                     if (bytes != null && bytes.length > 0) {
+                        FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url,CtCacheType.GIF),storePair);
                         listener.notificationReady(this);
                         return;
                     } else {
                         this.error = "Error processing GIF";
                     }
                 } else if (media.isImage()) {
-
-                    Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
+                    Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(url);
                     if (bitmap != null) {
+                        FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url,CtCacheType.IMAGE),storePair);
                         listener.notificationReady(this);
                         return;
                     } else {
@@ -510,33 +520,48 @@ public class CTInAppNotification implements Parcelable {
 
     private void configureWithJson(JSONObject jsonObject) {
         try {
-            this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject.getString(Constants.INAPP_ID_IN_PAYLOAD) : "";
-            this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "";
+            this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject.getString(
+                    Constants.INAPP_ID_IN_PAYLOAD) : "";
+            this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(
+                    Constants.NOTIFICATION_ID_TAG) : "";
             this.type = jsonObject.getString(Constants.KEY_TYPE);// won't be null based on initWithJSON()
             this.isLocalInApp = jsonObject.has(IS_LOCAL_INAPP) && jsonObject.getBoolean(IS_LOCAL_INAPP);
-            this.fallBackToNotificationSettings = jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS) && jsonObject.getBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS);
-            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 || jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
+            this.fallBackToNotificationSettings = jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS)
+                    && jsonObject.getBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS);
+            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1
+                    || jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
-            this.maxPerSession = jsonObject.has(Constants.INAPP_MAX_DISPLAY_COUNT) ? jsonObject.getInt(Constants.INAPP_MAX_DISPLAY_COUNT) : -1;
+            this.maxPerSession = jsonObject.has(Constants.INAPP_MAX_DISPLAY_COUNT) ? jsonObject.getInt(
+                    Constants.INAPP_MAX_DISPLAY_COUNT) : -1;
             this.inAppType = CTInAppType.fromString(this.type);
             this.isTablet = jsonObject.has(Constants.KEY_IS_TABLET) && jsonObject.getBoolean(Constants.KEY_IS_TABLET);
-            this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : Constants.WHITE;
-            this.isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(Constants.KEY_PORTRAIT);
-            this.isLandscape = jsonObject.has(Constants.KEY_LANDSCAPE) && jsonObject.getBoolean(Constants.KEY_LANDSCAPE);
-            this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject.getLong(Constants.WZRK_TIME_TO_LIVE) : System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
-            JSONObject titleObject = jsonObject.has(Constants.KEY_TITLE) ? jsonObject.getJSONObject(Constants.KEY_TITLE) : null;
+            this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG)
+                    : Constants.WHITE;
+            this.isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(
+                    Constants.KEY_PORTRAIT);
+            this.isLandscape = jsonObject.has(Constants.KEY_LANDSCAPE) && jsonObject.getBoolean(
+                    Constants.KEY_LANDSCAPE);
+            this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject.getLong(
+                    Constants.WZRK_TIME_TO_LIVE) : System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
+            JSONObject titleObject = jsonObject.has(Constants.KEY_TITLE) ? jsonObject.getJSONObject(
+                    Constants.KEY_TITLE) : null;
             if (titleObject != null) {
                 this.title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
-                this.titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR) : Constants.BLACK;
+                this.titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR)
+                        : Constants.BLACK;
             }
-            JSONObject msgObject = jsonObject.has(Constants.KEY_MESSAGE) ? jsonObject.getJSONObject(Constants.KEY_MESSAGE) : null;
+            JSONObject msgObject = jsonObject.has(Constants.KEY_MESSAGE) ? jsonObject.getJSONObject(
+                    Constants.KEY_MESSAGE) : null;
             if (msgObject != null) {
                 this.message = msgObject.has(Constants.KEY_TEXT) ? msgObject.getString(Constants.KEY_TEXT) : "";
-                this.messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR) : Constants.BLACK;
+                this.messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR)
+                        : Constants.BLACK;
             }
-            this.hideCloseButton = jsonObject.has(Constants.KEY_HIDE_CLOSE) && jsonObject.getBoolean(Constants.KEY_HIDE_CLOSE);
-            JSONObject media = jsonObject.has(Constants.KEY_MEDIA) ? jsonObject.getJSONObject(Constants.KEY_MEDIA) : null;
+            this.hideCloseButton = jsonObject.has(Constants.KEY_HIDE_CLOSE) && jsonObject.getBoolean(
+                    Constants.KEY_HIDE_CLOSE);
+            JSONObject media = jsonObject.has(Constants.KEY_MEDIA) ? jsonObject.getJSONObject(Constants.KEY_MEDIA)
+                    : null;
             if (media != null) {
                 CTInAppNotificationMedia portraitMedia = new CTInAppNotificationMedia()
                         .initWithJSON(media, Configuration.ORIENTATION_PORTRAIT);
@@ -545,17 +570,21 @@ public class CTInAppNotification implements Parcelable {
                 }
             }
 
-            JSONObject media_landscape = jsonObject.has(Constants.KEY_MEDIA_LANDSCAPE) ? jsonObject.getJSONObject(Constants.KEY_MEDIA_LANDSCAPE) : null;
+            JSONObject media_landscape = jsonObject.has(Constants.KEY_MEDIA_LANDSCAPE) ? jsonObject.getJSONObject(
+                    Constants.KEY_MEDIA_LANDSCAPE) : null;
             if (media_landscape != null) {
-                CTInAppNotificationMedia landscapeMedia = new CTInAppNotificationMedia().initWithJSON(media_landscape, Configuration.ORIENTATION_LANDSCAPE);
+                CTInAppNotificationMedia landscapeMedia = new CTInAppNotificationMedia().initWithJSON(media_landscape,
+                        Configuration.ORIENTATION_LANDSCAPE);
                 if (landscapeMedia != null) {
                     mediaList.add(landscapeMedia);
                 }
             }
-            JSONArray buttonArray = jsonObject.has(Constants.KEY_BUTTONS) ? jsonObject.getJSONArray(Constants.KEY_BUTTONS) : null;
+            JSONArray buttonArray = jsonObject.has(Constants.KEY_BUTTONS) ? jsonObject.getJSONArray(
+                    Constants.KEY_BUTTONS) : null;
             if (buttonArray != null) {
                 for (int i = 0; i < buttonArray.length(); i++) {
-                    CTInAppNotificationButton inAppNotificationButton = new CTInAppNotificationButton().initWithJSON(buttonArray.getJSONObject(i));
+                    CTInAppNotificationButton inAppNotificationButton = new CTInAppNotificationButton().initWithJSON(
+                            buttonArray.getJSONObject(i));
                     if (inAppNotificationButton != null && inAppNotificationButton.getError() == null) {
                         this.buttons.add(inAppNotificationButton);
                         this.buttonCount++;
