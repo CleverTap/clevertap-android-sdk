@@ -59,11 +59,13 @@ internal class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches,priva
     }
 
     override fun removeDiskMemory(key: String): Boolean {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from GIF disk-memory")
         val gifDiskMemory = ctCaches.gifCacheDisk()
         return gifDiskMemory.remove(key)
     }
 
     override fun removeInMemory(key: String): Pair<ByteArray, File>? {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from GIF in-memory")
         val gifInMemory = ctCaches.gifCache()
         return gifInMemory.remove(key)
     }

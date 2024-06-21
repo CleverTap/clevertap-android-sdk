@@ -59,11 +59,13 @@ internal class FileMemoryAccessObject(private val ctCaches: CTCaches,private val
     }
 
     override fun removeDiskMemory(key: String): Boolean {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from FILE disk-memory")
         val fileDiskMemory = ctCaches.fileCacheDisk()
         return fileDiskMemory.remove(key)
     }
 
     override fun removeInMemory(key: String): Pair<ByteArray, File>? {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from FILE in-memory")
         val fileInMemory = ctCaches.fileLruCache()
         return fileInMemory.remove(key)
     }

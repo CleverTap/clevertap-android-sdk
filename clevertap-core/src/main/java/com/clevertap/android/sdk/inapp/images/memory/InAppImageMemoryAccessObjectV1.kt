@@ -66,11 +66,13 @@ internal class InAppImageMemoryAccessObjectV1(private val ctCaches: CTCaches,pri
     }
 
     override fun removeDiskMemory(key: String): Boolean {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from IMAGE disk-memory")
         val imageDiskMemory = ctCaches.imageCacheDisk()
         return imageDiskMemory.remove(key)
     }
 
     override fun removeInMemory(key: String): Pair<Bitmap, File>? {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from IMAGE in-memory")
         val imageInMemory = ctCaches.imageCache()
         return imageInMemory.remove(key)
     }
