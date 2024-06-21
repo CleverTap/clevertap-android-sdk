@@ -111,14 +111,26 @@ internal class FileResourceProvider(
 
     fun deleteData(cacheKey: String) {
         mapOfMAO[IMAGE]?.forEach { mao ->
+            val cacheType = when (mao) {
+                is InAppImageMemoryAccessObjectV1 -> IMAGE
+                is InAppGifMemoryAccessObjectV1 -> GIF
+                is FileMemoryAccessObject -> FILES
+                else -> ""
+            }
             val pair = mao.removeInMemory(cacheKey)
             if (pair != null) {
-                logger?.verbose(TAG_FILE_DOWNLOAD,"successfully removed $cacheKey from memory cache")
+                logger?.verbose(
+                    TAG_FILE_DOWNLOAD,
+                    "$cacheKey was present in $cacheType in-memory cache is successfully removed"
+                )
             }
 
             val b = mao.removeDiskMemory(cacheKey)
             if (b) {
-                logger?.verbose(TAG_FILE_DOWNLOAD,"successfully removed $cacheKey from file cache")
+                logger?.verbose(
+                    TAG_FILE_DOWNLOAD,
+                    "$cacheKey was present in $cacheType disk-memory cache is successfully removed"
+                )
             }
         }
     }
