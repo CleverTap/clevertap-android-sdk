@@ -22,11 +22,8 @@ internal class FileResourcesRepoImpl constructor(
 
     companion object {
 
-        const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
-        private const val DAYS_FOR_EXPIRY = 14
-
         // 14 days
-        const val EXPIRY_OFFSET_MILLIS = DAY_IN_MILLIS * DAYS_FOR_EXPIRY
+        private val EXPIRY_OFFSET_MILLIS = 14.days.inWholeMilliseconds
 
         private val listeners = setOf<(urls: List<String>) -> Map<String, Boolean>>()
         private val listenerss = mutableSetOf<DownloadListener>()
