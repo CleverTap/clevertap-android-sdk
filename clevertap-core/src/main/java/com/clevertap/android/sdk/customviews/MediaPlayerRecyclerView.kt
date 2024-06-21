@@ -198,15 +198,11 @@ class MediaPlayerRecyclerView : RecyclerView {
     }
 
     private fun bufferingStarted() {
-        playingHolder?.let { ph ->
-            ph.playerBuffering()
-        }
+        playingHolder?.playerBuffering()
     }
 
     private fun playerReady() {
-        playingHolder?.let { ph ->
-            ph.playerReady()
-        }
+        playingHolder?.playerReady()
     }
 
     private fun artworkAsset(): Drawable {
@@ -222,8 +218,6 @@ class MediaPlayerRecyclerView : RecyclerView {
 
     private fun removeVideoView() {
         handle.pause()
-        playingHolder?.let { ph ->
-            ph.playerRemoved() // removes all the views from video container
-        }
+        playingHolder?.playerRemoved() // removes all the views from video container
     }
 }
