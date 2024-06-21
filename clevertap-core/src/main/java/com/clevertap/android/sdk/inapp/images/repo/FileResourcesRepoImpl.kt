@@ -2,6 +2,9 @@ package com.clevertap.android.sdk.inapp.images.repo
 
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.inapp.data.CtCacheType
+import com.clevertap.android.sdk.inapp.data.CtCacheType.FILES
+import com.clevertap.android.sdk.inapp.data.CtCacheType.GIF
+import com.clevertap.android.sdk.inapp.data.CtCacheType.IMAGE
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.FileStore
@@ -127,22 +130,20 @@ internal class FileResourcesRepoImpl constructor(
         legacyInAppsStore.updateAssetCleanupTs(currentTime)
     }
 
-    override fun cleanupExpiredInAppsResources() {
-        cleanupStaleFilesNow(
-            allFileUrls = inAppAssetsStore.getAllAssetUrls(),
-            expiryTs = { key ->
-                inAppAssetsStore.expiryForUrl(key)
-            }
-        )
+    override fun cleanupExpiredResources(cacheTpe: CtCacheType) {
+        val allFileUrls = when (cacheTpe) {
+            IMAGE, GIF -> inAppAssetsStore.getAllAssetUrls()
+            FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
+        }
+        cleanupStaleFilesNow(allFileUrls = allFileUrls)
     }
 
-    override fun cleanupInAppsResources() {
-        cleanupStaleFilesNow(
-            allFileUrls = inAppAssetsStore.getAllAssetUrls(),
-            expiryTs = { key ->
-                inAppAssetsStore.expiryForUrl(key)
-            }
-        )
+    override fun cleanupAllResources(cacheTpe: CtCacheType) {
+        val cleanupUrls = when (cacheTpe) {
+            IMAGE, GIF -> inAppAssetsStore.getAllAssetUrls()
+            FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
+        }
+        cleanupAllFiles(cleanupUrls = cleanupUrls.toList())
     }
 
     private fun cleanupStaleFilesNow(

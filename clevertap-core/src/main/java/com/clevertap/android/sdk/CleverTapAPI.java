@@ -42,6 +42,7 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
@@ -3564,9 +3565,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         if (expiredOnly) {
-            impl.cleanupExpiredInAppsResources();
+            impl.cleanupExpiredResources(CtCacheType.IMAGE);
         } else {
-            impl.cleanupInAppsResources();
+            impl.cleanupAllResources(CtCacheType.IMAGE);
         }
     }
 
@@ -3596,9 +3597,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         if (expiredOnly) {
-            impl.cleanupStaleFiles();
+            impl.cleanupExpiredResources(CtCacheType.FILES);
         } else {
-            impl.cleanupStaleFiles(); // todo this also only clears expired ones. fixme
+            impl.cleanupAllResources(CtCacheType.FILES);
         }
     }
 

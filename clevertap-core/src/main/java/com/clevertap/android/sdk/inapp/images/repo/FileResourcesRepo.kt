@@ -26,7 +26,7 @@ internal interface FileResourcesRepo {
     fun cleanupStaleFiles() = cleanupStaleFiles(emptyList())
     fun cleanupStaleFiles(urls: List<String>)
 
-    fun cleanupExpiredInAppsResources()
+    fun cleanupExpiredResources(cacheTpe: CtCacheType)
 
-    fun cleanupInAppsResources()
+    fun cleanupAllResources(cacheTpe: CtCacheType)
 }
