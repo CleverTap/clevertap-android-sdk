@@ -422,6 +422,10 @@ public class CTInboxMessageContent implements Parcelable {
         return contentType != null && this.media != null && contentType.startsWith("video");
     }
 
+    public boolean mediaIsStreamable() {
+        return mediaIsAudio() || mediaIsVideo();
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(title);
