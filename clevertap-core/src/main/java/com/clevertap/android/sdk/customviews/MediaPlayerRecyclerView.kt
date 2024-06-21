@@ -123,6 +123,7 @@ class MediaPlayerRecyclerView : RecyclerView {
 
         // Case 3: Video has to be played in different view holder so we remove and reattch to correct one
         removeVideoView()
+        initialize()
         val currentVolume = handle.playerVolume()
         val addedVideo = targetHolder.addMediaPlayer(
             currentVolume,
