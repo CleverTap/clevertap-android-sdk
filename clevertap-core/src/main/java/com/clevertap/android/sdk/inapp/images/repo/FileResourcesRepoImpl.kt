@@ -2,13 +2,16 @@ package com.clevertap.android.sdk.inapp.images.repo
 
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.inapp.data.CtCacheType
+import com.clevertap.android.sdk.inapp.data.CtCacheType.FILES
+import com.clevertap.android.sdk.inapp.data.CtCacheType.GIF
+import com.clevertap.android.sdk.inapp.data.CtCacheType.IMAGE
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import kotlin.math.max
-
+internal const val TAG_FILE_DOWNLOAD = "FileDownload"
 internal class FileResourcesRepoImpl constructor(
     override val cleanupStrategy: FileCleanupStrategy,
     override val preloaderStrategy: FilePreloaderStrategy,
@@ -19,11 +22,8 @@ internal class FileResourcesRepoImpl constructor(
 
     companion object {
 
-        const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
-        private const val DAYS_FOR_EXPIRY = 14
-
         // 14 days
-        const val EXPIRY_OFFSET_MILLIS = DAY_IN_MILLIS * DAYS_FOR_EXPIRY
+        private val EXPIRY_OFFSET_MILLIS = 14.days.inWholeMilliseconds
 
         private val listeners = setOf<(urls: List<String>) -> Map<String, Boolean>>()
         private val listenerss = mutableSetOf<DownloadListener>()
@@ -52,6 +52,24 @@ internal class FileResourcesRepoImpl constructor(
             }
         }
         private val fetchAllFilesLock = Any()
+        @JvmStatic
+        fun saveUrlExpiryToStore(urlMeta: Pair<String, CtCacheType>, storePair: Pair<FileStore, InAppAssetsStore>){
+            val url = urlMeta.first
+            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
+            val fileStore = storePair.first
+            val inAppAssetsStore = storePair.second
+
+            when (urlMeta.second) {
+                CtCacheType.IMAGE,
+                CtCacheType.GIF -> {
+                    inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
+                    fileStore.saveFileUrl(url = url, expiry = expiry)
+                }
+                CtCacheType.FILES -> {
+                    fileStore.saveFileUrl(url = url, expiry = expiry)
+                }
+            }
+        }
     }
 
     @WorkerThread
@@ -63,19 +81,7 @@ internal class FileResourcesRepoImpl constructor(
     ) {
 
         val successBlockk: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
-            val url = meta.first
-            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-
-            when (meta.second) {
-                CtCacheType.IMAGE,
-                CtCacheType.GIF -> {
-                    inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
-                    fileStore.saveFileUrl(url = url, expiry = expiry)
-                }
-                CtCacheType.FILES -> {
-                    fileStore.saveFileUrl(url = url, expiry = expiry)
-                }
-            }
+            saveUrlExpiryToStore(meta,Pair(fileStore, inAppAssetsStore))
             synchronized(fetchAllFilesLock) {
                 downloadInProgressUrls.put(meta.first, DownloadState.SUCCESSFUL)
             }
@@ -121,22 +127,20 @@ internal class FileResourcesRepoImpl constructor(
         legacyInAppsStore.updateAssetCleanupTs(currentTime)
     }
 
-    override fun cleanupExpiredInAppsResources() {
-        cleanupStaleFilesNow(
-            allFileUrls = inAppAssetsStore.getAllAssetUrls(),
-            expiryTs = { key ->
-                inAppAssetsStore.expiryForUrl(key)
-            }
-        )
+    override fun cleanupExpiredResources(cacheTpe: CtCacheType) {
+        val allFileUrls = when (cacheTpe) {
+            IMAGE, GIF -> inAppAssetsStore.getAllAssetUrls()
+            FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
+        }
+        cleanupStaleFilesNow(allFileUrls = allFileUrls)
     }
 
-    override fun cleanupInAppsResources() {
-        cleanupStaleFilesNow(
-            allFileUrls = inAppAssetsStore.getAllAssetUrls(),
-            expiryTs = { key ->
-                inAppAssetsStore.expiryForUrl(key)
-            }
-        )
+    override fun cleanupAllResources(cacheTpe: CtCacheType) {
+        val cleanupUrls = when (cacheTpe) {
+            IMAGE, GIF -> inAppAssetsStore.getAllAssetUrls()
+            FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
+        }
+        cleanupAllFiles(cleanupUrls = cleanupUrls.toList())
     }
 
     private fun cleanupStaleFilesNow(

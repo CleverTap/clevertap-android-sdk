@@ -56,9 +56,10 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         }.toMutableMap()
 
         for (url in urlMetas) {
-            val task = executor.ioTaskNonUi<Unit>()
+            val task = executor.ioTaskWithCallbackOnCurrentThread<Unit>()
+            task.addOnSuccessListener { countDownLatch.countDown() }
+            task.addOnFailureListener { countDownLatch.countDown() }
             task.execute("tag") {
-                countDownLatch.countDown()
                 startedBlock.invoke(url)
                 val bitmap = assetBlock(url)
                 if (bitmap != null) {
@@ -72,7 +73,7 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         }
         try {
             // dont wait for more than 10 seconds to download.
-            val success = countDownLatch.await(10, TimeUnit.SECONDS)
+            val success = countDownLatch.await(5, TimeUnit.MINUTES)
             if (success) {
                 preloadFinished.invoke(downloadStatus)
             }
