@@ -9,8 +9,13 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTLocalInApp
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
+import com.clevertap.android.sdk.variables.Var
+import com.clevertap.android.sdk.variables.callbacks.VariableCallback
+import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.ExampleVariables
 import java.util.Date
+
+private const val TAG = "HomeScreenViewModel"
 
 class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel() {
 
@@ -514,6 +519,32 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.defineVariable("variableInt", 0)
                 cleverTapAPI?.defineVariable("variableBoolean", true)
                 cleverTapAPI?.defineVariable("variableFloat", 2.4f)
+                cleverTapAPI?.defineFileVariable("some_variable_name")
+
+                val file1: Var<String>? = cleverTapAPI?.defineFileVariable("folder1.fileVariable")
+                    ?.apply {
+                        addFileReadyHandler(object: VariableCallback<String>() {
+                            override fun onValueChanged(variable: Var<String>?) {
+                                Log.i(TAG, "file1 is ready with url ${value()}")
+                            }
+                        })
+                    }
+                val file2 = cleverTapAPI?.defineFileVariable("folder1.folder2.fileVariable")
+                    ?.apply {
+                        addFileReadyHandler(object: VariableCallback<String>() {
+                            override fun onValueChanged(variable: Var<String>?) {
+                                Log.i(TAG, "file2 is ready with url ${value()}")
+                            }
+                        })
+                    }
+                val file3 = cleverTapAPI?.defineFileVariable("folder1.folder3.fileVariable")
+                    ?.apply {
+                        addFileReadyHandler(object: VariableCallback<String>() {
+                            override fun onValueChanged(variable: Var<String>?) {
+                                Log.i(TAG, "file3 is ready with url ${value()}")
+                            }
+                        })
+                    }
             }
             "13-1" -> {
                 cleverTapAPI?.fetchVariables { isSuccess -> println("Variables Fetched = $isSuccess") }
@@ -529,16 +560,35 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 println("VariableBoolean = ${cleverTapAPI?.getVariable<Boolean>("variableBoolean")}")
                 println("VariableFloat = ${cleverTapAPI?.getVariable<Float>("variableFloat")}")
                 println("ParsedVariableDouble = ${cleverTapAPI?.getVariable<Double>("var_double")}")
+                println("ParsedFile = ${cleverTapAPI?.getVariable<String>("some_variable_name")}")
+
+                val file1 = cleverTapAPI?.getVariable<String>("folder1.fileVariable")
+                val file2 = cleverTapAPI?.getVariable<String>("folder1.folder2.fileVariable")
+                val file3 = cleverTapAPI?.getVariable<String>("folder1.folder3.fileVariable")
+
+                println("ParsedFile1 = $file1")
+                println("ParsedFile2 = $file2")
+                println("ParsedFile3 = $file3")
+
             }
             "13-5" -> {
                 println("VariableInt = ${cleverTapAPI?.getVariableValue("variableInt")}")
                 println("VariableBoolean = ${cleverTapAPI?.getVariableValue("variableBoolean")}")
                 println("VariableFloat = ${cleverTapAPI?.getVariableValue("variableFloat")}")
                 println("ParsedVariableDouble = ${cleverTapAPI?.getVariableValue("var_double")}")
+                println("ParsedFile = ${cleverTapAPI?.getVariableValue("some_variable_name")}")
+
+                println("ParsedFile1 = ${cleverTapAPI?.getVariableValue("folder1.fileVariable")}")
+                println("ParsedFile2 = ${cleverTapAPI?.getVariableValue("folder1.folder2.fileVariable")}")
+                println("ParsedFile3 = ${cleverTapAPI?.getVariableValue("folder1.folder3.fileVariable")}")
             }
             "13-6" -> {
-
                 cleverTapAPI?.addVariablesChangedCallback(exampleVariables.variablesChangedCallback)
+                cleverTapAPI?.onVariablesChangedAndNoDownloadsPending(object : VariablesChangedCallback() {
+                    override fun variablesChanged() {
+                        Log.i(TAG, "onceVariablesChangedAndNoDownloadsPending - should come after each fetch")
+                    }
+                })
             }
             "13-7" -> {
                 cleverTapAPI?.removeVariablesChangedCallback(exampleVariables.variablesChangedCallback)
@@ -546,6 +596,11 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
             "13-8" -> {
                 cleverTapAPI?.addOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
+                cleverTapAPI?.onceVariablesChangedAndNoDownloadsPending(object : VariablesChangedCallback() {
+                    override fun variablesChanged() {
+                        Log.i(TAG, "onceVariablesChangedAndNoDownloadsPending - should come only once")
+                    }
+                })
             }
             "13-9" -> {
                 cleverTapAPI?.removeOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
