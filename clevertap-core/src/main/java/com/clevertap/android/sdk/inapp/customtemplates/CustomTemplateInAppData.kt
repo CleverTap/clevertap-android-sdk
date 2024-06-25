@@ -6,6 +6,8 @@ import android.os.Parcelable.Creator
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.copyFrom
 import com.clevertap.android.sdk.inapp.CTInAppType
+import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.FILE
+import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.utils.getStringOrNull
 import com.clevertap.android.sdk.utils.readJson
 import com.clevertap.android.sdk.utils.writeJson
@@ -44,6 +46,17 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
             copy.copyFrom(it)
             copy
         }
+    }
+
+    fun getFileArgsUrls(templatesManager: TemplatesManager): List<Pair<String, CtCacheType>> {
+        return templateName?.let { name ->
+            templatesManager.getTemplate(name)?.args
+                ?.filter { arg -> arg.type == FILE && args?.has(arg.name) ?: false }
+                ?.mapNotNull { arg -> args?.getString(arg.name) }
+                ?.map { url ->
+                    Pair(url, CtCacheType.FILES)
+                }
+        } ?: emptyList()
     }
 
     override fun writeToParcel(dest: Parcel, flags: Int) {

@@ -13,7 +13,7 @@ import java.util.zip.GZIPInputStream
 class GzipBitmapInputStreamReader(
     saveBytes: Boolean = false,
     logger: Logger? = null
-) : BitmapInputStreamDecoder(saveBytes, logger) {
+) : BitmapInputStreamDecoder(saveBytes = saveBytes, logger = logger) {
 
     override fun readInputStream(
         inputStream: InputStream,

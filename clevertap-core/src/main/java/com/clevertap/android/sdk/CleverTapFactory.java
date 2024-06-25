@@ -15,7 +15,8 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
+import com.clevertap.android.sdk.inapp.store.preference.FileStore;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
@@ -48,8 +49,18 @@ class CleverTapFactory {
         TemplatesManager templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig);
         coreState.setTemplatesManager(templatesManager);
 
-        StoreRegistry storeRegistry = new StoreRegistry();
-        storeRegistry.setLegacyInAppStore(StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
+        // create storeRegistry, preferences for features
+        final StoreProvider storeProvider = StoreProvider.getInstance();
+        String accountId = cleverTapInstanceConfig.getAccountId();
+
+        StoreRegistry storeRegistry = new StoreRegistry(
+                null,
+                null,
+                storeProvider.provideLegacyInAppStore(context, accountId),
+                storeProvider.provideInAppAssetsStore(context, accountId),
+                storeProvider.provideFileStore(context, accountId)
+        );
+
         coreState.setStoreRegistry(storeRegistry);
 
         CoreMetaData coreMetaData = new CoreMetaData();
@@ -123,14 +134,9 @@ class CleverTapFactory {
         );
         coreState.setEvaluationManager(evaluationManager);
 
-        final StoreProvider storeProvider = StoreProvider.getInstance();
-
         Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
         taskInitStores.execute("initStores", () -> {
-            if (storeRegistry.getInAppAssetsStore() == null) {
-                InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, config.getAccountId());
-                storeRegistry.setInAppAssetsStore(assetsStore);
-            }
+
             if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
                 if (storeRegistry.getInAppStore() == null) {
                     InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo.getDeviceID(),
@@ -191,6 +197,7 @@ class CleverTapFactory {
                 false,
                 storeRegistry,
                 triggersManager,
+                templatesManager,
                 coreMetaData
         );
 
@@ -236,6 +243,7 @@ class CleverTapFactory {
                 true,
                 storeRegistry,
                 triggersManager,
+                templatesManager,
                 coreMetaData
         );
 
@@ -267,8 +275,9 @@ class CleverTapFactory {
                 deviceInfo,
                 new InAppQueue(config, storeRegistry),
                 evaluationManager,
-                new InAppResourceProvider(context, config.getLogger()),
-                templatesManager
+                new FileResourceProvider(context, config.getLogger()),
+                templatesManager,
+                storeRegistry
         );
 
         coreState.setInAppController(inAppController);

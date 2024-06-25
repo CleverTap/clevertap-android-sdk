@@ -3,6 +3,8 @@ package com.clevertap.android.sdk.inapp.data
 import android.content.res.Configuration
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
 import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.orEmptyArray
@@ -15,8 +17,9 @@ import org.json.JSONObject
 /**
  * Class that wraps functionality for response and return relevant methods to get data
  */
-class InAppResponseAdapter(
-    responseJson: JSONObject
+internal class InAppResponseAdapter(
+    responseJson: JSONObject,
+    templatesManager: TemplatesManager
 ) {
 
     companion object {
@@ -35,38 +38,45 @@ class InAppResponseAdapter(
         }
     }
 
+    val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
+    val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
+    val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
+    val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    
     val preloadImages: List<String>
     val preloadGifs: List<String>
+    val preloadFiles: List<String>
     val preloadAssets: List<String>
-
-    val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
-
-    val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
-
-    val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
-
-    val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    val preloadAssetsMeta: List<Pair<String, CtCacheType>>
 
     init {
         val imageList = mutableListOf<String>()
         val gifList = mutableListOf<String>()
+        val filesList = mutableListOf<String>()
 
-        //fetchMediaUrls(legacyInApps, list)
-        //fetchMediaUrls(appLaunchServerSideInApps, list)
-        fetchMediaUrls(clientSideInApps, imageList, gifList)
+        fetchMediaUrls(
+            imageList = imageList,
+            gifList = gifList
+        )
+        fetchFilesUrlsForTemplates(
+            filesList = filesList,
+            templatesManager = templatesManager
+        )
 
         preloadImages = imageList
         preloadGifs = gifList
-        preloadAssets = imageList + gifList
+        preloadFiles = filesList
+
+        preloadAssets = imageList + gifList + filesList
+        preloadAssetsMeta = imageList.map { Pair(it, CtCacheType.IMAGE) } + gifList.map { Pair(it, CtCacheType.GIF) } + filesList.map { Pair(it, CtCacheType.FILES) } // todo no need to copy over and over
     }
 
     private fun fetchMediaUrls(
-        data: Pair<Boolean, JSONArray?>,
         imageList: MutableList<String>,
         gifList: MutableList<String>
     ) {
-        if (data.first) {
-            data.second?.iterator<JSONObject> { jsonObject ->
+        if (clientSideInApps.first) {
+            clientSideInApps.second?.iterator<JSONObject> { jsonObject ->
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
 
                 if (portrait != null) {
@@ -98,6 +108,20 @@ class InAppResponseAdapter(
         }
     }
 
+    private fun fetchFilesUrlsForTemplates(filesList: MutableList<String>, templatesManager: TemplatesManager) {
+        if (clientSideInApps.first) {
+            for (i in 0 until clientSideInApps.second!!.length()) {
+                val customTemplateInAppData = createFromJson(clientSideInApps.second!!.getJSONObject(i))
+                if (customTemplateInAppData != null) {
+                    val fileArgs = customTemplateInAppData.getFileArgsUrls(
+                        templatesManager
+                    )
+                    filesList.addAll(fileArgs.map { it.first })
+                }
+            }
+        }
+    }
+
     val inAppsPerSession: Int = responseJson.optInt(IN_APP_SESSION_KEY, IN_APP_DEFAULT_SESSION)
 
     val inAppsPerDay: Int = responseJson.optInt(IN_APP_DAILY_KEY, IN_APP_DEFAULT_DAILY)
@@ -105,6 +129,10 @@ class InAppResponseAdapter(
     val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "")
 
     val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)
+}
+
+enum class CtCacheType {
+    IMAGE, GIF, FILES
 }
 
 

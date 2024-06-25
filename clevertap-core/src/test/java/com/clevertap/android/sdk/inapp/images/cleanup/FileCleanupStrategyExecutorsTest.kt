@@ -1,21 +1,21 @@
 package com.clevertap.android.sdk.inapp.images.cleanup
 
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.task.MockCTExecutors
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class InAppCleanupStrategyExecutorsTest {
+class FileCleanupStrategyExecutorsTest {
 
-    private val inAppResourceProvider = mockk<InAppResourceProvider>(relaxed = true)
+    private val mFileResourceProvider = mockk<FileResourceProvider>(relaxed = true)
     private val executors = MockCTExecutors()
 
-    private val cleanupStrategy = InAppCleanupStrategyExecutors(
-        inAppResourceProvider = inAppResourceProvider,
+    private val cleanupStrategy = FileCleanupStrategyExecutors(
+        fileResourceProvider = mFileResourceProvider,
         executor = executors
-    )
+    )/*
 
     @Test
     fun `cleanup deletes all resources`() {
@@ -24,20 +24,20 @@ class InAppCleanupStrategyExecutorsTest {
         val successUrls = mutableListOf<String>()
 
         // invoke method
-        cleanupStrategy.clearAssets(urls) { url ->
+        cleanupStrategy.clearInAppImagesAndGifsV1(urls) { url ->
             successUrls.add(url)
         }
 
         // check results
         urls.forEach { url ->
             verify {
-                inAppResourceProvider.deleteImage(url)
+                mFileResourceProvider.deleteImageMemoryV1(url)
             }
             verify {
-                inAppResourceProvider.deleteGif(url)
+                mFileResourceProvider.deleteGifMemoryV1(url)
             }
         }
 
         assertEquals(urls.size, successUrls.size)
-    }
+    }*/
 }

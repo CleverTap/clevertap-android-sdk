@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.network.DownloadedBitmap
+import com.clevertap.android.sdk.network.DownloadedBitmap.Status.DOWNLOAD_FAILED
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -11,6 +12,7 @@ import java.net.HttpURLConnection
 
 open class BitmapInputStreamDecoder(
     val saveBytes: Boolean = false,
+    val saveBitmap : Boolean = true,
     val logger: Logger? = null
 ) : IBitmapInputStreamReader {
 
@@ -36,12 +38,6 @@ open class BitmapInputStreamDecoder(
         logger?.verbose("Total download size for bitmap = $totalBytesRead")
 
         val dataReadFromStreamInByteArray = finalDataFromHttpInputStream.toByteArray()
-        // Decode the bitmap from decompressed data
-        val bitmap = BitmapFactory.decodeByteArray(
-            dataReadFromStreamInByteArray,
-            0,
-            dataReadFromStreamInByteArray.size
-        )
 
         val fileLength = connection.contentLength
         if (fileLength != -1 && fileLength != totalBytesRead) {
@@ -49,14 +45,34 @@ open class BitmapInputStreamDecoder(
             return DownloadedBitmapFactory.nullBitmapWithStatus(DownloadedBitmap.Status.DOWNLOAD_FAILED)
         }
 
-        return DownloadedBitmapFactory.successBitmap(
-            bitmap = bitmap,
-            downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds,
-            data = if (saveBytes) {
-                dataReadFromStreamInByteArray
+        val downloadedBitmap: DownloadedBitmap
+        if (saveBitmap) {
+            // Decode the bitmap from decompressed data
+            val bitmap = BitmapFactory.decodeByteArray(
+                dataReadFromStreamInByteArray,
+                0,
+                dataReadFromStreamInByteArray.size
+            )
+
+            downloadedBitmap = if (bitmap != null) {
+                DownloadedBitmapFactory.successBitmap(
+                    bitmap = bitmap,
+                    downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds,
+                    data = if (saveBytes) {
+                        dataReadFromStreamInByteArray
+                    } else {
+                        null
+                    }
+                )
             } else {
-                null
+                DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
             }
-        )
+        } else {
+            downloadedBitmap = DownloadedBitmapFactory.successBytes(
+                downloadTime = Utils.getNowInMillis() - downloadStartTimeInMilliseconds,
+                data = dataReadFromStreamInByteArray
+            )
+        }
+        return downloadedBitmap
     }
 }

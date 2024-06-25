@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.ContextDismissListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.TemplateContext
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 
 internal class TemplatesManager(templates: Collection<CustomTemplate>, private val logger: Logger) :
     ContextDismissListener {
@@ -53,8 +54,12 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
 
     fun getActiveContextForTemplate(templateName: String): CustomTemplateContext? = activeContexts[templateName]
 
-    fun presentTemplate(notification: CTInAppNotification, inAppListener: InAppListener) {
-        val context = createContextFromInApp(notification, inAppListener) ?: return
+    fun presentTemplate(
+        notification: CTInAppNotification,
+        inAppListener: InAppListener,
+        resourceProvider: FileResourceProvider
+    ) {
+        val context = createContextFromInApp(notification, inAppListener,resourceProvider) ?: return
         val template = customTemplates[context.templateName]
         if (template == null) {
             logger.info("CustomTemplates", "Cannot find template with name ${context.templateName}")
@@ -110,7 +115,8 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
 
     private fun createContextFromInApp(
         notification: CTInAppNotification,
-        inAppListener: InAppListener
+        inAppListener: InAppListener,
+        resourceProvider: FileResourceProvider
     ): CustomTemplateContext? {
         val templateName = notification.customTemplateData?.templateName
         if (templateName == null) {
@@ -131,6 +137,7 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
             template,
             notification,
             inAppListener,
+            resourceProvider,
             dismissListener = this,
             logger
         )

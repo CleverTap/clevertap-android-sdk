@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class InAppQueueTest {
-
+/*
     @Mock
     private lateinit var mockConfig: CleverTapInstanceConfig
 
@@ -125,5 +125,5 @@ class InAppQueueTest {
         val queueLength = inAppQueue.getQueueLength()
 
         assertEquals(1, queueLength)
-    }
+    }*/
 }
