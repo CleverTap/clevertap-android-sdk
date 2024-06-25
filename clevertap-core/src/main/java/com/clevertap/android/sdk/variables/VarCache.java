@@ -240,9 +240,9 @@ public class VarCache {
 
         for (Map.Entry<String, Var<String>> entry : filesMap.entrySet()) {
             String name = entry.getKey();
-            Var<String> var = (Var<String>) vars.get(name);
+            Var<String> var = (Var<String>) entry.getValue();
             String url = var.value();
-            urls.add(new Pair<>(name, CtCacheType.FILES));
+            urls.add(new Pair<>(url, CtCacheType.FILES));
             urlToName.put(url, name);
         }
 
