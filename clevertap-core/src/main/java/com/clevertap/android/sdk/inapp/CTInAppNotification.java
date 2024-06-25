@@ -10,14 +10,14 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
+
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -415,13 +415,27 @@ public class CTInAppNotification implements Parcelable {
 
     }
 
-    CTInAppNotification copyAsCustomCode() {
-        //TODO implement copying of all fields instead of parsing the json
-        CTInAppNotification notification = new CTInAppNotification()
-                .initWithJSON(jsonDescription, videoSupported);
-        notification.type = InAppActionType.CUSTOM_CODE.name();
-        notification.excludeFromCaps = true;
-        return notification;
+    CTInAppNotification createNotificationForAction(CustomTemplateInAppData actionData) {
+        try {
+            JSONObject notificationJson = new JSONObject();
+            notificationJson.put(Constants.INAPP_ID_IN_PAYLOAD, id);
+            notificationJson.put(Constants.NOTIFICATION_ID_TAG, campaignId);
+            notificationJson.put(Constants.KEY_TYPE, InAppActionType.CUSTOM_CODE.toString());
+            notificationJson.put(Constants.KEY_EFC, 1);
+            notificationJson.put(Constants.KEY_EXCLUDE_GLOBAL_CAPS, 1);
+            notificationJson.put(Constants.KEY_WZRK_TTL, timeToLive);
+            if (jsonDescription.has(Constants.INAPP_WZRK_PIVOT)) {
+                notificationJson.put(Constants.INAPP_WZRK_PIVOT, jsonDescription.optString(Constants.INAPP_WZRK_PIVOT));
+            }
+            if (jsonDescription.has(Constants.INAPP_WZRK_CGID)) {
+                notificationJson.put(Constants.INAPP_WZRK_CGID, jsonDescription.optString(Constants.INAPP_WZRK_CGID));
+            }
+            CTInAppNotification notification = new CTInAppNotification().initWithJSON(notificationJson, videoSupported);
+            notification.setCustomTemplateData(actionData);
+            return notification;
+        } catch (JSONException jsonException) {
+            return null;
+        }
     }
 
     void setCustomTemplateData(CustomTemplateInAppData inAppData) {
