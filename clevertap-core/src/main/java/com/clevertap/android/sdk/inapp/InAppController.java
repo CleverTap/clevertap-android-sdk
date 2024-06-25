@@ -986,12 +986,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             if (template != null) {
                 // When a custom in-app template is triggered as an action we need to present it.
                 // Since all related methods operate with either CTInAppNotification or its json representation, here
-                // we create a copy of the notification that initiated the triggering and add the action as its
+                // we create a new notification from the one that initiated the triggering and add the action as its
                 // template data.
-                CTInAppNotification notificationFromAction = notification.copyAsCustomCode();
                 CustomTemplateInAppData actionTemplateData = templateInAppData.copy();
                 actionTemplateData.setAction(true);
-                notificationFromAction.setCustomTemplateData(actionTemplateData);
+                CTInAppNotification notificationFromAction = notification.createNotificationForAction(actionTemplateData);
+                if (notificationFromAction == null) {
+                    logger.debug("Failed to present custom template with name: "
+                            + templateInAppData.getTemplateName());
+                    return;
+                }
                 if (template.isVisual()) {
                     addInAppNotificationInFrontOfQueue(notificationFromAction.getJsonDescription());
                 } else {
