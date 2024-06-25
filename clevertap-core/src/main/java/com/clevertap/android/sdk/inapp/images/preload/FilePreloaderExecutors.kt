@@ -73,7 +73,7 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         }
         try {
             // dont wait for more than 10 seconds to download.
-            val success = countDownLatch.await(10, TimeUnit.SECONDS)
+            val success = countDownLatch.await(5, TimeUnit.MINUTES)
             if (success) {
                 preloadFinished.invoke(downloadStatus)
             }
