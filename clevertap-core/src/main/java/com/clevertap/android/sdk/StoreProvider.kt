@@ -64,14 +64,14 @@ class StoreProvider {
         context: Context,
         accountId: String
     ): InAppAssetsStore {
-        val prefName = constructStorePreferenceName(STORE_TYPE_INAPP_ASSETS, accountId)
+        val prefName = constructStorePreferenceName(storeType = STORE_TYPE_INAPP_ASSETS, accountId = accountId)
         return InAppAssetsStore(getCTPreference(context, prefName))
     }
     fun provideFileStore(
         context: Context,
         accountId: String
     ): FileStore {
-        val prefName = constructStorePreferenceName(STORE_TYPE_FILES, accountId)
+        val prefName = constructStorePreferenceName(storeType = STORE_TYPE_FILES, accountId = accountId)
         return FileStore(getCTPreference(context, prefName))
     }
 

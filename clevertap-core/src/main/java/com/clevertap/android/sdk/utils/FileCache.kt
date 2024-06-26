@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.utils
 
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.inapp.images.repo.TAG_FILE_DOWNLOAD
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.Exception
@@ -38,6 +39,7 @@ class FileCache(
             file.delete()
         }
         val newFile = fetchFile(key)
+        logger?.verbose(TAG_FILE_DOWNLOAD,"mapped file path - ${newFile.absoluteFile} to key - $key")
         val os = FileOutputStream(newFile)
         os.write(value)
         os.close()

@@ -11,7 +11,7 @@ class MemoryCreator {
         private const val GIF_CACHE_MIN_KB: Long = 5 * 1024
         private const val FILE_CACHE_MIN_KB: Long = 15 * 1024
         private const val IMAGE_SIZE_MAX_DISK: Long = 5 * 1024
-        private const val FILE_SIZE_MAX_DISK: Long = 15 * 1024
+        private const val FILE_SIZE_MAX_DISK: Long = 5 * 1024
 
         /**
          * Creates a GifMemory object.

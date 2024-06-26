@@ -68,7 +68,11 @@ internal class InAppResponseAdapter(
         preloadFiles = filesList
 
         preloadAssets = imageList + gifList + filesList
-        preloadAssetsMeta = imageList.map { Pair(it, CtCacheType.IMAGE) } + gifList.map { Pair(it, CtCacheType.GIF) } + filesList.map { Pair(it, CtCacheType.FILES) } // todo no need to copy over and over
+        preloadAssetsMeta = (imageList.map { Pair(it, CtCacheType.IMAGE) } +
+                gifList.map { Pair(it, CtCacheType.GIF) } +
+                filesList.map {
+                    Pair(it, CtCacheType.FILES)
+                }).distinctBy { it.first } // todo no need to copy over and over
     }
 
     private fun fetchMediaUrls(

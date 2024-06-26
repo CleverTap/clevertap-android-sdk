@@ -12,10 +12,19 @@ internal interface FilePreloaderStrategy {
 
     val config: FilePreloadConfig
 
+    /**
+     * takes list of url meta which contains url string and cachetype to warm up cache after prefetch
+     *
+     * successBlock - invoked for each successful download
+     * failureBlock - invoked for each failed download
+     * startedBlock - invoked when download starts for particular url
+     */
     fun preloadFilesAndCache(
         urlMetas: List<Pair<String, CtCacheType>>,
         successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = {},
-        failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = {}
+        failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = {},
+        startedBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = {},
+        preloadFinished: (urlDownloadStatus: Map<String, Boolean>) -> Unit = {}
     )
 
     fun cleanup()

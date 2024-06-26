@@ -22,7 +22,8 @@ public enum CTInAppType {
     CTInAppTypeCoverImageOnly("cover-image"),
     CTInAppTypeInterstitialImageOnly("interstitial-image"),
     CTInAppTypeHalfInterstitialImageOnly("half-interstitial-image"),
-    CTInAppTypeCustomCodeTemplate("custom-code");
+    CTInAppTypeCustomCodeTemplate("custom-code"),
+    UNKNOWN("");
 
 
     private final String inAppType;
@@ -89,7 +90,7 @@ public enum CTInAppType {
                 return CTInAppTypeCustomCodeTemplate;
             }
             default:
-                return null;
+                return UNKNOWN;
         }
     }
 

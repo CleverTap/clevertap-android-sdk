@@ -20,6 +20,8 @@ public class CTExecutors {
 
     public final MainThreadExecutor MAIN_EXECUTOR = new MainThreadExecutor();
 
+    public final Executor CURRENT_THREAD_EXECUTOR = Runnable::run;
+
     public final MainThreadExecutor DEFAULT_CALLBACK_EXECUTOR = MAIN_EXECUTOR;
 
     protected final CleverTapInstanceConfig config;
@@ -61,6 +63,14 @@ public class CTExecutors {
      */
     public <TResult> Task<TResult> ioTaskNonUi() {
         return taskOnExecutorWithName(IO_EXECUTOR, IO_EXECUTOR, "ioTaskNonUi");
+    }
+    /**
+     * Use this task when you want to offload some background task and receive callback on current thread
+     * @param <TResult>
+     * @return
+     */
+    public <TResult> Task<TResult> ioTaskWithCallbackOnCurrentThread() {
+        return taskOnExecutorWithName(IO_EXECUTOR, CURRENT_THREAD_EXECUTOR, "ioTaskWithCallbackOnCurrentThread");
     }
 
     /**

@@ -20,6 +20,7 @@ public final class CTVariableUtils {
     public static final String BOOLEAN = "boolean";
     public static final String DICTIONARY = "group";
     public static final String NUMBER = "number";
+    public static final String FILE = "file";
 
     private static void log(String msg){
         Logger.d("variables", msg);

@@ -16,9 +16,9 @@ import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
-import com.clevertap.android.sdk.inapp.store.preference.FileStore;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
@@ -175,7 +175,13 @@ class CleverTapFactory {
             }
         });
 
-        VarCache varCache = new VarCache(config, context);
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.
+                createFileResourcesRepo(context, config.getLogger(), storeRegistry);
+        VarCache varCache = new VarCache(
+                config,
+                context,
+                impl
+        );
         coreState.setVarCache(varCache);
 
         CTVariables ctVariables = new CTVariables(varCache);
