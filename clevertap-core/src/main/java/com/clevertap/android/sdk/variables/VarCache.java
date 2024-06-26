@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
@@ -56,14 +57,18 @@ public class VarCache {
     private final FileResourcesRepoImpl fileResourcesRepoImpl;
     private final CleverTapInstanceConfig instanceConfig;
 
+    private final FileResourceProvider fileResourceProvider;
+
     public VarCache(
             CleverTapInstanceConfig config,
             Context ctx,
-            FileResourcesRepoImpl fileResourcesRepoImpl
+            FileResourcesRepoImpl fileResourcesRepoImpl,
+            FileResourceProvider fileResourceProvider
     ) {
         this.variablesCtx = ctx;
         this.instanceConfig = config;
         this.fileResourcesRepoImpl = fileResourcesRepoImpl;
+        this.fileResourceProvider = fileResourceProvider;
     }
 
     private void storeDataInCache(@NonNull String data){
@@ -322,4 +327,7 @@ public class VarCache {
         globalCallbacksRunnableForFiles = runnable;
     }
 
+    public String filePathFromDisk(String url) {
+        return fileResourceProvider.cachedFilePath(url);
+    }
 }

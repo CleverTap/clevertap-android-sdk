@@ -188,9 +188,15 @@ public class Var<T> {
         }
     }
 
-    @Override @NonNull
+    @Override
+    @NonNull
     public String toString() {
-        return "Var(" + name + ","+value+")" ;
+        if (CTVariableUtils.FILE.equals(kind)) {
+            String filePath = ctVariables.getVarCache().filePathFromDisk(stringValue);
+            return "Var(" + name + "," + filePath + ")";
+        } else {
+            return "Var(" + name + "," + value + ")";
+        }
     }
 
     void warnIfNotStarted() {
@@ -219,7 +225,12 @@ public class Var<T> {
 
     public T value() {
         warnIfNotStarted();
-        return value;
+
+        if (CTVariableUtils.FILE.equals(kind)) {
+            return (T) ctVariables.getVarCache().filePathFromDisk(stringValue);
+        } else {
+            return value;
+        }
     }
 
     public void addValueChangedCallback(VariableCallback<T> callback) {
@@ -259,7 +270,11 @@ public class Var<T> {
 
     public String stringValue() {
         warnIfNotStarted();
-        return stringValue;
+        if (CTVariableUtils.FILE.equals(kind)) {
+            return ctVariables.getVarCache().filePathFromDisk(stringValue);
+        } else {
+            return stringValue;
+        }
     }
 
     void clearStartFlag() {
