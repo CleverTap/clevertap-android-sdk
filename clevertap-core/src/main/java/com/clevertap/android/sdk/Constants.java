@@ -159,6 +159,7 @@ public interface Constants {
     String NOTIFICATION_TAG = "wzrk_pn";
     String CHARGED_EVENT = "Charged";
     String PROFILE = "profile";
+    String RAISED = "raised";
     String USER_ATTRIBUTE_CHANGE = "_CTUserAttributeChange";
     String KEY_NEW_VALUE = "newValue";
     String KEY_OLD_VALUE = "oldValue";
