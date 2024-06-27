@@ -72,7 +72,7 @@ public class Var<T> {
             log("Variable name starts or ends with a `.` which is not allowed: " + name);
             return null;
         }
-        if (!kind.equals(CTVariableUtils.FILE) && defaultValue == null) {
+        if (!CTVariableUtils.FILE.equals(kind) && defaultValue == null) {
             Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '"
                     + name + "'.");
             return null;
@@ -230,6 +230,14 @@ public class Var<T> {
             return (T) ctVariables.getVarCache().filePathFromDisk(stringValue);
         } else {
             return value;
+        }
+    }
+
+    public String rawFileValue() {
+        if (CTVariableUtils.FILE.equals(kind)) {
+            return stringValue;
+        } else {
+           return null;
         }
     }
 

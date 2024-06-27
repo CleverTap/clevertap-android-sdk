@@ -149,6 +149,11 @@ public class VarCache {
     }
 
     public synchronized Object getMergedValue(String variableName) {
+        Var<?> var = vars.get(variableName);
+        if (var != null && CTVariableUtils.FILE.equals(var.kind())) {
+            return filePathFromDisk(var.stringValue);
+        }
+
         String[] components = CTVariableUtils.getNameComponents(variableName);
         Object mergedValue = getMergedValueFromComponentArray(components);
         if (mergedValue instanceof Map) {
@@ -159,7 +164,10 @@ public class VarCache {
     }
 
     public synchronized <T> T getMergedValueFromComponentArray(Object[] components) {
-        return getMergedValueFromComponentArray(components, merged != null ? merged : valuesFromClient);
+        return getMergedValueFromComponentArray(
+                components,
+                merged != null ? merged : valuesFromClient
+        );
     }
 
     public synchronized <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
@@ -246,7 +254,7 @@ public class VarCache {
         for (Map.Entry<String, Var<String>> entry : filesMap.entrySet()) {
             String name = entry.getKey();
             Var<String> var = (Var<String>) entry.getValue();
-            String url = var.value();
+            String url = var.rawFileValue();
             urls.add(new Pair<>(url, CtCacheType.FILES));
             urlToName.put(url, name);
         }
