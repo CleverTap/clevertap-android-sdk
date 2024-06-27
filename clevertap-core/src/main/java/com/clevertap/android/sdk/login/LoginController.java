@@ -177,7 +177,15 @@ public class LoginController {
                         "CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID");
             }
         }
-        _onUserLogin(profile, cleverTapID);
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("_onUserLogin",new Callable<Void>() {
+            @Override
+            public Void call() {
+                _onUserLogin(profile, cleverTapID);
+                return null;
+            }
+        });
+
     }
 
     public void recordDeviceIDErrors() {
