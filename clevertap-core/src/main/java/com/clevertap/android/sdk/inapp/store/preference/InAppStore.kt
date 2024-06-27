@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.store.preference
 
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.Constants.PREFS_EVALUATED_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
@@ -11,7 +12,8 @@ import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.store.preference.ICTPreference
 import org.json.JSONArray
-
+import org.json.JSONException
+import org.json.JSONObject
 /**
  * The `InAppStore` class manages the storage and retrieval of In-App messages.
  * In-App messages can be stored in either Client-side mode (CS) or Server-side mode (SS).
@@ -118,18 +120,18 @@ class InAppStore(
     /**
      * Stores evaluated Server-side In-App IDs.
      *
-     * @param evaluatedServerSideInAppIds The array of evaluated Server-side In-App IDs.
+     * @param evaluatedServerSideInAppIds  The JSoNObject representing the map of EventType - evaluated Server-side In-App IDs.
      */
-    fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: JSONArray) {
+    fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: JSONObject) {
         ctPreference.writeString(PREFS_EVALUATED_INAPP_KEY_SS, evaluatedServerSideInAppIds.toString())
     }
 
     /**
      * Stores suppressed Client-side In-App IDs.
      *
-     * @param suppressedClientSideInAppIds The array of suppressed Client-side In-App IDs.
+     * @param suppressedClientSideInAppIds The JSoNObject representing the map of EventType - suppressed Client-side In-App IDs.
      */
-    fun storeSuppressedClientSideInAppIds(suppressedClientSideInAppIds: JSONArray) {
+    fun storeSuppressedClientSideInAppIds(suppressedClientSideInAppIds: JSONObject) {
         ctPreference.writeString(PREFS_SUPPRESSED_INAPP_KEY_CS, suppressedClientSideInAppIds.toString())
     }
 
@@ -167,25 +169,41 @@ class InAppStore(
     /**
      * Reads evaluated Server-side In-App IDs.
      *
-     * @return An array of evaluated Server-side In-App IDs.
+     * @return A JSoNObject representing the map of EventType - evaluated Server-side In-App IDs
      */
-    fun readEvaluatedServerSideInAppIds(): JSONArray {
+    fun readEvaluatedServerSideInAppIds(): JSONObject {
         val evaluatedServerSideInAppIds = ctPreference.readString(PREFS_EVALUATED_INAPP_KEY_SS, "")
-        if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONArray()
+        if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONObject()
 
-        return JSONArray(evaluatedServerSideInAppIds)
+        return try {
+            // Try to convert the string to a JSONObject
+            JSONObject(evaluatedServerSideInAppIds)
+        } catch (jsonException: JSONException) {
+            // If it fails, convert the string to a JSONArray
+            val jsonArray = JSONArray(evaluatedServerSideInAppIds)
+            // Wrap the JSONArray in a JSONObject
+            JSONObject().put(Constants.RAISED, jsonArray)
+        }
     }
 
     /**
      * Reads suppressed Client-side In-App IDs.
      *
-     * @return An array of suppressed Client-side In-App IDs.
+     * @return A JSoNObject representing the map of EventType - suppressed Client-side In-App IDs.
      */
-    fun readSuppressedClientSideInAppIds(): JSONArray {
+    fun readSuppressedClientSideInAppIds(): JSONObject {
         val suppressedClientSideInAppIds = ctPreference.readString(PREFS_SUPPRESSED_INAPP_KEY_CS, "")
-        if (suppressedClientSideInAppIds.isNullOrBlank()) return JSONArray()
+        if (suppressedClientSideInAppIds.isNullOrBlank()) return JSONObject()
 
-        return JSONArray(suppressedClientSideInAppIds)
+        return try {
+            // Try to convert the string to a JSONObject
+            JSONObject(suppressedClientSideInAppIds)
+        } catch (jsonException: JSONException) {
+            // If it fails, convert the string to a JSONArray
+            val jsonArray = JSONArray(suppressedClientSideInAppIds)
+            // Wrap the JSONArray in a JSONObject
+            JSONObject().put(Constants.RAISED, jsonArray)
+        }
     }
 
     /**

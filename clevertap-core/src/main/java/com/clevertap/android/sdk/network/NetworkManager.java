@@ -29,6 +29,7 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueData;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
+import com.clevertap.android.sdk.inapp.evaluation.EventType;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.network.api.CtApiWrapper;
@@ -567,7 +568,7 @@ public class NetworkManager extends BaseNetworkManager {
 
         EndpointId endpointId = EndpointId.fromEventGroup(eventGroup);
         JSONObject queueHeader = getQueueHeader(context, caller);
-        applyQueueHeaderListeners(queueHeader, endpointId);
+        applyQueueHeaderListeners(queueHeader, endpointId, queue.optJSONObject(0).has("profile"));
 
         final SendQueueRequestBody body = new SendQueueRequestBody(queueHeader, queue);
         logger.debug(config.getAccountId(), "Send queue contains " + queue.length() + " items: " + body);
@@ -623,10 +624,10 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
-    private void applyQueueHeaderListeners(JSONObject queueHeader, EndpointId endpointId) {
+    private void applyQueueHeaderListeners(JSONObject queueHeader, EndpointId endpointId, boolean isProfile) {
         if (queueHeader != null) {
             for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
-                final JSONObject headersToAttach = listener.onAttachHeaders(endpointId);
+                final JSONObject headersToAttach = listener.onAttachHeaders(endpointId, EventType.Companion.fromBoolean(isProfile));
                 if (headersToAttach != null) {
                     CTXtensions.copyFrom(queueHeader, headersToAttach);
                 }
@@ -709,7 +710,8 @@ public class NetworkManager extends BaseNetworkManager {
 
         if (body.getQueueHeader() != null) {
             for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
-                listener.onSentHeaders(body.getQueueHeader(), endpointId);
+                boolean isProfile = body.getQueue().optJSONObject(0).has("profile");
+                listener.onSentHeaders(body.getQueueHeader(), endpointId, EventType.Companion.fromBoolean(isProfile));
             }
         }
 

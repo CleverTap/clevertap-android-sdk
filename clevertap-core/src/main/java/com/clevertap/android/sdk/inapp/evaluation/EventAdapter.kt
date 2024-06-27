@@ -87,6 +87,16 @@ class EventAdapter(
         return eventName == Constants.CHARGED_EVENT
     }
 
+
+    /**
+     * Checks if the event is a user-attribute-change-event.
+     *
+     * @return `true` if the event is a user-attribute-change-event; otherwise, `false`.
+     */
+    fun isUserAttributeChangeEvent(): Boolean {
+        return profileAttrName != null
+    }
+
     @VisibleForTesting
     internal fun getActualPropertyValue(propertyName: String): Any? {
         var value = eventProperties[propertyName]
