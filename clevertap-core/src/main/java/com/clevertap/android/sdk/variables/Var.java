@@ -233,7 +233,7 @@ public class Var<T> {
         }
     }
 
-    public String rawFileValue() {
+    String rawFileValue() {
         if (CTVariableUtils.FILE.equals(kind)) {
             return stringValue;
         } else {

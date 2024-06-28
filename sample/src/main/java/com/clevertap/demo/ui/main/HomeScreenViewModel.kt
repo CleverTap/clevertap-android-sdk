@@ -34,6 +34,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.pushEvent("testEventPushAmp")
                 cleverTapAPI?.pushEvent("BlockBRTesting")
             }
+
             "0-1" -> {
                 //Record an event with properties
                 val prodViewedAction = mapOf(
@@ -46,6 +47,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.pushEvent("caurousel-inapp")
                 cleverTapAPI?.pushEvent("icon-inbox")
             }
+
             "0-2" -> {
                 //Record a Charged (Transactional) event
                 val chargeDetails = hashMapOf<String, Any>(
@@ -73,18 +75,21 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
                 cleverTapAPI?.pushChargedEvent(chargeDetails, items)
             }
+
             "0-3" -> cleverTapAPI?.recordScreen("Cart Screen Viewed")
             "1-0" -> {
                 //Record a profile
                 val profileUpdate = HashMap<String, Any>()
                 profileUpdate["Name"] = "User Name" // String
                 profileUpdate["Email"] = "User@gmail.com" // Email address of the user
-                profileUpdate["Phone"] = "+14155551234" // Phone (with the country code, starting with +)
+                profileUpdate["Phone"] =
+                    "+14155551234" // Phone (with the country code, starting with +)
                 profileUpdate["Gender"] = "M" // Can be either M or F
                 profileUpdate["Employed"] = "Y" // Can be either Y or N
                 profileUpdate["Education"] = "Graduate" // Can be either Graduate, College or School
                 profileUpdate["Married"] = "Y" // Can be either Y or N
-                profileUpdate["DOB"] = Date() // Date of Birth. Set the Date object to the appropriate value first
+                profileUpdate["DOB"] =
+                    Date() // Date of Birth. Set the Date object to the appropriate value first
                 profileUpdate["Age"] = 28 // Not required if DOB is set
                 profileUpdate["MSG-email"] = false // Disable email notifications
                 profileUpdate["MSG-push"] = true // Enable push notifications
@@ -95,6 +100,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
                 cleverTapAPI?.pushProfile(profileUpdate)
             }
+
             "1-1" -> {
                 //Update(Replace) Single-Value User Profile Properties
                 val profileUpdate = HashMap<String, Any>()
@@ -108,11 +114,14 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
                 cleverTapAPI?.pushProfile(profileUpdate)
             }
+
             "1-2" -> {
                 //Update(Add) Single-Value User Profile Properties
-                val profileUpdate = mapOf("Customer Type" to "Silver", "Preferred Language" to "English")
+                val profileUpdate =
+                    mapOf("Customer Type" to "Silver", "Preferred Language" to "English")
                 cleverTapAPI?.pushProfile(profileUpdate)
             }
+
             "1-3" -> {
                 //Update(Remove) Single-Value User Profile Properties or
                 //Update(Remove) Can be used to remove PII data(for eg. Email,Phone,Name), locally
@@ -121,40 +130,54 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 //                cleverTapAPI?.removeValueForKey("Phone")
 //                cleverTapAPI?.removeValueForKey("Name")
             }
+
             "1-4" -> {
                 // Update(Replace) Multi-Value property
-                cleverTapAPI?.setMultiValuesForKey("MyStuffList", arrayListOf("Updated Bag", "Updated Shoes"))
+                cleverTapAPI?.setMultiValuesForKey(
+                    "MyStuffList",
+                    arrayListOf("Updated Bag", "Updated Shoes")
+                )
             }
+
             "1-5" -> {
                 // Update(Add) Multi-Value property
                 cleverTapAPI?.addMultiValueForKey("MyStuffList", "Coat")
                 // or
                 cleverTapAPI?.addMultiValuesForKey("MyStuffList", arrayListOf("Socks", "Scarf"))
             }
+
             "1-6" -> {
                 // Update(Remove) Multi-Value property
                 cleverTapAPI?.removeMultiValueForKey("MyStuffList", "Coat")
                 // or
                 cleverTapAPI?.removeMultiValuesForKey("MyStuffList", arrayListOf("Socks", "Scarf"))
             }
+
             "1-7" -> {
                 //Update(Add) Increment Value
                 cleverTapAPI?.incrementValue("score", 50)
             }
+
             "1-8" -> {
                 // Update(Add) Decrement Value
                 cleverTapAPI?.decrementValue("score", 30)
             }
+
             "1-9" -> {
                 // Profile location
                 cleverTapAPI?.location = cleverTapAPI?.location
             }
+
             "1-10" -> {
                 // Get Profile Info
                 Log.i(TAG, "Profile Name = ${cleverTapAPI?.getProperty("Name")}")
                 Log.i(TAG, "Profile CleverTapId = ${cleverTapAPI?.cleverTapID}")
-                Log.i(TAG, "Profile CleverTap AttributionIdentifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}")
+                Log.i(
+                    TAG,
+                    "Profile CleverTap AttributionIdentifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}"
+                )
             }
+
             "1-11" -> {
                 // onUserLogin
                 val newProfile = HashMap<String, Any>()
@@ -167,10 +190,15 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 // add any other key value pairs.....
                 cleverTapAPI?.onUserLogin(newProfile)
             }
+
             "2-0" -> {
                 // Open Inbox(Customised, with tabs)
                 val inboxTabs =
-                    arrayListOf("Promotions", "Offers", "Others")//Anything after the first 2 will be ignored
+                    arrayListOf(
+                        "Promotions",
+                        "Offers",
+                        "Others"
+                    )//Anything after the first 2 will be ignored
                 CTInboxStyleConfig().apply {
                     tabs = inboxTabs //Do not use this if you don't want to use tabs
                     tabBackgroundColor = "#FF0000"
@@ -186,6 +214,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     cleverTapAPI?.showAppInbox(this) //Opens activity With Tabs
                 }
             }
+
             "2-1" -> {
                 // Open Inbox(Customised, without tabs)
                 CTInboxStyleConfig().apply {
@@ -202,8 +231,14 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 }
             }
 
-            "2-2" -> Log.i(TAG, "Total inbox message count = ${cleverTapAPI?.inboxMessageCount}") // show total inbox message count
-            "2-3" -> Log.i(TAG, "Unread inbox message count = ${cleverTapAPI?.inboxMessageUnreadCount}") // show unread inbox message count
+            "2-2" -> Log.i(
+                TAG,
+                "Total inbox message count = ${cleverTapAPI?.inboxMessageCount}"
+            ) // show total inbox message count
+            "2-3" -> Log.i(
+                TAG,
+                "Unread inbox message count = ${cleverTapAPI?.inboxMessageUnreadCount}"
+            ) // show unread inbox message count
             "2-4" ->  // All inbox messages
                 cleverTapAPI?.allInboxMessages?.forEach {
                     Log.i(TAG, "All inbox messages ID = ${it.messageId}")
@@ -213,6 +248,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.unreadInboxMessages?.forEach {
                     Log.i(TAG, "All unread inbox messages ID = ${it.messageId}")
                 }
+
             "2-6" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Get message object belonging to the given message id only. Message id should be a String
@@ -221,6 +257,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.i(TAG, "inboxMessage For Id $it = ${inboxMessageForId?.data}")
                 } ?: Log.i(TAG, "inboxMessage Id is null")
             }
+
             "2-7" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Delete message object belonging to the given message id only. Message id should be a String
@@ -229,6 +266,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.i(TAG, "Deleted inboxMessage For Id = $it")
                 } ?: Log.i(TAG, "inboxMessage Id is null")
             }
+
             "2-8" -> {
                 val firstMessage = cleverTapAPI?.allInboxMessages?.firstOrNull()
                 //Delete message object belonging to the given CTInboxMessage.
@@ -237,8 +275,9 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.i(TAG, "Deleted inboxMessage = ${it.messageId}")
                 } ?: Log.i(TAG, "inboxMessage is null")
             }
+
             "2-9" -> {
-                val messageIDs=ArrayList<String>()
+                val messageIDs = ArrayList<String>()
                 cleverTapAPI?.unreadInboxMessages?.forEach {
                     messageIDs.add(it.messageId)
                 }
@@ -248,6 +287,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.i(TAG, "Deleted list of inboxMessages For IDs = $it")
                 }
             }
+
             "2-10" -> {
                 val firstMessageId = cleverTapAPI?.unreadInboxMessages?.firstOrNull()?.messageId
                 //Mark Message as Read. Message id should be a String
@@ -256,6 +296,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.i(TAG, "Marked Message as Read For Id = $it")
                 } ?: Log.i(TAG, "inboxMessage Id is null")
             }
+
             "2-11" -> {
                 val firstMessage = cleverTapAPI?.unreadInboxMessages?.firstOrNull()
                 //Mark message as Read. Message should object of CTInboxMessage
@@ -264,8 +305,9 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.i(TAG, "Marked Message as Read = ${it.messageId}")
                 } ?: Log.i(TAG, "inboxMessage is null")
             }
-            "2-12"->{
-                val messageIDs=ArrayList<String>()
+
+            "2-12" -> {
+                val messageIDs = ArrayList<String>()
                 cleverTapAPI?.unreadInboxMessages?.forEach {
                     messageIDs.add(it.messageId)
                 }
@@ -275,6 +317,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.i(TAG, "Marked Messages as read for list of IDs = $it")
                 }
             }
+
             "2-13" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Raise Notification Viewed event for Inbox Message. Message id should be a String
@@ -307,7 +350,10 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 } ?: Log.i(TAG, "DisplayUnit Id is null")
             }
 
-            "3-1" -> Log.i(TAG, "All Display Units = ${cleverTapAPI?.allDisplayUnits}") // get all display units
+            "3-1" -> Log.i(
+                TAG,
+                "All Display Units = ${cleverTapAPI?.allDisplayUnits}"
+            ) // get all display units
             "3-2" -> {
                 val displayUnitID = cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID
                 //Raise Notification Viewed event for DisplayUnit. Message id should be a String
@@ -316,6 +362,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.i(TAG, "Raised Notification Viewed event For DisplayUnit Id = $it")
                 } ?: Log.i(TAG, "DisplayUnit Id is null")
             }
+
             "3-3" -> {
                 val displayUnitID = cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID
                 //Raise Notification Clicked event for DisplayUnit. Message id should be a String
@@ -324,13 +371,18 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     Log.i(TAG, "Raised Notification Clicked event For DisplayUnit Id = $it")
                 } ?: Log.i(TAG, "DisplayUnit Id is null")
             }
+
             "4-0" -> {
                 val hashMap = hashMapOf<String, Any>(
-                    "text color" to "red", "msg count" to 100, "price" to 100.50, "is shown" to true,
+                    "text color" to "red",
+                    "msg count" to 100,
+                    "price" to 100.50,
+                    "is shown" to true,
                     "json" to """{"key":"val","key2":50}"""
                 )
                 cleverTapAPI?.productConfig()?.setDefaults(hashMap)
             }
+
             "4-1" -> cleverTapAPI?.productConfig()?.fetch()
             "4-2" -> cleverTapAPI?.productConfig()?.activate()
             "4-3" -> cleverTapAPI?.productConfig()?.fetchAndActivate()
@@ -338,27 +390,43 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "4-5" -> cleverTapAPI?.productConfig()?.fetch(60)
             "4-6" -> //get all product config values
                 cleverTapAPI?.productConfig()?.apply {
-                    Log.i(TAG, "Product Config text color val in string : ${getString("text color")}")
+                    Log.i(
+                        TAG,
+                        "Product Config text color val in string : ${getString("text color")}"
+                    )
                     Log.i(TAG, "Product Config is shown val in boolean : ${getBoolean("is shown")}")
                     Log.i(TAG, "Product Config msg count val in long : ${getLong("msg count")}")
                     Log.i(TAG, "Product Config price val in double : ${getDouble("price")}")
                     Log.i(TAG, "Product Config json val in string : ${getString("json")}")
                 }
-            "4-7" -> Log.i(TAG, "Product Config lastFetchTimeStampInMillis = ${cleverTapAPI?.productConfig()?.lastFetchTimeStampInMillis}")
-            "5-0" -> Log.i(TAG,
+
+            "4-7" -> Log.i(
+                TAG,
+                "Product Config lastFetchTimeStampInMillis = ${cleverTapAPI?.productConfig()?.lastFetchTimeStampInMillis}"
+            )
+
+            "5-0" -> Log.i(
+                TAG,
                 "Feature Flags is shown val in boolean = ${
                     cleverTapAPI?.featureFlag()?.get("is shown", true)
                 }"
             )
-            "8-0" -> Log.i(TAG, "CleverTapAttribution Identifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}")
+
+            "8-0" -> Log.i(
+                TAG,
+                "CleverTapAttribution Identifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}"
+            )
+
             "8-1" -> cleverTapAPI?.getCleverTapID {
-                Log.i(TAG,
+                Log.i(
+                    TAG,
                     "CleverTap DeviceID from Application class= $it, thread=${
                         if (Looper.myLooper() == Looper.getMainLooper()) "mainthread" else "bg thread"
                         // Current Thread is Main Thread.
                     }"
                 )
             }
+
             "9-0" -> cleverTapAPI?.pushEvent("Send Basic Push")
             "9-1" -> cleverTapAPI?.pushEvent("Send Carousel Push")
             "9-2" -> cleverTapAPI?.pushEvent("Send Manual Carousel Push")
@@ -502,15 +570,17 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "12-0" -> {
-                cleverTapAPI?.fetchInApps( object : FetchInAppsCallback {
+                cleverTapAPI?.fetchInApps(object : FetchInAppsCallback {
                     override fun onInAppsFetched(isSuccess: Boolean) {
                         Log.i(TAG, "InAppsFetched = $isSuccess")
                     }
                 })
             }
+
             "12-1" -> {
                 cleverTapAPI?.clearInAppResources(false)
             }
+
             "12-2" -> {
                 cleverTapAPI?.clearInAppResources(true)
             }
@@ -519,90 +589,108 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.defineVariable("variableInt", 0)
                 cleverTapAPI?.defineVariable("variableBoolean", true)
                 cleverTapAPI?.defineVariable("variableFloat", 2.4f)
-                cleverTapAPI?.defineFileVariable("some_variable_name")
+                cleverTapAPI?.defineVariable("var_double", 2.4)
+            }
 
-                val file1: Var<String>? = cleverTapAPI?.defineFileVariable("folder1.fileVariable")
-                    ?.apply {
-                        addFileReadyHandler(object: VariableCallback<String>() {
-                            override fun onValueChanged(variable: Var<String>?) {
-                                Log.i(TAG, "file1 is ready with url ${value()}")
-                            }
-                        })
-                    }
-                val file2 = cleverTapAPI?.defineFileVariable("folder1.folder2.fileVariable")
-                    ?.apply {
-                        addFileReadyHandler(object: VariableCallback<String>() {
-                            override fun onValueChanged(variable: Var<String>?) {
-                                Log.i(TAG, "file2 is ready with url ${value()}")
-                            }
-                        })
-                    }
-                val file3 = cleverTapAPI?.defineFileVariable("folder1.folder3.fileVariable")
-                    ?.apply {
-                        addFileReadyHandler(object: VariableCallback<String>() {
-                            override fun onValueChanged(variable: Var<String>?) {
-                                Log.i(TAG, "file3 is ready with url ${value()}")
-                            }
-                        })
-                    }
-            }
             "13-1" -> {
-                cleverTapAPI?.fetchVariables { isSuccess -> Log.i(TAG, "Variables Fetched = $isSuccess") }
+
+                Log.i(TAG, "onChildClick: 13-1: Starting to define file vars:")
+
+                FileVarsData.defineFileVars(cleverTapAPI!!)
+
+                Log.i(
+                    TAG,
+                    "onChildClick: 13-1: Printing file vars values, they might be null if not yet fetched"
+                )
+                printfileVars()
             }
+
             "13-2" -> {
+                cleverTapAPI?.fetchVariables { isSuccess ->
+                    Log.i(
+                        TAG,
+                        "Variables Fetched = $isSuccess"
+                    )
+                }
+            }
+
+            "13-3" -> {
                 cleverTapAPI?.syncVariables()
             }
-            "13-3" -> {
+
+            "13-4" -> {
                 cleverTapAPI?.parseVariables(exampleVariables)
             }
-            "13-4" -> {
+
+            "13-5" -> {
                 Log.i(TAG, "VariableInt = ${cleverTapAPI?.getVariable<Int>("variableInt")}")
-                Log.i(TAG, "VariableBoolean = ${cleverTapAPI?.getVariable<Boolean>("variableBoolean")}")
+                Log.i(
+                    TAG,
+                    "VariableBoolean = ${cleverTapAPI?.getVariable<Boolean>("variableBoolean")}"
+                )
                 Log.i(TAG, "VariableFloat = ${cleverTapAPI?.getVariable<Float>("variableFloat")}")
-                Log.i(TAG, "ParsedVariableDouble = ${cleverTapAPI?.getVariable<Double>("var_double")}")
-                Log.i(TAG, "ParsedFile = ${cleverTapAPI?.getVariable<String>("some_variable_name")}")
+                Log.i(
+                    TAG,
+                    "ParsedVariableDouble = ${cleverTapAPI?.getVariable<Double>("var_double")}"
+                )
 
-                val file1 = cleverTapAPI?.getVariable<String>("folder1.fileVariable")
-                val file2 = cleverTapAPI?.getVariable<String>("folder1.folder2.fileVariable")
-                val file3 = cleverTapAPI?.getVariable<String>("folder1.folder3.fileVariable")
-
-                Log.i(TAG, "ParsedFile1 = $file1")
-                Log.i(TAG, "ParsedFile2 = $file2")
-                Log.i(TAG, "ParsedFile3 = $file3")
+                printfileVars()
 
             }
-            "13-5" -> {
+
+            "13-6" -> {
                 Log.i(TAG, "VariableInt = ${cleverTapAPI?.getVariableValue("variableInt")}")
                 Log.i(TAG, "VariableBoolean = ${cleverTapAPI?.getVariableValue("variableBoolean")}")
                 Log.i(TAG, "VariableFloat = ${cleverTapAPI?.getVariableValue("variableFloat")}")
                 Log.i(TAG, "ParsedVariableDouble = ${cleverTapAPI?.getVariableValue("var_double")}")
-                Log.i(TAG, "ParsedFile = ${cleverTapAPI?.getVariableValue("some_variable_name")}")
 
-                Log.i(TAG, "ParsedFile1 = ${cleverTapAPI?.getVariableValue("folder1.fileVariable")}")
-                Log.i(TAG, "ParsedFile2 = ${cleverTapAPI?.getVariableValue("folder1.folder2.fileVariable")}")
-                Log.i(TAG, "ParsedFile3 = ${cleverTapAPI?.getVariableValue("folder1.folder3.fileVariable")}")
+                Log.i(
+                    TAG,
+                    "ParsedFile1 = ${cleverTapAPI?.getVariableValue("folder1.fileVariable")}"
+                )
+                Log.i(
+                    TAG,
+                    "ParsedFile2 = ${cleverTapAPI?.getVariableValue("folder1.folder2.fileVariable")}"
+                )
+                Log.i(
+                    TAG,
+                    "ParsedFile3 = ${cleverTapAPI?.getVariableValue("folder1.folder3.fileVariable")}"
+                )
             }
-            "13-6" -> {
-                cleverTapAPI?.addVariablesChangedCallback(exampleVariables.variablesChangedCallback)
-                cleverTapAPI?.onVariablesChangedAndNoDownloadsPending(object : VariablesChangedCallback() {
-                    override fun variablesChanged() {
-                        Log.i(TAG, "onceVariablesChangedAndNoDownloadsPending - should come after each fetch")
-                    }
-                })
-            }
+
             "13-7" -> {
-                cleverTapAPI?.removeVariablesChangedCallback(exampleVariables.variablesChangedCallback)
-
-            }
-            "13-8" -> {
-                cleverTapAPI?.addOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
-                cleverTapAPI?.onceVariablesChangedAndNoDownloadsPending(object : VariablesChangedCallback() {
+                cleverTapAPI?.addVariablesChangedCallback(exampleVariables.variablesChangedCallback)
+                cleverTapAPI?.onVariablesChangedAndNoDownloadsPending(object :
+                    VariablesChangedCallback() {
                     override fun variablesChanged() {
-                        Log.i(TAG, "onceVariablesChangedAndNoDownloadsPending - should come only once")
+                        Log.i(
+                            TAG,
+                            "Files downloaded, onVariablesChangedAndNoDownloadsPending - should come after each fetch"
+                        )
+                        Log.i(TAG, "variablesChanged: reprinting files var data")
+                        printfileVars()
                     }
                 })
             }
+
+            "13-8" -> {
+                cleverTapAPI?.removeVariablesChangedCallback(exampleVariables.variablesChangedCallback)
+            }
+
             "13-9" -> {
+                cleverTapAPI?.addOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
+                cleverTapAPI?.onceVariablesChangedAndNoDownloadsPending(object :
+                    VariablesChangedCallback() {
+                    override fun variablesChanged() {
+                        Log.i(
+                            TAG,
+                            "onceVariablesChangedAndNoDownloadsPending - should come only once globally"
+                        )
+                    }
+                })
+            }
+
+            "13-10" -> {
                 cleverTapAPI?.removeOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
             }
 
@@ -612,5 +700,15 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }
+    }
+
+    private fun printfileVars() {
+        val file1 = cleverTapAPI?.getVariable<String>("folder1.fileVariable")?.value()
+        val file2 = cleverTapAPI?.getVariable<String>("folder1.folder2.fileVariable")?.value()
+        val file3 = cleverTapAPI?.getVariable<String>("folder1.folder3.fileVariable")?.value()
+
+        Log.i(TAG, "ParsedFile1 = $file1")
+        Log.i(TAG, "ParsedFile2 = $file2")
+        Log.i(TAG, "ParsedFile3 = $file3")
     }
 }

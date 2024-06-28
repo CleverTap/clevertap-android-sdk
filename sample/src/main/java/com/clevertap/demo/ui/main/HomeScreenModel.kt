@@ -90,6 +90,7 @@ object HomeScreenModel {
             "CS INAPP" to listOf("Fetch CS InApps", "Clear all CS InApp Resources", "Clear expired only InAPP Resources"),
             "VARIABLES" to listOf(
                 "Define Variable",
+                "Define file Variables with listeners",
                 "Fetch Variables",
                 "Sync Variables",
                 "Parse Variables",
