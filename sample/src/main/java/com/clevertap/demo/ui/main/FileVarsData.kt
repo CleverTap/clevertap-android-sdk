@@ -35,5 +35,6 @@ object FileVarsData {
                     }
                 })
             }
+        cleverTapAPI.defineFileVariable("folder1.folder4.folder5.fileVariable")
     }
 }
