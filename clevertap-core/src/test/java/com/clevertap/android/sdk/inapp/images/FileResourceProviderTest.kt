@@ -2,15 +2,24 @@ package com.clevertap.android.sdk.inapp.images
 
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
+import com.clevertap.android.sdk.utils.CTCaches
+import com.clevertap.android.sdk.utils.FileCache
+import com.clevertap.android.sdk.utils.LruCache
 import io.mockk.*
+import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
+import org.mockito.Mockito
 import java.io.File
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
+@Ignore
 class FileResourceProviderTest {
-/*
+
     private val mockCache = Mockito.mock(CTCaches::class.java)
     private val mockBitmapPair = Pair(Mockito.mock(Bitmap::class.java), mockk<File>())
-    private val mockBytesPair = Pair(mockk<ByteArray>(), mockk<File>())
+    private val mockBytesPair = Pair(Mockito.mock(ByteArray::class.java), mockk<File>())
 
     private val mockBitmap = mockk<Bitmap>()
 
@@ -18,7 +27,7 @@ class FileResourceProviderTest {
     private val mockGifFileCache = Mockito.mock(FileCache::class.java)
 
     private val mockLruCache = Mockito.mock(LruCache::class.java) as LruCache<Pair<Bitmap, File>>
-    private val mockLruCacheGif = Mockito.mock(LruCache::class.java) as LruCache<Pair<ByteArray, File>>*/
+    private val mockLruCacheGif = Mockito.mock(LruCache::class.java) as LruCache<Pair<ByteArray, File>>
 
     private val images = File("")
     private val gifs = File("")
@@ -34,7 +43,7 @@ class FileResourceProviderTest {
         /*ctCaches = mockCache,
         fileToBitmap = ::fileToBitmap,
         fileToBytes = ::fileToBytes,*/
-        inAppRemoteSource = TestInAppFetchApi.success(bitmap = mockk<Bitmap>(), bytes = bytes)
+        inAppRemoteSource = TestInAppFetchApi.success(bitmap = mockk<Bitmap>(), bytes = mockk<ByteArray>())
     )
 
 /*    private fun fileToBitmap(file: File?) : Bitmap? {
@@ -52,7 +61,7 @@ class FileResourceProviderTest {
             bytes // we return random array
         }
     }*/
-/*
+
     @Before
     fun before() {
         Mockito.`when`(mockCache.imageCache()).thenReturn(mockLruCache)
@@ -97,52 +106,8 @@ class FileResourceProviderTest {
         // verify add images called
         Mockito.verify(mockCache.gifCache()).add(key, mockBytesPair)
         Mockito.verify(mockCache.gifCacheDisk()).add(key, bytes)
-    }*/
-
-    @Test
-    fun fetchCachedDataTest(){
-        /*val inAppGifMemoryAccessObjectV1 = mockk<InAppGifMemoryAccessObjectV1>()
-        val fileMemoryAccessObject = mockk<FileMemoryAccessObject>()
-        val inAppImageMemoryAccessObjectV1 = mockk<InAppImageMemoryAccessObjectV1>()
-
-        provider.fileMAO = fileMemoryAccessObject
-        provider.imageMAO = inAppImageMemoryAccessObjectV1
-        provider.gifMAO = inAppGifMemoryAccessObjectV1
-        provider.mapOfMAO =
-            mapOf<CtCacheType, List<MemoryAccessObject<*>>>(
-                CtCacheType.IMAGE to listOf(provider.imageMAO, provider.fileMAO, provider.gifMAO),
-                CtCacheType.GIF to listOf(provider.gifMAO, provider.fileMAO, provider.imageMAO),
-                CtCacheType.FILES to listOf(provider.fileMAO, provider.imageMAO, provider.gifMAO)
-            )
-
-        val expectedData = byteArrayOf(1, 2, 3)
-        every { fileMemoryAccessObject.fetchInMemoryAndTransform("abc", MT.ToByteArray) } returns null
-        every { inAppImageMemoryAccessObjectV1.fetchInMemoryAndTransform("abc", MT.ToByteArray) } returns null
-        every { inAppGifMemoryAccessObjectV1.fetchInMemoryAndTransform("abc", MT.ToByteArray) } returns null
-        every { fileMemoryAccessObject.fetchDiskMemoryAndTransform("abc", MT.ToByteArray) } returns null
-        every { inAppImageMemoryAccessObjectV1.fetchDiskMemoryAndTransform("abc", MT.ToByteArray) } returns null
-        every { inAppGifMemoryAccessObjectV1.fetchDiskMemoryAndTransform("abc", MT.ToByteArray) } returns expectedData
-
-
-        val result = provider.fetchCachedData(Pair("abc",GIF), MT.ToByteArray)*/
-        //assertArrayEquals(expectedData, result)
     }
 
-    @Test
-    fun fetchCachedDataTest1(){
-       /*
-        val mockCTCaches = mockk<CTCaches>()
-        val expectedData = byteArrayOf(1, 2, 3)
-        //val result = provider.fetchCachedData(Pair("abc",GIF), MT.ToByteArray)
-        val f = FileMemoryAccessObject(mockCTCaches)
-        val lru = mockk<LruCache<Pair<ByteArray, File>>>()
-        every { mockCTCaches.fileLruCache() } returns  lru
-        every { lru.get("abc") } returns Pair(expectedData, mock<File>())
-
-        val r = f.fetchInMemoryAndTransform("abc",MT.ToFile)*/
-        //assertArrayEquals(expectedData, result)
-    }
-/*
     @Test
     fun `image isCached and cached image returns true and bitmap if image is present in either memory or disk cache`() {
 
@@ -200,8 +165,8 @@ class FileResourceProviderTest {
 
         val op2 = provider.cachedInAppGifV1(cacheKey = url)
         assertEquals(bytes, op2)
-    }*/
-/*
+    }
+
     @Test
     fun `fetchInAppImage returns from cache when data exists in cache`() {
 
@@ -210,7 +175,7 @@ class FileResourceProviderTest {
         Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmapPair)
 
         // invocation
-        val bitmap = provider.fetchInAppImageV1(url = url)
+        val bitmap = provider.fetchInAppImageV1(url = url, Bitmap::class.java)
 
         // assertions
         assertEquals(mockBitmap, bitmap)
@@ -223,7 +188,7 @@ class FileResourceProviderTest {
         val url = "key"
 
         // invocation
-        val bitmap = provider.fetchInAppImageV1(url = url)
+        val bitmap = provider.fetchInAppImageV1(url = url, Bitmap::class.java)
 
         // assertions
         assertEquals(mockBitmap, bitmap)
@@ -254,7 +219,7 @@ class FileResourceProviderTest {
 
         // assertions
         assertEquals(bytes, opBytes)
-    }*/
+    }
 
     // TODO : test api failure cases
 

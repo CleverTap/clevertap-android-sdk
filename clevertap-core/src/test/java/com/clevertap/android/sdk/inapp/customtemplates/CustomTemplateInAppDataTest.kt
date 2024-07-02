@@ -11,7 +11,7 @@ import kotlin.test.assertEquals
 
 class CustomTemplateInAppDataTest {
 
-/*
+
     private lateinit var templatesManager: TemplatesManager
     private val keyTemplateName = "templateName"
     private val keyVars = "vars"
@@ -175,5 +175,5 @@ class CustomTemplateInAppDataTest {
             }
         }
     """.trimIndent()
-    )*/
+    )
 }

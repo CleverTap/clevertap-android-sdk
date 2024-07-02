@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 
 class ImpressionManagerTest : BaseTestCase() {
 
-    /*@Mock
+    @Mock
     private lateinit var clock: Clock
 
     @Mock
@@ -624,5 +624,5 @@ class ImpressionManagerTest : BaseTestCase() {
     private fun recordImpression(timestamp: Long, campaignId: String) {
         `when`(clock.currentTimeSeconds()).thenReturn(timestamp)
         impressionManager.recordImpression(campaignId)
-    }*/
+    }
 }
