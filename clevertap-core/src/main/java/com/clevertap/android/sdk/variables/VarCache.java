@@ -251,13 +251,24 @@ public class VarCache {
         ArrayList<Pair<String, CtCacheType>> urls = new ArrayList<>();
         HashMap<String, String> urlToName = new HashMap<>();
 
+        StringBuilder builder = new StringBuilder();
+        builder.append("Skipped these file vars cause fetch is pending :");
+        builder.append("\n");
+
         for (Map.Entry<String, Var<String>> entry : filesMap.entrySet()) {
             String name = entry.getKey();
             Var<String> var = (Var<String>) entry.getValue();
             String url = var.rawFileValue();
-            urls.add(new Pair<>(url, CtCacheType.FILES));
+
+            if (url != null) {
+                urls.add(new Pair<>(url, CtCacheType.FILES));
+            } else {
+                builder.append(name);
+                builder.append("\n");
+            }
             urlToName.put(url, name);
         }
+        log(builder.toString());
 
         fileResourcesRepoImpl.preloadFilesAndCache(
                 urls,
