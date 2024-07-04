@@ -143,7 +143,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         extras,
                         notificationId,
                         nb
-                    ).setOngoing(true)
+                    )
 
                     /**
                      * Checks whether the imageUrls are perfect to download icon's bitmap,

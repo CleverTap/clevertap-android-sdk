@@ -82,7 +82,6 @@ class FiveIconSmallContentView constructor(
                 }
             }
         }
-        Utils.loadImageRidIntoRemoteView(R.id.close, R.drawable.pt_close, remoteView)
 
         extras.putInt(PTConstants.PT_NOTIF_ID, renderer.notificationId)
         extras.putBoolean(Constants.CLOSE_SYSTEM_DIALOGS, true)
@@ -141,14 +140,6 @@ class FiveIconSmallContentView constructor(
                 LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA5, context)
             )
         }
-
-        remoteView.setOnClickPendingIntent(
-            R.id.close, PendingIntentFactory.getPendingIntent(
-                context,
-                renderer.notificationId, extras, false, FIVE_ICON_CLOSE_PENDING_INTENT, renderer
-            )
-        )
-
 
         if (imageCounter > 2) {
             PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, not displaying Notification.")
