@@ -252,6 +252,11 @@ public class VarCache {
     // todo null checks
     private void startFilesDownload(HashMap<String, Var<String>> filesMap) {
 
+        if (filesMap.isEmpty()) {
+            // noop
+            return;
+        }
+
         ArrayList<Pair<String, CtCacheType>> urls = new ArrayList<>();
         HashMap<String, String> urlToName = new HashMap<>();
 
