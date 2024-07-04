@@ -11,6 +11,8 @@ import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import kotlin.math.max
+import kotlin.time.Duration.Companion.days
+
 internal const val TAG_FILE_DOWNLOAD = "FileDownload"
 internal class FileResourcesRepoImpl constructor(
     override val cleanupStrategy: FileCleanupStrategy,

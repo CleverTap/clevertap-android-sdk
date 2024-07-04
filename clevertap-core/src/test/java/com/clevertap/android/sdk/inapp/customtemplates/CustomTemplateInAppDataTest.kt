@@ -11,7 +11,6 @@ import kotlin.test.assertEquals
 
 class CustomTemplateInAppDataTest {
 
-/*
     private lateinit var templatesManager: TemplatesManager
     private val keyTemplateName = "templateName"
     private val keyVars = "vars"
@@ -161,6 +160,56 @@ class CustomTemplateInAppDataTest {
         assertEquals(listOf("file_url_1"), result)
     }
 
+    @Test
+    fun `getFileArgsUrls retrieves file args in both the template and its actions`() {
+        val url1 = "url1"
+        val url2 = "url2"
+        val mainTemplateName = "templateWithAction"
+        val actionTemplateName = "actionTemplate"
+        val inAppDataJson = JSONObject(
+            """
+            {
+            "templateName": "$mainTemplateName",
+            "templateId": "templateWithActionId",
+            "templateDescription": "Description",
+            "type": "$CUSTOM_CODE",
+            "vars": {
+                "file": "$url1",
+                "action": {
+                    "templateName": "$actionTemplateName",
+                    "templateId": "actionTemplateId",
+                    "templateDescription": "Description",
+                    "type": "$CUSTOM_CODE",
+                    "vars": {
+                        "file": "$url2"
+                    }
+                }
+            }
+            }
+        """.trimIndent()
+        )
+
+        val mainTemplate = template {
+            name(mainTemplateName)
+            presenter(presenter)
+            fileArgument("file")
+            actionArgument("action")
+        }
+        val actionTemplate = function(false) {
+            name(actionTemplateName)
+            presenter {}
+            fileArgument("file")
+        }
+
+        every { templatesManager.getTemplate(mainTemplateName) } returns mainTemplate
+        every { templatesManager.getTemplate(actionTemplateName) } returns actionTemplate
+
+        val customInAppData = CustomTemplateInAppData.createFromJson(inAppDataJson)
+        val fileUrls = customInAppData!!.getFileArgsUrls(templatesManager)
+
+        assertEquals(listOf(url1, url2), fileUrls)
+    }
+
     private val inAppDataJson = JSONObject(
         """
         {
@@ -175,5 +224,5 @@ class CustomTemplateInAppDataTest {
             }
         }
     """.trimIndent()
-    )*/
+    )
 }
