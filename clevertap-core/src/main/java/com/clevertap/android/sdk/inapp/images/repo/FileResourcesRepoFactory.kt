@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
 import android.content.Context
-import androidx.annotation.NonNull
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
@@ -14,7 +13,6 @@ internal class FileResourcesRepoFactory {
     companion object {
 
         @JvmStatic
-        @NonNull
         fun createFileResourcesRepo(
             context: Context,
             logger: Logger,
