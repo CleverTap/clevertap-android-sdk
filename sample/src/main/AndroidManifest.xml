@@ -48,16 +48,16 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />
 
-        <!-- Add meta data for CleverTap Account Id and Account Token -->
+        <!-- Add meta data for CleverTap Account Id and Account Token and Region-->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="YOUR ACCT ID" />
+            android:value="TEST-4RW-944-876Z" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="YOUR ACCT TOKEN" />
+            android:value="TEST-44c-024" />
         <meta-data
             android:name="CLEVERTAP_REGION"
-            android:value="YOUR ACCT REGION"/>
+            android:value="eu1"/>
         <!--<meta-data
             android:name="CLEVERTAP_PROXY_DOMAIN"
             android:value="analytics.sdktesting.xyz"/>-->
@@ -65,27 +65,25 @@
             android:name="CLEVERTAP_SPIKY_PROXY_DOMAIN"
             android:value="push.sdktesting.xyz"/>-->
 
-        <!-- android:name="CLEVERTAP_REGION" -->
-        <!-- android:value="eu1"/> -->
         <!-- IMPORTANT: To force use Google AD ID to uniquely identify  users, use the following meta tag. GDPR mandates that if you are using this tag, there is prominent disclousure to your end customer in their application. Read more about GDPR here - https://clevertap.com/blog/in-preparation-of-gdpr-compliance/ -->
         <!--<meta-data
             android:name="CLEVERTAP_USE_GOOGLE_AD_ID"
             android:value="1" />-->
         <meta-data
             android:name="CLEVERTAP_SSL_PINNING"
-            android:value="0" /> <!-- Add meta data for CleverTap Notification Icon -->
+            android:value="0" />
         <meta-data
             android:name="CLEVERTAP_NOTIFICATION_ICON"
-            android:value="ic_notification" />
+            android:value="ic_notification" /> <!-- Add meta data for CleverTap Notification Icon -->
         <meta-data
             android:name="CLEVERTAP_BACKGROUND_SYNC"
-            android:value="1" /> <!-- Add meta and set to 1 to raise Notification Viewed for Push Notifications -->
+            android:value="1" /> <!-- Add meta and set to 1 to allow your app to use CleverTap's Pull Notification via background ping service-->
         <meta-data
             android:name="CLEVERTAP_RAISE_NOTIFICATION_VIEWED"
-            android:value="1" /> <!-- Add meta and set to 1 start using custom CleverTap ID -->
+            android:value="1" /> <!-- Add meta and set to 1 to raise Notification Viewed for Push Notifications -->
         <meta-data
             android:name="CLEVERTAP_USE_CUSTOM_ID"
-            android:value="0" /> <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
+            android:value="0" /> <!-- Add meta and set to 1 start using custom CleverTap ID -->
         <!-- <meta-data
              android:name="CLEVERTAP_IDENTIFIER"
              android:value="Email,Phone" />-->
@@ -94,8 +92,9 @@
             android:value="HomeScreenActivity" />
         <meta-data
             android:name="CLEVERTAP_ENCRYPTION_LEVEL"
-            android:value="1" />
+            android:value="1" /> <!-- Add meta and set to 1 enable encryption of PII data -->
 
+        <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
         <service
             android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
             android:exported="true">
