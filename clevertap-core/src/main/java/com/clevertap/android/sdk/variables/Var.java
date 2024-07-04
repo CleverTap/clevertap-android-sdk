@@ -117,6 +117,11 @@ public class Var<T> {
         if (ctVariables.hasVarsRequestCompleted()) {
             hadStarted = true;
             triggerValueChanged();
+
+            // trigger file ready, start download if not.
+            if (CTVariableUtils.FILE.equals(kind)) {
+                ctVariables.getVarCache().fileVarUpdated((Var<String>) this);
+            }
         }
     }
 

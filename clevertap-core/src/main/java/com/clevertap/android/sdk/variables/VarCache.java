@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.task.Task;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONObject;
@@ -145,10 +146,10 @@ public class VarCache {
             defaultValue,
             var.kind(),
             valuesFromClient,
-            defaultKinds);
+            defaultKinds
+        );
 
         mergeVariable(var);
-
     }
 
     public synchronized Object getMergedValue(String variableName) {
@@ -306,6 +307,7 @@ public class VarCache {
     }
 
     private synchronized void triggerGlobalCallbacksForFiles() {
+        // switch flag
         if (globalCallbacksRunnableForFiles != null) {
             globalCallbacksRunnableForFiles.run();
         }
@@ -351,5 +353,23 @@ public class VarCache {
 
     public String filePathFromDisk(String url) {
         return fileResourceProvider.cachedFilePath(url);
+    }
+
+    public void fileVarUpdated(Var<String> fileVar) {
+        String url = fileVar.rawFileValue();
+        if (fileResourceProvider.isFileCached(url)) {
+            // if present in cache
+            fileVar.triggerFileIsReady();
+        } else {
+            List<Pair<String, CtCacheType>> list = new ArrayList<>();
+            list.add(new Pair<>(url, CtCacheType.FILES));
+            fileResourcesRepoImpl.preloadFilesAndCache(
+                    list,
+                    downloadAllBlock -> {
+                        fileVar.triggerFileIsReady();
+                        return null;
+                    }
+            );
+        }
     }
 }
