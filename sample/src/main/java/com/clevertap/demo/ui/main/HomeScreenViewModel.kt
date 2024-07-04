@@ -719,7 +719,6 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     TAG,
                     "onChildClick: 14-0: Printing file vars values, they might be null if not yet fetched"
                 )
-                cleverTapAPI.fetchVariables()
                 FileVarsData.printFileVariables(cleverTapAPI, tag = TAG)
             }
             "14-1" -> {
@@ -732,21 +731,18 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     TAG,
                     "onChildClick: 14-1: Printing file vars values, they might be null if not yet fetched"
                 )
-                cleverTapAPI.fetchVariables()
                 FileVarsData.printFileVariables(cleverTapAPI, tag = TAG)
             }
             "14-2" -> {
                 Log.i(TAG, "onChildClick: 14-2")
                 FileVarsData.addGlobalCallbacks(cleverTapAPI!!, tag = TAG)
                 FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG)
-                cleverTapAPI.fetchVariables()
 
             }
             "14-3" -> {
                 Log.i(TAG, "onChildClick: 14-3")
                 FileVarsData.addGlobalCallbacks(cleverTapAPI!!, tag = TAG, listenerCount = 3)
                 FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG, fileReadyListenerCount = 3)
-                cleverTapAPI.fetchVariables()
             }
             "14-4" -> {
                 Log.i(TAG, "onChildClick: 14-4")
