@@ -108,9 +108,12 @@ public class VarCache {
         Map<String, Object> mergedMap = JsonUtil.uncheckedCast(merged);
         Object mergedValue = mergedMap.get(firstComponent);
 
-        boolean shouldMerge =
-            (defaultValue == null && mergedValue != null) || // todo defaultValue == null check for filetype
-                (defaultValue != null && !defaultValue.equals(mergedValue));
+        boolean shouldMerge;
+        if (CTVariableUtils.FILE.equals(var.kind())) {
+            shouldMerge = defaultValue == null && mergedValue != null;
+        } else {
+            shouldMerge = defaultValue != null && !defaultValue.equals(mergedValue);
+        }
 
         if (shouldMerge) {
             Object newValue = CTVariableUtils.mergeHelper(defaultValue, mergedValue);
