@@ -9,8 +9,6 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTLocalInApp
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
-import com.clevertap.android.sdk.variables.Var
-import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.ExampleVariables
 import java.util.Date
@@ -602,7 +600,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     TAG,
                     "onChildClick: 13-1: Printing file vars values, they might be null if not yet fetched"
                 )
-                printfileVars()
+                FileVarsData.printFileVariables(cleverTapAPI)
             }
 
             "13-2" -> {
@@ -633,9 +631,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     TAG,
                     "ParsedVariableDouble = ${cleverTapAPI?.getVariable<Double>("var_double")}"
                 )
-
-                printfileVars()
-
+                FileVarsData.printFileVariables(cleverTapAPI!!)
             }
 
             "13-6" -> {
@@ -668,7 +664,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                             "Files downloaded, onVariablesChangedAndNoDownloadsPending - should come after each fetch"
                         )
                         Log.i(TAG, "variablesChanged: reprinting files var data")
-                        printfileVars()
+                        FileVarsData.printFileVariables(cleverTapAPI)
                     }
                 })
             }
@@ -693,22 +689,53 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "13-10" -> {
                 cleverTapAPI?.removeOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
             }
-
             "14-0" -> {
+                Log.i(TAG, "onChildClick: 14-0")
+
+                FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG)
+
+                Log.i(
+                    TAG,
+                    "onChildClick: 14-0: Printing file vars values, they might be null if not yet fetched"
+                )
+                cleverTapAPI.fetchVariables()
+                FileVarsData.printFileVariables(cleverTapAPI, tag = TAG)
+            }
+            "14-1" -> {
+
+                Log.i(TAG, "onChildClick: 14-1")
+
+                FileVarsData.defineFileVars(cleverTapAPI = cleverTapAPI!!, tag = TAG, fileReadyListenerCount = 3)
+
+                Log.i(
+                    TAG,
+                    "onChildClick: 14-1: Printing file vars values, they might be null if not yet fetched"
+                )
+                cleverTapAPI.fetchVariables()
+                FileVarsData.printFileVariables(cleverTapAPI, tag = TAG)
+            }
+            "14-2" -> {
+                Log.i(TAG, "onChildClick: 14-2")
+                FileVarsData.addGlobalCallbacks(cleverTapAPI!!, tag = TAG)
+                FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG)
+                cleverTapAPI.fetchVariables()
+
+            }
+            "14-3" -> {
+                Log.i(TAG, "onChildClick: 14-3")
+                FileVarsData.addGlobalCallbacks(cleverTapAPI!!, tag = TAG, listenerCount = 3)
+                FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG, fileReadyListenerCount = 3)
+                cleverTapAPI.fetchVariables()
+            }
+            "14-4" -> {
+                Log.i(TAG, "onChildClick: 14-4")
+                FileVarsData.printFileVariables(cleverTapAPI!!, tag = TAG)
+            }
+            "15-0" -> {
                 cleverTapAPI?.locale = "en_IN"
             }
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }
-    }
-
-    private fun printfileVars() {
-        val file1 = cleverTapAPI?.getVariable<String>("folder1.fileVariable")?.value()
-        val file2 = cleverTapAPI?.getVariable<String>("folder1.folder2.fileVariable")?.value()
-        val file3 = cleverTapAPI?.getVariable<String>("folder1.folder3.fileVariable")?.value()
-
-        Log.i(TAG, "ParsedFile1 = $file1")
-        Log.i(TAG, "ParsedFile2 = $file2")
-        Log.i(TAG, "ParsedFile3 = $file3")
     }
 }

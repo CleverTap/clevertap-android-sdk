@@ -101,7 +101,15 @@ object HomeScreenModel {
                 "Add One Time Variables Changed Callback",
                 "Remove One Time Variables Changed Callback"
             ),
-            "LOCALE" to listOf("Set Locale")
+            "FILE TYPE VARIABLES" to listOf(
+                "Define file Variables listeners \n adds file variables with fileReady() listeners and calls fetch",
+                "Define file Variables with multiple listeners \n adds file variables with fileReady() listeners and calls fetch",
+                "Global listeners & Define file Variables \n Adds listeners first and then registers the variables followed by fetch call",
+                "Multiple Global listeners & Define file Variables \n Adds listeners first and then registers the variables followed by fetch call",
+                "PrintFileVariables"
+                //"Add onceVariablesChangedAndNoDownloadsPending \n first time after app launch for first time",
+            ),
+            "LOCALE" to listOf("Set Locale"),
         )
     }
 }
