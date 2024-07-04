@@ -110,4 +110,21 @@ object FileVarsData {
         }
         Log.i(tag, builder.toString())
     }
+
+    fun printFileVariablesValues(
+        cleverTapAPI: CleverTapAPI,
+        tag: String = "FileVarsData"
+    ) {
+        val builder = StringBuilder()
+        builder.append("List of file variables:")
+        builder.appendLine()
+        listFileVarNames.forEach {  name ->
+            val url = cleverTapAPI.getVariableValue(name)
+            if (url != null) {
+                builder.append(url)
+                builder.appendLine()
+            }
+        }
+        Log.i(tag, builder.toString())
+    }
 }

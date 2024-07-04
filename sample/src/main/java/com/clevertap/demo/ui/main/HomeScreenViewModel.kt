@@ -584,10 +584,13 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "13-0" -> {
-                cleverTapAPI?.defineVariable("variableInt", 0)
-                cleverTapAPI?.defineVariable("variableBoolean", true)
-                cleverTapAPI?.defineVariable("variableFloat", 2.4f)
-                cleverTapAPI?.defineVariable("var_double", 2.4)
+                cleverTapAPI?.defineVariable("var_int", 3)
+                cleverTapAPI?.defineVariable("var_long", 4L)
+                cleverTapAPI?.defineVariable("var_short", 2)
+                cleverTapAPI?.defineVariable("var_float", 5f)
+                cleverTapAPI?.defineVariable("var_double", 6)
+                cleverTapAPI?.defineVariable("var_string", "str")
+                cleverTapAPI?.defineVariable("var_boolean", true)
             }
 
             "13-1" -> {
@@ -621,37 +624,55 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "13-5" -> {
-                Log.i(TAG, "VariableInt = ${cleverTapAPI?.getVariable<Int>("variableInt")}")
-                Log.i(
-                    TAG,
-                    "VariableBoolean = ${cleverTapAPI?.getVariable<Boolean>("variableBoolean")}"
-                )
-                Log.i(TAG, "VariableFloat = ${cleverTapAPI?.getVariable<Float>("variableFloat")}")
-                Log.i(
-                    TAG,
-                    "ParsedVariableDouble = ${cleverTapAPI?.getVariable<Double>("var_double")}"
-                )
+
+                Log.i(TAG, "onChildClick: 13-5")
+
+                val builder = buildString {
+                    append("Printing variables (basic types) :")
+                    appendLine()
+                    append(cleverTapAPI!!.getVariable<Int>("var_int"))
+                    appendLine()
+                    append(cleverTapAPI.getVariable<Long>("var_long"))
+                    appendLine()
+                    append(cleverTapAPI.getVariable<Short>("var_short"))
+                    appendLine()
+                    append(cleverTapAPI.getVariable<Float>("var_float"))
+                    appendLine()
+                    append(cleverTapAPI.getVariable<Double>("var_double"))
+                    appendLine()
+                    append(cleverTapAPI.getVariable<String>("var_string"))
+                    appendLine()
+                    append(cleverTapAPI.getVariable<Boolean>("var_boolean"))
+                }
+
+                Log.i(TAG, builder)
                 FileVarsData.printFileVariables(cleverTapAPI!!)
             }
 
             "13-6" -> {
-                Log.i(TAG, "VariableInt = ${cleverTapAPI?.getVariableValue("variableInt")}")
-                Log.i(TAG, "VariableBoolean = ${cleverTapAPI?.getVariableValue("variableBoolean")}")
-                Log.i(TAG, "VariableFloat = ${cleverTapAPI?.getVariableValue("variableFloat")}")
-                Log.i(TAG, "ParsedVariableDouble = ${cleverTapAPI?.getVariableValue("var_double")}")
+                Log.i(TAG, "onChildClick: 13-6")
 
-                Log.i(
-                    TAG,
-                    "ParsedFile1 = ${cleverTapAPI?.getVariableValue("folder1.fileVariable")}"
-                )
-                Log.i(
-                    TAG,
-                    "ParsedFile2 = ${cleverTapAPI?.getVariableValue("folder1.folder2.fileVariable")}"
-                )
-                Log.i(
-                    TAG,
-                    "ParsedFile3 = ${cleverTapAPI?.getVariableValue("folder1.folder3.fileVariable")}"
-                )
+                val builder = buildString {
+                    append("Printing variables Values (basic types) :")
+                    appendLine()
+                    append(cleverTapAPI!!.getVariableValue("var_int"))
+                    appendLine()
+                    append(cleverTapAPI.getVariableValue("var_long"))
+                    appendLine()
+                    append(cleverTapAPI.getVariableValue("var_short"))
+                    appendLine()
+                    append(cleverTapAPI.getVariableValue("var_float"))
+                    appendLine()
+                    append(cleverTapAPI.getVariableValue("var_double"))
+                    appendLine()
+                    append(cleverTapAPI.getVariableValue("var_string"))
+                    appendLine()
+                    append(cleverTapAPI.getVariableValue("var_boolean"))
+                    appendLine()
+                }
+                Log.i(TAG, builder)
+
+                FileVarsData.printFileVariablesValues(cleverTapAPI!!, TAG)
             }
 
             "13-7" -> {
