@@ -98,6 +98,115 @@ class FilePreloaderCoroutineTest {
         }
         assertEquals(urls.size, successUrls.size)
     }
+
+    @Test
+    fun `preload files fetches files from all urls`() = testScheduler.run {
+        val urls = mutableListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k")
+            .map { Pair(it, CtCacheType.FILES) }
+        val successUrls = mutableListOf<String>()
+
+        // replace with forEach
+        urls.forEach{
+            every {
+                mFileResourceProvider.fetchFile(it.first)
+            } returns byteArray
+        }
+
+        filePreloaderCoroutine.preloadFilesAndCache(urls, { url ->
+            successUrls.add(url.first)
+        },{},{},{})
+        advanceUntilIdle()
+
+        urls.forEach {
+            verify {
+                mFileResourceProvider.fetchFile(it.first)
+            }
+        }
+        assertEquals(urls.size, successUrls.size)
+
+    }
+
+    @Test
+    fun `preloadFilesAndCache invokes all callbacks for images`() = testScheduler.run {
+        val urls = listOf("a", "b", "c").map { Pair(it, CtCacheType.IMAGE) }
+        val successUrls = mutableListOf<String>()
+        val failureUrls = mutableListOf<String>()
+        val startedUrls = mutableListOf<String>()
+        val finishedStatus = mutableMapOf<String, Boolean>()
+
+        urls.forEach {
+            every { mFileResourceProvider.fetchInAppImageV1(it.first) } returns
+                    if (it.first == "b") null else mockBitmap // Simulate failure for "b"
+        }
+
+        filePreloaderCoroutine.preloadFilesAndCache(
+            urls,
+            successBlock = { url -> successUrls.add(url.first) },
+            failureBlock = { url -> failureUrls.add(url.first) },
+            startedBlock = { url -> startedUrls.add(url.first) },
+            preloadFinished = { status -> finishedStatus.putAll(status) }
+        )
+        advanceUntilIdle()
+
+        assertEquals(listOf("a", "c"), successUrls)
+        assertEquals(listOf("b"), failureUrls)
+        assertEquals(listOf("a", "b", "c"), startedUrls)
+        assertEquals(mapOf("a" to true, "b" to false, "c" to true), finishedStatus)
+    }
+
+    @Test
+    fun `preloadFilesAndCache invokes all callbacks for GIFs`() = testScheduler.run {
+        val urls = listOf("x", "y", "z").map { Pair(it, CtCacheType.GIF) }
+        val successUrls = mutableListOf<String>()
+        val failureUrls = mutableListOf<String>()
+        val startedUrls = mutableListOf<String>()
+        val finishedStatus = mutableMapOf<String, Boolean>()
+
+        urls.forEach {
+            every { mFileResourceProvider.fetchInAppGifV1(it.first) } returns
+                    if (it.first == "y") null else byteArray // Simulate failure for "y"
+        }
+
+        filePreloaderCoroutine.preloadFilesAndCache(
+            urls,
+            successBlock = { url -> successUrls.add(url.first) },
+            failureBlock = { url -> failureUrls.add(url.first) },
+            startedBlock = { url -> startedUrls.add(url.first) },
+            preloadFinished = { status -> finishedStatus.putAll(status) }
+        )
+        advanceUntilIdle()
+
+        assertEquals(listOf("x", "z"), successUrls)
+        assertEquals(listOf("y"), failureUrls)
+        assertEquals(listOf("x", "y", "z"), startedUrls)
+        assertEquals(mapOf("x" to true, "y" to false, "z" to true), finishedStatus)
+
+    }
+    @Test
+    fun `preloadFilesAndCache invokes all callbacks for files`() = testScheduler.run {
+        val urls = listOf("p", "q", "r").map { Pair(it, CtCacheType.FILES) }
+        val successUrls = mutableListOf<String>()
+        val failureUrls = mutableListOf<String>()
+        val startedUrls = mutableListOf<String>()
+        val finishedStatus = mutableMapOf<String, Boolean>()
+        urls.forEach {
+            every { mFileResourceProvider.fetchFile(it.first) } returns
+                    if (it.first == "q") null else byteArray //Simulate failure for "q"
+        }
+        filePreloaderCoroutine.preloadFilesAndCache(
+            urls,
+            successBlock = { url -> successUrls.add(url.first) },
+            failureBlock = { url -> failureUrls.add(url.first) },
+            startedBlock = { url -> startedUrls.add(url.first) },
+            preloadFinished = { status -> finishedStatus.putAll(status) }
+        )
+        advanceUntilIdle()
+
+        assertEquals(listOf("p", "r"), successUrls)
+        assertEquals(listOf("q"), failureUrls)
+        assertEquals(listOf("p", "q", "r"), startedUrls)
+        assertEquals(mapOf("p" to true, "q" to false, "r" to true), finishedStatus)
+    }
 }
 
 class MainDispatcherRule @OptIn(ExperimentalCoroutinesApi::class) constructor(
