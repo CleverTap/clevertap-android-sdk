@@ -104,4 +104,85 @@ class FilePreloaderExecutorsTest {
         assertEquals(urls.size, successUrls.size)
     }
 
+    @Test
+    fun `preloadFilesAndCache invokes all callbacks for images`() {
+        val urls = listOf("a", "b", "c").map { Pair(it, CtCacheType.IMAGE) }
+        val successUrls = mutableListOf<String>()
+        val failureUrls = mutableListOf<String>()
+        val startedUrls = mutableListOf<String>()
+        val finishedStatus = mutableMapOf<String, Boolean>()
+
+        urls.forEach {
+            every { mFileResourceProvider.fetchInAppImageV1(it.first) } returns
+                    if (it.first == "b") null else mockBitmap // Simulate failure for "b"
+        }
+
+        filePreloader.preloadFilesAndCache(
+            urls,
+            successBlock = { url -> successUrls.add(url.first) },
+            failureBlock = { url -> failureUrls.add(url.first) },
+            startedBlock = { url -> startedUrls.add(url.first) },
+            preloadFinished = { status -> finishedStatus.putAll(status) }
+        )
+
+        assertEquals(listOf("a", "c"), successUrls)
+        assertEquals(listOf("b"), failureUrls)
+        assertEquals(listOf("a", "b", "c"), startedUrls)
+        assertEquals(mapOf("a" to true, "b" to false, "c" to true), finishedStatus)
+    }
+
+    @Test
+    fun `preloadFilesAndCache invokes all callbacks for GIFs`() {
+        val urls = listOf("x", "y", "z").map { Pair(it, CtCacheType.GIF) }
+        val successUrls = mutableListOf<String>()
+        val failureUrls = mutableListOf<String>()
+        val startedUrls = mutableListOf<String>()
+        val finishedStatus = mutableMapOf<String, Boolean>()
+
+        urls.forEach {
+            every { mFileResourceProvider.fetchInAppGifV1(it.first) } returns
+                    if (it.first == "y") null else byteArray // Simulate failure for "y"
+        }
+
+        filePreloader.preloadFilesAndCache(
+            urls,
+            successBlock = { url -> successUrls.add(url.first) },
+            failureBlock = { url -> failureUrls.add(url.first) },
+            startedBlock = { url -> startedUrls.add(url.first) },
+            preloadFinished = { status -> finishedStatus.putAll(status) }
+        )
+
+        assertEquals(listOf("x", "z"), successUrls)
+        assertEquals(listOf("y"), failureUrls)
+        assertEquals(listOf("x", "y", "z"), startedUrls)
+        assertEquals(mapOf("x" to true, "y" to false, "z" to true), finishedStatus)
+    }
+
+    @Test
+    fun `preloadFilesAndCache invokes all callbacks for files`() {
+        val urls = listOf("p", "q", "r").map { Pair(it, CtCacheType.FILES) }
+        val successUrls = mutableListOf<String>()
+        val failureUrls = mutableListOf<String>()
+        val startedUrls = mutableListOf<String>()
+        val finishedStatus = mutableMapOf<String, Boolean>()
+
+        urls.forEach {
+            every { mFileResourceProvider.fetchFile(it.first) } returns
+                    if (it.first == "q") null else byteArray //Simulate failure for "q"
+        }
+
+        filePreloader.preloadFilesAndCache(
+            urls,
+            successBlock = { url -> successUrls.add(url.first) },
+            failureBlock = { url -> failureUrls.add(url.first) },
+            startedBlock = { url -> startedUrls.add(url.first) },
+            preloadFinished = { status -> finishedStatus.putAll(status) }
+        )
+
+        assertEquals(listOf("p", "r"), successUrls)
+        assertEquals(listOf("q"), failureUrls)
+        assertEquals(listOf("p", "q", "r"), startedUrls)
+        assertEquals(mapOf("p" to true, "q" to false, "r" to true), finishedStatus)
+    }
+
 }
