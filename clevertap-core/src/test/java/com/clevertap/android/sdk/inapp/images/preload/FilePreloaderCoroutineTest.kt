@@ -3,7 +3,11 @@ package com.clevertap.android.sdk.inapp.images.preload
 import TestDispatchers
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
+import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -14,25 +18,24 @@ import kotlinx.coroutines.test.setMain
 import org.junit.Test
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
-import org.mockito.Mockito
 import kotlin.test.assertEquals
 
-class InAppImagePreloaderCoroutineTest {
+class FilePreloaderCoroutineTest {
 
     //@get:Rule
     //val mainDispatcherRule = MainDispatcherRule()
 
-    private val mockBitmap = Mockito.mock(Bitmap::class.java)
+    private val mockBitmap = mockk<Bitmap>()
     private val byteArray = ByteArray(10) { pos ->
         pos.toByte()
     }
-    private val mFileResourceProvider = Mockito.mock(FileResourceProvider::class.java)
+    private val mFileResourceProvider = mockk<FileResourceProvider>()
     private val logger = TestLogger()
 
     private val testScheduler = TestCoroutineScheduler()
     private val dispatchers = TestDispatchers(testScheduler)
 
-    private val inAppImagePreloaderCoroutine = FilePreloaderCoroutine(
+    private val filePreloaderCoroutine = FilePreloaderCoroutine(
         fileResourceProvider = mFileResourceProvider,
         logger = logger,
         dispatchers = dispatchers
@@ -41,24 +44,28 @@ class InAppImagePreloaderCoroutineTest {
     @Test
     fun `preload image fetches images from all urls`() = testScheduler.run {
 
-        val urls = mutableListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k")
+        val urls = mutableListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k").map { Pair(it,
+            CtCacheType.IMAGE) }
         val successUrls = mutableListOf<String>()
 
-        for (url in urls) {
-            Mockito.`when`(mFileResourceProvider.fetchInAppImageV1(url)).thenReturn(mockBitmap)
+        urls.forEach{
+            every {
+                mFileResourceProvider.fetchInAppImageV1(it.first)
+            } returns mockBitmap
         }
 
-        val func = fun (url: String) {
+        val func = fun (url: Pair<String, CtCacheType>) {
             // dummy func
-            successUrls.add(url)
+            successUrls.add(url.first)
         }
 
-        inAppImagePreloaderCoroutine.preloadInAppImagesV1(urls, func)
+        filePreloaderCoroutine.preloadFilesAndCache(urls, func,{},{},{})
         advanceUntilIdle()
 
-        for (count in 0 until urls.size) {
-            val url = urls[count]
-            Mockito.verify(mFileResourceProvider).fetchInAppImageV1(url)
+        urls.forEach{
+            verify {
+                mFileResourceProvider.fetchInAppImageV1(it.first)
+            }
         }
         assertEquals(urls.size, successUrls.size)
     }
@@ -67,23 +74,27 @@ class InAppImagePreloaderCoroutineTest {
     fun `preload gifs fetches gif from all urls`() = testScheduler.run {
 
         val urls = mutableListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k")
+            .map { Pair(it, CtCacheType.GIF) }
         val successUrls = mutableListOf<String>()
 
-        for (url in urls) {
-            Mockito.`when`(mFileResourceProvider.fetchInAppGifV1(url)).thenReturn(byteArray)
+        urls.forEach{
+            every {
+                mFileResourceProvider.fetchInAppGifV1(it.first)
+            } returns byteArray
         }
 
-        val func = fun (url: String) {
+        val func = fun (url: Pair<String, CtCacheType>) {
             // dummy func
-            successUrls.add(url)
+            successUrls.add(url.first)
         }
 
-        inAppImagePreloaderCoroutine.preloadInAppGifsV1(urls, func)
+        filePreloaderCoroutine.preloadFilesAndCache(urls, func,{},{},{})
         advanceUntilIdle()
 
-        for (count in 0 until urls.size) {
-            val url = urls[count]
-            Mockito.verify(mFileResourceProvider).fetchInAppGifV1(url)
+        urls.forEach{
+            verify {
+                mFileResourceProvider.fetchInAppGifV1(it.first)
+            }
         }
         assertEquals(urls.size, successUrls.size)
     }
