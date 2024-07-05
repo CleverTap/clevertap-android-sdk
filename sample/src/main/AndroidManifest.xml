@@ -51,13 +51,13 @@
         <!-- Add meta data for CleverTap Account Id and Account Token and Region-->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="TEST-4RW-944-876Z" />
+            android:value="YOUR ACCT ID" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="TEST-44c-024" />
+            android:value="YOUR ACCT TOKEN" />
         <meta-data
             android:name="CLEVERTAP_REGION"
-            android:value="eu1"/>
+            android:value="YOUR ACCT REGION"/>
         <!--<meta-data
             android:name="CLEVERTAP_PROXY_DOMAIN"
             android:value="analytics.sdktesting.xyz"/>-->
