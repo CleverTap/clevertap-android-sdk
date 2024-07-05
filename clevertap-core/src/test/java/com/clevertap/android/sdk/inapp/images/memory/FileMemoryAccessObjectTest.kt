@@ -24,15 +24,17 @@ import kotlin.test.assertNull
 
 class FileMemoryAccessObjectTest {
 
+    private lateinit var fileMemoryAccessObject: FileMemoryAccessObject
     private val mockCTCaches = mockk<CTCaches>()
     private val mockLogger = mockk<ILogger>(relaxed = true) // Relaxed to avoid unnecessary stubbing
     private val mockMemoryCache = mockk<LruCache<Pair<ByteArray, File>>>()
     private val mockDiskCache = mockk<FileCache>()
 
-    private lateinit var fileMemoryAccessObject: FileMemoryAccessObject
-
     private val key = "test_key"
-    private val mockData = Pair(byteArrayOf(1, 2, 3), mockk<File>())
+    private val mockByteArray = byteArrayOf(1, 2, 3)
+    private val mockFile = mockk<File>()
+    private val mockBitmap = mockk<Bitmap>()
+    private val mockData = Pair(mockByteArray, mockFile)
 
     @Before
     fun setup() {
@@ -47,19 +49,13 @@ class FileMemoryAccessObjectTest {
     @Test
     fun `fetchInMemory returns data from in-memory cache`() {
         every { mockMemoryCache.get(key) } returns mockData
-
-        val result = fileMemoryAccessObject.fetchInMemory(key)
-
-        assertEquals(mockData, result)
+        assertEquals(mockData, fileMemoryAccessObject.fetchInMemory(key))
     }
 
     @Test
     fun `fetchInMemory returns null when data not in in-memory cache`() {
         every { mockMemoryCache.get(key) } returns null
-
-        val result = fileMemoryAccessObject.fetchInMemory(key)
-
-        assertNull(result)
+        assertNull(fileMemoryAccessObject.fetchInMemory(key))
     }
 
     @Test
@@ -67,116 +63,99 @@ class FileMemoryAccessObjectTest {
         every { mockMemoryCache.get(key) } returns mockData
 
         // Test transforming to ByteArray
-        val resultByteArray = fileMemoryAccessObject.fetchInMemoryAndTransform(key, ToByteArray)
-        assertEquals(mockData.first, resultByteArray)
+        assertEquals(
+            mockByteArray,
+            fileMemoryAccessObject.fetchInMemoryAndTransform(key, ToByteArray)
+        )
 
         // Test transforming to File
-        val resultFile = fileMemoryAccessObject.fetchInMemoryAndTransform(key, ToFile)
-        assertEquals(mockData.second, resultFile)
+        assertEquals(mockFile, fileMemoryAccessObject.fetchInMemoryAndTransform(key, ToFile))
 
         // Test transforming to Bitmap
-        val mockkBitmap = mockk<Bitmap>()
-        every { bytesToBitmap(mockData.first) } returns mockkBitmap
+        every { bytesToBitmap(mockByteArray) } returns mockBitmap
         val resultBitmap = fileMemoryAccessObject.fetchInMemoryAndTransform(key, ToBitmap)
         assertNotNull(resultBitmap)
-        assertEquals(mockkBitmap, resultBitmap)
+        assertEquals(mockBitmap, resultBitmap)
     }
 
     // fetchInMemoryAndTransform when data not in in-memory cache
     @Test
     fun `fetchInMemoryAndTransform returns null when data not in in-memory cache`() {
         every { mockMemoryCache.get(key) } returns null
-        val result = fileMemoryAccessObject.fetchInMemoryAndTransform(key, ToByteArray)
-        assertNull(result)
+        assertNull(fileMemoryAccessObject.fetchInMemoryAndTransform(key, ToByteArray))
     }
 
     // fetchInMemoryAndTransform when bytesToBitmap returns null
     @Test
     fun `fetchInMemoryAndTransform returns null when bytesToBitmap returns null`() {
         every { mockMemoryCache.get(key) } returns mockData
-        every { bytesToBitmap(mockData.first) } returns null
-        val result = fileMemoryAccessObject.fetchInMemoryAndTransform(key, ToBitmap)
-        assertNull(result)
+        every { bytesToBitmap(mockByteArray) } returns null
+        assertNull(fileMemoryAccessObject.fetchInMemoryAndTransform(key, ToBitmap))
     }
 
     // tests for fetchDiskMemoryAndTransform
     @Test
     fun `fetchDiskMemoryAndTransform transforms data from disk cache`() {
-        val mockBytes = mockData.first
-        val mockFile = mockData.second
         every { mockDiskCache.get(key) } returns mockFile
-        every { mockFile.readBytes() } returns mockBytes
-        every { mockMemoryCache.add(key, Pair(mockBytes, mockFile)) } returns true
+        every { mockFile.readBytes() } returns mockByteArray
+        every { mockMemoryCache.add(key, mockData) } returns true
 
         // Test transforming to ByteArray
-        val result = fileMemoryAccessObject.fetchDiskMemoryAndTransform(key, ToByteArray)
-        assertEquals(mockBytes, result)
-        verify { mockMemoryCache.add(key, Pair(mockBytes, mockFile)) }
+        assertEquals(
+            mockByteArray,
+            fileMemoryAccessObject.fetchDiskMemoryAndTransform(key, ToByteArray)
+        )
+        verify { mockMemoryCache.add(key, mockData) }
 
         // Test transforming to File
-        val resultFile = fileMemoryAccessObject.fetchDiskMemoryAndTransform(key, ToFile)
-        assertEquals(mockFile, resultFile)
+        assertEquals(mockFile, fileMemoryAccessObject.fetchDiskMemoryAndTransform(key, ToFile))
 
         // Test transforming to Bitmap
-        val mockkBitmap = mockk<Bitmap>()
-        every { fileToBitmap(mockFile) } returns mockkBitmap
+        every { fileToBitmap(mockFile) } returns mockBitmap
         val resultBitmap = fileMemoryAccessObject.fetchDiskMemoryAndTransform(key, ToBitmap)
         assertNotNull(resultBitmap)
-        assertEquals(mockkBitmap, resultBitmap)
+        assertEquals(mockBitmap, resultBitmap)
     }
 
     //fetchDiskMemoryAndTransform when data not in disk cache
     @Test
     fun `fetchDiskMemoryAndTransform returns null when data not in disk cache`() {
         every { mockDiskCache.get(key) } returns null
-        val result = fileMemoryAccessObject.fetchDiskMemoryAndTransform(
-            key,
-            ToByteArray
+        assertNull(fileMemoryAccessObject.fetchDiskMemoryAndTransform(key, ToByteArray)
         )
-        assertNull(result)
     }
 
     //fetchDiskMemoryAndTransform when fileToBitmap returns null
     @Test
     fun `fetchDiskMemoryAndTransform returns null when fileToBitmap returns null`() {
-        val mockBytes = mockData.first
-        val mockFile = mockData.second
         every { mockDiskCache.get(key) } returns mockFile
-        every { mockFile.readBytes() } returns mockBytes
-        every { mockMemoryCache.add(key, Pair(mockBytes, mockFile)) } returns true
+        every { mockFile.readBytes() } returns mockByteArray
+        every { mockMemoryCache.add(key, mockData) } returns true
         every { fileToBitmap(mockFile) } returns null
-        val result = fileMemoryAccessObject.fetchDiskMemoryAndTransform(
-            key,
-            ToBitmap
-        )
-        verify { mockMemoryCache.add(key, Pair(mockBytes, mockFile)) }
-        assertNull(result)
+
+        assertNull(fileMemoryAccessObject.fetchDiskMemoryAndTransform(key, ToBitmap))
+        verify { mockMemoryCache.add(key, Pair(mockByteArray, mockFile)) }
     }
 
 
     // tests for fetchDiskMemory
     @Test
     fun `fetchDiskMemory returns data from disk cache`() {
-        val mockFile = mockData.second
         every { mockDiskCache.get(key) } returns mockFile
-        val result = fileMemoryAccessObject.fetchDiskMemory(key)
-        assertEquals(mockFile, result)
-
+        assertEquals(mockFile, fileMemoryAccessObject.fetchDiskMemory(key))
     }
 
     @Test
     fun `fetchDiskMemory returns null when data not in disk cache`() {
         every { mockDiskCache.get(key) } returns null
-        val result = fileMemoryAccessObject.fetchDiskMemory(key)
-        assertNull(result)
+        assertNull(fileMemoryAccessObject.fetchDiskMemory(key))
     }
 
     // test for removeDiskMemory
     @Test
     fun `removeDiskMemory removes data from disk cache`() {
         every { mockDiskCache.remove(key) } returns true
-        val result = fileMemoryAccessObject.removeDiskMemory(key)
-        assertTrue(result)
+        assertTrue(fileMemoryAccessObject.removeDiskMemory(key))
         verify { mockDiskCache.remove(key) }
     }
 
@@ -184,8 +163,7 @@ class FileMemoryAccessObjectTest {
     @Test
     fun `removeDiskMemory returns false when data not in disk cache`() {
         every { mockDiskCache.remove(key) } returns false
-        val result = fileMemoryAccessObject.removeDiskMemory(key)
-        assertFalse(result)
+        assertFalse(fileMemoryAccessObject.removeDiskMemory(key))
         verify { mockDiskCache.remove(key) }
     }
 
@@ -193,8 +171,7 @@ class FileMemoryAccessObjectTest {
     @Test
     fun `removeInMemory removes data from in-memory cache`() {
         every { mockMemoryCache.remove(key) } returns mockData
-        val result = fileMemoryAccessObject.removeInMemory(key)
-        assertEquals(mockData, result)
+        assertEquals(mockData, fileMemoryAccessObject.removeInMemory(key))
         verify { mockMemoryCache.remove(key) }
     }
 
@@ -202,8 +179,7 @@ class FileMemoryAccessObjectTest {
     @Test
     fun `removeInMemory returns null when data not in in-memory cache`() {
         every { mockMemoryCache.remove(key) } returns null
-        val result = fileMemoryAccessObject.removeInMemory(key)
-        assertNull(result)
+        assertNull(fileMemoryAccessObject.removeInMemory(key))
         verify { mockMemoryCache.remove(key) }
     }
 
@@ -211,22 +187,16 @@ class FileMemoryAccessObjectTest {
     // test for saveDiskMemory
     @Test
     fun `saveDiskMemory saves data to disk cache`() {
-        val mockBytes = mockData.first
-        val mockFile = mockData.second
-        every { mockDiskCache.addAndReturnFileInstance(key, mockBytes) } returns mockFile
-        val result = fileMemoryAccessObject.saveDiskMemory(key, mockBytes)
-        assertEquals(mockFile, result)
-        verify { mockDiskCache.addAndReturnFileInstance(key, mockBytes) }
+        every { mockDiskCache.addAndReturnFileInstance(key, mockByteArray) } returns mockFile
+        assertEquals(mockFile, fileMemoryAccessObject.saveDiskMemory(key, mockByteArray))
+        verify { mockDiskCache.addAndReturnFileInstance(key, mockByteArray) }
     }
 
     // test for saveInMemory
     @Test
     fun `saveInMemory saves data to in-memory cache`() {
         every { mockMemoryCache.add(key, mockData) } returns true
-
-        val result = fileMemoryAccessObject.saveInMemory(key, mockData)
-
-        assertTrue(result)
+        assertTrue(fileMemoryAccessObject.saveInMemory(key, mockData))
         verify { mockMemoryCache.add(key, mockData) }
     }
 
