@@ -6,10 +6,10 @@ import com.clevertap.android.sdk.inapp.images.hasValidBitmap
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-enum class MemoryDataTransformationType {
-    MEMORY_DATA_TRANSFORM_TO_BITMAP,
-    MEMORY_DATA_TRANSFORM_TO_BYTEARRAY,
-    MEMORY_DATA_TRANSFORM_TO_FILE
+sealed class MemoryDataTransformationType<A> {
+    object ToBitmap : MemoryDataTransformationType<Bitmap>()
+    object ToByteArray : MemoryDataTransformationType<ByteArray>()
+    object ToFile : MemoryDataTransformationType<File>()
 }
 
 val fileToBitmap: (file: File?) -> Bitmap? = { file ->
@@ -52,7 +52,7 @@ interface MemoryAccessObject<T> {
      * @param transformTo The transformation identifier.
      * @return The transformed value, or null if not found.
      */
-    fun fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any?
+    fun <A> fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType<A>): A?
 
     /**
      * Fetches a value from disk memory by key and transforms it.
@@ -60,7 +60,7 @@ interface MemoryAccessObject<T> {
      * @param transformTo The transformation identifier.
      * @return The transformed value, or null if not found.
      */
-    fun fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any?
+    fun <A> fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType<A>): A?
 
     /**
      * Fetches a file from disk memory by key.
@@ -83,7 +83,7 @@ interface MemoryAccessObject<T> {
      * @param data The data to save as a byte array.
      * @return The saved file if successful, or null otherwise.
      */
-    fun saveDiskMemory(key: String, data: ByteArray): File?
+    fun saveDiskMemory(key: String, data: ByteArray): File
 
     /**
      * Removes a file from disk memory by key.

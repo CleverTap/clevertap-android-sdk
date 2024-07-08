@@ -7,8 +7,8 @@ import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.TriggerManager;
-import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
@@ -20,7 +20,6 @@ import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import kotlin.Pair;
@@ -72,15 +71,14 @@ public class InAppResponse extends CleverTapResponseDecorator {
     ) {
         try {
 
-            InAppResponseAdapter res = new InAppResponseAdapter(response);
+            InAppResponseAdapter res = new InAppResponseAdapter(response, templatesManager);
             final ImpressionStore impressionStore = storeRegistry.getImpressionStore();
             final InAppStore inAppStore = storeRegistry.getInAppStore();
             final InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
             final FileStore fileStore = storeRegistry.getFilesStore();
             final LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
 
-            if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null
-                    || fileStore == null) {
+            if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null || fileStore == null) {
                 logger.verbose(config.getAccountId(), "Stores are not initialised, ignoring inapps!!!!");
                 return;
             }
@@ -131,40 +129,19 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 inAppStore.storeServerSideInAppsMetaData(ssInApps.getSecond());
             }
 
-            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context, logger,
-                    storeRegistry);
-            if (assetRepo != null) {
-                assetRepo.fetchAllInAppImagesV1(res.getPreloadImages());
-                assetRepo.fetchAllInAppGifsV1(res.getPreloadGifs());
-                // TODO CustomTemplates download all file arguments before presenting replace image fetching will general file handling (including custom template files)
-                List<String> files = new ArrayList<>();
-                if (csInApps.getFirst()) {
-                    for (int i = 0; i < csInApps.getSecond().length(); i++) {
-                        final CustomTemplateInAppData customTemplateInAppData
-                                = CustomTemplateInAppData.createFromJson(csInApps.getSecond().getJSONObject(i));
-                        if (customTemplateInAppData != null) {
-                            final List<String> fileArgs = customTemplateInAppData.getFileArgsUrls(
-                                    templatesManager);
-                            files.addAll(fileArgs);
-                        }
-                    }
-                    if (!files.isEmpty())
-                    {
-                        assetRepo.fetchAllFiles(files, (aBoolean, stringBooleanMap) -> {
-                            logger.verbose(config.getAccountId(),
-                                    "file download status from InAppResponse = " + aBoolean + " and url status map = "
-                                            + stringBooleanMap);
-                            return null;
-                        });
-                    }
-                }
+            List<Pair<String, CtCacheType>> preloadAssetsMeta = res.getPreloadAssetsMeta();
 
-                if (isFullResponse) {
-                    logger.verbose(config.getAccountId(), "Handling cache eviction");
-                    assetRepo.cleanupStaleInAppImagesAndGifsV1(res.getPreloadAssets());
-                } else {
-                    logger.verbose(config.getAccountId(), "Ignoring cache eviction");
-                }
+            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory
+                    .createFileResourcesRepo(context, logger, storeRegistry);
+            if (!preloadAssetsMeta.isEmpty()) {
+                assetRepo.preloadFilesAndCache(preloadAssetsMeta);
+            }
+
+            if (isFullResponse) {
+                logger.verbose(config.getAccountId(), "Handling cache eviction");
+                assetRepo.cleanupStaleFiles(res.getPreloadAssets());
+            } else {
+                logger.verbose(config.getAccountId(), "Ignoring cache eviction");
             }
 
             String mode = res.getInAppMode();

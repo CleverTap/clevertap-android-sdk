@@ -5,9 +5,9 @@ import com.clevertap.android.sdk.inapp.images.memory.Memory
 import java.io.File
 
 /**
- * We have 2 caches in CT, image cache and a gif cache with different size configs
+ * We have 3 caches in CT, image cache, gif cache, general file cache with different size configs
  */
-class CTCaches private constructor(
+internal class CTCaches private constructor(
     private val inAppImageMemoryV1: Memory<Bitmap>,
     private val inAppGifMemoryV1: Memory<ByteArray>,
     private val fileMemory: Memory<ByteArray>
@@ -24,7 +24,11 @@ class CTCaches private constructor(
             if (ctCaches == null) {
                 synchronized(this) {
                     if (ctCaches == null) {
-                        ctCaches = CTCaches(inAppImageMemoryV1, inAppGifMemoryV1, fileMemory)
+                        ctCaches = CTCaches(
+                            inAppImageMemoryV1 = inAppImageMemoryV1,
+                            inAppGifMemoryV1 = inAppGifMemoryV1,
+                            fileMemory = fileMemory
+                        )
                     }
                 }
             }

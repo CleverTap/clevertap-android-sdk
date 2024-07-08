@@ -8,7 +8,7 @@ import java.io.File
 import kotlin.math.max
 
 class InAppImageMemoryV1(
-    private val config: MemoryConfig,
+    internal val config: MemoryConfig,
     private val logger: ILogger? = null
 ) : Memory<Bitmap> {
 

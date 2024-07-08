@@ -24,17 +24,14 @@ class FileCleanupStrategyExecutorsTest {
         val successUrls = mutableListOf<String>()
 
         // invoke method
-        cleanupStrategy.clearInAppImagesAndGifsV1(urls) { url ->
+        cleanupStrategy.clearFileAssets(urls) { url ->
             successUrls.add(url)
         }
 
         // check results
         urls.forEach { url ->
             verify {
-                mFileResourceProvider.deleteImageMemoryV1(url)
-            }
-            verify {
-                mFileResourceProvider.deleteGifMemoryV1(url)
+                mFileResourceProvider.deleteData(url)
             }
         }
 

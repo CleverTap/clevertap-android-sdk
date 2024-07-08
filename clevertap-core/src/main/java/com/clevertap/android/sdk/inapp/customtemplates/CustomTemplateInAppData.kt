@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.copyFrom
 import com.clevertap.android.sdk.inapp.CTInAppType
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.FILE
+import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.ACTION
 import com.clevertap.android.sdk.utils.getStringOrNull
 import com.clevertap.android.sdk.utils.readJson
 import com.clevertap.android.sdk.utils.writeJson
@@ -48,10 +49,35 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
     }
 
     fun getFileArgsUrls(templatesManager: TemplatesManager): List<String> {
-        return templateName?.let {
-            templatesManager.getTemplate(it)?.args?.filter { arg -> arg.type == FILE && args?.has(arg.name) ?: false }
-                ?.mapNotNull { arg -> args?.getString(arg.name) }
-        } ?: emptyList()
+        val urls = mutableListOf<String>()
+        getFileArgsUrls(templatesManager, urls)
+        return urls
+    }
+
+    fun getFileArgsUrls(templatesManager: TemplatesManager, filesList: MutableList<String>) {
+        val templateName = templateName ?: return
+        val customTemplate = templatesManager.getTemplate(templateName) ?: return
+        val inAppArguments = args ?: return
+
+        for (arg in customTemplate.args) {
+            when (arg.type) {
+                FILE -> {
+                    inAppArguments.getStringOrNull(arg.name)?.let { fileUrl ->
+                        filesList.add(fileUrl)
+                    }
+                }
+
+                ACTION -> {
+                    inAppArguments.optJSONObject(arg.name)?.let { actionJson ->
+                        createFromJson(actionJson)?.getFileArgsUrls(
+                            templatesManager, filesList
+                        )
+                    }
+                }
+
+                else -> continue
+            }
+        }
     }
 
     override fun writeToParcel(dest: Parcel, flags: Int) {

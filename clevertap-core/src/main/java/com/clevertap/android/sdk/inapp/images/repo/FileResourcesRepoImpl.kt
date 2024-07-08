@@ -1,14 +1,17 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
-import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.max
+import kotlin.time.Duration.Companion.days
 
-internal class FileResourcesRepoImpl(
+internal const val TAG_FILE_DOWNLOAD = "FileDownload"
+
+internal class FileResourcesRepoImpl constructor(
     override val cleanupStrategy: FileCleanupStrategy,
     override val preloaderStrategy: FilePreloaderStrategy,
     private val inAppAssetsStore: InAppAssetsStore,
@@ -16,104 +19,91 @@ internal class FileResourcesRepoImpl(
     private val legacyInAppsStore: LegacyInAppStore
 ) : FileResourcesRepo {
 
-    //if we want to call fetchAll() API using multiple instances of this class then downloadInProgressUrls must be static
-    private val downloadInProgressUrls = ConcurrentHashMap<String, MutableList<(String, Boolean) -> Unit>>()
-    private val fetchAllFilesLock = Any()
-
     companion object {
 
-        const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
-        private const val DAYS_FOR_EXPIRY = 14
-
         // 14 days
-        const val EXPIRY_OFFSET_MILLIS = DAY_IN_MILLIS * DAYS_FOR_EXPIRY
-    }
+        private val EXPIRY_OFFSET_MILLIS = 14.days.inWholeMilliseconds
 
-    /**
-     * Fetches all images in parallel and registers successful url in repo
-     */
-    override fun fetchAllInAppImagesV1(urls: List<String>) {
+        private val urlTriggers = mutableSetOf<DownloadTriggerForUrls>()
 
-        val successBlock: (url: String) -> Unit = { url ->
+        private val downloadInProgressUrls = HashMap<String, DownloadState>()
+        private val fetchAllFilesLock = Any()
+        @JvmStatic
+        fun saveUrlExpiryToStore(urlMeta: Pair<String, CtCacheType>, storePair: Pair<FileStore, InAppAssetsStore>){
+            val url = urlMeta.first
             val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-            inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)// uncommon
-        }
+            val fileStore = storePair.first
+            val inAppAssetsStore = storePair.second
 
-        preloaderStrategy.preloadInAppImagesV1(urls, successBlock)
+            when (urlMeta.second) {
+                CtCacheType.IMAGE,
+                CtCacheType.GIF -> {
+                    inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
+                    fileStore.saveFileUrl(url = url, expiry = expiry)
+                }
+                CtCacheType.FILES -> {
+                    fileStore.saveFileUrl(url = url, expiry = expiry)
+                }
+            }
+        }
     }
 
-    override fun fetchAllInAppGifsV1(urls: List<String>) {
-        val successBlock: (url: String) -> Unit = { url ->
-            val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-            inAppAssetsStore.saveAssetUrl(url = url, expiry = expiry)
-        }
-
-        preloaderStrategy.preloadInAppGifsV1(urls, successBlock)
-    }
-
-    @WorkerThread
-    override fun fetchAllFiles(
-        urls: List<String>,
-        completionCallback: (status: Boolean, urlStatusMap: Map<String, Boolean>) -> Unit
+    override fun preloadFilesAndCache(
+        urlMeta: List<Pair<String, CtCacheType>>,
+        completionCallback: (urlStatusMap: Map<String, Boolean>) -> Unit,
+        successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit,
+        failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit
     ) {
-        val urlStatusMap = ConcurrentHashMap<String, Boolean>()
 
-        val newCompletionCallback: (String, Boolean) -> Unit = { url, status ->
-            urlStatusMap[url] = status
-            checkCompletion(urls.size, urlStatusMap, completionCallback)
+        val successBlockk: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
+            saveUrlExpiryToStore(meta,Pair(fileStore, inAppAssetsStore))
+            updateRepoStatus(
+                meta = meta,
+                downloadState = DownloadState.SUCCESSFUL
+            )
+            successBlock.invoke(meta)
         }
-        val successBlock: (url: String) -> Unit = { url ->
-            synchronized(fetchAllFilesLock) {
-                val expiry = System.currentTimeMillis() + EXPIRY_OFFSET_MILLIS
-                fileStore.saveFileUrl(url = url, expiry = expiry)
-                val callbacks = downloadInProgressUrls.remove(url)
-                callbacks?.forEach { it(url, true) }
-            }
-        }
-        val failureBlock: (String) -> Unit = { url ->
-            synchronized(fetchAllFilesLock) {
-                val callbacks = downloadInProgressUrls.remove(url)
-                callbacks?.forEach { it(url, false) }
-            }
+        val failureBlockk: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
+            updateRepoStatus(
+                meta = meta,
+                downloadState = DownloadState.FAILED
+            )
+            failureBlock.invoke(meta)
         }
 
+        val started : (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
+            updateRepoStatus(
+                meta = meta,
+                downloadState = DownloadState.IN_PROGRESS
+            )
+        }
+
+        preloaderStrategy.preloadFilesAndCache(
+            urlMetas = urlMeta,
+            successBlock = successBlockk,
+            failureBlock = failureBlockk,
+            startedBlock = started,
+            preloadFinished = completionCallback
+        )
+    }
+
+    private fun updateRepoStatus(
+        meta: Pair<String, CtCacheType>,
+        downloadState: DownloadState
+    ) {
+        if (urlTriggers.isEmpty()) {
+            // added condition to avoid acquiring unnecessary locks
+            return
+        }
         synchronized(fetchAllFilesLock) {
-            if (downloadInProgressUrls.isEmpty()) {
-                urls.forEach { url ->
-                    downloadInProgressUrls[url] = mutableListOf(newCompletionCallback)
-                }
-                preloaderStrategy.preloadFiles(urls, successBlock, failureBlock)
-            } else {
-                val filteredUrls = mutableListOf<String>()
-                urls.forEach { url ->
-                    if (downloadInProgressUrls.containsKey(url)) {
-                        downloadInProgressUrls[url]?.add(newCompletionCallback)
-                    } else {
-                        downloadInProgressUrls[url] = mutableListOf(newCompletionCallback)
-                        filteredUrls.add(url)
-                    }
-                }
-                preloaderStrategy.preloadFiles(filteredUrls, successBlock, failureBlock)
-            }
+            downloadInProgressUrls[meta.first] = downloadState
+            repoUpdated()
         }
     }
 
-    private fun checkCompletion(
-        totalUrls: Int,
-        urlStatusMap: ConcurrentHashMap<String, Boolean>,
-        completionCallback: (status: Boolean, urlStatusMap: Map<String, Boolean>) -> Unit
+    override fun cleanupStaleFiles(
+        urls: List<String>
     ) {
-        if (urlStatusMap.size == totalUrls) {
-            val allSuccessful = urlStatusMap.values.all { it }
-            completionCallback(allSuccessful, urlStatusMap)
-        }
-    }
-
-    /**
-     * Checks all existing cached data and check if it is in valid urls, if not evict item from cache
-     */
-    override fun cleanupStaleInAppImagesAndGifsV1(validUrls: List<String>) {
-
         val currentTime = System.currentTimeMillis()
 
         if (currentTime - legacyInAppsStore.lastCleanupTs() < EXPIRY_OFFSET_MILLIS) {
@@ -121,79 +111,95 @@ internal class FileResourcesRepoImpl(
             return
         }
 
-        cleanupStaleInAppImagesAndGifsV1Now(validUrls, currentTime)
+        cleanupStaleFilesNow(
+            validUrls = urls,
+            currentTime = currentTime
+        )
         legacyInAppsStore.updateAssetCleanupTs(currentTime)
     }
 
-    override fun cleanupStaleFiles(validUrls: List<String>) {
-        val currentTime = System.currentTimeMillis()
-
-        if (currentTime - legacyInAppsStore.lastCleanupTsForFiles() < EXPIRY_OFFSET_MILLIS) {
-            // limiting cleanup once per 14 days
-            return
+    override fun cleanupExpiredResources(cacheTpe: CtCacheType) {
+        val allFileUrls = when (cacheTpe) {
+            CtCacheType.IMAGE, CtCacheType.GIF -> inAppAssetsStore.getAllAssetUrls()
+            CtCacheType.FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
         }
-
-        cleanupStaleFilesNow(validUrls, currentTime)
-        legacyInAppsStore.updateFileCleanupTs(currentTime)
+        cleanupStaleFilesNow(allFileUrls = allFileUrls)
     }
 
-    @JvmOverloads
-    fun cleanupStaleInAppImagesAndGifsV1Now(
-        validUrls: List<String> = emptyList(),
-        currentTime: Long = System.currentTimeMillis()
-    ) {
-        val valid = validUrls.associateWith { it }
-
-        val allAssetUrls = inAppAssetsStore.getAllAssetUrls()
-
-        val cleanupUrls = allAssetUrls
-            .toMutableSet()
-            .filter { key ->
-                valid.contains(key).not()
-                        && (currentTime > inAppAssetsStore.expiryForUrl(key))
-            }
-
-        cleanupAllInAppImagesAndGifsV1(cleanupUrls)
+    override fun cleanupAllResources(cacheTpe: CtCacheType) {
+        val cleanupUrls = when (cacheTpe) {
+            CtCacheType.IMAGE,CtCacheType.GIF -> inAppAssetsStore.getAllAssetUrls()
+            CtCacheType.FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
+        }
+        cleanupAllFiles(cleanupUrls = cleanupUrls.toList())
     }
 
-    @JvmOverloads
-    fun cleanupStaleFilesNow(
+    private fun cleanupStaleFilesNow(
         validUrls: List<String> = emptyList(),
-        currentTime: Long = System.currentTimeMillis()
+        currentTime: Long = System.currentTimeMillis(),
+        allFileUrls: Set<String> = fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls(),
+        expiryTs: (url: String) -> Long = { key ->
+            max(fileStore.expiryForUrl(key), inAppAssetsStore.expiryForUrl(key))
+        }
     ) {
         val valid = validUrls.associateWith { it }
-
-        val allFileUrls = fileStore.getAllFileUrls()
 
         val cleanupFileUrls = allFileUrls
             .toMutableSet()
             .filter { key ->
-                valid.contains(key).not()
-                        && (currentTime > fileStore.expiryForUrl(key))
+
+                // check if url is still valid, if so then dont clear
+                val first = valid.contains(key).not()
+
+                // check current time is greater than expiry for url
+                val second = currentTime > expiryTs(key)
+
+                first && second
             }
 
         cleanupAllFiles(cleanupFileUrls)
     }
 
-    @JvmOverloads
-    fun cleanupAllInAppImagesAndGifsV1(
-        cleanupUrls: List<String> = inAppAssetsStore.getAllAssetUrls().toList()
-    ) {
-        val successBlock: (url: String) -> Unit = { url ->
-            inAppAssetsStore.clearAssetUrl(url)
-        }
-
-        cleanupStrategy.clearInAppImagesAndGifsV1(cleanupUrls, successBlock)
-    }
-
-    @JvmOverloads
-    fun cleanupAllFiles(
-        cleanupUrls: List<String> = fileStore.getAllFileUrls().toList()
+    private fun cleanupAllFiles(
+        cleanupUrls: List<String>
     ) {
         val successBlock: (url: String) -> Unit = { url ->
             fileStore.clearFileUrl(url)
+            inAppAssetsStore.clearAssetUrl(url)
         }
 
-        cleanupStrategy.clearFileAssetsV2(cleanupUrls, successBlock)
+        cleanupStrategy.clearFileAssets(cleanupUrls, successBlock)
+    }
+
+    private fun repoUpdated() {
+        urlTriggers.forEach { dt ->
+
+            val all = dt.urls.all { url ->
+                downloadInProgressUrls[url] == DownloadState.SUCCESSFUL
+                        || downloadInProgressUrls[url] == DownloadState.FAILED
+            }
+            if (all) {
+                // trigger callback for all downloads finished
+                dt.callback.invoke()
+            }
+        }
     }
 }
+
+enum class DownloadState {
+    QUEUED, IN_PROGRESS, SUCCESSFUL, FAILED
+}
+
+/**
+ * Invokes callback once the list of urls passed have finished downloading
+ */
+data class DownloadTriggerForUrls(
+    val urls: List<String>,
+    val callback: () -> Unit
+)
+
+data class DownloadTriggerResult(
+    val successfulUrls: List<String>,
+    val failureUrls: List<String>,
+    val allSuccessful: Boolean
+)

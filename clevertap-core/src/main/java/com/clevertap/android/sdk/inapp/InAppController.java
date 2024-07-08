@@ -45,8 +45,6 @@ import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -65,6 +63,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
+
+import kotlin.Pair;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function2;
@@ -102,7 +102,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay(resourceProvider);
+            inAppNotification.prepareForDisplay(resourceProvider,templatesManager,storeRegistry);
         }
     }
 
@@ -724,8 +724,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
-    private static void checkPendingNotifications(final Context context, final CleverTapInstanceConfig config,
-            final InAppController inAppController) {
+    private static void checkPendingNotifications(
+            final Context context,
+            final CleverTapInstanceConfig config,
+            final InAppController inAppController
+    ) {
         Logger.v(config.getAccountId(), "checking Pending Notifications");
         if (pendingNotifications != null && !pendingNotifications.isEmpty()) {
             try {
@@ -745,8 +748,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     //InApp
-    private static void inAppDidDismiss(Context context, CleverTapInstanceConfig config,
-            CTInAppNotification inAppNotification, InAppController inAppController) {
+    private static void inAppDidDismiss(
+            Context context,
+            CleverTapInstanceConfig config,
+            CTInAppNotification inAppNotification,
+            InAppController inAppController
+    ) {
         Logger.v(config.getAccountId(), "Running inAppDidDismiss");
         if (currentlyDisplayingInApp != null && (currentlyDisplayingInApp.getCampaignId()
                 .equals(inAppNotification.getCampaignId()))) {
@@ -771,8 +778,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     //InApp
-    private static void showInApp(Context context, final CTInAppNotification inAppNotification,
-            CleverTapInstanceConfig config, InAppController inAppController) {
+    private static void showInApp(
+            Context context,
+            final CTInAppNotification inAppNotification,
+            CleverTapInstanceConfig config,
+            InAppController inAppController
+    ) {
 
         Logger.v(config.getAccountId(), "Attempting to show next In-App");
 
@@ -856,24 +867,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 inAppFragment = new CTInAppNativeHeaderFragment();
                 break;
             case CTInAppTypeCustomCodeTemplate:
-                //TODO CustomTemplates download all file arguments before presenting
-                final List<String> fileUrls = inAppNotification.getCustomTemplateData()
-                        .getFileArgsUrls(inAppController.getTemplatesManager());
-                FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory.createFileResourcesRepo(context,
-                        config.getLogger(),
-                        inAppController.getStoreRegistry());
-                if (assetRepo != null && !fileUrls.isEmpty()) {
-                    assetRepo.fetchAllFiles(fileUrls, (aBoolean, stringBooleanMap) -> {
-                        config.getLogger().verbose(config.getAccountId(),
-                                "file download status from showInApp() = " + aBoolean + " and url status map = "
-                                        + stringBooleanMap);
-                        if (aBoolean)
-                        {
-                            inAppController.presentTemplate(inAppNotification);
-                        }
-                        return null;
-                    });
-                }
+                inAppController.presentTemplate(inAppNotification);
                 return;
             default:
                 Logger.d(config.getAccountId(), "Unknown InApp Type found: " + type);
@@ -992,12 +986,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             if (template != null) {
                 // When a custom in-app template is triggered as an action we need to present it.
                 // Since all related methods operate with either CTInAppNotification or its json representation, here
-                // we create a copy of the notification that initiated the triggering and add the action as its
+                // we create a new notification from the one that initiated the triggering and add the action as its
                 // template data.
-                CTInAppNotification notificationFromAction = notification.copyAsCustomCode();
                 CustomTemplateInAppData actionTemplateData = templateInAppData.copy();
                 actionTemplateData.setAction(true);
-                notificationFromAction.setCustomTemplateData(actionTemplateData);
+                CTInAppNotification notificationFromAction = notification.createNotificationForAction(actionTemplateData);
+                if (notificationFromAction == null) {
+                    logger.debug("Failed to present custom template with name: "
+                            + templateInAppData.getTemplateName());
+                    return;
+                }
                 if (template.isVisual()) {
                     addInAppNotificationInFrontOfQueue(notificationFromAction.getJsonDescription());
                 } else {

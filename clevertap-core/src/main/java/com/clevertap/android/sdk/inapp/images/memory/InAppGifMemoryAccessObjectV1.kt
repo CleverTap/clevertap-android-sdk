@@ -1,45 +1,54 @@
 package com.clevertap.android.sdk.inapp.images.memory
 
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BITMAP
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BYTEARRAY
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_FILE
+import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToBitmap
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToByteArray
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToFile
+import com.clevertap.android.sdk.inapp.images.repo.TAG_FILE_DOWNLOAD
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
 
-class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches): MemoryAccessObject<ByteArray> {
+internal class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches,private val logger: ILogger?): MemoryAccessObject<ByteArray> {
 
     override fun fetchInMemory(key: String): Pair<ByteArray, File>? {
         val gifInMemory = ctCaches.gifCache()
         return gifInMemory.get(key)
     }
 
-    override fun fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any? {
+    @Suppress("UNCHECKED_CAST")
+    override fun <A> fetchInMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType<A>): A? {
         val pair = fetchInMemory(key)
         return pair?.let {
+            logger?.verbose(TAG_FILE_DOWNLOAD,"$key data found in GIF in-memory")
             when(transformTo)
             {
-                MEMORY_DATA_TRANSFORM_TO_BITMAP -> bytesToBitmap(it.first)
-                MEMORY_DATA_TRANSFORM_TO_BYTEARRAY -> it.first
-                MEMORY_DATA_TRANSFORM_TO_FILE -> it.second
-                else -> null
+                ToBitmap -> bytesToBitmap(it.first) as? A
+                ToByteArray -> it.first as? A
+                ToFile -> it.second as? A
             }
         }
     }
 
-    override fun fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType): Any? {
+    @Suppress("UNCHECKED_CAST")
+    override fun <A> fetchDiskMemoryAndTransform(key: String, transformTo: MemoryDataTransformationType<A>): A? {
         val file = fetchDiskMemory(key)
         return file?.let {
+            logger?.verbose(TAG_FILE_DOWNLOAD,"$key data found in GIF disk memory")
+            val bytes = fileToBytes(it)
+            if (bytes != null) {
+                saveInMemory(key, Pair(bytes, it))
+            }
             when(transformTo)
             {
-                MEMORY_DATA_TRANSFORM_TO_BITMAP -> fileToBitmap(it)
-                MEMORY_DATA_TRANSFORM_TO_BYTEARRAY -> fileToBytes(it)
-                MEMORY_DATA_TRANSFORM_TO_FILE -> file
-                else -> null
+                ToBitmap -> fileToBitmap(it) as? A
+                ToByteArray -> bytes as? A
+                ToFile -> it as? A
             }
         }
     }
 
     override fun fetchDiskMemory(key: String): File? {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"GIF In-Memory cache miss for $key data")
         val gifDiskMemory = ctCaches.gifCacheDisk()
         return gifDiskMemory.get(key)
     }
@@ -50,16 +59,19 @@ class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches): MemoryAccess
     }
 
     override fun removeDiskMemory(key: String): Boolean {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from GIF disk-memory")
         val gifDiskMemory = ctCaches.gifCacheDisk()
         return gifDiskMemory.remove(key)
     }
 
     override fun removeInMemory(key: String): Pair<ByteArray, File>? {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from GIF in-memory")
         val gifInMemory = ctCaches.gifCache()
         return gifInMemory.remove(key)
     }
 
     override fun saveInMemory(key: String, data: Pair<ByteArray, File>): Boolean {
+        logger?.verbose(TAG_FILE_DOWNLOAD,"Saving $key data in GIF in-memory")
         val gifInMemory = ctCaches.gifCache()
         return gifInMemory.add(key, data)
     }

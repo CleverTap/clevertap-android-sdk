@@ -37,6 +37,8 @@ public class Var<T> {
 
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
 
+    private final List<VariableCallback<T>> fileReadyHandlers = new ArrayList<>();
+
     private static boolean printedCallbackWarning;
 
     public Var(CTVariables ctVariables) {
@@ -70,7 +72,7 @@ public class Var<T> {
             log("Variable name starts or ends with a `.` which is not allowed: " + name);
             return null;
         }
-        if (defaultValue == null) {
+        if (!CTVariableUtils.FILE.equals(kind) && defaultValue == null) {
             Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '"
                     + name + "'.");
             return null;
@@ -115,6 +117,11 @@ public class Var<T> {
         if (ctVariables.hasVarsRequestCompleted()) {
             hadStarted = true;
             triggerValueChanged();
+
+            // trigger file ready, start download if not.
+            if (CTVariableUtils.FILE.equals(kind)) {
+                ctVariables.getVarCache().fileVarUpdated((Var<String>) this);
+            }
         }
     }
 
@@ -186,9 +193,15 @@ public class Var<T> {
         }
     }
 
-    @Override @NonNull
+    @Override
+    @NonNull
     public String toString() {
-        return "Var(" + name + ","+value+")" ;
+        if (CTVariableUtils.FILE.equals(kind)) {
+            String filePath = ctVariables.getVarCache().filePathFromDisk(stringValue);
+            return "Var(" + name + "," + filePath + ")";
+        } else {
+            return "Var(" + name + "," + value + ")";
+        }
     }
 
     void warnIfNotStarted() {
@@ -217,7 +230,20 @@ public class Var<T> {
 
     public T value() {
         warnIfNotStarted();
-        return value;
+
+        if (CTVariableUtils.FILE.equals(kind)) {
+            return (T) ctVariables.getVarCache().filePathFromDisk(stringValue);
+        } else {
+            return value;
+        }
+    }
+
+    String rawFileValue() {
+        if (CTVariableUtils.FILE.equals(kind)) {
+            return stringValue;
+        } else {
+           return null;
+        }
     }
 
     public void addValueChangedCallback(VariableCallback<T> callback) {
@@ -241,6 +267,15 @@ public class Var<T> {
         }
     }
 
+    public void triggerFileIsReady() {
+        synchronized (fileReadyHandlers) {
+            for (VariableCallback<T> callback : fileReadyHandlers) {
+                callback.setVariable(this);
+                Utils.runOnUiThread(callback);
+            }
+        }
+    }
+
     public Number numberValue() {
         warnIfNotStarted();
         return numberValue;
@@ -248,10 +283,31 @@ public class Var<T> {
 
     public String stringValue() {
         warnIfNotStarted();
-        return stringValue;
+        if (CTVariableUtils.FILE.equals(kind)) {
+            return ctVariables.getVarCache().filePathFromDisk(stringValue);
+        } else {
+            return stringValue;
+        }
     }
 
     void clearStartFlag() {
         hadStarted = false;
+    }
+
+    public void addFileReadyHandler(@NonNull VariableCallback<T> handler) {
+        synchronized (fileReadyHandlers) {
+            fileReadyHandlers.add(handler);
+        }
+    }
+
+    /**
+     * Removes file ready handler for a given variable.
+     *
+     * @param handler Handler to be removed.
+     */
+    public void removeFileReadyHandler(@NonNull VariableCallback<T> handler) {
+        synchronized (fileReadyHandlers) {
+            fileReadyHandlers.remove(handler);
+        }
     }
 }

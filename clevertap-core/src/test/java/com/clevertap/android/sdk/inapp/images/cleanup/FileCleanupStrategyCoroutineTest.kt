@@ -26,15 +26,14 @@ class FileCleanupStrategyCoroutineTest {
         val successUrls = mutableListOf<String>()
 
         // invoke method
-        cleanupStrategy.clearInAppImagesAndGifsV1(urls) { url ->
+        cleanupStrategy.clearFileAssets(urls) { url ->
             successUrls.add(url)
         }
 
         advanceUntilIdle()
 
         urls.forEach { url ->
-            Mockito.verify(mFileResourceProvider).deleteImageMemoryV1(url)
-            Mockito.verify(mFileResourceProvider).deleteGifMemoryV1(url)
+            Mockito.verify(mFileResourceProvider).deleteData(url)
         }
 
         // assert

@@ -11,7 +11,7 @@ class MemoryCreator {
         private const val GIF_CACHE_MIN_KB: Long = 5 * 1024
         private const val FILE_CACHE_MIN_KB: Long = 15 * 1024
         private const val IMAGE_SIZE_MAX_DISK: Long = 5 * 1024
-        private const val FILE_SIZE_MAX_DISK: Long = 15 * 1024
+        private const val FILE_SIZE_MAX_DISK: Long = 5 * 1024
 
         /**
          * Creates a GifMemory object.
@@ -21,12 +21,12 @@ class MemoryCreator {
          */
         fun createInAppGifMemoryV1(diskMemoryLocation: File, logger: ILogger?): Memory<ByteArray> {
             val defaultGifConfig = MemoryConfig(
-                GIF_CACHE_MIN_KB,
-                Runtime.getRuntime().maxMemory() / (1024 * 32),
-                IMAGE_SIZE_MAX_DISK,
-                diskMemoryLocation
+                minInMemorySizeKB = GIF_CACHE_MIN_KB,
+                optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32),
+                maxDiskSizeKB = IMAGE_SIZE_MAX_DISK,
+                diskDirectory = diskMemoryLocation
             )
-            return InAppGifMemoryV1(defaultGifConfig, logger)
+            return InAppGifMemoryV1(config = defaultGifConfig, logger = logger)
         }
 
         /**
@@ -37,12 +37,12 @@ class MemoryCreator {
          */
         fun createInAppImageMemoryV1(diskMemoryLocation: File, logger: ILogger?): Memory<Bitmap> {
             val defaultImageConfig = MemoryConfig(
-                IMAGE_CACHE_MIN_KB,
-                Runtime.getRuntime().maxMemory() / (1024 * 32),
-                IMAGE_SIZE_MAX_DISK,
-                diskMemoryLocation
+                minInMemorySizeKB = IMAGE_CACHE_MIN_KB,
+                optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32),
+                maxDiskSizeKB = IMAGE_SIZE_MAX_DISK,
+                diskDirectory = diskMemoryLocation
             )
-            return InAppImageMemoryV1(defaultImageConfig, logger)
+            return InAppImageMemoryV1(config = defaultImageConfig, logger = logger)
         }
 
         /**
@@ -53,12 +53,12 @@ class MemoryCreator {
          */
         fun createFileMemoryV2(diskMemoryLocation: File, logger: ILogger?): Memory<ByteArray> {
             val defaultFileConfig = MemoryConfig(
-                FILE_CACHE_MIN_KB,
-                Runtime.getRuntime().maxMemory() / (1024 * 32),
-                FILE_SIZE_MAX_DISK,
-                diskMemoryLocation
+                minInMemorySizeKB = FILE_CACHE_MIN_KB,
+                optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32),
+                maxDiskSizeKB = FILE_SIZE_MAX_DISK,
+                diskDirectory = diskMemoryLocation
             )
-            return FileMemoryV2(defaultFileConfig, logger)
+            return FileMemoryV2(config = defaultFileConfig, logger = logger)
         }
     }
 }

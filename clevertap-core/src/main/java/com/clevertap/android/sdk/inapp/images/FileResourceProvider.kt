@@ -3,17 +3,22 @@ package com.clevertap.android.sdk.inapp.images
 import android.content.Context
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.inapp.data.CtCacheType
+import com.clevertap.android.sdk.inapp.data.CtCacheType.FILES
+import com.clevertap.android.sdk.inapp.data.CtCacheType.GIF
+import com.clevertap.android.sdk.inapp.data.CtCacheType.IMAGE
 import com.clevertap.android.sdk.inapp.images.memory.FileMemoryAccessObject
 import com.clevertap.android.sdk.inapp.images.memory.InAppGifMemoryAccessObjectV1
 import com.clevertap.android.sdk.inapp.images.memory.InAppImageMemoryAccessObjectV1
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType
 import com.clevertap.android.sdk.inapp.images.memory.MemoryAccessObject
 import com.clevertap.android.sdk.inapp.images.memory.MemoryCreator
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BITMAP
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_BYTEARRAY
-import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.MEMORY_DATA_TRANSFORM_TO_FILE
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToBitmap
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToByteArray
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToFile
+import com.clevertap.android.sdk.inapp.images.repo.TAG_FILE_DOWNLOAD
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.utils.CTCaches
-import java.io.ByteArrayOutputStream
 import java.io.File
 
 internal class FileResourceProvider(
@@ -24,11 +29,20 @@ internal class FileResourceProvider(
     private val inAppRemoteSource: FileFetchApiContract = FileFetchApi()
 ) {
 
-    private var ctCaches: CTCaches = CTCaches.instance(
+    private val ctCaches: CTCaches = CTCaches.instance(
         inAppImageMemoryV1 = MemoryCreator.createInAppImageMemoryV1(images, logger),
         inAppGifMemoryV1 = MemoryCreator.createInAppGifMemoryV1(gifs, logger),
         fileMemory = MemoryCreator.createFileMemoryV2(allFileTypesDir, logger)
     )
+    private val imageMAO = InAppImageMemoryAccessObjectV1(ctCaches,logger)
+    private val gifMAO = InAppGifMemoryAccessObjectV1(ctCaches,logger)
+    private val fileMAO = FileMemoryAccessObject(ctCaches,logger)
+    private val mapOfMAO =
+        mapOf<CtCacheType, List<MemoryAccessObject<*>>>(
+            IMAGE to listOf(imageMAO, fileMAO, gifMAO),
+            GIF to listOf(gifMAO, fileMAO, imageMAO),
+            FILES to listOf(fileMAO, imageMAO, gifMAO)
+        )
 
     constructor(
         context: Context,
@@ -46,312 +60,130 @@ internal class FileResourceProvider(
         private const val ALL_FILE_TYPES_DIRECTORY_NAME = "CleverTap.Files."
     }
 
-    fun saveInAppImageV1(cacheKey: String, bitmap: Bitmap, bytes: ByteArray) {
-        val imageMAO = InAppImageMemoryAccessObjectV1(ctCaches)
-        val savedFile = imageMAO.saveDiskMemory(cacheKey, bytes)
-        imageMAO.saveInMemory(cacheKey, Pair(bitmap, savedFile))
-    }
-
-    fun saveInAppGifV1(cacheKey: String, bytes: ByteArray) {
-        val gifMAO = InAppGifMemoryAccessObjectV1(ctCaches)
-        val savedFile = gifMAO.saveDiskMemory(cacheKey, bytes)
-        gifMAO.saveInMemory(cacheKey, Pair(bytes, savedFile))
-    }
-
-    fun saveFile(cacheKey: String, bytes: ByteArray) {
-        val fileMAO = FileMemoryAccessObject(ctCaches)
-        val savedFile = fileMAO.saveDiskMemory(cacheKey, bytes)
-        fileMAO.saveInMemory(cacheKey, Pair(bytes, savedFile))
-    }
-
-    fun isInAppImageCachedV1(url: String): Boolean {
-        return isFileCached(url)
-    }
-
-    fun isInAppGifCachedV1(url: String): Boolean {
-        return isFileCached(url)
+    private fun <T> saveData(cacheKey : String, data : Pair<T,ByteArray>,mao : MemoryAccessObject<T>){
+        val savedFile = mao.saveDiskMemory(cacheKey, data.second)
+        mao.saveInMemory(cacheKey,Pair(data.first,savedFile))
     }
 
     fun isFileCached(url: String): Boolean {
-        val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            FileMemoryAccessObject(ctCaches), InAppImageMemoryAccessObjectV1(ctCaches),
-            InAppGifMemoryAccessObjectV1(ctCaches)
-        )
-
-        // Try in memory
-        memoryAccessObjectList.forEach {
-            val pair = it.fetchInMemory(url)
-            if (pair != null) {
-                return true
+        return (mapOfMAO[FILES]?.run {
+            firstNotNullOfOrNull {// Try in memory
+                it.fetchInMemory(url)
+            } ?: firstNotNullOfOrNull {/* Try disk */
+                it.fetchDiskMemory(url)
             }
-        }
-
-        // Try disk
-        memoryAccessObjectList.forEach {
-            val file = it.fetchDiskMemory(url)
-            if (file != null) {
-                return true
-            }
-        }
-        return false
+        }) != null
     }
 
-    fun cachedInAppImageV1(cacheKey: String?): Bitmap? {
-
-        if (cacheKey == null) {
-            logger?.verbose("Bitmap for null key requested")
-            return null
-        }
-
-        val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            InAppImageMemoryAccessObjectV1(ctCaches), FileMemoryAccessObject(ctCaches),
-            InAppGifMemoryAccessObjectV1(ctCaches)
-        )
-        // Try in memory
-        memoryAccessObjectList.forEach {
-            val bitmap = it.fetchInMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BITMAP)
-            if (bitmap is Bitmap) {
-                return bitmap
-            }
-        }
-
-        // Try disk
-        memoryAccessObjectList.forEach {
-            val bitmap = it.fetchDiskMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BITMAP)
-            if (bitmap is Bitmap) {
-                return bitmap
-            }
-        }
-
-        return null
-    }
-
-    fun cachedInAppGifV1(cacheKey: String?): ByteArray? {
-        if (cacheKey == null) {
-            logger?.verbose("GIF for null key requested")
-            return null
-        }
-        val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            InAppGifMemoryAccessObjectV1(ctCaches), FileMemoryAccessObject(ctCaches),
-            InAppImageMemoryAccessObjectV1(ctCaches)
-        )
-        // Try in memory
-        memoryAccessObjectList.forEach {
-            val bytes = it.fetchInMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BYTEARRAY)
-            if (bytes is ByteArray) {
-                return bytes
-            }
-        }
-
-        // Try disk
-        memoryAccessObjectList.forEach {
-            val bytes = it.fetchDiskMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BYTEARRAY)
-            if (bytes is ByteArray) {
-                return bytes
-            }
-        }
-
-        return null
-    }
-
-    fun cachedFileInBytes(cacheKey: String?): ByteArray? {
-        if (cacheKey == null) {
-            logger?.verbose("File for null key requested")
-            return null
-        }
-        val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            FileMemoryAccessObject(ctCaches),
-            InAppGifMemoryAccessObjectV1(ctCaches),
-            InAppImageMemoryAccessObjectV1(ctCaches)
-        )
-        // Try in memory
-        memoryAccessObjectList.forEach {
-            val bytes = it.fetchInMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BYTEARRAY)
-            if (bytes is ByteArray) {
-                return bytes
-            }
-        }
-
-        // Try disk
-        memoryAccessObjectList.forEach {
-            val bytes = it.fetchDiskMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_BYTEARRAY)
-            if (bytes is ByteArray) {
-                return bytes
-            }
-        }
-
-        return null
-    }
-
-    fun cachedFilePath(cacheKey: String?): String? {
-        return cachedFileInstance(cacheKey)?.absolutePath
-    }
-
-    fun cachedFileInstance(cacheKey: String?): File? {
-        if (cacheKey == null) {
-            logger?.verbose("File for null key requested")
-            return null
-        }
-        val memoryAccessObjectList = listOf<MemoryAccessObject<*>>(
-            FileMemoryAccessObject(ctCaches),
-            InAppGifMemoryAccessObjectV1(ctCaches),
-            InAppImageMemoryAccessObjectV1(ctCaches)
-        )
-        // Try in memory
-        memoryAccessObjectList.forEach {
-            val file = it.fetchInMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_FILE)
-            if (file is File) {
-                return file
-            }
-        }
-
-        // Try disk
-        memoryAccessObjectList.forEach {
-            val file = it.fetchDiskMemoryAndTransform(cacheKey, MEMORY_DATA_TRANSFORM_TO_FILE)
-            if (file is File) {
-                return file
-            }
-        }
-        return null
-    }
-
-    fun fetchInAppImageV1(url: String): Bitmap? {
-        return fetchInAppImageV1(url = url, clazz = Bitmap::class.java)
-    }
+    fun cachedInAppImageV1(cacheKey: String?): Bitmap? = fetchCachedData(Pair(cacheKey,IMAGE), ToBitmap)
+    fun cachedInAppGifV1(cacheKey: String?): ByteArray? = fetchCachedData(Pair(cacheKey,GIF), ToByteArray)
+    fun cachedFileInBytes(cacheKey: String?): ByteArray? = fetchCachedData(Pair(cacheKey,FILES), ToByteArray)
+    fun cachedFilePath(cacheKey: String?): String? = cachedFileInstance(cacheKey)?.absolutePath
+    fun cachedFileInstance(cacheKey: String?): File? = fetchCachedData(Pair(cacheKey,FILES), ToFile)
 
     /**
      * Function that would fetch and cache bitmap image into Memory and File cache and return it.
      * If image is found in cache, the cached image is returned.
      */
-    fun <T> fetchInAppImageV1(url: String, clazz: Class<T>): T? {
-
-        val cachedImage: Bitmap? = cachedInAppImageV1(url)
-
-        if (cachedImage != null) {
-            if (clazz.isAssignableFrom(Bitmap::class.java)) {
-                return cachedImage as? T
-            } else if (clazz.isAssignableFrom(ByteArray::class.java)) {
-                val stream = ByteArrayOutputStream()
-                cachedImage.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                val byteArray = stream.toByteArray()
-                return byteArray as? T
-            }
-        }
-
-        val downloadedBitmap = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
-
-        when (downloadedBitmap.status) {
-
-            DownloadedBitmap.Status.SUCCESS -> {
-                saveInAppImageV1(
-                    cacheKey = url,
-                    bitmap = downloadedBitmap.bitmap!!,
-                    bytes = downloadedBitmap.bytes!!
-                )
-            }
-
-            else -> {
-                logger?.verbose("There was a problem fetching data for bitmap")
-                return null
-            }
-        }
-
-        return if (clazz.isAssignableFrom(Bitmap::class.java)) {
-            downloadedBitmap.bitmap as? T
-        } else if (clazz.isAssignableFrom(ByteArray::class.java)) {
-            downloadedBitmap.bytes as? T
-        } else {
-            null
-        }
+    fun fetchInAppImageV1(url: String): Bitmap? {
+        return fetchData(
+            urlMeta = Pair(url, IMAGE),
+            mao = imageMAO,
+            cachedDataFetcherBlock = ::cachedInAppImageV1
+        ) { Pair(it.bitmap!!, it.bytes!!) }
     }
 
     fun fetchInAppGifV1(url: String): ByteArray? {
-        val cachedGif = cachedInAppGifV1(url)
-
-        if (cachedGif != null) {
-            logger?.verbose("Returning requested $url gif from cache with size ${cachedGif.size}")
-            return cachedGif
-        }
-
-        val downloadedGif = inAppRemoteSource.makeApiCallForInAppBitmap(url = url)
-
-        return when (downloadedGif.status) {
-
-            DownloadedBitmap.Status.SUCCESS -> {
-                saveInAppGifV1(cacheKey = url, bytes = downloadedGif.bytes!!)
-                logger?.verbose("Returning requested $url gif with network, saved in cache")
-                downloadedGif.bytes
-            }
-
-            else -> {
-                logger?.verbose("There was a problem fetching data for bitmap, status:${downloadedGif.status}")
-                null
-            }
-        }
+        return fetchData(
+            urlMeta = Pair(url, GIF),
+            mao = gifMAO,
+            cachedDataFetcherBlock = ::cachedInAppGifV1
+        ) { Pair(it.bytes!!, it.bytes) }
     }
 
     fun fetchFile(url: String): ByteArray? {
-        val cachedFile = cachedFileInBytes(url)
+        return fetchData(
+            urlMeta = Pair(url, FILES),
+            mao = fileMAO,
+            cachedDataFetcherBlock = ::cachedFileInBytes
+        ) { Pair(it.bytes!!, it.bytes) }
+    }
 
-        if (cachedFile != null) {
-            logger?.verbose("Returning requested $url file from cache with size ${cachedFile.size}")
-            return cachedFile
-        }
-
-        val downloadedFile = inAppRemoteSource.makeApiCallForFile(url = url)
-
-        return when (downloadedFile.status) {
-
-            DownloadedBitmap.Status.SUCCESS -> {
-                saveFile(cacheKey = url, bytes = downloadedFile.bytes!!)
-                logger?.verbose("Returning requested $url file with network, saved in cache")
-                downloadedFile.bytes
+    fun deleteData(cacheKey: String) {
+        mapOfMAO[IMAGE]?.forEach { mao ->
+            val cacheType = when (mao) {
+                is InAppImageMemoryAccessObjectV1 -> IMAGE
+                is InAppGifMemoryAccessObjectV1 -> GIF
+                is FileMemoryAccessObject -> FILES
+                else -> ""
+            }
+            val pair = mao.removeInMemory(cacheKey)
+            if (pair != null) {
+                logger?.verbose(
+                    TAG_FILE_DOWNLOAD,
+                    "$cacheKey was present in $cacheType in-memory cache is successfully removed"
+                )
             }
 
+            val b = mao.removeDiskMemory(cacheKey)
+            if (b) {
+                logger?.verbose(
+                    TAG_FILE_DOWNLOAD,
+                    "$cacheKey was present in $cacheType disk-memory cache is successfully removed"
+                )
+            }
+        }
+    }
+
+
+    private fun <T> fetchCachedData(cacheKeyAndType: Pair<String?,CtCacheType>, transformationType: MemoryDataTransformationType<T>): T? {
+        val cacheKey = cacheKeyAndType.first
+        val cacheType = cacheKeyAndType.second
+        logger?.verbose(TAG_FILE_DOWNLOAD,"${cacheType.name} data for key $cacheKey requested")
+
+        if (cacheKey == null) {
+            logger?.verbose(TAG_FILE_DOWNLOAD,"${cacheType.name} data for null key requested")
+            return null
+        }
+
+        return mapOfMAO[cacheType]?.run {
+            firstNotNullOfOrNull {// Try in memory
+                it.fetchInMemoryAndTransform(cacheKey, transformationType)
+            } ?: firstNotNullOfOrNull {/* Try disk */
+                it.fetchDiskMemoryAndTransform(cacheKey, transformationType)
+            }
+        }
+    }
+
+    private fun <T> fetchData(
+        urlMeta: Pair<String, CtCacheType>,
+        mao: MemoryAccessObject<T>,
+        cachedDataFetcherBlock: (String) -> T?,
+        dataToSaveBlock: (DownloadedBitmap) -> Pair<T, ByteArray>
+    ): T? {
+        val cachedData = cachedDataFetcherBlock(urlMeta.first)
+
+        if (cachedData != null) {
+            logger?.verbose(TAG_FILE_DOWNLOAD,"Returning requested ${urlMeta.first} ${urlMeta.second.name} from cache")
+            return cachedData
+        }
+
+        val downloadedData = inAppRemoteSource.makeApiCallForFile(urlMeta)
+        val dataToSave = dataToSaveBlock(downloadedData)
+        return when (downloadedData.status) {
+            DownloadedBitmap.Status.SUCCESS -> {
+                saveData(
+                    cacheKey = urlMeta.first,
+                    data = dataToSave,
+                    mao = mao
+                )
+                logger?.verbose(TAG_FILE_DOWNLOAD,"Returning requested ${urlMeta.first} ${urlMeta.second.name} with network, saved in cache")
+                dataToSave.first
+            }
             else -> {
-                logger?.verbose("There was a problem fetching data for file, status:${downloadedFile.status}")
+                logger?.verbose(TAG_FILE_DOWNLOAD,"There was a problem fetching data for ${urlMeta.second.name}, status: ${downloadedData.status}")
                 null
             }
-        }
-    }
-
-    fun deleteImageMemoryV1(cacheKey: String) {
-        val imageMAO = InAppImageMemoryAccessObjectV1(ctCaches)
-        val pair = imageMAO.removeInMemory(cacheKey)
-        if (pair != null) {
-            logger?.verbose("successfully removed $cacheKey from memory cache")
-        }
-
-        val b = imageMAO.removeDiskMemory(cacheKey)
-        if (b) {
-            logger?.verbose("successfully removed $cacheKey from file cache")
-        }
-    }
-
-    fun deleteGifMemoryV1(cacheKey: String) {
-
-        val gifMAO = InAppGifMemoryAccessObjectV1(ctCaches)
-        val bytes = gifMAO.removeInMemory(cacheKey)
-        if (bytes != null) {
-            logger?.verbose("successfully removed gif $cacheKey from memory cache")
-        }
-        val b = gifMAO.removeDiskMemory(cacheKey)
-        if (b) {
-            logger?.verbose("successfully removed gif $cacheKey from file cache")
-        }
-    }
-
-    fun deleteFileMemoryV2(cacheKey: String) {
-        val fileMAO = FileMemoryAccessObject(ctCaches)
-        val bytes = fileMAO.removeInMemory(cacheKey)
-
-        if (bytes != null) {
-            logger?.verbose("successfully removed file $cacheKey from memory cache")
-        }
-        val b = fileMAO.removeDiskMemory(cacheKey)
-
-        if (b) {
-            logger?.verbose("successfully removed file $cacheKey from file disk cache")
         }
     }
 }

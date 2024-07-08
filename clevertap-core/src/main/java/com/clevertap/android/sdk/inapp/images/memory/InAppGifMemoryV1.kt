@@ -7,7 +7,7 @@ import java.io.File
 import kotlin.math.max
 
 class InAppGifMemoryV1(
-    private val config: MemoryConfig,
+    internal val config: MemoryConfig,
     private val logger: ILogger? = null
 ) : Memory<ByteArray> {
 
@@ -43,7 +43,10 @@ class InAppGifMemoryV1(
     }
 
     override fun inMemorySize(): Int {
-        val selected = max(config.optimistic, config.minInMemorySizeKB).toInt()
+        val selected = max(
+            a = config.optimistic,
+            b = config.minInMemorySizeKB
+        ).toInt()
 
         logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minInMemorySizeKB}, selected = $selected")
 
