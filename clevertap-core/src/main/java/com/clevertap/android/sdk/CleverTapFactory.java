@@ -175,12 +175,14 @@ class CleverTapFactory {
             }
         });
 
-        FileResourcesRepoImpl impl = FileResourcesRepoFactory.
-                createFileResourcesRepo(context, config.getLogger(), storeRegistry);
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, config.getLogger(), storeRegistry);
+        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, config.getLogger());
+
         VarCache varCache = new VarCache(
                 config,
                 context,
-                impl
+                impl,
+                fileResourceProvider
         );
         coreState.setVarCache(varCache);
 
@@ -269,7 +271,6 @@ class CleverTapFactory {
         coreState.setAnalyticsManager(analyticsManager);
 
         networkManager.addNetworkHeadersListener(evaluationManager);
-
         InAppController inAppController = new InAppController(
                 context,
                 config,
@@ -281,7 +282,7 @@ class CleverTapFactory {
                 deviceInfo,
                 new InAppQueue(config, storeRegistry),
                 evaluationManager,
-                new FileResourceProvider(context, config.getLogger()),
+                fileResourceProvider,
                 templatesManager,
                 storeRegistry
         );

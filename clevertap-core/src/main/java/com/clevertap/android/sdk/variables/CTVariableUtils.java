@@ -257,36 +257,46 @@ public final class CTVariableUtils {
         }
     }
 
-    public static JSONObject getFlatVarsJson(Map<String, Object> values, Map<String, String> kinds) {
+    public static JSONObject getFlatVarsJson(
+            Map<String, Object> values,
+            Map<String, String> kinds
+    ) {
        try {
            JSONObject resultJson = new JSONObject();
            resultJson.put("type", Constants.variablePayloadType);
 
            JSONObject vars = new JSONObject();
-           for (String valueKey:values.keySet()) {
+           for (String valueKey : values.keySet()) {
 
                String kind = kinds.get(valueKey);
                Object value = values.get(valueKey);
-               if(value instanceof Map){
-                   Map<String,Object> valueMap = new HashMap<>();
-                   valueMap.put(valueKey,value);
-                   Map<String,Object> flattenedValueMap = new HashMap<>();
-                   convertNestedMapsToFlatMap("",valueMap,flattenedValueMap);
-                   for (HashMap.Entry<String,Object> entry :flattenedValueMap.entrySet()) {
+               if (value instanceof Map) {
+                   Map<String, Object> valueMap = new HashMap<>();
+                   valueMap.put(valueKey, value);
+                   Map<String, Object> flattenedValueMap = new HashMap<>();
+                   convertNestedMapsToFlatMap("", valueMap, flattenedValueMap);
+                   for (HashMap.Entry<String, Object> entry : flattenedValueMap.entrySet()) {
                        String flattenedKey = entry.getKey();
                        Object flattenedValue = entry.getValue();
-                       String flattenedValueKind = kindFromValue(flattenedValue);
+
+                       // check if it is file type, in this case we cannot deduce the type from value
+                       String flattenedValueKind;
+                       if (CTVariableUtils.FILE.equals(kinds.get(flattenedKey))) {
+                           flattenedValueKind = CTVariableUtils.FILE;
+                       } else {
+                           flattenedValueKind = kindFromValue(flattenedValue);
+                       }
+
                        JSONObject varData = new JSONObject();
-                       varData.put("type",flattenedValueKind);
-                       varData.put("defaultValue",flattenedValue);
-                       vars.put(flattenedKey,varData);
+                       varData.put("type", flattenedValueKind);
+                       varData.put("defaultValue", flattenedValue);
+                       vars.put(flattenedKey, varData);
                    }
-               }
-               else {
+               } else {
                    JSONObject varData = new JSONObject();
-                   varData.put("type",kind);
-                   varData.put("defaultValue",value);
-                   vars.put(valueKey,varData);
+                   varData.put("type", kind);
+                   varData.put("defaultValue", value);
+                   vars.put(valueKey, varData);
                }
            }
            resultJson.put("vars",vars);

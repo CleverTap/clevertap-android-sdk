@@ -2,10 +2,14 @@ package com.clevertap.android.sdk.inapp
 
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.StoreProvider
+import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
+import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
+import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockk
 import org.junit.*
 import org.mockito.*
 import org.mockito.Mockito.*
@@ -18,7 +22,7 @@ import kotlin.test.assertEquals
 
 class ImpressionManagerTest : BaseTestCase() {
 
-    /*@Mock
+    @Mock
     private lateinit var clock: Clock
 
     @Mock
@@ -31,8 +35,14 @@ class ImpressionManagerTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         MockitoAnnotations.openMocks(this)
-
-        val storeRegistry = StoreRegistry()
+        val mockLegacyInAppStore: LegacyInAppStore = mockk()
+        val mockInAppAssetsStore: InAppAssetsStore = mockk()
+        val mockFileStore: FileStore = mockk()
+        val storeRegistry = StoreRegistry(
+            legacyInAppStore = mockLegacyInAppStore,
+            inAppAssetsStore = mockInAppAssetsStore,
+            filesStore = mockFileStore
+        )
 
         impressionManager = ImpressionManager(
             storeRegistry = storeRegistry, clock = clock, locale = Locale.getDefault()
@@ -624,5 +634,5 @@ class ImpressionManagerTest : BaseTestCase() {
     private fun recordImpression(timestamp: Long, campaignId: String) {
         `when`(clock.currentTimeSeconds()).thenReturn(timestamp)
         impressionManager.recordImpression(campaignId)
-    }*/
+    }
 }

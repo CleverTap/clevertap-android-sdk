@@ -3609,7 +3609,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param url the non-null url for which to check the existence of the file.
      * @return true if a file exists for the specified url, false otherwise.
      */
-    public boolean doesFileExistForUrl(@NonNull String url){
+    public boolean doesFileExistForUrl(@NonNull String url) {
         Logger logger = getConfigLogger();
         FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
         return fileResourceProvider.isFileCached(url);
@@ -3626,7 +3626,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return the absolute file path corresponding to the given URL or null if file doesn't exist
      */
     @Nullable
-    public String getFilePathForUrl(@NonNull String url){
+    public String getFilePathForUrl(@NonNull String url) {
         Logger logger = getConfigLogger();
         FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
         return fileResourceProvider.cachedFilePath(url);

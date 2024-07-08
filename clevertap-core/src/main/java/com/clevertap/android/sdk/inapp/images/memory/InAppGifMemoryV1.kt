@@ -6,27 +6,8 @@ import com.clevertap.android.sdk.utils.LruCache
 import java.io.File
 import kotlin.math.max
 
-// CTCaches - SDK Class - all features -> inapp, templates
-
-// 2 features:
-// Inapps -> InAppResorceProvider, InAppsRepo
-// Templates -> FileResorceProvider, FileResourcesRepoImpl
-// m modueles
-
-
-// Step 3
-// Inapps -> FileResorceProvider, FileResourcesRepoImpl
-
-// Step 4
-// Inapps -> getInappImage() -> inappresprov.getInappImage -> if null -> FileResorceProvider.getInappImage
-
-
-// FileResourceImpl
-// FileResourceProvicer
-// Gif, Image, File cache
-
 class InAppGifMemoryV1(
-    private val config: MemoryConfig,
+    internal val config: MemoryConfig,
     private val logger: ILogger? = null
 ) : Memory<ByteArray> {
 
