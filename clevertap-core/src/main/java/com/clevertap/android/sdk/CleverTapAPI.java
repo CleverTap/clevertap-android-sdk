@@ -42,6 +42,7 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
@@ -70,6 +71,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.Var;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
@@ -3307,6 +3309,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Defines a new file variable. In
+     * that case it is better to use the @Variable annotation instead of this method.
+     * // todo check annotation and documentation
+     *
+     * @param name Name of the variable.
+     * @return Returns the Var instance.
+     */
+    public Var<String> defineFileVariable(String name) {
+        return Var.define(name, null , CTVariableUtils.FILE, coreState.getCTVariables());
+    }
+
+    /**
      * Parses the @Variable annotated fields from a given instance or multiple instances.
      *
      * @param instances Instance or instances to parse.
@@ -3466,6 +3480,30 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Adds a callback to be invoked when variables are initialised with server values and file
+     * downloads are also completed for file type variables (if any) registered with
+     * {@link #defineFileVariable}.
+     * Will be called each time new values are fetched.
+     *
+     * @param callback Callback to register.
+     */
+    public void onVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().onVariablesChangedAndNoDownloadsPending(callback);
+    }
+
+    /**
+     * Adds a callback to be invoked when variables are initialised with server values and file
+     * downloads are also completed for file type variables (if any) registered with
+     * {@link #defineFileVariable}.
+     * WWill be called only once and then removed.
+     *
+     * @param callback Callback to register.
+     */
+    public void onceVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().onceVariablesChangedAndNoDownloadsPending(callback);
+    }
+
+    /**
      *  Removes all previously registered callbacks.
      */
     public void removeAllVariablesChangedCallbacks() {
@@ -3527,9 +3565,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         if (expiredOnly) {
-            impl.cleanupExpiredInAppsResources();
+            impl.cleanupExpiredResources(CtCacheType.IMAGE);
         } else {
-            impl.cleanupInAppsResources();
+            impl.cleanupAllResources(CtCacheType.IMAGE);
         }
     }
 
@@ -3559,9 +3597,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         if (expiredOnly) {
-            impl.cleanupStaleFiles();
+            impl.cleanupExpiredResources(CtCacheType.FILES);
         } else {
-            impl.cleanupStaleFiles(); // todo this also only clears expired ones. fixme
+            impl.cleanupAllResources(CtCacheType.FILES);
         }
     }
 
@@ -3571,7 +3609,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param url the non-null url for which to check the existence of the file.
      * @return true if a file exists for the specified url, false otherwise.
      */
-    public boolean doesFileExistForUrl(@NonNull String url){
+    public boolean doesFileExistForUrl(@NonNull String url) {
         Logger logger = getConfigLogger();
         FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
         return fileResourceProvider.isFileCached(url);
@@ -3588,7 +3626,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return the absolute file path corresponding to the given URL or null if file doesn't exist
      */
     @Nullable
-    public String getFilePathForUrl(@NonNull String url){
+    public String getFilePathForUrl(@NonNull String url) {
         Logger logger = getConfigLogger();
         FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
         return fileResourceProvider.cachedFilePath(url);

@@ -16,6 +16,7 @@ import com.clevertap.android.sdk.inapp.images.memory.MemoryCreator
 import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToBitmap
 import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToByteArray
 import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToFile
+import com.clevertap.android.sdk.inapp.images.repo.TAG_FILE_DOWNLOAD
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
@@ -33,9 +34,9 @@ internal class FileResourceProvider(
         inAppGifMemoryV1 = MemoryCreator.createInAppGifMemoryV1(gifs, logger),
         fileMemory = MemoryCreator.createFileMemoryV2(allFileTypesDir, logger)
     )
-    private val imageMAO = InAppImageMemoryAccessObjectV1(ctCaches)
-    private val gifMAO = InAppGifMemoryAccessObjectV1(ctCaches)
-    private val fileMAO = FileMemoryAccessObject(ctCaches)
+    private val imageMAO = InAppImageMemoryAccessObjectV1(ctCaches,logger)
+    private val gifMAO = InAppGifMemoryAccessObjectV1(ctCaches,logger)
+    private val fileMAO = FileMemoryAccessObject(ctCaches,logger)
     private val mapOfMAO =
         mapOf<CtCacheType, List<MemoryAccessObject<*>>>(
             IMAGE to listOf(imageMAO, fileMAO, gifMAO),
@@ -110,14 +111,26 @@ internal class FileResourceProvider(
 
     fun deleteData(cacheKey: String) {
         mapOfMAO[IMAGE]?.forEach { mao ->
+            val cacheType = when (mao) {
+                is InAppImageMemoryAccessObjectV1 -> IMAGE
+                is InAppGifMemoryAccessObjectV1 -> GIF
+                is FileMemoryAccessObject -> FILES
+                else -> ""
+            }
             val pair = mao.removeInMemory(cacheKey)
             if (pair != null) {
-                logger?.verbose("successfully removed $cacheKey from memory cache")
+                logger?.verbose(
+                    TAG_FILE_DOWNLOAD,
+                    "$cacheKey was present in $cacheType in-memory cache is successfully removed"
+                )
             }
 
             val b = mao.removeDiskMemory(cacheKey)
             if (b) {
-                logger?.verbose("successfully removed $cacheKey from file cache")
+                logger?.verbose(
+                    TAG_FILE_DOWNLOAD,
+                    "$cacheKey was present in $cacheType disk-memory cache is successfully removed"
+                )
             }
         }
     }
@@ -126,9 +139,10 @@ internal class FileResourceProvider(
     private fun <T> fetchCachedData(cacheKeyAndType: Pair<String?,CtCacheType>, transformationType: MemoryDataTransformationType<T>): T? {
         val cacheKey = cacheKeyAndType.first
         val cacheType = cacheKeyAndType.second
+        logger?.verbose(TAG_FILE_DOWNLOAD,"${cacheType.name} data for key $cacheKey requested")
 
         if (cacheKey == null) {
-            logger?.verbose("${cacheType.name} data for null key requested")
+            logger?.verbose(TAG_FILE_DOWNLOAD,"${cacheType.name} data for null key requested")
             return null
         }
 
@@ -150,7 +164,7 @@ internal class FileResourceProvider(
         val cachedData = cachedDataFetcherBlock(urlMeta.first)
 
         if (cachedData != null) {
-            logger?.verbose("Returning requested ${urlMeta.first} ${urlMeta.second.name} from cache")
+            logger?.verbose(TAG_FILE_DOWNLOAD,"Returning requested ${urlMeta.first} ${urlMeta.second.name} from cache")
             return cachedData
         }
 
@@ -163,11 +177,11 @@ internal class FileResourceProvider(
                     data = dataToSave,
                     mao = mao
                 )
-                logger?.verbose("Returning requested ${urlMeta.first} ${urlMeta.second.name} with network, saved in cache")
+                logger?.verbose(TAG_FILE_DOWNLOAD,"Returning requested ${urlMeta.first} ${urlMeta.second.name} with network, saved in cache")
                 dataToSave.first
             }
             else -> {
-                logger?.verbose("There was a problem fetching data for ${urlMeta.second.name}, status: ${downloadedData.status}")
+                logger?.verbose(TAG_FILE_DOWNLOAD,"There was a problem fetching data for ${urlMeta.second.name}, status: ${downloadedData.status}")
                 null
             }
         }

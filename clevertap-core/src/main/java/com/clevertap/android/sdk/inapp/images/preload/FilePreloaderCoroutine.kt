@@ -7,8 +7,11 @@ import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import com.clevertap.android.sdk.utils.DispatcherProvider
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlin.system.measureTimeMillis
 
@@ -29,12 +32,16 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
     override fun preloadFilesAndCache(
         urlMetas: List<Pair<String, CtCacheType>>,
         successBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit,
-        failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit
+        failureBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit,
+        startedBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit,
+        preloadFinished: (urlDownloadStatus: Map<String, Boolean>) -> Unit
     ) {
         preloadAssets(
             urlMetas = urlMetas,
             successBlock = successBlock,
-            failureBlock = failureBlock
+            failureBlock = failureBlock,
+            startedBlock = startedBlock,
+            preloadFinished = preloadFinished
         ) { urlMeta: Pair<String, CtCacheType> ->
 
             val url = urlMeta.first
@@ -51,25 +58,38 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
         urlMetas: List<Pair<String, CtCacheType>>,
         successBlock: (meta: Pair<String, CtCacheType>) -> Unit,
         failureBlock: (meta: Pair<String, CtCacheType>) -> Unit = {},
+        startedBlock: (urlMeta: Pair<String, CtCacheType>) -> Unit = {},
+        preloadFinished: (urlDownloadStatus: Map<String, Boolean>) -> Unit = {},
         assetBlock: (meta: Pair<String, CtCacheType>) -> Any?
     ) {
-        urlMetas.forEach { meta: Pair<String, CtCacheType> ->
-            val job = scope.launch(handler) {
-                logger?.verbose("started asset url fetch $meta")
+        val job = scope.launch(handler) {
+            val dowloadResults = mutableListOf<Deferred<Pair<String, Boolean>>>()
+            urlMetas.forEach { meta: Pair<String, CtCacheType> ->
+                val deferred: Deferred<Pair<String, Boolean>> = async {
+                    logger?.verbose("started asset url fetch $meta")
 
-                val mils = measureTimeMillis {
-                    val fetchInAppImage = assetBlock(meta)
-                    if (fetchInAppImage != null) {
-                        successBlock.invoke(meta)
-                    } else {
-                        failureBlock.invoke(meta)
+                    startedBlock.invoke(meta)
+                    val success: Boolean
+                    val mils = measureTimeMillis {
+                        val fetchInAppImage = assetBlock(meta)
+                        if (fetchInAppImage != null) {
+                            successBlock.invoke(meta)
+                            success = true
+                        } else {
+                            failureBlock.invoke(meta)
+                            success = false
+                        }
                     }
-                }
+                    logger?.verbose("finished asset url fetch $meta in $mils ms")
 
-                logger?.verbose("finished asset url fetch $meta in $mils ms")
+                    return@async meta.first to success
+                }
+                dowloadResults.add(deferred)
             }
-            jobs.add(job)
+            val pairs = dowloadResults.awaitAll() // waits for all downloads to finish
+            preloadFinished.invoke(pairs.toMap())
         }
+        jobs.add(job)
     }
 
     override fun cleanup() {

@@ -16,9 +16,9 @@ import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
-import com.clevertap.android.sdk.inapp.store.preference.FileStore;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
@@ -175,7 +175,15 @@ class CleverTapFactory {
             }
         });
 
-        VarCache varCache = new VarCache(config, context);
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, config.getLogger(), storeRegistry);
+        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, config.getLogger());
+
+        VarCache varCache = new VarCache(
+                config,
+                context,
+                impl,
+                fileResourceProvider
+        );
         coreState.setVarCache(varCache);
 
         CTVariables ctVariables = new CTVariables(varCache);
@@ -263,7 +271,6 @@ class CleverTapFactory {
         coreState.setAnalyticsManager(analyticsManager);
 
         networkManager.addNetworkHeadersListener(evaluationManager);
-
         InAppController inAppController = new InAppController(
                 context,
                 config,
@@ -275,7 +282,7 @@ class CleverTapFactory {
                 deviceInfo,
                 new InAppQueue(config, storeRegistry),
                 evaluationManager,
-                new FileResourceProvider(context, config.getLogger()),
+                fileResourceProvider,
                 templatesManager,
                 storeRegistry
         );

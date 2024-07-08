@@ -102,7 +102,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay(resourceProvider,templatesManager);
+            inAppNotification.prepareForDisplay(resourceProvider,templatesManager,storeRegistry);
         }
     }
 

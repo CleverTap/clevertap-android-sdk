@@ -3,7 +3,10 @@ package com.clevertap.android.sdk.inapp.data
 import android.content.res.Configuration
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
+import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgument
+import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
 import com.clevertap.android.sdk.iterator
@@ -11,6 +14,7 @@ import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.safeGetJSONArray
 import com.clevertap.android.sdk.safeGetJSONArrayOrNullIfEmpty
 import com.clevertap.android.sdk.toList
+import com.clevertap.android.sdk.utils.getStringOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -42,7 +46,7 @@ internal class InAppResponseAdapter(
     val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
     val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
     val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
-    
+
     val preloadImages: List<String>
     val preloadGifs: List<String>
     val preloadFiles: List<String>
@@ -68,7 +72,11 @@ internal class InAppResponseAdapter(
         preloadFiles = filesList
 
         preloadAssets = imageList + gifList + filesList
-        preloadAssetsMeta = imageList.map { Pair(it, CtCacheType.IMAGE) } + gifList.map { Pair(it, CtCacheType.GIF) } + filesList.map { Pair(it, CtCacheType.FILES) } // todo no need to copy over and over
+        preloadAssetsMeta = (imageList.map { Pair(it, CtCacheType.IMAGE) } +
+                gifList.map { Pair(it, CtCacheType.GIF) } +
+                filesList.map {
+                    Pair(it, CtCacheType.FILES)
+                }).distinctBy { it.first } // todo no need to copy over and over
     }
 
     private fun fetchMediaUrls(
@@ -110,14 +118,12 @@ internal class InAppResponseAdapter(
 
     private fun fetchFilesUrlsForTemplates(filesList: MutableList<String>, templatesManager: TemplatesManager) {
         if (clientSideInApps.first) {
-            for (i in 0 until clientSideInApps.second!!.length()) {
-                val customTemplateInAppData = createFromJson(clientSideInApps.second!!.getJSONObject(i))
-                if (customTemplateInAppData != null) {
-                    val fileArgs = customTemplateInAppData.getFileArgsUrls(
-                        templatesManager
-                    )
-                    filesList.addAll(fileArgs.map { it.first })
-                }
+            val inAppsList = clientSideInApps.second ?: return
+            for (i in 0 until inAppsList.length()) {
+                createFromJson(inAppsList.optJSONObject(i))?.getFileArgsUrls(
+                    templatesManager,
+                    filesList
+                )
             }
         }
     }

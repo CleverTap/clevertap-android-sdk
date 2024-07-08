@@ -7,7 +7,7 @@ import java.io.File
 import kotlin.math.max
 
 class FileMemoryV2(
-    private val config: MemoryConfig,
+    internal val config: MemoryConfig,
     private val logger: ILogger? = null
 ) : Memory<ByteArray> {
 
