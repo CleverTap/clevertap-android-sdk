@@ -69,6 +69,7 @@ sealed class CustomTemplateContext private constructor(
     protected val argumentValues = mergeArguments(template.args, notification.customTemplateData?.getArguments())
     internal val inAppListenerRef = WeakReference(inAppListener)
     private val isAction = notification.customTemplateData?.isAction ?: false
+    private val isVisual = template.isVisual
 
     /**
      * Retrieve a [String] argument by [name].
@@ -221,7 +222,7 @@ sealed class CustomTemplateContext private constructor(
         dismissListener?.onDismissContext(this)
         dismissListener = null
 
-        if (isAction) {
+        if (isAction && !isVisual) {
             return
         }
 
