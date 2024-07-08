@@ -1,17 +1,16 @@
 package com.clevertap.android.sdk.inapp.images.repo
 
-import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.inapp.data.CtCacheType
-import com.clevertap.android.sdk.inapp.data.CtCacheType.FILES
-import com.clevertap.android.sdk.inapp.data.CtCacheType.GIF
-import com.clevertap.android.sdk.inapp.data.CtCacheType.IMAGE
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.preload.FilePreloaderStrategy
 import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import kotlin.math.max
+import kotlin.time.Duration.Companion.days
+
 internal const val TAG_FILE_DOWNLOAD = "FileDownload"
+
 internal class FileResourcesRepoImpl constructor(
     override val cleanupStrategy: FileCleanupStrategy,
     override val preloaderStrategy: FilePreloaderStrategy,
@@ -25,32 +24,9 @@ internal class FileResourcesRepoImpl constructor(
         // 14 days
         private val EXPIRY_OFFSET_MILLIS = 14.days.inWholeMilliseconds
 
-        private val listeners = setOf<(urls: List<String>) -> Map<String, Boolean>>()
-        private val listenerss = mutableSetOf<DownloadListener>()
+        private val urlTriggers = mutableSetOf<DownloadTriggerForUrls>()
 
-        private val downloadInProgressUrls = object : HashMap<String, DownloadState>() {
-            override fun put(key: String, value: DownloadState): DownloadState? {
-
-                listenerss.forEach { listener ->
-                    if (listener.url == key) {
-                        when (value) {
-                            DownloadState.QUEUED,
-                            DownloadState.IN_PROGRESS -> {
-                                //noop
-                            }
-                            DownloadState.SUCCESSFUL -> {
-                                listener.callback.invoke(listener.url to true)
-                            }
-                            DownloadState.FAILED -> {
-                                listener.callback.invoke(listener.url to false)
-                            }
-                        }
-                    }
-                }
-
-                return super.put(key, value)
-            }
-        }
+        private val downloadInProgressUrls = HashMap<String, DownloadState>()
         private val fetchAllFilesLock = Any()
         @JvmStatic
         fun saveUrlExpiryToStore(urlMeta: Pair<String, CtCacheType>, storePair: Pair<FileStore, InAppAssetsStore>){
@@ -72,7 +48,6 @@ internal class FileResourcesRepoImpl constructor(
         }
     }
 
-    @WorkerThread
     override fun preloadFilesAndCache(
         urlMeta: List<Pair<String, CtCacheType>>,
         completionCallback: (urlStatusMap: Map<String, Boolean>) -> Unit,
@@ -82,23 +57,25 @@ internal class FileResourcesRepoImpl constructor(
 
         val successBlockk: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
             saveUrlExpiryToStore(meta,Pair(fileStore, inAppAssetsStore))
-            synchronized(fetchAllFilesLock) {
-                downloadInProgressUrls.put(meta.first, DownloadState.SUCCESSFUL)
-            }
-
+            updateRepoStatus(
+                meta = meta,
+                downloadState = DownloadState.SUCCESSFUL
+            )
             successBlock.invoke(meta)
         }
         val failureBlockk: (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
-            synchronized(fetchAllFilesLock) {
-                downloadInProgressUrls.put(meta.first, DownloadState.FAILED)
-            }
+            updateRepoStatus(
+                meta = meta,
+                downloadState = DownloadState.FAILED
+            )
             failureBlock.invoke(meta)
         }
 
         val started : (urlMeta: Pair<String, CtCacheType>) -> Unit = { meta ->
-            synchronized(fetchAllFilesLock) {
-                downloadInProgressUrls.put(meta.first, DownloadState.IN_PROGRESS)
-            }
+            updateRepoStatus(
+                meta = meta,
+                downloadState = DownloadState.IN_PROGRESS
+            )
         }
 
         preloaderStrategy.preloadFilesAndCache(
@@ -108,6 +85,20 @@ internal class FileResourcesRepoImpl constructor(
             startedBlock = started,
             preloadFinished = completionCallback
         )
+    }
+
+    private fun updateRepoStatus(
+        meta: Pair<String, CtCacheType>,
+        downloadState: DownloadState
+    ) {
+        if (urlTriggers.isEmpty()) {
+            // added condition to avoid acquiring unnecessary locks
+            return
+        }
+        synchronized(fetchAllFilesLock) {
+            downloadInProgressUrls[meta.first] = downloadState
+            repoUpdated()
+        }
     }
 
     override fun cleanupStaleFiles(
@@ -129,16 +120,16 @@ internal class FileResourcesRepoImpl constructor(
 
     override fun cleanupExpiredResources(cacheTpe: CtCacheType) {
         val allFileUrls = when (cacheTpe) {
-            IMAGE, GIF -> inAppAssetsStore.getAllAssetUrls()
-            FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
+            CtCacheType.IMAGE, CtCacheType.GIF -> inAppAssetsStore.getAllAssetUrls()
+            CtCacheType.FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
         }
         cleanupStaleFilesNow(allFileUrls = allFileUrls)
     }
 
     override fun cleanupAllResources(cacheTpe: CtCacheType) {
         val cleanupUrls = when (cacheTpe) {
-            IMAGE, GIF -> inAppAssetsStore.getAllAssetUrls()
-            FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
+            CtCacheType.IMAGE,CtCacheType.GIF -> inAppAssetsStore.getAllAssetUrls()
+            CtCacheType.FILES -> fileStore.getAllFileUrls() + inAppAssetsStore.getAllAssetUrls()
         }
         cleanupAllFiles(cleanupUrls = cleanupUrls.toList())
     }
@@ -179,13 +170,36 @@ internal class FileResourcesRepoImpl constructor(
 
         cleanupStrategy.clearFileAssets(cleanupUrls, successBlock)
     }
+
+    private fun repoUpdated() {
+        urlTriggers.forEach { dt ->
+
+            val all = dt.urls.all { url ->
+                downloadInProgressUrls[url] == DownloadState.SUCCESSFUL
+                        || downloadInProgressUrls[url] == DownloadState.FAILED
+            }
+            if (all) {
+                // trigger callback for all downloads finished
+                dt.callback.invoke()
+            }
+        }
+    }
 }
 
 enum class DownloadState {
     QUEUED, IN_PROGRESS, SUCCESSFUL, FAILED
 }
 
-data class DownloadListener( // todo check if needed
-    val url: String,
-    val callback: (Pair<String, Boolean>) -> Unit
+/**
+ * Invokes callback once the list of urls passed have finished downloading
+ */
+data class DownloadTriggerForUrls(
+    val urls: List<String>,
+    val callback: () -> Unit
+)
+
+data class DownloadTriggerResult(
+    val successfulUrls: List<String>,
+    val failureUrls: List<String>,
+    val allSuccessful: Boolean
 )

@@ -1,11 +1,8 @@
 package com.clevertap.android.sdk.variables;
 
-import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.clevertap.android.sdk.BuildConfig;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
@@ -17,7 +14,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Map;
 
-
 /**
  * Package Private class to not allow external access to working of Variables
  *
@@ -26,6 +22,8 @@ import java.util.Map;
 public class CTVariables {
 
     private boolean hasVarsRequestCompleted = false;
+    private boolean preRegisteredFilesDownloaded = false;
+
     private final List<VariablesChangedCallback> variablesChangedCallbacks = new ArrayList<>();
     private final List<VariablesChangedCallback> oneTimeVariablesChangedCallbacks = new ArrayList<>();
     private final List<VariablesChangedCallback> variablesChangedCallbacksNoDownloadsPending = new ArrayList<>();
@@ -52,27 +50,12 @@ public class CTVariables {
                 oneTimeVariablesChangedCallbacks.clear();
             }
         };
-
-        Runnable triggerGlobalCallbacksForFiles = () -> {
-            synchronized (variablesChangedCallbacksNoDownloadsPending) {
-                for (VariablesChangedCallback callback : variablesChangedCallbacksNoDownloadsPending) {
-                    Utils.runOnUiThread(callback);
-                }
-            }
-            synchronized (oneTimeVariablesChangedCallbacksNoDownloadsPending) {
-                for (VariablesChangedCallback callback : oneTimeVariablesChangedCallbacksNoDownloadsPending) {
-                    Utils.runOnUiThread(callback);
-                }
-                oneTimeVariablesChangedCallbacksNoDownloadsPending.clear();
-            }
-        };
         this.varCache.setGlobalCallbacksRunnable(triggerGlobalCallbacks);
-        this.varCache.setGlobalCallbacksRunnableForFiles(triggerGlobalCallbacksForFiles);
     }
 
     public void init() {
         logD("init() called");
-        varCache.loadDiffs();
+        varCache.loadDiffs(() -> null);
     }
 
     public void handleVariableResponse(
@@ -91,7 +74,11 @@ public class CTVariables {
     public void handleVariableResponseError(@Nullable FetchVariablesCallback fetchCallback) {
         if (!hasVarsRequestCompleted()) {
             setHasVarsRequestCompleted(true);
-            varCache.loadDiffsAndTriggerHandlers(); // triggers global callbacks only once on error
+            varCache.loadDiffsAndTriggerHandlers(() -> {
+                triggerGlobalFilesCallbacks();
+                preRegisteredFilesDownloaded = true;
+                return null;
+            });
         }
         if (fetchCallback != null) {
             fetchCallback.onVariablesFetched(false);
@@ -105,9 +92,30 @@ public class CTVariables {
         setHasVarsRequestCompleted(true);
         Map<String, Object> variableDiffs = JsonUtil.mapFromJson(response);
         variableDiffs = CTVariableUtils.convertFlatMapToNestedMaps(variableDiffs);
-        varCache.updateDiffsAndTriggerHandlers(variableDiffs);
+        varCache.updateDiffsAndTriggerHandlers(variableDiffs, () -> {
+            triggerGlobalFilesCallbacks();
+            preRegisteredFilesDownloaded = true;
+            return null;
+        });
         if (fetchCallback != null) {
             fetchCallback.onVariablesFetched(true);
+        }
+    }
+
+    /**
+     * Triggers global callbacks for file download updates
+     */
+    private void triggerGlobalFilesCallbacks() {
+        synchronized (variablesChangedCallbacksNoDownloadsPending) {
+            for (VariablesChangedCallback callback : variablesChangedCallbacksNoDownloadsPending) {
+                Utils.runOnUiThread(callback);
+            }
+        }
+        synchronized (oneTimeVariablesChangedCallbacksNoDownloadsPending) {
+            for (VariablesChangedCallback callback : oneTimeVariablesChangedCallbacksNoDownloadsPending) {
+                Utils.runOnUiThread(callback);
+            }
+            oneTimeVariablesChangedCallbacksNoDownloadsPending.clear();
         }
     }
 
@@ -117,6 +125,7 @@ public class CTVariables {
     public void clearUserContent() {
         logD("Clear user content in CTVariables");
         setHasVarsRequestCompleted(false); // disable callbacks and wait until fetch is finished
+        preRegisteredFilesDownloaded = false;
         varCache.clearUserContent();
     }
 
@@ -166,7 +175,7 @@ public class CTVariables {
             variablesChangedCallbacksNoDownloadsPending.add(callback);
         }
 
-        if (hasVarsRequestCompleted) {
+        if (preRegisteredFilesDownloaded) {
             callback.variablesChanged();
         }
     }
@@ -178,8 +187,9 @@ public class CTVariables {
      * added handlers triggered ever. therefore, it is necessary to trigger the user's handlers
      * immediately once this function is called
      */
+    // change name to oncePreSdkInitRegisteredVariablesChangedAndNoDownloadsPending
     public void onceVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
-        if (hasVarsRequestCompleted) {
+        if (preRegisteredFilesDownloaded) {
             callback.variablesChanged();
         } else {
             synchronized (oneTimeVariablesChangedCallbacksNoDownloadsPending) {

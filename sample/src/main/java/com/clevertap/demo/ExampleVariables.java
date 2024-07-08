@@ -32,6 +32,18 @@ public class ExampleVariables {
     private final VariablesChangedCallback oneTimeVariablesChangedCallback;
     private final VariablesChangedCallback variablesChangedCallback;
 
+    public final VariablesChangedCallback downloadsCompleteOnce = new VariablesChangedCallback() {
+        @Override public void variablesChanged() {
+            System.out.println("File downloads finished from downloadsCompleteOnce");
+        }
+    };
+
+    public final VariablesChangedCallback downloadsCompleteRepeated = new VariablesChangedCallback() {
+        @Override public void variablesChanged() {
+            System.out.println("File downloads finished from downloadsCompleteRepeated");
+        }
+    };
+
     public VariablesChangedCallback getOneTimeVariablesChangedCallback() {
         return oneTimeVariablesChangedCallback;
     }

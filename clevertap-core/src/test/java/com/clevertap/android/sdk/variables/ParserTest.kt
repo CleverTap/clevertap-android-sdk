@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.variables
 
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.VariableDefinitions.TestVarsJI
 import com.clevertap.android.shared.test.BaseTestCase
@@ -20,13 +21,21 @@ class ParserTest:BaseTestCase() {
 
     private  lateinit var varCache:VarCache
     private lateinit var fileResourcesRepoImpl: FileResourcesRepoImpl
+    private lateinit var fileResourceProvider: FileResourceProvider
 
     override fun setUp() {
         super.setUp()
 
 
         fileResourcesRepoImpl = TODO()
-        varCache = VarCache(cleverTapInstanceConfig, appCtx, fileResourcesRepoImpl)
+        fileResourceProvider = TODO()
+
+        varCache = VarCache(
+            cleverTapInstanceConfig,
+            appCtx,
+            fileResourcesRepoImpl,
+            fileResourceProvider
+        )
 
         ctv = CTVariables(varCache)
         ctvSpy = Mockito.spy(ctv)
