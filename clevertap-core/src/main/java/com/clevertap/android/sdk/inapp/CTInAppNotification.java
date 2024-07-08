@@ -483,15 +483,15 @@ public class CTInAppNotification implements Parcelable {
                 storeRegistry.getInAppAssetsStore());
 
         if (inAppType.equals(CTInAppType.CTInAppTypeCustomCodeTemplate)) {
-            final List<Pair<String, CtCacheType>> fileUrlMetas = customTemplateData.getFileArgsUrls(templatesManager);
+            final List<String> fileUrls = customTemplateData.getFileArgsUrls(templatesManager);
 
             int index = 0;
-            while (index < fileUrlMetas.size()) {
-                Pair<String, CtCacheType> urlMeta = fileUrlMetas.get(index);
-                byte[] bytes = fileResourceProvider.fetchFile(urlMeta.getFirst());
+            while (index < fileUrls.size()) {
+                String url = fileUrls.get(index);
+                byte[] bytes = fileResourceProvider.fetchFile(url);
 
                 if (bytes != null && bytes.length > 0) {
-                    FileResourcesRepoImpl.saveUrlExpiryToStore(urlMeta,storePair);
+                    FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url, CtCacheType.FILES), storePair);
                 } else {
                     // download fail
                     this.error = "Error processing the custom code in-app template: file download failed.";
