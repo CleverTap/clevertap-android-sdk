@@ -176,13 +176,10 @@ class InAppStore(
         if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONObject()
 
         return try {
-            // Try to convert the string to a JSONObject
+            // Try to convert the string to a JSONObject which signifies already migrated
             JSONObject(evaluatedServerSideInAppIds)
         } catch (jsonException: JSONException) {
-            // If it fails, convert the string to a JSONArray
-            val jsonArray = JSONArray(evaluatedServerSideInAppIds)
-            // Wrap the JSONArray in a JSONObject
-            JSONObject().put(Constants.RAISED, jsonArray)
+            migrateInAppHeaderPrefsForEventType(evaluatedServerSideInAppIds)
         }
     }
 
@@ -196,14 +193,27 @@ class InAppStore(
         if (suppressedClientSideInAppIds.isNullOrBlank()) return JSONObject()
 
         return try {
-            // Try to convert the string to a JSONObject
+            // Try to convert the string to a JSONObject which signifies already migrated
             JSONObject(suppressedClientSideInAppIds)
         } catch (jsonException: JSONException) {
-            // If it fails, convert the string to a JSONArray
-            val jsonArray = JSONArray(suppressedClientSideInAppIds)
-            // Wrap the JSONArray in a JSONObject
-            JSONObject().put(Constants.RAISED, jsonArray)
+            migrateInAppHeaderPrefsForEventType(suppressedClientSideInAppIds)
         }
+    }
+
+    /**
+     * Migrates suppressed_ss and evaluated_ss after reading from the prefs.
+     * The older format was a JSONArray. This JSoNArray represented the list of all inapps suppressed/evaluated
+     * The migrated format is a JSONObject. This JSoNObject has the key as EvenType and the
+     * value as the corresponding list of inapps suppressed/evaluated
+     *
+     * @param - inAppIds to be migrated
+     * @return - JSoNObject in the migrated format
+     */
+    private fun migrateInAppHeaderPrefsForEventType(inAppIds: String): JSONObject {
+        // If it fails, convert the string to a JSONArray
+        val jsonArray = JSONArray(inAppIds)
+        // Wrap the JSONArray in a JSONObject
+        return JSONObject().put(Constants.RAISED, jsonArray)
     }
 
     /**
