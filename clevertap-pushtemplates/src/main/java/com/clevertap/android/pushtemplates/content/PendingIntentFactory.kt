@@ -27,7 +27,6 @@ const val RATING_CLICK3_PENDING_INTENT = 10
 const val RATING_CLICK4_PENDING_INTENT = 11
 const val RATING_CLICK5_PENDING_INTENT = 12
 const val FIVE_ICON_CONTENT_PENDING_INTENT = 13
-const val FIVE_ICON_CLOSE_PENDING_INTENT = 19
 const val PRODUCT_DISPLAY_CONTENT_PENDING_INTENT = 20
 const val PRODUCT_DISPLAY_DL1_PENDING_INTENT = 21
 const val PRODUCT_DISPLAY_DL2_PENDING_INTENT = 22
@@ -206,13 +205,6 @@ internal object PendingIntentFactory {
             FIVE_ICON_CONTENT_PENDING_INTENT -> {
                 extras.putString(Constants.DEEP_LINK_KEY, null)
                 return setPendingIntent(context, notificationId, extras, launchIntent, requestCode)
-            }
-
-            FIVE_ICON_CLOSE_PENDING_INTENT -> {
-                launchIntent!!.putExtra("close", true)
-                launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtras(extras)
-                return PendingIntent.getBroadcast(context, requestCode, launchIntent!!, flagsLaunchPendingIntent)
             }
 
             PRODUCT_DISPLAY_DL1_PENDING_INTENT -> {
