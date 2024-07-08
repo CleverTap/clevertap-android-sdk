@@ -61,11 +61,7 @@ public class LoginController {
 
     private final ValidationResultStack validationResultStack;
 
-    private String processingUserLoginIdentifier = null;
-
     private final CryptHandler cryptHandler;
-
-    private static final Object processingUserLoginLock = new Object();
 
     public LoginController(Context context,
             CleverTapInstanceConfig config,
@@ -142,9 +138,6 @@ public class LoginController {
                         analyticsManager.pushProfile(profile);
                     }
                     pushProviders.forcePushDeviceToken(true);
-                    synchronized (processingUserLoginLock) {
-                        processingUserLoginIdentifier = null;
-                    }
                     resetInbox();
                     resetFeatureFlags();
                     resetProductConfigs();
@@ -178,7 +171,15 @@ public class LoginController {
                         "CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID");
             }
         }
-        _onUserLogin(profile, cleverTapID);
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("_onUserLogin",new Callable<Void>() {
+            @Override
+            public Void call() {
+                _onUserLogin(profile, cleverTapID);
+                return null;
+            }
+        });
+
     }
 
     public void recordDeviceIDErrors() {
@@ -246,36 +247,14 @@ public class LoginController {
                 return;
             }
 
-            // stringify profile to use as dupe blocker
-            String profileToString = profile.toString();
-
-            // as processing happens async block concurrent onUserLogin requests with the same profile, as our cache is set async
-            if (isProcessUserLoginWithIdentifier(profileToString)) {
-                config.getLogger()
-                        .debug(config.getAccountId(), "Already processing onUserLogin for " + profileToString);
-                return;
-            }
-
-            // create new guid if necessary and reset
-            // block any concurrent onUserLogin call for the same profile
-            synchronized (processingUserLoginLock) {
-                processingUserLoginIdentifier = profileToString;
-            }
-
             config.getLogger()
-                    .verbose(config.getAccountId(), "onUserLogin: queuing reset profile for " + profileToString
+                    .verbose(config.getAccountId(), "onUserLogin: queuing reset profile for " + profile
                             + " with Cached GUID " + ((cachedGUID != null) ? cachedGUID : "NULL"));
 
             asyncProfileSwitchUser(profile, cachedGUID, cleverTapID);
 
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "onUserLogin failed", t);
-        }
-    }
-
-    private boolean isProcessUserLoginWithIdentifier(String identifier) {
-        synchronized (processingUserLoginLock) {
-            return processingUserLoginIdentifier != null && processingUserLoginIdentifier.equals(identifier);
         }
     }
 

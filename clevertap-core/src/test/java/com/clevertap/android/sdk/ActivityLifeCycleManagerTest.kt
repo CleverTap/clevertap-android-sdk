@@ -90,7 +90,6 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         verify(coreState.pushProviders,times(0)).onTokenRefresh()
         verify(geofenceCallbackSpy, never()).triggerLocation()
         verify(coreState.baseEventQueueManager).pushInitialEventsAsync()
-        verify(coreState.inAppController).checkExistingInAppNotifications(mockActivity)
         verify(coreState.inAppController).checkPendingInAppNotifications(mockActivity)
     }
 
@@ -139,7 +138,6 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
                 verify(coreState.pushProviders).onTokenRefresh()
                 verify(geofenceCallbackSpy).triggerLocation()
                 verify(coreState.baseEventQueueManager).pushInitialEventsAsync()
-                verify(coreState.inAppController).checkExistingInAppNotifications(mockActivity)
                 verify(coreState.inAppController).checkPendingInAppNotifications(mockActivity)
             }
 

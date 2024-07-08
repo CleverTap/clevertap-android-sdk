@@ -212,30 +212,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         };
     }
 
-    public void checkExistingInAppNotifications(Activity activity) {
-        final boolean canShow = canShowInAppOnActivity();
-        if (canShow) {
-            if (currentlyDisplayingInApp != null && ((System.currentTimeMillis() / 1000) < currentlyDisplayingInApp
-                    .getTimeToLive())) {
-                Fragment inAppFragment = ((FragmentActivity) activity).getSupportFragmentManager()
-                        .getFragment(new Bundle(), currentlyDisplayingInApp.getType());
-                if (CoreMetaData.getCurrentActivity() != null && inAppFragment != null) {
-                    FragmentTransaction fragmentTransaction = ((FragmentActivity) activity)
-                            .getSupportFragmentManager()
-                            .beginTransaction();
-                    Bundle bundle = new Bundle();
-                    bundle.putParcelable("inApp", currentlyDisplayingInApp);
-                    bundle.putParcelable("config", config);
-                    inAppFragment.setArguments(bundle);
-                    fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
-                    fragmentTransaction.add(android.R.id.content, inAppFragment, currentlyDisplayingInApp.getType());
-                    Logger.v(config.getAccountId(),
-                            "calling InAppFragment " + currentlyDisplayingInApp.getCampaignId());
-                    fragmentTransaction.commitNow();
-                }
-            }
-        }
-    }
 
     public void checkPendingInAppNotifications(Activity activity) {
         final boolean canShow = canShowInAppOnActivity();
@@ -810,7 +786,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             return;
         }
 
-        boolean isHtmlType = Constants.KEY_CUSTOM_HTML.equals(inAppNotification.getType());
+        String inAppNotificationType = inAppNotification.getType();
+        boolean isHtmlType = inAppNotificationType != null && inAppNotificationType.equals(Constants.KEY_CUSTOM_HTML);
+
         if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
             Logger.d(config.getAccountId(),
                     "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp");

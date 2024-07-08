@@ -63,10 +63,7 @@ public class Utils {
         if (icoPath == null || icoPath.equals("")) {
             return fallbackToAppIcon ? getAppIcon(context) : null;
         }
-        // Simply stream the bitmap
-        if (!icoPath.startsWith("http")) {
-            icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
-        }
+
         Bitmap ic = getBitmapFromURL(icoPath,context);
         return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
     }
