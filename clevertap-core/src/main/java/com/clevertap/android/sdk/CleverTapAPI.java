@@ -42,16 +42,12 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
-import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
-import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -75,6 +71,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.Var;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
@@ -3312,6 +3309,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Defines a new file variable. In
+     * that case it is better to use the @Variable annotation instead of this method.
+     * // todo check annotation and documentation
+     *
+     * @param name Name of the variable.
+     * @return Returns the Var instance.
+     */
+    public Var<String> defineFileVariable(String name) {
+        return Var.define(name, null , CTVariableUtils.FILE, coreState.getCTVariables());
+    }
+
+    /**
      * Parses the @Variable annotated fields from a given instance or multiple instances.
      *
      * @param instances Instance or instances to parse.
@@ -3471,6 +3480,30 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Adds a callback to be invoked when variables are initialised with server values and file
+     * downloads are also completed for file type variables (if any) registered with
+     * {@link #defineFileVariable}.
+     * Will be called each time new values are fetched.
+     *
+     * @param callback Callback to register.
+     */
+    public void onVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().onVariablesChangedAndNoDownloadsPending(callback);
+    }
+
+    /**
+     * Adds a callback to be invoked when variables are initialised with server values and file
+     * downloads are also completed for file type variables (if any) registered with
+     * {@link #defineFileVariable}.
+     * WWill be called only once and then removed.
+     *
+     * @param callback Callback to register.
+     */
+    public void onceVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().onceVariablesChangedAndNoDownloadsPending(callback);
+    }
+
+    /**
      *  Removes all previously registered callbacks.
      */
     public void removeAllVariablesChangedCallbacks() {
@@ -3515,39 +3548,87 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public void clearInAppResources(boolean expiredOnly) {
 
-        Logger logger = coreState.getConfig().getLogger();
+        Logger logger = getConfigLogger();
 
         StoreRegistry storeRegistry = coreState.getStoreRegistry();
         if (storeRegistry == null) {
-            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+            logger.info(
+                    "There was a problem clearing resources because instance is not completely initialised, please try again after some time");
             return;
         }
 
-        InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
-        LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
-
-        if (inAppAssetStore == null || legacyInAppStore == null) {
-            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
+        if (impl == null) {
+            logger.info(
+                    "There was a problem clearing resources because instance is not completely initialised, please try again after some time");
             return;
         }
 
-        InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-        InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
-        InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(
-                inAppResourceProvider,
-                logger
-        );
-
-        InAppImageRepoImpl impl = new InAppImageRepoImpl(
-                cleanupStrategy,
-                preloadStrategy,
-                inAppAssetStore,
-                legacyInAppStore
-        );
         if (expiredOnly) {
-            impl.cleanupStaleImagesNow();
+            impl.cleanupExpiredResources(CtCacheType.IMAGE);
         } else {
-            impl.cleanupAllImages();
+            impl.cleanupAllResources(CtCacheType.IMAGE);
         }
+    }
+
+    /**
+     * Deletes all types of files which are preloaded for SDK features like custom in-app templates, app functions and
+     * variables etc.
+     *
+     * @param expiredOnly to clear only files which will not be needed further for SDK features like custom in-app
+     *                    templates, app functions and variables etc.
+     */
+    public void clearFileResources(boolean expiredOnly) {
+
+        Logger logger = getConfigLogger();
+
+        StoreRegistry storeRegistry = coreState.getStoreRegistry();
+        if (storeRegistry == null) {
+            logger.info(
+                    "There was a problem clearing file resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
+        if (impl == null) {
+            logger.info(
+                    "There was a problem clearing file resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        if (expiredOnly) {
+            impl.cleanupExpiredResources(CtCacheType.FILES);
+        } else {
+            impl.cleanupAllResources(CtCacheType.FILES);
+        }
+    }
+
+    /**
+     * Checks if a file exists for the given non-null url.
+     *
+     * @param url the non-null url for which to check the existence of the file.
+     * @return true if a file exists for the specified url, false otherwise.
+     */
+    public boolean doesFileExistForUrl(@NonNull String url) {
+        Logger logger = getConfigLogger();
+        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
+        return fileResourceProvider.isFileCached(url);
+    }
+
+    /**
+     * Retrieves the absolute file path associated with the given url.
+     *
+     * This method takes a url as a String parameter and returns the corresponding
+     * absolute file path as a String. The url parameter must not be null.
+     *
+     * @param url the url for which the file path is to be retrieved.
+     *            Must be a non-null String.
+     * @return the absolute file path corresponding to the given URL or null if file doesn't exist
+     */
+    @Nullable
+    public String getFilePathForUrl(@NonNull String url) {
+        Logger logger = getConfigLogger();
+        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
+        return fileResourceProvider.cachedFilePath(url);
     }
 }

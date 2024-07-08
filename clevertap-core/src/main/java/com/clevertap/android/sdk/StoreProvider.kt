@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.StoreProvider.Companion.INSTANCE
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
@@ -14,6 +15,7 @@ const val STORE_TYPE_INAPP = 1
 const val STORE_TYPE_IMPRESSION = 2
 const val STORE_TYPE_LEGACY_INAPP = 3
 const val STORE_TYPE_INAPP_ASSETS = 4
+const val STORE_TYPE_FILES = 5
 
 /**
  * The `StoreProvider` class is responsible for providing different types of stores
@@ -36,6 +38,7 @@ class StoreProvider {
         private var INSTANCE: StoreProvider? = null
 
         private const val ASSET_STORE_PREFIX = "inapp_assets"
+        private const val FILE_STORE_PREFIX = "ct_files"
 
         /**
          * Gets the singleton instance of the [StoreProvider].
@@ -61,8 +64,15 @@ class StoreProvider {
         context: Context,
         accountId: String
     ): InAppAssetsStore {
-        val prefName = constructStorePreferenceName(STORE_TYPE_INAPP_ASSETS, accountId)
+        val prefName = constructStorePreferenceName(storeType = STORE_TYPE_INAPP_ASSETS, accountId = accountId)
         return InAppAssetsStore(getCTPreference(context, prefName))
+    }
+    fun provideFileStore(
+        context: Context,
+        accountId: String
+    ): FileStore {
+        val prefName = constructStorePreferenceName(storeType = STORE_TYPE_FILES, accountId = accountId)
+        return FileStore(getCTPreference(context, prefName))
     }
 
     /**
@@ -134,6 +144,7 @@ class StoreProvider {
     fun constructStorePreferenceName(storeType: Int, deviceId: String = "", accountId: String = ""): String =
         when (storeType) {
             STORE_TYPE_INAPP_ASSETS -> "$ASSET_STORE_PREFIX:$accountId"
+            STORE_TYPE_FILES -> "$FILE_STORE_PREFIX:$accountId"
             STORE_TYPE_INAPP -> "${Constants.INAPP_KEY}:$deviceId:$accountId"
             STORE_TYPE_IMPRESSION -> "${Constants.KEY_COUNTS_PER_INAPP}:$deviceId:$accountId"
             STORE_TYPE_LEGACY_INAPP -> Constants.CLEVERTAP_STORAGE_TAG

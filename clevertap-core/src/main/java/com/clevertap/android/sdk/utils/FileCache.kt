@@ -1,9 +1,10 @@
 package com.clevertap.android.sdk.utils
 
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.inapp.images.repo.TAG_FILE_DOWNLOAD
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.Exception
+import kotlin.Exception
 
 class FileCache(
     private val directory: File,
@@ -18,26 +19,32 @@ class FileCache(
     }
 
     fun add(key: String, value: ByteArray) : Boolean {
+        return try {
+            addAndReturnFileInstance(key, value)
+            true
+        } catch (e : Exception){
+            logger?.verbose("Error while adding file to disk. Key: $key, Value Size: ${value.size} bytes", e)
+            false
+        }
+    }
+
+    fun addAndReturnFileInstance(key: String, value: ByteArray) : File {
         if (value.sizeInKb() > maxFileSizeKb) {
             remove(key = key)
-            return false
+            throw IllegalArgumentException("File size exceeds the maximum limit of $maxFileSizeKb")
         }
         val file = fetchFile(key)
 
         if (file.exists()) {
             file.delete()
         }
-        try {
-            val newFile = fetchFile(key)
-            val os = FileOutputStream(newFile)
-            os.write(value)
-            os.close()
-        } catch (e: Exception) {
-            logger?.verbose("Error in saving data to file", e)
-            return false
-        }
+        val newFile = fetchFile(key)
+        logger?.verbose(TAG_FILE_DOWNLOAD,"mapped file path - ${newFile.absoluteFile} to key - $key")
+        val os = FileOutputStream(newFile)
+        os.write(value)
+        os.close()
+        return newFile
 
-        return true
     }
 
     fun get(key: String): File? {

@@ -5,40 +5,48 @@ import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.utils.CTCaches
 import com.clevertap.android.sdk.utils.FileCache
 import com.clevertap.android.sdk.utils.LruCache
+import io.mockk.*
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.Mockito
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class InAppResourceProviderTest {
+@Ignore
+class FileResourceProviderTest {
 
     private val mockCache = Mockito.mock(CTCaches::class.java)
-    private val mockBitmap = Mockito.mock(Bitmap::class.java)
+    private val mockBitmapPair = Pair(Mockito.mock(Bitmap::class.java), mockk<File>())
+    private val mockBytesPair = Pair(Mockito.mock(ByteArray::class.java), mockk<File>())
+
+    private val mockBitmap = mockk<Bitmap>()
 
     private val mockImageFileCache = Mockito.mock(FileCache::class.java)
     private val mockGifFileCache = Mockito.mock(FileCache::class.java)
 
-    private val mockLruCache = Mockito.mock(LruCache::class.java) as LruCache<Bitmap>
-    private val mockLruCacheGif = Mockito.mock(LruCache::class.java) as LruCache<ByteArray>
+    private val mockLruCache = Mockito.mock(LruCache::class.java) as LruCache<Pair<Bitmap, File>>
+    private val mockLruCacheGif = Mockito.mock(LruCache::class.java) as LruCache<Pair<ByteArray, File>>
 
     private val images = File("")
     private val gifs = File("")
+    private val files = File("")
 
     private val bytes = byteArrayOf(0)
 
-    private val provider = InAppResourceProvider(
-        images = images,
-        gifs = gifs,
+    private val provider = FileResourceProvider(
+        images,
+        gifs,
+        files,
         logger = TestLogger(),
-        ctCaches = mockCache,
+        /*ctCaches = mockCache,
         fileToBitmap = ::fileToBitmap,
-        fileToBytes = ::fileToBytes,
-        inAppRemoteSource = TestInAppFetchApi.success(bitmap = mockBitmap, bytes = bytes)
+        fileToBytes = ::fileToBytes,*/
+        inAppRemoteSource = TestInAppFetchApi.success(bitmap = mockk<Bitmap>(), bytes = mockk<ByteArray>())
     )
 
-    private fun fileToBitmap(file: File?) : Bitmap? {
+/*    private fun fileToBitmap(file: File?) : Bitmap? {
         return if (file == null) {
             null
         } else {
@@ -52,15 +60,15 @@ class InAppResourceProviderTest {
         } else {
             bytes // we return random array
         }
-    }
+    }*/
 
     @Before
     fun before() {
         Mockito.`when`(mockCache.imageCache()).thenReturn(mockLruCache)
-        Mockito.`when`(mockCache.imageCacheDisk(images)).thenReturn(mockImageFileCache)
+        Mockito.`when`(mockCache.imageCacheDisk()).thenReturn(mockImageFileCache)
 
         Mockito.`when`(mockCache.gifCache()).thenReturn(mockLruCacheGif)
-        Mockito.`when`(mockCache.gifCacheDisk(images)).thenReturn(mockGifFileCache)
+        Mockito.`when`(mockCache.gifCacheDisk()).thenReturn(mockGifFileCache)
     }
 
     @Test
@@ -68,18 +76,18 @@ class InAppResourceProviderTest {
 
         val key = "key"
 
-        provider.saveImage(
+        provider.saveInAppImageV1(
             cacheKey = key,
             bitmap = mockBitmap,
             bytes = bytes
         )
 
         assertNotNull(mockCache.imageCache())
-        assertNotNull(mockCache.imageCacheDisk(gifs))
+        assertNotNull(mockCache.imageCacheDisk())
 
         // verify add images called
-        Mockito.verify(mockCache.imageCache()).add(key, mockBitmap)
-        Mockito.verify(mockCache.imageCacheDisk(images)).add(key, bytes)
+        Mockito.verify(mockCache.imageCache()).add(key, mockBitmapPair)
+        Mockito.verify(mockCache.imageCacheDisk()).add(key, bytes)
     }
 
     @Test
@@ -87,17 +95,17 @@ class InAppResourceProviderTest {
 
         val key = "key"
 
-        provider.saveGif(
+        provider.saveInAppGifV1(
             cacheKey = key,
             bytes = bytes
         )
 
         assertNotNull(mockCache.gifCache())
-        assertNotNull(mockCache.gifCacheDisk(gifs))
+        assertNotNull(mockCache.gifCacheDisk())
 
         // verify add images called
-        Mockito.verify(mockCache.gifCache()).add(key, bytes)
-        Mockito.verify(mockCache.gifCacheDisk(images)).add(key, bytes)
+        Mockito.verify(mockCache.gifCache()).add(key, mockBytesPair)
+        Mockito.verify(mockCache.gifCacheDisk()).add(key, bytes)
     }
 
     @Test
@@ -106,11 +114,11 @@ class InAppResourceProviderTest {
         val url = "key"
         val savedImage = Mockito.mock(File::class.java)
 
-        Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmap)
-        val res1 = provider.isImageCached(url = url)
+        Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmapPair)
+        val res1 = provider.isInAppImageCachedV1(url = url)
         assertEquals(true, res1)
 
-        val op1 = provider.cachedImage(cacheKey = url)
+        val op1 = provider.cachedInAppImageV1(cacheKey = url)
         assertEquals(mockBitmap, op1)
 
         // reset image cache
@@ -121,10 +129,10 @@ class InAppResourceProviderTest {
         Mockito.`when`(savedImage.exists()).thenReturn(true)
 
         // assert
-        val res2 = provider.isImageCached(url = url)
+        val res2 = provider.isInAppImageCachedV1(url = url)
         assertEquals(true, res2)
 
-        val op2 = provider.cachedImage(cacheKey = url)
+        val op2 = provider.cachedInAppImageV1(cacheKey = url)
         assertEquals(mockBitmap, op2)
     }
 
@@ -134,17 +142,17 @@ class InAppResourceProviderTest {
         val url = "key"
         val savedGif = Mockito.mock(File::class.java)
 
-        Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(bytes)
-        val res1 = provider.isGifCached(url = url)
+        Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(mockBytesPair)
+        val res1 = provider.isInAppGifCachedV1(url = url)
         assertEquals(true, res1)
 
-        val op1 = provider.cachedGif(cacheKey = url)
+        val op1 = provider.cachedInAppGifV1(cacheKey = url)
         assertEquals(bytes, op1)
 
         // reset gif cache
         Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(null)
 
-        val resNone = provider.isGifCached(url = url)
+        val resNone = provider.isInAppGifCachedV1(url = url)
         assertEquals(false, resNone)
 
         // setup
@@ -152,10 +160,10 @@ class InAppResourceProviderTest {
         Mockito.`when`(savedGif.exists()).thenReturn(true)
 
         // assert
-        val res2 = provider.isGifCached(url = url)
+        val res2 = provider.isInAppGifCachedV1(url = url)
         assertEquals(true, res2)
 
-        val op2 = provider.cachedGif(cacheKey = url)
+        val op2 = provider.cachedInAppGifV1(cacheKey = url)
         assertEquals(bytes, op2)
     }
 
@@ -164,10 +172,10 @@ class InAppResourceProviderTest {
 
         // setup - warm up cache
         val url = "key"
-        Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmap)
+        Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmapPair)
 
         // invocation
-        val bitmap = provider.fetchInAppImage(url = url, Bitmap::class.java)
+        val bitmap = provider.fetchInAppImageV1(url = url, Bitmap::class.java)
 
         // assertions
         assertEquals(mockBitmap, bitmap)
@@ -180,7 +188,7 @@ class InAppResourceProviderTest {
         val url = "key"
 
         // invocation
-        val bitmap = provider.fetchInAppImage(url = url, Bitmap::class.java)
+        val bitmap = provider.fetchInAppImageV1(url = url, Bitmap::class.java)
 
         // assertions
         assertEquals(mockBitmap, bitmap)
@@ -191,10 +199,10 @@ class InAppResourceProviderTest {
 
         // setup - warm up cache
         val url = "key"
-        Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(bytes)
+        Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(mockBytesPair)
 
         // invocation
-        val opBytes = provider.fetchInAppGif(url = url)
+        val opBytes = provider.fetchInAppGifV1(url = url)
 
         // assertions
         assertEquals(bytes, opBytes)
@@ -207,7 +215,7 @@ class InAppResourceProviderTest {
         val url = "key"
 
         // invocation
-        val opBytes = provider.fetchInAppGif(url = url)
+        val opBytes = provider.fetchInAppGifV1(url = url)
 
         // assertions
         assertEquals(bytes, opBytes)

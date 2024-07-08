@@ -44,7 +44,8 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
@@ -62,6 +63,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
+
+import kotlin.Pair;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function2;
@@ -99,7 +102,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay(resourceProvider);
+            inAppNotification.prepareForDisplay(resourceProvider,templatesManager,storeRegistry);
         }
     }
 
@@ -140,6 +143,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final EvaluationManager evaluationManager;
 
+    private final StoreRegistry storeRegistry;
+
     private final TemplatesManager templatesManager;
 
     private InAppState inAppState;
@@ -148,7 +153,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final Logger logger;
 
-    private InAppResourceProvider resourceProvider;
+    private final FileResourceProvider resourceProvider;
 
     private final MainLooperHandler mainLooperHandler;
 
@@ -177,9 +182,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             final DeviceInfo deviceInfo,
             InAppQueue inAppQueue,
             final EvaluationManager evaluationManager,
-            InAppResourceProvider resourceProvider,
-            TemplatesManager templatesManager
-    ) {
+            FileResourceProvider resourceProvider,
+            TemplatesManager templatesManager,
+            final StoreRegistry storeRegistry) {
         this.context = context;
         this.config = config;
         this.logger = this.config.getLogger();
@@ -194,6 +199,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
         this.templatesManager = templatesManager;
+        this.storeRegistry = storeRegistry;
         this.onAppLaunchEventSent = () -> {
             final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
                     deviceInfo.getAppLaunchedFields());
@@ -718,8 +724,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
-    private static void checkPendingNotifications(final Context context, final CleverTapInstanceConfig config,
-            final InAppController inAppController) {
+    private static void checkPendingNotifications(
+            final Context context,
+            final CleverTapInstanceConfig config,
+            final InAppController inAppController
+    ) {
         Logger.v(config.getAccountId(), "checking Pending Notifications");
         if (pendingNotifications != null && !pendingNotifications.isEmpty()) {
             try {
@@ -739,8 +748,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     //InApp
-    private static void inAppDidDismiss(Context context, CleverTapInstanceConfig config,
-            CTInAppNotification inAppNotification, InAppController inAppController) {
+    private static void inAppDidDismiss(
+            Context context,
+            CleverTapInstanceConfig config,
+            CTInAppNotification inAppNotification,
+            InAppController inAppController
+    ) {
         Logger.v(config.getAccountId(), "Running inAppDidDismiss");
         if (currentlyDisplayingInApp != null && (currentlyDisplayingInApp.getCampaignId()
                 .equals(inAppNotification.getCampaignId()))) {
@@ -765,8 +778,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     //InApp
-    private static void showInApp(Context context, final CTInAppNotification inAppNotification,
-            CleverTapInstanceConfig config, InAppController inAppController) {
+    private static void showInApp(
+            Context context,
+            final CTInAppNotification inAppNotification,
+            CleverTapInstanceConfig config,
+            InAppController inAppController
+    ) {
 
         Logger.v(config.getAccountId(), "Attempting to show next In-App");
 
@@ -850,7 +867,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 inAppFragment = new CTInAppNativeHeaderFragment();
                 break;
             case CTInAppTypeCustomCodeTemplate:
-                //TODO CustomTemplates download all file arguments before presenting
                 inAppController.presentTemplate(inAppNotification);
                 return;
             default:
@@ -940,7 +956,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     private void presentTemplate(final CTInAppNotification inAppNotification) {
-        templatesManager.presentTemplate(inAppNotification, this);
+        templatesManager.presentTemplate(inAppNotification, this,resourceProvider);
     }
 
     private JSONArray filterNonRegisteredCustomTemplates(JSONArray inAppNotifications) {
@@ -970,12 +986,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             if (template != null) {
                 // When a custom in-app template is triggered as an action we need to present it.
                 // Since all related methods operate with either CTInAppNotification or its json representation, here
-                // we create a copy of the notification that initiated the triggering and add the action as its
+                // we create a new notification from the one that initiated the triggering and add the action as its
                 // template data.
-                CTInAppNotification notificationFromAction = notification.copyAsCustomCode();
                 CustomTemplateInAppData actionTemplateData = templateInAppData.copy();
                 actionTemplateData.setAction(true);
-                notificationFromAction.setCustomTemplateData(actionTemplateData);
+                CTInAppNotification notificationFromAction = notification.createNotificationForAction(actionTemplateData);
+                if (notificationFromAction == null) {
+                    logger.debug("Failed to present custom template with name: "
+                            + templateInAppData.getTemplateName());
+                    return;
+                }
                 if (template.isVisual()) {
                     addInAppNotificationInFrontOfQueue(notificationFromAction.getJsonDescription());
                 } else {
@@ -1019,5 +1039,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             }
             logger.debug("No activity found to open url: " + url);
         }
+    }
+
+    public TemplatesManager getTemplatesManager() {
+        return templatesManager;
+    }
+    public StoreRegistry getStoreRegistry() {
+        return storeRegistry;
     }
 }

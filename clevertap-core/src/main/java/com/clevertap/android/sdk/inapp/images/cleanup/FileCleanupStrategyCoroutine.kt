@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inapp.images.cleanup
 
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import com.clevertap.android.sdk.utils.DispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -10,20 +10,23 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 
-internal class InAppCleanupStrategyCoroutine @JvmOverloads constructor(
-    override val inAppResourceProvider: InAppResourceProvider,
+internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
+    override val fileResourceProvider: FileResourceProvider,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers()
-) : InAppCleanupStrategy {
+) : FileCleanupStrategy {
 
     private var jobs: MutableList<Job> = mutableListOf()
-    override fun clearAssets(urls: List<String>, successBlock: (url: String) -> Unit) {
+
+    override fun clearFileAssets(
+        urls: List<String>,
+        successBlock: (url: String) -> Unit
+    ) {
         val job = CoroutineScope(dispatchers.io()).launch {
 
             val asyncTasks = mutableListOf<Deferred<Unit>>()
             for (url in urls) {
                 val deferred: Deferred<Unit> = async {
-                    inAppResourceProvider.deleteImage(url)
-                    inAppResourceProvider.deleteGif(url)
+                    fileResourceProvider.deleteData(url)
                     successBlock.invoke(url)
                 }
                 asyncTasks.add(deferred)
