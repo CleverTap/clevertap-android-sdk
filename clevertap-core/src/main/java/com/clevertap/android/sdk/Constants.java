@@ -61,7 +61,6 @@ public interface Constants {
     int DEFINE_VARS_EVENT = 8;
     String variablePayloadType = "varsPayload";
     String WZRK_FETCH = "wzrk_fetch";
-    String ICON_BASE_URL = "http://static.wizrocket.com/android/ico/";
     String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
     String NOTIFICATION_VIEWED_EVENT_NAME = "Notification Viewed";
     String SC_OUTGOING_EVENT_NAME = "SCOutgoing";
@@ -236,7 +235,6 @@ public interface Constants {
     String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
     String KEY_BETA = "beta";
     String KEY_PACKAGE_NAME = "packageName";
-    String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
     String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";

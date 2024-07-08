@@ -1,6 +1,14 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 6.2.1 (April 11, 2024)
+This hotfix release addresses the following issue in `v6.2.0`:
+
+#### Bug Fixes
+* Fixes a crash `IllegalArgumentException` caused by `allowedPushType` XPS enum.
+
 ### Version 6.2.0 (April 3, 2024)
+> ⚠️ **NOTE**
+6.2.0 produces a crash, please update to 6.2.1 and above.
 
 #### Bug Fixes
 * Extends the push primer callback to notify permission denial when cancel button is clicked on `PromptForSettings` alert dialog.
