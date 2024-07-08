@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.variables
 
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.VariableDefinitions.NullDefaultValue
 import com.clevertap.android.shared.test.BaseTestCase
@@ -17,13 +18,21 @@ class VarCacheTest : BaseTestCase() {
   private lateinit var ctVariables: CTVariables
   private lateinit var parser: Parser
   private lateinit var fileResourcesRepoImpl: FileResourcesRepoImpl
+  private lateinit var fileResourceProvider: FileResourceProvider
 
   @Before
   @Throws(Exception::class)
   override fun setUp() {
     super.setUp()
     fileResourcesRepoImpl = TODO()
-    varCache = VarCache(cleverTapInstanceConfig, application, fileResourcesRepoImpl)
+    fileResourceProvider = TODO()
+
+    varCache = VarCache(
+        cleverTapInstanceConfig,
+        application,
+        fileResourcesRepoImpl,
+        fileResourceProvider
+    )
     ctVariables = CTVariables(varCache)
     parser = Parser(ctVariables)
   }
