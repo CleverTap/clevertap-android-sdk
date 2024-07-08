@@ -478,7 +478,7 @@ public class CTInAppNotification implements Parcelable {
             FileResourceProvider fileResourceProvider,
             final TemplatesManager templatesManager,
             final StoreRegistry storeRegistry) {
-
+      
         final Pair<FileStore,InAppAssetsStore> storePair = new Pair<>(storeRegistry.getFilesStore(),
                 storeRegistry.getInAppAssetsStore());
 
@@ -502,24 +502,17 @@ public class CTInAppNotification implements Parcelable {
             listener.notificationReady(this);
         } else {
             for (CTInAppNotificationMedia media : this.mediaList) {
-                final String url = media.getMediaUrl();
-                if (media.isGIF()) {
-                    byte[] bytes = fileResourceProvider.fetchInAppGifV1(url);
-                    if (bytes != null && bytes.length > 0) {
-                        FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url,CtCacheType.GIF),storePair);
-                        listener.notificationReady(this);
-                        return;
-                    } else {
-                        this.error = "Error processing GIF";
-                    }
-                } else if (media.isImage()) {
-                    Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(url);
-                    if (bitmap != null) {
-                        FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url,CtCacheType.IMAGE),storePair);
-                        listener.notificationReady(this);
-                        return;
-                    } else {
-                        this.error = "Error processing image as bitmap was NULL";
+            if (media.isGIF()) {
+                byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
+                if (bytes == null || bytes.length == 0) {
+                    this.error = "Error processing GIF";
+                    break;
+                }
+            } else if (media.isImage()) {
+
+                Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
+                if (bitmap == null) {
+                    this.error = "Error processing image as bitmap was NULL";
                     }
                 } else if (media.isVideo() || media.isAudio()) {
                     if (!this.videoSupported) {
