@@ -8,10 +8,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -20,9 +22,9 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
+
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTPreferenceCache;
@@ -41,10 +43,14 @@ import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
+import com.clevertap.android.sdk.inapp.store.preference.FileStore;
+import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -53,6 +59,10 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.JsonUtilsKt;
 import com.clevertap.android.sdk.variables.JsonUtil;
 import com.clevertap.android.sdk.video.VideoLibChecker;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -70,13 +80,10 @@ import kotlin.Pair;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function2;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 // inapp db handle // glovbal dn
 @RestrictTo(Scope.LIBRARY_GROUP)
-public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener,
+public class InAppController implements InAppListener,
         InAppNotificationActivity.PushPermissionResultCallback {
 
     //InApp
@@ -103,8 +110,67 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                                 "Unable to parse inapp notification " + inAppNotification.getError());
                 return;
             }
-            inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay(resourceProvider,templatesManager,storeRegistry);
+            prepareForDisplay(inAppNotification);
+        }
+
+        void prepareForDisplay(CTInAppNotification inApp) {
+
+            final Pair<FileStore, InAppAssetsStore> storePair = new Pair<>(storeRegistry.getFilesStore(),
+                    storeRegistry.getInAppAssetsStore());
+
+            String templateName = null;
+            if (CTInAppType.CTInAppTypeCustomCodeTemplate.equals(inApp.getInAppType())) {
+                final CustomTemplateInAppData customTemplateData = inApp.getCustomTemplateData();
+                final List<String> fileUrls;
+                if (customTemplateData != null) {
+                    templateName = customTemplateData.getTemplateName();
+                    fileUrls = customTemplateData.getFileArgsUrls(templatesManager);
+                } else {
+                    fileUrls = Collections.emptyList();
+                }
+
+                int index = 0;
+                while (index < fileUrls.size()) {
+                    String url = fileUrls.get(index);
+                    byte[] bytes = resourceProvider.fetchFile(url);
+
+                    if (bytes != null && bytes.length > 0) {
+                        FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url, CtCacheType.FILES), storePair);
+                    } else {
+                        // download fail
+                        inApp.setError("Error processing the custom code in-app template: file download failed.");
+                        break;
+                    }
+                    index++;
+                }
+            } else {
+                for (CTInAppNotificationMedia media : inApp.getMediaList()) {
+                    if (media.isGIF()) {
+                        byte[] bytes = resourceProvider.fetchInAppGifV1(media.getMediaUrl());
+                        if (bytes == null || bytes.length == 0) {
+                            inApp.setError("Error processing GIF");
+                            break;
+                        }
+                    } else if (media.isImage()) {
+
+                        Bitmap bitmap = resourceProvider.fetchInAppImageV1(media.getMediaUrl());
+                        if (bitmap == null) {
+                            inApp.setError("Error processing image as bitmap was NULL");
+                        }
+                    } else if (media.isVideo() || media.isAudio()) {
+                        if (!inApp.isVideoSupported()) {
+                            inApp.setError("InApp Video/Audio is not supported");
+                        }
+                    }
+                }
+            }
+
+            InAppController controller = inAppControllerWeakReference.get();
+            if (controller != null) {
+                final CustomTemplate template =
+                        templateName != null ? templatesManager.getTemplate(templateName) : null;
+                controller.notificationReady(inApp, template);
+            }
         }
     }
 
@@ -462,26 +528,29 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     //InApp
-    @Override
-    public void notificationReady(final CTInAppNotification inAppNotification) {
+    private void notificationReady(final CTInAppNotification inAppNotification,
+                                   @Nullable final CustomTemplate template) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             mainLooperHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    notificationReady(inAppNotification);
+                    notificationReady(inAppNotification, template);
                 }
             });
             return;
         }
 
         if (inAppNotification.getError() != null) {
-            logger
-                    .debug(config.getAccountId(),
-                            "Unable to process inapp notification " + inAppNotification.getError());
+            logger.debug(config.getAccountId(),
+                    "Unable to process inapp notification " + inAppNotification.getError());
             return;
         }
         logger.debug(config.getAccountId(), "Notification ready: " + inAppNotification.getJsonDescription());
-        displayNotification(inAppNotification);
+        if (template != null && !template.isVisual()) {
+            presentTemplate(inAppNotification);
+        } else {
+            displayNotification(inAppNotification);
+        }
     }
 
     @Override
@@ -979,7 +1048,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 if (template.isVisual()) {
                     addInAppNotificationInFrontOfQueue(notificationFromAction.getJsonDescription());
                 } else {
-                    presentTemplate(notificationFromAction);
+                    prepareNotificationForDisplay(notificationFromAction.getJsonDescription());
                 }
             } else {
                 logger.debug("Cannot present non-registered template with name: "
