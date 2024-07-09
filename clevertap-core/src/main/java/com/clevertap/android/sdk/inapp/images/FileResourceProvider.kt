@@ -22,28 +22,32 @@ import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
 
 internal class FileResourceProvider(
-    private val images: File,
-    private val gifs: File,
-    private val allFileTypesDir: File,
+    images: File,
+    gifs: File,
+    allFileTypesDir: File,
     private val logger: ILogger? = null,
-    private val inAppRemoteSource: FileFetchApiContract = FileFetchApi()
-) {
-
-    private val ctCaches: CTCaches = CTCaches.instance(
+    private val inAppRemoteSource: FileFetchApiContract = FileFetchApi(),
+    ctCaches: CTCaches = CTCaches.instance(
         inAppImageMemoryV1 = MemoryCreator.createInAppImageMemoryV1(images, logger),
         inAppGifMemoryV1 = MemoryCreator.createInAppGifMemoryV1(gifs, logger),
         fileMemory = MemoryCreator.createFileMemoryV2(allFileTypesDir, logger)
-    )
-    private val imageMAO = InAppImageMemoryAccessObjectV1(ctCaches,logger)
-    private val gifMAO = InAppGifMemoryAccessObjectV1(ctCaches,logger)
-    private val fileMAO = FileMemoryAccessObject(ctCaches,logger)
-    private val mapOfMAO =
+    ),
+    private val imageMAO: InAppImageMemoryAccessObjectV1 = InAppImageMemoryAccessObjectV1(
+        ctCaches,
+        logger
+    ),
+    private val gifMAO: InAppGifMemoryAccessObjectV1 = InAppGifMemoryAccessObjectV1(
+        ctCaches,
+        logger
+    ),
+    private val fileMAO: FileMemoryAccessObject = FileMemoryAccessObject(ctCaches, logger)
+) {
+    private val mapOfMAO: Map<CtCacheType, List<MemoryAccessObject<*>>> =
         mapOf<CtCacheType, List<MemoryAccessObject<*>>>(
             IMAGE to listOf(imageMAO, fileMAO, gifMAO),
             GIF to listOf(gifMAO, fileMAO, imageMAO),
             FILES to listOf(fileMAO, imageMAO, gifMAO)
         )
-
     constructor(
         context: Context,
         logger: ILogger? = null
