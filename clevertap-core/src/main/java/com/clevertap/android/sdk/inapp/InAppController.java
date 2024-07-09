@@ -9,9 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -36,14 +38,19 @@ import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.JsonUtilsKt;
 import com.clevertap.android.sdk.variables.JsonUtil;
 import com.clevertap.android.sdk.video.VideoLibChecker;
 
@@ -56,7 +63,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Callable;
+
+import kotlin.Pair;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function2;
@@ -94,7 +104,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
             inAppNotification.listener = inAppControllerWeakReference.get();
-            inAppNotification.prepareForDisplay(resourceProvider);
+            inAppNotification.prepareForDisplay(resourceProvider,templatesManager,storeRegistry);
         }
     }
 
@@ -135,13 +145,17 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final EvaluationManager evaluationManager;
 
+    private final StoreRegistry storeRegistry;
+
+    private final TemplatesManager templatesManager;
+
     private InAppState inAppState;
 
     private HashSet<String> inappActivityExclude = null;
 
     private final Logger logger;
 
-    private InAppResourceProvider resourceProvider;
+    private final FileResourceProvider resourceProvider;
 
     private final MainLooperHandler mainLooperHandler;
 
@@ -170,8 +184,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             final DeviceInfo deviceInfo,
             InAppQueue inAppQueue,
             final EvaluationManager evaluationManager,
-            InAppResourceProvider resourceProvider
-    ) {
+            FileResourceProvider resourceProvider,
+            TemplatesManager templatesManager,
+            final StoreRegistry storeRegistry) {
         this.context = context;
         this.config = config;
         this.logger = this.config.getLogger();
@@ -185,6 +200,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.resourceProvider = resourceProvider;
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
+        this.templatesManager = templatesManager;
+        this.storeRegistry = storeRegistry;
         this.onAppLaunchEventSent = () -> {
             final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
                     deviceInfo.getAppLaunchedFields());
@@ -304,24 +321,90 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     @Override
-    public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-            HashMap<String, String> keyValueMap) {
-        analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, formData);
-        if (keyValueMap != null && !keyValueMap.isEmpty()) {
-            if (callbackManager.getInAppNotificationButtonListener() != null) {
-                callbackManager.getInAppNotificationButtonListener().onInAppButtonClick(keyValueMap);
-            }
+    @NonNull
+    public Bundle inAppNotificationActionTriggered(
+            @NonNull final CTInAppNotification inAppNotification,
+            @NonNull final CTInAppAction action,
+            @NonNull final String callToAction,
+            @Nullable final Bundle additionalData,
+            @Nullable final Context activityContext) {
+        Bundle data;
+        if (additionalData != null) {
+            data = new Bundle(additionalData);
+        } else {
+            data = new Bundle();
         }
+        data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
+        data.putString(Constants.KEY_C2A, callToAction);
+
+        // send clicked event
+        analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, data);
+
+        InAppActionType type = action.getType();
+        if (type == null) {
+            logger.debug("Triggered in-app action without type");
+            return data;
+        }
+
+        switch (type) {
+            case CUSTOM_CODE:
+                triggerCustomTemplateAction(inAppNotification, action.getCustomTemplateInAppData());
+                break;
+            case CLOSE:
+                if (CTInAppType.CTInAppTypeCustomCodeTemplate == inAppNotification.getInAppType()) {
+                    templatesManager.closeTemplate(inAppNotification);
+                }
+                // SDK In-Apps are dismissed in CTInAppBaseFragment::handleButtonClick or CTInAppNotificationActivity
+                break;
+            case OPEN_URL:
+                String actionUrl = action.getActionUrl();
+                if (actionUrl != null) {
+                    openUrl(actionUrl, activityContext);
+                } else {
+                    logger.debug("Cannot trigger open url action without url value");
+                }
+                break;
+            case KEY_VALUES:
+                if (action.getKeyValues() != null && !action.getKeyValues().isEmpty()) {
+                    if (callbackManager.getInAppNotificationButtonListener() != null) {
+                        callbackManager.getInAppNotificationButtonListener().onInAppButtonClick(action.getKeyValues());
+                    }
+                }
+                break;
+        }
+
+        return data;
+    }
+
+    @Nullable
+    @Override
+    public Bundle inAppNotificationDidClick(
+            @NonNull final CTInAppNotification inAppNotification,
+            @NonNull final CTInAppNotificationButton button,
+            @Nullable final Context activityContext) {
+        if (button.getAction() == null) {
+            return null;
+        }
+        return inAppNotificationActionTriggered(
+                inAppNotification,
+                button.getAction(),
+                button.getText(),
+                null,
+                activityContext);
     }
 
     @Override
-    public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
-            final Bundle formData) {
+    public void inAppNotificationDidDismiss(@Nullable final Context context,
+            @NonNull final CTInAppNotification inAppNotification,
+            @Nullable final Bundle formData) {
         inAppNotification.didDismiss(resourceProvider);
 
         if (controllerManager.getInAppFCManager() != null) {
             controllerManager.getInAppFCManager().didDismiss(inAppNotification);
-            logger.verbose(config.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
+            String templateName = inAppNotification.getCustomTemplateData() != null
+                    ? inAppNotification.getCustomTemplateData().getTemplateName() : "";
+            logger.verbose(config.getAccountId(),
+                    "InApp Dismissed: " + inAppNotification.getCampaignId() + "  " + templateName);
         } else {
             logger.verbose(config.getAccountId(), "Not calling InApp Dismissed: " + inAppNotification.getCampaignId()
                     + " because InAppFCManager is null");
@@ -363,7 +446,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     //InApp
     @Override
-    public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
+    public void inAppNotificationDidShow(@NonNull CTInAppNotification inAppNotification, @Nullable Bundle formData) {
         controllerManager.getInAppFCManager().didShow(context, inAppNotification);
         analyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData);
 
@@ -427,9 +510,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         showInAppNotificationIfAny();
     }
 
+    @WorkerThread
     public void addInAppNotificationsToQueue(JSONArray inappNotifs) {
         try {
-            inAppQueue.enqueueAll(inappNotifs);
+            JSONArray filteredNotifs = filterNonRegisteredCustomTemplates(inappNotifs);
+            inAppQueue.enqueueAll(filteredNotifs);
 
             // Fire the first notification, if any
             showNotificationIfAvailable(context);
@@ -489,6 +574,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             // We won't get here
             logger.verbose(config.getAccountId(), "InApp: Couldn't parse JSON array string from prefs", t);
         }
+    }
+
+    private void addInAppNotificationInFrontOfQueue(JSONObject inApp) {
+        if (isNonRegisteredCustomTemplate(inApp)) {
+            return;
+        }
+        inAppQueue.insertInFront(inApp);
+        showNotificationIfAvailable(context);
     }
 
     private boolean canShowInAppOnActivity() {
@@ -609,8 +702,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
-    private static void checkPendingNotifications(final Context context, final CleverTapInstanceConfig config,
-            final InAppController inAppController) {
+    private static void checkPendingNotifications(
+            final Context context,
+            final CleverTapInstanceConfig config,
+            final InAppController inAppController
+    ) {
         Logger.v(config.getAccountId(), "checking Pending Notifications");
         if (pendingNotifications != null && !pendingNotifications.isEmpty()) {
             try {
@@ -630,8 +726,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     //InApp
-    private static void inAppDidDismiss(Context context, CleverTapInstanceConfig config,
-            CTInAppNotification inAppNotification, InAppController inAppController) {
+    private static void inAppDidDismiss(
+            Context context,
+            CleverTapInstanceConfig config,
+            CTInAppNotification inAppNotification,
+            InAppController inAppController
+    ) {
         Logger.v(config.getAccountId(), "Running inAppDidDismiss");
         if (currentlyDisplayingInApp != null && (currentlyDisplayingInApp.getCampaignId()
                 .equals(inAppNotification.getCampaignId()))) {
@@ -656,8 +756,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     //InApp
-    private static void showInApp(Context context, final CTInAppNotification inAppNotification,
-            CleverTapInstanceConfig config, InAppController inAppController) {
+    private static void showInApp(
+            Context context,
+            final CTInAppNotification inAppNotification,
+            CleverTapInstanceConfig config,
+            InAppController inAppController
+    ) {
 
         Logger.v(config.getAccountId(), "Attempting to show next In-App");
 
@@ -686,6 +790,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
         String inAppNotificationType = inAppNotification.getType();
         boolean isHtmlType = inAppNotificationType != null && inAppNotificationType.equals(Constants.KEY_CUSTOM_HTML);
+
         if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
             Logger.d(config.getAccountId(),
                     "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp");
@@ -741,6 +846,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             case CTInAppTypeHeader:
                 inAppFragment = new CTInAppNativeHeaderFragment();
                 break;
+            case CTInAppTypeCustomCodeTemplate:
+                inAppController.presentTemplate(inAppNotification);
+                return;
             default:
                 Logger.d(config.getAccountId(), "Unknown InApp Type found: " + type);
                 currentlyDisplayingInApp = null;
@@ -801,6 +909,18 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
+    @WorkerThread
+    public void onQueueProfileEvent(final Map<String, Map<String, Object>> userAttributeChangedProperties,
+            Location location) {
+        final Map<String, Object> appFields = JsonUtil.mapFromJson(
+                deviceInfo.getAppLaunchedFields());
+        final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnUserAttributeChange(
+                userAttributeChangedProperties, location, appFields);
+        if (clientSideInAppsToDisplay.length() > 0) {
+            addInAppNotificationsToQueue(clientSideInAppsToDisplay);
+        }
+    }
+
     public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps,
             Location userLocation)
             throws JSONException {
@@ -813,5 +933,98 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         if (serverSideInAppsToDisplay.length() > 0) {
             addInAppNotificationsToQueue(serverSideInAppsToDisplay);
         }
+    }
+
+    private void presentTemplate(final CTInAppNotification inAppNotification) {
+        templatesManager.presentTemplate(inAppNotification, this,resourceProvider);
+    }
+
+    private JSONArray filterNonRegisteredCustomTemplates(JSONArray inAppNotifications) {
+        return JsonUtilsKt.filterObjects(inAppNotifications, jsonObject -> !isNonRegisteredCustomTemplate(jsonObject));
+    }
+
+    private boolean isNonRegisteredCustomTemplate(JSONObject inApp) {
+        CustomTemplateInAppData customTemplateData = CustomTemplateInAppData.createFromJson(inApp);
+        boolean isNonRegistered = customTemplateData != null && customTemplateData.getTemplateName() != null
+                && !templatesManager.isTemplateRegistered(customTemplateData.getTemplateName());
+
+        if (isNonRegistered) {
+            logger.info("CustomTemplates",
+                    "Template with name \"" + customTemplateData.getTemplateName() +
+                            "\" is not registered and cannot be presented");
+        }
+
+        return isNonRegistered;
+    }
+
+    private void triggerCustomTemplateAction(
+            CTInAppNotification notification,
+            CustomTemplateInAppData templateInAppData
+    ) {
+        if (templateInAppData != null && templateInAppData.getTemplateName() != null) {
+            CustomTemplate template = templatesManager.getTemplate(templateInAppData.getTemplateName());
+            if (template != null) {
+                // When a custom in-app template is triggered as an action we need to present it.
+                // Since all related methods operate with either CTInAppNotification or its json representation, here
+                // we create a new notification from the one that initiated the triggering and add the action as its
+                // template data.
+                CustomTemplateInAppData actionTemplateData = templateInAppData.copy();
+                actionTemplateData.setAction(true);
+                CTInAppNotification notificationFromAction = notification.createNotificationForAction(actionTemplateData);
+                if (notificationFromAction == null) {
+                    logger.debug("Failed to present custom template with name: "
+                            + templateInAppData.getTemplateName());
+                    return;
+                }
+                if (template.isVisual()) {
+                    addInAppNotificationInFrontOfQueue(notificationFromAction.getJsonDescription());
+                } else {
+                    presentTemplate(notificationFromAction);
+                }
+            } else {
+                logger.debug("Cannot present non-registered template with name: "
+                        + templateInAppData.getTemplateName());
+            }
+        } else {
+            logger.debug("Cannot present template without name.");
+        }
+    }
+
+    private void openUrl(String url, @Nullable Context launchContext) {
+        try {
+            Uri uri = Uri.parse(url.replace("\n", "").replace("\r", ""));
+            Set<String> queryParamSet = uri.getQueryParameterNames();
+            Bundle queryBundle = new Bundle();
+            if (queryParamSet != null && !queryParamSet.isEmpty()) {
+                for (String queryName : queryParamSet) {
+                    queryBundle.putString(queryName, uri.getQueryParameter(queryName));
+                }
+            }
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            if (!queryBundle.isEmpty()) {
+                intent.putExtras(queryBundle);
+            }
+
+            if (launchContext == null) {
+                launchContext = context;
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
+
+            Utils.setPackageNameFromResolveInfoList(launchContext, intent);
+            launchContext.startActivity(intent);
+        } catch (Exception e) {
+            if (url.startsWith(Constants.WZRK_URL_SCHEMA)) {
+                // Ignore logging CT scheme actions
+                return;
+            }
+            logger.debug("No activity found to open url: " + url);
+        }
+    }
+
+    public TemplatesManager getTemplatesManager() {
+        return templatesManager;
+    }
+    public StoreRegistry getStoreRegistry() {
+        return storeRegistry;
     }
 }

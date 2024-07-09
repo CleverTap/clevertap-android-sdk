@@ -9,18 +9,18 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.view.WindowManager;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
+import com.clevertap.android.sdk.inapp.CTInAppAction;
 import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
@@ -32,10 +32,12 @@ import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragmen
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.inapp.CTInAppNotificationButton;
 import com.clevertap.android.sdk.inapp.CTInAppType;
+import com.clevertap.android.sdk.inapp.InAppActionType;
 import com.clevertap.android.sdk.inapp.InAppListener;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
         DidClickForHardPermissionListener {
@@ -152,11 +154,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        if (pushPermissionManager.isFromNotificationSettingsActivity()){
+        if (pushPermissionManager.isFromNotificationSettingsActivity()) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 int permissionStatus = ContextCompat.checkSelfPermission(this,
                         Manifest.permission.POST_NOTIFICATIONS);
-                if (permissionStatus == PackageManager.PERMISSION_GRANTED){
+                if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
                     pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
                 } else {
                     pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
@@ -177,33 +179,57 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
     }
 
+    @Nullable
     @Override
-    public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-            HashMap<String, String> keyValueMap) {
-        didClick(formData, keyValueMap);
+    public Bundle inAppNotificationDidClick(
+            @NonNull final CTInAppNotification inAppNotification,
+            @NonNull final CTInAppNotificationButton button,
+            @Nullable final Context activityContext) {
+        InAppListener listener = getListener();
+        if (listener != null) {
+            return listener.inAppNotificationDidClick(inAppNotification, button, this);
+        } else {
+            return null;
+        }
     }
 
     @Override
-    public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
-            Bundle formData) {
+    public void inAppNotificationDidDismiss(
+            @NonNull final Context context,
+            @NonNull final CTInAppNotification inAppNotification,
+            @Nullable Bundle formData) {
         didDismiss(formData);
     }
 
     @Override
-    public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
+    public void inAppNotificationDidShow(@NonNull CTInAppNotification inAppNotification, @Nullable Bundle formData) {
         didShow(formData);
+    }
+
+    @Nullable
+    @Override
+    public Bundle inAppNotificationActionTriggered(
+            @NonNull final CTInAppNotification inAppNotification,
+            @NonNull final CTInAppAction action,
+            @NonNull final String callToAction,
+            @Nullable final Bundle additionalData,
+            @Nullable final Context activityContext) {
+        InAppListener listener = getListener();
+        if (listener != null) {
+            return listener.inAppNotificationActionTriggered(
+                    inAppNotification,
+                    action,
+                    callToAction,
+                    additionalData,
+                    this);
+        } else {
+            return null;
+        }
     }
 
     @Override
     public void setTheme(int resid) {
         super.setTheme(android.R.style.Theme_Translucent_NoTitleBar);
-    }
-
-    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
-        InAppListener listener = getListener();
-        if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
-        }
     }
 
     @Override
@@ -212,13 +238,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @SuppressLint("NewApi")
-    public void showHardPermissionPrompt(boolean isFallbackSettingsEnabled){
+    public void showHardPermissionPrompt(boolean isFallbackSettingsEnabled) {
         pushPermissionManager.showHardPermissionPrompt(isFallbackSettingsEnabled,
                 pushPermissionResultCallbackWeakReference.get());
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+    public void onRequestPermissionsResult(
+            int requestCode,
+            @NonNull String[] permissions,
             @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         CTPreferenceCache.getInstance(this, config).setFirstTimeRequest(false);
@@ -254,16 +282,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
     }
 
-    void fireUrlThroughIntent(String url, Bundle formData) {
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("\n", "").replace("\r", "")));
-            startActivity(intent);
-        } catch (Throwable t) {
-            // Ignore
-        }
-        didDismiss(formData);
-    }
-
     InAppListener getListener() {
         InAppListener listener = null;
         try {
@@ -288,6 +306,16 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     public void notifyPermissionDenied() {
         pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
+    }
+
+    @Nullable
+    private Bundle didClick(CTInAppNotificationButton button) {
+        InAppListener listener = getListener();
+        if (listener != null) {
+            return listener.inAppNotificationDidClick(inAppNotification, button, this);
+        } else {
+            return null;
+        }
     }
 
     private CTInAppBaseFullFragment createContentFragment() {
@@ -331,156 +359,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 break;
             }
             case CTInAppTypeAlert: {
-                AlertDialog alertDialog = null;
-                if (inAppNotification.getButtons().size() > 0) {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                        alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this,
-                                android.R.style.Theme_Material_Light_Dialog_Alert)
-                                .setCancelable(false)
-                                .setTitle(inAppNotification.getTitle())
-                                .setMessage(inAppNotification.getMessage())
-                                .setPositiveButton(inAppNotification.getButtons().get(0).getText(),
-                                        new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                Bundle data = new Bundle();
-                                                data.putString(Constants.NOTIFICATION_ID_TAG,
-                                                        inAppNotification.getCampaignId());
-                                                data.putString("wzrk_c2a",
-                                                        inAppNotification.getButtons().get(0).getText());
-                                                didClick(data, null);
-                                                String actionUrl = inAppNotification.getButtons().get(0)
-                                                        .getActionUrl();
-                                                if (actionUrl != null) {
-                                                    fireUrlThroughIntent(actionUrl, data);
-                                                    return;
-                                                }
-                                                if (inAppNotification.isLocalInApp()) {
-                                                    showHardPermissionPrompt(inAppNotification.fallBackToNotificationSettings());
-                                                    return;
-                                                }
-
-                                                if (inAppNotification.getButtons().get(0).getType() != null &&
-                                                        inAppNotification.getButtons().get(0).getType()
-                                                                .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
-                                                    showHardPermissionPrompt(inAppNotification.
-                                                            getButtons().get(0).isFallbackToSettings());
-                                                    return;
-                                                }
-
-                                                didDismiss(data);
-                                            }
-                                        })
-                                .create();
-                        if (inAppNotification.getButtons().size() == 2) {
-                            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
-                                    inAppNotification.getButtons().get(1).getText(),
-                                    new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            Bundle data = new Bundle();
-                                            data.putString(Constants.NOTIFICATION_ID_TAG,
-                                                    inAppNotification.getCampaignId());
-                                            data.putString("wzrk_c2a",
-                                                    inAppNotification.getButtons().get(1).getText());
-                                            didClick(data, null);
-                                            String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
-                                            if (actionUrl != null) {
-                                                fireUrlThroughIntent(actionUrl, data);
-                                                return;
-                                            }
-
-                                            if (inAppNotification.getButtons().get(1).getType() != null &&
-                                                    inAppNotification.getButtons().get(1).getType()
-                                                            .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
-                                                showHardPermissionPrompt(inAppNotification.
-                                                        getButtons().get(1).isFallbackToSettings());
-                                                return;
-                                            }
-
-                                            didDismiss(data);
-                                        }
-                                    });
-                        }
-                    } else {
-                        alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this)
-                                .setCancelable(false)
-                                .setTitle(inAppNotification.getTitle())
-                                .setMessage(inAppNotification.getMessage())
-                                .setPositiveButton(inAppNotification.getButtons().get(0).getText(),
-                                        new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                Bundle data = new Bundle();
-                                                data.putString(Constants.NOTIFICATION_ID_TAG,
-                                                        inAppNotification.getCampaignId());
-                                                data.putString("wzrk_c2a",
-                                                        inAppNotification.getButtons().get(0).getText());
-                                                didClick(data, null);
-                                                String actionUrl = inAppNotification.getButtons().get(0)
-                                                        .getActionUrl();
-                                                if (actionUrl != null) {
-                                                    fireUrlThroughIntent(actionUrl, data);
-                                                    return;
-                                                }
-                                                didDismiss(data);
-
-                                            }
-                                        }).create();
-                        if (inAppNotification.getButtons().size() == 2) {
-                            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
-                                    inAppNotification.getButtons().get(1).getText(),
-                                    new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            Bundle data = new Bundle();
-                                            data.putString(Constants.NOTIFICATION_ID_TAG,
-                                                    inAppNotification.getCampaignId());
-                                            data.putString("wzrk_c2a",
-                                                    inAppNotification.getButtons().get(1).getText());
-                                            didClick(data, null);
-                                            String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
-                                            if (actionUrl != null) {
-                                                fireUrlThroughIntent(actionUrl, data);
-                                                return;
-                                            }
-                                            didDismiss(data);
-                                        }
-                                    });
-                        }
-                    }
-                    //By default, we will allow 2 button alerts and set a third button if it is configured
-                    if (inAppNotification.getButtons().size() > 2) {
-                        alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL,
-                                inAppNotification.getButtons().get(2).getText(),
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-
-                                        Bundle data = new Bundle();
-                                        data.putString(Constants.NOTIFICATION_ID_TAG,
-                                                inAppNotification.getCampaignId());
-                                        data.putString("wzrk_c2a", inAppNotification.getButtons().get(2).getText());
-
-                                        didClick(data, null);
-                                        String actionUrl = inAppNotification.getButtons().get(2).getActionUrl();
-                                        if (actionUrl != null) {
-                                            fireUrlThroughIntent(actionUrl, data);
-                                            return;
-                                        }
-                                        didDismiss(data);
-                                    }
-                                });
-                    }
-                }
-                if (alertDialog != null) {
-                    alertDialog.show();
-                    isAlertVisible = true;
-                    didShow(null);
-                } else {
-                    config.getLogger()
-                            .debug("InAppNotificationActivity: Alert Dialog is null, not showing Alert InApp");
-                }
+                showAlertDialogForInApp();
                 break;
             }
             default: {
@@ -493,5 +372,82 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private String getFragmentTag() {
         return config.getAccountId() + ":CT_INAPP_CONTENT_FRAGMENT";
+    }
+
+    private void showAlertDialogForInApp() {
+        ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
+        if (buttons.isEmpty()) {
+            config.getLogger()
+                    .debug("InAppNotificationActivity: Notification has no buttons, not showing Alert InApp");
+            return;
+        }
+        AlertDialog alertDialog;
+        CTInAppNotificationButton positiveButton = buttons.get(0);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this,
+                    android.R.style.Theme_Material_Light_Dialog_Alert)
+                    .setCancelable(false)
+                    .setTitle(inAppNotification.getTitle())
+                    .setMessage(inAppNotification.getMessage())
+                    .setPositiveButton(positiveButton.getText(),
+                            (dialogInterface, i) -> onAlertButtonClick(positiveButton, true))
+                    .create();
+
+            if (inAppNotification.getButtons().size() == 2) {
+                CTInAppNotificationButton negativeButton = buttons.get(1);
+                alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
+                        negativeButton.getText(),
+                        (dialog, which) -> onAlertButtonClick(negativeButton, false));
+            }
+        } else {
+            alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this)
+                    .setCancelable(false)
+                    .setTitle(inAppNotification.getTitle())
+                    .setMessage(inAppNotification.getMessage())
+                    .setPositiveButton(positiveButton.getText(),
+                            (dialogInterface, i) -> onAlertButtonClickLegacy(positiveButton))
+                    .create();
+
+            if (inAppNotification.getButtons().size() == 2) {
+                CTInAppNotificationButton negativeButton = buttons.get(1);
+                alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
+                        negativeButton.getText(),
+                        (dialog, which) -> onAlertButtonClickLegacy(negativeButton));
+            }
+        }
+        //By default, we will allow 2 button alerts and set a third button if it is configured
+        if (buttons.size() > 2) {
+            CTInAppNotificationButton button = buttons.get(2);
+            alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL,
+                    button.getText(),
+                    (dialogInterface, i) -> onAlertButtonClickLegacy(button));
+        }
+
+        alertDialog.show();
+        isAlertVisible = true;
+        didShow(null);
+    }
+
+    private void onAlertButtonClickLegacy(final CTInAppNotificationButton button) {
+        Bundle clickData = didClick(button);
+        didDismiss(clickData);
+    }
+
+    private void onAlertButtonClick(CTInAppNotificationButton button, boolean isPositive) {
+        Bundle clickData = didClick(button);
+
+        if (isPositive && inAppNotification.isLocalInApp()) {
+            showHardPermissionPrompt(inAppNotification.fallBackToNotificationSettings());
+            return;
+        }
+
+        CTInAppAction action = button.getAction();
+        if (action != null && InAppActionType.REQUEST_FOR_PERMISSIONS == action.getType()) {
+            showHardPermissionPrompt(action.shouldFallbackToSettings());
+            return;
+        }
+
+        didDismiss(clickData);
     }
 }

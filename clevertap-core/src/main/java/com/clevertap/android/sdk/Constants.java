@@ -72,6 +72,7 @@ public interface Constants {
     String APP_LAUNCHED_EVENT = "App Launched";
     String ERROR_KEY = "wzrk_error";
     int PUSH_DELAY_MS = 1000;
+    String WZRK_URL_SCHEMA = "wzrk://";
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
     String INAPP_IMAGE_INTERSTITIAL_TYPE = "image-interstitial";
@@ -156,6 +157,11 @@ public interface Constants {
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";
     String CHARGED_EVENT = "Charged";
+    String PROFILE = "profile";
+    String RAISED = "raised";
+    String USER_ATTRIBUTE_CHANGE = "_CTUserAttributeChange";
+    String KEY_NEW_VALUE = "newValue";
+    String KEY_OLD_VALUE = "oldValue";
     String KEY_ITEMS = "Items";
     String KEY_MUTED = "comms_mtd";
     int EMPTY_NOTIFICATION_ID = -1000;
@@ -220,6 +226,7 @@ public interface Constants {
     String KEY_EVENT_PROPERTIES = "eventProperties";
     String KEY_ITEM_PROPERTIES = "itemProperties";
     String KEY_GEO_RADIUS_PROPERTIES = "geoRadius";
+    String KEY_PROFILE_ATTR_NAME = "profileAttrName";
     String KEY_PROPERTY_VALUE = "propertyValue";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
@@ -299,6 +306,7 @@ public interface Constants {
     String COMMAND_DELETE = "$delete";
     String COMMAND_INCREMENT = "$incr";
     String COMMAND_DECREMENT = "$decr";
+    String DATE_PREFIX = "$D_";
     String GUID_PREFIX_GOOGLE_AD_ID = "__g";
     String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
     String ERROR_PROFILE_PREFIX = "__i";
@@ -389,6 +397,8 @@ public interface Constants {
     HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME));
     HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
     HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
+
+    HashSet<String> keysToSkipForUserAttributesEvaluation = new HashSet<>(Arrays.asList("cc", "tz", "Carrier"));
 
 
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;

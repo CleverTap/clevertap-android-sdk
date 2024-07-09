@@ -19,6 +19,9 @@ import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
+import com.clevertap.android.sdk.variables.Var
+import com.clevertap.android.sdk.variables.callbacks.VariableCallback
+import com.clevertap.demo.ui.main.FileVarsData
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
@@ -93,6 +96,8 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 FirebaseAnalytics.getInstance(this@MyApplication)
                     .setUserProperty("ct_objectId", ctId)
             }
+
+            // FileVarsData.defineFileVars(cleverTapAPI = this) // uncomment to define file vars before app launch
         }
 
         /*println(

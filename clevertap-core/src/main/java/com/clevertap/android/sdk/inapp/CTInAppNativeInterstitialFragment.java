@@ -166,14 +166,14 @@ import java.util.ArrayList;
         if (!inAppNotification.getMediaList().isEmpty()) {
             CTInAppNotificationMedia media = inAppNotification.getMediaList().get(0);
             if (media.isImage()) {
-                Bitmap image = resourceProvider().cachedImage(media.getMediaUrl());
+                Bitmap image = resourceProvider().cachedInAppImageV1(media.getMediaUrl());
                 if (image != null) {
                     ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
                     imageView.setVisibility(View.VISIBLE);
                     imageView.setImageBitmap(image);
                 }
             } else if (media.isGIF()) {
-                byte[] gifByteArray = resourceProvider().cachedGif(media.getMediaUrl());
+                byte[] gifByteArray = resourceProvider().cachedInAppGifV1(media.getMediaUrl());
                 if (gifByteArray != null) {
                     gifImageView = relativeLayout.findViewById(R.id.gifImage);
                     gifImageView.setVisibility(View.VISIBLE);
@@ -289,7 +289,7 @@ import java.util.ArrayList;
         super.onStart();
         if (gifImageView != null) {
             CTInAppNotificationMedia inAppMedia = inAppNotification.getMediaList().get(0);
-            gifImageView.setBytes(resourceProvider().cachedGif(inAppMedia.getMediaUrl()));
+            gifImageView.setBytes(resourceProvider().cachedInAppGifV1(inAppMedia.getMediaUrl()));
             gifImageView.startAnimation();
         }
     }

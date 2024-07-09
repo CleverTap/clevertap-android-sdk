@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
 import static com.clevertap.android.sdk.Utils.getSCDomain;
+import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
@@ -15,6 +16,7 @@ import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.media.AudioAttributes;
@@ -37,16 +39,15 @@ import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategy;
-import com.clevertap.android.sdk.inapp.images.cleanup.InAppCleanupStrategyExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderExecutors;
-import com.clevertap.android.sdk.inapp.images.preload.InAppImagePreloaderStrategy;
-import com.clevertap.android.sdk.inapp.images.repo.InAppImageRepoImpl;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
+import com.clevertap.android.sdk.inapp.data.CtCacheType;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
-import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -55,6 +56,7 @@ import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
+import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -69,7 +71,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.variables.CTVariables;
+import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.Var;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
@@ -1002,6 +1004,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return fromAccountId(context, _accountId);
     }
 
+    private static boolean isDevelopmentMode(@NonNull Context context) {
+        return 0 != (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE);
+    }
+
     @RestrictTo(Scope.LIBRARY)
     public static void runJobWork(Context context) {
         if (instances == null) {
@@ -1034,6 +1040,97 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         for (CleverTapAPI instance : getAvailableInstances(context)) {
             instance.coreState.getPushProviders().doTokenRefresh(token, pushType);
         }
+    }
+
+    /**
+     * Register {@link com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate CustomTemplates} through a
+     * {@link TemplateProducer}. See {@link com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate.Builder
+     * CustomTemplate.Builder}. Templates must be registered before the {@link CleverTapAPI} instance, that would use
+     * them, is created. A common place for this initialization is in {@link Application#onCreate()}. If your
+     * application uses multiple {@link CleverTapAPI} instance, use the {@link CleverTapInstanceConfig} within the
+     * TemplateProducer to differentiate which templates should be registered to which {@link CleverTapAPI}
+     * instances.This method can be called multiple times with different TemplateProducers, however all of the
+     * produced templates must have unique names.
+     * <br/><br/>
+     * Example usage:
+     * <br/>
+     * Java:
+     * <pre>
+     * CleverTapAPI.registerCustomInAppTemplates(ctConfig -> CustomTemplatesExtKt.templatesSet(
+     *                 new CustomTemplate.TemplateBuilder()
+     *                         .name("template")
+     *                         .presenter()
+     *                         .stringArgument("string", "Text")
+     *                         .build()));
+     * </pre>
+     * Kotlin:
+     * <pre>
+     * CleverTapAPI.registerCustomInAppTemplates {
+     *     setOf(
+     *         template {
+     *             name("template")
+     *             presenter()
+     *             stringArgument("string", "Text")
+     *         })
+     * }
+     * </pre>
+     * @param producer The {@link TemplateProducer} that would create a set of templates
+     */
+    public static synchronized void registerCustomInAppTemplates(TemplateProducer producer) {
+        TemplatesManager.register(producer);
+    }
+
+    /**
+     * Retrieve a {@link CustomTemplateContext} for a template that is currently displaying. If the provided template
+     * name is not of a currently active template this method returns <code>null</code>.
+     */
+    @Nullable
+    public CustomTemplateContext getActiveContextForTemplate(@NonNull String templateName) {
+        if (coreState == null || coreState.getTemplatesManager() == null) {
+            return null;
+        }
+        return coreState.getTemplatesManager().getActiveContextForTemplate(templateName);
+    }
+
+    /**
+     * Sync all currently registered templates (through {@link #registerCustomInAppTemplates(TemplateProducer)} to the
+     * backend. Use this method to transfer template definitions from the SDK to the CT dashboard. This method can
+     * only be called from a debug build of the application and the current logged-in user must be marked as a
+     * test profile through the web dashboard.
+     */
+    public void syncRegisteredInAppTemplates() {
+        if (!isDevelopmentMode()) {
+            getConfigLogger().debug("CustomTemplates",
+                    "Your app is NOT in development mode, templates will not be synced");
+            return;
+        }
+
+        if (coreState == null) {
+            getConfigLogger().debug("CustomTemplates", "coreState is null, templates cannot be synced");
+            return;
+        }
+
+        if (coreState.getNetworkManager() == null) {
+            getConfigLogger().debug("CustomTemplates", "networkManager is null, templates cannot be synced");
+            return;
+        }
+
+        if (coreState.getTemplatesManager() == null) {
+            getConfigLogger().debug("CustomTemplates", "templateManager is null, templates cannot be synced");
+            return;
+        }
+
+        TemplatesManager templatesManager = coreState.getTemplatesManager();
+        BaseNetworkManager networkManager = coreState.getNetworkManager();
+
+        getCleverTapID(x -> {
+            // getCleverTapID is executed on the main thread
+            Task<Void> task = CTExecutorFactory.executors(getConfig()).postAsyncSafelyTask();
+            task.execute("DefineTemplates", () -> {
+                networkManager.defineTemplates(context, templatesManager.getAllRegisteredTemplates());
+                return null;
+            });
+        });
     }
 
     /**
@@ -1793,7 +1890,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Return the user profile property value for the specified key
+     * Return the user profile property value for the specified key.
+     * Date related property values are returned as number of seconds since January 1, 1970, 00:00:00 GMT
      *
      * @param name String
      * @return {@link JSONArray}, String or null
@@ -2729,6 +2827,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         CryptHandler cryptHandler = coreState.getCryptHandler();
         StoreProvider storeProvider = StoreProvider.getInstance();
 
+        // Inflate the local profile here as eviceId is required
+        coreState.getLocalDataStore().inflateLocalProfileAsync(context);
+
         if (storeRegistry.getInAppStore() == null) {
             InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceId,
                     accountId);
@@ -2780,11 +2881,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         getConfigLogger().verbose(accountId + ":async_deviceID",
                 "Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         coreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
-
-        if (coreState.getCallbackManager().getOnInitCleverTapIDListener() != null) {
-            coreState.getCallbackManager().getOnInitCleverTapIDListener().onInitCleverTapID(deviceId);
-        }
-
+        coreState.getCallbackManager().notifyCleverTapIDChanged(deviceId);
     }
 
     private CleverTapInstanceConfig getConfig() {
@@ -3002,31 +3099,35 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Returns a unique identifier by which CleverTap identifies this user, on Main thread Callback.
+     * Subscribe to receive a unique identifier by which CleverTap identifies this user. The listener is called on the
+     * main thread and it is invoked each time the id changes until the listener is removed through
+     * {@link #removeCleverTapIDListener(OnInitCleverTapIDListener)}
      *
      * @param onInitCleverTapIDListener non-null callback to retrieve identifier on main thread.
      */
     public void getCleverTapID(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
         Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(getConfig()).ioTask();
-        taskDeviceCachedInfo.execute("getCleverTapID", new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                String deviceID = coreState.getDeviceInfo().getDeviceID();
-                if (deviceID != null) {
-                    onInitCleverTapIDListener.onInitCleverTapID(deviceID);
-                } else {
-                    /**
-                     * If cleverTapID not yet generated during first init then set listener, through which
-                     * cleverTapID will be notified when it's generated and ready to use from deviceIDCreated()
-                     *
-                     * Setting callback here makes sure that callback will be give only once, either from
-                     * getCleverTapID() or deviceIDCreated()
-                     */
-                    coreState.getCallbackManager().setOnInitCleverTapIDListener(onInitCleverTapIDListener);
-                }
-                return null;
+        taskDeviceCachedInfo.execute("getCleverTapID", () -> {
+            String deviceID = coreState.getDeviceInfo().getDeviceID();
+            if (deviceID != null) {
+                runOnUiThread(() -> onInitCleverTapIDListener.onInitCleverTapID(deviceID));
             }
+            coreState.getCallbackManager().addOnInitCleverTapIDListener(onInitCleverTapIDListener);
+            return null;
         });
+    }
+
+    /**
+     * Remove a previously subscribed OnInitCleverTapIDListener.
+     * See {@link #getCleverTapID(OnInitCleverTapIDListener)}
+     *
+     * @param onInitCleverTapIDListener The same listener instance passed to
+     *                                  {@link #getCleverTapID(OnInitCleverTapIDListener)} that should be removed.
+     */
+    public void removeCleverTapIDListener(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
+        if (coreState != null && coreState.getCallbackManager() != null) {
+            coreState.getCallbackManager().removeOnInitCleverTapIDListener(onInitCleverTapIDListener);
+        }
     }
 
     //TODO: start synchronizing entire flow from here
@@ -3184,13 +3285,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Check if your app is in development mode. <br>
-     * the following function: {@link CleverTapAPI#syncVariables()} will only work if the app is in
-     * development mode and profile is set as a test profile in CT Dashboard.
+     * Some functions (like {@link CleverTapAPI#syncVariables()} and {@link CleverTapAPI#syncRegisteredInAppTemplates()})
+     * will only work if the app is in development mode and the current user profile is set as a test profile in CT
+     * Dashboard.
      *
-     * @return boolean True if development mode, false otherwise.
+     * @return <code>true</code> if the app is in development mode, <code>false</code> otherwise.
      */
-    boolean isDevelopmentMode() {
-        return CTVariables.isDevelopmentMode(context);
+    public boolean isDevelopmentMode() {
+        return context != null && isDevelopmentMode(context);
     }
 
     /**
@@ -3204,6 +3306,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public <T> Var<T> defineVariable(String name, T defaultValue) {
         return Var.define(name, defaultValue,coreState.getCTVariables());
+    }
+
+    /**
+     * Defines a new file variable. In
+     * that case it is better to use the @Variable annotation instead of this method.
+     * // todo check annotation and documentation
+     *
+     * @param name Name of the variable.
+     * @return Returns the Var instance.
+     */
+    public Var<String> defineFileVariable(String name) {
+        return Var.define(name, null , CTVariableUtils.FILE, coreState.getCTVariables());
     }
 
     /**
@@ -3366,6 +3480,30 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Adds a callback to be invoked when variables are initialised with server values and file
+     * downloads are also completed for file type variables (if any) registered with
+     * {@link #defineFileVariable}.
+     * Will be called each time new values are fetched.
+     *
+     * @param callback Callback to register.
+     */
+    public void onVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().onVariablesChangedAndNoDownloadsPending(callback);
+    }
+
+    /**
+     * Adds a callback to be invoked when variables are initialised with server values and file
+     * downloads are also completed for file type variables (if any) registered with
+     * {@link #defineFileVariable}.
+     * WWill be called only once and then removed.
+     *
+     * @param callback Callback to register.
+     */
+    public void onceVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
+        coreState.getCTVariables().onceVariablesChangedAndNoDownloadsPending(callback);
+    }
+
+    /**
      *  Removes all previously registered callbacks.
      */
     public void removeAllVariablesChangedCallbacks() {
@@ -3410,39 +3548,87 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public void clearInAppResources(boolean expiredOnly) {
 
-        Logger logger = coreState.getConfig().getLogger();
+        Logger logger = getConfigLogger();
 
         StoreRegistry storeRegistry = coreState.getStoreRegistry();
         if (storeRegistry == null) {
-            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+            logger.info(
+                    "There was a problem clearing resources because instance is not completely initialised, please try again after some time");
             return;
         }
 
-        InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
-        LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
-
-        if (inAppAssetStore == null || legacyInAppStore == null) {
-            logger.info("There was a problem clearing resources because instance is not completely initialised, please try again after some time");
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
+        if (impl == null) {
+            logger.info(
+                    "There was a problem clearing resources because instance is not completely initialised, please try again after some time");
             return;
         }
 
-        InAppResourceProvider inAppResourceProvider = new InAppResourceProvider(context, logger);
-        InAppCleanupStrategy cleanupStrategy = new InAppCleanupStrategyExecutors(inAppResourceProvider);
-        InAppImagePreloaderStrategy preloadStrategy = new InAppImagePreloaderExecutors(
-                inAppResourceProvider,
-                logger
-        );
-
-        InAppImageRepoImpl impl = new InAppImageRepoImpl(
-                cleanupStrategy,
-                preloadStrategy,
-                inAppAssetStore,
-                legacyInAppStore
-        );
         if (expiredOnly) {
-            impl.cleanupStaleImagesNow();
+            impl.cleanupExpiredResources(CtCacheType.IMAGE);
         } else {
-            impl.cleanupAllImages();
+            impl.cleanupAllResources(CtCacheType.IMAGE);
         }
+    }
+
+    /**
+     * Deletes all types of files which are preloaded for SDK features like custom in-app templates, app functions and
+     * variables etc.
+     *
+     * @param expiredOnly to clear only files which will not be needed further for SDK features like custom in-app
+     *                    templates, app functions and variables etc.
+     */
+    public void clearFileResources(boolean expiredOnly) {
+
+        Logger logger = getConfigLogger();
+
+        StoreRegistry storeRegistry = coreState.getStoreRegistry();
+        if (storeRegistry == null) {
+            logger.info(
+                    "There was a problem clearing file resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
+        if (impl == null) {
+            logger.info(
+                    "There was a problem clearing file resources because instance is not completely initialised, please try again after some time");
+            return;
+        }
+
+        if (expiredOnly) {
+            impl.cleanupExpiredResources(CtCacheType.FILES);
+        } else {
+            impl.cleanupAllResources(CtCacheType.FILES);
+        }
+    }
+
+    /**
+     * Checks if a file exists for the given non-null url.
+     *
+     * @param url the non-null url for which to check the existence of the file.
+     * @return true if a file exists for the specified url, false otherwise.
+     */
+    public boolean doesFileExistForUrl(@NonNull String url) {
+        Logger logger = getConfigLogger();
+        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
+        return fileResourceProvider.isFileCached(url);
+    }
+
+    /**
+     * Retrieves the absolute file path associated with the given url.
+     *
+     * This method takes a url as a String parameter and returns the corresponding
+     * absolute file path as a String. The url parameter must not be null.
+     *
+     * @param url the url for which the file path is to be retrieved.
+     *            Must be a non-null String.
+     * @return the absolute file path corresponding to the given URL or null if file doesn't exist
+     */
+    @Nullable
+    public String getFilePathForUrl(@NonNull String url) {
+        Logger logger = getConfigLogger();
+        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
+        return fileResourceProvider.cachedFilePath(url);
     }
 }

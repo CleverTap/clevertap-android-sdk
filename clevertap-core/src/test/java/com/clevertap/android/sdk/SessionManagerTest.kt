@@ -22,6 +22,7 @@ class SessionManagerTest : BaseTestCase() {
     private lateinit var validator : Validator
     private lateinit var localDataStoreDef: LocalDataStore
     private lateinit var cryptHandler : CryptHandler
+    private lateinit var deviceInfo : DeviceInfo
     override fun setUp() {
         super.setUp()
         config = CleverTapInstanceConfig.createInstance(application, "id", "token", "region")
@@ -31,7 +32,9 @@ class SessionManagerTest : BaseTestCase() {
         coreMetaData = CoreMetaData()
         validator = Validator()
         cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
-        localDataStoreDef = LocalDataStore(application, configDef, cryptHandler)
+        cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
+        deviceInfo = MockDeviceInfo(appCtx, configDef, "id", coreMetaData)
+        localDataStoreDef = LocalDataStore(application, configDef, cryptHandler, deviceInfo)
 
         sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreDef)
 

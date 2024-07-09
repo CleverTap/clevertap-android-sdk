@@ -383,7 +383,7 @@ class ValidatorTest : BaseTestCase() {
 
         // 6. if object is of type date, then validator value must be a string of type '$D_xyz'
         val date = Date()
-        expectedStr = "\$D_" + (date.time / 1000)
+        expectedStr = Constants.DATE_PREFIX + (date.time / 1000)
         result = validator.cleanObjectValue(date, Validator.ValidationContext.Event)
         assertEquals(null, result.errorDesc)
         assertEquals(0, result.errorCode)

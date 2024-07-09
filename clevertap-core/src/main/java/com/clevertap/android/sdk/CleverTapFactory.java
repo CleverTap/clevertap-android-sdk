@@ -11,12 +11,14 @@ import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.InAppQueue;
 import com.clevertap.android.sdk.inapp.TriggerManager;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher;
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
@@ -44,8 +46,21 @@ class CleverTapFactory {
             String cleverTapID) {
         CoreState coreState = new CoreState(context);
 
-        StoreRegistry storeRegistry = new StoreRegistry();
-        storeRegistry.setLegacyInAppStore(StoreProvider.getInstance().provideLegacyInAppStore(context, cleverTapInstanceConfig.getAccountId()));
+        TemplatesManager templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig);
+        coreState.setTemplatesManager(templatesManager);
+
+        // create storeRegistry, preferences for features
+        final StoreProvider storeProvider = StoreProvider.getInstance();
+        String accountId = cleverTapInstanceConfig.getAccountId();
+
+        StoreRegistry storeRegistry = new StoreRegistry(
+                null,
+                null,
+                storeProvider.provideLegacyInAppStore(context, accountId),
+                storeProvider.provideInAppAssetsStore(context, accountId),
+                storeProvider.provideFileStore(context, accountId)
+        );
+
         coreState.setStoreRegistry(storeRegistry);
 
         CoreMetaData coreMetaData = new CoreMetaData();
@@ -78,15 +93,18 @@ class CleverTapFactory {
             return null;
         });
 
-        EventMediator eventMediator = new EventMediator(context, config, coreMetaData);
-        coreState.setEventMediator(eventMediator);
-
-        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler);
-        coreState.setLocalDataStore(localDataStore);
-
         DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
         coreState.setDeviceInfo(deviceInfo);
         deviceInfo.onInitDeviceInfo(cleverTapID);
+
+        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler, deviceInfo);
+        coreState.setLocalDataStore(localDataStore);
+
+        ProfileValueHandler profileValueHandler = new ProfileValueHandler(validator, validationResultStack);
+        coreState.setProfileValueHandler(profileValueHandler);
+
+        EventMediator eventMediator = new EventMediator(context, config, coreMetaData, localDataStore, profileValueHandler);
+        coreState.setEventMediator(eventMediator);
 
         CTPreferenceCache.getInstance(context, config);
 
@@ -111,18 +129,14 @@ class CleverTapFactory {
                 triggersMatcher,
                 triggersManager,
                 limitsMatcher,
-                storeRegistry
+                storeRegistry,
+                templatesManager
         );
         coreState.setEvaluationManager(evaluationManager);
 
-        final StoreProvider storeProvider = StoreProvider.getInstance();
-
         Task<Void> taskInitStores = CTExecutorFactory.executors(config).ioTask();
         taskInitStores.execute("initStores", () -> {
-            if (storeRegistry.getInAppAssetsStore() == null) {
-                InAppAssetsStore assetsStore = storeProvider.provideInAppAssetsStore(context, config.getAccountId());
-                storeRegistry.setInAppAssetsStore(assetsStore);
-            }
+
             if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
                 if (storeRegistry.getInAppStore() == null) {
                     InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceInfo.getDeviceID(),
@@ -161,7 +175,15 @@ class CleverTapFactory {
             }
         });
 
-        VarCache varCache = new VarCache(config, context);
+        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, config.getLogger(), storeRegistry);
+        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, config.getLogger());
+
+        VarCache varCache = new VarCache(
+                config,
+                context,
+                impl,
+                fileResourceProvider
+        );
         coreState.setVarCache(varCache);
 
         CTVariables ctVariables = new CTVariables(varCache);
@@ -183,6 +205,7 @@ class CleverTapFactory {
                 false,
                 storeRegistry,
                 triggersManager,
+                templatesManager,
                 coreMetaData
         );
 
@@ -198,7 +221,6 @@ class CleverTapFactory {
                 callbackManager,
                 ctLockManager,
                 validator,
-                localDataStore,
                 inAppResponse,
                 ctApiWrapper
         );
@@ -229,6 +251,7 @@ class CleverTapFactory {
                 true,
                 storeRegistry,
                 triggersManager,
+                templatesManager,
                 coreMetaData
         );
 
@@ -239,7 +262,6 @@ class CleverTapFactory {
                 validator,
                 validationResultStack,
                 coreMetaData,
-                localDataStore,
                 deviceInfo,
                 callbackManager,
                 controllerManager,
@@ -249,7 +271,6 @@ class CleverTapFactory {
         coreState.setAnalyticsManager(analyticsManager);
 
         networkManager.addNetworkHeadersListener(evaluationManager);
-
         InAppController inAppController = new InAppController(
                 context,
                 config,
@@ -261,7 +282,9 @@ class CleverTapFactory {
                 deviceInfo,
                 new InAppQueue(config, storeRegistry),
                 evaluationManager,
-                new InAppResourceProvider(context, config.getLogger())
+                fileResourceProvider,
+                templatesManager,
+                storeRegistry
         );
 
         coreState.setInAppController(inAppController);

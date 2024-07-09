@@ -115,7 +115,6 @@ public class LoginController {
                     dbManager.clearQueues(context);
 
                     // clear out the old data
-                    localDataStore.changeUser();
                     CoreMetaData.setActivityCount(1);
                     sessionManager.destroySession();
 
@@ -128,6 +127,8 @@ public class LoginController {
                     } else {
                         deviceInfo.forceNewDeviceID();
                     }
+
+                    localDataStore.changeUser();
                     callbackManager.notifyUserProfileInitialized(deviceInfo.getDeviceID());
                     deviceInfo
                             .setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
