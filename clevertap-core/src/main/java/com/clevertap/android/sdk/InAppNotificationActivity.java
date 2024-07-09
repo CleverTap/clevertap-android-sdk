@@ -17,6 +17,7 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.view.WindowManager;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -51,10 +52,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private PushPermissionManager pushPermissionManager;
 
-    private Bundle returnBundle = null;
-
-    private boolean invokedInAppDismissCallback = false;
-
     public interface PushPermissionResultCallback {
 
         void onPushPermissionAccept();
@@ -64,6 +61,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+                didDismiss(null);
+            }
+        });
+
         int orientation = this.getResources().getConfiguration().orientation;
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -170,37 +175,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         } else {
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         }
-
-        if (invokedInAppDismissCallback) {
-            return;
-        }
-        notifyInAppDismissed();
-    }
-
-    @SuppressLint("WrongConstant")
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (VERSION.SDK_INT >= VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, android.R.anim.fade_in, android.R.anim.fade_out);
-        } else {
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-        }
-        if (invokedInAppDismissCallback) {
-            return;
-        }
-        notifyInAppDismissed();
-    }
-
-    private void notifyInAppDismissed() {
-        if (isAlertVisible) {
-            isAlertVisible = false;
-        }
-        InAppListener listener = getListener();
-        if (listener != null && getBaseContext() != null && inAppNotification != null) {
-            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, returnBundle);
-        }
-        invokedInAppDismissCallback = true;
     }
 
     @Override
@@ -245,7 +219,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         CTPreferenceCache.getInstance(this, config).setFirstTimeRequest(false);
         CTPreferenceCache.updateCacheToDisk(this, config);
@@ -263,8 +237,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     void didDismiss(Bundle data) {
-        returnBundle = data;
+        if (isAlertVisible) {
+            isAlertVisible = false;
+        }
         finish();
+        InAppListener listener = getListener();
+        if (listener != null && getBaseContext() != null && inAppNotification != null) {
+            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data);
+        }
     }
 
     void didShow(Bundle data) {
@@ -382,7 +362,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
                                                 if (inAppNotification.getButtons().get(0).getType() != null &&
                                                         inAppNotification.getButtons().get(0).getType()
-                                                        .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+                                                                .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
                                                     showHardPermissionPrompt(inAppNotification.
                                                             getButtons().get(0).isFallbackToSettings());
                                                     return;
@@ -412,7 +392,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
                                             if (inAppNotification.getButtons().get(1).getType() != null &&
                                                     inAppNotification.getButtons().get(1).getType()
-                                                    .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+                                                            .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
                                                 showHardPermissionPrompt(inAppNotification.
                                                         getButtons().get(1).isFallbackToSettings());
                                                 return;
