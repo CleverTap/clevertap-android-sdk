@@ -15,6 +15,7 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.view.WindowManager;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -53,10 +54,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private PushPermissionManager pushPermissionManager;
 
-    private Bundle returnBundle = null;
-
-    private boolean invokedInAppDismissCallback = false;
-
     public interface PushPermissionResultCallback {
 
         void onPushPermissionAccept();
@@ -66,6 +63,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+                didDismiss(null);
+            }
+        });
+
         int orientation = this.getResources().getConfiguration().orientation;
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -172,37 +177,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         } else {
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         }
-
-        if (invokedInAppDismissCallback) {
-            return;
-        }
-        notifyInAppDismissed();
-    }
-
-    @SuppressLint("WrongConstant")
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (VERSION.SDK_INT >= VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, android.R.anim.fade_in, android.R.anim.fade_out);
-        } else {
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-        }
-        if (invokedInAppDismissCallback) {
-            return;
-        }
-        notifyInAppDismissed();
-    }
-
-    private void notifyInAppDismissed() {
-        if (isAlertVisible) {
-            isAlertVisible = false;
-        }
-        InAppListener listener = getListener();
-        if (listener != null && getBaseContext() != null && inAppNotification != null) {
-            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, returnBundle);
-        }
-        invokedInAppDismissCallback = true;
     }
 
     @Nullable
@@ -291,8 +265,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     void didDismiss(Bundle data) {
-        returnBundle = data;
+        if (isAlertVisible) {
+            isAlertVisible = false;
+        }
         finish();
+        InAppListener listener = getListener();
+        if (listener != null && getBaseContext() != null && inAppNotification != null) {
+            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data);
+        }
     }
 
     void didShow(Bundle data) {
