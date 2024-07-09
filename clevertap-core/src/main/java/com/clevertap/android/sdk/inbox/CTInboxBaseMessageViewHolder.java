@@ -223,11 +223,12 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     }
 
     public void playerRemoved() {
+        // .post here is imp
         if (progressBarFrameLayout != null) {
-            progressBarFrameLayout.setVisibility(View.GONE);
+            progressBarFrameLayout.post(() -> progressBarFrameLayout.setVisibility(View.GONE));
         }
         if (muteIcon != null) {
-            muteIcon.setVisibility(View.GONE);
+            muteIcon.post(() -> muteIcon.setVisibility(View.GONE));
         }
         FrameLayout frameLayout = getLayoutForMediaPlayer();
         if (frameLayout != null) {
