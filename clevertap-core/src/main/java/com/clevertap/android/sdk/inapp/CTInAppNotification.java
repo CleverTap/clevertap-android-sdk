@@ -474,6 +474,10 @@ public class CTInAppNotification implements Parcelable {
         return isTablet;
     }
 
+    public boolean hasStreamMedia() {
+        return !getMediaList().isEmpty() && getMediaList().get(0).isMediaStreamable();
+    }
+
     void prepareForDisplay(
             FileResourceProvider fileResourceProvider,
             final TemplatesManager templatesManager,
