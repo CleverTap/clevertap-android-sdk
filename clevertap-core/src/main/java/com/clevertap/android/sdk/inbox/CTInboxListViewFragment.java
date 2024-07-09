@@ -33,6 +33,8 @@ import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.customviews.MediaPlayerRecyclerView;
 import com.clevertap.android.sdk.customviews.VerticalSpaceItemDecoration;
+import com.clevertap.android.sdk.video.VideoLibChecker;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +54,7 @@ public class CTInboxListViewFragment extends Fragment {
 
     CleverTapInstanceConfig config;
 
-    boolean haveVideoPlayerSupport = Utils.haveVideoPlayerSupport;
+    boolean haveVideoPlayerSupport = VideoLibChecker.haveVideoPlayerSupport;
 
     ArrayList<CTInboxMessage> inboxMessages = new ArrayList<>();
 
@@ -128,7 +130,6 @@ public class CTInboxListViewFragment extends Fragment {
 
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
-            setMediaRecyclerView(mediaRecyclerView);
             mediaRecyclerView.setVisibility(View.VISIBLE);
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
             mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
@@ -216,7 +217,7 @@ public class CTInboxListViewFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.release();
+            mediaRecyclerView.stop();
         }
     }
 
