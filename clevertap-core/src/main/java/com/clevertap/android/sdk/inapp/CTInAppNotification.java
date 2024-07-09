@@ -430,7 +430,7 @@ public class CTInAppNotification implements Parcelable {
     }
 
     public boolean hasStreamMedia() {
-        return !getMediaList().isEmpty() && getMediaList().get(0).isStreamMedia();
+        return !getMediaList().isEmpty() && getMediaList().get(0).isMediaStreamable();
     }
 
     void prepareForDisplay(InAppResourceProvider inAppResourceProvider) {

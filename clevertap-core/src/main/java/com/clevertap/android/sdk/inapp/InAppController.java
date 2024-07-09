@@ -74,9 +74,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
         private final WeakReference<InAppController> inAppControllerWeakReference;
 
-        private JSONObject jsonObject;
+        private final JSONObject jsonObject;
 
-        private final boolean videoSupport = VideoLibChecker.INSTANCE.haveVideoPlayerSupport;
+        private final boolean videoSupport = VideoLibChecker.haveVideoPlayerSupport;
 
         NotificationPrepareRunnable(InAppController inAppController, JSONObject jsonObject) {
             this.inAppControllerWeakReference = new WeakReference<>(inAppController);

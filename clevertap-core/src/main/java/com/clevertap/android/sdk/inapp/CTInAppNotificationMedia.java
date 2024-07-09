@@ -127,7 +127,7 @@ public class CTInAppNotificationMedia implements Parcelable {
         return contentType != null && this.mediaUrl != null && contentType.startsWith("video");
     }
 
-    public boolean isStreamMedia() {
+    public boolean isMediaStreamable() {
         return isVideo() || isAudio();
     }
 }

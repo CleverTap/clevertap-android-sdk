@@ -204,7 +204,7 @@ public class ControllerManager {
                                 baseDatabaseManager.loadDBAdapter(context),
                                 ctLockManager,
                                 callbackManager,
-                                VideoLibChecker.INSTANCE.haveVideoPlayerSupport
+                                VideoLibChecker.haveVideoPlayerSupport
                         )
                 );
                 callbackManager._notifyInboxInitialized();
