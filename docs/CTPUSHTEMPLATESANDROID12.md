@@ -58,7 +58,7 @@ Product catalog template lets you show case different images of a product (or a 
 
 ## Five Icons Template
 
-Five icons template is a sticky push notification with no text, just 5 icons and a close button which can help your users go directly to the functionality of their choice with a button's click.
+Five icons template is a push notification with no text, just 5 icons which can help your users go directly to the functionality of their choice with a button's click.
 
 If at least 3 icons are not retrieved, the library doesn't render any notification. The bifurcation of each CTA is captured in the event Notification Clicked with in the property `wzrk_c2a`.
 
