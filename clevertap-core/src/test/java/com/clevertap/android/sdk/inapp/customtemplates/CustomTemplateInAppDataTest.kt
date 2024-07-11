@@ -3,11 +3,9 @@ package com.clevertap.android.sdk.inapp.customtemplates
 import com.clevertap.android.sdk.copyFrom
 import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.TemplateContext
-import com.clevertap.android.sdk.inapp.data.CtCacheType
 import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
-import org.mockito.Mockito.*
 import kotlin.test.assertEquals
 
 class CustomTemplateInAppDataTest {
@@ -109,7 +107,7 @@ class CustomTemplateInAppDataTest {
         every { templatesManager.getTemplate(templateName) } returns template
 
         val result = customTemplateInAppData!!.getFileArgsUrls(templatesManager)
-        assertEquals(listOf(Pair("file_url_1",CtCacheType.FILES), Pair("file_url_2",CtCacheType.FILES)), result)
+        assertEquals(listOf("file_url_1", "file_url_2"), result)
     }
 
     @Test
@@ -136,7 +134,7 @@ class CustomTemplateInAppDataTest {
         every { templatesManager.getTemplate(templateName) } returns template
 
         val result = customTemplateInAppData!!.getFileArgsUrls(templatesManager)
-        assertEquals(listOf(Pair("file_url_1",CtCacheType.FILES), Pair("file_url_2",CtCacheType.FILES)), result)
+        assertEquals(listOf("file_url_1", "file_url_2"), result)
     }
 
 
@@ -158,7 +156,7 @@ class CustomTemplateInAppDataTest {
         every { templatesManager.getTemplate(templateName) } returns template
 
         val result = customTemplateInAppData!!.getFileArgsUrls(templatesManager)
-        assertEquals(listOf(Pair("file_url_1",CtCacheType.FILES)), result)
+        assertEquals(listOf("file_url_1"), result)
     }
 
     @Test
