@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
@@ -25,8 +26,8 @@ class CTVariablesTest : BaseTestCase() {
   override fun setUp() {
     super.setUp()
 
-    fileResourcesRepoImpl = TODO()
-    fileResourceProvider = TODO()
+    fileResourcesRepoImpl = mockk(relaxed = true)
+    fileResourceProvider = mockk(relaxed = true)
     varCache = VarCache(
         cleverTapInstanceConfig,
         application,
