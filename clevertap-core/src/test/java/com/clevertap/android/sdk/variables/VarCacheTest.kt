@@ -50,7 +50,6 @@ class VarCacheTest : BaseTestCase() {
                 "group" to mapOf("var2" to 20, "var3" to 30),
             ), func
         )
-        println(varCache.vars)
 
         assertEquals(10, var1.value())
         assertEquals(20, var2.value())
