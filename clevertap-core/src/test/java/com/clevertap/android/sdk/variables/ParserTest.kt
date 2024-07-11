@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.VariableDefinitions.TestVarsJI
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
@@ -26,10 +27,8 @@ class ParserTest:BaseTestCase() {
     override fun setUp() {
         super.setUp()
 
-
-        fileResourcesRepoImpl = TODO()
-        fileResourceProvider = TODO()
-
+        fileResourcesRepoImpl = mockk(relaxed = true)
+        fileResourceProvider = mockk(relaxed = true)
         varCache = VarCache(
             cleverTapInstanceConfig,
             appCtx,
