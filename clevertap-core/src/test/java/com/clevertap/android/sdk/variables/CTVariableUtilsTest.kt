@@ -266,12 +266,16 @@ class CTVariableUtilsTest : BaseTestCase() {
 
   @Test
   fun `test getFlatVarsJson`() {
-    val values = mutableMapOf("var1" to "str", "group" to mutableMapOf("var2" to 1, "var3" to 2.0))
-    val kinds = mutableMapOf("group.var2" to "number", "var1" to "string", "group" to "group")
+    val values = mutableMapOf("var1" to "str", "group" to mutableMapOf("var2" to 1, "var3" to 2.0), "fileVar" to "http://example.com/file")
+    val kinds = mutableMapOf("group.var2" to "number", "var1" to "string", "group" to "group", "fileVar" to "file")
 
     val expected = mapOf(
       "type" to "varsPayload",
       "vars" to mapOf(
+        "fileVar" to mapOf(
+          "type" to "file",
+          "defaultValue" to "http://example.com/file"
+        ),
         "var1" to mapOf(
           "type" to "string",
           "defaultValue" to "str"
