@@ -9,7 +9,7 @@ internal object VideoLibChecker {
     private val hasMedia3 = checkForMedia3()
 
     @JvmField
-    val haveVideoPlayerSupport = hasExoplayer || hasMedia3
+    val haveVideoPlayerSupport = checkForVideoPlayerSupport()
 
     @JvmField
     val mediaLibType = when {
@@ -22,6 +22,17 @@ internal object VideoLibChecker {
         else -> {
             VideoLibraryIntegrated.NONE
         }
+    }
+
+    /**
+     * Method to check whether app has either ExoPlayer or Media3 dependencies
+     *
+     * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
+     */
+    private fun checkForVideoPlayerSupport(): Boolean {
+        if (!hasMedia3 && !hasExoplayer)
+            Logger.d("Please add ExoPlayer/Media3 dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.")
+        return hasExoplayer || hasMedia3
     }
 
     /**
@@ -40,16 +51,15 @@ internal object VideoLibChecker {
             exoPlayerPresent = true
         } catch (t: Throwable) {
             Logger.d("ExoPlayer library files are missing!!!")
-            Logger.d("Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.")
-            if (className != null) {
-                Logger.d("ExoPlayer classes not found " + className.getName())
-            } else {
-                Logger.d("ExoPlayer classes not found")
-            }
         }
         return exoPlayerPresent
     }
 
+    /**
+     * Method to check whether app has Media3 dependencies
+     *
+     * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
+     */
     private fun checkForMedia3(): Boolean {
         var media3ExoplayerPresent = false
         var className: Class<*>? = null
@@ -57,16 +67,10 @@ internal object VideoLibChecker {
             className = Class.forName("androidx.media3.exoplayer.ExoPlayer")
             className = Class.forName("androidx.media3.exoplayer.hls.HlsMediaSource")
             className = Class.forName("androidx.media3.ui.PlayerView")
-            Logger.d("ExoPlayer from Media3 is present")
+            Logger.d("Media3 is present")
             media3ExoplayerPresent = true
         } catch (t: Throwable) {
-            Logger.d("Media3 ExoPlayer library files are missing!!!")
-            Logger.d("Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.")
-            if (className != null) {
-                Logger.d("ExoPlayer classes not found " + className.getName())
-            } else {
-                Logger.d("ExoPlayer classes not found")
-            }
+            Logger.d("Media3 library files are missing!!!")
         }
         return media3ExoplayerPresent
     }
