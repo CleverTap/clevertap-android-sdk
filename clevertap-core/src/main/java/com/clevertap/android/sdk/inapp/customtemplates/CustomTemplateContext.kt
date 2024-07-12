@@ -185,7 +185,6 @@ sealed class CustomTemplateContext private constructor(
         return map
     }
 
-    // TODO CustomTemplates add getFile(name: String) method for retrieving file arguments
     /**
      * Retrieve an absolute file path argument by [name].
      *
@@ -269,7 +268,6 @@ sealed class CustomTemplateContext private constructor(
                         else -> overrides.getDouble(argument.name)
                     }
                 }
-                // TODO CustomTemplates add FILE handling when implemented
                 FILE -> overrides.getString(argument.name)
                 ACTION -> CTInAppAction.createFromJson(
                     overrides.optJSONObject(argument.name)?.optJSONObject(ARGS_KEY_ACTIONS)
