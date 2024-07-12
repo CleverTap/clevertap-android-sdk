@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.inapp.images.repo.TAG_FILE_DOWNLOAD
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
 
-internal class FileMemoryAccessObject(private val ctCaches: CTCaches,private val logger: ILogger?): MemoryAccessObject<ByteArray> {
+internal class FileMemoryAccessObject(private val ctCaches: CTCaches,private val logger: ILogger? = null): MemoryAccessObject<ByteArray> {
 
     override fun fetchInMemory(key: String): Pair<ByteArray, File>? {
         val fileInMemory = ctCaches.fileLruCache()
