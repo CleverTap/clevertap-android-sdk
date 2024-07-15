@@ -7,12 +7,14 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.CTExecutors
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
 
 internal class FilePreloaderExecutors @JvmOverloads constructor(
     override val fileResourceProvider: FileResourceProvider,
     override val logger: ILogger? = null,
     private val executor: CTExecutors = CTExecutorFactory.executorResourceDownloader(),
-    override val config: FilePreloadConfig = FilePreloadConfig.default()
+    override val config: FilePreloadConfig = FilePreloadConfig.default(),
+    override val timeoutForPreload: Long = 5.minutes.inWholeMilliseconds
 ) : FilePreloaderStrategy {
 
     override fun preloadFilesAndCache(
