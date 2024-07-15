@@ -430,4 +430,12 @@ public class CTWebInterface {
             Logger.d("CTWebInterface invalid action JSON: " + actionJson);
         }
     }
+
+    /**
+     * Retrieve the version code of the CleverTap SDK.
+     */
+    @JavascriptInterface
+    public int getSdkVersion() {
+        return BuildConfig.VERSION_CODE;
+    }
 }
