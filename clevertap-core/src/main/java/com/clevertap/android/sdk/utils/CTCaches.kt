@@ -42,27 +42,27 @@ internal class CTCaches private constructor(
         }
     }
 
-    fun imageCache(): LruCache<Pair<Bitmap, File>> {
+    fun imageCache(): InMemoryLruCache<Pair<Bitmap, File>> {
         return inAppImageMemoryV1.createInMemory()
     }
 
-    fun gifCache(): LruCache<Pair<ByteArray, File>> {
+    fun gifCache(): InMemoryLruCache<Pair<ByteArray, File>> {
         return inAppGifMemoryV1.createInMemory()
     }
 
-    fun fileLruCache(): LruCache<Pair<ByteArray, File>> {
+    fun fileLruCache(): InMemoryLruCache<Pair<ByteArray, File>> {
         return fileMemory.createInMemory()
     }
 
-    fun imageCacheDisk(): FileCache {
+    fun imageCacheDisk(): DiskMemory {
         return inAppImageMemoryV1.createDiskMemory()
     }
 
-    fun gifCacheDisk(): FileCache {
+    fun gifCacheDisk(): DiskMemory {
         return inAppGifMemoryV1.createDiskMemory()
     }
 
-    fun fileCacheDisk(): FileCache {
+    fun fileCacheDisk(): DiskMemory {
         return fileMemory.createDiskMemory()
     }
 }

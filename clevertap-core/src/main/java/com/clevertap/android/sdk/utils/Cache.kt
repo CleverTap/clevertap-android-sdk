@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.util.LruCache
 import androidx.core.util.lruCache
 
-class LruCache<T : Any>(
+class InMemoryLruCache<T : Any>(
     private val maxSize: Int,
     private val memoryCache: CacheMethods<T> = object : CacheMethods<T> {
 

@@ -19,19 +19,19 @@ import java.io.File
  *
  * https://stackoverflow.com/questions/43430148/how-to-test-file-io-in-android-unittest-androidtest
  */
-class FileCacheTest {
+class DiskMemoryTest {
     @get:Rule
     val tempFolder = TemporaryFolder()
 
     private lateinit var cacheDirectory: File
-    private lateinit var fileCache: FileCache
+    private lateinit var diskMemory: DiskMemory
     private val mockLogger = TestLogger()
     private val maxFileSizeKb = 1024 // 1MB
 
     @Before
     fun setup() {
         cacheDirectory = tempFolder.newFolder("test_cache")
-        fileCache = FileCache(cacheDirectory, maxFileSizeKb, mockLogger)
+        diskMemory = DiskMemory(cacheDirectory, maxFileSizeKb, mockLogger)
     }
 
     @Test
@@ -39,10 +39,10 @@ class FileCacheTest {
         val key = "test_key"
         val data = "Test data".toByteArray()
 
-        val result = fileCache.add(key, data)
+        val result = diskMemory.add(key, data)
 
         assertTrue(result)
-        val cachedFile = File(cacheDirectory, "CT_FILE_${fileCache.hashFunction(key)}")
+        val cachedFile = File(cacheDirectory, "CT_FILE_${diskMemory.hashFunction(key)}")
         assertTrue(cachedFile.exists())
         assertArrayEquals(data, cachedFile.readBytes())
     }
@@ -52,10 +52,10 @@ class FileCacheTest {
         val key = "test_key"
         val data = ByteArray(maxFileSizeKb * 1024 + 1024) // Exceeds limit by 1 kb
 
-        val result = fileCache.add(key, data)
+        val result = diskMemory.add(key, data)
 
         assertFalse(result)
-        val cachedFile = File(cacheDirectory, "CT_FILE_${fileCache.hashFunction(key)}")
+        val cachedFile = File(cacheDirectory, "CT_FILE_${diskMemory.hashFunction(key)}")
         assertFalse(cachedFile.exists()) // File should not be cached
     }
 
@@ -64,11 +64,11 @@ class FileCacheTest {
         val key = "test_key"
         val data = "Test data".toByteArray()
 
-        val cachedFile = fileCache.addAndReturnFileInstance(key, data)
+        val cachedFile = diskMemory.addAndReturnFileInstance(key, data)
 
         assertNotNull(cachedFile)
         assertTrue(cachedFile.exists())
-        assertEquals(File(cacheDirectory, "CT_FILE_${fileCache.hashFunction(key)}"), cachedFile)
+        assertEquals(File(cacheDirectory, "CT_FILE_${diskMemory.hashFunction(key)}"), cachedFile)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -76,16 +76,16 @@ class FileCacheTest {
         val key = "test_key"
         val data = ByteArray(maxFileSizeKb * 1024 + 1024) // Exceeds limit by 1 kb
 
-        fileCache.addAndReturnFileInstance(key, data) // Should throw exception
+        diskMemory.addAndReturnFileInstance(key, data) // Should throw exception
     }
 
     @Test
     fun `get returns cached file`() {
         val key = "test_key"
         val data = "Test data".toByteArray()
-        fileCache.add(key, data)
+        diskMemory.add(key, data)
 
-        val cachedFile = fileCache.get(key)
+        val cachedFile = diskMemory.get(key)
 
         assertNotNull(cachedFile)
         assertTrue(cachedFile!!.exists())
@@ -96,7 +96,7 @@ class FileCacheTest {
     fun `get returns null for non-existent key`() {
         val key = "non_existent_key"
 
-        val cachedFile = fileCache.get(key)
+        val cachedFile = diskMemory.get(key)
 
         assertNull(cachedFile)
     }
@@ -105,12 +105,12 @@ class FileCacheTest {
     fun `remove deletes cached file`() {
         val key = "test_key"
         val data = "Test data".toByteArray()
-        fileCache.add(key, data)
+        diskMemory.add(key, data)
 
-        val result = fileCache.remove(key)
+        val result = diskMemory.remove(key)
 
         assertTrue(result)
-        val cachedFile = File(cacheDirectory, "CT_FILE_${fileCache.hashFunction(key)}")
+        val cachedFile = File(cacheDirectory, "CT_FILE_${diskMemory.hashFunction(key)}")
         assertFalse(cachedFile.exists())
     }
 
@@ -118,7 +118,7 @@ class FileCacheTest {
     fun `remove returns false for non-existent key`() {
         val key = "non_existent_key"
 
-        val result = fileCache.remove(key)
+        val result = diskMemory.remove(key)
 
         assertFalse(result)
     }
@@ -127,10 +127,10 @@ class FileCacheTest {
     fun `empty clears the cache directory`() {
         val key1 = "test_key1"
         val key2 = "test_key2"
-        fileCache.add(key1, "Test data 1".toByteArray())
-        fileCache.add(key2, "Test data 2".toByteArray())
+        diskMemory.add(key1, "Test data 1".toByteArray())
+        diskMemory.add(key2, "Test data 2".toByteArray())
 
-        val result = fileCache.empty()
+        val result = diskMemory.empty()
 
         assertTrue(result)
         assertTrue(cacheDirectory.listFiles().isNullOrEmpty()) // Directory should be empty

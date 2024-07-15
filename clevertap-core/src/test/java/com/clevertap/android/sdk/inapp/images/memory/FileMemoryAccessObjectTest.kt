@@ -7,8 +7,8 @@ import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationTyp
 import com.clevertap.android.sdk.inapp.images.memory.bytesToBitmap
 import com.clevertap.android.sdk.inapp.images.memory.fileToBitmap
 import com.clevertap.android.sdk.utils.CTCaches
-import com.clevertap.android.sdk.utils.FileCache
-import com.clevertap.android.sdk.utils.LruCache
+import com.clevertap.android.sdk.utils.DiskMemory
+import com.clevertap.android.sdk.utils.InMemoryLruCache
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -27,8 +27,8 @@ class FileMemoryAccessObjectTest {
     private lateinit var fileMemoryAccessObject: FileMemoryAccessObject
     private val mockCTCaches = mockk<CTCaches>()
     private val mockLogger = mockk<ILogger>(relaxed = true) // Relaxed to avoid unnecessary stubbing
-    private val mockMemoryCache = mockk<LruCache<Pair<ByteArray, File>>>()
-    private val mockDiskCache = mockk<FileCache>()
+    private val mockMemoryCache = mockk<InMemoryLruCache<Pair<ByteArray, File>>>()
+    private val mockDiskCache = mockk<DiskMemory>()
 
     private val key = "test_key"
     private val mockByteArray = byteArrayOf(1, 2, 3)

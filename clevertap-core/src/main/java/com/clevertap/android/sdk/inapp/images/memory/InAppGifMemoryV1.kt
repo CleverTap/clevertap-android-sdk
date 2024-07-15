@@ -1,8 +1,8 @@
 package com.clevertap.android.sdk.inapp.images.memory
 
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.utils.FileCache
-import com.clevertap.android.sdk.utils.LruCache
+import com.clevertap.android.sdk.utils.DiskMemory
+import com.clevertap.android.sdk.utils.InMemoryLruCache
 import java.io.File
 import kotlin.math.max
 
@@ -11,27 +11,27 @@ class InAppGifMemoryV1(
     private val logger: ILogger? = null
 ) : Memory<ByteArray> {
 
-    private var gifInMemory: LruCache<Pair<ByteArray, File>>? = null
-    private var gifDiskMemory: FileCache? = null
+    private var gifInMemory: InMemoryLruCache<Pair<ByteArray, File>>? = null
+    private var gifDiskMemory: DiskMemory? = null
     private val inMemoryLock = Any()
     private val diskMemoryLock = Any()
 
-    override fun createInMemory(): LruCache<Pair<ByteArray, File>> {
+    override fun createInMemory(): InMemoryLruCache<Pair<ByteArray, File>> {
         if (gifInMemory == null) {
             synchronized(inMemoryLock) {
                 if (gifInMemory == null) {
-                    gifInMemory = LruCache(maxSize = inMemorySize())
+                    gifInMemory = InMemoryLruCache(maxSize = inMemorySize())
                 }
             }
         }
         return gifInMemory!!
     }
 
-    override fun createDiskMemory(): FileCache {
+    override fun createDiskMemory(): DiskMemory {
         if (gifDiskMemory == null) {
             synchronized(diskMemoryLock) {
                 if (gifDiskMemory == null) {
-                    gifDiskMemory = FileCache(
+                    gifDiskMemory = DiskMemory(
                         directory = config.diskDirectory,
                         maxFileSizeKb = config.maxDiskSizeKB.toInt(),
                         logger = logger

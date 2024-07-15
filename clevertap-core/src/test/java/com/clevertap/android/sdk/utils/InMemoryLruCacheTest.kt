@@ -6,9 +6,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class LruCacheTest {
+class InMemoryLruCacheTest {
 
-    private val lruCache = LruCache<ByteArray>(
+    private val inMemoryLruCache = InMemoryLruCache<ByteArray>(
         maxSize = 100,
         memoryCache = TestCacheProvider<ByteArray>().provide()
     )
@@ -20,26 +20,26 @@ class LruCacheTest {
 
     @Before
     fun before() {
-        lruCache.empty()
+        inMemoryLruCache.empty()
     }
 
     private val cacheKey = "key"
 
     @Test
     fun `test add works correctly`() {
-        val result = lruCache.add(cacheKey, validData)
+        val result = inMemoryLruCache.add(cacheKey, validData)
         assertEquals(true, result)
     }
 
     @Test
     fun `test add does not allow greater than allowed size`() {
-        val result = lruCache.add(cacheKey, sizeExceedingData)
+        val result = inMemoryLruCache.add(cacheKey, sizeExceedingData)
         assertEquals(false, result)
     }
 
     @Test
     fun `getter returns null if there is no data`() {
-        val result = lruCache.get(cacheKey)
+        val result = inMemoryLruCache.get(cacheKey)
         assertNull(result)
     }
 
@@ -47,9 +47,9 @@ class LruCacheTest {
     fun `getter returns valid data if it exists`() {
 
         // warm up cache
-        lruCache.add(cacheKey, validData)
+        inMemoryLruCache.add(cacheKey, validData)
 
-        val result = lruCache.get(cacheKey)
+        val result = inMemoryLruCache.get(cacheKey)
         assertNotNull(result)
         assertEquals(result, validData)
     }
@@ -58,25 +58,25 @@ class LruCacheTest {
     fun `remove method evicts data`() {
 
         // warm cache
-        lruCache.add(cacheKey, validData)
+        inMemoryLruCache.add(cacheKey, validData)
 
-        val op = lruCache.remove(cacheKey)
+        val op = inMemoryLruCache.remove(cacheKey)
         assertEquals(validData, op)
     }
 
     @Test
     fun `remove method returns null if there is no data`() {
 
-        val op = lruCache.remove(cacheKey)
+        val op = inMemoryLruCache.remove(cacheKey)
         assertNull(op)
     }
 
     @Test
     fun `empty method clears cache`() {
-        lruCache.add("key1", validData)
+        inMemoryLruCache.add("key1", validData)
 
-        lruCache.empty()
-        assertEquals(true, lruCache.isEmpty())
+        inMemoryLruCache.empty()
+        assertEquals(true, inMemoryLruCache.isEmpty())
     }
 
 }

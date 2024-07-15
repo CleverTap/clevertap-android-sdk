@@ -2,8 +2,8 @@ package com.clevertap.android.sdk.inapp.images.memory
 
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.utils.FileCache
-import com.clevertap.android.sdk.utils.LruCache
+import com.clevertap.android.sdk.utils.DiskMemory
+import com.clevertap.android.sdk.utils.InMemoryLruCache
 import java.io.File
 import kotlin.math.max
 
@@ -12,27 +12,27 @@ class InAppImageMemoryV1(
     private val logger: ILogger? = null
 ) : Memory<Bitmap> {
 
-    private var imageInMemory: LruCache<Pair<Bitmap, File>>? = null
-    private var imageDiskMemory: FileCache? = null
+    private var imageInMemory: InMemoryLruCache<Pair<Bitmap, File>>? = null
+    private var imageDiskMemory: DiskMemory? = null
     private val inMemoryLock = Any()
     private val diskMemoryLock = Any()
 
-    override fun createInMemory(): LruCache<Pair<Bitmap, File>> {
+    override fun createInMemory(): InMemoryLruCache<Pair<Bitmap, File>> {
         if (imageInMemory == null) {
             synchronized(inMemoryLock) {
                 if (imageInMemory == null) {
-                    imageInMemory = LruCache(maxSize = inMemorySize())
+                    imageInMemory = InMemoryLruCache(maxSize = inMemorySize())
                 }
             }
         }
         return imageInMemory!!
     }
 
-    override fun createDiskMemory(): FileCache {
+    override fun createDiskMemory(): DiskMemory {
         if (imageDiskMemory == null) {
             synchronized(diskMemoryLock) {
                 if (imageDiskMemory == null) {
-                    imageDiskMemory = FileCache(
+                    imageDiskMemory = DiskMemory(
                         directory = config.diskDirectory,
                         maxFileSizeKb = config.maxDiskSizeKB.toInt(),
                         logger = logger

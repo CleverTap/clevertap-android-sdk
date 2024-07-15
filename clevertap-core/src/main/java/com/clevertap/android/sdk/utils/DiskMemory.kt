@@ -6,7 +6,7 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.Exception
 
-class FileCache(
+class DiskMemory(
     private val directory: File,
     private val maxFileSizeKb: Int,
     private val logger: ILogger? = null,
