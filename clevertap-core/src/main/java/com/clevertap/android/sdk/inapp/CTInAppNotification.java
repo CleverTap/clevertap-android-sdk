@@ -4,37 +4,27 @@ import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICAT
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.IS_LOCAL_INAPP;
 
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
-import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
-import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
-import com.clevertap.android.sdk.inapp.store.preference.FileStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
-import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import kotlin.Pair;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 @RestrictTo(Scope.LIBRARY)
 public class CTInAppNotification implements Parcelable {
-
-    interface CTInAppNotificationListener {
-
-        void notificationReady(CTInAppNotification inAppNotification);
-    }
 
     @SuppressWarnings("unused")
     public static final Parcelable.Creator<CTInAppNotification> CREATOR
@@ -49,8 +39,6 @@ public class CTInAppNotification implements Parcelable {
             return new CTInAppNotification[size];
         }
     };
-
-    CTInAppNotificationListener listener;
 
     private String _landscapeImageCacheKey;
 
@@ -314,6 +302,10 @@ public class CTInAppNotification implements Parcelable {
         return error;
     }
 
+    void setError(String error) {
+        this.error = error;
+    }
+
     public boolean isLocalInApp() {
         return isLocalInApp;
     }
@@ -474,59 +466,12 @@ public class CTInAppNotification implements Parcelable {
         return isTablet;
     }
 
-    public boolean hasStreamMedia() {
-        return !getMediaList().isEmpty() && getMediaList().get(0).isMediaStreamable();
+    boolean isVideoSupported() {
+        return videoSupported;
     }
 
-    void prepareForDisplay(
-            FileResourceProvider fileResourceProvider,
-            final TemplatesManager templatesManager,
-            final StoreRegistry storeRegistry) {
-      
-        final Pair<FileStore,InAppAssetsStore> storePair = new Pair<>(storeRegistry.getFilesStore(),
-                storeRegistry.getInAppAssetsStore());
-
-        if (inAppType.equals(CTInAppType.CTInAppTypeCustomCodeTemplate)) {
-            final List<String> fileUrls = customTemplateData.getFileArgsUrls(templatesManager);
-
-            int index = 0;
-            while (index < fileUrls.size()) {
-                String url = fileUrls.get(index);
-                byte[] bytes = fileResourceProvider.fetchFile(url);
-
-                if (bytes != null && bytes.length > 0) {
-                    FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url, CtCacheType.FILES), storePair);
-                } else {
-                    // download fail
-                    this.error = "Error processing the custom code in-app template: file download failed.";
-                    break;
-                }
-                index++;
-            }
-            listener.notificationReady(this);
-        } else {
-            for (CTInAppNotificationMedia media : this.mediaList) {
-            if (media.isGIF()) {
-                byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
-                if (bytes == null || bytes.length == 0) {
-                    this.error = "Error processing GIF";
-                    break;
-                }
-            } else if (media.isImage()) {
-
-                Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
-                if (bitmap == null) {
-                    this.error = "Error processing image as bitmap was NULL";
-                    }
-                } else if (media.isVideo() || media.isAudio()) {
-                    if (!this.videoSupported) {
-                        this.error = "InApp Video/Audio is not supported";
-                    }
-                }
-            }
-            listener.notificationReady(this);
-        }
-
+    public boolean hasStreamMedia() {
+        return !getMediaList().isEmpty() && getMediaList().get(0).isMediaStreamable();
     }
 
     private void configureWithJson(JSONObject jsonObject) {

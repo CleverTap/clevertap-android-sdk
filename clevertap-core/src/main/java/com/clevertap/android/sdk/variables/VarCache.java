@@ -328,7 +328,8 @@ public class VarCache {
     public synchronized void clearUserContent() {
         log("Clear user content in VarCache");
         // 1. clear Var state to allow callback invocation when server values are downloaded
-        for (String name : new HashMap<>(vars).keySet()) {
+        HashMap<String, Var<?>> clientRegisteredVars = new HashMap<>(vars);
+        for (String name : clientRegisteredVars.keySet()) {
             Var<?> var = vars.get(name);
             if (var != null) {
                 var.clearStartFlag();
@@ -336,7 +337,7 @@ public class VarCache {
         }
 
         // 2. reset server values for previous user
-        applyVariableDiffs(new HashMap<>(), new HashMap<>());
+        applyVariableDiffs(new HashMap<>(), clientRegisteredVars);
 
         // 3. reset data in shared prefs
         saveDiffsAsync();
