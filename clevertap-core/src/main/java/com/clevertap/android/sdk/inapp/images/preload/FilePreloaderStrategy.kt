@@ -12,6 +12,8 @@ internal interface FilePreloaderStrategy {
 
     val config: FilePreloadConfig
 
+    val timeoutForPreload: Long
+
     /**
      * takes list of url meta which contains url string and cachetype to warm up cache after prefetch
      *

@@ -13,14 +13,17 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class FilePreloaderCoroutine @JvmOverloads constructor(
     override val fileResourceProvider: FileResourceProvider,
     override val logger: ILogger? = null,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
-    override val config: FilePreloadConfig = FilePreloadConfig.default()
+    override val config: FilePreloadConfig = FilePreloadConfig.default(),
+    override val timeoutForPreload: Long = 5.minutes.inWholeMilliseconds
 ) : FilePreloaderStrategy {
 
     private val jobs: MutableList<Job> = mutableListOf()
@@ -64,6 +67,12 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
     ) {
         val job = scope.launch(handler) {
             val dowloadResults = mutableListOf<Deferred<Pair<String, Boolean>>>()
+            val results: MutableMap<String, Boolean> = urlMetas.map {
+                it.first to false
+            }.associate {
+                it.first to it.second
+            }.toMutableMap()
+
             urlMetas.forEach { meta: Pair<String, CtCacheType> ->
                 val deferred: Deferred<Pair<String, Boolean>> = async {
                     logger?.verbose("started asset url fetch $meta")
@@ -82,12 +91,19 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
                     }
                     logger?.verbose("finished asset url fetch $meta in $mils ms")
 
+                    results[meta.first] = success
                     return@async meta.first to success
                 }
                 dowloadResults.add(deferred)
             }
-            val pairs = dowloadResults.awaitAll() // waits for all downloads to finish
-            preloadFinished.invoke(pairs.toMap())
+            val pairs = withTimeoutOrNull(timeoutForPreload) {
+                dowloadResults.awaitAll()
+            }
+            if (pairs != null) {
+                preloadFinished.invoke(pairs.toMap())
+            } else {
+                preloadFinished.invoke(results)
+            }
         }
         jobs.add(job)
     }
