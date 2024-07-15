@@ -1,12 +1,17 @@
 package com.clevertap.android.sdk.utils
 
 import com.clevertap.android.sdk.TestLogger
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 /**
  * We do not validate file read/write in unit tests, we will have to make instrumentation tests for
@@ -15,76 +20,120 @@ import kotlin.test.assertNull
  * https://stackoverflow.com/questions/43430148/how-to-test-file-io-in-android-unittest-androidtest
  */
 class FileCacheTest {
+    @get:Rule
+    val tempFolder = TemporaryFolder()
 
-    private val fileCache: FileCache = FileCache(
-        directory = File("/"),
-        maxFileSizeKb = 500,
-        logger = TestLogger()
-    )
+    private lateinit var cacheDirectory: File
+    private lateinit var fileCache: FileCache
+    private val mockLogger = TestLogger()
+    private val maxFileSizeKb = 1024 // 1MB
 
-    @Test
-    @Throws(Exception::class)
-    fun testAdd() {
-        val result = fileCache.add("key", byteArrayOf(0.toByte()))
-        //assertEquals(true, result)
+    @Before
+    fun setup() {
+        cacheDirectory = tempFolder.newFolder("test_cache")
+        fileCache = FileCache(cacheDirectory, maxFileSizeKb, mockLogger)
     }
 
     @Test
-    @Throws(Exception::class)
-    fun `add method fails if size is greater than allowed size`() {
-        val largeBytes = ByteArray(1000 * 1024) { index ->
-            index.toByte()
-        }
-        val result = fileCache.add("key", largeBytes)
-        assertEquals(false, result)
+    fun `add successfully caches file`() {
+        val key = "test_key"
+        val data = "Test data".toByteArray()
+
+        val result = fileCache.add(key, data)
+
+        assertTrue(result)
+        val cachedFile = File(cacheDirectory, "CT_FILE_${fileCache.hashFunction(key)}")
+        assertTrue(cachedFile.exists())
+        assertArrayEquals(data, cachedFile.readBytes())
     }
 
     @Test
-    @Throws(Exception::class)
-    fun testGet() {
-        fileCache.add("key", byteArrayOf(0.toByte()))
-        val result = fileCache.get("key")
-        //assertNotNull(result)
-        //assertEquals(result.exists(), true)
+    fun `add fails when file size exceeds limit`() {
+        val key = "test_key"
+        val data = ByteArray(maxFileSizeKb * 1024 + 1024) // Exceeds limit by 1 kb
+
+        val result = fileCache.add(key, data)
+
+        assertFalse(result)
+        val cachedFile = File(cacheDirectory, "CT_FILE_${fileCache.hashFunction(key)}")
+        assertFalse(cachedFile.exists()) // File should not be cached
     }
 
     @Test
-    @Throws(Exception::class)
-    fun `file cache returns null when there is no file for url`() {
-        val result = fileCache.get("non-cached-key-res")
-        assertNull(result)
+    fun `addAndReturnFileInstance returns correct File instance`() {
+        val key = "test_key"
+        val data = "Test data".toByteArray()
+
+        val cachedFile = fileCache.addAndReturnFileInstance(key, data)
+
+        assertNotNull(cachedFile)
+        assertTrue(cachedFile.exists())
+        assertEquals(File(cacheDirectory, "CT_FILE_${fileCache.hashFunction(key)}"), cachedFile)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `addAndReturnFileInstance throws exception when file size exceeds limit`() {
+        val key = "test_key"
+        val data = ByteArray(maxFileSizeKb * 1024 + 1024) // Exceeds limit by 1 kb
+
+        fileCache.addAndReturnFileInstance(key, data) // Should throw exception
     }
 
     @Test
-    @Throws(Exception::class)
-    fun testRemove() {
-        fileCache.add("key", byteArrayOf(0.toByte()))
-        val result = fileCache.remove("key")
-        //assertEquals(true, result)
+    fun `get returns cached file`() {
+        val key = "test_key"
+        val data = "Test data".toByteArray()
+        fileCache.add(key, data)
+
+        val cachedFile = fileCache.get(key)
+
+        assertNotNull(cachedFile)
+        assertTrue(cachedFile!!.exists())
+        assertArrayEquals(data, cachedFile.readBytes())
     }
 
     @Test
-    @Throws(Exception::class)
-    fun `remove returns false when we try to remove file which is not there in cache`() {
-        val result = fileCache.remove("non-cached-key-res")
-        //assertEquals(true, result)
+    fun `get returns null for non-existent key`() {
+        val key = "non_existent_key"
+
+        val cachedFile = fileCache.get(key)
+
+        assertNull(cachedFile)
     }
 
     @Test
-    @Ignore
-    @Throws(Exception::class)
-    fun `empty deletes all files`() {
+    fun `remove deletes cached file`() {
+        val key = "test_key"
+        val data = "Test data".toByteArray()
+        fileCache.add(key, data)
 
-        // warm up cache
-        fileCache.add("key1", byteArrayOf(0.toByte()))
-        fileCache.add("key2", byteArrayOf(0.toByte()))
+        val result = fileCache.remove(key)
 
-        // check it is warmed up
-        val get = fileCache.get("key1")
-        //assertNotNull(get)
+        assertTrue(result)
+        val cachedFile = File(cacheDirectory, "CT_FILE_${fileCache.hashFunction(key)}")
+        assertFalse(cachedFile.exists())
+    }
 
-        // clear cache
+    @Test
+    fun `remove returns false for non-existent key`() {
+        val key = "non_existent_key"
+
+        val result = fileCache.remove(key)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `empty clears the cache directory`() {
+        val key1 = "test_key1"
+        val key2 = "test_key2"
+        fileCache.add(key1, "Test data 1".toByteArray())
+        fileCache.add(key2, "Test data 2".toByteArray())
+
         val result = fileCache.empty()
-        //assertEquals(true, result)
+
+        assertTrue(result)
+        assertTrue(cacheDirectory.listFiles().isNullOrEmpty()) // Directory should be empty
     }
+
 }

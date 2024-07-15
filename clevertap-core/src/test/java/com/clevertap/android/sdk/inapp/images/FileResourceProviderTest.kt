@@ -2,225 +2,239 @@ package com.clevertap.android.sdk.inapp.images
 
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
-import com.clevertap.android.sdk.utils.CTCaches
-import com.clevertap.android.sdk.utils.FileCache
-import com.clevertap.android.sdk.utils.LruCache
-import io.mockk.*
+import com.clevertap.android.sdk.inapp.data.CtCacheType
+import com.clevertap.android.sdk.inapp.data.CtCacheType.FILES
+import com.clevertap.android.sdk.inapp.data.CtCacheType.GIF
+import com.clevertap.android.sdk.inapp.data.CtCacheType.IMAGE
+import com.clevertap.android.sdk.inapp.images.memory.FileMemoryAccessObject
+import com.clevertap.android.sdk.inapp.images.memory.InAppGifMemoryAccessObjectV1
+import com.clevertap.android.sdk.inapp.images.memory.InAppImageMemoryAccessObjectV1
+import com.clevertap.android.sdk.inapp.images.memory.MemoryAccessObject
+import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType
+import com.clevertap.android.sdk.network.DownloadedBitmap
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
-import org.mockito.Mockito
 import java.io.File
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
-@Ignore
 class FileResourceProviderTest {
-
-    private val mockCache = Mockito.mock(CTCaches::class.java)
-    private val mockBitmapPair = Pair(Mockito.mock(Bitmap::class.java), mockk<File>())
-    private val mockBytesPair = Pair(Mockito.mock(ByteArray::class.java), mockk<File>())
-
-    private val mockBitmap = mockk<Bitmap>()
-
-    private val mockImageFileCache = Mockito.mock(FileCache::class.java)
-    private val mockGifFileCache = Mockito.mock(FileCache::class.java)
-
-    private val mockLruCache = Mockito.mock(LruCache::class.java) as LruCache<Pair<Bitmap, File>>
-    private val mockLruCacheGif = Mockito.mock(LruCache::class.java) as LruCache<Pair<ByteArray, File>>
-
-    private val images = File("")
-    private val gifs = File("")
-    private val files = File("")
-
-    private val bytes = byteArrayOf(0)
-
-    private val provider = FileResourceProvider(
-        images,
-        gifs,
-        files,
-        logger = TestLogger(),
-        /*ctCaches = mockCache,
-        fileToBitmap = ::fileToBitmap,
-        fileToBytes = ::fileToBytes,*/
-        inAppRemoteSource = TestInAppFetchApi.success(bitmap = mockk<Bitmap>(), bytes = mockk<ByteArray>())
-    )
-
-/*    private fun fileToBitmap(file: File?) : Bitmap? {
-        return if (file == null) {
-            null
-        } else {
-            mockBitmap
-        }
-    }
-
-    private fun fileToBytes(file: File?) : ByteArray? {
-        return if (file == null) {
-            null
-        } else {
-            bytes // we return random array
-        }
-    }*/
+    private val mockLogger = TestLogger()
+    private val mockFileFetchApi = mockk<FileFetchApiContract>()
+    private val mockImageMAO = mockk<InAppImageMemoryAccessObjectV1>()
+    private val mockGifMAO = mockk<InAppGifMemoryAccessObjectV1>()
+    private val mockFileMAO = mockk<FileMemoryAccessObject>()
+    private lateinit var fileResourceProvider: FileResourceProvider
+    private lateinit var mapOfMAO: Map<CtCacheType, List<MemoryAccessObject<*>>>
 
     @Before
-    fun before() {
-        Mockito.`when`(mockCache.imageCache()).thenReturn(mockLruCache)
-        Mockito.`when`(mockCache.imageCacheDisk()).thenReturn(mockImageFileCache)
-
-        Mockito.`when`(mockCache.gifCache()).thenReturn(mockLruCacheGif)
-        Mockito.`when`(mockCache.gifCacheDisk()).thenReturn(mockGifFileCache)
-    }
-
-    @Test
-    fun `save image dumps image in memory and disk cache`() {
-
-        val key = "key"
-
-        provider.saveInAppImageV1(
-            cacheKey = key,
-            bitmap = mockBitmap,
-            bytes = bytes
+    fun setup() {
+        // Initialize FileResourceProvider with mock dependencies
+        fileResourceProvider = FileResourceProvider(
+            images = mockk(relaxed = true),
+            gifs = mockk(relaxed = true),
+            allFileTypesDir = mockk(relaxed = true),
+            logger = mockLogger,
+            inAppRemoteSource = mockFileFetchApi,
+            ctCaches = mockk(relaxed = true),
+            imageMAO = mockImageMAO,
+            gifMAO = mockGifMAO,
+            fileMAO = mockFileMAO
         )
-
-        assertNotNull(mockCache.imageCache())
-        assertNotNull(mockCache.imageCacheDisk())
-
-        // verify add images called
-        Mockito.verify(mockCache.imageCache()).add(key, mockBitmapPair)
-        Mockito.verify(mockCache.imageCacheDisk()).add(key, bytes)
+        mapOfMAO =
+            mapOf<CtCacheType, List<MemoryAccessObject<*>>>(
+                IMAGE to listOf(mockImageMAO, mockFileMAO, mockGifMAO),
+                GIF to listOf(mockGifMAO, mockFileMAO, mockImageMAO),
+                FILES to listOf(mockFileMAO, mockImageMAO, mockGifMAO)
+            )
+        // All MAO mocks returns null
+        mapOfMAO[IMAGE]!!.forEach{
+            every { it.fetchInMemory(any()) } returns null
+            every { it.fetchDiskMemory(any()) } returns null
+        }
+    }
+    @Test
+    fun `isFileCached returns true for IMAGE found in disk-memory`() {
+        val url = "https://example.com/image.jpg"
+        every { mockImageMAO.fetchDiskMemory(url) } returns mockk()
+        assertTrue(fileResourceProvider.isFileCached(url))
     }
 
     @Test
-    fun `save gif dumps gif in memory and disk cache`() {
+    fun `isFileCached returns true for GIF found in disk-memory`() {
+        val url = "https://example.com/animation.gif"
+        every { mockGifMAO.fetchDiskMemory(url) } returns mockk() // Simulate file found on disk
+        assertTrue(fileResourceProvider.isFileCached(url))
+    }
+    @Test
+    fun `isFileCached returns true for FILES found in disk-memory`() {
+        val url = "https://example.com/document.pdf"
+        every { mockFileMAO.fetchDiskMemory(url) } returns mockk() // Simulate file found on disk
+        assertTrue(fileResourceProvider.isFileCached(url))
+    }
+    @Test
+    fun `isFileCached returns true for IMAGE found in in-memory`() {
+        val url = "https://example.com/image.jpg"
+        every { mockImageMAO.fetchInMemory(url) } returns mockk() // Simulate file found in in-memory
 
-        val key = "key"
+        assertTrue(fileResourceProvider.isFileCached(url))
+        verify(exactly = 0) { mockImageMAO.fetchDiskMemory(url) } // Verify disk-memory is not checked
+    }
 
-        provider.saveInAppGifV1(
-            cacheKey = key,
-            bytes = bytes
+    @Test
+    fun `isFileCached returns true for GIF found in in-memory`() {
+        val url = "https://example.com/animation.gif"
+        every { mockGifMAO.fetchInMemory(url) } returns mockk() // Simulate file found in in-memory
+
+        assertTrue(fileResourceProvider.isFileCached(url))
+        verify(exactly = 0) { mockGifMAO.fetchDiskMemory(url) } // Verify disk-memory is not checked
+    }
+
+    @Test
+    fun `isFileCachedreturns true for FILES found in in-memory`() {
+        val url = "https://example.com/document.pdf"
+        every { mockFileMAO.fetchInMemory(url) } returns mockk() // Simulate file found in in-memory
+
+        assertTrue(fileResourceProvider.isFileCached(url))
+        verify(exactly = 0) { mockFileMAO.fetchDiskMemory(url) } // Verify disk-memory is not checked
+    }
+
+    @Test
+    fun `isFileCached returns false for non-cached file`() {
+        val url = "https://example.com/file.pdf"
+        assertFalse(fileResourceProvider.isFileCached(url))
+    }
+
+    @Test
+    fun `fetchInAppImageV1 returns cached image if available`() {
+        val url = "https://example.com/image.jpg"
+        val mockBitmap = mockk<Bitmap>()
+        every { mockImageMAO.fetchInMemoryAndTransform(url, MemoryDataTransformationType.ToBitmap) } returns mockBitmap
+
+        val result = fileResourceProvider.fetchInAppImageV1(url)
+
+        assertEquals(mockBitmap, result)
+        verify(exactly = 0) { mockFileFetchApi.makeApiCallForFile(any()) } // No network call
+    }
+
+    @Test
+    fun `fetchInAppImageV1 fetches and caches image if not cached`() {
+        val mockSavedFile = mockk<File>()
+        val url = "https://example.com/image.jpg"
+        val mockDownloadedBitmap = DownloadedBitmap(
+            bitmap = mockk(),
+            status = DownloadedBitmap.Status.SUCCESS,
+            downloadTime = 0L,
+            bytes = byteArrayOf()
         )
+        mapOfMAO[IMAGE]!!.forEach {
+            every { it.fetchInMemoryAndTransform(url, MemoryDataTransformationType.ToBitmap) } returns null
+            every { it.fetchDiskMemoryAndTransform(url, MemoryDataTransformationType.ToBitmap) } returns null
+        }
+        every { mockFileFetchApi.makeApiCallForFile(Pair(url, CtCacheType.IMAGE)) } returns mockDownloadedBitmap
+        every { mockImageMAO.saveDiskMemory(url, any()) } returns mockSavedFile
+        every { mockImageMAO.saveInMemory(url, any()) } returns true
 
-        assertNotNull(mockCache.gifCache())
-        assertNotNull(mockCache.gifCacheDisk())
+        val result = fileResourceProvider.fetchInAppImageV1(url)
 
-        // verify add images called
-        Mockito.verify(mockCache.gifCache()).add(key, mockBytesPair)
-        Mockito.verify(mockCache.gifCacheDisk()).add(key, bytes)
+        assertEquals(mockDownloadedBitmap.bitmap, result) // Verify image was fetched
+        verify { mockImageMAO.saveDiskMemory(url, mockDownloadedBitmap.bytes!!) }
+        verify { mockImageMAO.saveInMemory(url, Pair(mockDownloadedBitmap.bitmap!!,mockSavedFile)) } // Verify caching
     }
 
     @Test
-    fun `image isCached and cached image returns true and bitmap if image is present in either memory or disk cache`() {
+    fun `fetchInAppGifV1 returns cached GIF if available`() {
+        val url = "https://example.com/animation.gif"
+        val mockGifBytes = byteArrayOf(1, 2, 3)
+        every { mockGifMAO.fetchInMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns mockGifBytes
 
-        val url = "key"
-        val savedImage = Mockito.mock(File::class.java)
+        val result = fileResourceProvider.fetchInAppGifV1(url)
 
-        Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmapPair)
-        val res1 = provider.isInAppImageCachedV1(url = url)
-        assertEquals(true, res1)
-
-        val op1 = provider.cachedInAppImageV1(cacheKey = url)
-        assertEquals(mockBitmap, op1)
-
-        // reset image cache
-        Mockito.`when`(mockLruCache.get(url)).thenReturn(null)
-
-        // setup
-        Mockito.`when`(mockImageFileCache.get(url)).thenReturn(savedImage)
-        Mockito.`when`(savedImage.exists()).thenReturn(true)
-
-        // assert
-        val res2 = provider.isInAppImageCachedV1(url = url)
-        assertEquals(true, res2)
-
-        val op2 = provider.cachedInAppImageV1(cacheKey = url)
-        assertEquals(mockBitmap, op2)
+        assertEquals(mockGifBytes, result)
+        verify(exactly = 0) { mockFileFetchApi.makeApiCallForFile(any()) } // No network call
     }
 
     @Test
-    fun `gif isCached returns true if gif is present in either memory or disk cache`() {
+    fun `fetchInAppGifV1 fetches and caches GIF if not cached`() {
+        val mockSavedFile = mockk<File>()
+        val url = "https://example.com/animation.gif"
+        val mockDownloadedGif = DownloadedBitmap(
+            bitmap = null, // GIFs don't have Bitmaps
+            status = DownloadedBitmap.Status.SUCCESS,
+            downloadTime = 0L,
+            bytes = byteArrayOf(1, 2, 3)
+        )
+        mapOfMAO[GIF]!!.forEach {
+            every { it.fetchInMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns null
+            every { it.fetchDiskMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns null
+        }
+        every { mockFileFetchApi.makeApiCallForFile(Pair(url, CtCacheType.GIF)) } returns mockDownloadedGif
+        every { mockGifMAO.saveDiskMemory(url, any()) } returns mockSavedFile
+        every { mockGifMAO.saveInMemory(url, any()) } returns true
 
-        val url = "key"
-        val savedGif = Mockito.mock(File::class.java)
+        val result = fileResourceProvider.fetchInAppGifV1(url)
 
-        Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(mockBytesPair)
-        val res1 = provider.isInAppGifCachedV1(url = url)
-        assertEquals(true, res1)
-
-        val op1 = provider.cachedInAppGifV1(cacheKey = url)
-        assertEquals(bytes, op1)
-
-        // reset gif cache
-        Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(null)
-
-        val resNone = provider.isInAppGifCachedV1(url = url)
-        assertEquals(false, resNone)
-
-        // setup
-        Mockito.`when`(mockGifFileCache.get(url)).thenReturn(savedGif)
-        Mockito.`when`(savedGif.exists()).thenReturn(true)
-
-        // assert
-        val res2 = provider.isInAppGifCachedV1(url = url)
-        assertEquals(true, res2)
-
-        val op2 = provider.cachedInAppGifV1(cacheKey = url)
-        assertEquals(bytes, op2)
+        assertEquals(mockDownloadedGif.bytes, result) // Verify GIF was fetched
+        verify { mockGifMAO.saveDiskMemory(url, mockDownloadedGif.bytes!!) }
+        verify { mockGifMAO.saveInMemory(url, Pair(mockDownloadedGif.bytes!!, mockSavedFile)) } // Verify caching
     }
 
     @Test
-    fun `fetchInAppImage returns from cache when data exists in cache`() {
+    fun `fetchFile returns cached file if available`() {
+        val url = "https://example.com/document.pdf"
+        val mockFileBytes = byteArrayOf(4, 5, 6)
+        every { mockFileMAO.fetchInMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns mockFileBytes
 
-        // setup - warm up cache
-        val url = "key"
-        Mockito.`when`(mockLruCache.get(url)).thenReturn(mockBitmapPair)
+        val result = fileResourceProvider.fetchFile(url)
 
-        // invocation
-        val bitmap = provider.fetchInAppImageV1(url = url, Bitmap::class.java)
-
-        // assertions
-        assertEquals(mockBitmap, bitmap)
+        assertEquals(mockFileBytes, result)
+        verify(exactly = 0) { mockFileFetchApi.makeApiCallForFile(any()) } // No network call
     }
 
     @Test
-    fun `fetchInAppImage returns from remote service (http api) when data does not exist in cache`() {
+    fun `fetchFile fetches and caches file if not cached`() {
+        val mockSavedFile = mockk<File>()
+        val url = "https://example.com/document.pdf"
+        val mockDownloadedFile = DownloadedBitmap(
+            bitmap = null, // Files don't have Bitmaps
+            status = DownloadedBitmap.Status.SUCCESS,
+            downloadTime = 0L,
+            bytes = byteArrayOf(4, 5, 6)
+        )
+        mapOfMAO[FILES]!!.forEach {
+            every { it.fetchInMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns null
+            every { it.fetchDiskMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns null
+        }
+        every { mockFileFetchApi.makeApiCallForFile(Pair(url, CtCacheType.FILES)) } returns mockDownloadedFile
+        every { mockFileMAO.saveDiskMemory(url, any()) } returns mockSavedFile
+        every { mockFileMAO.saveInMemory(url, any()) } returns true
 
-        // setup
-        val url = "key"
+        val result = fileResourceProvider.fetchFile(url)
 
-        // invocation
-        val bitmap = provider.fetchInAppImageV1(url = url, Bitmap::class.java)
-
-        // assertions
-        assertEquals(mockBitmap, bitmap)
+        assertEquals(mockDownloadedFile.bytes, result) // Verify file was fetched
+        verify { mockFileMAO.saveDiskMemory(url, mockDownloadedFile.bytes!!) }
+        verify { mockFileMAO.saveInMemory(url, Pair(mockDownloadedFile.bytes!!, mockSavedFile)) } // Verify caching
     }
 
     @Test
-    fun `fetchInAppGif returns from cache when data exists in cache`() {
+    fun `deleteData removes data from all caches`() {
+        val cacheKey = "someKey"
+        mapOfMAO.values.flatten().forEach { mao ->
+            every { mao.removeInMemory(cacheKey) } returns mockk()
+            every { mao.removeDiskMemory(cacheKey) } returns true
+        }
 
-        // setup - warm up cache
-        val url = "key"
-        Mockito.`when`(mockLruCacheGif.get(url)).thenReturn(mockBytesPair)
+        fileResourceProvider.deleteData(cacheKey)
 
-        // invocation
-        val opBytes = provider.fetchInAppGifV1(url = url)
-
-        // assertions
-        assertEquals(bytes, opBytes)
+        // convert mapOfMAO to list of MAO
+        mapOfMAO.values.flatten().forEach { mao ->
+            verify { mao.removeInMemory(cacheKey) }
+            verify { mao.removeDiskMemory(cacheKey) }
+        }
     }
-
-    @Test
-    fun `fetchInAppGif returns gif from remote service when data does not exist in cache`() {
-
-        // setup
-        val url = "key"
-
-        // invocation
-        val opBytes = provider.fetchInAppGifV1(url = url)
-
-        // assertions
-        assertEquals(bytes, opBytes)
-    }
-
-    // TODO : test api failure cases
 
 }
