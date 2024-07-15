@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.video
 
 import com.clevertap.android.sdk.Logger
 
-// todo check logs which get printed if methods fail detecing media stream libs
 internal object VideoLibChecker {
 
     private val hasExoplayer = checkForExoPlayer()
@@ -27,7 +26,7 @@ internal object VideoLibChecker {
     /**
      * Method to check whether app has either ExoPlayer or Media3 dependencies
      *
-     * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
+     * @return boolean - true/false depending on app's availability of either ExoPlayer or Media3 dependencies
      */
     private fun checkForVideoPlayerSupport(): Boolean {
         if (!hasMedia3 && !hasExoplayer)
@@ -41,38 +40,50 @@ internal object VideoLibChecker {
      * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
      */
     private fun checkForExoPlayer(): Boolean {
-        var exoPlayerPresent = false
-        var className: Class<*>? = null
-        try {
-            className = Class.forName("com.google.android.exoplayer2.ExoPlayer")
-            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource")
-            className = Class.forName("com.google.android.exoplayer2.ui.StyledPlayerView")
-            Logger.d("ExoPlayer is present")
-            exoPlayerPresent = true
-        } catch (t: Throwable) {
-            Logger.d("ExoPlayer library files are missing!!!")
+        val requiredExoplayerClassNames = listOf(
+            "com.google.android.exoplayer2.ExoPlayer",
+            "com.google.android.exoplayer2.source.hls.HlsMediaSource",
+            "com.google.android.exoplayer2.ui.StyledPlayerView"
+        )
+
+        for (className in requiredExoplayerClassNames) {
+            try {
+                Class.forName(className)
+            } catch (t: Throwable) {
+                Logger.d("$className is missing!!!")
+                Logger.d("One or more ExoPlayer library files are missing!!!")
+                return false
+            }
         }
-        return exoPlayerPresent
+
+        Logger.d("ExoPlayer is present")
+        return true
     }
 
     /**
      * Method to check whether app has Media3 dependencies
      *
-     * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
+     * @return boolean - true/false depending on app's availability of Media3 dependencies
      */
     private fun checkForMedia3(): Boolean {
-        var media3ExoplayerPresent = false
-        var className: Class<*>? = null
-        try {
-            className = Class.forName("androidx.media3.exoplayer.ExoPlayer")
-            className = Class.forName("androidx.media3.exoplayer.hls.HlsMediaSource")
-            className = Class.forName("androidx.media3.ui.PlayerView")
-            Logger.d("Media3 is present")
-            media3ExoplayerPresent = true
-        } catch (t: Throwable) {
-            Logger.d("Media3 library files are missing!!!")
+        val requiredMedia3ClassNames = listOf(
+            "androidx.media3.exoplayer.ExoPlayer",
+            "androidx.media3.exoplayer.hls.HlsMediaSource",
+            "androidx.media3.ui.PlayerView"
+        )
+
+        for (className in requiredMedia3ClassNames) {
+            try {
+                Class.forName(className)
+            } catch (t: Throwable) {
+                Logger.d("$className is missing!!!")
+                Logger.d("One or more Media3 library files are missing!!!")
+                return false
+            }
         }
-        return media3ExoplayerPresent
+
+        Logger.d("Media3 is present")
+        return true
     }
 }
 
