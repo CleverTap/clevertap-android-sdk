@@ -3309,9 +3309,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Defines a new file variable. In
-     * that case it is better to use the @Variable annotation instead of this method.
-     * // todo check annotation and documentation
+     * Defines a new file variable. Disclaimer: cannot be used with @Variable annotation.
      *
      * @param name Name of the variable.
      * @return Returns the Var instance.
