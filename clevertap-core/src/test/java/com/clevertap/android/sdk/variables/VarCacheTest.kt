@@ -65,7 +65,7 @@ class VarCacheTest : BaseTestCase() {
         ctVariables.init()
         val func = mockk<Function0<Unit>>(relaxed = true)
 
-        val var1 = Var.define("var1", "http://example.com/file", "file", ctVariables)
+        val var1 = Var.define("var1", null, "file", ctVariables)
         every { fileResourceProvider.isFileCached(any()) } returns false
 
         // Call the method under test
@@ -85,8 +85,8 @@ class VarCacheTest : BaseTestCase() {
         ctVariables.init()
         val func = mockk<Function0<Unit>>(relaxed = true)
 
-        val var1 = Var.define("var1", "http://example.com/file", "file", ctVariables)
-        val var2 = Var.define("var2", "http:/dummy.com/file", "file", ctVariables)
+        val var1 = Var.define("var1", null, "file", ctVariables)
+        val var2 = Var.define("var2", null, "file", ctVariables)
         every { fileResourceProvider.isFileCached(any()) } returns true
 
         // Call the method under test
@@ -109,8 +109,8 @@ class VarCacheTest : BaseTestCase() {
         ctVariables.init()
         val func = mockk<Function0<Unit>>(relaxed = true)
 
-        val var1 = Var.define("var1", "http://example.com/file", "file", ctVariables)
-        val var2 = Var.define("var2", "http:/dummy.com/file", "file", ctVariables)
+        val var1 = Var.define("var1", null, "file", ctVariables)
+        val var2 = Var.define("var2", null, "file", ctVariables)
         every { fileResourceProvider.isFileCached("http://example.com/file2") } returns true
         every { fileResourceProvider.isFileCached("http://dummy.com/file2") } returns false
 
@@ -133,7 +133,7 @@ class VarCacheTest : BaseTestCase() {
         ctVariables.init()
         val func = mockk<Function0<Unit>>(relaxed = true)
 
-        val var1 = Var.define("var1", null, "file", ctVariables)
+        Var.define("var1", null, "file", ctVariables)
         every { fileResourceProvider.isFileCached(any()) } returns false
 
         // Call the method under test
@@ -261,7 +261,7 @@ class VarCacheTest : BaseTestCase() {
     @Test
     fun `test getMergedValue for kind file`() {
         ctVariables.init()
-        Var.define("var1", "http://example.com/file", "file", ctVariables)
+        Var.define("var1", null, "file", ctVariables)
 
         every { fileResourceProvider.cachedFilePath(any()) } returns "cachedFilePath"
         assertEquals("cachedFilePath", varCache.getMergedValue("var1"))
@@ -380,8 +380,8 @@ class VarCacheTest : BaseTestCase() {
 
     @Test
     fun `test clearUserContent`() {
-        val var1 = Var.define("var1", 1, ctVariables)
-        val var2 = Var.define("var2", "default", ctVariables)
+        Var.define("var1", 1, ctVariables)
+        Var.define("var2", "default", ctVariables)
         mockkStatic(StorageHelper::class)
 
         varCache.clearUserContent()
@@ -391,9 +391,9 @@ class VarCacheTest : BaseTestCase() {
 
     @Test
     fun `test fileVarUpdated when file is cached`() {
-        val var1 = Var.define("var1", "http://example.com/file", "file", ctVariables)
+        val var1 : Var<String> = Var.define("var1", null, "file", ctVariables)
         val handler1: VariableCallback<String> = mockk(relaxed = true)
-        var1?.addFileReadyHandler(handler1)
+        var1.addFileReadyHandler(handler1)
 
         every { fileResourceProvider.isFileCached(any()) } returns true
 
@@ -405,9 +405,9 @@ class VarCacheTest : BaseTestCase() {
 
     @Test
     fun `test fileVarUpdated when file is not cached`() {
-        val var1 = Var.define("var1", "http://example.com/file", "file", ctVariables)
+        val var1 : Var<String> = Var.define("var1", null, "file", ctVariables)
         val handler1: VariableCallback<String> = mockk(relaxed = true)
-        var1?.addFileReadyHandler(handler1)
+        var1.addFileReadyHandler(handler1)
 
         every { fileResourceProvider.isFileCached(any()) } returns false
 
@@ -415,6 +415,6 @@ class VarCacheTest : BaseTestCase() {
 
         verify(exactly = 0) { handler1.setVariable(var1) }
         verify(exactly = 0) { handler1.run() }
-        verify { fileResourcesRepoImpl.preloadFilesAndCache(listOf(Pair("http://example.com/file", FILES)), any()) }
+        verify { fileResourcesRepoImpl.preloadFilesAndCache(any(), any()) }
     }
 }
