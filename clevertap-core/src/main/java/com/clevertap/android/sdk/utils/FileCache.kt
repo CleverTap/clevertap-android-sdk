@@ -10,7 +10,7 @@ class FileCache(
     private val directory: File,
     private val maxFileSizeKb: Int,
     private val logger: ILogger? = null,
-    private val hashFunction: (key: String) -> String = UrlHashGenerator.hash()
+    internal val hashFunction: (key: String) -> String = UrlHashGenerator.hash()
 ) {
 
     companion object {

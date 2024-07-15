@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
@@ -25,14 +26,15 @@ class CTVariablesTest : BaseTestCase() {
   override fun setUp() {
     super.setUp()
 
-    fileResourcesRepoImpl = TODO()
-    fileResourceProvider = TODO()
+    fileResourcesRepoImpl = mockk(relaxed = true)
+    fileResourceProvider = mockk(relaxed = true)
     varCache = VarCache(
         cleverTapInstanceConfig,
         application,
         fileResourcesRepoImpl,
         fileResourceProvider
     )
+    varCache = spyk(varCache)
     ctVariables = CTVariables(varCache)
     parser = Parser(ctVariables)
   }
@@ -72,6 +74,7 @@ class CTVariablesTest : BaseTestCase() {
     assertTrue(var2_notified)
     assertEquals(10, var1.value())
     assertEquals(20, var2.value())
+    verify { varCache.updateDiffsAndTriggerHandlers(any(), any()) }
   }
 
   @Test
@@ -79,12 +82,15 @@ class CTVariablesTest : BaseTestCase() {
     ctVariables.init()
     var success = false
     var callback = false
+    ctVariables.setHasVarsRequestCompleted(false)
 
     ctVariables.handleVariableResponse(null) { isSuccessful ->
       success = isSuccessful
       callback = true
     }
 
+    assertTrue(ctVariables.hasVarsRequestCompleted())
+    verify { varCache.loadDiffsAndTriggerHandlers(any()) }
     assertTrue(callback)
     assertFalse(success)
   }
