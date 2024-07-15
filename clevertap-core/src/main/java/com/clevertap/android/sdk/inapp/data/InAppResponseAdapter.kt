@@ -76,7 +76,7 @@ internal class InAppResponseAdapter(
                 gifList.map { Pair(it, CtCacheType.GIF) } +
                 filesList.map {
                     Pair(it, CtCacheType.FILES)
-                }).distinctBy { it.first } // todo no need to copy over and over
+                }).distinctBy { it.first }
     }
 
     private fun fetchMediaUrls(
