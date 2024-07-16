@@ -11,7 +11,7 @@ import java.io.File
  * An implementation of [MemoryAccessObject] for managing GIF images in memory and on disk.
  *
  * This class provides methods for fetching, saving, and removing GIF images from both in-memory and disk storage.
- * It also supports transforming fetched data into different formats like [Bitmap], [ByteArray], and [File].
+ * It also supports transforming fetched data into different formats like Bitmap, [ByteArray], and [File].
  *
  *@param ctCaches An instance of [CTCaches] providing access to the caching mechanisms.
  * @param logger An optional [ILogger] for debugging and tracking purposes.

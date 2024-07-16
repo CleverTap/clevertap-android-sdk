@@ -28,7 +28,6 @@ sealed class MemoryDataTransformationType<A> {
 /**
  * Converts a [File] to a [Bitmap] if the file contains a valid bitmap.
  *
- * @param file The file to convert.
  * @return The converted [Bitmap], or null if the file is invalid or cannot be decoded.
  */
 val fileToBitmap: (file: File?) -> Bitmap? = { file ->
@@ -41,7 +40,6 @@ val fileToBitmap: (file: File?) -> Bitmap? = { file ->
 /**
  * Reads the contents of a [File] into a [ByteArray].
  *
- * @param file The file to read.
  * @return The [ByteArray] containing the file's contents, or null if the file is null.
  */
 val fileToBytes: (file: File?) -> ByteArray? = { file ->
@@ -50,7 +48,6 @@ val fileToBytes: (file: File?) -> ByteArray? = { file ->
 /**
  * Decodes a [ByteArray] into a [Bitmap].
  *
- * @param bytes The [ByteArray] to decode.
  * @return The decoded [Bitmap], or null if the byte array cannot be decoded.
  */
 val bytesToBitmap: (bytes: ByteArray) -> Bitmap? = {
@@ -63,7 +60,6 @@ val bytesToBitmap: (bytes: ByteArray) -> Bitmap? = {
 /**
  * Compresses a [Bitmap] into a [ByteArray] in PNG format.
  *
- * @param bitmap The [Bitmap] to compress.
  * @return The compressed [ByteArray], or null if the bitmap is null.
  */
 val bitmapToBytes: (bitmap: Bitmap?) -> ByteArray? = {
