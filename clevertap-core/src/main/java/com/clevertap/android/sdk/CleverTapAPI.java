@@ -2827,7 +2827,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         CryptHandler cryptHandler = coreState.getCryptHandler();
         StoreProvider storeProvider = StoreProvider.getInstance();
 
-        // Inflate the local profile here as eviceId is required
+        // Inflate the local profile here as deviceId is required
         coreState.getLocalDataStore().inflateLocalProfileAsync(context);
 
         if (storeRegistry.getInAppStore() == null) {
@@ -3493,7 +3493,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Adds a callback to be invoked when variables are initialised with server values and file
      * downloads are also completed for file type variables (if any) registered with
      * {@link #defineFileVariable}.
-     * WWill be called only once and then removed.
+     * Will be called only once and then removed.
      *
      * @param callback Callback to register.
      */

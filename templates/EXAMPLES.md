@@ -213,6 +213,16 @@ implementation "${ext.exoplayer}"
 implementation "${ext.exoplayer_hls}"
 implementation "${ext.exoplayer_ui}"
 ```
+
+#### Migrating from `Exoplayer` to `AndroidX Media3`
+Clevertap supports `AndroidX Media3` from `v7.0.0+` to replace the deprecated `ExoPlayer` libraries. For migration change the following dependencies.
+
+|         Old Dependency | New Dependency      |
+|-----------------------:|:--------------------|
+|     `${ext.exoplayer}` | `${ext.media3}`     |
+| `${ext.exoplayer_hls}` | `${ext.media3_hls}` |
+|  `${ext.exoplayer_ui}` | `${ext.media3_ui}`  |
+
 #### Initializing the Inbox
 
 Initializing the Inbox will provide a callback to two methods `inboxDidInitialize()` AND `inboxMessagesDidUpdate()`
