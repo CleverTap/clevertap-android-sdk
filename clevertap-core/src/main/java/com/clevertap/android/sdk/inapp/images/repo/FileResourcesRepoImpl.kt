@@ -10,7 +10,15 @@ import kotlin.math.max
 import kotlin.time.Duration.Companion.days
 
 internal const val TAG_FILE_DOWNLOAD = "FileDownload"
-
+/**
+ * Implementation of [FileResourcesRepo] that manages the preloading, caching, and cleanup of file resources.
+ *
+ * @param cleanupStrategy The strategy for cleaning up stale or unnecessary files.
+ * @param preloaderStrategy The strategy for preloading files to improve performance.
+ * @param inAppAssetsStore The store for managing in-app asset URLs and their expiry times.
+ * @param fileStore The store for managing file URLs and their expiry times.
+ * @param legacyInAppsStore The store for managing legacy in-app data.
+ */
 internal class FileResourcesRepoImpl constructor(
     override val cleanupStrategy: FileCleanupStrategy,
     override val preloaderStrategy: FilePreloaderStrategy,
@@ -28,6 +36,12 @@ internal class FileResourcesRepoImpl constructor(
 
         private val downloadInProgressUrls = HashMap<String, DownloadState>()
         private val fetchAllFilesLock = Any()
+        /**
+         * Saves the expiry time for a downloaded URL in the appropriate store.
+         *
+         * @param urlMeta The pair of URL and its [CtCacheType].
+         * @param storePair The pair of [FileStore] and [InAppAssetsStore] to save the expiry time.
+         */
         @JvmStatic
         fun saveUrlExpiryToStore(urlMeta: Pair<String, CtCacheType>, storePair: Pair<FileStore, InAppAssetsStore>){
             val url = urlMeta.first
@@ -47,7 +61,14 @@ internal class FileResourcesRepoImpl constructor(
             }
         }
     }
-
+    /**
+     * Preloads and caches files associated with the given URL-cache type pairs, providing callbacks for completion, success, and failure events.
+     *
+     * @param urlMeta A list of pairs containing URLs and their corresponding [CtCacheType] values.
+     * @param completionCallback A function to be executed when the preloading process is complete, providing a map of URLs and their preloading status (true for success, false for failure).
+     * @param successBlock A function to be executed for each URL that is successfully preloaded and cached.
+     * @param failureBlock A function to be executed for each URL that fails to preload or cache.
+     */
     override fun preloadFilesAndCache(
         urlMeta: List<Pair<String, CtCacheType>>,
         completionCallback: (urlStatusMap: Map<String, Boolean>) -> Unit,
@@ -100,7 +121,11 @@ internal class FileResourcesRepoImpl constructor(
             repoUpdated()
         }
     }
-
+    /**
+     * Cleans up stale files based on their expiry time, limiting cleanup to once every 14 days.
+     *
+     * @param urls A list of valid URLs to exclude from cleanup (if empty, all stale files are cleaned up).
+     */
     override fun cleanupStaleFiles(
         urls: List<String>
     ) {
@@ -117,7 +142,11 @@ internal class FileResourcesRepoImpl constructor(
         )
         legacyInAppsStore.updateAssetCleanupTs(currentTime)
     }
-
+    /**
+     * Cleans up expired resources associated with the specified cache type.
+     *
+     * @param cacheTpe The [CtCacheType] for which expired resources should be cleaned up.
+     */
     override fun cleanupExpiredResources(cacheTpe: CtCacheType) {
         val allFileUrls = when (cacheTpe) {
             CtCacheType.IMAGE, CtCacheType.GIF -> inAppAssetsStore.getAllAssetUrls()
@@ -125,7 +154,11 @@ internal class FileResourcesRepoImpl constructor(
         }
         cleanupStaleFilesNow(allFileUrls = allFileUrls)
     }
-
+    /**
+     * Cleans up all resources associated with the specified cache type.
+     *
+     * @param cacheTpe The [CtCacheType] for which all resources should be cleaned up.
+     */
     override fun cleanupAllResources(cacheTpe: CtCacheType) {
         val cleanupUrls = when (cacheTpe) {
             CtCacheType.IMAGE,CtCacheType.GIF -> inAppAssetsStore.getAllAssetUrls()

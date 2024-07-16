@@ -9,14 +9,27 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-
+/**
+ * A file cleanup strategy that utilizes Kotlin coroutines for asynchronous operations.
+ *
+ * This strategy clears file assets associated with provided URLs concurrently, leveraging coroutines for efficient
+ * and non-blocking execution.
+ *
+ * @param fileResourceProvider The provider for accessing and managing file resources.
+ * @param dispatchers The dispatcher provider for managing coroutine execution contexts (defaults to [CtDefaultDispatchers]).
+ */
 internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
     override val fileResourceProvider: FileResourceProvider,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers()
 ) : FileCleanupStrategy {
 
     private var jobs: MutableList<Job> = mutableListOf()
-
+    /**
+     * Clears file assets associated with the given URLs asynchronously.
+     *
+     * @param urls A list of URLs representing the file assets to be cleared.
+     * @param successBlock A function to be executed for each URL that is successfully cleared.
+     */
     override fun clearFileAssets(
         urls: List<String>,
         successBlock: (url: String) -> Unit
@@ -35,7 +48,9 @@ internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
         }
         jobs.add(job)
     }
-
+    /**
+     * Stops any ongoing file cleanup operations initiated by this strategy.
+     */
     override fun stop() {
         jobs.forEach { job ->
             job.cancel()
