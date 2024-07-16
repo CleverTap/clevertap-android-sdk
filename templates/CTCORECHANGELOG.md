@@ -26,8 +26,7 @@ TODO - Update Date here
 
 #### Dependency Update
 
-* Adds support for the library `AndroidX Media3` in lieu of the [deprecation](https://developer.android.com/media/media3/exoplayer/migration-guide) of `ExoPlayer`. Details here. 
-// TODO - @Lalit - After changes in Example.md for dependency update and support for both exoplayer and media3 in, link can be added here
+* Adds support for `AndroidX Media3` in lieu of the [deprecation](https://developer.android.com/media/media3/exoplayer/migration-guide) of `ExoPlayer`. While Clevertap continues to support `ExoPlayer`, migration is recommended. For migration refer [here](EXAMPLES.md#migrating-from-exoplayer-to-androidx-media3).
 
 
 ### Version 6.2.1 (April 11, 2024)
