@@ -1,5 +1,6 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+TODO - Update Date here
 ### Version 1.2.4 (July xx, 2024)
 
 #### New features
