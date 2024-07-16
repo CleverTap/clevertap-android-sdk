@@ -11,6 +11,8 @@ TODO - Update Date here
 * Adds new API, // TODO @Vasko, Changelog related to https://wizrocket.atlassian.net/browse/MC-1805, if required
 
 #### Breaking API Changes
+* // TODO @piyush, API changes related to file support
+* // TODO @lalit, API changes related to file variables
 
 #### Bug Fixes
 
