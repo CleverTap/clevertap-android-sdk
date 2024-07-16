@@ -1,7 +1,7 @@
 ## CleverTap Android SDK CHANGE LOG
 
 TODO - Update Date here
-### Version 7.0.0 (April xx, 2024)
+### Version 7.0.0 (July xx, 2024)
 
 #### New Features
 
