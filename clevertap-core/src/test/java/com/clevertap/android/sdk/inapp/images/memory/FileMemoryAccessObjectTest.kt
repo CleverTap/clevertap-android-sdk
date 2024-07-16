@@ -38,8 +38,8 @@ class FileMemoryAccessObjectTest {
 
     @Before
     fun setup() {
-        every { mockCTCaches.fileLruCache() } returns mockMemoryCache
-        every { mockCTCaches.fileCacheDisk() } returns mockDiskCache
+        every { mockCTCaches.fileInMemory() } returns mockMemoryCache
+        every { mockCTCaches.fileDiskMemory() } returns mockDiskCache
         fileMemoryAccessObject = FileMemoryAccessObject(mockCTCaches, mockLogger)
 
         mockkStatic("com.clevertap.android.sdk.inapp.images.memory.MemoryAccessObjectKt")

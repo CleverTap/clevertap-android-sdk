@@ -62,11 +62,11 @@ class CTCachesTest {
 
         val ctCaches = CTCaches.instance(mockImageMemory, mockGifMemory, mockFileMemory)
 
-        assertEquals(mockImageInMemoryLruCache, ctCaches.imageCache())
-        assertEquals(mockGifInMemoryLruCache, ctCaches.gifCache())
-        assertEquals(mockFileInMemoryLruCache, ctCaches.fileLruCache())
-        assertEquals(mockImageDiskMemory, ctCaches.imageCacheDisk())
-        assertEquals(mockGifDiskMemory, ctCaches.gifCacheDisk())
-        assertEquals(mockFileDiskMemory, ctCaches.fileCacheDisk())
+        assertEquals(mockImageInMemoryLruCache, ctCaches.imageInMemory())
+        assertEquals(mockGifInMemoryLruCache, ctCaches.gifInMemory())
+        assertEquals(mockFileInMemoryLruCache, ctCaches.fileInMemory())
+        assertEquals(mockImageDiskMemory, ctCaches.imageDiskMemory())
+        assertEquals(mockGifDiskMemory, ctCaches.gifDiskMemory())
+        assertEquals(mockFileDiskMemory, ctCaches.fileDiskMemory())
     }
 }

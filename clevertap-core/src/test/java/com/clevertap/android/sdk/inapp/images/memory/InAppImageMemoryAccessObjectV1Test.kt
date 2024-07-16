@@ -36,8 +36,8 @@ class InAppImageMemoryAccessObjectV1Test {
 
     @Before
     fun setup() {
-        every { mockCTCaches.imageCache() } returns mockMemoryCache
-        every { mockCTCaches.imageCacheDisk() } returns mockDiskCache
+        every { mockCTCaches.imageInMemory() } returns mockMemoryCache
+        every { mockCTCaches.imageDiskMemory() } returns mockDiskCache
         inAppImageMemoryAccessObjectV1 = InAppImageMemoryAccessObjectV1(mockCTCaches, mockLogger)
 
         mockkStatic("com.clevertap.android.sdk.inapp.images.memory.MemoryAccessObjectKt")

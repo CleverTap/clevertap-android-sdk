@@ -12,7 +12,7 @@ import java.io.File
 internal class InAppImageMemoryAccessObjectV1(private val ctCaches: CTCaches,private val logger: ILogger?) : MemoryAccessObject<Bitmap> {
 
     override fun fetchInMemory(key: String): Pair<Bitmap, File>? {
-        val imageInMemory = ctCaches.imageCache()
+        val imageInMemory = ctCaches.imageInMemory()
         return imageInMemory.get(key)
     }
 
@@ -50,30 +50,30 @@ internal class InAppImageMemoryAccessObjectV1(private val ctCaches: CTCaches,pri
 
     override fun fetchDiskMemory(key: String): File? {
         logger?.verbose(TAG_FILE_DOWNLOAD,"IMAGE In-Memory cache miss for $key data")
-        val imageDiskMemory = ctCaches.imageCacheDisk()
+        val imageDiskMemory = ctCaches.imageDiskMemory()
         return imageDiskMemory.get(key)
     }
 
     override fun saveInMemory(key: String, data: Pair<Bitmap, File>): Boolean {
         logger?.verbose(TAG_FILE_DOWNLOAD,"Saving $key data in IMAGE in-memory")
-        val imageInMemory = ctCaches.imageCache()
+        val imageInMemory = ctCaches.imageInMemory()
         return imageInMemory.add(key, data)
     }
 
     override fun saveDiskMemory(key: String, data: ByteArray): File {
-        val imageDiskMemory = ctCaches.imageCacheDisk()
+        val imageDiskMemory = ctCaches.imageDiskMemory()
         return imageDiskMemory.addAndReturnFileInstance(key, data)
     }
 
     override fun removeDiskMemory(key: String): Boolean {
         logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from IMAGE disk-memory")
-        val imageDiskMemory = ctCaches.imageCacheDisk()
+        val imageDiskMemory = ctCaches.imageDiskMemory()
         return imageDiskMemory.remove(key)
     }
 
     override fun removeInMemory(key: String): Pair<Bitmap, File>? {
         logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from IMAGE in-memory")
-        val imageInMemory = ctCaches.imageCache()
+        val imageInMemory = ctCaches.imageInMemory()
         return imageInMemory.remove(key)
     }
 }

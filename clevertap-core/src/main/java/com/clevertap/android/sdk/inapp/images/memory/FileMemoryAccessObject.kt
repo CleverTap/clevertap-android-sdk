@@ -11,7 +11,7 @@ import java.io.File
 internal class FileMemoryAccessObject(private val ctCaches: CTCaches,private val logger: ILogger? = null): MemoryAccessObject<ByteArray> {
 
     override fun fetchInMemory(key: String): Pair<ByteArray, File>? {
-        val fileInMemory = ctCaches.fileLruCache()
+        val fileInMemory = ctCaches.fileInMemory()
         return fileInMemory.get(key)
     }
 
@@ -49,30 +49,30 @@ internal class FileMemoryAccessObject(private val ctCaches: CTCaches,private val
 
     override fun fetchDiskMemory(key: String): File? {
         logger?.verbose(TAG_FILE_DOWNLOAD,"FILE In-Memory cache miss for $key data")
-        val fileDiskMemory = ctCaches.fileCacheDisk()
+        val fileDiskMemory = ctCaches.fileDiskMemory()
         return fileDiskMemory.get(key)
     }
 
     override fun saveDiskMemory(key: String, data: ByteArray): File {
-        val fileDiskMemory = ctCaches.fileCacheDisk()
+        val fileDiskMemory = ctCaches.fileDiskMemory()
         return fileDiskMemory.addAndReturnFileInstance(key, data)
     }
 
     override fun removeDiskMemory(key: String): Boolean {
         logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from FILE disk-memory")
-        val fileDiskMemory = ctCaches.fileCacheDisk()
+        val fileDiskMemory = ctCaches.fileDiskMemory()
         return fileDiskMemory.remove(key)
     }
 
     override fun removeInMemory(key: String): Pair<ByteArray, File>? {
         logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from FILE in-memory")
-        val fileInMemory = ctCaches.fileLruCache()
+        val fileInMemory = ctCaches.fileInMemory()
         return fileInMemory.remove(key)
     }
 
     override fun saveInMemory(key: String, data: Pair<ByteArray, File>): Boolean {
         logger?.verbose(TAG_FILE_DOWNLOAD,"Saving $key data in FILE in-memory")
-        val fileInMemory = ctCaches.fileLruCache()
+        val fileInMemory = ctCaches.fileInMemory()
         return fileInMemory.add(key, data)
     }
 }

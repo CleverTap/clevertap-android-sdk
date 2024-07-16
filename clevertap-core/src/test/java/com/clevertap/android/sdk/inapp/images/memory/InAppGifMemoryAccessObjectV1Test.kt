@@ -36,8 +36,8 @@ class InAppGifMemoryAccessObjectV1Test {
 
     @Before
     fun setup() {
-        every { mockCTCaches.gifCache() } returns mockMemoryCache
-        every { mockCTCaches.gifCacheDisk() } returns mockDiskCache
+        every { mockCTCaches.gifInMemory() } returns mockMemoryCache
+        every { mockCTCaches.gifDiskMemory() } returns mockDiskCache
         inAppGifMemoryAccessObjectV1 = InAppGifMemoryAccessObjectV1(mockCTCaches, mockLogger)
 
         mockkStatic("com.clevertap.android.sdk.inapp.images.memory.MemoryAccessObjectKt")

@@ -11,7 +11,7 @@ import java.io.File
 internal class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches,private val logger: ILogger?): MemoryAccessObject<ByteArray> {
 
     override fun fetchInMemory(key: String): Pair<ByteArray, File>? {
-        val gifInMemory = ctCaches.gifCache()
+        val gifInMemory = ctCaches.gifInMemory()
         return gifInMemory.get(key)
     }
 
@@ -49,30 +49,30 @@ internal class InAppGifMemoryAccessObjectV1(private val ctCaches: CTCaches,priva
 
     override fun fetchDiskMemory(key: String): File? {
         logger?.verbose(TAG_FILE_DOWNLOAD,"GIF In-Memory cache miss for $key data")
-        val gifDiskMemory = ctCaches.gifCacheDisk()
+        val gifDiskMemory = ctCaches.gifDiskMemory()
         return gifDiskMemory.get(key)
     }
 
     override fun saveDiskMemory(key: String, data: ByteArray): File {
-        val gifDiskMemory = ctCaches.gifCacheDisk()
+        val gifDiskMemory = ctCaches.gifDiskMemory()
         return gifDiskMemory.addAndReturnFileInstance(key, data)
     }
 
     override fun removeDiskMemory(key: String): Boolean {
         logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from GIF disk-memory")
-        val gifDiskMemory = ctCaches.gifCacheDisk()
+        val gifDiskMemory = ctCaches.gifDiskMemory()
         return gifDiskMemory.remove(key)
     }
 
     override fun removeInMemory(key: String): Pair<ByteArray, File>? {
         logger?.verbose(TAG_FILE_DOWNLOAD,"If present, will remove $key data from GIF in-memory")
-        val gifInMemory = ctCaches.gifCache()
+        val gifInMemory = ctCaches.gifInMemory()
         return gifInMemory.remove(key)
     }
 
     override fun saveInMemory(key: String, data: Pair<ByteArray, File>): Boolean {
         logger?.verbose(TAG_FILE_DOWNLOAD,"Saving $key data in GIF in-memory")
-        val gifInMemory = ctCaches.gifCache()
+        val gifInMemory = ctCaches.gifInMemory()
         return gifInMemory.add(key, data)
     }
 }
