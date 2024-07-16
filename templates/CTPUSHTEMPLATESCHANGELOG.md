@@ -3,6 +3,11 @@
 ### Version 1.2.3 (February 21, 2024)
 
 #### New features
+* Removes the cross button from the `Five Icons` push template. This template notification will now be dismissible.
+
+### Version 1.2.3 (February 21, 2024)
+
+#### New features
 
 * Supports Android 14, made it compliant with Android 14 requirements. Details [here](https://developer.android.com/about/versions/14/summary)
 * Upgrades AGP to 8.2.2 for building the SDK and adds related consumer proguard rules

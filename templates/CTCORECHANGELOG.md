@@ -1,5 +1,33 @@
 ## CleverTap Android SDK CHANGE LOG
 
+TODO - Update Date here
+### Version 7.0.0 (April xx, 2024)
+
+#### New Features
+
+* Adds support for triggering InApps based on user attribute changes
+* // TODO @Vasko, Changelog related to https://wizrocket.atlassian.net/browse/MC-12
+* // TODO @Lalit, Changelog related to https://wizrocket.atlassian.net/browse/SDK-3782
+* Adds new API, // TODO @Vasko, Changelog related to https://wizrocket.atlassian.net/browse/MC-1805, if required
+
+#### Breaking API Changes
+
+#### Bug Fixes
+
+* Fixes a race-condition bug where the App Launch event was triggered twice when using a custom CleverTap ID.
+* Fixes an ANR caused by extremely old InApp campaigns.
+* Fixes an issue where incorrect callbacks were sent when the phone was rotated.
+* Fixes an issue where an InApp was displayed even when all campaigns were stopped.
+* Fixes an issue where the InApp image was not shown when the phone was rotated to landscape.
+* // TODO - @piyush Changelog if required related to https://wizrocket.atlassian.net/browse/SDK-3772
+* 
+
+#### Dependency Update
+
+* Adds support for the library `AndroidX Media3` in lieu of the [deprecation](https://developer.android.com/media/media3/exoplayer/migration-guide) of `ExoPlayer`. Details here. 
+// TODO - @Lalit - After changes in Example.md for dependency update and support for both exoplayer and media3 in, link can be added here
+
+
 ### Version 6.2.1 (April 11, 2024)
 This hotfix release addresses the following issue in `v6.2.0`:
 
