@@ -6,9 +6,9 @@ TODO - Update Date here
 #### New Features
 
 * Adds support for triggering InApps based on user attribute changes
-* // TODO @Vasko, Changelog related to https://wizrocket.atlassian.net/browse/MC-12
+* // Adds support for custom code templates for InApp notifications
 * // TODO @Lalit, Changelog related to https://wizrocket.atlassian.net/browse/SDK-3782
-* Adds new API, // TODO @Vasko, Changelog related to https://wizrocket.atlassian.net/browse/MC-1805, if required
+
 
 #### Breaking API Changes
 * // TODO @piyush, API changes related to file support
