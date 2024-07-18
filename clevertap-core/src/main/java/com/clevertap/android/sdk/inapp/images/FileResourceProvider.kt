@@ -90,27 +90,42 @@ internal class FileResourceProvider(
      * If image is found in cache, the cached image is returned.
      */
     fun fetchInAppImageV1(url: String): Bitmap? {
-        return fetchData(
-            urlMeta = Pair(url, IMAGE),
-            mao = imageMAO,
-            cachedDataFetcherBlock = ::cachedInAppImageV1
-        ) { Pair(it.bitmap!!, it.bytes!!) }
+        return try {
+            fetchData(
+                urlMeta = Pair(url, IMAGE),
+                mao = imageMAO,
+                cachedDataFetcherBlock = ::cachedInAppImageV1
+            ) { Pair(it.bitmap!!, it.bytes!!) }
+        } catch (e: Exception) {
+            logger?.verbose(TAG_FILE_DOWNLOAD, "failed to fetch image from $url", e)
+            null
+        }
     }
 
     fun fetchInAppGifV1(url: String): ByteArray? {
-        return fetchData(
-            urlMeta = Pair(url, GIF),
-            mao = gifMAO,
-            cachedDataFetcherBlock = ::cachedInAppGifV1
-        ) { Pair(it.bytes!!, it.bytes) }
+        return try {
+            fetchData(
+                urlMeta = Pair(url, GIF),
+                mao = gifMAO,
+                cachedDataFetcherBlock = ::cachedInAppGifV1
+            ) { Pair(it.bytes!!, it.bytes) }
+        } catch (e: Exception) {
+            logger?.verbose(TAG_FILE_DOWNLOAD, "failed to fetch GIF from $url", e)
+            null
+        }
     }
 
     fun fetchFile(url: String): ByteArray? {
-        return fetchData(
-            urlMeta = Pair(url, FILES),
-            mao = fileMAO,
-            cachedDataFetcherBlock = ::cachedFileInBytes
-        ) { Pair(it.bytes!!, it.bytes) }
+        return try {
+            fetchData(
+                urlMeta = Pair(url, FILES),
+                mao = fileMAO,
+                cachedDataFetcherBlock = ::cachedFileInBytes
+            ) { Pair(it.bytes!!, it.bytes) }
+        } catch (e: Exception) {
+            logger?.verbose(TAG_FILE_DOWNLOAD, "failed to fetch file from $url", e)
+            null
+        }
     }
 
     fun deleteData(cacheKey: String) {
@@ -173,9 +188,9 @@ internal class FileResourceProvider(
         }
 
         val downloadedData = inAppRemoteSource.makeApiCallForFile(urlMeta)
-        val dataToSave = dataToSaveBlock(downloadedData)
         return when (downloadedData.status) {
             DownloadedBitmap.Status.SUCCESS -> {
+                val dataToSave = dataToSaveBlock(downloadedData)
                 saveData(
                     cacheKey = urlMeta.first,
                     data = dataToSave,
