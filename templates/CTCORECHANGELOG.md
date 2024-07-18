@@ -10,8 +10,8 @@ TODO - Update Date here
 * Removes character limit of maximum 3 lines from AppInbox messages.
 * Adds support for File Types for Variables. Please refer to [Variables.md](Variables.md#define-file-variables) for further details
 * Adds new API 
-- // TODO @piyush, API changes related to file support
-- // TODO @lalit, API changes related to file variables
+  - `clearFileResources(boolean expiredOnly)`
+      - This API allows you to delete all types of files which are preloaded for SDK features like Custom In-App Templates, App Functions, Variables etc.
 
 #### Bug Fixes
 
