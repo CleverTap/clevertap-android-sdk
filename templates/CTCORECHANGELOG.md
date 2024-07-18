@@ -6,13 +6,12 @@ TODO - Update Date here
 #### New Features
 
 * Adds support for triggering InApps based on user attribute changes.
-* Adds support for custom code templates for InApp notifications.
+* Adds support for custom code templates for InApp notifications. Please refer to the [CustomCodeTemplates.md](CustomCodeTemplates.md) for further details.
 * Removes character limit of maximum 3 lines from AppInbox messages.
-* // TODO @Lalit, Changelog related to https://wizrocket.atlassian.net/browse/SDK-3782
-
-#### Breaking API Changes
-* // TODO @piyush, API changes related to file support
-* // TODO @lalit, API changes related to file variables
+* Adds support for File Types for Variables. Please refer to [Variables.md](Variables.md#define-file-variables) for further details
+* Adds new API 
+- // TODO @piyush, API changes related to file support
+- // TODO @lalit, API changes related to file variables
 
 #### Bug Fixes
 
