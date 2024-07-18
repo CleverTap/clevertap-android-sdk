@@ -110,16 +110,14 @@ All presenter methods provide a `CustomTemplateContext`. It can be used to:
 ```kotlin
 MyTemplatePresenter: TemplatePresenter {
 
-
-   override fun onClose(context: TemplateContext) {
+   override fun onPresent(context: TemplateContext) {
        // be sure to keep the context as long as the template UI is being displayed
        // so that context.setDismissed() can be called when the UI is closed.
        showUI(context)
        context.setPresented()
    }
 
-
-   override fun onPresent(context: TemplateContext) {
+   override fun onClose(context: TemplateContext) {
        // close the corresponding UI
        context.setDismissed()
    }
