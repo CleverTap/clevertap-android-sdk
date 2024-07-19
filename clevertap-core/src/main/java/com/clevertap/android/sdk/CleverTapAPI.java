@@ -43,7 +43,6 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
-import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
@@ -2827,7 +2826,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         CryptHandler cryptHandler = coreState.getCryptHandler();
         StoreProvider storeProvider = StoreProvider.getInstance();
 
-        // Inflate the local profile here as eviceId is required
+        // Inflate the local profile here as deviceId is required
         coreState.getLocalDataStore().inflateLocalProfileAsync(context);
 
         if (storeRegistry.getInAppStore() == null) {
@@ -3493,7 +3492,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Adds a callback to be invoked when variables are initialised with server values and file
      * downloads are also completed for file type variables (if any) registered with
      * {@link #defineFileVariable}.
-     * WWill be called only once and then removed.
+     * Will be called only once and then removed.
      *
      * @param callback Callback to register.
      */
@@ -3599,34 +3598,5 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         } else {
             impl.cleanupAllResources(CtCacheType.FILES);
         }
-    }
-
-    /**
-     * Checks if a file exists for the given non-null url.
-     *
-     * @param url the non-null url for which to check the existence of the file.
-     * @return true if a file exists for the specified url, false otherwise.
-     */
-    public boolean doesFileExistForUrl(@NonNull String url) {
-        Logger logger = getConfigLogger();
-        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
-        return fileResourceProvider.isFileCached(url);
-    }
-
-    /**
-     * Retrieves the absolute file path associated with the given url.
-     *
-     * This method takes a url as a String parameter and returns the corresponding
-     * absolute file path as a String. The url parameter must not be null.
-     *
-     * @param url the url for which the file path is to be retrieved.
-     *            Must be a non-null String.
-     * @return the absolute file path corresponding to the given URL or null if file doesn't exist
-     */
-    @Nullable
-    public String getFilePathForUrl(@NonNull String url) {
-        Logger logger = getConfigLogger();
-        FileResourceProvider fileResourceProvider = new FileResourceProvider(context, logger);
-        return fileResourceProvider.cachedFilePath(url);
     }
 }

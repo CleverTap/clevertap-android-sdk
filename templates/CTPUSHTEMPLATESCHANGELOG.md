@@ -1,5 +1,11 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+TODO - Update Date here
+### Version 1.2.4 (July xx, 2024)
+
+#### New features
+* Removes the cross button from the `Five Icons` push template. The `Five Icons` notification will no more be sticky.
+
 ### Version 1.2.3 (February 21, 2024)
 
 #### New features

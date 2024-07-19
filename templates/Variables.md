@@ -169,13 +169,32 @@ Kotlin:
 > }
 > ```
 
+# Define File Variables
+Clevertap supports File Types for Variables from `v7.0.0+`. Supported file types include but are not limited to images (jpg, jpeg, png, gif), text files, and PDFs.
+
+Using the `defineFileVariable(...)` method.
+
+Java:
+```java
+Var<String> fileVar = cleverTap.defineFileVariable("var_file");
+```
+
+Kotlin:
+```kotlin
+val fileVar: Var<String> = cleverTap.defineFileVariable("var_file")
+```
+
+**Note** : Using the `@Variable` annotation for file type variables is not supported yet.
+
 # Set Up Callbacks
 
 CleverTap Android SDK provides several callbacks for the developer to receive feedback from the SDK. You can use them as per your requirement, using all of them is not mandatory. They are as follows:
 
 - Status of fetch variables request.
 - Change in individual variable value.
-- Initialize all variables or change all variable values
+- Initialize all variables or change all variable values.
+- File for a variable is downloaded and ready.
+- Change in variable value and no download pending.
 
 ## Status of Fetch Variables Request
 
@@ -267,6 +286,73 @@ cleverTap.addOneTimeVariablesChangedCallback(object : VariablesChangedCallback()
 })
 ```
 
+## File for a Variable is downloaded and ready
+
+This individual callback is registered per file variable. It is called when the file associated with the variable is downloaded and ready to be used.
+
+Java:
+```java
+Var<String> fileVar = cleverTap.defineFileVariable("var_file");
+fileVar.addFileReadyHandler(new VariableCallback<String>() {
+    @Override
+    public void onValueChanged(Var<String> variable) {
+        // invoked when file corresponding to this variable is downloaded and ready to be used
+    }
+});
+```
+
+Kotlin:
+```kotlin
+val fileVar: Var<String> = cleverTap.defineFileVariable("var_file")
+fileVar.addFileReadyHandler(object : VariableCallback<String>() {
+    override fun onValueChanged(variable: Var<String>) {
+        // invoked when file corresponding to this variable is downloaded and ready to be used
+    }
+})
+```
+
+## Change in variable value and no downloads pending.
+This global callback registered on the CleverTap instance is called when variable values are changed and the filse associated with it are downloaded and ready to be used.
+
+### Callback triggered each time new values are fetched and downloaded
+Java:
+```java
+cleverTapAPI.onVariablesChangedAndNoDownloadsPending(new VariablesChangedCallback() {
+    @Override
+    public void variablesChanged() {
+        // Will be called each time new values are fetched and download is completed
+    }
+});
+```
+
+Kotlin:
+```kotlin
+cleverTap.onVariablesChangedAndNoDownloadsPending(object : VariablesChangedCallback() {
+    override fun variablesChanged() {
+        // Will be called each time new values are fetched and download is completed
+    }
+})
+```
+
+### Callback triggered only once for when new values are fetched and downloaded 
+Java:
+```java
+cleverTapAPI.onceVariablesChangedAndNoDownloadsPending(new VariablesChangedCallback() {
+    @Override
+    public void variablesChanged() {
+        // Will be called only once when new values are fetched and download is completed
+    }
+});
+```
+
+Kotlin:
+```kotlin
+cleverTap.onceVariablesChangedAndNoDownloadsPending(object : VariablesChangedCallback() {
+    override fun variablesChanged() {
+        // Will be called only once when new values are fetched and download is completed
+    }
+})
+```
 
 
 # Sync Defined Variables

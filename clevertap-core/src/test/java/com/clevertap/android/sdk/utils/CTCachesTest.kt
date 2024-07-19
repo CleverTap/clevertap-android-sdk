@@ -46,27 +46,27 @@ class CTCachesTest {
         val mockImageMemory = mockk<Memory<Bitmap>>()
         val mockGifMemory = mockk<Memory<ByteArray>>()
         val mockFileMemory = mockk<Memory<ByteArray>>()
-        val mockImageLruCache = mockk<LruCache<Pair<Bitmap, File>>>()
-        val mockGifLruCache = mockk<LruCache<Pair<ByteArray, File>>>()
-        val mockFileLruCache = mockk<LruCache<Pair<ByteArray, File>>>()
-        val mockImageFileCache = mockk<FileCache>()
-        val mockGifFileCache = mockk<FileCache>()
-        val mockFileFileCache = mockk<FileCache>()
+        val mockImageInMemoryLruCache = mockk<InMemoryLruCache<Pair<Bitmap, File>>>()
+        val mockGifInMemoryLruCache = mockk<InMemoryLruCache<Pair<ByteArray, File>>>()
+        val mockFileInMemoryLruCache = mockk<InMemoryLruCache<Pair<ByteArray, File>>>()
+        val mockImageDiskMemory = mockk<DiskMemory>()
+        val mockGifDiskMemory = mockk<DiskMemory>()
+        val mockFileDiskMemory = mockk<DiskMemory>()
 
-        every { mockImageMemory.createInMemory() } returns mockImageLruCache
-        every { mockGifMemory.createInMemory() } returns mockGifLruCache
-        every { mockFileMemory.createInMemory() } returns mockFileLruCache
-        every { mockImageMemory.createDiskMemory() } returns mockImageFileCache
-        every { mockGifMemory.createDiskMemory() } returns mockGifFileCache
-        every { mockFileMemory.createDiskMemory() } returns mockFileFileCache
+        every { mockImageMemory.createInMemory() } returns mockImageInMemoryLruCache
+        every { mockGifMemory.createInMemory() } returns mockGifInMemoryLruCache
+        every { mockFileMemory.createInMemory() } returns mockFileInMemoryLruCache
+        every { mockImageMemory.createDiskMemory() } returns mockImageDiskMemory
+        every { mockGifMemory.createDiskMemory() } returns mockGifDiskMemory
+        every { mockFileMemory.createDiskMemory() } returns mockFileDiskMemory
 
         val ctCaches = CTCaches.instance(mockImageMemory, mockGifMemory, mockFileMemory)
 
-        assertEquals(mockImageLruCache, ctCaches.imageCache())
-        assertEquals(mockGifLruCache, ctCaches.gifCache())
-        assertEquals(mockFileLruCache, ctCaches.fileLruCache())
-        assertEquals(mockImageFileCache, ctCaches.imageCacheDisk())
-        assertEquals(mockGifFileCache, ctCaches.gifCacheDisk())
-        assertEquals(mockFileFileCache, ctCaches.fileCacheDisk())
+        assertEquals(mockImageInMemoryLruCache, ctCaches.imageInMemory())
+        assertEquals(mockGifInMemoryLruCache, ctCaches.gifInMemory())
+        assertEquals(mockFileInMemoryLruCache, ctCaches.fileInMemory())
+        assertEquals(mockImageDiskMemory, ctCaches.imageDiskMemory())
+        assertEquals(mockGifDiskMemory, ctCaches.gifDiskMemory())
+        assertEquals(mockFileDiskMemory, ctCaches.fileDiskMemory())
     }
 }

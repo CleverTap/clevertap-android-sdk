@@ -3,7 +3,11 @@ package com.clevertap.android.sdk.inapp.images.memory
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.ILogger
 import java.io.File
-
+/**
+ * A factory class for creating different types of memory objects for storage purposes.
+ *
+ * This class provides methods for creating [InAppGifMemoryV1], [InAppImageMemoryV1], and [FileMemoryV2] objects.
+ */
 class MemoryCreator {
     companion object {
 
@@ -14,10 +18,11 @@ class MemoryCreator {
         private const val FILE_SIZE_MAX_DISK: Long = 5 * 1024
 
         /**
-         * Creates a GifMemory object.
-         * @param diskMemoryLocation The location for disk memory storage.
-         * @param logger The logger for logging purposes.
-         * @return An instance of GifMemory.
+         * Creates a [InAppGifMemoryV1] object for storing GIF images.
+         *
+         * @param diskMemoryLocation The directory on disk for storing GIF images.
+         * @param logger An optional [ILogger] for logging purposes.
+         * @return An instance of [InAppGifMemoryV1].
          */
         fun createInAppGifMemoryV1(diskMemoryLocation: File, logger: ILogger?): Memory<ByteArray> {
             val defaultGifConfig = MemoryConfig(
@@ -30,10 +35,11 @@ class MemoryCreator {
         }
 
         /**
-         * Creates an ImageMemory object.
-         * @param diskMemoryLocation The location on disk for memory storage.
-         * @param logger The logger for logging purposes.
-         * @return An instance of ImageMemory.
+         * Creates an [InAppImageMemoryV1] object for storing bitmap images.
+         *
+         * @param diskMemoryLocation The directory on disk for storing bitmap images.
+         * @param logger An optional [ILogger] for logging purposes.
+         * @return An instance of [InAppImageMemoryV1].
          */
         fun createInAppImageMemoryV1(diskMemoryLocation: File, logger: ILogger?): Memory<Bitmap> {
             val defaultImageConfig = MemoryConfig(
@@ -46,10 +52,11 @@ class MemoryCreator {
         }
 
         /**
-         * Creates a FileMemory object.
-         * @param diskMemoryLocation The location on disk for memory storage.
-         * @param logger The logger for logging purposes.
-         * @return An instance of FileMemory.
+         * Creates a [FileMemoryV2] object for storing all types of file data.
+         *
+         * @param diskMemoryLocation The directory on disk for storing all types of files.
+         * @param logger An optional [ILogger] for logging purposes.
+         * @return An instance of [FileMemoryV2].
          */
         fun createFileMemoryV2(diskMemoryLocation: File, logger: ILogger?): Memory<ByteArray> {
             val defaultFileConfig = MemoryConfig(

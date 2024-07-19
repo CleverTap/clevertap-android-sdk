@@ -5,13 +5,31 @@ import android.graphics.BitmapFactory
 import com.clevertap.android.sdk.inapp.images.hasValidBitmap
 import java.io.ByteArrayOutputStream
 import java.io.File
-
+/**
+ * Represents the types of transformations that can be applied to stored data.
+ *
+ * @param <A> The type of the transformed data.
+ */
 sealed class MemoryDataTransformationType<A> {
+    /**
+     * Transforms data into a [Bitmap] object.
+     */
     object ToBitmap : MemoryDataTransformationType<Bitmap>()
+    /**
+     * Transforms data into a [ByteArray].
+     */
     object ToByteArray : MemoryDataTransformationType<ByteArray>()
+    /**
+     * Transforms data into a [File] object.
+     */
     object ToFile : MemoryDataTransformationType<File>()
 }
 
+/**
+ * Converts a [File] to a [Bitmap] if the file contains a valid bitmap.
+ *
+ * @return The converted [Bitmap], or null if the file is invalid or cannot be decoded.
+ */
 val fileToBitmap: (file: File?) -> Bitmap? = { file ->
     if (file != null && file.hasValidBitmap()) {
         BitmapFactory.decodeFile(file.absolutePath)
@@ -19,9 +37,19 @@ val fileToBitmap: (file: File?) -> Bitmap? = { file ->
         null
     }
 }
+/**
+ * Reads the contents of a [File] into a [ByteArray].
+ *
+ * @return The [ByteArray] containing the file's contents, or null if the file is null.
+ */
 val fileToBytes: (file: File?) -> ByteArray? = { file ->
     file?.readBytes()
 }
+/**
+ * Decodes a [ByteArray] into a [Bitmap].
+ *
+ * @return The decoded [Bitmap], or null if the byte array cannot be decoded.
+ */
 val bytesToBitmap: (bytes: ByteArray) -> Bitmap? = {
     BitmapFactory.decodeByteArray(
         it,
@@ -29,6 +57,11 @@ val bytesToBitmap: (bytes: ByteArray) -> Bitmap? = {
         it.size
     )
 }
+/**
+ * Compresses a [Bitmap] into a [ByteArray] in PNG format.
+ *
+ * @return The compressed [ByteArray], or null if the bitmap is null.
+ */
 val bitmapToBytes: (bitmap: Bitmap?) -> ByteArray? = {
     it?.let {
         val stream = ByteArrayOutputStream()
@@ -36,13 +69,17 @@ val bitmapToBytes: (bitmap: Bitmap?) -> ByteArray? = {
         stream.toByteArray()
     }
 }
-
+/**
+ * An interface for accessing and managing data in memory and on disk.
+ *
+ * @param <T> The type of data being stored.
+ */
 interface MemoryAccessObject<T> {
 
     /**
      * Fetches a value from in-memory cache by key.
      * @param key The key to search for.
-     * @return A pair containing the value and file if found, or null otherwise.
+     * @return A [Pair] containing the value and file if found, or null otherwise.
      */
     fun fetchInMemory(key: String): Pair<T, File>?
 
@@ -65,7 +102,7 @@ interface MemoryAccessObject<T> {
     /**
      * Fetches a file from disk memory by key.
      * @param key The key to search for.
-     * @return The file if found, or null otherwise.
+     * @return The [File] if found, or null otherwise.
      */
     fun fetchDiskMemory(key: String): File?
 
@@ -81,7 +118,7 @@ interface MemoryAccessObject<T> {
      * Saves data to disk memory.
      * @param key The key to save the data under.
      * @param data The data to save as a byte array.
-     * @return The saved file if successful, or null otherwise.
+     * @return The saved [File] if successful, or null otherwise.
      */
     fun saveDiskMemory(key: String, data: ByteArray): File
 
