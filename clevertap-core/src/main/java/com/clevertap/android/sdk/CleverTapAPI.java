@@ -74,6 +74,7 @@ import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.Var;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -1616,21 +1617,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             FirebaseMessaging
                     .getInstance()
                     .getToken()
-                    .addOnCompleteListener
-                            (task -> {
-                                if (!task.isSuccessful()) {
-                                    Logger.v(LOG_TAG,
-                                            FCM_LOG_TAG + "FCM token using googleservices.json failed",
-                                            task.getException());
-                                    requestTokenListener.onDevicePushToken(null, FCM);
-                                    return;
-                                }
-                                String token = task.getResult() != null ? task.getResult() : null;
+                    .addOnCompleteListener(new OnCompleteListener<String>() {
+                        @Override
+                        public void onComplete(@NonNull com.google.android.gms.tasks.Task<String> task) {
+                            if (!task.isSuccessful()) {
                                 Logger.v(LOG_TAG,
-                                        FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
-                                requestTokenListener.onDevicePushToken(token, FCM);
+                                        FCM_LOG_TAG + "FCM token using googleservices.json failed",
+                                        task.getException());
+                                requestTokenListener.onDevicePushToken(null, FCM);
+                                return;
                             }
-                            );
+                            String token = task.getResult() != null ? task.getResult() : null;
+                            Logger.v(LOG_TAG,
+                                    FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
+                            requestTokenListener.onDevicePushToken(token, FCM);
+                        }
+                    });
+
         } catch (Throwable t) {
             Logger.v(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t);
             requestTokenListener.onDevicePushToken(null, FCM);

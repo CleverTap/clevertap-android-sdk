@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -206,6 +207,80 @@ class FilePreloaderCoroutineTest {
         assertEquals(listOf("q"), failureUrls)
         assertEquals(listOf("p", "q", "r"), startedUrls)
         assertEquals(mapOf("p" to true, "q" to false, "r" to true), finishedStatus)
+    }
+
+    @Test
+    fun `check results in case of timeout along with failures`() = testScheduler.run {
+
+        // Prepare data - setup, Given :
+        val filePreloaderCoroutineWithTimeout = FilePreloaderCoroutine(
+            fileResourceProvider = mFileResourceProvider,
+            logger = logger,
+            dispatchers = dispatchers,
+            timeoutForPreload = 100 // 100ms
+        )
+
+        val urls = buildList {
+            add("p" to CtCacheType.FILES)
+            add("q" to CtCacheType.FILES)
+            add("r" to CtCacheType.FILES)
+            add("a" to CtCacheType.IMAGE)
+            add("b" to CtCacheType.IMAGE)
+            add("c" to CtCacheType.IMAGE)
+            add("m" to CtCacheType.GIF)
+            add("n" to CtCacheType.GIF)
+            add("o" to CtCacheType.GIF)
+        }
+
+        every { mFileResourceProvider.fetchFile("p") } returns byteArray
+        every { mFileResourceProvider.fetchFile("q") } returns byteArray
+        every { mFileResourceProvider.fetchFile("r") } returns null // Simulate failure for "r"
+        every { mFileResourceProvider.fetchInAppImageV1("a") } returns mockBitmap
+        every { mFileResourceProvider.fetchInAppImageV1("b") } returns mockBitmap
+        every { mFileResourceProvider.fetchInAppImageV1("c") } returns null
+        every { mFileResourceProvider.fetchInAppGifV1("m") } returns byteArray
+        every { mFileResourceProvider.fetchInAppGifV1("n") } returns byteArray
+        every { mFileResourceProvider.fetchInAppGifV1("o") } returns null
+
+        val successfulExpected = mutableSetOf("p", "q", "a", "b", "m", "n") // expected success
+        val failedExpected = mutableSetOf("c", "r", "o") // expected failures
+        val startedExpected = mutableSetOf("p", "q", "r", "a", "b", "c", "m", "n", "o")
+        val finishedExpected = mapOf(
+            "p" to true,
+            "q" to true,
+            "r" to false,
+            "a" to true,
+            "b" to true,
+            "c" to false,
+            "m" to true,
+            "n" to true,
+            "o" to false,
+        ) // expected final map of statuses
+
+        // Prep containers to gather results.
+        val successUrls = mutableSetOf<String>()
+        val failedUrls = mutableSetOf<String>()
+        val completedUrls = mutableSetOf<String>()
+        val finishedStatus = mutableMapOf<String, Boolean>()
+
+        // Function to test :
+        filePreloaderCoroutineWithTimeout.preloadFilesAndCache(
+            urlMetas = urls,
+            successBlock = { url -> successUrls.add(url.first) },
+            failureBlock = { url -> failedUrls.add(url.first) },
+            startedBlock = { url -> completedUrls.add(url.first) },
+            preloadFinished = { status -> finishedStatus.putAll(status) }
+        )
+        advanceUntilIdle()
+
+        // Assertions :
+        assertThat(successfulExpected).containsExactlyElementsIn(successUrls)
+        assertThat(failedExpected).containsExactlyElementsIn(failedUrls)
+        assertThat(startedExpected).containsExactlyElementsIn(completedUrls)
+        assertEquals(
+            expected = finishedExpected,
+            actual = finishedStatus
+        )
     }
 }
 

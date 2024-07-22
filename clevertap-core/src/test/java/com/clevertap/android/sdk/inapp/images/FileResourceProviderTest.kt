@@ -199,7 +199,7 @@ class FileResourceProviderTest {
     fun `fetchFile fetches and caches file if not cached`() {
         val mockSavedFile = mockk<File>()
         val url = "https://example.com/document.pdf"
-        val mockDownloadedFile = DownloadedBitmap(
+        val downloadSuccess = DownloadedBitmap(
             bitmap = null, // Files don't have Bitmaps
             status = DownloadedBitmap.Status.SUCCESS,
             downloadTime = 0L,
@@ -209,15 +209,35 @@ class FileResourceProviderTest {
             every { it.fetchInMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns null
             every { it.fetchDiskMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns null
         }
-        every { mockFileFetchApi.makeApiCallForFile(Pair(url, CtCacheType.FILES)) } returns mockDownloadedFile
+        every { mockFileFetchApi.makeApiCallForFile(Pair(url, CtCacheType.FILES)) } returns downloadSuccess
         every { mockFileMAO.saveDiskMemory(url, any()) } returns mockSavedFile
         every { mockFileMAO.saveInMemory(url, any()) } returns true
 
         val result = fileResourceProvider.fetchFile(url)
 
-        assertEquals(mockDownloadedFile.bytes, result) // Verify file was fetched
-        verify { mockFileMAO.saveDiskMemory(url, mockDownloadedFile.bytes!!) }
-        verify { mockFileMAO.saveInMemory(url, Pair(mockDownloadedFile.bytes!!, mockSavedFile)) } // Verify caching
+        assertEquals(downloadSuccess.bytes, result) // Verify file was fetched
+        verify { mockFileMAO.saveDiskMemory(url, downloadSuccess.bytes!!) }
+        verify { mockFileMAO.saveInMemory(url, Pair(downloadSuccess.bytes!!, mockSavedFile)) } // Verify caching
+    }
+
+    @Test
+    fun `fetchFile does not caches file if it doesn't exist in cache and api call fails as well`() {
+        val url = "https://example.com/document.pdf"
+        val downloadFailed = DownloadedBitmap(
+            bitmap = null, // Files don't have Bitmaps
+            status = DownloadedBitmap.Status.DOWNLOAD_FAILED,
+            downloadTime = 0L,
+            bytes = null
+        )
+        mapOfMAO[FILES]!!.forEach {
+            every { it.fetchInMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns null
+            every { it.fetchDiskMemoryAndTransform(url, MemoryDataTransformationType.ToByteArray) } returns null
+        }
+        every { mockFileFetchApi.makeApiCallForFile(Pair(url, CtCacheType.FILES)) } returns downloadFailed
+
+        val result = fileResourceProvider.fetchFile(url)
+
+        assertEquals(expected = null, actual = result) // Verify file was null
     }
 
     @Test
