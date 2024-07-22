@@ -74,7 +74,6 @@ import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.Var;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -154,7 +153,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static NotificationHandler sSignedCallNotificationHandler;
 
-    private static HashMap<String,NotificationRenderedListener> sNotificationRenderedListenerMap = new HashMap<>();
+    private static final HashMap<String,NotificationRenderedListener> sNotificationRenderedListenerMap = new HashMap<>();
 
     private final Context context;
 
@@ -202,6 +201,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param token             CleverTap Account Token
      * @param proxyDomain       CleverTap Proxy Domain
      * @param spikyProxyDomain  CleverTap Spiky Proxy Domain
+     * @noinspection unused
      */
     public static void changeCredentials(String accountID, String token, String proxyDomain, String spikyProxyDomain) {
         if (defaultConfig != null) {
@@ -376,26 +376,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
-                task.execute("creatingNotificationChannel", new Callable<Void>() {
-                    @Override
-                    public Void call() {
-                        NotificationManager notificationManager = (NotificationManager) context
-                                .getSystemService(NOTIFICATION_SERVICE);
-                        if (notificationManager == null) {
-                            return null;
-                        }
-                        NotificationChannel notificationChannel = new NotificationChannel(channelId,
-                                channelName,
-                                importance);
-                        notificationChannel.setDescription(channelDescription);
-                        notificationChannel.setGroup(groupId);
-                        notificationChannel.setShowBadge(showBadge);
-                        notificationManager.createNotificationChannel(notificationChannel);
-                        instance.getConfigLogger().info(instance.getAccountId(),
-                                "Notification channel " + channelName.toString() + " has been created");
-
+                task.execute("creatingNotificationChannel", () -> {
+                    NotificationManager notificationManager = (NotificationManager) context
+                            .getSystemService(NOTIFICATION_SERVICE);
+                    if (notificationManager == null) {
                         return null;
                     }
+                    NotificationChannel notificationChannel = new NotificationChannel(channelId,
+                            channelName,
+                            importance);
+                    notificationChannel.setDescription(channelDescription);
+                    notificationChannel.setGroup(groupId);
+                    notificationChannel.setShowBadge(showBadge);
+                    notificationManager.createNotificationChannel(notificationChannel);
+                    instance.getConfigLogger().info(instance.getAccountId(),
+                            "Notification channel " + channelName.toString() + " has been created");
+
+                    return null;
                 });
             }
         } catch (Throwable t) {
@@ -431,50 +428,47 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
-                task.execute("createNotificationChannel", new Callable<Void>() {
-                    @Override
-                    public Void call() {
-                        NotificationManager notificationManager = (NotificationManager) context
-                                .getSystemService(NOTIFICATION_SERVICE);
-                        if (notificationManager == null) {
-                            return null;
-                        }
-
-                        String soundfile = "";
-                        Uri soundUri = null;
-
-                        if (!sound.isEmpty()) {
-                            if (sound.contains(".mp3") || sound.contains(".ogg") || sound.contains(".wav")) {
-                                soundfile = sound.substring(0, (sound.length() - 4));
-                            } else {
-                                instance.getConfigLogger()
-                                        .debug(instance.getAccountId(), "Sound file name not supported");
-                            }
-                            if (!soundfile.isEmpty()) {
-                                soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context
-                                        .getPackageName() + "/raw/" + soundfile);
-                            }
-
-                        }
-
-                        NotificationChannel notificationChannel = new NotificationChannel(channelId,
-                                channelName,
-                                importance);
-                        notificationChannel.setDescription(channelDescription);
-                        notificationChannel.setShowBadge(showBadge);
-                        if (soundUri != null) {
-                            notificationChannel.setSound(soundUri,
-                                    new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                                            .build());
-                        } else {
-                            instance.getConfigLogger().debug(instance.getAccountId(),
-                                    "Sound file not found, notification channel will be created without custom sound");
-                        }
-                        notificationManager.createNotificationChannel(notificationChannel);
-                        instance.getConfigLogger().info(instance.getAccountId(),
-                                "Notification channel " + channelName.toString() + " has been created");
+                task.execute("createNotificationChannel", () -> {
+                    NotificationManager notificationManager = (NotificationManager) context
+                            .getSystemService(NOTIFICATION_SERVICE);
+                    if (notificationManager == null) {
                         return null;
                     }
+
+                    String soundfile = "";
+                    Uri soundUri = null;
+
+                    if (!sound.isEmpty()) {
+                        if (sound.contains(".mp3") || sound.contains(".ogg") || sound.contains(".wav")) {
+                            soundfile = sound.substring(0, (sound.length() - 4));
+                        } else {
+                            instance.getConfigLogger()
+                                    .debug(instance.getAccountId(), "Sound file name not supported");
+                        }
+                        if (!soundfile.isEmpty()) {
+                            soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context
+                                    .getPackageName() + "/raw/" + soundfile);
+                        }
+
+                    }
+
+                    NotificationChannel notificationChannel = new NotificationChannel(channelId,
+                            channelName,
+                            importance);
+                    notificationChannel.setDescription(channelDescription);
+                    notificationChannel.setShowBadge(showBadge);
+                    if (soundUri != null) {
+                        notificationChannel.setSound(soundUri,
+                                new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                                        .build());
+                    } else {
+                        instance.getConfigLogger().debug(instance.getAccountId(),
+                                "Sound file not found, notification channel will be created without custom sound");
+                    }
+                    notificationManager.createNotificationChannel(notificationChannel);
+                    instance.getConfigLogger().info(instance.getAccountId(),
+                            "Notification channel " + channelName.toString() + " has been created");
+                    return null;
                 });
             }
         } catch (Throwable t) {
@@ -513,50 +507,47 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
-                task.execute("creatingNotificationChannel", new Callable<Void>() {
-                    @Override
-                    public Void call() {
-                        NotificationManager notificationManager = (NotificationManager) context
-                                .getSystemService(NOTIFICATION_SERVICE);
-                        if (notificationManager == null) {
-                            return null;
-                        }
-
-                        String soundfile = "";
-                        Uri soundUri = null;
-
-                        if (!sound.isEmpty()) {
-                            if (sound.contains(".mp3") || sound.contains(".ogg") || sound.contains(".wav")) {
-                                soundfile = sound.substring(0, (sound.length() - 4));
-                            } else {
-                                instance.getConfigLogger()
-                                        .debug(instance.getAccountId(), "Sound file name not supported");
-                            }
-                            if (!soundfile.isEmpty()) {
-                                soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context
-                                        .getPackageName() + "/raw/" + soundfile);
-                            }
-
-                        }
-                        NotificationChannel notificationChannel = new NotificationChannel(channelId,
-                                channelName,
-                                importance);
-                        notificationChannel.setDescription(channelDescription);
-                        notificationChannel.setGroup(groupId);
-                        notificationChannel.setShowBadge(showBadge);
-                        if (soundUri != null) {
-                            notificationChannel.setSound(soundUri,
-                                    new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                                            .build());
-                        } else {
-                            instance.getConfigLogger().debug(instance.getAccountId(),
-                                    "Sound file not found, notification channel will be created without custom sound");
-                        }
-                        notificationManager.createNotificationChannel(notificationChannel);
-                        instance.getConfigLogger().info(instance.getAccountId(),
-                                "Notification channel " + channelName.toString() + " has been created");
+                task.execute("creatingNotificationChannel", () -> {
+                    NotificationManager notificationManager = (NotificationManager) context
+                            .getSystemService(NOTIFICATION_SERVICE);
+                    if (notificationManager == null) {
                         return null;
                     }
+
+                    String soundfile = "";
+                    Uri soundUri = null;
+
+                    if (!sound.isEmpty()) {
+                        if (sound.contains(".mp3") || sound.contains(".ogg") || sound.contains(".wav")) {
+                            soundfile = sound.substring(0, (sound.length() - 4));
+                        } else {
+                            instance.getConfigLogger()
+                                    .debug(instance.getAccountId(), "Sound file name not supported");
+                        }
+                        if (!soundfile.isEmpty()) {
+                            soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context
+                                    .getPackageName() + "/raw/" + soundfile);
+                        }
+
+                    }
+                    NotificationChannel notificationChannel = new NotificationChannel(channelId,
+                            channelName,
+                            importance);
+                    notificationChannel.setDescription(channelDescription);
+                    notificationChannel.setGroup(groupId);
+                    notificationChannel.setShowBadge(showBadge);
+                    if (soundUri != null) {
+                        notificationChannel.setSound(soundUri,
+                                new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                                        .build());
+                    } else {
+                        instance.getConfigLogger().debug(instance.getAccountId(),
+                                "Sound file not found, notification channel will be created without custom sound");
+                    }
+                    notificationManager.createNotificationChannel(notificationChannel);
+                    instance.getConfigLogger().info(instance.getAccountId(),
+                            "Notification channel " + channelName.toString() + " has been created");
+                    return null;
                 });
             }
         } catch (Throwable t) {
@@ -587,21 +578,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
-                task.execute("creatingNotificationChannelGroup", new Callable<Void>() {
-                    @Override
-                    public Void call() {
-                        NotificationManager notificationManager = (NotificationManager) context
-                                .getSystemService(NOTIFICATION_SERVICE);
-                        if (notificationManager == null) {
-                            return null;
-                        }
-                        notificationManager
-                                .createNotificationChannelGroup(
-                                        new NotificationChannelGroup(groupId, groupName));
-                        instance.getConfigLogger().info(instance.getAccountId(),
-                                "Notification channel group " + groupName.toString() + " has been created");
+                task.execute("creatingNotificationChannelGroup", () -> {
+                    NotificationManager notificationManager = (NotificationManager) context
+                            .getSystemService(NOTIFICATION_SERVICE);
+                    if (notificationManager == null) {
                         return null;
                     }
+                    notificationManager
+                            .createNotificationChannelGroup(
+                                    new NotificationChannelGroup(groupId, groupName));
+                    instance.getConfigLogger().info(instance.getAccountId(),
+                            "Notification channel group " + groupName.toString() + " has been created");
+                    return null;
                 });
             }
         } catch (Throwable t) {
@@ -630,19 +618,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
-                task.execute("deletingNotificationChannel", new Callable<Void>() {
-                    @Override
-                    public Void call() {
-                        NotificationManager notificationManager = (NotificationManager) context
-                                .getSystemService(NOTIFICATION_SERVICE);
-                        if (notificationManager == null) {
-                            return null;
-                        }
-                        notificationManager.deleteNotificationChannel(channelId);
-                        instance.getConfigLogger().info(instance.getAccountId(),
-                                "Notification channel " + channelId + " has been deleted");
+                task.execute("deletingNotificationChannel", () -> {
+                    NotificationManager notificationManager = (NotificationManager) context
+                            .getSystemService(NOTIFICATION_SERVICE);
+                    if (notificationManager == null) {
                         return null;
                     }
+                    notificationManager.deleteNotificationChannel(channelId);
+                    instance.getConfigLogger().info(instance.getAccountId(),
+                            "Notification channel " + channelId + " has been deleted");
+                    return null;
                 });
             }
         } catch (Throwable t) {
@@ -670,21 +655,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
-                task.execute("deletingNotificationChannelGroup", new Callable<Void>() {
-                    @Override
-                    public Void call() {
+                task.execute("deletingNotificationChannelGroup", () -> {
 
-                        NotificationManager notificationManager = (NotificationManager) context
-                                .getSystemService(NOTIFICATION_SERVICE);
-                        if (notificationManager == null) {
-                            return null;
-                        }
-                        notificationManager.deleteNotificationChannelGroup(groupId);
-                        instance.getConfigLogger().info(instance.getAccountId(),
-                                "Notification channel group " + groupId + " has been deleted");
-
+                    NotificationManager notificationManager = (NotificationManager) context
+                            .getSystemService(NOTIFICATION_SERVICE);
+                    if (notificationManager == null) {
                         return null;
                     }
+                    notificationManager.deleteNotificationChannelGroup(groupId);
+                    instance.getConfigLogger().info(instance.getAccountId(),
+                            "Notification channel group " + groupId + " has been deleted");
+
+                    return null;
                 });
             }
         } catch (Throwable t) {
@@ -888,7 +870,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public static CleverTapAPI instanceWithConfig(Context context, @NonNull CleverTapInstanceConfig config,
             String cleverTapID) {
-        //noinspection Constant Conditions
+        //noinspection ConstantValue
         if (config == null) {
             Logger.v("CleverTapInstanceConfig cannot be null");
             return null;
@@ -903,14 +885,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             instances.put(config.getAccountId(), instance);
             final CleverTapAPI finalInstance = instance;
             Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
-            task.execute("recordDeviceIDErrors", new Callable<Void>() {
-                @Override
-                public Void call() {
-                    if (finalInstance.getCleverTapID() != null) {
-                        finalInstance.coreState.getLoginController().recordDeviceIDErrors();
-                    }
-                    return null;
+            task.execute("recordDeviceIDErrors", () -> {
+                if (finalInstance.getCleverTapID() != null) {
+                    finalInstance.coreState.getLoginController().recordDeviceIDErrors();
                 }
+                return null;
             });
         } else if (instance.isErrorDeviceId() && instance.getConfig().getEnableCustomCleverTapId() && Utils
                 .validateCTID(cleverTapID)) {
@@ -1074,6 +1053,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * }
      * </pre>
      * @param producer The {@link TemplateProducer} that would create a set of templates
+     * @noinspection unused
      */
     public static synchronized void registerCustomInAppTemplates(TemplateProducer producer) {
         TemplatesManager.register(producer);
@@ -1082,6 +1062,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Retrieve a {@link CustomTemplateContext} for a template that is currently displaying. If the provided template
      * name is not of a currently active template this method returns <code>null</code>.
+     * @noinspection unused
      */
     @Nullable
     public CustomTemplateContext getActiveContextForTemplate(@NonNull String templateName) {
@@ -1096,6 +1077,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * backend. Use this method to transfer template definitions from the SDK to the CT dashboard. This method can
      * only be called from a debug build of the application and the current logged-in user must be marked as a
      * test profile through the web dashboard.
+     * @noinspection unused
      */
     public void syncRegisteredInAppTemplates() {
         if (!isDevelopmentMode()) {
@@ -1182,14 +1164,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "CoreState is set");
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("CleverTapAPI#initializeDeviceInfo", new Callable<Void>() {
-            @Override
-            public Void call() {
-                if (config.isDefaultInstance()) {
-                    manifestAsyncValidation();
-                }
-                return null;
+        task.execute("CleverTapAPI#initializeDeviceInfo", () -> {
+            if (config.isDefaultInstance()) {
+                manifestAsyncValidation();
             }
+            return null;
         });
 
         int now = Utils.getNow();
@@ -1198,28 +1177,22 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("setStatesAsync", new Callable<Void>() {
-            @Override
-            public Void call() {
-                CleverTapAPI.this.coreState.getSessionManager().setLastVisitTime();
-                CleverTapAPI.this.coreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
-                CleverTapAPI.this.coreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
-                return null;
-            }
+        task.execute("setStatesAsync", () -> {
+            CleverTapAPI.this.coreState.getSessionManager().setLastVisitTime();
+            CleverTapAPI.this.coreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
+            CleverTapAPI.this.coreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
+            return null;
         });
 
         task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("saveConfigtoSharedPrefs", new Callable<Void>() {
-            @Override
-            public Void call() {
-                String configJson = config.toJSONString();
-                if (configJson == null) {
-                    Logger.v("Unable to save config to SharedPrefs, config Json is null");
-                    return null;
-                }
-                StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, "instance"), configJson);
+        task.execute("saveConfigtoSharedPrefs", () -> {
+            String configJson = config.toJSONString();
+            if (configJson == null) {
+                Logger.v("Unable to save config to SharedPrefs, config Json is null");
                 return null;
             }
+            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, "instance"), configJson);
+            return null;
         });
 
         Logger.i("CleverTap SDK initialized with accountId: " + config.getAccountId() + " accountToken: " + config
@@ -1318,6 +1291,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Suspends the display of InApp Notifications and discards any new InApp Notifications to be shown
      * after this method is called.
      * The InApp Notifications will be displayed only once resumeInAppNotifications() is called.
+     * @noinspection unused
      */
     public void discardInAppNotifications() {
         if (!getCoreState().getConfig().isAnalyticsOnly()) {
@@ -1382,6 +1356,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * This is to be used only by clevertap-signedcall-sdk
      *
      * @param scDomainListener - the {@link SCDomainListener} instance
+     * @noinspection unused
      */
     @RestrictTo(Scope.LIBRARY_GROUP)
     @WorkerThread
@@ -1469,6 +1444,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the CTPushAmpListener object
      *
      * @return The {@link CTPushAmpListener} object
+     * @noinspection unused
      */
     @SuppressWarnings("WeakerAccess")
     public CTPushAmpListener getCTPushAmpListener() {
@@ -1489,6 +1465,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the CTPushNotificationListener object
      *
      * @return The {@link CTPushNotificationListener} object
+     * @noinspection unused
      */
     @SuppressWarnings("WeakerAccess")
     public CTPushNotificationListener getCTPushNotificationListener() {
@@ -1542,7 +1519,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * This method is used to decrement the given value
-     *
      * Number should be in positive range
      *
      * @param key   String
@@ -1641,22 +1617,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                     .getInstance()
                     .getToken()
                     .addOnCompleteListener
-                            (new OnCompleteListener<String>() {
-                                 @Override
-                                 public void onComplete(@NonNull final com.google.android.gms.tasks.Task<String> task) {
-                                     if (!task.isSuccessful()) {
-                                         Logger.v(LOG_TAG,
-                                                 FCM_LOG_TAG + "FCM token using googleservices.json failed",
-                                                 task.getException());
-                                         requestTokenListener.onDevicePushToken(null, FCM);
-                                         return;
-                                     }
-                                     String token = task.getResult() != null ? task.getResult() : null;
-                                     Logger.v(LOG_TAG,
-                                             FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
-                                     requestTokenListener.onDevicePushToken(token, FCM);
-                                 }
-                             }
+                            (task -> {
+                                if (!task.isSuccessful()) {
+                                    Logger.v(LOG_TAG,
+                                            FCM_LOG_TAG + "FCM token using googleservices.json failed",
+                                            task.getException());
+                                    requestTokenListener.onDevicePushToken(null, FCM);
+                                    return;
+                                }
+                                String token = task.getResult() != null ? task.getResult() : null;
+                                Logger.v(LOG_TAG,
+                                        FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
+                                requestTokenListener.onDevicePushToken(token, FCM);
+                            }
                             );
         } catch (Throwable t) {
             Logger.v(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t);
@@ -1905,6 +1878,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Returns the token for a particular push type
+     * @noinspection unused
      */
     public String getPushToken(@NonNull PushType pushType) {
         return coreState.getPushProviders().getCachedToken(pushType);
@@ -1924,6 +1898,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the SyncListener object
      *
      * @return The {@link SyncListener} object
+     * @noinspection unused
      */
     @SuppressWarnings("WeakerAccess")
     public SyncListener getSyncListener() {
@@ -2081,18 +2056,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @Override
     public void messageDidShow(CTInboxActivity ctInboxActivity, final CTInboxMessage inboxMessage, final Bundle data) {
         Task<Void> task = CTExecutorFactory.executors(coreState.getConfig()).postAsyncSafelyTask();
-        task.execute("handleMessageDidShow", new Callable<Void>() {
-            @Override
-            public Void call() {
-                Logger.d("CleverTapAPI:messageDidShow() called  in async with: messageId = [" + inboxMessage.getMessageId() + "]");
+        task.execute("handleMessageDidShow", () -> {
+            Logger.d("CleverTapAPI:messageDidShow() called  in async with: messageId = [" + inboxMessage.getMessageId() + "]");
 
-                CTInboxMessage message = getInboxMessageForId(inboxMessage.getMessageId());
-                if (!message.isRead()) {
-                    markReadInboxMessage(inboxMessage);
-                    coreState.getAnalyticsManager().pushInboxMessageStateEvent(false, inboxMessage, data);
-                }
-                return null;
+            CTInboxMessage message = getInboxMessageForId(inboxMessage.getMessageId());
+            if (!message.isRead()) {
+                markReadInboxMessage(inboxMessage);
+                coreState.getAnalyticsManager().pushInboxMessageStateEvent(false, inboxMessage, data);
             }
+            return null;
         });
     }
 
@@ -2260,7 +2232,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushEvent(String eventName) {
-        if (eventName == null || eventName.trim().equals("")) {
+        if (eventName == null || eventName.trim().isEmpty()) {
             return;
         }
         pushEvent(eventName, null);
@@ -2503,13 +2475,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Resumes display of InApp Notifications.
-     *
+     * <p>
      * If suspendInAppNotifications() was called previously, calling this method will instantly show
      * all queued InApp Notifications and also resume InApp Notifications on events raised after this
      * method is called.
-     *
+     * <p>
      * If discardInAppNotifications() was called previously, calling this method will only resume
      * InApp Notifications on events raised after this method is called.
+     * @noinspection unused
      */
     public void resumeInAppNotifications() {
         if (!getCoreState().getConfig().isAnalyticsOnly()) {
@@ -2530,9 +2503,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * This method is used to increment the given value
-     *
-     * Number should be in positive range
+     * This method is used to increment the given value.
+     * <p>
+     * Number should be in positive range.
      *
      * @param key   String
      * @param value Number
@@ -2688,32 +2661,29 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void setOptOut(boolean userOptOut) {
         final boolean enable = userOptOut;
         Task<Void> task = CTExecutorFactory.executors(coreState.getConfig()).postAsyncSafelyTask();
-        task.execute("setOptOut", new Callable<Void>() {
-            @Override
-            public Void call() {
-                // generate the data for a profile push to alert the server to the optOut state change
-                HashMap<String, Object> optOutMap = new HashMap<>();
-                optOutMap.put(Constants.CLEVERTAP_OPTOUT, enable);
+        task.execute("setOptOut", () -> {
+            // generate the data for a profile push to alert the server to the optOut state change
+            HashMap<String, Object> optOutMap = new HashMap<>();
+            optOutMap.put(Constants.CLEVERTAP_OPTOUT, enable);
 
-                // determine order of operations depending on enabled/disabled
-                if (enable) {  // if opting out first push profile event then set the flag
-                    pushProfile(optOutMap);
-                    coreState.getCoreMetaData().setCurrentUserOptedOut(true);
-                } else {  // if opting back in first reset the flag to false then push the profile event
-                    coreState.getCoreMetaData().setCurrentUserOptedOut(false);
-                    pushProfile(optOutMap);
-                }
-                // persist the new optOut state
-                String key = coreState.getDeviceInfo().optOutKey();
-                if (key == null) {
-                    getConfigLogger()
-                            .verbose(getAccountId(), "Unable to persist user OptOut state, storage key is null");
-                    return null;
-                }
-                StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(getConfig(), key), enable);
-                getConfigLogger().verbose(getAccountId(), "Set current user OptOut state to: " + enable);
+            // determine order of operations depending on enabled/disabled
+            if (enable) {  // if opting out first push profile event then set the flag
+                pushProfile(optOutMap);
+                coreState.getCoreMetaData().setCurrentUserOptedOut(true);
+            } else {  // if opting back in first reset the flag to false then push the profile event
+                coreState.getCoreMetaData().setCurrentUserOptedOut(false);
+                pushProfile(optOutMap);
+            }
+            // persist the new optOut state
+            String key = coreState.getDeviceInfo().optOutKey();
+            if (key == null) {
+                getConfigLogger()
+                        .verbose(getAccountId(), "Unable to persist user OptOut state, storage key is null");
                 return null;
             }
+            StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(getConfig(), key), enable);
+            getConfigLogger().verbose(getAccountId(), "Set current user OptOut state to: " + enable);
+            return null;
         });
     }
 
@@ -2787,6 +2757,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Suspends display of InApp Notifications.
      * The InApp Notifications are queued once this method is called
      * and will be displayed once resumeInAppNotifications() is called.
+     * @noinspection unused
      */
     public void suspendInAppNotifications() {
         if (!getCoreState().getConfig().isAnalyticsOnly()) {
@@ -2800,11 +2771,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    /** @noinspection unused*/
     @RestrictTo(Scope.LIBRARY_GROUP)
     public int getCustomSdkVersion(String customSdkName) {
         return coreState.getCoreMetaData().getCustomSdkVersion(customSdkName);
     }
 
+    /** @noinspection unused*/
     @RestrictTo(Scope.LIBRARY_GROUP)
     public void setCustomSdkVersion(String customSdkName,int customSdkVersion) {
         coreState.getCoreMetaData().setCustomSdkVersion(customSdkName,customSdkVersion);
@@ -2822,7 +2795,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         StoreRegistry storeRegistry = coreState.getStoreRegistry();
-        DeviceInfo deviceInfo = coreState.getDeviceInfo();
         CryptHandler cryptHandler = coreState.getCryptHandler();
         StoreProvider storeProvider = StoreProvider.getInstance();
 
@@ -2842,9 +2814,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             coreState.getCallbackManager().addChangeUserCallback(impStore);
         }
 
-        /**
-         * Reinitialising InAppFCManager with device id, if it's null
-         * during first initialisation from CleverTapFactory.getCoreState()
+        /*
+          Reinitialising InAppFCManager with device id, if it's null
+          during first initialisation from CleverTapFactory.getCoreState()
          */
         if (coreState.getControllerManager().getInAppFCManager() == null) {
             getConfigLogger().verbose(accountId + ":async_deviceID",
@@ -2855,9 +2827,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         //todo : replace with variables
-        /**
-         * Reinitialising product config & Feature Flag controllers with device id, if it's null
-         * during first initialisation from CleverTapFactory.getCoreState()
+        /*
+          Reinitialising product config & Feature Flag controllers with device id, if it's null
+          during first initialisation from CleverTapFactory.getCoreState()
          */
         CTFeatureFlagsController ctFeatureFlagsController = coreState.getControllerManager()
                 .getCTFeatureFlagsController();
@@ -2898,13 +2870,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     //Run manifest validation in async
     private void manifestAsyncValidation() {
         Task<Void> task = CTExecutorFactory.executors(coreState.getConfig()).postAsyncSafelyTask();
-        task.execute("Manifest Validation", new Callable<Void>() {
-            @Override
-            public Void call() {
-                ManifestValidator
-                        .validate(context, coreState.getDeviceInfo(), coreState.getPushProviders());
-                return null;
-            }
+        task.execute("Manifest Validation", () -> {
+            ManifestValidator
+                    .validate(context, coreState.getDeviceInfo(), coreState.getPushProviders());
+            return null;
         });
     }
 
@@ -2964,7 +2933,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                             && Constants.WZRK_FROM.equals(notification.get(Constants.WZRK_FROM_KEY)));
                     if (alreadyProcessedByCleverTap) {
                         Logger.v("ActivityLifecycleCallback: Notification Clicked already processed for "
-                                + notification.toString() + ", dropping duplicate.");
+                                + notification + ", dropping duplicate.");
                     }
                     if (notification.containsKey(Constants.WZRK_ACCT_ID_KEY)) {
                         _accountId = (String) notification.get(Constants.WZRK_ACCT_ID_KEY);
@@ -3066,10 +3035,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
         CleverTapInstanceConfig defaultInstanceConfig = CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
 
-        if (proxyDomain != null && proxyDomain.trim().length() > 0) {
+        if (proxyDomain != null && !proxyDomain.trim().isEmpty()) {
             defaultInstanceConfig.setProxyDomain(proxyDomain);
         }
-        if (spikyProxyDomain != null && spikyProxyDomain.trim().length() > 0) {
+        if (spikyProxyDomain != null && !spikyProxyDomain.trim().isEmpty()) {
             defaultInstanceConfig.setSpikyProxyDomain(spikyProxyDomain);
         }
         return defaultInstanceConfig;
@@ -3093,6 +3062,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         sNotificationHandler = notificationHandler;
     }
 
+    /** @noinspection unused*/
     public static void setSignedCallNotificationHandler(NotificationHandler notificationHandler) {
         sSignedCallNotificationHandler = notificationHandler;
     }
@@ -3122,6 +3092,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param onInitCleverTapIDListener The same listener instance passed to
      *                                  {@link #getCleverTapID(OnInitCleverTapIDListener)} that should be removed.
+     * @noinspection unused
      */
     public void removeCleverTapIDListener(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
         if (coreState != null && coreState.getCallbackManager() != null) {
@@ -3139,23 +3110,20 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         try {
             Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
             future = task.submit("CleverTapAPI#renderPushNotification",
-                    new Callable<Void>() {
-                        @Override
-                        public Void call() {
-                            synchronized (coreState.getPushProviders().getPushRenderingLock()) {
-                                coreState.getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
+                    () -> {
+                        synchronized (coreState.getPushProviders().getPushRenderingLock()) {
+                            coreState.getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
 
-                                if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
-                                    coreState.getPushProviders()
-                                            ._createNotification(context, extras,
-                                                    extras.getInt(Constants.PT_NOTIF_ID));
-                                } else {
-                                    coreState.getPushProviders()
-                                            ._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
-                                }
+                            if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
+                                coreState.getPushProviders()
+                                        ._createNotification(context, extras,
+                                                extras.getInt(Constants.PT_NOTIF_ID));
+                            } else {
+                                coreState.getPushProviders()
+                                        ._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
                             }
-                            return null;
                         }
+                        return null;
                     });
         } catch (Throwable t) {
             config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
@@ -3206,6 +3174,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
      *      Note: This method must be called on background thread.
      *</p>
+     * @noinspection unused
      */
     public static @Nullable Bitmap getNotificationBitmapWithTimeoutAndSize(
             final Context context, final Bundle bundle, String bitmapSrcUrl,
@@ -3265,6 +3234,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
      * Note: This method must be called on background thread.
      * </p>
+     * @noinspection unused
      */
     public static @Nullable Bitmap getNotificationBitmapWithTimeout(
             final Context context, final Bundle bundle, String bitmapSrcUrl,
@@ -3330,6 +3300,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Parses the @Variable annotated static fields from a given class or multiple classes.
      *
      * @param classes Class object or objects to parse.
+     * @noinspection unused
      */
     public void parseVariablesForClasses(Class<?>... classes) {
         coreState.getParser().parseVariablesForClasses(classes);
@@ -3363,6 +3334,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Fetches variable values from server.
+     * @noinspection unused
      */
     public void fetchVariables() {
         fetchVariables(null);
@@ -3502,6 +3474,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      *  Removes all previously registered callbacks.
+     * @noinspection unused
      */
     public void removeAllVariablesChangedCallbacks() {
         coreState.getCTVariables().removeAllVariablesChangedCallbacks();
@@ -3509,6 +3482,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      *  Removes all previously registered one time callbacks.
+     * @noinspection unused
      */
     public void removeAllOneTimeVariablesChangedCallbacks() {
         coreState.getCTVariables().removeAllOneTimeVariablesChangedCallbacks();
@@ -3555,11 +3529,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
-        if (impl == null) {
-            logger.info(
-                    "There was a problem clearing resources because instance is not completely initialised, please try again after some time");
-            return;
-        }
 
         if (expiredOnly) {
             impl.cleanupExpiredResources(CtCacheType.IMAGE);
@@ -3574,6 +3543,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param expiredOnly to clear only files which will not be needed further for SDK features like custom in-app
      *                    templates, app functions and variables etc.
+     * @noinspection unused
      */
     public void clearFileResources(boolean expiredOnly) {
 
@@ -3587,11 +3557,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
-        if (impl == null) {
-            logger.info(
-                    "There was a problem clearing file resources because instance is not completely initialised, please try again after some time");
-            return;
-        }
 
         if (expiredOnly) {
             impl.cleanupExpiredResources(CtCacheType.FILES);
