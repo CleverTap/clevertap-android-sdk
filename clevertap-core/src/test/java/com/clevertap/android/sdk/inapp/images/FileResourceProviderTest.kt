@@ -222,7 +222,6 @@ class FileResourceProviderTest {
 
     @Test
     fun `fetchFile does not caches file if it doesn't exist in cache and api call fails as well`() {
-        val mockSavedFile = mockk<File>()
         val url = "https://example.com/document.pdf"
         val downloadFailed = DownloadedBitmap(
             bitmap = null, // Files don't have Bitmaps
