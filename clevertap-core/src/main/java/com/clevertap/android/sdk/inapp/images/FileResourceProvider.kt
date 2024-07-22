@@ -64,9 +64,13 @@ internal class FileResourceProvider(
         private const val ALL_FILE_TYPES_DIRECTORY_NAME = "CleverTap.Files."
     }
 
-    private fun <T> saveData(cacheKey : String, data : Pair<T,ByteArray>,mao : MemoryAccessObject<T>){
+    private fun <T> saveData(
+        cacheKey: String,
+        data: Pair<T, ByteArray>,
+        mao: MemoryAccessObject<T>
+    ) {
         val savedFile = mao.saveDiskMemory(cacheKey, data.second)
-        mao.saveInMemory(cacheKey,Pair(data.first,savedFile))
+        mao.saveInMemory(cacheKey, Pair(data.first, savedFile))
     }
 
     fun isFileCached(url: String): Boolean {
@@ -79,11 +83,18 @@ internal class FileResourceProvider(
         }) != null
     }
 
-    fun cachedInAppImageV1(cacheKey: String?): Bitmap? = fetchCachedData(Pair(cacheKey,IMAGE), ToBitmap)
-    fun cachedInAppGifV1(cacheKey: String?): ByteArray? = fetchCachedData(Pair(cacheKey,GIF), ToByteArray)
-    fun cachedFileInBytes(cacheKey: String?): ByteArray? = fetchCachedData(Pair(cacheKey,FILES), ToByteArray)
+    fun cachedInAppImageV1(cacheKey: String?): Bitmap? =
+        fetchCachedData(Pair(cacheKey, IMAGE), ToBitmap)
+
+    fun cachedInAppGifV1(cacheKey: String?): ByteArray? =
+        fetchCachedData(Pair(cacheKey, GIF), ToByteArray)
+
+    fun cachedFileInBytes(cacheKey: String?): ByteArray? =
+        fetchCachedData(Pair(cacheKey, FILES), ToByteArray)
+
     fun cachedFilePath(cacheKey: String?): String? = cachedFileInstance(cacheKey)?.absolutePath
-    fun cachedFileInstance(cacheKey: String?): File? = fetchCachedData(Pair(cacheKey,FILES), ToFile)
+    fun cachedFileInstance(cacheKey: String?): File? =
+        fetchCachedData(Pair(cacheKey, FILES), ToFile)
 
     /**
      * Function that would fetch and cache bitmap image into Memory and File cache and return it.
@@ -94,23 +105,47 @@ internal class FileResourceProvider(
             urlMeta = Pair(url, IMAGE),
             mao = imageMAO,
             cachedDataFetcherBlock = ::cachedInAppImageV1
-        ) { Pair(it.bitmap!!, it.bytes!!) }
+        ) { downloadedBitmap ->
+            when (downloadedBitmap.status) {
+                DownloadedBitmap.Status.SUCCESS -> {
+                    // force unwrapping cause successful
+                    Pair(downloadedBitmap.bitmap!!, downloadedBitmap.bytes!!)
+                }
+                else -> {
+                    null
+                }
+            }
+        }
     }
 
     fun fetchInAppGifV1(url: String): ByteArray? {
         return fetchData(
             urlMeta = Pair(url, GIF),
             mao = gifMAO,
-            cachedDataFetcherBlock = ::cachedInAppGifV1
-        ) { Pair(it.bytes!!, it.bytes) }
+            cachedDataFetcherBlock = ::cachedInAppGifV1,
+            dataToSaveBlock = ::downloadedBytesFromApi
+        )
     }
 
     fun fetchFile(url: String): ByteArray? {
         return fetchData(
             urlMeta = Pair(url, FILES),
             mao = fileMAO,
-            cachedDataFetcherBlock = ::cachedFileInBytes
-        ) { Pair(it.bytes!!, it.bytes) }
+            cachedDataFetcherBlock = ::cachedFileInBytes,
+            dataToSaveBlock = ::downloadedBytesFromApi
+        )
+    }
+
+    private fun downloadedBytesFromApi(downloadedBitmap: DownloadedBitmap): Pair<ByteArray, ByteArray>? {
+        return when (downloadedBitmap.status) {
+            DownloadedBitmap.Status.SUCCESS -> {
+                // force unwrap cause successful
+                Pair(downloadedBitmap.bytes!!, downloadedBitmap.bytes)
+            }
+            else -> {
+                null
+            }
+        }
     }
 
     fun deleteData(cacheKey: String) {
@@ -163,7 +198,7 @@ internal class FileResourceProvider(
         urlMeta: Pair<String, CtCacheType>,
         mao: MemoryAccessObject<T>,
         cachedDataFetcherBlock: (String) -> T?,
-        dataToSaveBlock: (DownloadedBitmap) -> Pair<T, ByteArray>
+        dataToSaveBlock: (DownloadedBitmap) -> Pair<T, ByteArray>?
     ): T? {
         val cachedData = cachedDataFetcherBlock(urlMeta.first)
 
@@ -172,10 +207,10 @@ internal class FileResourceProvider(
             return cachedData
         }
 
-        val downloadedData = inAppRemoteSource.makeApiCallForFile(urlMeta)
-        val dataToSave = dataToSaveBlock(downloadedData)
+        val downloadedData: DownloadedBitmap = inAppRemoteSource.makeApiCallForFile(urlMeta)
         return when (downloadedData.status) {
             DownloadedBitmap.Status.SUCCESS -> {
+                val dataToSave: Pair<T, ByteArray> = dataToSaveBlock(downloadedData)!! // can force unwrap since success case
                 saveData(
                     cacheKey = urlMeta.first,
                     data = dataToSave,
