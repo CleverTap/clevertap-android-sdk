@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -219,27 +220,17 @@ class FilePreloaderCoroutineTest {
             timeoutForPreload = 100 // 100ms
         )
 
-        val filesList = buildList {
+        val urls = buildList {
             add("p" to CtCacheType.FILES)
             add("q" to CtCacheType.FILES)
             add("r" to CtCacheType.FILES)
-        }
-
-        val imagesList = buildList {
             add("a" to CtCacheType.IMAGE)
             add("b" to CtCacheType.IMAGE)
             add("c" to CtCacheType.IMAGE)
-        }
-
-        val gifsList = buildList {
             add("m" to CtCacheType.GIF)
             add("n" to CtCacheType.GIF)
             add("o" to CtCacheType.GIF)
         }
-
-        val urls = filesList + imagesList + gifsList
-
-        val finishedStatus = mutableMapOf<String, Boolean>()
 
         every { mFileResourceProvider.fetchFile("p") } returns byteArray
         every { mFileResourceProvider.fetchFile("q") } returns byteArray
@@ -266,20 +257,26 @@ class FilePreloaderCoroutineTest {
             "o" to false,
         ) // expected final map of statuses
 
+        // Prep containers to gather results.
+        val successUrls = mutableSetOf<String>()
+        val failedUrls = mutableSetOf<String>()
+        val completedUrls = mutableSetOf<String>()
+        val finishedStatus = mutableMapOf<String, Boolean>()
+
         // Function to test :
         filePreloaderCoroutineWithTimeout.preloadFilesAndCache(
             urlMetas = urls,
-            successBlock = { url -> successfulExpected.remove(url.first) },
-            failureBlock = { url -> failedExpected.remove(url.first) },
-            startedBlock = { url -> startedExpected.remove(url.first) },
+            successBlock = { url -> successUrls.add(url.first) },
+            failureBlock = { url -> failedUrls.add(url.first) },
+            startedBlock = { url -> completedUrls.add(url.first) },
             preloadFinished = { status -> finishedStatus.putAll(status) }
         )
         advanceUntilIdle()
 
         // Assertions :
-        assertEquals(expected = 0, actual = successfulExpected.size)
-        assertEquals(expected = 0, actual = failedExpected.size)
-        assertEquals(expected = 0, actual = startedExpected.size)
+        assertThat(successfulExpected).containsExactlyElementsIn(successUrls)
+        assertThat(failedExpected).containsExactlyElementsIn(failedUrls)
+        assertThat(startedExpected).containsExactlyElementsIn(completedUrls)
         assertEquals(
             expected = finishedExpected,
             actual = finishedStatus
