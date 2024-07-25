@@ -40,6 +40,9 @@ import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
+import com.clevertap.android.sdk.inapp.customtemplates.FunctionPresenter;
+import com.clevertap.android.sdk.inapp.customtemplates.JsonTemplatesProducer;
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatePresenter;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
@@ -1027,7 +1030,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * {@link TemplateProducer}. See {@link com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate.Builder
      * CustomTemplate.Builder}. Templates must be registered before the {@link CleverTapAPI} instance, that would use
      * them, is created. A common place for this initialization is in {@link Application#onCreate()}. If your
-     * application uses multiple {@link CleverTapAPI} instance, use the {@link CleverTapInstanceConfig} within the
+     * application uses multiple {@link CleverTapAPI} instances, use the {@link CleverTapInstanceConfig} within the
      * TemplateProducer to differentiate which templates should be registered to which {@link CleverTapAPI}
      * instances.This method can be called multiple times with different TemplateProducers, however all of the
      * produced templates must have unique names.
@@ -1059,6 +1062,32 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public static synchronized void registerCustomInAppTemplates(TemplateProducer producer) {
         TemplatesManager.register(producer);
+    }
+
+    /**
+     * Register {@link com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate CustomTemplates} through a
+     * json definition. Templates must be registered before the {@link CleverTapAPI} instance, that would use
+     * them, is created. A common place for this initialization is in {@link Application#onCreate()}. If your
+     * application uses multiple {@link CleverTapAPI} instances, extend {@link JsonTemplatesProducer}
+     * with definitions for each instance and register using {@link #registerCustomInAppTemplates(TemplateProducer)}.
+     * Use the {@link CleverTapInstanceConfig} in {@link JsonTemplatesProducer#defineTemplates} to control
+     * for which instance the templates should be registered.
+     * </br>
+     * This method can be called multiple times with different json definitions and presenters,
+     * however all of the templates must have unique names.
+     *
+     * @param templatesJson A string with the json definitions of templates. See
+     *                      {@link JsonTemplatesProducer} for the json format.
+     * @param templatesPresenter A presenter for all templates in the json definitions.
+     *                           Required if there is at least one template with type "template".
+     * @param functionsPresenter A presenter for all functions in the json definitions.
+     *                           Required if there is at least one template with type "function".
+     */
+    public static synchronized void registerCustomInAppTemplates
+    (@NonNull String templatesJson,
+     @Nullable TemplatePresenter templatesPresenter,
+     @Nullable FunctionPresenter functionsPresenter) {
+        TemplatesManager.register(new JsonTemplatesProducer(templatesJson, templatesPresenter, functionsPresenter));
     }
 
     /**
