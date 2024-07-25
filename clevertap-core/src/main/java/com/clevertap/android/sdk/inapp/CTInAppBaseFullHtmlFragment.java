@@ -87,8 +87,8 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             inAppView = inflater.inflate(R.layout.inapp_html_full, container, false);
             RelativeLayout rl = inAppView.findViewById(R.id.inapp_html_full_relative_layout);
             RelativeLayout.LayoutParams webViewLp = new RelativeLayout
-                    .LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-                    RelativeLayout.LayoutParams.WRAP_CONTENT);
+                    .LayoutParams(LayoutParams.MATCH_PARENT,
+                    LayoutParams.MATCH_PARENT);
             webViewLp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
             initWebViewLayoutParams(webViewLp);
