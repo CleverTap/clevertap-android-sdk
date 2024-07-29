@@ -195,7 +195,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     @Override
     public void inAppNotificationDidDismiss(
-            @NonNull final Context context,
             @NonNull final CTInAppNotification inAppNotification,
             @Nullable Bundle formData) {
         didDismiss(formData);
@@ -270,8 +269,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
         finish();
         InAppListener listener = getListener();
-        if (listener != null && getBaseContext() != null && inAppNotification != null) {
-            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data);
+        if (listener != null && inAppNotification != null) {
+            listener.inAppNotificationDidDismiss(inAppNotification, data);
         }
     }
 

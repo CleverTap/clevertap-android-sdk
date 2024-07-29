@@ -289,7 +289,7 @@ public class InAppController implements InAppListener,
                 mainLooperHandler.postDelayed(mainLooperHandler.getPendingRunnable(), 200);
                 mainLooperHandler.setPendingRunnable(null);
             } else {
-                showNotificationIfAvailable(context);
+                showNotificationIfAvailable();
             }
         } else {
             Logger.d("In-app notifications will not be shown for this activity ("
@@ -460,7 +460,7 @@ public class InAppController implements InAppListener,
     }
 
     @Override
-    public void inAppNotificationDidDismiss(@Nullable final Context context,
+    public void inAppNotificationDidDismiss(
             @NonNull final CTInAppNotification inAppNotification,
             @Nullable final Bundle formData) {
         inAppNotification.didDismiss(resourceProvider);
@@ -504,7 +504,7 @@ public class InAppController implements InAppListener,
             @Override
             public Void call() {
                 inAppDidDismiss(context, config, inAppNotification, InAppController.this);
-                _showNotificationIfAvailable(context);
+                _showNotificationIfAvailable();
                 return null;
             }
         });
@@ -586,7 +586,7 @@ public class InAppController implements InAppListener,
             inAppQueue.enqueueAll(filteredNotifs);
 
             // Fire the first notification, if any
-            showNotificationIfAvailable(context);
+            showNotificationIfAvailable();
         } catch (Exception e) {
             logger.debug(config.getAccountId(), "InAppController: : InApp notification handling error: " + e.getMessage());
         }
@@ -594,13 +594,13 @@ public class InAppController implements InAppListener,
 
 
     //InApp
-    public void showNotificationIfAvailable(final Context context) {
+    public void showNotificationIfAvailable() {
         if (!config.isAnalyticsOnly()) {
             Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
             task.execute("InappController#showNotificationIfAvailable", new Callable<Void>() {
                 @Override
                 public Void call() {
-                    _showNotificationIfAvailable(context);
+                    _showNotificationIfAvailable();
                     return null;
                 }
             });
@@ -613,7 +613,7 @@ public class InAppController implements InAppListener,
     }
 
     //InApp
-    private void _showNotificationIfAvailable(Context context) {
+    private void _showNotificationIfAvailable() {
         try {
             if (!canShowInAppOnActivity()) {
                 Logger.v("Not showing notification on blacklisted activity");
@@ -650,7 +650,7 @@ public class InAppController implements InAppListener,
             return;
         }
         inAppQueue.insertInFront(inApp);
-        showNotificationIfAvailable(context);
+        showNotificationIfAvailable();
     }
 
     private boolean canShowInAppOnActivity() {
@@ -745,7 +745,7 @@ public class InAppController implements InAppListener,
             task.execute("InAppController#showInAppNotificationIfAny", new Callable<Void>() {
                 @Override
                 public Void call() {
-                    _showNotificationIfAvailable(context);
+                    _showNotificationIfAvailable();
                     return null;
                 }
             });
@@ -772,7 +772,7 @@ public class InAppController implements InAppListener,
     }
 
     private static void checkPendingNotifications(
-            final Context context,
+            @NonNull final Context context,
             final CleverTapInstanceConfig config,
             final InAppController inAppController
     ) {
@@ -796,7 +796,7 @@ public class InAppController implements InAppListener,
 
     //InApp
     private static void inAppDidDismiss(
-            Context context,
+            @NonNull Context context,
             CleverTapInstanceConfig config,
             CTInAppNotification inAppNotification,
             InAppController inAppController
@@ -826,7 +826,7 @@ public class InAppController implements InAppListener,
 
     //InApp
     private static void showInApp(
-            Context context,
+            @NonNull Context context,
             final CTInAppNotification inAppNotification,
             CleverTapInstanceConfig config,
             InAppController inAppController

@@ -111,8 +111,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
     public void didDismiss(Bundle data) {
         cleanup();
         InAppListener listener = getListener();
-        if (listener != null && getActivity() != null && getActivity().getBaseContext() != null) {
-            listener.inAppNotificationDidDismiss(getActivity().getBaseContext(), inAppNotification, data);
+        if (listener != null) {
+            listener.inAppNotificationDidDismiss(inAppNotification, data);
         }
     }
 

@@ -11,7 +11,7 @@ internal interface InAppListener {
         activityContext: Context?
     ): Bundle?
 
-    fun inAppNotificationDidDismiss(context: Context?, inAppNotification: CTInAppNotification, formData: Bundle?)
+    fun inAppNotificationDidDismiss(inAppNotification: CTInAppNotification, formData: Bundle?)
     fun inAppNotificationDidShow(inAppNotification: CTInAppNotification, formData: Bundle?)
     fun inAppNotificationActionTriggered(
         inAppNotification: CTInAppNotification,
