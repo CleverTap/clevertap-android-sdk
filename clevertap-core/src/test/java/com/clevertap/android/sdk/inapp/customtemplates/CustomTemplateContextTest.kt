@@ -183,7 +183,7 @@ class CustomTemplateContextTest {
         val templateContext = createTestTemplateContext(mockInAppListener)
 
         templateContext.setDismissed()
-        verify { mockInAppListener.inAppNotificationDidDismiss(any(), any(), any()) }
+        verify { mockInAppListener.inAppNotificationDidDismiss(any(), any()) }
     }
 
     @Test
@@ -214,13 +214,13 @@ class CustomTemplateContextTest {
         val templateContext = createTestTemplateContext(mockInAppListener)
 
         templateContext.setDismissed()
-        verify(exactly = 1) { mockInAppListener.inAppNotificationDidDismiss(any(), any(), any()) }
+        verify(exactly = 1) { mockInAppListener.inAppNotificationDidDismiss(any(), any()) }
 
         templateContext.setPresented()
         verify(exactly = 0) { mockInAppListener.inAppNotificationDidShow(any(), any()) }
 
         templateContext.setDismissed()
-        verify(exactly = 1) { mockInAppListener.inAppNotificationDidDismiss(any(), any(), any()) }
+        verify(exactly = 1) { mockInAppListener.inAppNotificationDidDismiss(any(), any()) }
     }
 
     @Test
