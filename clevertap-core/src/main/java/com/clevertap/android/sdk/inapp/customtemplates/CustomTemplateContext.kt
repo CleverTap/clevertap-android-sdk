@@ -227,7 +227,7 @@ sealed class CustomTemplateContext private constructor(
 
         val listener = inAppListenerRef.get()
         if (listener != null) {
-            listener.inAppNotificationDidDismiss(null, notification, null)
+            listener.inAppNotificationDidDismiss(notification, null)
         } else {
             logger.debug("CustomTemplates", "Cannot set template as dismissed")
         }
