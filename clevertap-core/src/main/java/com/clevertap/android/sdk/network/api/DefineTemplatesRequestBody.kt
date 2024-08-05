@@ -23,7 +23,7 @@ private fun Collection<CustomTemplate>.toJSON(): JSONObject {
         putObject("definitions") {
             for (template in templates) {
                 putObject(template.name) {
-                    put("type", template.type.stringName)
+                    put("type", template.type.toString())
                     if (template.args.isNotEmpty()) {
                         putObject("vars") {
                             template.args.forEachIndexed { index, arg ->
@@ -31,7 +31,7 @@ private fun Collection<CustomTemplate>.toJSON(): JSONObject {
                                     arg.defaultValue?.let {
                                         put("defaultValue", it)
                                     }
-                                    put("type", arg.type.stringName)
+                                    put("type", arg.type.toString())
                                     put("order", index)
                                 }
                             }

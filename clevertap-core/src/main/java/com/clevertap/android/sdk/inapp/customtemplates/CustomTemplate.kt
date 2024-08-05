@@ -81,7 +81,6 @@ class CustomTemplate private constructor(
          *
          * @see [CustomTemplateContext.TemplateContext]
          * @see [FunctionBuilder]
-         * @see [CleverTapAPI.registerCustomInAppTemplates]
          */
         fun actionArgument(name: String): TemplateBuilder {
             addArgument(name, ACTION, null)
@@ -311,7 +310,17 @@ class CustomTemplate private constructor(
     }
 }
 
-internal enum class CustomTemplateType(val stringName: String) {
+internal enum class CustomTemplateType(private val stringName: String) {
     TEMPLATE("template"),
-    FUNCTION("function")
+    FUNCTION("function");
+
+    companion object {
+        fun fromString(string: String): CustomTemplateType? {
+            return values().find { it.stringName == string }
+        }
+    }
+
+    override fun toString(): String {
+        return stringName
+    }
 }
