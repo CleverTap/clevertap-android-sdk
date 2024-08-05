@@ -5,6 +5,7 @@ apply plugin: 'signing'
 apply from: "${project.rootDir}/gradle-scripts/jacoco_root.gradle"
 apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
 apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"
+apply from: "${project.rootDir}/gradle-scripts/spotless.gradle"
 
 ext {
     Repo = 'Maven'
