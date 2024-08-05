@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
 import com.clevertap.android.sdk.events.EventGroup.VARIABLES
 import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApiTestProvider
 import com.clevertap.android.sdk.network.api.CtApiWrapper
@@ -23,6 +24,7 @@ import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
@@ -125,6 +127,32 @@ class NetworkManagerTest : BaseTestCase() {
         assertFalse(networkManager.sendQueue(appCtx, VARIABLES, getSampleJsonArrayOfJsonObjects(1), null))
     }
 
+    @Test
+    fun `defineTemplates should return false when error response code is received`() {
+        mockHttpClient.responseCode = 400
+        mockHttpClient.responseBody = getErrorJson().toString()
+        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+
+        mockHttpClient.responseCode = 401
+        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+
+        mockHttpClient.responseCode = 500
+        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+    }
+
+    @Test
+    fun `defineTemplates should return false when http call results in an exception`() {
+        mockHttpClient.alwaysThrowOnExecute = true
+        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+    }
+
+    @Test
+    fun `defineTemplates should return true when success response code is received`() {
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = getErrorJson().toString()
+        assertTrue(networkManager.defineTemplates(appCtx, emptyList()))
+    }
+
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
@@ -136,7 +164,7 @@ class NetworkManagerTest : BaseTestCase() {
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
         val cryptHandler = CryptHandler(0, AES, cleverTapInstanceConfig.accountId)
         val localDataStore =
-            LocalDataStoreProvider.provideLocalDataStore(appCtx, cleverTapInstanceConfig, cryptHandler)
+            LocalDataStoreProvider.provideLocalDataStore(appCtx, cleverTapInstanceConfig, cryptHandler, deviceInfo)
         val triggersManager = TriggerManager(appCtx, cleverTapInstanceConfig.accountId, deviceInfo)
         val inAppResponse =
             InAppResponse(
@@ -145,6 +173,7 @@ class NetworkManagerTest : BaseTestCase() {
                 true,
                 coreState.storeRegistry,
                 triggersManager,
+                mockk<TemplatesManager>(),
                 metaData
             )
 
@@ -159,9 +188,14 @@ class NetworkManagerTest : BaseTestCase() {
             callbackManager,
             lockManager,
             Validator(),
-            localDataStore,
             inAppResponse,
             ctApiWrapper
         )
+    }
+
+    private fun getErrorJson(): JSONObject {
+        return JSONObject().apply {
+            put("error", "Error")
+        }
     }
 }

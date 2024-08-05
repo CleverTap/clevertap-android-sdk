@@ -7,7 +7,7 @@ import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.MockHttpClient
 import org.mockito.*
 
-object CtApiTestProvider {
+internal object CtApiTestProvider {
 
     const val DEFAULT_DOMAIN = "domain.com"
     const val DOMAIN = "new.domain.com"

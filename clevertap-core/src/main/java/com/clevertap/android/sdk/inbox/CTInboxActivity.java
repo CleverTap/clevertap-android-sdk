@@ -195,30 +195,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             viewPager.setAdapter(inboxTabAdapter);
             inboxTabAdapter.notifyDataSetChanged();
             viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-            tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-                @Override
-                public void onTabReselected(TabLayout.Tab tab) {
-                    //no-op
-                }
-
-                @Override
-                public void onTabSelected(TabLayout.Tab tab) {
-                    CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
-                            .getItem(tab.getPosition());
-                    if (fragment.getMediaRecyclerView() != null) {
-                        fragment.getMediaRecyclerView().onRestartPlayer();
-                    }
-                }
-
-                @Override
-                public void onTabUnselected(TabLayout.Tab tab) {
-                    CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
-                            .getItem(tab.getPosition());
-                    if (fragment.getMediaRecyclerView() != null) {
-                        fragment.getMediaRecyclerView().onPausePlayer();
-                    }
-                }
-            });
             tabLayout.setupWithViewPager(viewPager);
         }
     }

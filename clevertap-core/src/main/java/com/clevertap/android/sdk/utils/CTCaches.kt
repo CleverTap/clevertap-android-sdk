@@ -1,39 +1,40 @@
 package com.clevertap.android.sdk.utils
 
 import android.graphics.Bitmap
-import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.inapp.images.memory.Memory
 import java.io.File
-import kotlin.math.max
 
 /**
- * We have 2 caches in CT, image cache and a gif cache with different size configs
+ * We have 3 caches in CT, image cache, gif cache, general file cache with different size configs
  */
-class CTCaches private constructor(
-    private val config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
-    private val logger: ILogger? = null
+internal class CTCaches private constructor(
+    private val inAppImageMemoryV1: Memory<Bitmap>,
+    private val inAppGifMemoryV1: Memory<ByteArray>,
+    private val fileMemory: Memory<ByteArray>
 ) {
 
     companion object {
+
         private var ctCaches: CTCaches? = null
-
-        private val lock1 = Any()
-        private val lock2 = Any()
-        private val lock3 = Any()
-        private val lock4 = Any()
-
         fun instance(
-            config: CTCachesConfig = CTCachesConfig.DEFAULT_CONFIG,
-            logger: ILogger?
-        ) : CTCaches {
+            inAppImageMemoryV1: Memory<Bitmap>,
+            inAppGifMemoryV1: Memory<ByteArray>,
+            fileMemory: Memory<ByteArray>
+        ): CTCaches {
             if (ctCaches == null) {
                 synchronized(this) {
                     if (ctCaches == null) {
-                        ctCaches = CTCaches(config = config, logger = logger)
+                        ctCaches = CTCaches(
+                            inAppImageMemoryV1 = inAppImageMemoryV1,
+                            inAppGifMemoryV1 = inAppGifMemoryV1,
+                            fileMemory = fileMemory
+                        )
                     }
                 }
             }
             return ctCaches!!
         }
+
         fun clear() {
             synchronized(this) {
                 ctCaches = null
@@ -41,107 +42,27 @@ class CTCaches private constructor(
         }
     }
 
-    private var imageCache: LruCache<Bitmap>? = null
-    private var gifCache: LruCache<ByteArray>? = null
-
-    private var imageFileCache: FileCache? = null
-    private var gifFileCache: FileCache? = null
-
-    fun imageCache(): LruCache<Bitmap> {
-        if (imageCache == null) {
-            synchronized(lock1) {
-                if (imageCache == null) {
-                    imageCache = LruCache(maxSize = imageCacheSize())
-                }
-            }
-        }
-        return imageCache!!
+    fun imageInMemory(): InMemoryLruCache<Pair<Bitmap, File>> {
+        return inAppImageMemoryV1.createInMemory()
     }
 
-    fun gifCache(): LruCache<ByteArray> {
-        if (gifCache == null) {
-            synchronized(lock2) {
-                if (gifCache == null) {
-                    gifCache = LruCache(maxSize = gifCacheSize())
-                }
-            }
-        }
-        return gifCache!!
+    fun gifInMemory(): InMemoryLruCache<Pair<ByteArray, File>> {
+        return inAppGifMemoryV1.createInMemory()
     }
 
-    fun imageCacheDisk(dir: File): FileCache {
-        if (imageFileCache == null) {
-            synchronized(lock3) {
-                if (imageFileCache == null) {
-                    imageFileCache = FileCache(
-                        directory = dir,
-                        maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
-                        logger = logger
-                    )
-                }
-            }
-        }
-        return imageFileCache!!
+    fun fileInMemory(): InMemoryLruCache<Pair<ByteArray, File>> {
+        return fileMemory.createInMemory()
     }
 
-    fun gifCacheDisk(dir: File): FileCache {
-        if (gifFileCache == null) {
-            synchronized(lock4) {
-                if (gifFileCache == null) {
-                    gifFileCache = FileCache(
-                        directory = dir,
-                        maxFileSizeKb = config.maxImageSizeDiskKb.toInt(),
-                        logger = logger
-                    )
-                }
-            }
-        }
-        return gifFileCache!!
+    fun imageDiskMemory(): DiskMemory {
+        return inAppImageMemoryV1.createDiskMemory()
     }
 
-    fun imageCacheSize(): Int {
-        val selected = max(config.optimistic, config.minImageCacheKb).toInt()
-
-        logger?.verbose("Image cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minImageCacheKb}, selected = $selected")
-
-        return selected
+    fun gifDiskMemory(): DiskMemory {
+        return inAppGifMemoryV1.createDiskMemory()
     }
 
-    fun gifCacheSize(): Int {
-        val selected = max(config.optimistic, config.minGifCacheKb).toInt()
-
-        logger?.verbose(" Gif cache:: max-mem/1024 = ${config.optimistic}, minCacheSize = ${config.minGifCacheKb}, selected = $selected")
-
-        return selected
-    }
-
-    fun freeMemory() {
-        synchronized(this) {
-            imageCache?.empty()
-            imageCache = null
-            gifCache?.empty()
-            gifCache = null
-        }
-    }
-
-}
-
-data class CTCachesConfig(
-    val minImageCacheKb: Long,
-    val minGifCacheKb: Long,
-    val optimistic: Long,
-    val maxImageSizeDiskKb: Long
-) {
-    companion object {
-        const val IMAGE_CACHE_MIN_KB : Long = 20 * 1024
-        const val GIF_CACHE_MIN_KB : Long = 5 * 1024
-        const val IMAGE_SIZE_MAX_DISK : Long = 5 * 1024
-
-        val DEFAULT_CONFIG = CTCachesConfig(
-            minImageCacheKb = IMAGE_CACHE_MIN_KB,
-            minGifCacheKb = GIF_CACHE_MIN_KB,
-            optimistic = Runtime.getRuntime().maxMemory() / (1024 * 32),
-            maxImageSizeDiskKb = IMAGE_SIZE_MAX_DISK
-        )
+    fun fileDiskMemory(): DiskMemory {
+        return fileMemory.createDiskMemory()
     }
 }

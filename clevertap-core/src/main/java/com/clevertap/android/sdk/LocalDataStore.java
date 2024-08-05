@@ -19,7 +19,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -31,14 +30,6 @@ import java.util.concurrent.Executors;
 public class LocalDataStore {
 
     private static long EXECUTOR_THREAD_ID = 0;
-
-    /**
-     * Whenever a profile field is updated, in the session, put it here.
-     * The value must be an epoch until how long it is valid for (using existing TTL).
-     * <p/>
-     * When upstream updates come in, check whether or not to update the field.
-     */
-    private final HashMap<String, Integer> PROFILE_EXPIRY_MAP = new HashMap<>();
 
     private final HashMap<String, Object> PROFILE_FIELDS_IN_THIS_SESSION = new HashMap<>();
 
@@ -54,13 +45,14 @@ public class LocalDataStore {
 
     private final String eventNamespace = "local_events";
 
+    private final DeviceInfo deviceInfo;
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler) {
+    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
         this.cryptHandler = cryptHandler;
-        inflateLocalProfileAsync(context);
+        this.deviceInfo = deviceInfo;
     }
 
     @WorkerThread
@@ -108,14 +100,6 @@ public class LocalDataStore {
         }
     }
 
-    Object getProfileProperty(String key) {
-        return getProfileValueForKey(key);
-    }
-
-    Object getProfileValueForKey(String key) {
-        return _getProfileProperty(key);
-    }
-
     @WorkerThread
     public void persistEvent(Context context, JSONObject event, int type) {
 
@@ -130,18 +114,6 @@ public class LocalDataStore {
         } catch (Throwable t) {
             getConfigLogger().verbose(getConfigAccountId(), "Failed to sync with upstream", t);
         }
-    }
-
-    @WorkerThread
-    void removeProfileField(String key) {
-        removeProfileField(key, false, true);
-    }
-
-    void removeProfileFields(ArrayList<String> fields) {
-        if (fields == null) {
-            return;
-        }
-        removeProfileFields(fields, false);
     }
 
     @WorkerThread
@@ -192,103 +164,7 @@ public class LocalDataStore {
         }
     }
 
-    void setProfileField(String key, Object value) {
-        setProfileField(key, value, false, true);
-    }
-
-    void setProfileFields(JSONObject fields) {
-        setProfileFields(fields, false);
-    }
-
-    //Not used.Remove later
-    @SuppressWarnings("rawtypes")
-    public void syncWithUpstream(Context context, JSONObject response) {
-        try {
-            JSONObject eventUpdates = null;
-            JSONObject profileUpdates = null;
-
-            if (!response.has("evpr")) {
-                return;
-            }
-
-            JSONObject evpr = response.getJSONObject("evpr");
-            if (evpr.has("profile")) {
-                JSONObject profile = evpr.getJSONObject("profile");
-                if (profile.has("_custom")) {
-                    JSONObject custom = profile.getJSONObject("_custom");
-                    profile.remove("_custom");
-                    Iterator keys = custom.keys();
-                    while (keys.hasNext()) {
-                        String next = keys.next().toString();
-
-                        Object value = null;
-                        try {
-                            value = custom.getJSONArray(next);
-                        } catch (Throwable t) {
-                            try {
-                                value = custom.get(next);
-                            } catch (JSONException e) {
-                                //no-op
-                            }
-                        }
-
-                        if (value != null) {
-                            profile.put(next, value);
-                        }
-                    }
-                }
-
-                profileUpdates = syncProfile(profile);
-            }
-
-            if (evpr.has("events")) {
-                eventUpdates = syncEventsFromUpstream(context, evpr.getJSONObject("events"));
-            }
-
-            if (evpr.has("expires_in")) {
-                int expiresIn = evpr.getInt("expires_in");
-                setLocalCacheExpiryInterval(context, expiresIn);
-            }
-
-            StorageHelper.putInt(context, storageKeyWithSuffix("local_cache_last_update"),
-                    (int) (System.currentTimeMillis() / 1000));
-
-            Boolean profileUpdatesNotEmpty = (profileUpdates != null && profileUpdates.length() > 0);
-            Boolean eventsUpdatesNotEmpty = (eventUpdates != null && eventUpdates.length() > 0);
-            if (profileUpdatesNotEmpty || eventsUpdatesNotEmpty) {
-                JSONObject updates = new JSONObject();
-
-                if (profileUpdatesNotEmpty) {
-                    updates.put("profile", profileUpdates);
-                }
-
-                if (eventsUpdatesNotEmpty) {
-                    updates.put("events", eventUpdates);
-                }
-                SyncListener syncListener = null;
-                try {
-                    CleverTapAPI ct = CleverTapAPI.getDefaultInstance(context);
-                    if (ct != null) {
-                        syncListener = ct.getSyncListener();
-                    }
-                } catch (Throwable t) {
-                    // no-op
-                }
-                if (syncListener != null) {
-                    try {
-                        syncListener.profileDataUpdated(updates);
-                    } catch (Throwable t) {
-                        getConfigLogger().verbose(getConfigAccountId(), "Execution of sync listener failed", t);
-                    }
-                }
-            }
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to sync with upstream", t);
-        }
-    }
-
-    private Object _getProfileProperty(String key) {
-
+    public Object getProfileProperty(String key) {
         if (key == null) {
             return null;
         }
@@ -306,63 +182,6 @@ public class LocalDataStore {
                 return null;
             }
         }
-    }
-
-    private void _removeProfileField(String key) {
-
-        if (key == null) {
-            return;
-        }
-
-        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            try {
-                PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
-
-            } catch (Throwable t) {
-                getConfigLogger()
-                        .verbose(getConfigAccountId(), "Failed to remove local profile value for key " + key, t);
-            }
-        }
-    }
-
-    private void _setProfileField(String key, Object value) {
-        if (key == null || value == null) {
-            return;
-        }
-
-        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            PROFILE_FIELDS_IN_THIS_SESSION.put(key, value);
-        }
-    }
-
-    private JSONObject buildChangeFromOldValueToNewValue(Object oldValue, Object newValue) {
-
-        if (oldValue == null && newValue == null) {
-            return null;
-        }
-
-        JSONObject keyUpdates = new JSONObject();
-
-        try {
-            // if newValue is null means its been removed, represent that as -1
-            Object _newVal = (newValue != null) ? newValue : -1;
-            keyUpdates.put("newValue", _newVal);
-
-            if (oldValue != null) {
-                keyUpdates.put("oldValue", oldValue);
-            }
-
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to create profile changed values object", t);
-            return null;
-        }
-
-        return keyUpdates;
-    }
-
-    private int calculateLocalKeyExpiryTime() {
-        final int now = (int) (System.currentTimeMillis() / 1000);
-        return (now + getLocalCacheExpiryInterval(0));
     }
 
     private EventDetail decodeEventDetails(String name, String encoded) {
@@ -401,16 +220,6 @@ public class LocalDataStore {
         return getIntFromPrefs("local_cache_expires_in", defaultInterval);
     }
 
-    private Integer getLocalProfileKeyExpiryTimeForKey(String key) {
-        if (key == null) {
-            return 0;
-        }
-
-        synchronized (PROFILE_EXPIRY_MAP) {
-            return PROFILE_EXPIRY_MAP.get(key);
-        }
-    }
-
     private String getStringFromPrefs(String rawKey, String defaultValue, String nameSpace) {
         if (this.config.isDefaultInstance()) {
             String _new = StorageHelper
@@ -426,7 +235,7 @@ public class LocalDataStore {
     }
 
     // local cache/profile key expiry handling
-    private void inflateLocalProfileAsync(final Context context) {
+    void inflateLocalProfileAsync(final Context context) {
 
         final String accountID = this.config.getAccountId();
 
@@ -438,7 +247,7 @@ public class LocalDataStore {
                 }
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
                     try {
-                        JSONObject profile = dbAdapter.fetchUserProfileById(accountID);
+                        JSONObject profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(accountID, deviceInfo.getDeviceID());
 
                         if (profile == null) {
                             return;
@@ -470,8 +279,7 @@ public class LocalDataStore {
                         }
 
                         getConfigLogger().verbose(getConfigAccountId(),
-                                "Local Data Store - Inflated local profile " + PROFILE_FIELDS_IN_THIS_SESSION
-                                        .toString());
+                                "Local Data Store - Inflated local profile " + PROFILE_FIELDS_IN_THIS_SESSION);
 
                     } catch (Throwable t) {
                         //no-op
@@ -524,8 +332,7 @@ public class LocalDataStore {
             @Override
             public void run() {
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-                    HashMap<String, Object> profile = PROFILE_FIELDS_IN_THIS_SESSION;
-
+                    HashMap<String, Object> profile = new HashMap<>(PROFILE_FIELDS_IN_THIS_SESSION);
                     boolean passFlag = true;
                     // Encrypts only the pii keys before storing to DB
                     for (String piiKey : piiDBKeys) {
@@ -546,7 +353,7 @@ public class LocalDataStore {
                     if (!passFlag)
                         CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_DB_SUCCESS, cryptHandler);
 
-                    long status = dbAdapter.storeUserProfile(profileID, jsonObjectEncrypted);
+                    long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);
                     getConfigLogger().verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);
                 }
@@ -606,114 +413,60 @@ public class LocalDataStore {
         return stringify(value1).equals(stringify(value2));
     }
 
-    private void removeLocalProfileKeyExpiryTime(String key) {
-        if (key == null) {
-            return;
-        }
-
-        synchronized (PROFILE_EXPIRY_MAP) {
-            PROFILE_EXPIRY_MAP.remove(key);
-        }
-    }
-
-    private void removeProfileField(String key, Boolean fromUpstream, boolean persist) {
-
-        if (key == null) {
-            return;
-        }
-
-        try {
-            _removeProfileField(key);
-
-            // even though its a remove add an expiration time for the local key, as we still need it in the sync
-            if (!fromUpstream) {
-                updateLocalProfileKeyExpiryTime(key);
-            }
-
-        } catch (Throwable t) {
-            // no-op
-        }
-
-        if (persist) {
-            persistLocalProfileAsync();
-        }
-
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private void removeProfileFields(ArrayList<String> fields, Boolean fromUpstream) {
-        if (fields == null) {
-            return;
-        }
-
-        for (String key : fields) {
-            removeProfileField(key, fromUpstream, false);
-        }
-        persistLocalProfileAsync();
-    }
-
     private void resetLocalProfileSync() {
-
-        synchronized (PROFILE_EXPIRY_MAP) {
-            PROFILE_EXPIRY_MAP.clear();
-        }
-
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
             PROFILE_FIELDS_IN_THIS_SESSION.clear();
         }
 
-        final String accountID = getUserProfileID();
-        dbAdapter.removeUserProfile(accountID);
+        // Load the older profile from cache into the db
+        inflateLocalProfileAsync(context);
+
     }
 
-    private void setLocalCacheExpiryInterval(final Context context, final int ttl) {
-        StorageHelper.putInt(context, storageKeyWithSuffix("local_cache_expires_in"), ttl);
+    private void _removeProfileField(String key) {
+        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
+            try {
+                PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
+            } catch (Throwable t) {
+                getConfigLogger()
+                        .verbose(getConfigAccountId(), "Failed to remove local profile value for key " + key, t);
+            }
+        }
     }
 
-
-    private void setProfileField(String key, Object value, Boolean fromUpstream, boolean persist) {
-        if (key == null || value == null) {
+    private void _setProfileField(String key, Object value) {
+        if (value == null) {
             return;
         }
-
         try {
-            _setProfileField(key, value);
-
-            if (!fromUpstream) {
-                updateLocalProfileKeyExpiryTime(key);
+            synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
+                PROFILE_FIELDS_IN_THIS_SESSION.put(key, value);
             }
         } catch (Throwable t) {
-            // no-op
-        }
-        if (persist) {
-            persistLocalProfileAsync();
+            getConfigLogger()
+                    .verbose(getConfigAccountId(), "Failed to set local profile value for key " + key, t);
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    private void setProfileFields(JSONObject fields, Boolean fromUpstream) {
-        if (fields == null) {
+    /**
+     * This function centrally updates the profile fields both in the local cache and the local db
+     *
+     * @param fields, a map of key value pairs to be updated locally. The value will be null if that key needs to be
+     *                removed
+     */
+    public void updateProfileFields(Map<String, Object> fields) {
+        if(fields.isEmpty())
             return;
-        }
 
-        try {
-            final Iterator keys = fields.keys();
-
-            while (keys.hasNext()) {
-                String key = keys.next().toString();
-                setProfileField(key, fields.get(key), fromUpstream, false);
+        for (Map.Entry<String, Object> entry : fields.entrySet()) {
+            String key = entry.getKey();
+            Object newValue = entry.getValue();
+            if (newValue == null) {
+                _removeProfileField(key);
             }
-            persistLocalProfileAsync();
-
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to set profile fields", t);
+            _setProfileField(key, newValue);
         }
-    }
-
-    private Boolean shouldPreferLocalProfileUpdateForKeyForTime(String key, int time) {
-        final int now = (time <= 0) ? (int) (System.currentTimeMillis() / 1000) : time;
-        Integer keyValidUntil = getLocalProfileKeyExpiryTimeForKey(key);
-        return (keyValidUntil != null && keyValidUntil > now);
+        persistLocalProfileAsync();
     }
 
     private String storageKeyWithSuffix(String key) {
@@ -722,188 +475,5 @@ public class LocalDataStore {
 
     private String stringify(Object value) {
         return (value == null) ? "" : value.toString();
-    }
-
-    //Not used.Remove later
-    @SuppressWarnings({"rawtypes", "ConstantConditions"})
-    private JSONObject syncEventsFromUpstream(Context context, JSONObject events) {
-        try {
-            JSONObject eventUpdates = null;
-            String namespace;
-            if (!this.config.isDefaultInstance()) {
-                namespace = eventNamespace + ":" + this.config.getAccountId();
-            } else {
-                namespace = eventNamespace;
-            }
-            SharedPreferences prefs = StorageHelper.getPreferences(context, namespace);
-            Iterator keys = events.keys();
-            SharedPreferences.Editor editor = prefs.edit();
-
-            while (keys.hasNext()) {
-                String event = keys.next().toString();
-                String encoded = getStringFromPrefs(event, encodeEventDetails(0, 0, 0), namespace);
-
-                EventDetail ed = decodeEventDetails(event, encoded);
-
-                JSONArray upstream = events.getJSONArray(event);
-                if (upstream == null || upstream.length() < 3) {
-                    getConfigLogger().verbose(getConfigAccountId(), "Corrupted upstream event detail");
-                    continue;
-                }
-
-                int upstreamCount, first, last;
-                try {
-                    upstreamCount = upstream.getInt(0);
-                    first = upstream.getInt(1);
-                    last = upstream.getInt(2);
-                } catch (Throwable t) {
-                    getConfigLogger().verbose(getConfigAccountId(),
-                            "Failed to parse upstream event message: " + upstream.toString());
-                    continue;
-                }
-
-                if (upstreamCount > ed.getCount()) {
-                    editor.putString(storageKeyWithSuffix(event), encodeEventDetails(first, last, upstreamCount));
-                    getConfigLogger()
-                            .verbose(getConfigAccountId(), "Accepted update for event " + event + " from upstream");
-
-                    try {
-                        if (eventUpdates == null) {
-                            eventUpdates = new JSONObject();
-                        }
-
-                        JSONObject evUpdate = new JSONObject();
-
-                        JSONObject countUpdate = new JSONObject();
-                        countUpdate.put("oldValue", ed.getCount());
-                        countUpdate.put("newValue", upstreamCount);
-                        evUpdate.put("count", countUpdate);
-
-                        JSONObject firstUpdate = new JSONObject();
-                        firstUpdate.put("oldValue", ed.getFirstTime());
-                        firstUpdate.put("newValue", upstream.getInt(1));
-                        evUpdate.put("firstTime", firstUpdate);
-
-                        JSONObject lastUpdate = new JSONObject();
-                        lastUpdate.put("oldValue", ed.getLastTime());
-                        lastUpdate.put("newValue", upstream.getInt(2));
-                        evUpdate.put("lastTime", lastUpdate);
-
-                        eventUpdates.put(event, evUpdate);
-
-                    } catch (Throwable t) {
-                        getConfigLogger().verbose(getConfigAccountId(), "Couldn't set event updates", t);
-                    }
-
-                } else {
-                    getConfigLogger()
-                            .verbose(getConfigAccountId(), "Rejected update for event " + event + " from upstream");
-                }
-            }
-            StorageHelper.persist(editor);
-            return eventUpdates;
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Couldn't sync events from upstream", t);
-            return null;
-        }
-    }
-    //Not used.Remove later
-    @SuppressWarnings("rawtypes")
-    private JSONObject syncProfile(JSONObject remoteProfile) {
-
-        // Will hold the changes to be returned
-        JSONObject profileUpdates = new JSONObject();
-
-        if (remoteProfile == null || remoteProfile.length() <= 0) {
-            return profileUpdates;
-        }
-
-        try {
-
-            // will hold the updated fields that need to be written to the local profile
-            JSONObject fieldsToUpdateLocally = new JSONObject();
-
-            // cache the current time for shouldPreferLocalUpdateForKey check
-            final int now = (int) (System.currentTimeMillis() / 1000);
-
-            // walk the remote profile and compare values against the local profile values
-            // prefer the remote profile value unless we have set a still-valid expiration time for the local profile value
-            final Iterator keys = remoteProfile.keys();
-
-            while (keys.hasNext()) {
-                try {
-
-                    String key = keys.next().toString();
-
-                    if (shouldPreferLocalProfileUpdateForKeyForTime(key, now)) {
-                        // We shouldn't accept the upstream value, as our map
-                        // forces us to use the local
-                        getConfigLogger()
-                                .verbose(getConfigAccountId(), "Rejecting upstream value for key " + key + " " +
-                                        "because our local cache prohibits it");
-                        continue;
-                    }
-
-                    Object localValue = getProfileValueForKey(key);
-
-                    Object remoteValue = remoteProfile.get(key);
-
-                    // if remoteValue is empty (empty string or array) treat it as removed, so null it out here
-                    // all later tests handle null values
-                    if (profileValueIsEmpty(remoteValue)) {
-                        remoteValue = null;
-                    }
-
-                    // handles null values
-                    if (!profileValuesAreEqual(remoteValue, localValue)) {
-                        try {
-                            // Update required as we prefer the remote value once we've passed the local expiration time check
-
-                            // add the new value to be written to the local profile
-                            // if empty send a remove message
-                            if (remoteValue != null) {
-                                fieldsToUpdateLocally.put(key, remoteValue);
-                            } else {
-                                removeProfileField(key, true, true);
-                            }
-
-                            // add the changed values to the dictionary to be returned
-                            // handles null values
-                            JSONObject changesObject = buildChangeFromOldValueToNewValue(localValue, remoteValue);
-                            if (changesObject != null) {
-                                profileUpdates.put(key, changesObject);
-                            }
-
-                        } catch (Throwable t) {
-                            getConfigLogger().verbose(getConfigAccountId(), "Failed to set profile updates", t);
-                        }
-                    }
-
-                } catch (Throwable t) {
-                    getConfigLogger().verbose(getConfigAccountId(), "Failed to update profile field", t);
-                }
-            }
-
-            // save the changed fields locally
-            if (fieldsToUpdateLocally.length() > 0) {
-                setProfileFields(fieldsToUpdateLocally, true);
-            }
-
-            return profileUpdates;
-
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getConfigAccountId(), "Failed to sync remote profile", t);
-            return null;
-        }
-    }
-
-    private void updateLocalProfileKeyExpiryTime(String key) {
-        if (key == null) {
-            return;
-        }
-
-        synchronized (PROFILE_EXPIRY_MAP) {
-            PROFILE_EXPIRY_MAP.put(key, calculateLocalKeyExpiryTime());
-        }
     }
 }

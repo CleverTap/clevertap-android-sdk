@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk;
 
+import android.os.Bundle;
 import android.webkit.JavascriptInterface;
 import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.inapp.CTInAppAction;
 import com.clevertap.android.sdk.inapp.CTInAppBaseFragment;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -17,6 +19,7 @@ import org.json.JSONObject;
 public class CTWebInterface {
 
     private final WeakReference<CleverTapAPI> weakReference;
+
     private CTInAppBaseFragment inAppBaseFragment;
 
     public CTWebInterface(CleverTapAPI instance) {
@@ -24,14 +27,14 @@ public class CTWebInterface {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI != null) {
             CoreState coreState = cleverTapAPI.getCoreState();
-            if(coreState != null) {
+            if (coreState != null) {
                 coreState.getCoreMetaData().setWebInterfaceInitializedExternally(true);
             }
         }
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public CTWebInterface(CleverTapAPI instance, CTInAppBaseFragment inAppBaseFragment){
+    public CTWebInterface(CleverTapAPI instance, CTInAppBaseFragment inAppBaseFragment) {
         this.weakReference = new WeakReference<>(instance);
         this.inAppBaseFragment = inAppBaseFragment;
     }
@@ -87,6 +90,7 @@ public class CTWebInterface {
     /**
      * Method to be called from WebView Javascript to increase the value of a particular property.
      * The key must hold numeric value
+     *
      * @param key   {@link String} value of profile property key
      * @param value {@link Double} value of increment
      */
@@ -103,6 +107,7 @@ public class CTWebInterface {
     /**
      * Method to be called from WebView Javascript to decrease the value of a particular property.
      * The key must hold numeric value
+     *
      * @param key   {@link String} value of profile property key
      * @param value {@link Double} value of decrement
      */
@@ -379,5 +384,58 @@ public class CTWebInterface {
                 Logger.v("profile passed to CTWebInterface is null");
             }
         }
+    }
+
+    /**
+     * Trigger an in-app action (close, open url, button click, custom template, key-value). This method will also
+     * push a "Notification Clicked" event for the currently displayed in-app notification. The notification will be
+     * dismissed after the action is triggered.
+     *
+     * @param actionJson   Stringified JSON of the action that is triggered
+     * @param callToAction A string that will be stored as param to the "Notification Clicked" event
+     * @param buttonId     A string that will be stored as param to the "Notification Clicked" event
+     */
+    @JavascriptInterface
+    public void triggerInAppAction(String actionJson, String callToAction, String buttonId) {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CTWebInterface CleverTap Instance is null.");
+            return;
+        }
+
+        if (inAppBaseFragment == null) {
+            Logger.d("CTWebInterface Fragment is null");
+            return;
+        }
+
+        if (actionJson == null) {
+            Logger.d("CTWebInterface action JSON is null");
+            return;
+        }
+
+        try {
+            CTInAppAction action = CTInAppAction.createFromJson(new JSONObject(actionJson));
+            if (action == null) {
+                Logger.d("CTWebInterface invalid action JSON: " + actionJson);
+                return;
+            }
+
+            Bundle actionData = new Bundle();
+            if (buttonId != null) {
+                actionData.putString("button_id", buttonId);
+            }
+
+            inAppBaseFragment.triggerAction(action, callToAction, actionData);
+        } catch (JSONException je) {
+            Logger.d("CTWebInterface invalid action JSON: " + actionJson);
+        }
+    }
+
+    /**
+     * Retrieve the version code of the CleverTap SDK.
+     */
+    @JavascriptInterface
+    public int getSdkVersion() {
+        return BuildConfig.VERSION_CODE;
     }
 }

@@ -233,7 +233,7 @@ public final class Validator {
             vr.setObject(value.trim());
             return vr;
         } else if (o instanceof Date) {
-            String date = "$D_" + ((Date) o).getTime() / 1000;
+            String date = Constants.DATE_PREFIX + ((Date) o).getTime() / 1000;
             vr.setObject(date);
             return vr;
         } else if ((o instanceof String[] || o instanceof ArrayList) && validationContext

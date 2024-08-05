@@ -1,24 +1,21 @@
 package com.clevertap.android.sdk.inapp;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.customviews.CloseImageView;
-import com.clevertap.android.sdk.inapp.images.InAppResourceProvider;
-
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
+import com.clevertap.android.sdk.utils.UriHelper;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Set;
+import java.net.URLDecoder;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class CTInAppBaseFragment extends Fragment {
@@ -47,10 +44,10 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     private DidClickForHardPermissionListener didClickForHardPermissionListener;
 
-    private InAppResourceProvider provider;
+    private FileResourceProvider provider;
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         this.context = context;
         Bundle bundle = getArguments();
@@ -61,7 +58,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             if (config != null) {
                 logger = config.getLogger();
             }
-            provider = new InAppResourceProvider(context, logger);
+            provider = new FileResourceProvider(context, logger);
             currentOrientation = getResources().getConfiguration().orientation;
             generateListener();
             /*Initialize the below listener only when in app has InAppNotification activity as their host activity
@@ -73,25 +70,49 @@ public abstract class CTInAppBaseFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         didShow(null);
     }
 
     abstract void cleanup();
 
-    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
-        InAppListener listener = getListener();
-        if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
+    public void triggerAction(
+            @NonNull CTInAppAction action,
+            @Nullable String callToAction,
+            @Nullable Bundle additionalData) {
+        Bundle actionData = notifyActionTriggered(action, callToAction != null ? callToAction : "", additionalData);
+        didDismiss(actionData);
+    }
+
+    void openActionUrl(String url) {
+        try {
+            final Bundle formData = UriHelper.getAllKeyValuePairs(url, false);
+
+            String actionParts = formData.getString(Constants.KEY_C2A);
+            String callToAction = null;
+            if (actionParts != null) {
+                final String[] parts = actionParts.split("__dl__");
+                if (parts.length == 2) {
+                    // Decode it here as wzrk_c2a is not decoded by UriHelper
+                    callToAction = URLDecoder.decode(parts[0], "UTF-8");
+                    url = parts[1];
+                }
+            }
+
+            CTInAppAction action = CTInAppAction.createOpenUrlAction(url);
+            config.getLogger().debug("Executing call to action for in-app: " + url);
+            triggerAction(action, callToAction != null ? callToAction : "", formData);
+        } catch (Throwable t) {
+            config.getLogger().debug("Error parsing the in-app notification action!", t);
         }
     }
 
     public void didDismiss(Bundle data) {
         cleanup();
         InAppListener listener = getListener();
-        if (listener != null && getActivity() != null && getActivity().getBaseContext() != null) {
-            listener.inAppNotificationDidDismiss(getActivity().getBaseContext(), inAppNotification, data);
+        if (listener != null) {
+            listener.inAppNotificationDidDismiss(inAppNotification, data);
         }
     }
 
@@ -101,28 +122,6 @@ public abstract class CTInAppBaseFragment extends Fragment {
         if (listener != null) {
             listener.inAppNotificationDidShow(inAppNotification, data);
         }
-    }
-
-    void fireUrlThroughIntent(String url, Bundle formData) {
-        try {
-            Uri uri = Uri.parse(url.replace("\n", "").replace("\r", ""));
-            Set<String> queryParamSet = uri.getQueryParameterNames();
-            Bundle queryBundle = new Bundle();
-            if (queryParamSet != null && !queryParamSet.isEmpty()) {
-                for (String queryName : queryParamSet) {
-                    queryBundle.putString(queryName, uri.getQueryParameter(queryName));
-                }
-            }
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            if (!queryBundle.isEmpty()) {
-                intent.putExtras(queryBundle);
-            }
-            Utils.setPackageNameFromResolveInfoList(getActivity(), intent);
-            startActivity(intent);
-        } catch (Throwable t) {
-            // Ignore
-        }
-        didDismiss(formData);
     }
 
     abstract void generateListener();
@@ -153,45 +152,51 @@ public abstract class CTInAppBaseFragment extends Fragment {
     void handleButtonClickAtIndex(int index) {
         try {
             CTInAppNotificationButton button = inAppNotification.getButtons().get(index);
-            Bundle data = new Bundle();
+            Bundle clickData = didClick(button);
 
-            data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
-            data.putString(Constants.KEY_C2A, button.getText());
-
-            didClick(data, button.getKeyValues());
-
-            if (index == 0 && inAppNotification.isLocalInApp() &&
-                    didClickForHardPermissionListener != null) {
+            if (index == 0 && inAppNotification.isLocalInApp() && didClickForHardPermissionListener != null) {
                 didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(
                         inAppNotification.fallBackToNotificationSettings());
                 return;
-            }else if (index == 1 && inAppNotification.isLocalInApp()){
-                didDismiss(data);
-                return;
             }
 
-            if (button.getType() != null && button.getType().contains(
-                    Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
-                    && didClickForHardPermissionListener != null){
+            CTInAppAction action = button.getAction();
+            if (action != null && InAppActionType.REQUEST_FOR_PERMISSIONS == action.getType()
+                    && didClickForHardPermissionListener != null) {
                 didClickForHardPermissionListener.
-                        didClickForHardPermissionWithFallbackSettings(button.isFallbackToSettings());
+                        didClickForHardPermissionWithFallbackSettings(action.shouldFallbackToSettings());
                 return;
             }
-            String actionUrl = button.getActionUrl();
-            if (actionUrl != null) {
-                fireUrlThroughIntent(actionUrl, data);
-                return;
-            }
-            didDismiss(data);
 
+            didDismiss(clickData);
         } catch (Throwable t) {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
             didDismiss(null);
         }
     }
 
-    public InAppResourceProvider resourceProvider() {
+    public FileResourceProvider resourceProvider() {
         return provider;
     }
 
+    private Bundle didClick(CTInAppNotificationButton button) {
+        return notifyActionTriggered(button.getAction(), button.getText(), null);
+    }
+
+    private Bundle notifyActionTriggered(
+            @NonNull CTInAppAction action,
+            @NonNull String callToAction,
+            @Nullable Bundle additionalData) {
+        InAppListener listener = getListener();
+        if (listener != null) {
+            return listener.inAppNotificationActionTriggered(
+                    inAppNotification,
+                    action,
+                    callToAction,
+                    additionalData,
+                    getActivity());
+        } else {
+            return null;
+        }
+    }
 }

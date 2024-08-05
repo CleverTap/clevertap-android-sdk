@@ -20,8 +20,6 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
-import com.clevertap.android.sdk.utils.UriHelper;
-import java.net.URLDecoder;
 
 public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragment {
 
@@ -33,28 +31,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            final Bundle formData;
-            try {
-                formData = UriHelper.getAllKeyValuePairs(url, false);
-
-                if (formData.containsKey(Constants.KEY_C2A)) {
-                    final String c2a = formData.getString(Constants.KEY_C2A);
-                    if (c2a != null) {
-                        final String[] parts = c2a.split("__dl__");
-                        if (parts.length == 2) {
-                            // Decode it here as wzrk_c2a is not decoded by UriHelper
-                            formData.putString(Constants.KEY_C2A, URLDecoder.decode(parts[0], "UTF-8"));
-                            url = parts[1];
-                        }
-                    }
-                }
-
-                didClick(formData, null);
-                Logger.d("Executing call to action for in-app: " + url);
-                fireUrlThroughIntent(url, formData);
-            } catch (Throwable t) {
-                Logger.v("Error parsing the in-app notification action!", t);
-            }
+            openActionUrl(url);
             return true;
         }
     }
@@ -62,7 +39,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     protected CTInAppWebView webView;
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
     }
 
@@ -110,8 +87,8 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             inAppView = inflater.inflate(R.layout.inapp_html_full, container, false);
             RelativeLayout rl = inAppView.findViewById(R.id.inapp_html_full_relative_layout);
             RelativeLayout.LayoutParams webViewLp = new RelativeLayout
-                    .LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-                    RelativeLayout.LayoutParams.WRAP_CONTENT);
+                    .LayoutParams(LayoutParams.MATCH_PARENT,
+                    LayoutParams.MATCH_PARENT);
             webViewLp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
             initWebViewLayoutParams(webViewLp);

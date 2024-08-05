@@ -19,6 +19,11 @@ class MockCTExecutors @JvmOverloads constructor(config: CleverTapInstanceConfig?
         return Task(config, executor, executor, "ioTaskNonUi")
     }
 
+    override fun <TResult> ioTaskWithCallbackOnCurrentThread(): Task<TResult> {
+        val executor = MockExecutorService()
+        return Task(config, executor, executor, "ioTaskWithCallbackOnCurrentThread")
+    }
+
     override fun <TResult : Any?> postAsyncSafelyTask(): Task<TResult> {
         val executor = MockExecutorService()
         return Task(config, executor, executor, "postAsyncSafelyTask")
