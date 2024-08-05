@@ -1,14 +1,13 @@
 ## CleverTap Android SDK CHANGE LOG
 
-TODO - Update Date here
-### Version 7.0.0 (July xx, 2024)
+### Version 7.0.0 (August 5, 2024)
 
 #### New Features
 
 * Adds support for triggering InApps based on user attribute changes.
 * Adds support for custom code templates for InApp notifications. Please refer to the [CustomCodeTemplates.md](CustomCodeTemplates.md) for further details.
 * Removes character limit of maximum 3 lines from AppInbox messages.
-* Adds support for File Types for Variables. Please refer to [Variables.md](Variables.md#define-file-variables) for further details
+* Adds support for File Types for Variables. Please refer to [Variables.md](Variables.md#define-file-variables) for further details.
 * Adds new API 
   - `clearFileResources(boolean expiredOnly)`
       - This API allows you to delete all types of files which are preloaded for SDK features like Custom In-App Templates, App Functions, Variables etc.
@@ -17,11 +16,10 @@ TODO - Update Date here
 
 * Fixes a race-condition bug where the App Launch event was triggered twice when using a custom CleverTap ID.
 * Fixes an ANR caused by extremely old InApp campaigns.
-* Fixes an issue where incorrect callbacks were sent when the phone was rotated.
-* Fixes an issue where an InApp was displayed even when all campaigns were stopped.
+* Fixes an issue where incorrect callbacks were sent for InApps when the phone was rotated.
+* Fixes an issue where an InApp was displayed even after all the campaigns were stopped.
 * Fixes an issue where the InApp image was not shown when the phone was rotated to landscape.
-* // TODO - @piyush Changelog if required related to https://wizrocket.atlassian.net/browse/SDK-3772
-* 
+* Fixes an issue where certain URLs loaded incorrectly in custom HTML InApp templates.
 
 #### Dependency Update
 
