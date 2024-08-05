@@ -8,8 +8,9 @@ object LocalDataStoreProvider {
     fun provideLocalDataStore(
         context: Context,
         config: CleverTapInstanceConfig,
-        cryptHandler: CryptHandler
+        cryptHandler: CryptHandler,
+        deviceInfo: DeviceInfo
     ): LocalDataStore {
-        return LocalDataStore(context, config, cryptHandler)
+        return LocalDataStore(context, config, cryptHandler, deviceInfo)
     }
 }

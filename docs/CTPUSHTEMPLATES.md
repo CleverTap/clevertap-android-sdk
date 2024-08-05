@@ -20,8 +20,8 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:1.2.3"
-implementation "com.clevertap.android:clevertap-android-sdk:6.2.1" // 4.4.0 and above
+implementation "com.clevertap.android:push-templates:1.2.4"
+implementation "com.clevertap.android:clevertap-android-sdk:7.0.0" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -180,11 +180,11 @@ pt_product_display_linear | Optional | `true`
 
 ## Five Icons Template
 
-Five icons template is a sticky push notification with no text, just 5 icons and a close button which can help your users go directly to the functionality of their choice with a button's click.
+Five icons template is a push notification with no text, just 5 icons which can help your users go directly to the functionality of their choice with a button's click.
 
 If at least 3 icons are not retrieved, the library doesn't render any notification. The bifurcation of each CTA is captured in the event Notification Clicked with in the property `wzrk_c2a`.
 
-If user clicks on any notification area except the five & close icons, then by default it will launch an activity intent.
+If user clicks on any notification area except the five icons, then by default it will launch an activity intent.
 
 <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/fiveicon.png" width="412" height="100">
 

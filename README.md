@@ -26,7 +26,7 @@ We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as depend
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:6.2.1"
+         implementation "com.clevertap.android:clevertap-android-sdk:7.0.0"
     }
 ```
 
@@ -34,7 +34,7 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-6.2.1", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-7.0.0", ext: 'aar')
     }
 ```
 
@@ -46,7 +46,7 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:6.2.1"
+         implementation "com.clevertap.android:clevertap-android-sdk:7.0.0"
          implementation "androidx.core:core:1.9.0"
          implementation "com.google.firebase:firebase-messaging:23.0.6"
          implementation "com.google.android.gms:play-services-ads:22.3.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
@@ -85,7 +85,7 @@ Add your FCM generated `google-services.json` file to your project and add the f
 apply plugin: 'com.google.gms.google-services'
 ```
 Interstitial InApp Notification templates support Audio and Video with the help of ExoPlayer. To enable Audio/Video in your Interstitial InApp Notifications, add the following dependencies in your `build.gradle` file :
-    
+**Note:** Clevertap supports `AndroidX Media3` from `v7.0.0+` to replace the deprecated `ExoPlayer` libraries. While Clevertap continues to support `ExoPlayer`, migration is recommended. For migration, refer to [this](EXAMPLES.md#migrating-from-exoplayer-to-androidx-media3)
 ```groovy
     implementation "com.google.android.exoplayer:exoplayer:2.19.1"
     implementation "com.google.android.exoplayer:exoplayer-hls:2.19.1"

@@ -85,7 +85,7 @@ Add your FCM generated `google-services.json` file to your project and add the f
 apply plugin: 'com.google.gms.google-services'
 ```
 Interstitial InApp Notification templates support Audio and Video with the help of ExoPlayer. To enable Audio/Video in your Interstitial InApp Notifications, add the following dependencies in your `build.gradle` file :
-    
+**Note:** Clevertap supports `AndroidX Media3` from `v7.0.0+` to replace the deprecated `ExoPlayer` libraries. While Clevertap continues to support `ExoPlayer`, migration is recommended. For migration, refer to [this](EXAMPLES.md#migrating-from-exoplayer-to-androidx-media3)
 ```groovy
     implementation "${ext.exoplayer}"
     implementation "${ext.exoplayer_hls}"

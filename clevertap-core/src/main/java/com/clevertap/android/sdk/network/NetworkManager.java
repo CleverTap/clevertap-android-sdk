@@ -23,15 +23,17 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueData;
 import com.clevertap.android.sdk.events.EventGroup;
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
+import com.clevertap.android.sdk.inapp.evaluation.EventType;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.network.api.CtApiWrapper;
+import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody;
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody;
 import com.clevertap.android.sdk.network.http.Response;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
@@ -47,13 +49,13 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
-import com.clevertap.android.sdk.response.SyncUpstreamResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -80,8 +82,6 @@ public class NetworkManager extends BaseNetworkManager {
     private final BaseDatabaseManager databaseManager;
 
     private final DeviceInfo deviceInfo;
-
-    private final LocalDataStore localDataStore;
 
     private final Logger logger;
 
@@ -133,7 +133,6 @@ public class NetworkManager extends BaseNetworkManager {
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
-            LocalDataStore localDataStore,
             InAppResponse inAppResponse,
             final CtApiWrapper ctApiWrapper) {
         this.context = context;
@@ -141,7 +140,6 @@ public class NetworkManager extends BaseNetworkManager {
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
         this.validator = validator;
-        this.localDataStore = localDataStore;
         logger = this.config.getLogger();
 
         this.coreMetaData = coreMetaData;
@@ -161,7 +159,6 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponses.add(new FeatureFlagResponse(config, controllerManager));
         cleverTapResponses.add(new ProductConfigResponse(config, coreMetaData, controllerManager));
         cleverTapResponses.add(new GeofenceResponse(config, callbackManager));
-        cleverTapResponses.add(new SyncUpstreamResponse(localDataStore, logger, config.getAccountId()));
     }
 
     /**
@@ -571,7 +568,7 @@ public class NetworkManager extends BaseNetworkManager {
 
         EndpointId endpointId = EndpointId.fromEventGroup(eventGroup);
         JSONObject queueHeader = getQueueHeader(context, caller);
-        applyQueueHeaderListeners(queueHeader, endpointId);
+        applyQueueHeaderListeners(queueHeader, endpointId, queue.optJSONObject(0).has("profile"));
 
         final SendQueueRequestBody body = new SendQueueRequestBody(queueHeader, queue);
         logger.debug(config.getAccountId(), "Send queue contains " + queue.length() + " items: " + body);
@@ -602,10 +599,35 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
-    private void applyQueueHeaderListeners(JSONObject queueHeader, EndpointId endpointId) {
+    @Override
+    @WorkerThread
+    public boolean defineTemplates(final Context context, Collection<CustomTemplate> templates) {
+        final JSONObject header = getQueueHeader(context, null);
+        if (header == null) {
+            return false;
+        }
+
+        final DefineTemplatesRequestBody body = new DefineTemplatesRequestBody(header, templates);
+        logger.debug(config.getAccountId(), "Will define templates: " + body);
+
+        try (Response response = ctApiWrapper.getCtApi().defineTemplates(body)) {
+            if (response.isSuccess()) {
+                handleTemplateResponseSuccess(response);
+                return true;
+            } else {
+                handleVarsOrTemplatesResponseError(response, "CustomTemplates");
+                return false;
+            }
+        } catch (Exception e) {
+            logger.debug(config.getAccountId(), "An exception occurred while defining templates.", e);
+            return false;
+        }
+    }
+
+    private void applyQueueHeaderListeners(JSONObject queueHeader, EndpointId endpointId, boolean isProfile) {
         if (queueHeader != null) {
             for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
-                final JSONObject headersToAttach = listener.onAttachHeaders(endpointId);
+                final JSONObject headersToAttach = listener.onAttachHeaders(endpointId, EventType.Companion.fromBoolean(isProfile));
                 if (headersToAttach != null) {
                     CTXtensions.copyFrom(queueHeader, headersToAttach);
                 }
@@ -631,32 +653,41 @@ public class NetworkManager extends BaseNetworkManager {
 
             new ARPResponse(config, this, validator, controllerManager)
                     .processResponse(bodyJson, bodyString, this.context);
-            new SyncUpstreamResponse(localDataStore, logger, config.getAccountId())
-                    .processResponse(bodyJson, bodyString, context);
             return true;
         } else {
-            handleVariablesResponseError(response);
+            handleVarsOrTemplatesResponseError(response, "Variables");
             return false;
         }
     }
 
-    private void handleVariablesResponseError(Response response) {
+    private void handleVarsOrTemplatesResponseError(Response response, String logTag) {
         switch (response.getCode()) {
             case 400:
                 JSONObject errorStreamJson = CTXtensions.toJsonOrNull(response.readBody());
                 if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
                     String errorMessage = errorStreamJson.optString("error");
-                    logger.info("variables", "Error while syncing vars: " + errorMessage);
+                    logger.info(logTag, "Error while syncing: " + errorMessage);
                 } else {
-                    logger.info("variables", "Error while syncing vars.");
+                    logger.info(logTag, "Error while syncing.");
                 }
                 return;
             case 401:
-                logger.info("variables", "Unauthorized access from a non-test profile. "
+                logger.info(logTag, "Unauthorized access from a non-test profile. "
                         + "Please mark this profile as a test profile from the CleverTap dashboard.");
                 return;
             default:
-                logger.info("variables", "Response code " + response.getCode() + " while syncing vars.");
+                logger.info(logTag, "Response code " + response.getCode() + " while syncing.");
+        }
+    }
+
+    private void handleTemplateResponseSuccess(Response response) {
+        logger.info(config.getAccountId(), "Custom templates defined successfully.");
+        JSONObject body = CTXtensions.toJsonOrNull(response.readBody());
+        if (body != null) {
+            String warnings = body.optString("error");
+            if (!TextUtils.isEmpty(warnings)) {
+                logger.info(config.getAccountId(), "Custom templates warnings: " + warnings);
+            }
         }
     }
 
@@ -679,7 +710,8 @@ public class NetworkManager extends BaseNetworkManager {
 
         if (body.getQueueHeader() != null) {
             for (NetworkHeadersListener listener : mNetworkHeadersListeners) {
-                listener.onSentHeaders(body.getQueueHeader(), endpointId);
+                boolean isProfile = body.getQueue().optJSONObject(0).has("profile");
+                listener.onSentHeaders(body.getQueueHeader(), endpointId, EventType.Companion.fromBoolean(isProfile));
             }
         }
 

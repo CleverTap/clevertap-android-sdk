@@ -29,7 +29,8 @@ class EventAdapter(
     val eventName: String,
     val eventProperties: Map<String, Any>,
     val items: List<Map<String, Any>?> = listOf(), // for chargedEvent only
-    val userLocation: Location? = null
+    val userLocation: Location? = null,
+    val profileAttrName: String? = null // for profile events only
 ) {
 
     private val systemPropToKey = mapOf(
@@ -84,6 +85,16 @@ class EventAdapter(
      */
     fun isChargedEvent(): Boolean {
         return eventName == Constants.CHARGED_EVENT
+    }
+
+
+    /**
+     * Checks if the event is a user-attribute-change-event.
+     *
+     * @return `true` if the event is a user-attribute-change-event; otherwise, `false`.
+     */
+    fun isUserAttributeChangeEvent(): Boolean {
+        return profileAttrName != null
     }
 
     @VisibleForTesting

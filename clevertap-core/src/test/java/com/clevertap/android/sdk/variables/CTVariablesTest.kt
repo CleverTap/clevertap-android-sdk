@@ -1,8 +1,11 @@
 package com.clevertap.android.sdk.variables
 
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
@@ -15,13 +18,23 @@ class CTVariablesTest : BaseTestCase() {
   private lateinit var varCache: VarCache
   private lateinit var ctVariables: CTVariables
   private lateinit var parser: Parser
+  private lateinit var fileResourcesRepoImpl: FileResourcesRepoImpl
+  private lateinit var fileResourceProvider: FileResourceProvider
 
   @Before
   @Throws(Exception::class)
   override fun setUp() {
     super.setUp()
 
-    varCache = VarCache(cleverTapInstanceConfig, application)
+    fileResourcesRepoImpl = mockk(relaxed = true)
+    fileResourceProvider = mockk(relaxed = true)
+    varCache = VarCache(
+        cleverTapInstanceConfig,
+        application,
+        fileResourcesRepoImpl,
+        fileResourceProvider
+    )
+    varCache = spyk(varCache)
     ctVariables = CTVariables(varCache)
     parser = Parser(ctVariables)
   }
@@ -61,6 +74,7 @@ class CTVariablesTest : BaseTestCase() {
     assertTrue(var2_notified)
     assertEquals(10, var1.value())
     assertEquals(20, var2.value())
+    verify { varCache.updateDiffsAndTriggerHandlers(any(), any()) }
   }
 
   @Test
@@ -68,12 +82,15 @@ class CTVariablesTest : BaseTestCase() {
     ctVariables.init()
     var success = false
     var callback = false
+    ctVariables.setHasVarsRequestCompleted(false)
 
     ctVariables.handleVariableResponse(null) { isSuccessful ->
       success = isSuccessful
       callback = true
     }
 
+    assertTrue(ctVariables.hasVarsRequestCompleted())
+    verify { varCache.loadDiffsAndTriggerHandlers(any()) }
     assertTrue(callback)
     assertFalse(success)
   }

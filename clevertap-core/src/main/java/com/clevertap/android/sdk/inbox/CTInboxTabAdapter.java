@@ -23,7 +23,7 @@ public class CTInboxTabAdapter extends FragmentPagerAdapter {
     private final List<String> fragmentTitleList = new ArrayList<>();
 
     public CTInboxTabAdapter(FragmentManager fm, int size) {
-        super(fm);
+        super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         fragmentList = new Fragment[size];
     }
 

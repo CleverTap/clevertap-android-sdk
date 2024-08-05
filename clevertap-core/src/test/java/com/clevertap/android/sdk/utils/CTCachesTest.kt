@@ -1,58 +1,72 @@
 package com.clevertap.android.sdk.utils
 
-import com.clevertap.android.sdk.TestLogger
+import android.graphics.Bitmap
+import com.clevertap.android.sdk.inapp.images.memory.Memory
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.After
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Test
+import java.io.File
 import kotlin.test.assertEquals
 
 class CTCachesTest {
-
-    private val config1: CTCachesConfig = CTCachesConfig(
-            minImageCacheKb = 10,
-            minGifCacheKb = 10,
-            optimistic = 20,
-            maxImageSizeDiskKb = 2
-    )
-
-    private val config2: CTCachesConfig = CTCachesConfig(
-            minImageCacheKb = 100,
-            minGifCacheKb = 100,
-            optimistic = 20,
-            maxImageSizeDiskKb = 2
-    )
-
-    private val logger = TestLogger()
-
     @After
-    fun after() {
+    fun tearDown() {
+        CTCaches.clear() // Clear the singleton instance after each test
+    }
+
+    @Test
+    fun `instance returns the same instance on multiple calls`() {
+        val mockImageMemory = mockk<Memory<Bitmap>>()
+        val mockGifMemory = mockk<Memory<ByteArray>>()
+        val mockFileMemory = mockk<Memory<ByteArray>>()
+
+        val instance1 = CTCaches.instance(mockImageMemory, mockGifMemory, mockFileMemory)
+        val instance2 = CTCaches.instance(mockImageMemory, mockGifMemory, mockFileMemory)
+        assertSame(instance1, instance2)
+    }
+
+    @Test
+    fun `clear resets the singleton instance`() {
+        val mockImageMemory = mockk<Memory<Bitmap>>()
+        val mockGifMemory = mockk<Memory<ByteArray>>()
+        val mockFileMemory = mockk<Memory<ByteArray>>()
+
+        val instance1 = CTCaches.instance(mockImageMemory, mockGifMemory, mockFileMemory)
         CTCaches.clear()
+        val instance2 = CTCaches.instance(mockImageMemory, mockGifMemory, mockFileMemory)
+
+        assertNotSame(instance1, instance2)
     }
 
     @Test
-    fun `optimistic size is assigned when optimistic size is greater than minimum cache size`() {
-        val cache = CTCaches.instance(
-                config = config1,
-                logger = logger
-        )
+    fun `cache access methods return correct caches`() {
+        val mockImageMemory = mockk<Memory<Bitmap>>()
+        val mockGifMemory = mockk<Memory<ByteArray>>()
+        val mockFileMemory = mockk<Memory<ByteArray>>()
+        val mockImageInMemoryLruCache = mockk<InMemoryLruCache<Pair<Bitmap, File>>>()
+        val mockGifInMemoryLruCache = mockk<InMemoryLruCache<Pair<ByteArray, File>>>()
+        val mockFileInMemoryLruCache = mockk<InMemoryLruCache<Pair<ByteArray, File>>>()
+        val mockImageDiskMemory = mockk<DiskMemory>()
+        val mockGifDiskMemory = mockk<DiskMemory>()
+        val mockFileDiskMemory = mockk<DiskMemory>()
 
-        val opi = cache.imageCacheSize()
-        val opg = cache.gifCacheSize()
+        every { mockImageMemory.createInMemory() } returns mockImageInMemoryLruCache
+        every { mockGifMemory.createInMemory() } returns mockGifInMemoryLruCache
+        every { mockFileMemory.createInMemory() } returns mockFileInMemoryLruCache
+        every { mockImageMemory.createDiskMemory() } returns mockImageDiskMemory
+        every { mockGifMemory.createDiskMemory() } returns mockGifDiskMemory
+        every { mockFileMemory.createDiskMemory() } returns mockFileDiskMemory
 
-        assertEquals(config1.optimistic.toInt(), opi)
-        assertEquals(config1.optimistic.toInt(), opg)
-    }
+        val ctCaches = CTCaches.instance(mockImageMemory, mockGifMemory, mockFileMemory)
 
-    @Test
-    fun `minimum size is assigned when optimistic size is less than minimum cache size`() {
-        val cache = CTCaches.instance(
-                config = config2,
-                logger = logger
-        )
-
-        val opi = cache.imageCacheSize()
-        val opg = cache.gifCacheSize()
-
-        assertEquals(config2.minImageCacheKb.toInt(), opi)
-        assertEquals(config2.minGifCacheKb.toInt(), opg)
+        assertEquals(mockImageInMemoryLruCache, ctCaches.imageInMemory())
+        assertEquals(mockGifInMemoryLruCache, ctCaches.gifInMemory())
+        assertEquals(mockFileInMemoryLruCache, ctCaches.fileInMemory())
+        assertEquals(mockImageDiskMemory, ctCaches.imageDiskMemory())
+        assertEquals(mockGifDiskMemory, ctCaches.gifDiskMemory())
+        assertEquals(mockFileDiskMemory, ctCaches.fileDiskMemory())
     }
 }

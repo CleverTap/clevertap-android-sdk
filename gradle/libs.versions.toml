@@ -54,11 +54,11 @@ coroutines_test = "1.7.3"
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "6.2.1"
+clevertap_android_sdk = "7.0.0"
 clevertap_rendermax_sdk = "1.0.3"
 clevertap_geofence_sdk = "1.3.0"
 clevertap_hms_sdk = "1.3.4"
-clevertap_push_templates_sdk = "1.2.3"
+clevertap_push_templates_sdk = "1.2.4"
 
 # Glide
 glide = "4.12.0"
@@ -67,6 +67,9 @@ glide = "4.12.0"
 exoplayer = "2.19.1"
 exoplayer_hls = "2.19.1"
 exoplayer_ui = "2.19.1"
+
+# Media3
+media3 = "1.1.1"
 
 #Play Services
 play_services_ads = "22.3.0"
@@ -159,6 +162,12 @@ exoplayer_exoplayer = { module = "com.google.android.exoplayer:exoplayer", versi
 exoplayer_hls = { module = "com.google.android.exoplayer:exoplayer-hls", version.ref = "exoplayer_hls" }
 exoplayer_ui = { module = "com.google.android.exoplayer:exoplayer-ui", version.ref = "exoplayer_ui" }
 
+
+#Media3
+media3_exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
+media3_hls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "media3" }
+media3_ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
+
 #Play Services
 play_services_ads = { module = "com.google.android.gms:play-services-ads", version.ref = "play_services_ads" }
 play_services_location = { module = "com.google.android.gms:play-services-location", version.ref = "play_services_location" }
@@ -181,6 +190,7 @@ catch_exception = { module = "eu.codearte.catch-exception:catch-exception", vers
 
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]
+media3 = ["media3_exoplayer", "media3_hls", "media3_ui"]
 
 [plugins]
 sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }

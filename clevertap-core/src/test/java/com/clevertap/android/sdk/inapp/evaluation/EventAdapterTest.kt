@@ -111,4 +111,20 @@ class EventAdapterTest : BaseTestCase() {
 
         assertFalse(eventAdapter.isChargedEvent())
     }
+
+    @Test
+    fun `testGetProfileAttrName when missing`() {
+        // Arrange
+        val eventAdapter = EventAdapter("eventName", emptyMap())
+
+        assertNull(eventAdapter.profileAttrName)
+    }
+
+    @Test
+    fun `testGetProfileAttrName when present`() {
+        // Arrange
+        val eventAdapter = EventAdapter("eventName", emptyMap(), profileAttrName = "attr1")
+
+        assertEquals("attr1", eventAdapter.profileAttrName)
+    }
 }
