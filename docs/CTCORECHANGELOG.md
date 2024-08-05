@@ -94,6 +94,10 @@ Please update to 6.1.1 and above
 #### New Features
 
 * Adds support for client-side in-apps.
+* Adds new API
+  - `clearInAppResources(boolean expiredOnly)`
+      - This API allows you to delete images and gifs which are preloaded for InApps in `client-side` mode.
+
 
 #### Bug Fixes
 
