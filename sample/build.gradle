@@ -13,11 +13,11 @@ allprojects {
 }
 
 android {
-    compileSdk 34
+    compileSdk 35
     defaultConfig {
         applicationId "com.clevertap.demo"
         minSdkVersion 21
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode 7000010
         versionName "7.1.0"
         multiDexEnabled true
