@@ -1,13 +1,13 @@
 [versions]
 # Project
-android_compileSdk = "34"
-android_gradle_plugin = "8.2.2"
-android_minSdk = "19"
-kotlin_plugin = "1.7.20"
+android_compileSdk = "35"
+android_gradle_plugin = "8.5.2"
+android_minSdk = "21"
+kotlin_plugin = "2.0.10"
 sonarqube_plugin = "3.3"
 android_buildTools = "34.0.0"
-detekt_gradle_plugin = "1.20.0-RC1"
-firebase_gradle_crashlytics = "2.8.1"
+detekt_gradle_plugin = "1.23.3"
+firebase_gradle_crashlytics = "3.0.2"
 
 # AndroidX
 annotation = "1.2.0"
