@@ -194,3 +194,4 @@ media3 = ["media3_exoplayer", "media3_hls", "media3_ui"]
 
 [plugins]
 sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin_plugin" }
