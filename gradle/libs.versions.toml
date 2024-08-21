@@ -23,23 +23,23 @@ viewpager = "1.0.0"
 work_runtime = "2.9.1"
 
 #UI
-material = "1.4.0"
+material = "1.12.0"
 
 #Test
-espresso_core = "3.3.0"
-test_ext_junit = "1.1.3"
-test_core = "1.4.0"
-test_rules = "1.5.0"
-test_runner = "1.5.2"
-work_testing = "2.7.1"
+espresso_core = "3.6.1"
+test_ext_junit = "1.2.1"
+test_core = "1.6.1"
+test_rules = "1.6.1"
+test_runner = "1.6.2"
+work_testing = "2.9.1"
 truth = "1.1.3"
-junit = "4.13"
+junit = "4.13.2"
 awaitility = "4.1.0"
-kotlin_stdlib_jdk7 = "1.7.20" #check with kotlin_gradle_plugin
+kotlin_stdlib_jdk7 = "1.9.20" #check with kotlin_gradle_plugin
 kotlin_test = "1.7.20" #check with kotlin_gradle_plugin
-junit_jupiter_api = "5.7.2"
-junit_jupiter_engine = "5.7.2"
-junit_platform_runner = "1.7.2"
+junit_jupiter_api = "5.8.2"
+junit_jupiter_engine = "5.8.2"
+junit_platform_runner = "1.8.2"
 mockito_kotlin = "3.2.0"
 mockito_core = "5.9.0"
 opentest4j = "1.2.0"
@@ -47,18 +47,18 @@ robolectric = "4.9"
 jsonassert = "1.5.0"
 xmlpull = "1.1.3.1"
 mockk = "1.13.5"
-uiautomator = "2.3.0-alpha03"
+uiautomator = "2.3.0"
 coroutines_test = "1.7.3"
 
 #Install Referrer
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "7.0.0"
+clevertap_android_sdk = "7.1.0"
 clevertap_rendermax_sdk = "1.0.3"
-clevertap_geofence_sdk = "1.3.0"
-clevertap_hms_sdk = "1.3.4"
-clevertap_push_templates_sdk = "1.2.4"
+clevertap_geofence_sdk = "1.4.0"
+clevertap_hms_sdk = "1.4.0"
+clevertap_push_templates_sdk = "1.3.0"
 
 # Glide
 glide = "4.12.0"
@@ -69,7 +69,7 @@ exoplayer_hls = "2.19.1"
 exoplayer_ui = "2.19.1"
 
 # Media3
-media3 = "1.1.1"
+media3 = "1.4.0"
 
 #Play Services
 play_services_ads = "22.3.0"
