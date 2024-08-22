@@ -72,20 +72,20 @@ exoplayer_ui = "2.19.1"
 media3 = "1.4.0"
 
 #Play Services
-play_services_ads = "22.3.0"
-play_services_location = "21.0.0"
+play_services_ads = "23.3.0"
+play_services_location = "21.3.0"
 
 #Gson
-gson = "2.8.6"
+gson = "2.10.1"
 
 #FCM
-firebase_messaging = "23.0.6"
+firebase_messaging = "24.0.0"
 
 #GMS
-google_services = "4.4.0"
+google_services = "4.4.2"
 
 #HMS Push Plugin/Lib
-agcp = "1.9.1.300"
+agcp = "1.9.1.301"
 push = "6.11.0.300"
 
 #Catch Exception
