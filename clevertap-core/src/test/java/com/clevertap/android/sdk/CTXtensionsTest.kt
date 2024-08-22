@@ -8,9 +8,11 @@ import android.os.Build.VERSION
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.Mockito.*
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.mockStatic
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.util.ReflectionHelpers
@@ -20,6 +22,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+
 
 @RunWith(RobolectricTestRunner::class)
 class CTXtensionsTest : BaseTestCase() {
@@ -1045,6 +1048,16 @@ class CTXtensionsTest : BaseTestCase() {
 
         // Assert
         assertFalse(result)
+    }
+
+    @Test
+    fun `string format1`(){
+        println(String.format("Variable with name %s will override value: %s, with new value: %s.", null, null, null)
+        )
+    }
+    @Test
+    fun `string format2`(){
+        println(String.format("%s'%s'%s", null,null,null))
     }
 
     private fun configureTestNotificationChannel(
