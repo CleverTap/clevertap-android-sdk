@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.inapp;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -23,10 +22,13 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.activity.ComponentDialog;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.fragment.app.FragmentActivity;
 import androidx.media3.common.util.UnstableApi;
 
 import com.clevertap.android.sdk.Logger;
@@ -45,7 +47,7 @@ import java.util.ArrayList;
 
     private boolean exoPlayerFullscreen = false;
 
-    private Dialog fullScreenDialog;
+    private ComponentDialog fullScreenDialog;
 
     private ImageView fullScreenIcon;
 
@@ -61,6 +63,16 @@ import java.util.ArrayList;
     private FrameLayout videoFrameInDialog;
 
     private ViewGroup.LayoutParams imageViewLayoutParams;
+    private final OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            if (exoPlayerFullscreen) {
+                config.getLogger().debug("Frag", "handleOnBackPressed() called");
+                closeFullscreenDialog();
+                onBackPressedCallback.setEnabled(false);
+            }
+        }
+    };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -199,9 +211,11 @@ import java.util.ArrayList;
         fullScreenIcon.setImageDrawable(ResourcesCompat.getDrawable(this.context.getResources(), R.drawable.ct_ic_fullscreen_expand, null));
         fullScreenIcon.setOnClickListener(v -> {
             if (!exoPlayerFullscreen) {
+                onBackPressedCallback.setEnabled(true);
                 openFullscreenDialog();
             } else {
                 closeFullscreenDialog();
+                onBackPressedCallback.setEnabled(false);
             }
         });
 
@@ -311,6 +325,7 @@ import java.util.ArrayList;
         }
         if (exoPlayerFullscreen) {
             closeFullscreenDialog();
+            onBackPressedCallback.setEnabled(false);
         }
         handle.savePosition();
         handle.pause();
@@ -365,21 +380,20 @@ import java.util.ArrayList;
         if (fullScreenDialog == null) {
             // create only once
             // create full screen dialog and show
-            fullScreenDialog = new Dialog(this.context, android.R.style.Theme_Black_NoTitleBar_Fullscreen) {
-                public void onBackPressed() {
-                    if (exoPlayerFullscreen) {
-                        closeFullscreenDialog();
-                    }
-                    super.onBackPressed();
-                }
-            };
+            fullScreenDialog = new ComponentDialog(this.context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
             ViewGroup.LayoutParams fullScreenParams = new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
             );
             videoFrameInDialog = new FrameLayout(context);
             fullScreenDialog.addContentView(videoFrameInDialog, fullScreenParams);
+
+            FragmentActivity activity = getActivity();
+            if (activity != null) {
+                fullScreenDialog.getOnBackPressedDispatcher().addCallback(activity,onBackPressedCallback);
+            }
         }
+
         videoFrameInDialog.addView(playerView);
         exoPlayerFullscreen = true;
         fullScreenDialog.show();
