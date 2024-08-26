@@ -1,7 +1,15 @@
 package com.clevertap.android.sdk.inapp;
 
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
+import com.clevertap.android.sdk.CTXtensions;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Utils;
 
@@ -50,4 +58,21 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
             setListener(CleverTapAPI.instanceWithConfig(this.context, config).getCoreState().getInAppController());
         }
     }
+    void applySystemBarsInsets(View view) {
+        if (CTXtensions.isPackageAndOsTargetsAbove(context.getApplicationContext(),34)) {
+            ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+                Insets bars = insets.getInsets(
+                        WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
+                );
+                ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+                mlp.leftMargin = bars.left;
+                mlp.rightMargin = bars.right;
+                fillTopBottomMargin(bars, mlp);
+                v.setLayoutParams(mlp);
+                return WindowInsetsCompat.CONSUMED;
+            });
+        }
+    }
+
+    abstract void fillTopBottomMargin(Insets bars, ViewGroup.MarginLayoutParams mlp);
 }
