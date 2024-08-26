@@ -161,6 +161,8 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
             config.getLogger().verbose(config.getAccountId(), "Fragment view not created", t);
             return null;
         }
+        applySystemBarsInsets(inAppView);
+
         return inAppView;
     }
 

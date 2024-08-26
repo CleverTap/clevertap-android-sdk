@@ -3,6 +3,9 @@ package com.clevertap.android.sdk.inapp;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.core.graphics.Insets;
+
 import com.clevertap.android.sdk.R;
 
 public class CTInAppHtmlFooterFragment extends CTInAppBasePartialHtmlFragment {
@@ -15,5 +18,10 @@ public class CTInAppHtmlFooterFragment extends CTInAppBasePartialHtmlFragment {
     @Override
     View getView(LayoutInflater inflater, ViewGroup container) {
         return inflater.inflate(R.layout.inapp_html_footer, container, false);
+    }
+
+    @Override
+    void fillTopBottomMargin(Insets bars, ViewGroup.MarginLayoutParams mlp) {
+        mlp.bottomMargin = bars.bottom;
     }
 }

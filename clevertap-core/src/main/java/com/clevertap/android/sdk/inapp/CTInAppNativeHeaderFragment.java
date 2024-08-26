@@ -17,6 +17,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.graphics.Insets;
+
 import com.clevertap.android.sdk.R;
 import java.util.ArrayList;
 
@@ -87,7 +89,11 @@ public class CTInAppNativeHeaderFragment extends CTInAppBasePartialNativeFragmen
                 return true;
             }
         });
-
+        applySystemBarsInsets(inAppView);
         return inAppView;
+    }
+    @Override
+    void fillTopBottomMargin(Insets bars, ViewGroup.MarginLayoutParams mlp) {
+        mlp.topMargin = bars.top;
     }
 }
