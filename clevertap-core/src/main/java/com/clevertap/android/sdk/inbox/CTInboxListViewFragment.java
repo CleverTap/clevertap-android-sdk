@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Parcelable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -127,16 +131,16 @@ public class CTInboxListViewFragment extends Fragment {
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         inboxMessageAdapter= new CTInboxMessageAdapter(inboxMessages, this);
-
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
             mediaRecyclerView.setVisibility(View.VISIBLE);
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
             mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
             mediaRecyclerView.setItemAnimator(new DefaultItemAnimator());
+            applySystemBarsInsets(mediaRecyclerView);
+
             mediaRecyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
-
             linearLayout.addView(mediaRecyclerView);
 
             if (firstTime && shouldAutoPlayOnFirstLaunch()) {
@@ -155,10 +159,22 @@ public class CTInboxListViewFragment extends Fragment {
             recyclerView.setLayoutManager(linearLayoutManager);
             recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
             recyclerView.setItemAnimator(new DefaultItemAnimator());
+            applySystemBarsInsets(recyclerView);
             recyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
         }
         return allView;
+    }
+
+    private void applySystemBarsInsets(RecyclerView view) {
+        view.setClipToPadding(false);
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            Insets bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+            );
+            v.setPadding(bars.left, 0, bars.right, bars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
     }
 
     @Override
