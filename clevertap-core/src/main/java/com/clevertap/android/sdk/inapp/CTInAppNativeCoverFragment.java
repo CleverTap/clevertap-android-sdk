@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
+import static com.clevertap.android.sdk.CTXtensions.applySystemBarsInsets;
+
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -14,9 +16,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
 import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
+
 import java.util.ArrayList;
 
 public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
@@ -27,6 +32,13 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
 
         ArrayList<Button> inAppButtons = new ArrayList<>();
         View inAppView = inflater.inflate(R.layout.inapp_cover, container, false);
+        applySystemBarsInsets(inAppView, (insets, mlp) -> {
+            mlp.leftMargin = insets.left;
+            mlp.rightMargin = insets.right;
+            mlp.topMargin = insets.top;
+            mlp.bottomMargin = insets.bottom;
+            return null;
+        });
 
         FrameLayout fl = inAppView.findViewById(R.id.inapp_cover_frame_layout);
 
