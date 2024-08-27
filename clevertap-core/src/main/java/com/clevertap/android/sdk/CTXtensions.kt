@@ -10,10 +10,16 @@ import android.content.SharedPreferences
 import android.location.Location
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import android.view.View
+import android.view.ViewGroup.MarginLayoutParams
 import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import org.json.JSONArray
@@ -299,3 +305,17 @@ fun String?.toJsonOrNull(): JSONObject? {
         }
     }
 }
+
+fun View.applySystemBarsInsets(block : (bars:Insets,mlp:MarginLayoutParams) -> Unit) {
+    ViewCompat.setOnApplyWindowInsetsListener(this
+    ) { v, insets ->
+        val bars: Insets = insets.getInsets(
+            WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+        )
+        v.updateLayoutParams<MarginLayoutParams> {
+            block(bars,this)
+        }
+        WindowInsetsCompat.CONSUMED
+    }
+}
+
