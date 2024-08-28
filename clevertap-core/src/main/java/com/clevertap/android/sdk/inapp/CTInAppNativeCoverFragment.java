@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inapp;
 
-import static com.clevertap.android.sdk.CTXtensions.applySystemBarsInsets;
+import static com.clevertap.android.sdk.CTXtensions.applySystemBarsInsetsWithMargin;
 
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
@@ -32,7 +32,7 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
 
         ArrayList<Button> inAppButtons = new ArrayList<>();
         View inAppView = inflater.inflate(R.layout.inapp_cover, container, false);
-        applySystemBarsInsets(inAppView, (insets, mlp) -> {
+        applySystemBarsInsetsWithMargin(inAppView, (insets, mlp) -> {
             mlp.leftMargin = insets.left;
             mlp.rightMargin = insets.right;
             mlp.topMargin = insets.top;

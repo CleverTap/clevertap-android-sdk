@@ -306,7 +306,7 @@ fun String?.toJsonOrNull(): JSONObject? {
     }
 }
 
-fun View.applySystemBarsInsets(block : (bars:Insets,mlp:MarginLayoutParams) -> Unit) {
+fun View.applySystemBarsInsetsWithMargin(block : (bars:Insets, mlp:MarginLayoutParams) -> Unit) {
     ViewCompat.setOnApplyWindowInsetsListener(this
     ) { v, insets ->
         val bars: Insets = insets.getInsets(
