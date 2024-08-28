@@ -314,7 +314,7 @@ fun String?.isNotNullAndBlank() : Boolean {
     return isNullOrBlank().not()
 }
 
-fun View.applySystemBarsInsets(block : (bars:Insets,mlp:MarginLayoutParams) -> Unit) {
+fun View.applySystemBarsInsetsWithMargin(block : (bars:Insets, mlp:MarginLayoutParams) -> Unit) {
     ViewCompat.setOnApplyWindowInsetsListener(this
     ) { v, insets ->
         val bars: Insets = insets.getInsets(

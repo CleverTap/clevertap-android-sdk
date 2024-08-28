@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
+import static com.clevertap.android.sdk.CTXtensions.applySystemBarsInsetsWithMargin;
+
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -92,11 +94,13 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
                 return true;
             }
         });
-        applySystemBarsInsets(inAppView);
+        applySystemBarsInsetsWithMargin(inAppView, (insets, mlp) -> {
+            mlp.leftMargin = insets.left;
+            mlp.rightMargin = insets.right;
+            mlp.bottomMargin = insets.bottom;
+            return null;
+        });
         return inAppView;
     }
-    @Override
-    void fillTopBottomMargin(Insets bars, ViewGroup.MarginLayoutParams mlp) {
-        mlp.bottomMargin = bars.bottom;
-    }
+
 }

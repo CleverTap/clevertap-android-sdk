@@ -59,19 +59,4 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
         }
     }
 
-    void applySystemBarsInsets(View view) {
-        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
-            Insets bars = insets.getInsets(
-                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
-            );
-            ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-            mlp.leftMargin = bars.left;
-            mlp.rightMargin = bars.right;
-            fillTopBottomMargin(bars, mlp);
-            v.setLayoutParams(mlp);
-            return WindowInsetsCompat.CONSUMED;
-        });
-    }
-
-    abstract void fillTopBottomMargin(Insets bars, ViewGroup.MarginLayoutParams mlp);
 }

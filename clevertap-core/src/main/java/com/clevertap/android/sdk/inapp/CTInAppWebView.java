@@ -47,7 +47,7 @@ class CTInAppWebView extends WebView {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         updateDimension();
-        setMeasuredDimension(dim.x, dim.y);
+        setMeasuredDimension(measureWidth(widthMeasureSpec,dim.x), measureHeight(heightMeasureSpec,dim.y));
     }
 
     void updateDimension() {
@@ -65,5 +65,36 @@ class CTInAppWebView extends WebView {
             DisplayMetrics metrics = getResources().getDisplayMetrics();
             dim.y = (int) (metrics.heightPixels * heightPercentage / 100f);
         }
+    }
+
+    private int measureHeight(int measureSpec, int wantedHeight) {
+        int result;
+        int specMode = MeasureSpec.getMode(measureSpec);
+        int specSize = MeasureSpec.getSize(measureSpec);
+
+        if (specMode == MeasureSpec.EXACTLY) {
+            result = specSize;
+        } else {
+            result = wantedHeight;
+            if (specMode == MeasureSpec.AT_MOST) {
+                result = Math.min(result, specSize);
+            }
+        }
+        return result;
+    }
+    private int measureWidth(int measureSpec, int wantedWidth) {
+        int result;
+        int specMode = MeasureSpec.getMode(measureSpec);
+        int specSize = MeasureSpec.getSize(measureSpec);
+
+        if (specMode == MeasureSpec.EXACTLY) {
+            result = specSize;
+        } else {
+            result = wantedWidth;
+            if (specMode == MeasureSpec.AT_MOST) {
+                result = Math.min(result, specSize);
+            }
+        }
+        return result;
     }
 }

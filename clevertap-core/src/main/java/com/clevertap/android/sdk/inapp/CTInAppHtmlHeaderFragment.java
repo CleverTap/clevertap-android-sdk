@@ -1,10 +1,10 @@
 package com.clevertap.android.sdk.inapp;
 
+import static com.clevertap.android.sdk.CTXtensions.applySystemBarsInsetsWithMargin;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import androidx.core.graphics.Insets;
 
 import com.clevertap.android.sdk.R;
 
@@ -17,11 +17,13 @@ public class CTInAppHtmlHeaderFragment extends CTInAppBasePartialHtmlFragment {
 
     @Override
     View getView(LayoutInflater inflater, ViewGroup container) {
-        return inflater.inflate(R.layout.inapp_html_header, container, false);
-    }
-
-    @Override
-    void fillTopBottomMargin(Insets bars, ViewGroup.MarginLayoutParams mlp) {
-        mlp.topMargin = bars.top;
+        View inAppView = inflater.inflate(R.layout.inapp_html_header, container, false);
+        applySystemBarsInsetsWithMargin(inAppView, (insets, mlp) -> {
+            mlp.leftMargin = insets.left;
+            mlp.rightMargin = insets.right;
+            mlp.topMargin = insets.top;
+            return null;
+        });
+        return inAppView;
     }
 }
