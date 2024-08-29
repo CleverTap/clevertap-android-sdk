@@ -209,7 +209,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     @Override
     public Bundle inAppNotificationActionTriggered(
             @NonNull final CTInAppNotification inAppNotification,
-            @Nullable final CTInAppAction action,
+            @NonNull final CTInAppAction action,
             @NonNull final String callToAction,
             @Nullable final Bundle additionalData,
             @Nullable final Context activityContext) {

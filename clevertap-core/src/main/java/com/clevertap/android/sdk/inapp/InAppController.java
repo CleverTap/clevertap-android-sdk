@@ -390,7 +390,7 @@ public class InAppController implements InAppListener,
     @NonNull
     public Bundle inAppNotificationActionTriggered(
             @NonNull final CTInAppNotification inAppNotification,
-            @Nullable final CTInAppAction action,
+            @NonNull final CTInAppAction action,
             @NonNull final String callToAction,
             @Nullable final Bundle additionalData,
             @Nullable final Context activityContext) {
@@ -406,11 +406,11 @@ public class InAppController implements InAppListener,
         // send clicked event
         analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, data);
 
-        if (action == null || action.getType() == null) {
+        InAppActionType type = action.getType();
+        if (type == null) {
             logger.debug("Triggered in-app action without type");
             return data;
         }
-        InAppActionType type = action.getType();
 
         switch (type) {
             case CUSTOM_CODE:
