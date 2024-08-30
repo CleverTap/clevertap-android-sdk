@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.login;
 
 import android.content.Context;
+
+import androidx.annotation.RestrictTo;
+
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
@@ -29,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class LoginController {
 
     private String cachedGUID = null;
