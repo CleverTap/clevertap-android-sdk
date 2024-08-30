@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.login;
 
 import android.content.Context;
+
+import androidx.annotation.RestrictTo;
+
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
@@ -29,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class LoginController {
 
     private String cachedGUID = null;
@@ -144,11 +148,8 @@ public class LoginController {
                     recordDeviceIDErrors();
                     resetDisplayUnits();
 
-                    final List<ChangeUserCallback> changeUserCallbackList
-                            = callbackManager.getChangeUserCallbackList();
-                    for (ChangeUserCallback callback : changeUserCallbackList) {
-                        callback.onChangeUser(deviceInfo.getDeviceID(), config.getAccountId());
-                    }
+                    notifyChangeUserCallback();
+
                     controllerManager.getInAppFCManager().changeUser(deviceInfo.getDeviceID());
                 } catch (Throwable t) {
                     config.getLogger().verbose(config.getAccountId(), "Reset Profile error", t);
@@ -156,6 +157,18 @@ public class LoginController {
                 return null;
             }
         });
+    }
+
+    public void notifyChangeUserCallback() {
+        final List<ChangeUserCallback> changeUserCallbackList
+                = callbackManager.getChangeUserCallbackList();
+        synchronized (changeUserCallbackList) {
+            for (ChangeUserCallback callback : changeUserCallbackList) {
+                if (callback != null) {
+                    callback.onChangeUser(deviceInfo.getDeviceID(), config.getAccountId());
+                }
+            }
+        }
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
