@@ -67,8 +67,6 @@ public class DeviceInfo {
 
         private final double height;
 
-        private final int heightPixels;
-
         private final String manufacturer;
 
         private final String model;
@@ -84,8 +82,6 @@ public class DeviceInfo {
         private final String versionName;
 
         private final double width;
-
-        private final int widthPixels;
 
         private String appBucket;
 
@@ -106,9 +102,7 @@ public class DeviceInfo {
             countryCode = getCountryCode();
             sdkVersion = getSdkVersion();
             height = getHeight();
-            heightPixels = getHeightPixels();
             width = getWidth();
-            widthPixels = getWidthPixels();
             dpi = getDPI();
             localInAppCount = getLocalInAppCountFromPreference();
             locale = getDeviceLocale();
@@ -186,7 +180,7 @@ public class DeviceInfo {
             int height;
             float dpi;
 
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            WindowManager wm = getWindowManager();
             if (wm == null) {
                 return 0.0;
             }
@@ -213,26 +207,6 @@ public class DeviceInfo {
             // Calculate the width in inches
             double rHeight = height / dpi;
             return toTwoPlaces(rHeight);
-        }
-
-        private int getHeightPixels() {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            if (wm == null) {
-                return 0;
-            }
-            //Returns height in pixels using WindowMetrics API for API30 above
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
-                Insets insets = windowMetrics.getWindowInsets()
-                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
-                int heightInPixel = windowMetrics.getBounds().height() -
-                        insets.top - insets.bottom;
-                return heightInPixel;
-            } else {
-                DisplayMetrics dm = new DisplayMetrics();
-                wm.getDefaultDisplay().getMetrics(dm);
-                return dm.heightPixels;
-            }
         }
 
         private String getManufacturer() {
@@ -308,7 +282,7 @@ public class DeviceInfo {
             int width;
             float dpi;
 
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            WindowManager wm = getWindowManager();
             if (wm == null) {
                 return 0.0;
             }
@@ -337,26 +311,6 @@ public class DeviceInfo {
 
         }
 
-        private int getWidthPixels() {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            if (wm == null) {
-                return 0;
-            }
-            //Returns width in pixels using WindowMetrics API for API30 above
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
-                Insets insets = windowMetrics.getWindowInsets()
-                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
-                int widthInPixel = windowMetrics.getBounds().width() -
-                        insets.right - insets.left;
-                return widthInPixel;
-            } else {
-                DisplayMetrics dm = new DisplayMetrics();
-                wm.getDefaultDisplay().getMetrics(dm);
-                return dm.widthPixels;
-            }
-        }
-
         private String getDeviceLocale() {
             String language = Locale.getDefault().getLanguage();
             if ("".equals(language)) {
@@ -375,6 +329,18 @@ public class DeviceInfo {
             result = result / 100;
             return result;
         }
+    }
+
+    private WindowManager getWindowManager() {
+        WindowManager wm;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            wm = (WindowManager) context
+                    .createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION, null)
+                    .getSystemService(Context.WINDOW_SERVICE);
+        } else {
+            wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        }
+        return wm;
     }
 
     /**
@@ -745,14 +711,6 @@ public class DeviceInfo {
 
     String getAttributionID() {
         return getDeviceID();
-    }
-
-    int getHeightPixels() {
-        return getDeviceCachedInfo().heightPixels;
-    }
-
-    int getWidthPixels() {
-        return getDeviceCachedInfo().widthPixels;
     }
 
     @WorkerThread
