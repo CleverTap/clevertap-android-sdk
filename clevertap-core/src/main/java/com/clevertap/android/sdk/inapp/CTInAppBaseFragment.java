@@ -180,7 +180,11 @@ public abstract class CTInAppBaseFragment extends Fragment {
     }
 
     private Bundle didClick(CTInAppNotificationButton button) {
-        return notifyActionTriggered(button.getAction(), button.getText(), null);
+        CTInAppAction action = button.getAction();
+        if (action == null) {
+            action = CTInAppAction.createCloseAction();
+        }
+        return notifyActionTriggered(action, button.getText(), null);
     }
 
     private Bundle notifyActionTriggered(
