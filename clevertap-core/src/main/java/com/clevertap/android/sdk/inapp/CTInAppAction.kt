@@ -6,6 +6,7 @@ import android.os.Parcelable.Creator
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS
 import com.clevertap.android.sdk.inapp.InAppActionType.OPEN_URL
+import com.clevertap.android.sdk.inapp.InAppActionType.CLOSE
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.utils.getStringOrNull
 import org.json.JSONObject
@@ -97,6 +98,13 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
             return CTInAppAction(null).apply {
                 type = OPEN_URL
                 actionUrl = url
+            }
+        }
+
+        @JvmStatic
+        fun createCloseAction(): CTInAppAction {
+            return CTInAppAction(null).apply {
+                type = CLOSE
             }
         }
     }
