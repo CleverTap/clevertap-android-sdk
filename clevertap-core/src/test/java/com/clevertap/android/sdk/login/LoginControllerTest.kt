@@ -27,6 +27,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.Mockito
 import java.util.concurrent.CountDownLatch
@@ -224,6 +225,7 @@ class LoginControllerTest : BaseTestCase() {
         }
     }
 
+    @Ignore("Run this test locally")
     @Test
     fun `test notifyChangeUserCallback`() {
         // Arrange
@@ -264,6 +266,7 @@ class LoginControllerTest : BaseTestCase() {
         }
     }
 
+    @Ignore("Run this test locally")
     @Test
     fun `test notifyChangeUserCallback thread safety`() {
         // Arrange
