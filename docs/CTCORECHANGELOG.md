@@ -3,7 +3,7 @@
 ### Version 7.0.1 (September 2, 2024)
 
 #### Bug Fixes
-* Fixes an issue related to `ArrayIndexOutOfBoundsException` in a rare `race condition` scenario.
+* Fixes an `ArrayIndexOutOfBoundsException` in a rare `race condition` scenario due to un-synchronised list
 * Fixes an issue where the Android Permission popup is not triggered from `PushPrimer` when using `InAppType.HALF_INTERSTITIAL`
 
 ### Version 7.0.0 (August 5, 2024)
