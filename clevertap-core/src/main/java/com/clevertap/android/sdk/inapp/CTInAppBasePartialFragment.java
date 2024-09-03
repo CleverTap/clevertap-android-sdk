@@ -1,15 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
-import android.view.View;
-import android.view.ViewGroup;
-
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-
-import com.clevertap.android.sdk.CTXtensions;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Utils;
 
@@ -58,5 +50,4 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
             setListener(CleverTapAPI.instanceWithConfig(this.context, config).getCoreState().getInAppController());
         }
     }
-
 }
