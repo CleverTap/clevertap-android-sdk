@@ -43,6 +43,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
+import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
@@ -2800,22 +2801,32 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         StoreRegistry storeRegistry = coreState.getStoreRegistry();
         CryptHandler cryptHandler = coreState.getCryptHandler();
         StoreProvider storeProvider = StoreProvider.getInstance();
+        EvaluationManager evaluationManager = coreState.getEvaluationManager();
 
         // Inflate the local profile here as deviceId is required
         coreState.getLocalDataStore().inflateLocalProfileAsync(context);
 
-        if (storeRegistry.getInAppStore() == null) {
-            InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceId,
-                    accountId);
-            storeRegistry.setInAppStore(inAppStore);
-            coreState.getCallbackManager().addChangeUserCallback(inAppStore);
-        }
-        if (storeRegistry.getImpressionStore() == null) {
-            ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceId,
-                    accountId);
-            storeRegistry.setImpressionStore(impStore);
-            coreState.getCallbackManager().addChangeUserCallback(impStore);
-        }
+        // must move initStores task to async executor due to addChangeUserCallback synchronization
+        Task<Void> task = CTExecutorFactory.executors(getConfig()).ioTask();
+        task.execute("initStores", () -> {
+            if (storeRegistry.getInAppStore() == null) {
+                InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceId,
+                        accountId);
+                storeRegistry.setInAppStore(inAppStore);
+                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
+                // can cause ANR if called from main thread
+                coreState.getCallbackManager().addChangeUserCallback(inAppStore);
+            }
+            if (storeRegistry.getImpressionStore() == null) {
+                ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceId,
+                        accountId);
+                storeRegistry.setImpressionStore(impStore);
+                // can cause ANR if called from main thread
+                coreState.getCallbackManager().addChangeUserCallback(impStore);
+            }
+            return null;
+        });
+
 
         /*
           Reinitialising InAppFCManager with device id, if it's null

@@ -70,6 +70,9 @@ class CTLocalInApp private constructor() {
                     val positiveButtonObject = JSONObject().apply {
                         put(Constants.KEY_TEXT, positiveBtnText)
                         put(Constants.KEY_RADIUS, "2")
+                        put(Constants.KEY_ACTIONS, JSONObject().apply {
+                            put(Constants.KEY_TYPE, InAppActionType.CLOSE)
+                        })
                     }
                     put(Constants.KEY_BUTTONS, JSONArray().put(0, positiveButtonObject))
                     Builder5(this)

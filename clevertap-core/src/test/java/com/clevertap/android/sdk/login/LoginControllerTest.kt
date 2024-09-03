@@ -1,19 +1,37 @@
 import android.content.Context
-import com.clevertap.android.sdk.*
+import com.clevertap.android.sdk.AnalyticsManager
+import com.clevertap.android.sdk.BaseCallbackManager
+import com.clevertap.android.sdk.CTLockManager
+import com.clevertap.android.sdk.CallbackManager
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.LocalDataStore
+import com.clevertap.android.sdk.SessionManager
 import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
+import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.login.LoginController
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.*
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
-import org.mockito.*
+import org.mockito.Mockito
+import java.util.concurrent.CountDownLatch
+import kotlin.test.assertTrue
 
 class LoginControllerTest : BaseTestCase() {
 
@@ -206,4 +224,106 @@ class LoginControllerTest : BaseTestCase() {
             controllerManager.inAppFCManager.changeUser(any())
         }
     }
+
+    @Ignore("Run this test locally")
+    @Test
+    fun `test notifyChangeUserCallback`() {
+        // Arrange
+        val cm = CallbackManager(cleverTapInstanceConfig, deviceInfo)
+        val expectedChangeUserCallbackList = ArrayList<ChangeUserCallback>()
+
+        (1..10).forEach { _ ->
+            expectedChangeUserCallbackList.add(mockk<ChangeUserCallback> {
+                every { onChangeUser(any(), any()) } just Runs
+            })
+        }
+        expectedChangeUserCallbackList.forEach {
+            cm.addChangeUserCallback(it)
+        }
+        val loginController = LoginController(
+            context,
+            config,
+            deviceInfo,
+            validationResultStack,
+            baseEventQueueManager,
+            analyticsManager,
+            coreMetaData,
+            controllerManager,
+            sessionManager,
+            localDataStore,
+            cm,
+            dbManager,
+            ctLockManager,
+            cryptHandler
+        )
+        //Act
+        loginController.notifyChangeUserCallback()
+        //Assert
+        expectedChangeUserCallbackList.forEach {
+            verifyOrder {
+                it.onChangeUser(any(), any())
+            }
+        }
+    }
+
+    @Ignore("Run this test locally")
+    @Test
+    fun `test notifyChangeUserCallback thread safety`() {
+        // Arrange
+        val cm = CallbackManager(cleverTapInstanceConfig, deviceInfo)
+        val mockChangeUserCallback = mockk<ChangeUserCallback> {
+            every { onChangeUser(any(), any()) } just Runs
+        }
+        val loginController = LoginController(
+            context,
+            config,
+            deviceInfo,
+            validationResultStack,
+            baseEventQueueManager,
+            analyticsManager,
+            coreMetaData,
+            controllerManager,
+            sessionManager,
+            localDataStore,
+            cm,
+            dbManager,
+            ctLockManager,
+            cryptHandler
+        )
+
+        var isPassed = true
+        var ex: Exception? = null
+        // CountDownLatch to wait for all threads to finish
+        val latch = CountDownLatch(50)
+
+        //Act
+        (1..50).forEach { _ ->
+            Thread {
+                try {
+                    (1..100000).forEach { _ ->
+                        cm.addChangeUserCallback(mockChangeUserCallback)
+                    }
+
+                } catch (e: ArrayIndexOutOfBoundsException) {
+                    ex = e
+                    isPassed = false
+                } finally {
+                    latch.countDown()
+                }
+            }.start()
+        }
+        Thread {
+            try {
+                loginController.notifyChangeUserCallback()
+            } catch (e: ConcurrentModificationException) {
+                ex = e
+                isPassed = false
+            }
+        }.start()
+        latch.await()
+
+        //Assert
+        assertTrue(isPassed, "Exceptions must not be thrown but this is thrown $ex")
+    }
+
 }
