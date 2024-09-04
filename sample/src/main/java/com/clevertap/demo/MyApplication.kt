@@ -5,23 +5,22 @@ import android.app.Application.ActivityLifecycleCallbacks
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-
 import android.os.Build
-
 import android.os.Bundle
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.clevertap.android.pushtemplates.PushTemplateNotificationHandler
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.sdk.*
+import com.clevertap.android.sdk.ActivityLifecycleCallback
+import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
+import com.clevertap.android.sdk.InboxMessageButtonListener
+import com.clevertap.android.sdk.InboxMessageListener
+import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
-import com.clevertap.android.sdk.variables.Var
-import com.clevertap.android.sdk.variables.callbacks.VariableCallback
-import com.clevertap.demo.ui.main.FileVarsData
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
@@ -146,6 +145,12 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 .penaltyLog()
                 //.penaltyDeath()
                 .build()
+        )*/
+   /*     StrictMode.setVmPolicy(
+            StrictMode.VmPolicy.Builder()
+            .detectUnsafeIntentLaunch()
+            .penaltyDeath()
+            .build()
         )*/
     }
 
