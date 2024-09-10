@@ -306,14 +306,37 @@ fun String?.toJsonOrNull(): JSONObject? {
     }
 }
 
-fun View.applySystemBarsInsetsWithMargin(block : (bars:Insets, mlp:MarginLayoutParams) -> Unit) {
+/**
+ * Adjusts the margins of the view based on the system bar insets (such as the status bar, navigation bar,
+ * or display cutout) using the provided margin adjustment logic.
+ *
+ * This function sets a listener on the view to handle window insets and invokes the provided `marginAdjuster`
+ * block to allow custom margin adjustments. The `marginAdjuster` lambda receives the system bar insets and
+ * the view's margin layout parameters, allowing the caller to modify the margins as needed.
+ *
+ * @param marginAdjuster A lambda function that takes two parameters:
+ *  - `bars`: The insets for system bars and display cutouts, representing the space occupied by UI elements
+ *     such as the status bar or navigation bar.
+ *  - `mlp`: The `MarginLayoutParams` of the view, which can be modified to adjust the margins based on the insets.
+ *
+ * Example usage:
+ * ```
+ * view.applyInsetsWithMarginAdjustment { insets, layoutParams ->
+ *     layoutParams.leftMargin = insets.left
+ *     layoutParams.rightMargin = insets.right
+ *     layoutParams.topMargin = insets.top
+ *     layoutParams.bottomMargin = insets.bottom
+ * }
+ * ```
+ */
+fun View.applyInsetsWithMarginAdjustment(marginAdjuster : (insets:Insets, mlp:MarginLayoutParams) -> Unit) {
     ViewCompat.setOnApplyWindowInsetsListener(this
     ) { v, insets ->
         val bars: Insets = insets.getInsets(
             WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
         )
         v.updateLayoutParams<MarginLayoutParams> {
-            block(bars,this)
+            marginAdjuster(bars,this)
         }
         WindowInsetsCompat.CONSUMED
     }
