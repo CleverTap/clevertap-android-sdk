@@ -13,7 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.CTWebInterface
 import com.clevertap.android.sdk.CleverTapAPI
-import com.clevertap.android.sdk.applySystemBarsInsetsWithMargin
+import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
 class WebViewActivity : AppCompatActivity() {
 
@@ -30,7 +30,7 @@ class WebViewActivity : AppCompatActivity() {
             settings.allowFileAccessFromFileURLs = false
             addJavascriptInterface(CTWebInterface(MyApplication.ctInstance), "CleverTap")
         }
-        webView?.applySystemBarsInsetsWithMargin { insets: Insets, mlp: ViewGroup.MarginLayoutParams ->
+        webView?.applyInsetsWithMarginAdjustment { insets: Insets, mlp: ViewGroup.MarginLayoutParams ->
             mlp.leftMargin = insets.left
             mlp.rightMargin = insets.right
             mlp.topMargin = insets.top
