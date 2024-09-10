@@ -67,7 +67,6 @@ import java.util.ArrayList;
         @Override
         public void handleOnBackPressed() {
             if (exoPlayerFullscreen) {
-                config.getLogger().debug("Frag", "handleOnBackPressed() called");
                 closeFullscreenDialog();
                 onBackPressedCallback.setEnabled(false);
             }
