@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.StrictMode
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
@@ -38,7 +39,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
     override fun onCreate() {
         ANRWatchDog().start()
-        setupStrictMode()
+        //setupStrictMode() // uncomment during testing
         cleverTapPreAppCreated()
         super.onCreate()
         ctPostAppCreated()
@@ -131,8 +132,22 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         registerActivityLifecycleCallbacks(this)
     }
 
+    /**
+     * Configures strict mode policies for both thread and VM operations to detect potential performance
+     * and correctness issues during app development.
+     *
+     * - For thread policy, it detects all possible thread-related issues such as network operations or
+     *   disk I/O on the main thread. It logs the violations for debugging purposes.
+     *
+     * - For VM policy, it monitors potential memory-related issues such as leaks or misuse of API calls.
+     *   Violations are logged, helping developers find and fix memory management problems.
+     *
+     * This method is typically used during the development phase to catch bugs early. The `penaltyLog()`
+     * method ensures that violations are logged without crashing the app, but more aggressive actions
+     * like crashing can be enabled by using `penaltyDeath()` if desired.
+     */
     private fun setupStrictMode() {
-        /*StrictMode.setThreadPolicy(
+        StrictMode.setThreadPolicy(
             StrictMode.ThreadPolicy.Builder()
                 .detectAll()   // or .detectAll() for all detectable problems
                 .penaltyLog()
@@ -145,13 +160,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 .penaltyLog()
                 //.penaltyDeath()
                 .build()
-        )*/
-   /*     StrictMode.setVmPolicy(
-            StrictMode.VmPolicy.Builder()
-            .detectUnsafeIntentLaunch()
-            .penaltyDeath()
-            .build()
-        )*/
+        )
     }
 
     override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
