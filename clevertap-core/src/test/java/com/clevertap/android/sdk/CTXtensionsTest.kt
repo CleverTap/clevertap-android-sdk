@@ -1050,16 +1050,6 @@ class CTXtensionsTest : BaseTestCase() {
         assertFalse(result)
     }
 
-    @Test
-    fun `string format1`(){
-        println(String.format("Variable with name %s will override value: %s, with new value: %s.", null, null, null)
-        )
-    }
-    @Test
-    fun `string format2`(){
-        println(String.format("%s'%s'%s", null,null,null))
-    }
-
     private fun configureTestNotificationChannel(
         importance: Int, areChannelsEnabled: Boolean, SDK_INT: Int, channelID: String = "BlockedBRTesting",
         channelName: String = "BlockedBRTesting",
