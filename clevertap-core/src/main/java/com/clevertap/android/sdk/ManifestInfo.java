@@ -20,6 +20,8 @@ public class ManifestInfo {
 
     private static String spikyProxyDomain;
 
+    private static String handshakeDomain;
+
     private static boolean useADID;
 
     private static boolean appLaunchedDisabled;
@@ -83,6 +85,9 @@ public class ManifestInfo {
         }
         if (spikyProxyDomain == null) {
             spikyProxyDomain = _getManifestStringValueForKey(metaData, Constants.LABEL_SPIKY_PROXY_DOMAIN);
+        }
+        if (handshakeDomain == null) {
+            handshakeDomain = _getManifestStringValueForKey(metaData, Constants.LABEL_CLEVERTAP_HANDSHAKE_DOMAIN);
         }
         notificationIcon = _getManifestStringValueForKey(metaData, Constants.LABEL_NOTIFICATION_ICON);
         useADID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_USE_GOOGLE_AD_ID));
