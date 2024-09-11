@@ -43,17 +43,18 @@ internal class CtApi(
 
     fun sendQueue(useSpikyDomain: Boolean, body: SendQueueRequestBody): Response =
         httpClient.execute(createRequest(
-            relativePath = "a1",
+            baseUrl = getActualDomain(useSpikyDomain) ?: defaultDomain,
+            relativeUrl = "a1",
             body = body.toString(),
-            useSpikyDomain = useSpikyDomain,
-            includeTs = true)
+            includeTs = true
+        )
         )
 
     fun performHandshakeForDomain(useSpikyDomain: Boolean): Response {
         val request = createRequest(
-            relativePath = "hello",
+            baseUrl = getActualDomain(useSpikyDomain) ?: defaultDomain,
+            relativeUrl = "hello",
             body = null,
-            useSpikyDomain = useSpikyDomain,
             includeTs = false
         )
         logger.verbose(logTag, "Performing handshake with ${request.url}")
@@ -62,12 +63,22 @@ internal class CtApi(
 
     fun defineVars(body: SendQueueRequestBody): Response =
         httpClient.execute(
-            createRequest("defineVars", body.toString(), useSpikyDomain = false, includeTs = true)
+            createRequest(
+                baseUrl = getActualDomain(useSpikyDomain = false) ?: defaultDomain,
+                relativeUrl = "defineVars",
+                body = body.toString(),
+                includeTs = true
+            )
         )
 
     fun defineTemplates(body: DefineTemplatesRequestBody): Response =
         httpClient.execute(
-            createRequest("defineTemplates", body.toString(), useSpikyDomain = false, includeTs = true)
+            createRequest(
+                baseUrl = getActualDomain(useSpikyDomain = false) ?: defaultDomain,
+                relativeUrl = "defineTemplates",
+                body = body.toString(),
+                includeTs = true
+            )
         )
 
     fun getActualDomain(useSpikyDomain: Boolean): String? {
@@ -94,21 +105,29 @@ internal class CtApi(
     }
 
     private fun createRequest(
-        relativePath: String,
+        baseUrl: String,
+        relativeUrl: String,
         body: String?,
-        useSpikyDomain: Boolean,
         includeTs: Boolean
     ) = Request(
-        url = getUriForPath(path = relativePath, useSpikyDomain = useSpikyDomain, includeTs = includeTs),
+        url = getUriForPath(
+            baseUrl = baseUrl,
+            relativeUrl = relativeUrl,
+            includeTs = includeTs
+        ),
         headers = defaultHeaders,
         body = body
     )
 
-    private fun getUriForPath(path: String, useSpikyDomain: Boolean, includeTs: Boolean): Uri {
+    private fun getUriForPath(
+        baseUrl: String,
+        relativeUrl: String,
+        includeTs: Boolean
+    ): Uri {
         val builder = Uri.Builder()
             .scheme("https")
-            .authority(getActualDomain(useSpikyDomain) ?: defaultDomain)
-            .appendPath(path)
+            .authority(baseUrl)
+            .appendPath(relativeUrl)
             .appendDefaultQueryParams()
         if (includeTs) {
             builder.appendTsQueryParam()
@@ -120,7 +139,6 @@ internal class CtApi(
         for (queryParam in defaultQueryParams) {
             appendQueryParameter(queryParam.key, queryParam.value)
         }
-
         return this
     }
 
