@@ -14,6 +14,7 @@ internal class CtApi(
     var region: String?,
     var proxyDomain: String?,
     var spikyProxyDomain: String?,
+    var customHandshakeDomain: String?,
     accountId: String,
     accountToken: String,
     sdkVersion: String,

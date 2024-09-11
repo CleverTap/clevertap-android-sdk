@@ -23,18 +23,19 @@ internal object CtApiTestProvider {
     fun provideDefaultTestCtApi(): CtApi {
 
         return CtApi(
-            MockHttpClient(),
-            DEFAULT_DOMAIN,
-            DOMAIN,
-            SPIKY_DOMAIN,
-            REGION,
-            PROXY_DOMAIN,
-            SPIKY_PROXY_DOMAIN,
-            ACCOUNT_ID,
-            ACCOUNT_TOKEN,
-            SDK_VERSION,
-            Mockito.mock(Logger::class.java),
-            "testCtApi"
+            httpClient = MockHttpClient(),
+            defaultDomain = DEFAULT_DOMAIN,
+            domain = DOMAIN,
+            spikyDomain = SPIKY_DOMAIN,
+            region = REGION,
+            proxyDomain = PROXY_DOMAIN,
+            spikyProxyDomain = SPIKY_PROXY_DOMAIN,
+            customHandshakeDomain = null,
+            accountId = ACCOUNT_ID,
+            accountToken = ACCOUNT_TOKEN,
+            sdkVersion = SDK_VERSION,
+            logger = Mockito.mock(Logger::class.java),
+            logTag = "testCtApi"
         )
     }
 
@@ -43,18 +44,19 @@ internal object CtApiTestProvider {
         httpClient: CtHttpClient = MockHttpClient()
     ): CtApi {
         return CtApi(
-            httpClient,
-            Constants.PRIMARY_DOMAIN,
-            null,
-            null,
-            config.accountRegion,
-            config.proxyDomain,
-            config.spikyProxyDomain,
-            config.accountId,
-            config.accountToken,
-            SDK_VERSION,
-            config.logger,
-            "testCtApi"
+            httpClient = httpClient,
+            defaultDomain = Constants.PRIMARY_DOMAIN,
+            domain = null,
+            spikyDomain = null,
+            region = config.accountRegion,
+            proxyDomain = config.proxyDomain,
+            spikyProxyDomain = config.spikyProxyDomain,
+            customHandshakeDomain = config.customHandshakeDomain,
+            accountId = config.accountId,
+            accountToken = config.accountToken,
+            sdkVersion = SDK_VERSION,
+            logger = config.logger,
+            logTag = "testCtApi"
         )
     }
 }

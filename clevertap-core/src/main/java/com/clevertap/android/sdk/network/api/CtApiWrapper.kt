@@ -23,6 +23,10 @@ internal class CtApiWrapper(
 
     @get:WorkerThread
     val ctApi: CtApi by lazy {
-        provideDefaultCtApi(context, config, deviceInfo)
+        provideDefaultCtApi(
+            context = context,
+            config = config,
+            deviceInfo = deviceInfo
+        )
     }
 }

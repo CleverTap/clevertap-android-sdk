@@ -28,6 +28,7 @@ internal fun provideDefaultCtApi(
         region = config.accountRegion,
         proxyDomain = config.proxyDomain,
         spikyProxyDomain = config.spikyProxyDomain,
+        customHandshakeDomain = config.customHandshakeDomain,
         accountId = config.accountId,
         accountToken = config.accountToken,
         sdkVersion = deviceInfo.sdkVersion.toString(),
