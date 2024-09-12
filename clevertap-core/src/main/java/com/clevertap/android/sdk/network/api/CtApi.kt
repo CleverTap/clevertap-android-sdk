@@ -43,12 +43,13 @@ internal class CtApi(
         private set
 
     fun sendQueue(useSpikyDomain: Boolean, body: SendQueueRequestBody): Response =
-        httpClient.execute(createRequest(
-            baseUrl = getActualDomain(useSpikyDomain) ?: defaultDomain,
-            relativeUrl = "a1",
-            body = body.toString(),
-            includeTs = true
-        )
+        httpClient.execute(
+            createRequest(
+                baseUrl = getActualDomain(useSpikyDomain) ?: defaultDomain,
+                relativeUrl = "a1",
+                body = body.toString(),
+                includeTs = true
+            )
         )
 
     fun performHandshakeForDomain(useSpikyDomain: Boolean): Response {
@@ -65,7 +66,7 @@ internal class CtApi(
     fun defineVars(body: SendQueueRequestBody): Response =
         httpClient.execute(
             createRequest(
-                baseUrl = getActualDomain(useSpikyDomain = false) ?: defaultDomain,
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
                 relativeUrl = "defineVars",
                 body = body.toString(),
                 includeTs = true
@@ -75,29 +76,29 @@ internal class CtApi(
     fun defineTemplates(body: DefineTemplatesRequestBody): Response =
         httpClient.execute(
             createRequest(
-                baseUrl = getActualDomain(useSpikyDomain = false) ?: defaultDomain,
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
                 relativeUrl = "defineTemplates",
                 body = body.toString(),
                 includeTs = true
             )
         )
 
-    fun getActualDomain(useSpikyDomain: Boolean): String? {
+    fun getActualDomain(isViewedEvent: Boolean): String? {
         return when {
             !region.isNullOrBlank() -> {
-                val regionSuffix = if (useSpikyDomain) spikyRegionSuffix else ""
+                val regionSuffix = if (isViewedEvent) spikyRegionSuffix else ""
                 "$region${regionSuffix}.$defaultDomain"
             }
 
-            !useSpikyDomain && !proxyDomain.isNullOrBlank() -> {
+            !isViewedEvent && !proxyDomain.isNullOrBlank() -> {
                 proxyDomain
             }
 
-            useSpikyDomain && !spikyProxyDomain.isNullOrBlank() -> {
+            isViewedEvent && !spikyProxyDomain.isNullOrBlank() -> {
                 spikyProxyDomain
             }
 
-            else -> if (useSpikyDomain) {
+            else -> if (isViewedEvent) {
                 spikyDomain
             } else {
                 domain
