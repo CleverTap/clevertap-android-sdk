@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.network.api
 
 import android.net.Uri
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.images.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response
@@ -9,8 +10,9 @@ import com.clevertap.android.sdk.network.http.Response
 internal class CtApi(
     private val httpClient: CtHttpClient,
     val defaultDomain: String,
-    var domain: String?,
-    var spikyDomain: String?,
+    var cachedDomain: String?,
+    var cachedSpikyDomain: String?,
+    var cachedHandshakeDomain: String?,
     var region: String?,
     var proxyDomain: String?,
     var spikyProxyDomain: String?,
@@ -42,7 +44,10 @@ internal class CtApi(
     var currentRequestTimestampSeconds = 0
         private set
 
-    fun sendQueue(useSpikyDomain: Boolean, body: SendQueueRequestBody): Response =
+    fun sendQueue(
+        useSpikyDomain: Boolean,
+        body: SendQueueRequestBody
+    ): Response =
         httpClient.execute(
             createRequest(
                 baseUrl = getActualDomain(useSpikyDomain) ?: defaultDomain,
@@ -54,7 +59,7 @@ internal class CtApi(
 
     fun performHandshakeForDomain(useSpikyDomain: Boolean): Response {
         val request = createRequest(
-            baseUrl = getActualDomain(useSpikyDomain) ?: defaultDomain,
+            baseUrl = getHandshakeDomain(useSpikyDomain),
             relativeUrl = "hello",
             body = null,
             includeTs = false
@@ -86,8 +91,17 @@ internal class CtApi(
     fun getActualDomain(isViewedEvent: Boolean): String? {
         return when {
             !region.isNullOrBlank() -> {
-                val regionSuffix = if (isViewedEvent) spikyRegionSuffix else ""
-                "$region${regionSuffix}.$defaultDomain"
+                val regionSuffix = if (isViewedEvent) {
+                    spikyRegionSuffix
+                } else {
+                    ""
+                }
+                buildString {
+                    append(region)
+                    append(regionSuffix)
+                    append(".")
+                    append(defaultDomain)
+                }
             }
 
             !isViewedEvent && !proxyDomain.isNullOrBlank() -> {
@@ -99,10 +113,79 @@ internal class CtApi(
             }
 
             else -> if (isViewedEvent) {
-                spikyDomain
+                cachedSpikyDomain
             } else {
-                domain
+                cachedDomain
             }
+        }
+    }
+
+    fun getHandshakeDomain(isViewedEvent: Boolean) : String {
+        if (region.isNotNullAndEmpty()) {
+            val regionSuffix = if (isViewedEvent) {
+                spikyRegionSuffix
+            } else {
+                ""
+            }
+            return buildString {
+                append(region)
+                append(regionSuffix)
+                append(".")
+                append(defaultDomain)
+            }
+        }
+
+        if (isViewedEvent) {
+            if (spikyProxyDomain.isNotNullAndEmpty()) {
+                return spikyProxyDomain!!
+            }
+        } else {
+            if (proxyDomain.isNotNullAndEmpty()) {
+                return proxyDomain!!
+            }
+        }
+
+        if (customHandshakeDomain.isNotNullAndEmpty()) {
+            return customHandshakeDomain!!
+        }
+
+        if (isViewedEvent) {
+            if (cachedSpikyDomain.isNotNullAndEmpty()) {
+                return cachedSpikyDomain!!
+            }
+        } else {
+            if (cachedDomain.isNotNullAndEmpty()) {
+                return cachedDomain!!
+            }
+        }
+
+        return defaultDomain
+    }
+
+    fun needsHandshake(isViewedEvent: Boolean) : Boolean {
+
+        if (region.isNullOrBlank().not()) {
+            return false
+        }
+
+        if (isViewedEvent) {
+            if (spikyProxyDomain.isNullOrBlank().not()) {
+                return false
+            }
+        } else {
+            if (proxyDomain.isNullOrBlank().not()) {
+                return false
+            }
+        }
+
+        if (customHandshakeDomain.isNullOrBlank().not()) {
+            return cachedHandshakeDomain.isNullOrBlank()
+        }
+
+        return if (isViewedEvent) {
+            cachedSpikyDomain.isNullOrBlank()
+        } else {
+            cachedDomain.isNullOrBlank()
         }
     }
 

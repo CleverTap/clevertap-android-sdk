@@ -15,6 +15,7 @@ internal object CtApiTestProvider {
     const val SPIKY_DOMAIN = "new-spiky.domain.com"
     const val PROXY_DOMAIN = "proxy-domain.com"
     const val SPIKY_PROXY_DOMAIN = "proxy-spiky-domain.com"
+    const val CUSTOM_HANDSHAKE_DOMAIN = "custom-handshake-domain.com"
 
     const val ACCOUNT_ID = "accountId"
     const val ACCOUNT_TOKEN = "accountToken"
@@ -25,8 +26,9 @@ internal object CtApiTestProvider {
         return CtApi(
             httpClient = MockHttpClient(),
             defaultDomain = DEFAULT_DOMAIN,
-            domain = DOMAIN,
-            spikyDomain = SPIKY_DOMAIN,
+            cachedDomain = DOMAIN,
+            cachedSpikyDomain = SPIKY_DOMAIN,
+            cachedHandshakeDomain = null,
             region = REGION,
             proxyDomain = PROXY_DOMAIN,
             spikyProxyDomain = SPIKY_PROXY_DOMAIN,
@@ -46,8 +48,9 @@ internal object CtApiTestProvider {
         return CtApi(
             httpClient = httpClient,
             defaultDomain = Constants.PRIMARY_DOMAIN,
-            domain = null,
-            spikyDomain = null,
+            cachedDomain = null,
+            cachedSpikyDomain = null,
+            cachedHandshakeDomain = null,
             region = config.accountRegion,
             proxyDomain = config.proxyDomain,
             spikyProxyDomain = config.spikyProxyDomain,

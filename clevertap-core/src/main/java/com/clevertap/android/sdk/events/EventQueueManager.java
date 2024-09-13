@@ -235,8 +235,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         JSONArray singleEventQueue = new JSONArray().put(eventData);
 
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
-            networkManager.initHandshake(eventGroup, () ->
-                    networkManager.sendQueue(context, eventGroup, singleEventQueue, null));
+            networkManager.initHandshake(
+                    eventGroup,
+                    () -> networkManager.sendQueue(context, eventGroup, singleEventQueue, null)
+            );
         } else {
             networkManager.sendQueue(context, eventGroup, singleEventQueue, null);
         }

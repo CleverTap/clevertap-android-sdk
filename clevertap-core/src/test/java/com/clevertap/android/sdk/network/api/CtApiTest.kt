@@ -83,6 +83,80 @@ class CtApiTest {
         assertEquals(CtApiTestProvider.SPIKY_DOMAIN, ctApi.getActualDomain(true))
     }
 
+    @Test
+    fun `test get handshake domain returns client custom domain`() {
+
+        // setup
+        with (ctApi) {
+            region = null
+            proxyDomain = null
+            spikyProxyDomain = null
+            customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
+        }
+
+        // assert
+        assertEquals(CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN, ctApi.getHandshakeDomain(false))
+        assertEquals(CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN, ctApi.getHandshakeDomain(true))
+    }
+
+    @Test
+    fun `test get handshake domain returns domain mentioned in manifest, case1-CLEVERTAP_HANDSHAKE_DOMAIN mentioned`() {
+        // setup
+        with (ctApi) {
+            region = null
+            proxyDomain = null
+            spikyProxyDomain = null
+            customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
+        }
+
+        // assert
+        assertEquals(CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN, ctApi.getHandshakeDomain(false))
+        assertEquals(CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN, ctApi.getHandshakeDomain(true))
+    }
+
+    @Test
+    fun `test get handshake domain returns correct domains if custom domains are mentioned, case2-CLEVERTAP_SPIKY_PROXY_DOMAIN,CLEVERTAP_PROXY_DOMAIN`() {
+        // setup
+        with (ctApi) {
+            region = null
+            proxyDomain = CtApiTestProvider.PROXY_DOMAIN
+            spikyProxyDomain = null
+            customHandshakeDomain = null
+        }
+
+        // assert
+        assertEquals(CtApiTestProvider.PROXY_DOMAIN, ctApi.getHandshakeDomain(false))
+        assertEquals(CtApiTestProvider.SPIKY_DOMAIN, ctApi.getHandshakeDomain(true))
+
+        with (ctApi) {
+            region = null
+            proxyDomain = null
+            spikyProxyDomain = CtApiTestProvider.SPIKY_PROXY_DOMAIN
+            customHandshakeDomain = null
+        }
+
+        // assert
+        assertEquals(CtApiTestProvider.DOMAIN, ctApi.getHandshakeDomain(false))
+        assertEquals(CtApiTestProvider.SPIKY_PROXY_DOMAIN, ctApi.getHandshakeDomain(true))
+    }
+
+    @Test
+    fun `test get handshake domain returns correct domains if custom domains are mentioned, case3-Only account id and token are mentioned`() {
+        // setup
+        with (ctApi) {
+            region = null
+            proxyDomain = null
+            spikyProxyDomain = null
+            customHandshakeDomain = null
+            cachedDomain = null
+            cachedSpikyDomain = null
+        }
+
+        // assert
+        assertEquals(CtApiTestProvider.DEFAULT_DOMAIN, ctApi.getHandshakeDomain(false))
+
+    }
+
     private fun getEmptyQueueBody(): SendQueueRequestBody {
         return SendQueueRequestBody(null, JSONArray())
     }

@@ -23,8 +23,9 @@ internal fun provideDefaultCtApi(
     return CtApi(
         httpClient = httpClient,
         defaultDomain = Constants.PRIMARY_DOMAIN,
-        domain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null),
-        spikyDomain = StorageHelper.getStringFromPrefs(context, config, Constants.SPIKY_KEY_DOMAIN_NAME, null),
+        cachedDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null),
+        cachedSpikyDomain = StorageHelper.getStringFromPrefs(context, config, Constants.SPIKY_KEY_DOMAIN_NAME, null),
+        cachedHandshakeDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_HANDSHAKE_DOMAIN_NAME, null),
         region = config.accountRegion,
         proxyDomain = config.proxyDomain,
         spikyProxyDomain = config.spikyProxyDomain,

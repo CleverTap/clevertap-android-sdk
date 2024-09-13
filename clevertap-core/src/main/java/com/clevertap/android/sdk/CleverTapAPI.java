@@ -1365,10 +1365,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void setSCDomainListener(SCDomainListener scDomainListener) {
         coreState.getCallbackManager().setSCDomainListener(scDomainListener);
 
-        if(coreState.getNetworkManager() != null) {
+        if (coreState.getNetworkManager() != null) {
             NetworkManager networkManager = (NetworkManager) coreState.getNetworkManager();
             String domain = networkManager.getDomain(EventGroup.REGULAR);
-            if(domain != null) {
+            if (domain != null) {
                 scDomainListener.onSCDomainAvailable(getSCDomain(domain));
             }
         }
