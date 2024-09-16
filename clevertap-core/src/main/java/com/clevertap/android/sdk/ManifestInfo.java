@@ -181,6 +181,12 @@ public class ManifestInfo {
         return spikyProxyDomain;
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public String getHandshakeDomain() {
+        Logger.v("ManifestInfo: getHandshakeDomain called, returning handshakeDomain:" + handshakeDomain);
+        return handshakeDomain;
+    }
+
     String getPackageName() {
         return packageName;
     }

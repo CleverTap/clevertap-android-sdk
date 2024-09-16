@@ -14,5 +14,3 @@ fun File?.hasValidBitmap() : Boolean {
     BitmapFactory.decodeFile(this.path, options)
     return options.outWidth != -1 && options.outHeight != -1
 }
-
-fun String?.isNotNullAndEmpty() : Boolean = isNullOrEmpty().not()

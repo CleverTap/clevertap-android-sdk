@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.network.api
 
 import android.net.Uri
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.inapp.images.isNotNullAndEmpty
+import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response

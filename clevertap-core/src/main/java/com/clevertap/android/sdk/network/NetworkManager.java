@@ -845,7 +845,7 @@ public class NetworkManager extends BaseNetworkManager {
 
     @WorkerThread
     private void setCustomHandshakeDomain(final Context context, String customDomain) {
-        logger.verbose(config.getAccountId(), "Setting spiky domain to " + customDomain);
+        logger.verbose(config.getAccountId(), "Setting custom domain to " + customDomain);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_HANDSHAKE_DOMAIN_NAME), customDomain);
         ctApiWrapper.getCtApi().setCachedHandshakeDomain(customDomain);
     }

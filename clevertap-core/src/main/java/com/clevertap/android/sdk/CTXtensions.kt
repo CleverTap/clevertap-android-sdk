@@ -299,3 +299,5 @@ fun String?.toJsonOrNull(): JSONObject? {
         }
     }
 }
+
+fun String?.isNotNullAndEmpty() : Boolean = isNullOrEmpty().not()
