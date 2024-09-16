@@ -812,7 +812,10 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     @WorkerThread
-    private void setDomain(final Context context, String domainName) {
+    private void setDomain(
+            final Context context,
+            String domainName
+    ) {
         logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME), domainName);
         ctApiWrapper.getCtApi().setCachedDomain(domainName);
@@ -844,7 +847,7 @@ public class NetworkManager extends BaseNetworkManager {
     private void setCustomHandshakeDomain(final Context context, String customDomain) {
         logger.verbose(config.getAccountId(), "Setting spiky domain to " + customDomain);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_HANDSHAKE_DOMAIN_NAME), customDomain);
-        ctApiWrapper.getCtApi().setCachedSpikyDomain(customDomain);
+        ctApiWrapper.getCtApi().setCachedHandshakeDomain(customDomain);
     }
 
     /**

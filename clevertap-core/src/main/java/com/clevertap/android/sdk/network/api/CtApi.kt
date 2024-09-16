@@ -50,7 +50,7 @@ internal class CtApi(
     ): Response =
         httpClient.execute(
             createRequest(
-                baseUrl = getActualDomain(useSpikyDomain) ?: defaultDomain,
+                baseUrl = getActualDomain(isViewedEvent = useSpikyDomain) ?: defaultDomain,
                 relativeUrl = "a1",
                 body = body.toString(),
                 includeTs = true

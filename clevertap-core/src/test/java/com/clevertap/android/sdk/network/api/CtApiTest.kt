@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.network.api
 import org.json.JSONArray
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import kotlin.test.assertContains
@@ -79,8 +78,8 @@ class CtApiTest {
         ctApi.region = null
         ctApi.proxyDomain = null
         ctApi.spikyProxyDomain = null
-        assertEquals(CtApiTestProvider.DOMAIN, ctApi.getActualDomain(false))
-        assertEquals(CtApiTestProvider.SPIKY_DOMAIN, ctApi.getActualDomain(true))
+        assertEquals(CtApiTestProvider.CACHED_DOMAIN, ctApi.getActualDomain(false))
+        assertEquals(CtApiTestProvider.CACHED_SPIKY_DOMAIN, ctApi.getActualDomain(true))
     }
 
     @Test
@@ -126,7 +125,7 @@ class CtApiTest {
 
         // assert
         assertEquals(CtApiTestProvider.PROXY_DOMAIN, ctApi.getHandshakeDomain(false))
-        assertEquals(CtApiTestProvider.SPIKY_DOMAIN, ctApi.getHandshakeDomain(true))
+        assertEquals(CtApiTestProvider.CACHED_SPIKY_DOMAIN, ctApi.getHandshakeDomain(true))
 
         with (ctApi) {
             region = null
@@ -136,7 +135,7 @@ class CtApiTest {
         }
 
         // assert
-        assertEquals(CtApiTestProvider.DOMAIN, ctApi.getHandshakeDomain(false))
+        assertEquals(CtApiTestProvider.CACHED_DOMAIN, ctApi.getHandshakeDomain(false))
         assertEquals(CtApiTestProvider.SPIKY_PROXY_DOMAIN, ctApi.getHandshakeDomain(true))
     }
 

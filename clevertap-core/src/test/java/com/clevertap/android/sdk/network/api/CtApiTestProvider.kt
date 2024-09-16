@@ -10,9 +10,9 @@ import org.mockito.*
 internal object CtApiTestProvider {
 
     const val DEFAULT_DOMAIN = "domain.com"
-    const val DOMAIN = "new.domain.com"
+    const val CACHED_DOMAIN = "new.domain.com"
     const val REGION = "region"
-    const val SPIKY_DOMAIN = "new-spiky.domain.com"
+    const val CACHED_SPIKY_DOMAIN = "new-spiky.domain.com"
     const val PROXY_DOMAIN = "proxy-domain.com"
     const val SPIKY_PROXY_DOMAIN = "proxy-spiky-domain.com"
     const val CUSTOM_HANDSHAKE_DOMAIN = "custom-handshake-domain.com"
@@ -26,8 +26,8 @@ internal object CtApiTestProvider {
         return CtApi(
             httpClient = MockHttpClient(),
             defaultDomain = DEFAULT_DOMAIN,
-            cachedDomain = DOMAIN,
-            cachedSpikyDomain = SPIKY_DOMAIN,
+            cachedDomain = CACHED_DOMAIN,
+            cachedSpikyDomain = CACHED_SPIKY_DOMAIN,
             cachedHandshakeDomain = null,
             region = REGION,
             proxyDomain = PROXY_DOMAIN,
