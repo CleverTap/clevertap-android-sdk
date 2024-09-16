@@ -8,6 +8,7 @@ import org.robolectric.annotation.Config
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -36,6 +37,48 @@ class CtApiTest {
 
         val sendVarsResponse = ctApi.defineVars(getEmptyQueueBody())
         assertEquals(expectedHeaders, sendVarsResponse.request.headers)
+    }
+
+    @Test
+    fun `test hello request attaches extra header in case custom domain is mentioned in manifest`() {
+
+        // setup
+        with (ctApi) {
+            region = null
+            proxyDomain = null
+            spikyProxyDomain = null
+            customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
+        }
+
+        // expect
+        val expectedHeaders = mapOf(
+            "Content-Type" to "application/json; charset=utf-8",
+            "X-CleverTap-Account-ID" to CtApiTestProvider.ACCOUNT_ID,
+            "X-CleverTap-Token" to CtApiTestProvider.ACCOUNT_TOKEN,
+            CtApi.HEADER_CUSTOM_HANDSHAKE to CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
+        )
+
+        // Perform
+        val handshakeResponse = ctApi.performHandshakeForDomain(false)
+
+        // Assertions
+        assertEquals(expectedHeaders, handshakeResponse.request.headers)
+        assertNull(handshakeResponse.request.body)
+        assertEquals(
+            expected = "https://${CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN}/hello?os=Android&t=${CtApiTestProvider.SDK_VERSION}&z=${CtApiTestProvider.ACCOUNT_ID}",
+            actual = handshakeResponse.request.url.toString()
+        )
+
+        // Perform
+        val handshakeResponseSpiky = ctApi.performHandshakeForDomain(true)
+
+        // Assertions
+        assertEquals(expectedHeaders, handshakeResponseSpiky.request.headers)
+        assertNull(handshakeResponseSpiky.request.body)
+        assertEquals(
+            expected = "https://${CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN}/hello?os=Android&t=${CtApiTestProvider.SDK_VERSION}&z=${CtApiTestProvider.ACCOUNT_ID}",
+            actual = handshakeResponseSpiky.request.url.toString()
+        )
     }
 
     @Test

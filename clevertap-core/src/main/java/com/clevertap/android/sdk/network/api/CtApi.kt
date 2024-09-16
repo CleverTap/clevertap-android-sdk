@@ -28,6 +28,8 @@ internal class CtApi(
 
         const val DEFAULT_CONTENT_TYPE = "application/json; charset=utf-8"
         const val DEFAULT_QUERY_PARAM_OS = "Android"
+
+        const val HEADER_CUSTOM_HANDSHAKE = "X-CleverTap-Handshake-Domain"
     }
 
     private val defaultHeaders: Map<String, String> = mapOf(
@@ -52,19 +54,29 @@ internal class CtApi(
             createRequest(
                 baseUrl = getActualDomain(isViewedEvent = useSpikyDomain) ?: defaultDomain,
                 relativeUrl = "a1",
-                body = body.toString(),
-                includeTs = true
+                body = body.toString()
             )
         )
 
     fun performHandshakeForDomain(useSpikyDomain: Boolean): Response {
+        val baseUrl = getHandshakeDomain(useSpikyDomain)
+
+        // append extra info in header in-case we are using custom handshake domain
+        val headers = if (customHandshakeDomain.isNotNullAndEmpty() && baseUrl == customHandshakeDomain) {
+            defaultHeaders.plus(HEADER_CUSTOM_HANDSHAKE to customHandshakeDomain!!)
+        } else {
+            defaultHeaders
+        }
         val request = createRequest(
-            baseUrl = getHandshakeDomain(useSpikyDomain),
+            baseUrl = baseUrl,
             relativeUrl = "hello",
             body = null,
-            includeTs = false
+            includeTs = false,
+            headers = headers
         )
+
         logger.verbose(logTag, "Performing handshake with ${request.url}")
+
         return httpClient.execute(request)
     }
 
@@ -73,8 +85,7 @@ internal class CtApi(
             createRequest(
                 baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
                 relativeUrl = "defineVars",
-                body = body.toString(),
-                includeTs = true
+                body = body.toString()
             )
         )
 
@@ -83,22 +94,22 @@ internal class CtApi(
             createRequest(
                 baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
                 relativeUrl = "defineTemplates",
-                body = body.toString(),
-                includeTs = true
+                body = body.toString()
             )
         )
 
     fun getActualDomain(isViewedEvent: Boolean): String? {
         return when {
             !region.isNullOrBlank() -> {
-                val regionSuffix = if (isViewedEvent) {
-                    spikyRegionSuffix
-                } else {
-                    ""
-                }
                 buildString {
                     append(region)
-                    append(regionSuffix)
+                    append(
+                        if (isViewedEvent) {
+                            spikyRegionSuffix
+                        } else {
+                            ""
+                        }
+                    )
                     append(".")
                     append(defaultDomain)
                 }
@@ -122,14 +133,15 @@ internal class CtApi(
 
     fun getHandshakeDomain(isViewedEvent: Boolean) : String {
         if (region.isNotNullAndEmpty()) {
-            val regionSuffix = if (isViewedEvent) {
-                spikyRegionSuffix
-            } else {
-                ""
-            }
             return buildString {
                 append(region)
-                append(regionSuffix)
+                append(
+                    if (isViewedEvent) {
+                        spikyRegionSuffix
+                    } else {
+                        ""
+                    }
+                )
                 append(".")
                 append(defaultDomain)
             }
@@ -193,14 +205,15 @@ internal class CtApi(
         baseUrl: String,
         relativeUrl: String,
         body: String?,
-        includeTs: Boolean
+        includeTs: Boolean = true,
+        headers: Map<String, String> = defaultHeaders
     ) = Request(
         url = getUriForPath(
             baseUrl = baseUrl,
             relativeUrl = relativeUrl,
             includeTs = includeTs
         ),
-        headers = defaultHeaders,
+        headers = headers,
         body = body
     )
 
