@@ -1,6 +1,7 @@
 package com.clevertap.android.pushtemplates
 
 import android.app.ActivityOptions
+import android.app.AlarmManager
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ContentResolver
@@ -12,6 +13,7 @@ import android.net.Uri
 import android.os.*
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.Builder
@@ -19,6 +21,7 @@ import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.styles.*
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
+import com.clevertap.android.sdk.AlarmReceiver
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -229,79 +232,22 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?) {
         val handler = Handler(Looper.getMainLooper())
 
+        val alarmManager = context.getSystemService(AlarmManager::class.java)
 
-        if (delay != null) {
-            handler.postDelayed({
-                if (Utils.isNotificationInTray(
-                        context,
-                        notificationId
-                    ) && ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true
-                ) {
-                    val applicationContext = context.applicationContext
-                    val basicTemplateBundle = extras.clone() as Bundle
-                    basicTemplateBundle.remove("wzrk_rnv")
-                    basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
-                    basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
-
-
-                    /**
-                     *  Update existing payload bundle with new title,msg,img for Basic template
-                     */
-                    val ptJsonStr  = basicTemplateBundle.getString(PTConstants.PT_JSON)
-                    var ptJsonObj: JSONObject? = null
-                    if (ptJsonStr != null) {
-                        try {
-                            ptJsonObj = JSONObject(ptJsonStr)
-                        } catch (e: Exception) {
-                            Logger.v("Unable to convert JSON to String")
-                        }
-                    }
-
-                    if (pt_title_alt != null && pt_title_alt!!.isNotEmpty()) {
-                        ptJsonObj?.put(PTConstants.PT_TITLE,pt_title_alt) ?: basicTemplateBundle.putString(
-                            PTConstants.PT_TITLE,
-                            pt_title_alt
-                        )
-                    }
-                    if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty()) {
-                        ptJsonObj?.put(PTConstants.PT_BIG_IMG, pt_big_img_alt) ?: basicTemplateBundle.putString(
-                            PTConstants.PT_BIG_IMG,
-                            pt_big_img_alt
-                        )
-                    }
-                    if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
-                        ptJsonObj?.put(PTConstants.PT_MSG, pt_msg_alt) ?: basicTemplateBundle.putString(
-                            PTConstants.PT_MSG,
-                            pt_msg_alt
-                        )
-                    }
-
-
-                    if (ptJsonObj != null) {
-                        basicTemplateBundle.putString(
-                            PTConstants.PT_JSON,
-                            ptJsonObj.toString()
-                        )
-                    }
-                    // force random id generation
-                    basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
-                    basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
-                    basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
-                    val templateRenderer: INotificationRenderer =
-                        TemplateRenderer(applicationContext, basicTemplateBundle)
-                    val cleverTapAPI = CleverTapAPI
-                        .getGlobalInstance(
-                            applicationContext,
-                            PushNotificationUtil.getAccountIdFromNotificationBundle(basicTemplateBundle)
-                        )
-                    cleverTapAPI?.renderPushNotification(
-                        templateRenderer,
-                        applicationContext,
-                        basicTemplateBundle
-                    )
-                }
-            }, (delay - 100).toLong())
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            putExtra("EXTRA_MESSAGE", "Notification from alarm")
         }
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            System.currentTimeMillis() + delay!!.toLong(),
+            PendingIntent.getBroadcast(
+                context,
+                123,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+        Log.e("Alarm", "Alarm set at ${System.currentTimeMillis() + delay!!.toLong()}")
     }
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {
