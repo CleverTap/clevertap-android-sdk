@@ -174,9 +174,13 @@ internal class CtApi(
         return defaultDomain
     }
 
-    fun needsHandshake(isViewedEvent: Boolean) : Boolean {
+    fun needsHandshake(
+        isViewedEvent: Boolean,
+        clearCachedHandshakeDomain: () -> Unit = {}
+    ) : Boolean {
 
         if (region.isNotNullAndBlank()) {
+            clearCachedHandshakeDomain.invoke()
             return false
         }
 
@@ -192,6 +196,8 @@ internal class CtApi(
 
         if (customHandshakeDomain.isNotNullAndBlank()) {
             return cachedHandshakeDomain.isNullOrBlank()
+        } else {
+            clearCachedHandshakeDomain.invoke()
         }
 
         return if (isViewedEvent) {

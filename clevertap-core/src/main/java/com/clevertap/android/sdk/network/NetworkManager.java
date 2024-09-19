@@ -281,7 +281,14 @@ public class NetworkManager extends BaseNetworkManager {
     @WorkerThread
     public boolean needsHandshakeForDomain(final EventGroup eventGroup) {
 
-        boolean needsHandshake = ctApiWrapper.needsHandshake(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED);
+        boolean needsHandshake = ctApiWrapper.needsHandshake(
+                eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+                () -> {
+                    setCustomHandshakeDomain(context, null);
+                    return null;
+                }
+
+        );
         boolean needHandshakeDueToFailure = responseFailureCount > 5;
 
         if (needHandshakeDueToFailure) {

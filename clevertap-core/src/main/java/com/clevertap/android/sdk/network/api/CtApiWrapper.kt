@@ -33,8 +33,14 @@ internal class CtApiWrapper(
         )
     }
 
-    fun needsHandshake(isViewedEvent: Boolean) : Boolean =
-        ctApi.needsHandshake(isViewedEvent = isViewedEvent)
+    fun needsHandshake(
+        isViewedEvent: Boolean,
+        clearCachedHandshakeDomain: () -> Unit = {}
+    ) : Boolean =
+        ctApi.needsHandshake(
+            isViewedEvent = isViewedEvent,
+            clearCachedHandshakeDomain = clearCachedHandshakeDomain
+        )
 }
 
 internal object CtApiProvider {
