@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.network.api
 
 import android.net.Uri
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.isNotNullAndEmpty
+import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response
@@ -62,7 +62,7 @@ internal class CtApi(
         val baseUrl = getHandshakeDomain(isViewedEvent)
 
         // append extra info in header in-case we are using custom handshake domain
-        val headers = if (customHandshakeDomain.isNotNullAndEmpty() && baseUrl == customHandshakeDomain) {
+        val headers = if (customHandshakeDomain.isNotNullAndBlank() && baseUrl == customHandshakeDomain) {
             defaultHeaders.plus(HEADER_CUSTOM_HANDSHAKE to customHandshakeDomain!!)
         } else {
             defaultHeaders
@@ -132,7 +132,7 @@ internal class CtApi(
     }
 
     fun getHandshakeDomain(isViewedEvent: Boolean) : String {
-        if (region.isNotNullAndEmpty()) {
+        if (region.isNotNullAndBlank()) {
             return buildString {
                 append(region)
                 append(
@@ -148,25 +148,25 @@ internal class CtApi(
         }
 
         if (isViewedEvent) {
-            if (spikyProxyDomain.isNotNullAndEmpty()) {
+            if (spikyProxyDomain.isNotNullAndBlank()) {
                 return spikyProxyDomain!!
             }
         } else {
-            if (proxyDomain.isNotNullAndEmpty()) {
+            if (proxyDomain.isNotNullAndBlank()) {
                 return proxyDomain!!
             }
         }
 
-        if (customHandshakeDomain.isNotNullAndEmpty()) {
+        if (customHandshakeDomain.isNotNullAndBlank()) {
             return customHandshakeDomain!!
         }
 
         if (isViewedEvent) {
-            if (cachedSpikyDomain.isNotNullAndEmpty()) {
+            if (cachedSpikyDomain.isNotNullAndBlank()) {
                 return cachedSpikyDomain!!
             }
         } else {
-            if (cachedDomain.isNotNullAndEmpty()) {
+            if (cachedDomain.isNotNullAndBlank()) {
                 return cachedDomain!!
             }
         }
@@ -176,21 +176,21 @@ internal class CtApi(
 
     fun needsHandshake(isViewedEvent: Boolean) : Boolean {
 
-        if (region.isNullOrBlank().not()) {
+        if (region.isNotNullAndBlank()) {
             return false
         }
 
         if (isViewedEvent) {
-            if (spikyProxyDomain.isNullOrBlank().not()) {
+            if (spikyProxyDomain.isNotNullAndBlank()) {
                 return false
             }
         } else {
-            if (proxyDomain.isNullOrBlank().not()) {
+            if (proxyDomain.isNotNullAndBlank()) {
                 return false
             }
         }
 
-        if (customHandshakeDomain.isNullOrBlank().not()) {
+        if (customHandshakeDomain.isNotNullAndBlank()) {
             return cachedHandshakeDomain.isNullOrBlank()
         }
 

@@ -300,4 +300,4 @@ fun String?.toJsonOrNull(): JSONObject? {
     }
 }
 
-fun String?.isNotNullAndEmpty() : Boolean = isNullOrEmpty().not()
+fun String?.isNotNullAndBlank() : Boolean = isNullOrBlank().not()
