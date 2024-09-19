@@ -199,6 +199,156 @@ class CtApiTest {
 
     }
 
+    @Test
+    fun `test needs handshake returns false if region is mentioned in manifest`() {
+        // setup
+        with (ctApi) {
+            proxyDomain = null
+            spikyProxyDomain = null
+            customHandshakeDomain = null
+        }
+
+        var counter = 0
+        val func: () -> Unit = {
+            // we will assert that callback is invoked with means of count
+            counter++
+        }
+
+        // assert
+        assertEquals(
+            expected = false,
+            actual = ctApi.needsHandshake(false, func)
+        )
+        assertEquals(
+            expected = 1,
+            actual = counter
+        )
+
+        assertEquals(
+            expected = false,
+            actual = ctApi.needsHandshake(true, func)
+        )
+        assertEquals(
+            expected = 2,
+            actual = counter
+        )
+    }
+
+    @Test
+    fun `test needs handshake returns false if proxy and spiky proxy domains are mentioned in manifest`() {
+        // setup
+        with (ctApi) {
+            region = null
+            customHandshakeDomain = null
+        }
+
+        // assert
+        assertEquals(
+            expected = false,
+            actual = ctApi.needsHandshake(false)
+        )
+
+        assertEquals(
+            expected = false,
+            actual = ctApi.needsHandshake(true)
+        )
+    }
+
+    @Test
+    fun `test needs handshake returns true if handshake domain if first time in manifest and not yet cached`() {
+        // setup
+        with (ctApi) {
+            region = null
+            proxyDomain = null
+            spikyProxyDomain = null
+            customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
+            cachedHandshakeDomain = null // first launch
+            cachedDomain = null
+            cachedSpikyDomain = null
+        }
+
+        // assert
+        assertEquals(
+            expected = true,
+            actual = ctApi.needsHandshake(false)
+        )
+
+        assertEquals(
+            expected = true,
+            actual = ctApi.needsHandshake(true)
+        )
+    }
+
+    @Test
+    fun `test needs handshake returns true if handshake domain is mentioned first time in manifest after app upgrade`() {
+        // setup
+        with (ctApi) {
+            region = null
+            proxyDomain = null
+            spikyProxyDomain = null
+            customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
+            cachedHandshakeDomain = null // first launch
+            cachedDomain = CtApiTestProvider.CACHED_DOMAIN // will exist in old app
+            cachedSpikyDomain = CtApiTestProvider.CACHED_SPIKY_DOMAIN // will exist in old app
+        }
+
+        // assert
+        assertEquals(
+            expected = true,
+            actual = ctApi.needsHandshake(false)
+        )
+
+        assertEquals(
+            expected = true,
+            actual = ctApi.needsHandshake(true)
+        )
+    }
+
+    @Test
+    fun `test needs handshake returns false if handshake domain is cached previously`() {
+        // setup
+        with (ctApi) {
+            region = null
+            proxyDomain = null
+            spikyProxyDomain = null
+            customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
+            cachedHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
+            cachedDomain = "some-cached-domain.com"
+            cachedSpikyDomain = "some-cached-spiky-domain.com"
+        }
+
+        // assert
+        assertEquals(
+            expected = false,
+            actual = ctApi.needsHandshake(false)
+        )
+
+        assertEquals(
+            expected = false,
+            actual = ctApi.needsHandshake(true)
+        )
+
+        assertEquals(
+            expected = "some-cached-domain.com",
+            actual = ctApi.getActualDomain(false)
+        )
+
+        assertEquals(
+            expected = "some-cached-spiky-domain.com",
+            actual = ctApi.getActualDomain(true)
+        )
+
+        assertEquals(
+            expected = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN,
+            actual = ctApi.getHandshakeDomain(false)
+        )
+
+        assertEquals(
+            expected = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN,
+            actual = ctApi.getHandshakeDomain(true)
+        )
+    }
+
     private fun getEmptyQueueBody(): SendQueueRequestBody {
         return SendQueueRequestBody(null, JSONArray())
     }
