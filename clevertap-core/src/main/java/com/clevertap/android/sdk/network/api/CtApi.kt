@@ -47,19 +47,19 @@ internal class CtApi(
         private set
 
     fun sendQueue(
-        useSpikyDomain: Boolean,
+        isViewedEvent: Boolean,
         body: SendQueueRequestBody
     ): Response =
         httpClient.execute(
             createRequest(
-                baseUrl = getActualDomain(isViewedEvent = useSpikyDomain) ?: defaultDomain,
+                baseUrl = getActualDomain(isViewedEvent = isViewedEvent) ?: defaultDomain,
                 relativeUrl = "a1",
                 body = body.toString()
             )
         )
 
-    fun performHandshakeForDomain(useSpikyDomain: Boolean): Response {
-        val baseUrl = getHandshakeDomain(useSpikyDomain)
+    fun performHandshakeForDomain(isViewedEvent: Boolean): Response {
+        val baseUrl = getHandshakeDomain(isViewedEvent)
 
         // append extra info in header in-case we are using custom handshake domain
         val headers = if (customHandshakeDomain.isNotNullAndEmpty() && baseUrl == customHandshakeDomain) {
