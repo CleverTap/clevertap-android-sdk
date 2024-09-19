@@ -286,7 +286,7 @@ public class NetworkManager extends BaseNetworkManager {
 
         if (needHandshakeDueToFailure) {
             setDomain(context, null);
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_HANDSHAKE_DOMAIN_NAME), null);
+            setCustomHandshakeDomain(context, null);
         }
         return needsHandshake || needHandshakeDueToFailure;
     }
@@ -845,7 +845,7 @@ public class NetworkManager extends BaseNetworkManager {
 
     @WorkerThread
     private void setCustomHandshakeDomain(final Context context, String customDomain) {
-        logger.verbose(config.getAccountId(), "Setting custom domain to " + customDomain);
+        logger.verbose(config.getAccountId(), "Setting handshake domain to " + customDomain);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_HANDSHAKE_DOMAIN_NAME), customDomain);
         ctApiWrapper.getCtApi().setCachedHandshakeDomain(customDomain);
     }
