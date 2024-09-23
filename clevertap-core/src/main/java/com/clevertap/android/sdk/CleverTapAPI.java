@@ -59,7 +59,6 @@ import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
-import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -1133,7 +1132,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         TemplatesManager templatesManager = coreState.getTemplatesManager();
-        BaseNetworkManager networkManager = coreState.getNetworkManager();
+        NetworkManager networkManager = coreState.getNetworkManager();
 
         getCleverTapID(x -> {
             // getCleverTapID is executed on the main thread
