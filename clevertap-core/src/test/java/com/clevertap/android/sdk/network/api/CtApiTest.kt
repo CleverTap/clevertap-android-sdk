@@ -242,15 +242,29 @@ class CtApiTest {
             customHandshakeDomain = null
         }
 
+        var counter = 0
+        val func: () -> Unit = {
+            // we will assert that callback is invoked with means of count
+            counter++
+        }
+
         // assert
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(false)
+            actual = ctApi.needsHandshake(false, func)
+        )
+        assertEquals(
+            expected = 1,
+            actual = counter
         )
 
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(true)
+            actual = ctApi.needsHandshake(true, func)
+        )
+        assertEquals(
+            expected = 2,
+            actual = counter
         )
     }
 
