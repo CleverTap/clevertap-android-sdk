@@ -12,7 +12,6 @@ internal class CtApi(
     val defaultDomain: String,
     var cachedDomain: String?,
     var cachedSpikyDomain: String?,
-    var cachedHandshakeDomain: String?,
     var region: String?,
     var proxyDomain: String?,
     var spikyProxyDomain: String?,

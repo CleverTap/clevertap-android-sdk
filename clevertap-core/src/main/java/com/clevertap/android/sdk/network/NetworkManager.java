@@ -285,7 +285,6 @@ public class NetworkManager {
 
         if (needHandshakeDueToFailure) {
             setDomain(context, null);
-            setCustomHandshakeDomain(context, null);
         }
         return needsHandshake || needHandshakeDueToFailure;
     }
@@ -545,11 +544,6 @@ public class NetworkManager {
             setSpikyDomain(context, domainName);
         } else {
             setSpikyDomain(context, spikyDomainName);
-        }
-
-        String customDomain = config.getCustomHandshakeDomain();
-        if (customDomain != null) {
-            setCustomHandshakeDomain(context, customDomain);
         }
         return true;
     }
@@ -838,13 +832,6 @@ public class NetworkManager {
         logger.verbose(config.getAccountId(), "Setting spiky domain to " + spikyDomainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME), spikyDomainName);
         ctApiWrapper.getCtApi().setCachedSpikyDomain(spikyDomainName);
-    }
-
-    @WorkerThread
-    private void setCustomHandshakeDomain(final Context context, String customDomain) {
-        logger.verbose(config.getAccountId(), "Setting handshake domain to " + customDomain);
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_HANDSHAKE_DOMAIN_NAME), customDomain);
-        ctApiWrapper.getCtApi().setCachedHandshakeDomain(customDomain);
     }
 
     /**
