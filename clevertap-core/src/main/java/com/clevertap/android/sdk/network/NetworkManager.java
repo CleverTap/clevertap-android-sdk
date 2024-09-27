@@ -279,12 +279,7 @@ public class NetworkManager {
     public boolean needsHandshakeForDomain(final EventGroup eventGroup) {
 
         boolean needsHandshake = ctApiWrapper.needsHandshake(
-                eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
-                () -> {
-                    setCustomHandshakeDomain(context, null);
-                    return null;
-                }
-
+                eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED
         );
         boolean needHandshakeDueToFailure = responseFailureCount > 5;
 

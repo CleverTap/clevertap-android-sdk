@@ -7,6 +7,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -208,29 +209,15 @@ class CtApiTest {
             customHandshakeDomain = null
         }
 
-        var counter = 0
-        val func: () -> Unit = {
-            // we will assert that callback is invoked with means of count
-            counter++
-        }
-
         // assert
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(false, func)
-        )
-        assertEquals(
-            expected = 1,
-            actual = counter
+            actual = ctApi.needsHandshake(false)
         )
 
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(true, func)
-        )
-        assertEquals(
-            expected = 2,
-            actual = counter
+            actual = ctApi.needsHandshake(true)
         )
     }
 
@@ -242,29 +229,15 @@ class CtApiTest {
             customHandshakeDomain = null
         }
 
-        var counter = 0
-        val func: () -> Unit = {
-            // we will assert that callback is invoked with means of count
-            counter++
-        }
-
         // assert
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(false, func)
-        )
-        assertEquals(
-            expected = 1,
-            actual = counter
+            actual = ctApi.needsHandshake(false)
         )
 
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(true, func)
-        )
-        assertEquals(
-            expected = 2,
-            actual = counter
+            actual = ctApi.needsHandshake(true)
         )
     }
 
@@ -294,7 +267,7 @@ class CtApiTest {
     }
 
     @Test
-    fun `test needs handshake returns true if handshake domain is mentioned first time in manifest after app upgrade`() {
+    fun `test needs handshake returns false if handshake domain is mentioned first time in manifest after app upgrade`() {
         // setup
         with (ctApi) {
             region = null
@@ -307,15 +280,8 @@ class CtApiTest {
         }
 
         // assert
-        assertEquals(
-            expected = true,
-            actual = ctApi.needsHandshake(false)
-        )
-
-        assertEquals(
-            expected = true,
-            actual = ctApi.needsHandshake(true)
-        )
+        assertFalse(ctApi.needsHandshake(false))
+        assertFalse(ctApi.needsHandshake(true))
     }
 
     @Test
