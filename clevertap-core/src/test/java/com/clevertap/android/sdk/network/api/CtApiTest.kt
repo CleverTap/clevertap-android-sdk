@@ -127,22 +127,6 @@ class CtApiTest {
     }
 
     @Test
-    fun `test get handshake domain returns client custom domain`() {
-
-        // setup
-        with (ctApi) {
-            region = null
-            proxyDomain = null
-            spikyProxyDomain = null
-            customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
-        }
-
-        // assert
-        assertEquals(CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN, ctApi.getHandshakeDomain(false))
-        assertEquals(CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN, ctApi.getHandshakeDomain(true))
-    }
-
-    @Test
     fun `test get handshake domain returns domain mentioned in manifest, case1-CLEVERTAP_HANDSHAKE_DOMAIN mentioned`() {
         // setup
         with (ctApi) {
@@ -249,7 +233,6 @@ class CtApiTest {
             proxyDomain = null
             spikyProxyDomain = null
             customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
-            cachedHandshakeDomain = null // first launch
             cachedDomain = null
             cachedSpikyDomain = null
         }
@@ -274,7 +257,6 @@ class CtApiTest {
             proxyDomain = null
             spikyProxyDomain = null
             customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
-            cachedHandshakeDomain = null // first launch
             cachedDomain = CtApiTestProvider.CACHED_DOMAIN // will exist in old app
             cachedSpikyDomain = CtApiTestProvider.CACHED_SPIKY_DOMAIN // will exist in old app
         }
@@ -292,7 +274,6 @@ class CtApiTest {
             proxyDomain = null
             spikyProxyDomain = null
             customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
-            cachedHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
             cachedDomain = "some-cached-domain.com"
             cachedSpikyDomain = "some-cached-spiky-domain.com"
         }
