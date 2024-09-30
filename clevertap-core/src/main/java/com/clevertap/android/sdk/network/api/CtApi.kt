@@ -141,7 +141,7 @@ internal class CtApi(
 
         val toCheckProxy = if (isViewedEvent) { spikyProxyDomain } else { proxyDomain }
         if (toCheckProxy.isNotNullAndBlank()) {
-            return toCheckProxy!!
+            return toCheckProxy
         }
 
         if (customHandshakeDomain.isNotNullAndBlank()) {
@@ -150,7 +150,7 @@ internal class CtApi(
 
         val toCheckCached = if (isViewedEvent) { cachedSpikyDomain } else { cachedDomain }
         if (toCheckCached.isNotNullAndBlank()) {
-            return toCheckCached!!
+            return toCheckCached
         }
 
         return defaultDomain
