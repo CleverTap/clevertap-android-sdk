@@ -99,36 +99,29 @@ internal class CtApi(
         )
 
     fun getActualDomain(isViewedEvent: Boolean): String? {
-        return when {
-            !region.isNullOrBlank() -> {
-                buildString {
-                    append(region)
-                    append(
-                        if (isViewedEvent) {
-                            spikyRegionSuffix
-                        } else {
-                            ""
-                        }
-                    )
-                    append(".")
-                    append(defaultDomain)
-                }
-            }
 
-            !isViewedEvent && !proxyDomain.isNullOrBlank() -> {
-                proxyDomain
-            }
-
-            isViewedEvent && !spikyProxyDomain.isNullOrBlank() -> {
-                spikyProxyDomain
-            }
-
-            else -> if (isViewedEvent) {
-                cachedSpikyDomain
-            } else {
-                cachedDomain
+        if (region.isNotNullAndBlank()) {
+            return buildString {
+                append(region)
+                append(
+                    if (isViewedEvent) {
+                        spikyRegionSuffix
+                    } else {
+                        ""
+                    }
+                )
+                append(".")
+                append(defaultDomain)
             }
         }
+
+        val toCheckProxy = if (isViewedEvent) { spikyProxyDomain } else { proxyDomain }
+        if (toCheckProxy.isNotNullAndBlank()) {
+            return toCheckProxy
+        }
+
+        val toCheckCached = if (isViewedEvent) { cachedSpikyDomain } else { cachedDomain }
+        return toCheckCached
     }
 
     fun getHandshakeDomain(isViewedEvent: Boolean) : String {
@@ -147,28 +140,18 @@ internal class CtApi(
             }
         }
 
-        if (isViewedEvent) {
-            if (spikyProxyDomain.isNotNullAndBlank()) {
-                return spikyProxyDomain!!
-            }
-        } else {
-            if (proxyDomain.isNotNullAndBlank()) {
-                return proxyDomain!!
-            }
+        val toCheckProxy = if (isViewedEvent) { spikyProxyDomain } else { proxyDomain }
+        if (toCheckProxy.isNotNullAndBlank()) {
+            return toCheckProxy!!
         }
 
         if (customHandshakeDomain.isNotNullAndBlank()) {
             return customHandshakeDomain!!
         }
 
-        if (isViewedEvent) {
-            if (cachedSpikyDomain.isNotNullAndBlank()) {
-                return cachedSpikyDomain!!
-            }
-        } else {
-            if (cachedDomain.isNotNullAndBlank()) {
-                return cachedDomain!!
-            }
+        val toCheckCached = if (isViewedEvent) { cachedSpikyDomain } else { cachedDomain }
+        if (toCheckCached.isNotNullAndBlank()) {
+            return toCheckCached!!
         }
 
         return defaultDomain
@@ -184,27 +167,20 @@ internal class CtApi(
             return false
         }
 
-        if (isViewedEvent) {
-            if (spikyProxyDomain.isNotNullAndBlank()) {
-                return false
-            }
-        } else {
-            if (proxyDomain.isNotNullAndBlank()) {
-                return false
-            }
+        val toCheckProxy = if (isViewedEvent) { spikyProxyDomain } else { proxyDomain }
+        if (toCheckProxy.isNotNullAndBlank()) {
+            clearCachedHandshakeDomain.invoke()
+            return false
         }
 
         if (customHandshakeDomain.isNotNullAndBlank()) {
             return cachedHandshakeDomain.isNullOrBlank()
-        } else {
-            clearCachedHandshakeDomain.invoke()
         }
 
-        return if (isViewedEvent) {
-            cachedSpikyDomain.isNullOrBlank()
-        } else {
-            cachedDomain.isNullOrBlank()
-        }
+        clearCachedHandshakeDomain.invoke()
+
+        val toCheckCached = if (isViewedEvent) { cachedSpikyDomain } else { cachedDomain }
+        return toCheckCached.isNullOrBlank()
     }
 
     private fun createRequest(
