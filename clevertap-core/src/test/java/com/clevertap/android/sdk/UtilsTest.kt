@@ -230,6 +230,7 @@ class UtilsTest : BaseTestCase() {
 
     //------------------------------------------------------------------------------------
 
+    @Ignore("This test is flaky and subject to licensing + hosting of image url")
     @Test
     fun test_drawableToBitmap_when_PassedDrawable_should_ReturnBitmap() {
         val drawable: Drawable = application.getDrawable(R1.drawable.ct_image) ?: error("drawable is null")
@@ -241,6 +242,7 @@ class UtilsTest : BaseTestCase() {
 
     //------------------------------------------------------------------------------------
 
+    @Ignore("This test is flaky and subject to licensing + hosting of image url")
     @Test
     fun test_getBitmapFromURL_when_CorrectImageLinkArePassed_should_ReturnImage() {
         val url2 = "https://www.freedesktop.org/wiki/logo1.png"
@@ -268,6 +270,7 @@ class UtilsTest : BaseTestCase() {
         }
     }
 
+    @Ignore("This test is flaky and subject to licensing + hosting of image url")
     @Test
     fun test_getBitmapFromURL_when_image_link_contains_single_or_double_slash_should_ReturnImage() {
         val url = "https:/www.freedesktop.org//wiki///logo.png"
