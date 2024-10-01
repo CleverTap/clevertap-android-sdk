@@ -102,7 +102,7 @@ class DBAdapterTest : BaseTestCase() {
         msgList = dbAdapter.getMessages(userId)
         assertEquals(3, msgList.size)
 
-        msgIds.removeLast()
+        msgIds.removeAt(msgIds.lastIndex)
         msgIds.add("msg_4")
         result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
         msgList = dbAdapter.getMessages(userId)
@@ -333,7 +333,7 @@ class DBAdapterTest : BaseTestCase() {
                 getCtMsgDao(msgIds[2], userId, read = false)
             )
         )
-        msgIds.removeLast()
+        msgIds.removeAt(msgIds.lastIndex)
         msgIds.add("msg_4")
         result = dbAdapter.markReadMessagesForIds(msgIds, userId)
         msgList = dbAdapter.getMessages(userId)

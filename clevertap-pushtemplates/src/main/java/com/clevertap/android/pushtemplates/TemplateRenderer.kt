@@ -564,15 +564,9 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                             actionLaunchIntent!!, flagsActionLaunchPendingIntent
                         )
                     } else {
-                        var optionsBundle: Bundle? = null
-                        if (VERSION.SDK_INT >= VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                            optionsBundle = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(
-                                ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
-                            ).toBundle()
-                        }
                         PendingIntent.getActivity(
                             context, requestCode,
-                            actionLaunchIntent!!, flagsActionLaunchPendingIntent, optionsBundle
+                            actionLaunchIntent!!, flagsActionLaunchPendingIntent, null
                         )
                     }
                     nb.addAction(icon, label, actionIntent)

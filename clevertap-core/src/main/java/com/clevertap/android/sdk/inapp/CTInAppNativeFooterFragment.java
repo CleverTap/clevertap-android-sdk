@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
+import static com.clevertap.android.sdk.CTXtensions.applyInsetsWithMarginAdjustment;
+
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -17,6 +19,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+
 import com.clevertap.android.sdk.R;
 import java.util.ArrayList;
 
@@ -90,7 +93,13 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
                 return true;
             }
         });
-
+        applyInsetsWithMarginAdjustment(inAppView, (insets, mlp) -> {
+            mlp.leftMargin = insets.left;
+            mlp.rightMargin = insets.right;
+            mlp.bottomMargin = insets.bottom;
+            return null;
+        });
         return inAppView;
     }
+
 }

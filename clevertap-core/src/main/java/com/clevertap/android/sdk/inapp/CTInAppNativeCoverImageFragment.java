@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
+import static com.clevertap.android.sdk.CTXtensions.applyInsetsWithMarginAdjustment;
+
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -20,7 +22,13 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View inAppView = inflater.inflate(R.layout.inapp_cover_image, container, false);
-
+        applyInsetsWithMarginAdjustment(inAppView, (insets, mlp) -> {
+            mlp.leftMargin = insets.left;
+            mlp.rightMargin = insets.right;
+            mlp.topMargin = insets.top;
+            mlp.bottomMargin = insets.bottom;
+            return null;
+        });
         FrameLayout fl = inAppView.findViewById(R.id.inapp_cover_image_frame_layout);
         fl.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
 

@@ -64,14 +64,8 @@ public class LaunchPendingIntentFactory {
             flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
         }
 
-        Bundle optionsBundle = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            optionsBundle = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(
-                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED).toBundle();
-        }
-
         return PendingIntent.getActivity(context, new Random().nextInt(), launchIntent,
-                flagsLaunchPendingIntent, optionsBundle);
+                flagsLaunchPendingIntent, null);
 
 
     }

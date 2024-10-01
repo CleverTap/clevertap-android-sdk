@@ -149,13 +149,8 @@ public interface INotificationRenderer {
                         actionIntent = PendingIntent.getService(context, requestCode,
                                 actionLaunchIntent, flagsActionLaunchPendingIntent);
                     } else {
-                        Bundle optionsBundle = null;
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                            optionsBundle = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(
-                                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED).toBundle();
-                        }
                         actionIntent = PendingIntent.getActivity(context, requestCode,
-                                actionLaunchIntent, flagsActionLaunchPendingIntent, optionsBundle);
+                                actionLaunchIntent, flagsActionLaunchPendingIntent, null);
                     }
                     nb.addAction(icon, label, actionIntent);
 
