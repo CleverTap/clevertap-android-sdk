@@ -34,12 +34,10 @@ internal class CtApiWrapper(
     }
 
     fun needsHandshake(
-        isViewedEvent: Boolean,
-        clearCachedHandshakeDomain: () -> Unit = {}
+        isViewedEvent: Boolean
     ) : Boolean =
         ctApi.needsHandshake(
-            isViewedEvent = isViewedEvent,
-            clearCachedHandshakeDomain = clearCachedHandshakeDomain
+            isViewedEvent = isViewedEvent
         )
 }
 
@@ -62,7 +60,6 @@ internal object CtApiProvider {
             defaultDomain = Constants.PRIMARY_DOMAIN,
             cachedDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null),
             cachedSpikyDomain = StorageHelper.getStringFromPrefs(context, config, Constants.SPIKY_KEY_DOMAIN_NAME, null),
-            cachedHandshakeDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_HANDSHAKE_DOMAIN_NAME, null),
             region = config.accountRegion,
             proxyDomain = config.proxyDomain,
             spikyProxyDomain = config.spikyProxyDomain,

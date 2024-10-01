@@ -145,7 +145,6 @@ public interface Constants {
     String PRIMARY_DOMAIN = "clevertap-prod.com";
     String KEY_DOMAIN_NAME = "comms_dmn";
     String SPIKY_KEY_DOMAIN_NAME = "comms_dmn_spiky";
-    String KEY_HANDSHAKE_DOMAIN_NAME = "comms_dmn_handshake";
     String HEADER_DOMAIN_NAME = "X-WZRK-RD";
     String SPIKY_HEADER_DOMAIN_NAME = "X-WZRK-SPIKY-RD";
     String HEADER_MUTE = "X-WZRK-MUTE";

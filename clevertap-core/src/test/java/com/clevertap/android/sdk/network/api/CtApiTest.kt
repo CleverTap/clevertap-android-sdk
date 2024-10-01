@@ -7,6 +7,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -126,22 +127,6 @@ class CtApiTest {
     }
 
     @Test
-    fun `test get handshake domain returns client custom domain`() {
-
-        // setup
-        with (ctApi) {
-            region = null
-            proxyDomain = null
-            spikyProxyDomain = null
-            customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
-        }
-
-        // assert
-        assertEquals(CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN, ctApi.getHandshakeDomain(false))
-        assertEquals(CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN, ctApi.getHandshakeDomain(true))
-    }
-
-    @Test
     fun `test get handshake domain returns domain mentioned in manifest, case1-CLEVERTAP_HANDSHAKE_DOMAIN mentioned`() {
         // setup
         with (ctApi) {
@@ -208,29 +193,15 @@ class CtApiTest {
             customHandshakeDomain = null
         }
 
-        var counter = 0
-        val func: () -> Unit = {
-            // we will assert that callback is invoked with means of count
-            counter++
-        }
-
         // assert
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(false, func)
-        )
-        assertEquals(
-            expected = 1,
-            actual = counter
+            actual = ctApi.needsHandshake(false)
         )
 
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(true, func)
-        )
-        assertEquals(
-            expected = 2,
-            actual = counter
+            actual = ctApi.needsHandshake(true)
         )
     }
 
@@ -242,29 +213,15 @@ class CtApiTest {
             customHandshakeDomain = null
         }
 
-        var counter = 0
-        val func: () -> Unit = {
-            // we will assert that callback is invoked with means of count
-            counter++
-        }
-
         // assert
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(false, func)
-        )
-        assertEquals(
-            expected = 1,
-            actual = counter
+            actual = ctApi.needsHandshake(false)
         )
 
         assertEquals(
             expected = false,
-            actual = ctApi.needsHandshake(true, func)
-        )
-        assertEquals(
-            expected = 2,
-            actual = counter
+            actual = ctApi.needsHandshake(true)
         )
     }
 
@@ -276,7 +233,6 @@ class CtApiTest {
             proxyDomain = null
             spikyProxyDomain = null
             customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
-            cachedHandshakeDomain = null // first launch
             cachedDomain = null
             cachedSpikyDomain = null
         }
@@ -294,28 +250,20 @@ class CtApiTest {
     }
 
     @Test
-    fun `test needs handshake returns true if handshake domain is mentioned first time in manifest after app upgrade`() {
+    fun `test needs handshake returns false if handshake domain is mentioned first time in manifest after app upgrade`() {
         // setup
         with (ctApi) {
             region = null
             proxyDomain = null
             spikyProxyDomain = null
             customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
-            cachedHandshakeDomain = null // first launch
             cachedDomain = CtApiTestProvider.CACHED_DOMAIN // will exist in old app
             cachedSpikyDomain = CtApiTestProvider.CACHED_SPIKY_DOMAIN // will exist in old app
         }
 
         // assert
-        assertEquals(
-            expected = true,
-            actual = ctApi.needsHandshake(false)
-        )
-
-        assertEquals(
-            expected = true,
-            actual = ctApi.needsHandshake(true)
-        )
+        assertFalse(ctApi.needsHandshake(false))
+        assertFalse(ctApi.needsHandshake(true))
     }
 
     @Test
@@ -326,7 +274,6 @@ class CtApiTest {
             proxyDomain = null
             spikyProxyDomain = null
             customHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
-            cachedHandshakeDomain = CtApiTestProvider.CUSTOM_HANDSHAKE_DOMAIN
             cachedDomain = "some-cached-domain.com"
             cachedSpikyDomain = "some-cached-spiky-domain.com"
         }
