@@ -14,6 +14,11 @@ class MockHttpClient(
         if (alwaysThrowOnExecute) {
             throw RuntimeException("MockHttpClient exception on execute")
         }
-        return Response(request, responseCode, responseHeaders, responseBody?.byteInputStream(Charsets.UTF_8)) {}
+        return Response(
+            request = request,
+            code = responseCode,
+            headers = responseHeaders,
+            bodyStream = responseBody?.byteInputStream(Charsets.UTF_8)
+        ) {}
     }
 }
