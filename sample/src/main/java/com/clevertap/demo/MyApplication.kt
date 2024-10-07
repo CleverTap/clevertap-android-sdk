@@ -121,7 +121,8 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 "YOUR CLEVERTAP ACCOUNT ID",
                 "YOUR CLEVERTAP TOKEN",
                 "YOUR PROXY DOMAIN",
-                "YOUR SPIKY PROXY DOMAIN"
+                "YOUR SPIKY PROXY DOMAIN",
+                "YOUR CUSTOM HANDSHAKE DOMAIN"
             )
         }
 

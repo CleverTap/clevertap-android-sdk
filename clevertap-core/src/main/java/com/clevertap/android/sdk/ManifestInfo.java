@@ -232,6 +232,14 @@ public class ManifestInfo {
         spikyProxyDomain = _spikyProxyDomain;
     }
 
+    static void changeCredentials(String id, String token, String _proxyDomain, String _spikyProxyDomain, String customHandshakeDomain) {
+        accountId = id;
+        accountToken = token;
+        proxyDomain = _proxyDomain;
+        spikyProxyDomain = _spikyProxyDomain;
+        handshakeDomain = customHandshakeDomain;
+    }
+
     /**
      * This returns string representation of int,boolean,string,float value of given key
      *
