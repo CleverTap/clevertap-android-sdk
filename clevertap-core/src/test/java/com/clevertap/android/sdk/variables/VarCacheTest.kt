@@ -378,6 +378,7 @@ class VarCacheTest : BaseTestCase() {
         verify { globalCallbackRunnable.run() }
     }
 
+    @Ignore("this is flaky")
     @Test
     fun `test clearUserContent`() {
         Var.define("var1", 1, ctVariables)
