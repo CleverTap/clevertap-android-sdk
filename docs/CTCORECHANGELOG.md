@@ -1,5 +1,12 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.0.2 (October 10, 2024)
+
+#### New Features
+* Adds support for custom handshake domain configuration in android manifest
+* Adds support for custom code in-app templates definitions through a json scheme. Please refer to the [CustomCodeTemplates.md](CustomCodeTemplates.md) for further details.
+
+
 ### Version 7.0.1 (September 2, 2024)
 
 #### Bug Fixes
