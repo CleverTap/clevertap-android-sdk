@@ -1,5 +1,11 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.0.2 (October 10, 2024)
+
+#### New Features
+* Adds support for custom handshake domain configuration in android manifest
+
+
 ### Version 7.0.1 (September 2, 2024)
 
 #### Bug Fixes
