@@ -20,6 +20,8 @@ public class ManifestInfo {
 
     private static String spikyProxyDomain;
 
+    private static String handshakeDomain;
+
     private static boolean useADID;
 
     private static boolean appLaunchedDisabled;
@@ -83,6 +85,9 @@ public class ManifestInfo {
         }
         if (spikyProxyDomain == null) {
             spikyProxyDomain = _getManifestStringValueForKey(metaData, Constants.LABEL_SPIKY_PROXY_DOMAIN);
+        }
+        if (handshakeDomain == null) {
+            handshakeDomain = _getManifestStringValueForKey(metaData, Constants.LABEL_CLEVERTAP_HANDSHAKE_DOMAIN);
         }
         notificationIcon = _getManifestStringValueForKey(metaData, Constants.LABEL_NOTIFICATION_ICON);
         useADID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_USE_GOOGLE_AD_ID));
@@ -176,6 +181,12 @@ public class ManifestInfo {
         return spikyProxyDomain;
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public String getHandshakeDomain() {
+        Logger.v("ManifestInfo: getHandshakeDomain called, returning handshakeDomain:" + handshakeDomain);
+        return handshakeDomain;
+    }
+
     String getPackageName() {
         return packageName;
     }
@@ -219,6 +230,14 @@ public class ManifestInfo {
         accountToken = token;
         proxyDomain = _proxyDomain;
         spikyProxyDomain = _spikyProxyDomain;
+    }
+
+    static void changeCredentials(String id, String token, String _proxyDomain, String _spikyProxyDomain, String customHandshakeDomain) {
+        accountId = id;
+        accountToken = token;
+        proxyDomain = _proxyDomain;
+        spikyProxyDomain = _spikyProxyDomain;
+        handshakeDomain = customHandshakeDomain;
     }
 
     /**

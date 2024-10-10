@@ -22,6 +22,7 @@ import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @RestrictTo(Scope.LIBRARY)
@@ -66,7 +67,7 @@ public class CallbackManager extends BaseCallbackManager {
 
     private FetchInAppsCallback fetchInAppsCallback;
 
-    private final List<ChangeUserCallback> changeUserCallbackList = new ArrayList<>();
+    private final List<ChangeUserCallback> changeUserCallbackList = Collections.synchronizedList(new ArrayList<>());
 
     public CallbackManager(CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
         this.config = config;

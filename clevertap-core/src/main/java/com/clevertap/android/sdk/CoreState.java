@@ -11,7 +11,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.login.LoginController;
-import com.clevertap.android.sdk.network.BaseNetworkManager;
+import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -21,7 +21,9 @@ import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.Parser;
 import com.clevertap.android.sdk.variables.VarCache;
 
-public class CoreState extends CleverTapState {
+public class CoreState {
+
+    private final Context context;
 
     private BaseLocationManager baseLocationManager;
 
@@ -63,7 +65,7 @@ public class CoreState extends CleverTapState {
 
     private MainLooperHandler mainLooperHandler;
 
-    private BaseNetworkManager networkManager;
+    private NetworkManager networkManager;
 
     private PushProviders pushProviders;
 
@@ -110,7 +112,7 @@ public class CoreState extends CleverTapState {
     }
 
     CoreState(final Context context) {
-        super(context);
+        this.context = context;
     }
 
     public ActivityLifeCycleManager getActivityLifeCycleManager() {
@@ -192,12 +194,10 @@ public class CoreState extends CleverTapState {
         return getControllerManager().getCTProductConfigController();
     }
 
-    @Override
     public BaseDatabaseManager getDatabaseManager() {
         return databaseManager;
     }
 
-    @Override
     void setDatabaseManager(final BaseDatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
     }
@@ -242,13 +242,11 @@ public class CoreState extends CleverTapState {
         this.loginController = loginController;
     }
 
-    @Override
-    public BaseNetworkManager getNetworkManager() {
+    public NetworkManager getNetworkManager() {
         return networkManager;
     }
 
-    @Override
-    void setNetworkManager(final BaseNetworkManager networkManager) {
+    void setNetworkManager(final NetworkManager networkManager) {
         this.networkManager = networkManager;
     }
 
@@ -276,12 +274,10 @@ public class CoreState extends CleverTapState {
         this.validationResultStack = validationResultStack;
     }
 
-    @Override
     BaseLocationManager getLocationManager() {
         return baseLocationManager;
     }
 
-    @Override
     void setLocationManager(final BaseLocationManager baseLocationManager) {
         this.baseLocationManager = baseLocationManager;
     }

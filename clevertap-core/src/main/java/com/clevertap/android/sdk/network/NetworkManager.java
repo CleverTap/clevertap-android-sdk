@@ -65,7 +65,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
-public class NetworkManager extends BaseNetworkManager {
+public class NetworkManager {
 
     private final BaseCallbackManager callbackManager;
     private final List<CleverTapResponse> cleverTapResponses = new ArrayList<>();
@@ -134,7 +134,8 @@ public class NetworkManager extends BaseNetworkManager {
             CTLockManager ctLockManager,
             Validator validator,
             InAppResponse inAppResponse,
-            final CtApiWrapper ctApiWrapper) {
+            final CtApiWrapper ctApiWrapper
+    ) {
         this.context = context;
         this.config = config;
         this.deviceInfo = deviceInfo;
@@ -168,7 +169,6 @@ public class NetworkManager extends BaseNetworkManager {
      * @param eventGroup The EventGroup indicating the type of events to be flushed.
      * @param caller     The optional caller identifier.
      */
-    @Override
     public void flushDBQueue(final Context context, final EventGroup eventGroup, @Nullable final String caller) {
         config.getLogger()
                 .verbose(config.getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
@@ -224,7 +224,6 @@ public class NetworkManager extends BaseNetworkManager {
 
     //gives delay frequency based on region
     //randomly adds delay to 1s delay in case of non-EU regions
-    @Override
     public int getDelayFrequency() {
 
         logger.debug(config.getAccountId(), "Network retry #" + networkRetryCount);
@@ -269,7 +268,6 @@ public class NetworkManager extends BaseNetworkManager {
         return "ARP:" + accountId + ":" + deviceInfo.getDeviceID();
     }
 
-    @Override
     @WorkerThread
     public void initHandshake(final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
         // Always set this to 0 so that the handshake is not performed during a HTTP failure
@@ -277,15 +275,18 @@ public class NetworkManager extends BaseNetworkManager {
         performHandshakeForDomain(context, eventGroup, handshakeSuccessCallback);
     }
 
-    @Override
     @WorkerThread
     public boolean needsHandshakeForDomain(final EventGroup eventGroup) {
-        final String domain = getDomain(eventGroup);
+
+        boolean needsHandshake = ctApiWrapper.needsHandshake(
+                eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED
+        );
         boolean needHandshakeDueToFailure = responseFailureCount > 5;
+
         if (needHandshakeDueToFailure) {
             setDomain(context, null);
         }
-        return domain == null || needHandshakeDueToFailure;
+        return needsHandshake || needHandshakeDueToFailure;
     }
 
     @SuppressLint("CommitPrefEdits")
@@ -486,8 +487,11 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     @WorkerThread
-    private void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
-            final Runnable handshakeSuccessCallback) {
+    private void performHandshakeForDomain(
+            final Context context,
+            final EventGroup eventGroup,
+            final Runnable handshakeSuccessCallback
+    ) {
 
         try (Response response = ctApiWrapper.getCtApi().performHandshakeForDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)) {
             if (response.isSuccess()) {
@@ -553,7 +557,6 @@ public class NetworkManager extends BaseNetworkManager {
      * @param caller     The optional caller identifier.
      * @return True if the queue was sent successfully, false otherwise.
      */
-    @Override
     public boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue,
             @Nullable final String caller) {
         if (queue == null || queue.length() <= 0) {
@@ -599,7 +602,6 @@ public class NetworkManager extends BaseNetworkManager {
         }
     }
 
-    @Override
     @WorkerThread
     public boolean defineTemplates(final Context context, Collection<CustomTemplate> templates) {
         final JSONObject header = getQueueHeader(context, null);
@@ -801,11 +803,13 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     @WorkerThread
-    private void setDomain(final Context context, String domainName) {
+    private void setDomain(
+            final Context context,
+            String domainName
+    ) {
         logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
-                domainName);
-        ctApiWrapper.getCtApi().setDomain(domainName);
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME), domainName);
+        ctApiWrapper.getCtApi().setCachedDomain(domainName);
 
         if (callbackManager.getSCDomainListener() != null) {
             if (domainName != null) {
@@ -826,9 +830,8 @@ public class NetworkManager extends BaseNetworkManager {
     @WorkerThread
     private void setSpikyDomain(final Context context, String spikyDomainName) {
         logger.verbose(config.getAccountId(), "Setting spiky domain to " + spikyDomainName);
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
-                spikyDomainName);
-        ctApiWrapper.getCtApi().setSpikyDomain(spikyDomainName);
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME), spikyDomainName);
+        ctApiWrapper.getCtApi().setCachedSpikyDomain(spikyDomainName);
     }
 
     /**
