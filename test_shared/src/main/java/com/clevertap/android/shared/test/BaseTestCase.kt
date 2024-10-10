@@ -41,7 +41,14 @@ abstract class BaseTestCase {
         application = TestApplication.application
         shadowApplication = Shadows.shadowOf(application)
         cleverTapAPI = Mockito.mock(CleverTapAPI::class.java)
-        cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(application, Constant.ACC_ID, Constant.ACC_TOKEN)
+        cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(
+            application,
+            Constant.ACC_ID,
+            Constant.ACC_TOKEN
+        ).apply {
+            // intentional
+            customHandshakeDomain = null
+        }
         activityController = Robolectric.buildActivity(TestActivity::class.java)
         appCtx = application.applicationContext
 

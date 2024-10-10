@@ -3,7 +3,10 @@ package com.clevertap.android.sdk.network.api
 import org.json.JSONArray
 import org.json.JSONObject
 
-class SendQueueRequestBody(var queueHeader: JSONObject?, var queue: JSONArray) {
+class SendQueueRequestBody(
+    val queueHeader: JSONObject?,
+    val queue: JSONArray
+) {
 
     override fun toString(): String = if (queueHeader == null) {
         queue.toString()

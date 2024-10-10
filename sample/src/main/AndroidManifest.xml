@@ -58,6 +58,9 @@
         <meta-data
             android:name="CLEVERTAP_REGION"
             android:value="YOUR ACCT REGION"/>
+        <meta-data
+            android:name="CLEVERTAP_HANDSHAKE_DOMAIN"
+            android:value="YOUR HANDSHAKE DOMAIN"/>
         <!--<meta-data
             android:name="CLEVERTAP_PROXY_DOMAIN"
             android:value="analytics.sdktesting.xyz"/>-->

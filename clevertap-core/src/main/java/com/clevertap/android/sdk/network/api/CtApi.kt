@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.network.api
 
 import android.net.Uri
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response
@@ -9,11 +10,12 @@ import com.clevertap.android.sdk.network.http.Response
 internal class CtApi(
     private val httpClient: CtHttpClient,
     val defaultDomain: String,
-    var domain: String?,
-    var spikyDomain: String?,
+    var cachedDomain: String?,
+    var cachedSpikyDomain: String?,
     var region: String?,
     var proxyDomain: String?,
     var spikyProxyDomain: String?,
+    var customHandshakeDomain: String?,
     accountId: String,
     accountToken: String,
     sdkVersion: String,
@@ -25,6 +27,8 @@ internal class CtApi(
 
         const val DEFAULT_CONTENT_TYPE = "application/json; charset=utf-8"
         const val DEFAULT_QUERY_PARAM_OS = "Android"
+
+        const val HEADER_CUSTOM_HANDSHAKE = "X-CleverTap-Handshake-Domain"
     }
 
     private val defaultHeaders: Map<String, String> = mapOf(
@@ -41,74 +45,157 @@ internal class CtApi(
     var currentRequestTimestampSeconds = 0
         private set
 
-    fun sendQueue(useSpikyDomain: Boolean, body: SendQueueRequestBody): Response =
-        httpClient.execute(createRequest(
-            relativePath = "a1",
-            body = body.toString(),
-            useSpikyDomain = useSpikyDomain,
-            includeTs = true)
+    fun sendQueue(
+        isViewedEvent: Boolean,
+        body: SendQueueRequestBody
+    ): Response =
+        httpClient.execute(
+            createRequest(
+                baseUrl = getActualDomain(isViewedEvent = isViewedEvent) ?: defaultDomain,
+                relativeUrl = "a1",
+                body = body.toString()
+            )
         )
 
-    fun performHandshakeForDomain(useSpikyDomain: Boolean): Response {
+    fun performHandshakeForDomain(isViewedEvent: Boolean): Response {
+        val baseUrl = getHandshakeDomain(isViewedEvent)
+
+        // append extra info in header in-case we are using custom handshake domain
+        val headers = if (customHandshakeDomain.isNotNullAndBlank() && baseUrl == customHandshakeDomain) {
+            defaultHeaders.plus(HEADER_CUSTOM_HANDSHAKE to customHandshakeDomain!!)
+        } else {
+            defaultHeaders
+        }
         val request = createRequest(
-            relativePath = "hello",
+            baseUrl = baseUrl,
+            relativeUrl = "hello",
             body = null,
-            useSpikyDomain = useSpikyDomain,
-            includeTs = false
+            includeTs = false,
+            headers = headers
         )
+
         logger.verbose(logTag, "Performing handshake with ${request.url}")
+
         return httpClient.execute(request)
     }
 
     fun defineVars(body: SendQueueRequestBody): Response =
         httpClient.execute(
-            createRequest("defineVars", body.toString(), useSpikyDomain = false, includeTs = true)
+            createRequest(
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
+                relativeUrl = "defineVars",
+                body = body.toString()
+            )
         )
 
     fun defineTemplates(body: DefineTemplatesRequestBody): Response =
         httpClient.execute(
-            createRequest("defineTemplates", body.toString(), useSpikyDomain = false, includeTs = true)
+            createRequest(
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
+                relativeUrl = "defineTemplates",
+                body = body.toString()
+            )
         )
 
-    fun getActualDomain(useSpikyDomain: Boolean): String? {
-        return when {
-            !region.isNullOrBlank() -> {
-                val regionSuffix = if (useSpikyDomain) spikyRegionSuffix else ""
-                "$region${regionSuffix}.$defaultDomain"
-            }
+    fun getActualDomain(isViewedEvent: Boolean): String? {
 
-            !useSpikyDomain && !proxyDomain.isNullOrBlank() -> {
-                proxyDomain
-            }
-
-            useSpikyDomain && !spikyProxyDomain.isNullOrBlank() -> {
-                spikyProxyDomain
-            }
-
-            else -> if (useSpikyDomain) {
-                spikyDomain
-            } else {
-                domain
+        if (region.isNotNullAndBlank()) {
+            return buildString {
+                append(region)
+                append(
+                    if (isViewedEvent) {
+                        spikyRegionSuffix
+                    } else {
+                        ""
+                    }
+                )
+                append(".")
+                append(defaultDomain)
             }
         }
+
+        val toCheckProxy = if (isViewedEvent) { spikyProxyDomain } else { proxyDomain }
+        if (toCheckProxy.isNotNullAndBlank()) {
+            return toCheckProxy
+        }
+
+        val toCheckCached = if (isViewedEvent) { cachedSpikyDomain } else { cachedDomain }
+        return toCheckCached
+    }
+
+    fun getHandshakeDomain(isViewedEvent: Boolean) : String {
+        if (region.isNotNullAndBlank()) {
+            return buildString {
+                append(region)
+                append(
+                    if (isViewedEvent) {
+                        spikyRegionSuffix
+                    } else {
+                        ""
+                    }
+                )
+                append(".")
+                append(defaultDomain)
+            }
+        }
+
+        val toCheckProxy = if (isViewedEvent) { spikyProxyDomain } else { proxyDomain }
+        if (toCheckProxy.isNotNullAndBlank()) {
+            return toCheckProxy
+        }
+
+        if (customHandshakeDomain.isNotNullAndBlank()) {
+            return customHandshakeDomain!!
+        }
+
+        val toCheckCached = if (isViewedEvent) { cachedSpikyDomain } else { cachedDomain }
+        if (toCheckCached.isNotNullAndBlank()) {
+            return toCheckCached
+        }
+
+        return defaultDomain
+    }
+
+    fun needsHandshake(isViewedEvent: Boolean) : Boolean {
+
+        if (region.isNotNullAndBlank()) {
+            return false
+        }
+
+        val toCheckProxy = if (isViewedEvent) { spikyProxyDomain } else { proxyDomain }
+        if (toCheckProxy.isNotNullAndBlank()) {
+            return false
+        }
+
+        val toCheckCached = if (isViewedEvent) { cachedSpikyDomain } else { cachedDomain }
+        return toCheckCached.isNullOrBlank()
     }
 
     private fun createRequest(
-        relativePath: String,
+        baseUrl: String,
+        relativeUrl: String,
         body: String?,
-        useSpikyDomain: Boolean,
-        includeTs: Boolean
+        includeTs: Boolean = true,
+        headers: Map<String, String> = defaultHeaders
     ) = Request(
-        url = getUriForPath(path = relativePath, useSpikyDomain = useSpikyDomain, includeTs = includeTs),
-        headers = defaultHeaders,
+        url = getUriForPath(
+            baseUrl = baseUrl,
+            relativeUrl = relativeUrl,
+            includeTs = includeTs
+        ),
+        headers = headers,
         body = body
     )
 
-    private fun getUriForPath(path: String, useSpikyDomain: Boolean, includeTs: Boolean): Uri {
+    private fun getUriForPath(
+        baseUrl: String,
+        relativeUrl: String,
+        includeTs: Boolean
+    ): Uri {
         val builder = Uri.Builder()
             .scheme("https")
-            .authority(getActualDomain(useSpikyDomain) ?: defaultDomain)
-            .appendPath(path)
+            .authority(baseUrl)
+            .appendPath(relativeUrl)
             .appendDefaultQueryParams()
         if (includeTs) {
             builder.appendTsQueryParam()
@@ -120,7 +207,6 @@ internal class CtApi(
         for (queryParam in defaultQueryParams) {
             appendQueryParameter(queryParam.key, queryParam.value)
         }
-
         return this
     }
 
