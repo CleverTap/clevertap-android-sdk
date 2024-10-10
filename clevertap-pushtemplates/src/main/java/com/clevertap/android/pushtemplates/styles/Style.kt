@@ -41,7 +41,13 @@ abstract class Style(private var renderer: TemplateRenderer) {
             .setWhen(System.currentTimeMillis())
             .setColor(Color.parseColor(renderer.pt_small_icon_clr ?: "#FFFFFF"))
             .setAutoCancel(true)
-            .setOnlyAlertOnce(true)
+            .setStyle(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    NotificationCompat.DecoratedCustomViewStyle()
+                } else {
+                    null
+                }
+            )
     }
 
     protected abstract fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews?

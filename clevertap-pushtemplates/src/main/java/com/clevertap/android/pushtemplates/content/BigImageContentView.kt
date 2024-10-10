@@ -1,12 +1,18 @@
 package com.clevertap.android.pushtemplates.content
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.text.Html
 import android.view.View
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
+
 
 open class BigImageContentView(
     context: Context,

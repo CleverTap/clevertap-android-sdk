@@ -62,7 +62,7 @@ class RatingContentView(context: Context, renderer: TemplateRenderer, extras: Bu
         )
 
         if (VERSION.SDK_INT >= VERSION_CODES.S) {
-            remoteView.setViewVisibility(R.id.tVRatingConfirmation, View.VISIBLE)
+            remoteView.setViewVisibility(R.id.tVRatingConfirmation, View.GONE)
             extras.putInt(PTConstants.PT_NOTIF_ID, renderer.notificationId)
             remoteView.setOnClickPendingIntent(
                 R.id.tVRatingConfirmation,
