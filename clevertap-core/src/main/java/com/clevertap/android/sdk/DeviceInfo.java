@@ -105,8 +105,8 @@ public class DeviceInfo {
 
             WindowSize result = getWindowSizeData();
 
-            width = toTwoPlaces(result.doubleWidth);
-            height = toTwoPlaces(result.doubleHeight);
+            width = result.doubleWidth;
+            height = result.doubleHeight;
             dpi = result.localDpi;
 
 
@@ -326,9 +326,13 @@ public class DeviceInfo {
     private WindowManager getWindowManager() {
         WindowManager wm;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            wm = (WindowManager) context
-                    .createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION, null)
-                    .getSystemService(Context.WINDOW_SERVICE);
+            try {
+                wm = (WindowManager) context
+                        .createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION, null)
+                        .getSystemService(Context.WINDOW_SERVICE);
+            } catch (UnsupportedOperationException e) {
+                wm = null;
+            }
         } else {
             wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         }
