@@ -19,6 +19,8 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 fun Context.isPackageAndOsTargetsAbove(apiLevel: Int) =
     VERSION.SDK_INT > apiLevel && targetSdkVersion > apiLevel
@@ -298,4 +300,10 @@ fun String?.toJsonOrNull(): JSONObject? {
             null
         }
     }
+}
+
+@OptIn(ExperimentalContracts::class)
+fun String?.isNotNullAndBlank() : Boolean {
+    contract { returns(true) implies (this@isNotNullAndBlank != null) }
+    return isNullOrBlank().not()
 }

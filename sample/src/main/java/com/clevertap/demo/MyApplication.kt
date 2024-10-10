@@ -5,23 +5,24 @@ import android.app.Application.ActivityLifecycleCallbacks
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-
 import android.os.Build
-
 import android.os.Bundle
+import android.os.StrictMode
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.clevertap.android.pushtemplates.PushTemplateNotificationHandler
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.sdk.*
+import com.clevertap.android.sdk.ActivityLifecycleCallback
+import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.InboxMessageButtonListener
+import com.clevertap.android.sdk.InboxMessageListener
+import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
-import com.clevertap.android.sdk.variables.Var
-import com.clevertap.android.sdk.variables.callbacks.VariableCallback
-import com.clevertap.demo.ui.main.FileVarsData
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
@@ -53,25 +54,8 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             }
         })
 
-        /*val ctInstance = CleverTapInstanceConfig.createInstance(
-            applicationContext,
-            "YOUR CLEVERTAP ACCOUNT ID",
-            "YOUR CLEVERTAP TOKEN"
-        )
-        cleverTapInstanceConfig.proxyDomain = "YOUR PROXY DOMAIN"
-        cleverTapInstanceConfig.spikyProxyDomain = "YOUR SPIKY PROXY DOMAIN"
-
-        CleverTapAPI.instanceWithConfig(this, cleverTapInstanceConfig)*/
-
-        /*CleverTapAPI.changeCredentials(
-            "YOUR CLEVERTAP ACCOUNT ID",
-            "YOUR CLEVERTAP TOKEN",
-            "YOUR PROXY DOMAIN",
-            "YOUR SPIKY PROXY DOMAIN"
-        )*/
-
-        val ctInstance = CleverTapAPI.getDefaultInstance(this)
-        ctInstance?.apply {
+        val ctInstance: CleverTapAPI = buildCtInstance(useDefaultInstance = true) // to make readable
+        ctInstance.apply {
             syncListener = object : SyncListener {
                 override fun profileDataUpdated(updates: JSONObject?) {//no op
                 }
@@ -105,18 +89,62 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                     "${defaultInstance?.cleverTapAttributionIdentifier}"
         )*/
 
-        CleverTapAPI.createNotificationChannel(
-            this, "BRTesting", "Core",
-            "Core notifications", NotificationManager.IMPORTANCE_MAX, true
-        )
-        CleverTapAPI.createNotificationChannel(
-            this, "PTTesting", "Push templates",
-            "All push templates", NotificationManager.IMPORTANCE_MAX, true
-        )
-        CleverTapAPI.createNotificationChannel(
-            this, "BlockBRTesting", "Blocked Core",
-            "Blocked Core notifications", NotificationManager.IMPORTANCE_NONE, true
-        )
+        createNotificationChannels()
+    }
+
+    /**
+     * Build Clevertap instance for testing and flags can be manipulated for different variations
+     */
+    private fun buildCtInstance(
+        useDefaultInstance: Boolean = true,
+        changeCredentials: Boolean = false,
+        handshakeDomain: String? = null
+    ): CleverTapAPI {
+        val ctInstance = if (useDefaultInstance) {
+            CleverTapAPI.getDefaultInstance(this)!!
+        } else {
+            val config = CleverTapInstanceConfig.createInstance(
+                applicationContext,
+                "YOUR CLEVERTAP ACCOUNT ID",
+                "YOUR CLEVERTAP TOKEN",
+                "YOUR CLEVERTAP REGION",
+            ).apply {
+                handshakeDomain?.let { handshakeDomain ->
+                    customHandshakeDomain = handshakeDomain
+                }
+            }
+            CleverTapAPI.instanceWithConfig(this, config)
+        }
+
+        if (changeCredentials) {
+            CleverTapAPI.changeCredentials(
+                "YOUR CLEVERTAP ACCOUNT ID",
+                "YOUR CLEVERTAP TOKEN",
+                "YOUR PROXY DOMAIN",
+                "YOUR SPIKY PROXY DOMAIN",
+                "YOUR CUSTOM HANDSHAKE DOMAIN"
+            )
+        }
+
+        return ctInstance
+    }
+
+    private fun createNotificationChannels() {
+
+        listOf(
+            Triple("BRTesting", "Core", "Core notifications"),
+            Triple("PTTesting", "Push templates", "All push templates"),
+            Triple("BlockBRTesting", "Blocked Core", "Blocked Core notifications"),
+        ).forEach {
+            CleverTapAPI.createNotificationChannel(
+                this,
+                it.first,
+                it.second,
+                it.third,
+                NotificationManager.IMPORTANCE_MAX,
+                true
+            )
+        }
     }
 
     private fun cleverTapPreAppCreated() {
@@ -132,21 +160,23 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         registerActivityLifecycleCallbacks(this)
     }
 
-    private fun setupStrictMode() {
-        /*StrictMode.setThreadPolicy(
-            StrictMode.ThreadPolicy.Builder()
-                .detectAll()   // or .detectAll() for all detectable problems
-                .penaltyLog()
-                //.penaltyDeath()
-                .build()
-        );
-        StrictMode.setVmPolicy(
-            StrictMode.VmPolicy.Builder()
-                .detectAll()
-                .penaltyLog()
-                //.penaltyDeath()
-                .build()
-        )*/
+    private fun setupStrictMode(enable: Boolean = false) {
+        if (enable) {
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectAll()   // or .detectAll() for all detectable problems
+                    .penaltyLog()
+                    //.penaltyDeath()
+                    .build()
+            );
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    //.penaltyDeath()
+                    .build()
+            )
+        }
     }
 
     override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
@@ -249,10 +279,5 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             Log.i("MyApplication", "type/template of App Inbox item: ${message?.type}")
             //dismissAppInbox()
         }
-    }
-
-    private fun dismissAppInbox() {
-        val defaultInstance = CleverTapAPI.getDefaultInstance(this)
-        defaultInstance?.dismissAppInbox()
     }
 }

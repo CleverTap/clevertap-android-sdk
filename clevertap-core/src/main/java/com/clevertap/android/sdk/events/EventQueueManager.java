@@ -23,7 +23,6 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
-import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
@@ -65,7 +64,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private final MainLooperHandler mainLooperHandler;
 
-    private final BaseNetworkManager networkManager;
+    private final NetworkManager networkManager;
 
     private final SessionManager sessionManager;
 
@@ -235,8 +234,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         JSONArray singleEventQueue = new JSONArray().put(eventData);
 
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
-            networkManager.initHandshake(eventGroup, () ->
-                    networkManager.sendQueue(context, eventGroup, singleEventQueue, null));
+            networkManager.initHandshake(
+                    eventGroup,
+                    () -> networkManager.sendQueue(context, eventGroup, singleEventQueue, null)
+            );
         } else {
             networkManager.sendQueue(context, eventGroup, singleEventQueue, null);
         }

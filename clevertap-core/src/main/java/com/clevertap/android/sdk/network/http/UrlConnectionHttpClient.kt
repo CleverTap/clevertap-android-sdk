@@ -19,10 +19,12 @@ class UrlConnectionHttpClient(
     private val logTag: String
 ) : CtHttpClient {
 
-    var readTimeout = 10000
-    var connectTimeout = 10000
+    companion object {
+        const val READ_TIMEOUT = 10000
+        const val CONNECT_TIMEOUT = 10000
+    }
 
-    private val sslSocketFactory: SSLSocketFactory? by lazy {
+    private val socketFactory: SSLSocketFactory? by lazy {
         try {
             Logger.d("Pinning SSL session to DigiCertGlobalRoot CA certificate")
             sslContext?.socketFactory
@@ -39,12 +41,6 @@ class UrlConnectionHttpClient(
         try {
             connection = openHttpsURLConnection(request)
 
-            if (request.body != null) {
-                connection.doOutput = true
-                connection.outputStream.use {
-                    it.write(request.body.toByteArray(Charsets.UTF_8))
-                }
-            }
             logger.debug(logTag, "Sending request to: ${request.url}")
 
             // execute request
@@ -53,9 +49,21 @@ class UrlConnectionHttpClient(
             val disconnectConnection = { connection.disconnect() }
 
             return if (responseCode == HttpURLConnection.HTTP_OK) {
-                Response(request, responseCode, headers, connection.inputStream, disconnectConnection)
+                Response(
+                    request = request,
+                    code = responseCode,
+                    headers = headers,
+                    bodyStream = connection.inputStream,
+                    closeDelegate = disconnectConnection
+                )
             } else {
-                Response(request, responseCode, headers, connection.errorStream, disconnectConnection)
+                Response(
+                    request = request,
+                    code = responseCode,
+                    headers = headers,
+                    bodyStream = connection.errorStream,
+                    closeDelegate = disconnectConnection
+                )
             }
         } catch (e: Exception) {
             connection?.disconnect()
@@ -65,32 +73,46 @@ class UrlConnectionHttpClient(
 
     private fun openHttpsURLConnection(request: Request): HttpsURLConnection {
         val url = URL(request.url.toString())
-        val connection = url.openConnection() as HttpsURLConnection
-        connection.connectTimeout = connectTimeout
-        connection.readTimeout = readTimeout
-        for (header in request.headers) {
-            connection.setRequestProperty(header.key, header.value)
-        }
-        connection.instanceFollowRedirects = false
-        if (isSslPinningEnabled && sslContext != null) {
-            connection.sslSocketFactory = sslSocketFactory
+        val connection = (url.openConnection() as HttpsURLConnection).apply {
+            connectTimeout = CONNECT_TIMEOUT
+            readTimeout = READ_TIMEOUT
+            for (header in request.headers) {
+                setRequestProperty(header.key, header.value)
+            }
+            instanceFollowRedirects = false
+            if (isSslPinningEnabled && sslContext != null) {
+                sslSocketFactory = socketFactory
+            }
+            if (request.body != null) {
+                doOutput = true
+                outputStream.use {
+                    it.write(request.body.toByteArray(Charsets.UTF_8))
+                }
+            }
         }
         return connection
     }
 
     private fun createSslContext(): SSLContext? {
         try {
-            val certificateFactory = CertificateFactory.getInstance("X.509")
-            val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
-            val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-            keyStore.load(null, null) //Use null InputStream & password to create empty key store
-            val inputStream: InputStream =
-                BufferedInputStream(javaClass.classLoader?.getResourceAsStream("com/clevertap/android/sdk/certificates/AmazonRootCA1.cer"))
-            val x509Certificate3 = certificateFactory.generateCertificate(inputStream) as X509Certificate
-            keyStore.setCertificateEntry("AmazonRootCA1", x509Certificate3)
-            trustManagerFactory.init(keyStore)
-            val sslContext = SSLContext.getInstance("TLS")
-            sslContext.init(null, trustManagerFactory.trustManagers, null)
+
+            val sslContext = SSLContext.getInstance("TLS").apply {
+                val certificateFactory = CertificateFactory.getInstance("X.509")
+                val trustManagerFactory = TrustManagerFactory
+                    .getInstance(TrustManagerFactory.getDefaultAlgorithm())
+                    .apply {
+                        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
+                            load(null, null) //Use null InputStream & password to create empty key store
+                            val inputStream: InputStream =
+                                BufferedInputStream(javaClass.classLoader?.getResourceAsStream("com/clevertap/android/sdk/certificates/AmazonRootCA1.cer"))
+                            val x509Certificate3 = certificateFactory.generateCertificate(inputStream) as X509Certificate
+                            setCertificateEntry("AmazonRootCA1", x509Certificate3)
+                        }
+                        init(keyStore)
+                    }
+
+                init(null, trustManagerFactory.trustManagers, null)
+            }
             Logger.d("SSL Context built")
             return sslContext
         } catch (e: Exception) {

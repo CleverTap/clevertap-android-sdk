@@ -59,7 +59,6 @@ import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
-import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -208,7 +207,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param spikyProxyDomain  CleverTap Spiky Proxy Domain
      * @noinspection unused
      */
-    public static void changeCredentials(String accountID, String token, String proxyDomain, String spikyProxyDomain) {
+    public static void changeCredentials(
+            String accountID,
+            String token,
+            String proxyDomain,
+            String spikyProxyDomain
+    ) {
         if (defaultConfig != null) {
             Logger.i("CleverTap SDK already initialized with accountID:" + defaultConfig.getAccountId()
                     + ", token:" + defaultConfig.getAccountToken() + ", proxyDomain: " + defaultConfig.getProxyDomain() +
@@ -219,6 +223,36 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         ManifestInfo.changeCredentials(accountID, token, proxyDomain, spikyProxyDomain);
+    }
+
+    /**
+     * This method is used to change the credentials of CleverTap account Id, token, proxyDomain, spikyProxyDomain programmatically
+     *
+     * @param accountID         CleverTap Account Id
+     * @param token             CleverTap Account Token
+     * @param proxyDomain       CleverTap Proxy Domain
+     * @param spikyProxyDomain  CleverTap Spiky Proxy Domain
+     * @param customHandshakeDomain  Custom handshake Domain
+     * @noinspection unused
+     */
+    public static void changeCredentials(
+            String accountID,
+            String token,
+            String proxyDomain,
+            String spikyProxyDomain,
+            String customHandshakeDomain
+    ) {
+        if (defaultConfig != null) {
+            Logger.i("CleverTap SDK already initialized with accountID:" + defaultConfig.getAccountId()
+                    + ", token:" + defaultConfig.getAccountToken() + ", proxyDomain: " + defaultConfig.getProxyDomain() +
+                    ", spikyDomain: " + defaultConfig.getSpikyProxyDomain() + ", handshakeDomain: " + defaultConfig.getCustomHandshakeDomain()
+                    + ". Cannot change credentials to accountID: " + accountID +
+                    ", token: " + token + ", proxyDomain: " + proxyDomain + ", spikyProxyDomain: " + spikyProxyDomain
+                    + "and customHandshakeDomain: " + customHandshakeDomain);
+            return;
+        }
+
+        ManifestInfo.changeCredentials(accountID, token, proxyDomain, spikyProxyDomain, customHandshakeDomain);
     }
 
     /**
@@ -1133,7 +1167,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         TemplatesManager templatesManager = coreState.getTemplatesManager();
-        BaseNetworkManager networkManager = coreState.getNetworkManager();
+        NetworkManager networkManager = coreState.getNetworkManager();
 
         getCleverTapID(x -> {
             // getCleverTapID is executed on the main thread
@@ -1394,10 +1428,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void setSCDomainListener(SCDomainListener scDomainListener) {
         coreState.getCallbackManager().setSCDomainListener(scDomainListener);
 
-        if(coreState.getNetworkManager() != null) {
-            NetworkManager networkManager = (NetworkManager) coreState.getNetworkManager();
+        if (coreState.getNetworkManager() != null) {
+            NetworkManager networkManager = coreState.getNetworkManager();
             String domain = networkManager.getDomain(EventGroup.REGULAR);
-            if(domain != null) {
+            if (domain != null) {
                 scDomainListener.onSCDomainAvailable(getSCDomain(domain));
             }
         }
@@ -3068,6 +3102,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         String accountRegion = manifest.getAccountRegion();
         String proxyDomain = manifest.getProxyDomain();
         String spikyProxyDomain = manifest.getSpikeyProxyDomain();
+        String handshakeDomain = manifest.getHandshakeDomain();
         if (accountId == null || accountToken == null) {
             Logger.i(
                     "Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
@@ -3083,6 +3118,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
         if (spikyProxyDomain != null && !spikyProxyDomain.trim().isEmpty()) {
             defaultInstanceConfig.setSpikyProxyDomain(spikyProxyDomain);
+        }
+        if (handshakeDomain != null && !handshakeDomain.trim().isEmpty()) {
+            defaultInstanceConfig.setCustomHandshakeDomain(handshakeDomain);
         }
         return defaultInstanceConfig;
     }

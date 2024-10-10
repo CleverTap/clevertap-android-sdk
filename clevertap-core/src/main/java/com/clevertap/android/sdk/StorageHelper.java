@@ -146,9 +146,13 @@ public final class StorageHelper {
     }
 
     @SuppressWarnings("SameParameterValue")
-    public static long getLongFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey,
+    public static long getLongFromPrefs(
+            Context context,
+            CleverTapInstanceConfig config,
+            String rawKey,
             int defaultValue,
-            String nameSpace) {
+            String nameSpace
+    ) {
         if (config.isDefaultInstance()) {
             long dummy = -1000;
             long _new = getLong(context, nameSpace, storageKeyWithSuffix(config, rawKey), dummy);
