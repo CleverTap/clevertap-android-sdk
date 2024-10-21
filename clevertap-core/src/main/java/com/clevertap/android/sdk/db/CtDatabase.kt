@@ -28,7 +28,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
 
     companion object {
 
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
         private const val DB_LIMIT = 20 * 1024 * 1024 //20mb
     }
 
@@ -41,6 +41,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
     override fun onCreate(db: SQLiteDatabase) {
         logger.verbose("Creating CleverTap DB")
         executeStatement(db, CREATE_EVENTS_TABLE)
+        executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)
         executeStatement(db, CREATE_PROFILE_EVENTS_TABLE)
         executeStatement(db, CREATE_USER_PROFILES_TABLE)
         executeStatement(db, CREATE_INBOX_MESSAGES_TABLE)
@@ -72,6 +73,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
                 executeStatement(db, INBOX_MESSAGES_COMP_ID_USERID_INDEX)
                 executeStatement(db, NOTIFICATION_VIEWED_INDEX)
                 migrateUserProfilesTable(db)
+                executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates 1 to 5
             }
 
             2 -> {
@@ -80,11 +82,17 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
                 executeStatement(db, CREATE_NOTIFICATION_VIEWED_TABLE)
                 executeStatement(db, NOTIFICATION_VIEWED_INDEX)
                 migrateUserProfilesTable(db)
+                executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates 2 to 5
             }
 
             3 -> {
                 // For DB Version 4, just migrate userProfiles table
                 migrateUserProfilesTable(db)
+                executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates 3 to 5
+            }
+
+            4 -> {
+                executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates 4 to 5
             }
         }
     }
@@ -197,7 +205,8 @@ enum class Table(val tableName: String) {
     INBOX_MESSAGES("inboxMessages"),
     PUSH_NOTIFICATIONS("pushNotifications"),
     UNINSTALL_TS("uninstallTimestamp"),
-    PUSH_NOTIFICATION_VIEWED("notificationViewed")
+    PUSH_NOTIFICATION_VIEWED("notificationViewed"),
+    USER_EVENT_LOGS_TABLE("userEventLogs")
 }
 
 object Column {
@@ -212,6 +221,10 @@ object Column {
     const val CAMPAIGN = "campaignId"
     const val WZRKPARAMS = "wzrkParams"
     const val DEVICE_ID = "deviceID"
+    const val EVENT_NAME = "eventName"
+    const val FIRST_TS = "firstTs"
+    const val LAST_TS = "lastTs"
+    const val COUNT = "count"
 }
 
 private val CREATE_EVENTS_TABLE = """
@@ -219,6 +232,16 @@ private val CREATE_EVENTS_TABLE = """
         ${Column.ID} INTEGER PRIMARY KEY AUTOINCREMENT,
         ${Column.DATA} STRING NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL
+    );
+"""
+
+private val CREATE_USER_EVENT_LOGS_TABLE = """
+    CREATE TABLE ${Table.USER_EVENT_LOGS_TABLE.tableName} (
+        ${Column.EVENT_NAME} STRING NOT NULL,
+        ${Column.FIRST_TS} INTEGER NOT NULL,
+        ${Column.LAST_TS} INTEGER NOT NULL,
+        ${Column.COUNT} INTEGER NOT NULL,
+        ${Column.DEVICE_ID} STRING NOT NULL PRIMARY KEY
     );
 """
 
