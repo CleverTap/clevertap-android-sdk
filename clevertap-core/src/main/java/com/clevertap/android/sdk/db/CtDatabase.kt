@@ -198,7 +198,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
     }
 }
 
-enum class Table(val tableName: String) {
+ enum class Table(val tableName: String) {
     EVENTS("events"),
     PROFILE_EVENTS("profileEvents"),
     USER_PROFILES("userProfiles"),
@@ -241,7 +241,9 @@ private val CREATE_USER_EVENT_LOGS_TABLE = """
         ${Column.FIRST_TS} INTEGER NOT NULL,
         ${Column.LAST_TS} INTEGER NOT NULL,
         ${Column.COUNT} INTEGER NOT NULL,
-        ${Column.DEVICE_ID} STRING NOT NULL PRIMARY KEY
+        ${Column.DEVICE_ID} STRING NOT NULL,
+        PRIMARY KEY (${Column.EVENT_NAME}, ${Column.DEVICE_ID})
+        
     );
 """
 
