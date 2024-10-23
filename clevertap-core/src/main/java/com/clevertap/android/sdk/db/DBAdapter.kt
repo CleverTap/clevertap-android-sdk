@@ -11,8 +11,11 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.db.Table.INBOX_MESSAGES
 import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATIONS
 import com.clevertap.android.sdk.db.Table.UNINSTALL_TS
+import com.clevertap.android.sdk.db.Table.USER_EVENT_LOGS_TABLE
 import com.clevertap.android.sdk.db.Table.USER_PROFILES
 import com.clevertap.android.sdk.inbox.CTMessageDAO
+import com.clevertap.android.sdk.userEventLogs.UserEventLogDAO
+import com.clevertap.android.sdk.userEventLogs.UserEventLogDAOImpl
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -26,19 +29,21 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
 
         //Notification Inbox Messages Table fields
 
-        private const val DB_UPDATE_ERROR = -1L
+        internal const val DB_UPDATE_ERROR = -1L
 
-        private const val DB_OUT_OF_MEMORY_ERROR = -2L
+        internal const val DB_OUT_OF_MEMORY_ERROR = -2L
 
         @Suppress("unused")
         private const val DB_UNDEFINED_CODE = -3L
 
         private const val DATABASE_NAME = "clevertap"
 
-        private const val NOT_ENOUGH_SPACE_LOG =
+        internal const val NOT_ENOUGH_SPACE_LOG =
             "There is not enough space left on the device to store data, data discarded"
     }
 
+    @Volatile
+    private var userEventLogDao: UserEventLogDAO? = null
     private val logger = config.logger
 
     private val dbHelper: DatabaseHelper = DatabaseHelper(context, config, getDatabaseName(config), logger)
@@ -615,6 +620,23 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         } catch (e: SQLiteException) {
             logger.verbose("Error removing all events from table $tName Recreating DB")
             deleteDB()
+        }
+    }
+
+    /**
+     * -----------------------------
+     * -----------DAO---------------
+     * -----------------------------
+     */
+    @WorkerThread
+    fun userEventLogDAO(): UserEventLogDAO {
+        return userEventLogDao ?: synchronized(this) {
+            userEventLogDao ?: UserEventLogDAOImpl(
+                dbHelper,
+                logger,
+                USER_EVENT_LOGS_TABLE
+            ).also { userEventLogDao = it }
+
         }
     }
 
