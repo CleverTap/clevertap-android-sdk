@@ -137,6 +137,7 @@ internal class UserEventLogDAOImpl(
         }
     }
 
+    //TODO: Create index on deviceID,lastTs column if this method is frequently used
     @WorkerThread
     override fun allEventsByDeviceID(deviceID: String): List<UserEventLog> {
         val tName = table.tableName
@@ -167,6 +168,7 @@ internal class UserEventLogDAOImpl(
         }
     }
 
+    //TODO: Create index on lastTs column if this method is frequently used
     @WorkerThread
     override fun allEvents(): List<UserEventLog> {
         val tName = table.tableName
@@ -198,21 +200,28 @@ internal class UserEventLogDAOImpl(
     @WorkerThread
     override fun cleanUpExtraEvents(threshold: Int): Boolean {
         val tName = table.tableName
-        val rowCountQuery = "SELECT COUNT(*) FROM $tName"
-        val deleteQuery = "DELETE FROM $tName WHERE ${Column.DEVICE_ID} IN (" +
-                "SELECT ${Column.DEVICE_ID} FROM $tName ORDER BY ${Column.LAST_TS} ASC LIMIT ?)"
 
         return try {
-            db.readableDatabase.rawQuery(rowCountQuery, null)?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val rowCount = cursor.getInt(0)
-                    if (rowCount > threshold) {
-                        val excessRows = rowCount - threshold
-                        db.writableDatabase.execSQL(deleteQuery, arrayOf(excessRows.toString()))
-                        logger.verbose("$excessRows least recently used rows deleted from $tName")
-                    }
-                }
-            }
+            // SQL query to delete only the least recently used rows, using a subquery with LIMIT
+            val query = """
+            DELETE FROM $tName
+            WHERE (${Column.EVENT_NAME}, ${Column.DEVICE_ID}) IN (
+                SELECT ${Column.EVENT_NAME}, ${Column.DEVICE_ID}
+                FROM $tName
+                ORDER BY ${Column.LAST_TS} ASC 
+                LIMIT (
+                SELECT CASE 
+                    WHEN COUNT(*) > ? THEN COUNT(*) - ?
+                    ELSE 0
+                END 
+                FROM $tName
+                )
+            );
+        """.trimIndent()
+
+            // Execute the delete query with the threshold as an argument
+            db.writableDatabase.execSQL(query, arrayOf(threshold,threshold))
+            logger.verbose("Cleaned up extra events in $tName, keeping only $threshold rows.")
             true
         } catch (e: Exception) {
             logger.verbose("Error cleaning up extra events in $tName.", e)
@@ -220,5 +229,4 @@ internal class UserEventLogDAOImpl(
         }
     }
 
-    //TODO: Create indexes
 }
