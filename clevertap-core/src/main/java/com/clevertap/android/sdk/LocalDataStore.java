@@ -12,6 +12,7 @@ import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptUtils;
+import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
 
@@ -38,8 +39,7 @@ public class LocalDataStore {
     private final Context context;
 
     private final CryptHandler cryptHandler;
-
-    private DBAdapter dbAdapter;
+    private final BaseDatabaseManager baseDatabaseManager;
 
     private final ExecutorService es;
 
@@ -47,12 +47,13 @@ public class LocalDataStore {
 
     private final DeviceInfo deviceInfo;
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo) {
+    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
         this.cryptHandler = cryptHandler;
         this.deviceInfo = deviceInfo;
+        this.baseDatabaseManager = baseDatabaseManager;
     }
 
     @WorkerThread
@@ -242,9 +243,7 @@ public class LocalDataStore {
         this.postAsyncSafely("LocalDataStore#inflateLocalProfileAsync", new Runnable() {
             @Override
             public void run() {
-                if (dbAdapter == null) {
-                    dbAdapter = new DBAdapter(context, config);
-                }
+                DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
                     try {
                         JSONObject profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(accountID, deviceInfo.getDeviceID());
@@ -353,6 +352,7 @@ public class LocalDataStore {
                     if (!passFlag)
                         CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_DB_SUCCESS, cryptHandler);
 
+                    DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                     long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);
                     getConfigLogger().verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);

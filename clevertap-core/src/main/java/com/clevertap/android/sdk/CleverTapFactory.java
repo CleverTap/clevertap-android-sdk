@@ -97,7 +97,7 @@ class CleverTapFactory {
         coreState.setDeviceInfo(deviceInfo);
         deviceInfo.onInitDeviceInfo(cleverTapID);
 
-        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler, deviceInfo);
+        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler, deviceInfo, baseDatabaseManager);
         coreState.setLocalDataStore(localDataStore);
 
         ProfileValueHandler profileValueHandler = new ProfileValueHandler(validator, validationResultStack);
