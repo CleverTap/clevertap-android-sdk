@@ -21,7 +21,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,7 @@ public class LocalDataStore {
     private final String eventNamespace = "local_events";
 
     private final DeviceInfo deviceInfo;
+    private final Set<String> userEventLogKeys = Collections.synchronizedSet(new HashSet<>());
 
     LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
         this.context = context;
@@ -236,8 +239,17 @@ public class LocalDataStore {
 
     @WorkerThread
     public boolean isUserEventLogFirstTime(String eventName) {
+        if (userEventLogKeys.contains(eventName)) {
+            return false;
+        }
+
         String deviceID = deviceInfo.getDeviceID();
-        return eventExistsByDeviceIDAndCount(deviceID, eventName, 1);
+
+        int count = readEventCountByDeviceID(deviceID, eventName);
+        if (count > 1) {
+            userEventLogKeys.add(eventName);
+        }
+        return count == 1;
     }
 
     @WorkerThread
