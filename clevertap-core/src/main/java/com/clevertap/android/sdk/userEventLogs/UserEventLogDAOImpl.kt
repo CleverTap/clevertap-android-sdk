@@ -52,31 +52,24 @@ internal class UserEventLogDAOImpl(
 
     @WorkerThread
     override fun updateEventByDeviceID(deviceID: String, eventName: String): Boolean {
+        val tableName = table.tableName
         val now = System.currentTimeMillis()
-        val tName = table.tableName
-        val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ?"
-        val selectionArgs = arrayOf(deviceID, eventName)
-        val projection = arrayOf(Column.COUNT)
+
         return try {
-            // Below code can be replace with nested SQL query but couldn't found any difference in the performance
-            db.readableDatabase.query(
-                tName, projection, selection, selectionArgs, null, null, null, null
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT))
-                    val values = ContentValues().apply {
-                        put(Column.LAST_TS, now)
-                        put(Column.COUNT, countOfEvents + 1)
-                    }
-                    val updatedRow =
-                        db.writableDatabase.update(tName, values, selection, selectionArgs)
-                    updatedRow > 0
-                } else {
-                    false
-                }
-            } ?: false
+            val query = """
+            UPDATE $tableName 
+            SET 
+                ${Column.COUNT} = ${Column.COUNT} + 1,
+                ${Column.LAST_TS} = ?
+            WHERE ${Column.DEVICE_ID} = ? 
+            AND ${Column.EVENT_NAME} = ?;
+        """.trimIndent()
+
+            logger.verbose("Updating event $eventName with deviceID = $deviceID in $tableName")
+            db.writableDatabase.execSQL(query, arrayOf(now, deviceID, eventName))
+            true
         } catch (e: Exception) {
-            logger.verbose("Could not fetch records out of database $tName.", e)
+            logger.verbose("Could not update event in database $tableName.", e)
             false
         }
     }
