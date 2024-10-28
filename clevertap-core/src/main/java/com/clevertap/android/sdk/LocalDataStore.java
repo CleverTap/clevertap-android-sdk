@@ -64,6 +64,7 @@ public class LocalDataStore {
 
     @WorkerThread
     public void changeUser() {
+        userEventLogKeys.clear();
         resetLocalProfileSync();
     }
 
