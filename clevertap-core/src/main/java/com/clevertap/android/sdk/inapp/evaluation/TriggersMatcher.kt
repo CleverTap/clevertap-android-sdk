@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import android.location.Location
+import androidx.annotation.WorkerThread
 import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.LocalDataStore
 import com.clevertap.android.sdk.Logger
@@ -59,6 +60,12 @@ class TriggersMatcher(private val localDataStore: LocalDataStore) {
         if (!matchPropertyConditions(trigger, event)) {
             return false
         }
+        /**
+         * TODO: Add matchFirstTimeOnly(trigger, event)
+         */
+        if (!matchFirstTimeOnly(trigger)) {
+            return false
+        }
 
         if (event.isChargedEvent() && !matchChargedItemConditions(trigger, event)) {
             return false
@@ -69,6 +76,15 @@ class TriggersMatcher(private val localDataStore: LocalDataStore) {
         }
 
         return true
+    }
+
+    // TODO: matchFirstTimeOnly(trigger, event) implementation
+    @WorkerThread
+    internal fun matchFirstTimeOnly(trigger: TriggerAdapter): Boolean {
+        if (!trigger.firstTimeOnly) {
+            return true
+        }
+        return localDataStore.isUserEventLogFirstTime(trigger.eventName)
     }
 
     private fun matchPropertyConditions(trigger: TriggerAdapter, event: EventAdapter): Boolean {
