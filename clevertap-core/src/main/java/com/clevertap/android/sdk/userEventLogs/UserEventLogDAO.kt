@@ -12,6 +12,9 @@ interface UserEventLogDAO {
     @WorkerThread
     fun updateEventByDeviceID(deviceID: String, eventName: String): Boolean
 
+    @WorkerThread
+    fun upSertEventsByDeviceID(deviceID: String, eventNameList: Set<String>): Boolean
+
     // Read an event by deviceID
     @WorkerThread
     fun readEventByDeviceID(deviceID: String, eventName: String): UserEventLog?

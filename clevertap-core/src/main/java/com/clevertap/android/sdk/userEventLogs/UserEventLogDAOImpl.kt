@@ -75,6 +75,35 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
+    override fun upSertEventsByDeviceID(deviceID: String, eventNameList: Set<String>): Boolean {
+        val tableName = table.tableName
+        logger.verbose("UserEventLog: upSert EventLog for bulk events")
+        return try {
+            db.writableDatabase.beginTransaction()
+            eventNameList.forEach {
+                if (eventExistsByDeviceID(deviceID, it)) {
+                    logger.verbose("UserEventLog: Updating EventLog for event $it")
+                    updateEventByDeviceID(deviceID, it)
+                } else {
+                    logger.verbose("UserEventLog: Inserting EventLog for event $it")
+                    insertEventByDeviceID(deviceID, it)
+                }
+            }
+            db.writableDatabase.setTransactionSuccessful()
+            db.writableDatabase.endTransaction()
+            true
+        } catch (e: Exception) {
+            logger.verbose("Failed to perform bulk upsert on table $tableName", e)
+            try {
+                db.writableDatabase.endTransaction()
+            } catch (e: Exception) {
+                logger.verbose("Failed to end transaction on table $tableName", e)
+            }
+            false
+        }
+    }
+
+    @WorkerThread
     override fun readEventByDeviceID(deviceID: String, eventName: String): UserEventLog? {
         val tName = table.tableName
         val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ?"
