@@ -4,8 +4,10 @@ import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
 import android.location.Location;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -29,14 +31,16 @@ import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class EventQueueManager extends BaseEventQueueManager implements FailureFlushListener {
 
@@ -310,7 +314,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 }
                 localDataStore.setDataSyncFlag(event);
                 baseDatabaseManager.queueEventToDB(context, event, eventType);
-                updateLocalStore(context, event, eventType);
+                //updateLocalStore(context, event, eventType);// TODO: remove from here
                 scheduleQueueFlush(context);
 
             } catch (Throwable e) {
@@ -455,8 +459,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             @Override
             @WorkerThread
             public Void call() {
-
+                // TODO: add here updateLocalStore(context, event, eventType);
+                String eventName = eventMediator.getEventName(event);
                 Location userLocation = cleverTapMetaData.getLocationFromUser();
+
+                updateLocalStore(eventName, eventType);
 
                 if (eventMediator.isChargedEvent(event)) {
                     controllerManager.getInAppController()
@@ -464,7 +471,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                                     eventMediator.getChargedEventItemDetails(event), userLocation);
                 } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
                     // in case device is offline just evaluate all events
-                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
+                    controllerManager.getInAppController().onQueueEvent(eventName,
                             eventMediator.getEventProperties(event), userLocation);
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     // in case profile event, evaluate for user attribute changes
@@ -474,7 +481,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                             .onQueueProfileEvent(userAttributeChangedProperties, userLocation);
                 } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
                     // in case device is online only evaluate non-appLaunched events
-                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
+                    controllerManager.getInAppController().onQueueEvent(eventName,
                             eventMediator.getEventProperties(event), userLocation);
                 }
 
@@ -586,11 +593,13 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         mainLooperHandler.post(pushNotificationViewedRunnable);
     }
 
-    //Util
-    // only call async
-    private void updateLocalStore(final Context context, final JSONObject event, final int type) {
+    @WorkerThread
+    private void updateLocalStore(final String eventName, final int type) {
         if (type == Constants.RAISED_EVENT) {
-            localDataStore.persistEvent(context, event, type);
+            // TODO: persist event in DB
+
+            localDataStore.persistUserEventLog(eventName);
+
         }
     }
 
