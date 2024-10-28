@@ -19,6 +19,18 @@ interface UserEventLogDAO {
     @WorkerThread
     fun readEventByDeviceID(deviceID: String, eventName: String): UserEventLog?
 
+    // Read an event count by deviceID
+    @WorkerThread
+    fun readEventCountByDeviceID(deviceID: String, eventName: String): Int
+
+    // Read an event firstTs by deviceID
+    @WorkerThread
+    fun readEventFirstTsByDeviceID(deviceID: String, eventName: String): Long
+
+    // Read an event lastTs by deviceID
+    @WorkerThread
+    fun readEventLastTsByDeviceID(deviceID: String, eventName: String): Long
+
     // Check if an event exists by deviceID
     @WorkerThread
     fun eventExistsByDeviceID(deviceID: String, eventName: String): Boolean

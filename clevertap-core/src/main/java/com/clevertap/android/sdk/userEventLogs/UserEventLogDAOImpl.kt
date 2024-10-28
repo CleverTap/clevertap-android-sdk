@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.userEventLogs
 
 import android.content.ContentValues
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
@@ -130,6 +131,43 @@ internal class UserEventLogDAOImpl(
             null
         }
     }
+
+    @WorkerThread
+    override fun readEventCountByDeviceID(deviceID: String, eventName: String): Int =
+        readEventColumnByDeviceID(
+            deviceID,
+            eventName,
+            Column.COUNT,
+            defaultValueExtractor = { -1 },
+            valueExtractor = { cursor, columnName ->
+                cursor.getInt(cursor.getColumnIndexOrThrow(columnName))
+            }
+        )
+
+
+    @WorkerThread
+    override fun readEventFirstTsByDeviceID(deviceID: String, eventName: String): Long =
+        readEventColumnByDeviceID(
+        deviceID,
+        eventName,
+        Column.FIRST_TS,
+        defaultValueExtractor = { -1L },
+        valueExtractor = { cursor, columnName ->
+            cursor.getLong(cursor.getColumnIndexOrThrow(columnName))
+        }
+    )
+
+    @WorkerThread
+    override fun readEventLastTsByDeviceID(deviceID: String, eventName: String): Long =
+        readEventColumnByDeviceID(
+        deviceID,
+        eventName,
+        Column.LAST_TS,
+        defaultValueExtractor = { -1L },
+        valueExtractor = { cursor, columnName ->
+            cursor.getLong(cursor.getColumnIndexOrThrow(columnName))
+        }
+    )
 
     @WorkerThread
     override fun eventExistsByDeviceID(deviceID: String, eventName: String): Boolean {
@@ -274,6 +312,35 @@ internal class UserEventLogDAOImpl(
         } catch (e: Exception) {
             logger.verbose("Error cleaning up extra events in $tName.", e)
             false
+        }
+    }
+
+    @WorkerThread
+    private fun <T> readEventColumnByDeviceID(
+        deviceID: String,
+        eventName: String,
+        column: String,
+        defaultValueExtractor: () -> T,
+        valueExtractor: (cursor: Cursor, columnName: String) -> T
+    ): T {
+        val tName = table.tableName
+        val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ?"
+        val selectionArgs = arrayOf(deviceID, eventName)
+        val projection = arrayOf(column)
+
+        return try {
+            db.readableDatabase.query(
+                tName, projection, selection, selectionArgs, null, null, null, null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    valueExtractor(cursor, column)
+                } else {
+                    defaultValueExtractor()
+                }
+            } ?: defaultValueExtractor()
+        } catch (e: Exception) {
+            logger.verbose("Could not fetch $column from database $tName.", e)
+            defaultValueExtractor()
         }
     }
 
