@@ -630,7 +630,7 @@ public class LocalDataStore {
             }
         }
     }
-
+    //int k = 0;
     private void _setProfileField(String key, Object value) {
         if (value == null) {
             return;
@@ -654,7 +654,20 @@ public class LocalDataStore {
     public void updateProfileFields(Map<String, Object> fields) {
         if(fields.isEmpty())
             return;
-
+        /*Set<String> events = new HashSet<>();
+        for (int i = 0; i < 5000; i++) {
+            events.add("profile key - "+i+" - "+ k);
+        }*/
+        //k++;
+        long start = System.currentTimeMillis();
+        persistUserEventLogsInBulk(fields.keySet());
+//        persistUserEventLogsInBulk(events);
+        /*for (String key : events)
+        {
+            persistUserEventLog(key);
+        }*/
+        long end = System.currentTimeMillis();
+        config.getLogger().verbose(config.getAccountId(),"UserEventLog: persistUserEventLog execution time = "+(end-start)/1000+" seconds");
         for (Map.Entry<String, Object> entry : fields.entrySet()) {
             String key = entry.getKey();
             Object newValue = entry.getValue();
