@@ -146,13 +146,39 @@ internal class UserEventLogDAOImpl(
         """.trimIndent()
 
         return try {
-            db.readableDatabase.rawQuery(query, selectionArgs).use { cursor ->
+            db.readableDatabase.rawQuery(query, selectionArgs)?.use { cursor ->
                 if (cursor.moveToFirst()) {
                     cursor.getInt(cursor.getColumnIndexOrThrow("eventExists")) == 1
                 } else {
                     false
                 }
-            }
+            } ?: false
+        } catch (e: Exception) {
+            logger.verbose("Could not fetch records out of database $tName.", e)
+            false
+        }
+    }
+
+    @WorkerThread
+    override fun eventExistsByDeviceIDAndCount(deviceID: String, eventName: String, count: Int): Boolean {
+        val tName = table.tableName
+        val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ? AND ${Column.COUNT} = ?"
+        val selectionArgs = arrayOf(deviceID, eventName, count.toString())
+        val query = """
+            SELECT EXISTS(
+                SELECT 1 
+                FROM $tName 
+                WHERE $selection
+                ) AS eventExists;
+        """.trimIndent()
+        return try {
+            db.readableDatabase.rawQuery(query, selectionArgs)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    cursor.getInt(cursor.getColumnIndexOrThrow("eventExists")) == 1
+                } else {
+                    false
+                }
+            } ?: false
         } catch (e: Exception) {
             logger.verbose("Could not fetch records out of database $tName.", e)
             false
