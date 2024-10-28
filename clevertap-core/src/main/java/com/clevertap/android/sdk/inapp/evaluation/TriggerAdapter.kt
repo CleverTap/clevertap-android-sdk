@@ -102,6 +102,11 @@ class TriggerAdapter(triggerJSON: JSONObject) {
     val profileAttrName: String? = triggerJSON.optString(Constants.KEY_PROFILE_ATTR_NAME, null)
 
     /**
+     * TODO(MT): Add firstTimeOnly boolean property
+     */
+    val firstTimeOnly: Boolean = triggerJSON.optBoolean(Constants.KEY_FIRST_TIME_ONLY, false)
+
+    /**
      * Get the count of event property trigger conditions.
      */
     val propertyCount: Int
