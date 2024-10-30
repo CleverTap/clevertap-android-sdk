@@ -35,7 +35,6 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
@@ -65,6 +64,17 @@ import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
+
+    public static class NotificationResult {
+        public final NotificationCompat.Builder builder;
+        public final int notificationId;
+
+        public NotificationResult(NotificationCompat.Builder builder, int notificationId) {
+            this.builder = builder;
+            this.notificationId = notificationId;
+        }
+    }
+
 
     private static final int DEFAULT_FLEX_INTERVAL = 5;
     private static final int PING_FREQUENCY_VALUE = 240;
@@ -148,7 +158,41 @@ public class PushProviders implements CTPushProviderListener {
      * @param extras         The {@link Bundle} object received by the broadcast receiver
      * @param notificationId A custom id to build a notification
      */
-    public void _createNotification(final Context context, final Bundle extras, final int notificationId) {
+    public void _createNotification(final Context context, final Bundle extras, int notificationId) {
+        try {
+            NotificationResult result = getPreparedNotificationBuilder(context, extras, notificationId);
+            if (result.builder != null) {
+                triggerNotification(result.builder, result.notificationId);
+                storePushNotification(extras);
+            }
+        } catch (Throwable t) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Couldn't render notification: ", t);
+        }
+    }
+
+    public NotificationCompat.Builder _getNotification(final Context context, final Bundle extras, int notificationId) {
+        try {
+            NotificationResult result = getPreparedNotificationBuilder(context, extras, notificationId);
+            if (result.builder != null) {
+                storePushNotification(extras);
+                return result.builder;
+            }
+        } catch (Throwable t) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Couldn't get notification: ", t);
+        }
+        return null;
+    }
+
+    private NotificationResult getPreparedNotificationBuilder(final Context context, final Bundle extras, int notificationId) {
+        preProcessNotification(extras);
+        int generatedNotificationId = generateNotificationId(notificationId, extras);
+        NotificationCompat.Builder builder = prepareNotificationBuilder(context, extras, generatedNotificationId);
+        return new NotificationResult(builder, generatedNotificationId);
+    }
+
+    private void preProcessNotification(Bundle extras) {
         if (extras == null || extras.get(Constants.NOTIFICATION_TAG) == null) {
             return;
         }
@@ -160,55 +204,40 @@ public class PushProviders implements CTPushProviderListener {
             return;
         }
 
-        try {
-            boolean isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equalsIgnoreCase("true");
-            if (isSilent) {
-                analyticsManager.pushNotificationViewedEvent(extras);
-                return;
-            }
-            String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
-            if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
-                config.getLogger()
-                        .debug(config.getAccountId(),
-                                "Handling notification: " + extras);
+        boolean isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equalsIgnoreCase("true");
+        if (isSilent) {
+            analyticsManager.pushNotificationViewedEvent(extras);
+            return;
+        }
+        String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
+        if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
+            config.getLogger()
+                    .debug(config.getAccountId(),
+                            "Handling notification: " + extras);
 
-                if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
-                    if (baseDatabaseManager.loadDBAdapter(context)
-                            .doesPushNotificationIdExist(
-                                    extras.getString(Constants.WZRK_PUSH_ID))) {
-                        config.getLogger().debug(config.getAccountId(),
-                                "Push Notification already rendered, not showing again");
-                        return;
-                    }
-                }
-                String notifMessage = iNotificationRenderer.getMessage(extras);
-                notifMessage = (notifMessage != null) ? notifMessage : "";
-                if (notifMessage.isEmpty()) {
-                    //silent notification
-                    config.getLogger()
-                            .verbose(config.getAccountId(),
-                                    "Push notification message is empty, not rendering");
-                    baseDatabaseManager.loadDBAdapter(context)
-                            .storeUninstallTimestamp();
-                    String pingFreq = extras.getString("pf", "");
-                    if (!TextUtils.isEmpty(pingFreq)) {
-                        updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
-                    }
+            if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
+                if (baseDatabaseManager.loadDBAdapter(context)
+                        .doesPushNotificationIdExist(
+                                extras.getString(Constants.WZRK_PUSH_ID))) {
+                    config.getLogger().debug(config.getAccountId(),
+                            "Push Notification already rendered, not showing again");
                     return;
                 }
             }
-
-            String notifTitle = iNotificationRenderer.getTitle(extras,
-                    context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
-            notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name
-                    : notifTitle;//common
-            triggerNotification(context, extras, notificationId);
-        } catch (Throwable t) {
-            // Occurs if the notification image was null
-            // Let's return, as we couldn't get a handle on the app's icon
-            // Some devices throw a PackageManager* exception too
-            config.getLogger()
-                    .debug(config.getAccountId(), "Couldn't render notification: ", t);
+            String notifMessage = iNotificationRenderer.getMessage(extras);
+            notifMessage = (notifMessage != null) ? notifMessage : "";
+            if (notifMessage.isEmpty()) {
+                //silent notification
+                config.getLogger()
+                        .verbose(config.getAccountId(),
+                                "Push notification message is empty, not rendering");
+                baseDatabaseManager.loadDBAdapter(context)
+                        .storeUninstallTimestamp();
+                String pingFreq = extras.getString("pf", "");
+                if (!TextUtils.isEmpty(pingFreq)) {
+                    updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
+                }
+            }
         }
     }
 
@@ -876,74 +905,110 @@ public class PushProviders implements CTPushProviderListener {
         this.iNotificationRenderer = iNotificationRenderer;
     }
 
-    private void triggerNotification(Context context, Bundle extras, int notificationId) {
+    private void triggerNotification(@NonNull NotificationCompat.Builder nb, int notificationId) {
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        Notification n = nb.build();
+        notificationManager.notify(notificationId, n);
+        config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n);
+    }
+
+    public NotificationCompat.Builder prepareNotificationBuilder(Context context, Bundle extras, int notificationId) {
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
 
         if (notificationManager == null) {
             String notificationManagerError = "Unable to render notification, Notification Manager is null.";
             config.getLogger().debug(config.getAccountId(), notificationManagerError);
-            return;
+            return null;
         }
 
-        String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
-        String updatedChannelId = null;
         final boolean requiresChannelId = VERSION.SDK_INT >= VERSION_CODES.O;
-
+        NotificationCompat.Builder nb;
         if (requiresChannelId) {
-            int messageCode = -1;
-            String value = "";
-
-            if (channelId.isEmpty()) {
-                messageCode = Constants.CHANNEL_ID_MISSING_IN_PAYLOAD;
-                value = extras.toString();
-            } else if (notificationManager.getNotificationChannel(channelId) == null) {
-                messageCode = Constants.CHANNEL_ID_NOT_REGISTERED;
-                value = channelId;
+            String updatedChannelId = getNotificationChannelId(notificationManager, context, extras);
+            if (updatedChannelId == null) {
+                return null;
             }
-            if (messageCode != -1) {
-                ValidationResult channelIdError = ValidationResultFactory.create(512, messageCode, value);
-                config.getLogger().debug(config.getAccountId(), channelIdError.getErrorDesc());
-                validationResultStack.pushValidationResult(channelIdError);
-            }
-
-            // get channel using channel id from push payload. If channel id is null or empty then create default
-            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context);
-
-            // if no channel gets created then do not render push
-            if (updatedChannelId == null || updatedChannelId.trim().isEmpty()) {
-                config.getLogger()
-                        .debug(config.getAccountId(), "Not rendering Push since channel id is null or blank.");
-                return;
-            }
-
-            // if channel is blocked by user then do not render push
-            if (!CTXtensions.isNotificationChannelEnabled(context,updatedChannelId)) {
-                config.getLogger()
-                        .verbose(config.getAccountId(),
-                                "Not rendering push notification as channel = " + updatedChannelId + " is blocked by user");
-                return;
-            }
-
-            config.getLogger().debug(config.getAccountId(), "Rendering Push on channel = " + updatedChannelId);
+            nb = new NotificationCompat.Builder(context, updatedChannelId);
+        } else {
+            nb = new NotificationCompat.Builder(context);
         }
 
-        int smallIcon;
+
+        int smallIcon = getSmallIcon(context);
+        iNotificationRenderer.setSmallIcon(smallIcon, context);
+
+        setNotificationPriority(nb, extras);
+        setNotificationBadge(nb, extras);
+
+        if (iNotificationRenderer instanceof AudibleNotification) {
+            nb = ((AudibleNotification) iNotificationRenderer).setSound(context, extras, nb, config);
+        }
+
+        // Generate the nb based on the rendered
+        nb = iNotificationRenderer.renderNotification(extras, context, nb, config, notificationId);
+
+        return nb;
+    }
+
+    @RequiresApi(api = VERSION_CODES.O)
+    private String getNotificationChannelId(NotificationManager notificationManager, Context context, Bundle extras) {
+        String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
+        String updatedChannelId;
+        int messageCode = -1;
+        String value = "";
+
+        if (channelId.isEmpty()) {
+            messageCode = Constants.CHANNEL_ID_MISSING_IN_PAYLOAD;
+            value = extras.toString();
+        } else if (notificationManager.getNotificationChannel(channelId) == null) {
+            messageCode = Constants.CHANNEL_ID_NOT_REGISTERED;
+            value = channelId;
+        }
+        if (messageCode != -1) {
+            ValidationResult channelIdError = ValidationResultFactory.create(512, messageCode, value);
+            config.getLogger().debug(config.getAccountId(), channelIdError.getErrorDesc());
+            validationResultStack.pushValidationResult(channelIdError);
+        }
+
+        // Get or create the channel using the channel ID from the push payload
+        updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context);
+
+        // If no channel is created, do not render the push notification
+        if (updatedChannelId == null || updatedChannelId.trim().isEmpty()) {
+            config.getLogger().debug(config.getAccountId(), "Not rendering Push since channel id is null or blank.");
+            return null;
+        }
+
+        // If the channel is blocked by the user, do not render the push notification
+        if (!CTXtensions.isNotificationChannelEnabled(context, updatedChannelId)) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Not rendering push notification as channel = " + updatedChannelId + " is blocked by user");
+            return null;
+        }
+
+        config.getLogger().debug(config.getAccountId(), "Rendering Push on channel = " + updatedChannelId);
+        return updatedChannelId; // Return the valid channel ID
+    }
+
+
+    private int getSmallIcon(Context context) {
         try {
-            String x = ManifestInfo.getInstance(context).getNotificationIcon();
-            if (x == null) {
+            String iconName = ManifestInfo.getInstance(context).getNotificationIcon();
+            if (iconName == null) {
                 throw new IllegalArgumentException();
             }
-            smallIcon = context.getResources().getIdentifier(x, "drawable", context.getPackageName());
+            int smallIcon = context.getResources().getIdentifier(iconName, "drawable", context.getPackageName());
             if (smallIcon == 0) {
                 throw new IllegalArgumentException();
             }
+            return smallIcon;
         } catch (Throwable t) {
-            smallIcon = DeviceInfo.getAppIconAsIntId(context);
+            return DeviceInfo.getAppIconAsIntId(context); // Fallback to app icon
         }
+    }
 
-        iNotificationRenderer.setSmallIcon(smallIcon, context);
-
+    private void setNotificationPriority(NotificationCompat.Builder nb, Bundle extras) {
         int priorityInt = NotificationCompat.PRIORITY_DEFAULT;
         String priority = extras.getString(Constants.NOTIF_PRIORITY);
         if (priority != null) {
@@ -954,7 +1019,38 @@ public class PushProviders implements CTPushProviderListener {
                 priorityInt = NotificationCompat.PRIORITY_MAX;
             }
         }
+        nb.setPriority(priorityInt);
+    }
 
+    private void setNotificationBadge(NotificationCompat.Builder nb, Bundle extras) {
+        // Set badge icon
+        String badgeIconParam = extras.getString(Constants.WZRK_BADGE_ICON, null);
+        if (badgeIconParam != null) {
+            try {
+                int badgeIconType = Integer.parseInt(badgeIconParam);
+                if (badgeIconType >= 0) {
+                    nb.setBadgeIconType(badgeIconType);
+                }
+            } catch (Throwable t) {
+                // no-op
+            }
+        }
+
+        // Set badge count
+        String badgeCountParam = extras.getString(Constants.WZRK_BADGE_COUNT, null);
+        if (badgeCountParam != null) {
+            try {
+                int badgeCount = Integer.parseInt(badgeCountParam);
+                if (badgeCount >= 0) {
+                    nb.setNumber(badgeCount);
+                }
+            } catch (Throwable t) {
+                // no-op
+            }
+        }
+    }
+
+    private int generateNotificationId(int notificationId, Bundle extras) {
         // if we have no user set notificationID then try collapse key
         if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
             try {
@@ -994,59 +1090,10 @@ public class PushProviders implements CTPushProviderListener {
             notificationId = (int) (Math.random() * 100);
             config.getLogger().debug(config.getAccountId(), "Setting random notificationId: " + notificationId);
         }
+        return  notificationId;
+    }
 
-        NotificationCompat.Builder nb;
-        if (requiresChannelId) {
-            nb = new NotificationCompat.Builder(context, updatedChannelId);
-
-            // choices here are Notification.BADGE_ICON_NONE = 0, Notification.BADGE_ICON_SMALL = 1, Notification.BADGE_ICON_LARGE = 2.  Default is  Notification.BADGE_ICON_LARGE
-            String badgeIconParam = extras
-                    .getString(Constants.WZRK_BADGE_ICON, null);
-            if (badgeIconParam != null) {
-                try {
-                    int badgeIconType = Integer.parseInt(badgeIconParam);
-                    if (badgeIconType >= 0) {
-                        nb.setBadgeIconType(badgeIconType);
-                    }
-                } catch (Throwable t) {
-                    // no-op
-                }
-            }
-
-            String badgeCountParam = extras.getString(Constants.WZRK_BADGE_COUNT, null);//cbi
-            if (badgeCountParam != null) {
-                try {
-                    int badgeCount = Integer.parseInt(badgeCountParam);
-                    if (badgeCount >= 0) {
-                        nb.setNumber(badgeCount);
-                    }
-                } catch (Throwable t) {
-                    // no-op
-                }
-            }
-
-        } else {
-            // noinspection all
-            nb = new NotificationCompat.Builder(context);
-        }
-
-        nb.setPriority(priorityInt);
-
-        //remove sound for fallback notif
-
-        if (iNotificationRenderer instanceof AudibleNotification) {
-            nb = ((AudibleNotification) iNotificationRenderer).setSound(context, extras, nb, config);
-        }
-
-        nb = iNotificationRenderer.renderNotification(extras, context, nb, config, notificationId);
-        if (nb == null) {// template renderer can return null if template type is null
-            return;
-        }
-
-        Notification n = nb.build();
-        notificationManager.notify(notificationId, n);
-        config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());//cb
-
+    private void storePushNotification(Bundle extras) {
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
             String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,

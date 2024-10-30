@@ -13,7 +13,6 @@ import android.os.*
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
@@ -109,10 +108,10 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     }
 
     override fun renderNotification(
-        extras: Bundle, context: Context, nb: NotificationCompat.Builder,
+        extras: Bundle, context: Context, nb: Builder,
         config: CleverTapInstanceConfig,
         notificationId: Int
-    ): NotificationCompat.Builder? {
+    ): Builder? {
         if (pt_id == null) {
             PTLog.verbose("Template ID not provided. Cannot create the notification")
             return null
@@ -165,7 +164,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 if (ValidatorFactory.getValidator(TemplateType.ZERO_BEZEL, this)?.validate() == true)
                     return ZeroBezelStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
-            TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            TemplateType.TIMER -> if (VERSION.SDK_INT >= VERSION_CODES.N) {
                 if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
                     val timerEnd = getTimerEnd()
                     if (timerEnd != null) {
@@ -225,7 +224,11 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         return timer_end
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    fun getTemplateType() : TemplateType? {
+        return templateType
+    }
+
+    @RequiresApi(VERSION_CODES.M)
     private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?) {
         val handler = Handler(Looper.getMainLooper())
 
@@ -237,6 +240,8 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         notificationId
                     ) && ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true
                 ) {
+                    val intent = Intent(context, TimerTemplateService::class.java)
+                    context.stopService(intent)
                     val applicationContext = context.applicationContext
                     val basicTemplateBundle = extras.clone() as Bundle
                     basicTemplateBundle.remove("wzrk_rnv")

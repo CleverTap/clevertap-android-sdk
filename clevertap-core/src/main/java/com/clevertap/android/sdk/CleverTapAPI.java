@@ -31,6 +31,8 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
+import androidx.core.app.NotificationCompat;
+
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
@@ -3239,6 +3241,28 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
         }
 
+    }
+
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public NotificationCompat.Builder getPushNotificationOnCallerThread(@NonNull INotificationRenderer iNotificationRenderer, Context context,
+                                                                Bundle extras) {
+        CleverTapInstanceConfig config = coreState.getConfig();
+        try {
+            synchronized (coreState.getPushProviders().getPushRenderingLock()) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "returning push on caller thread with id = " + Thread.currentThread().getId());
+                coreState.getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
+                if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
+                    return coreState.getPushProviders()._getNotification(context, extras,
+                            extras.getInt(Constants.PT_NOTIF_ID));
+                } else {
+                    return coreState.getPushProviders()._getNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
+                }
+            }
+        } catch (Throwable t) {
+            config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
+            return null;
+        }
     }
 
     /**

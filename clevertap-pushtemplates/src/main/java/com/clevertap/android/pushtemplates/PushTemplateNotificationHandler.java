@@ -1,15 +1,31 @@
 package com.clevertap.android.pushtemplates;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+
+import androidx.core.content.ContextCompat;
+
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
-import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
+
 import java.util.Objects;
 
 public class PushTemplateNotificationHandler implements ActionButtonClickHandler {
+
+    public static boolean isServiceDeclared(Context context, String serviceClassName) {
+        try {
+            ComponentName componentName = new ComponentName(context.getPackageName(), serviceClassName);
+            context.getPackageManager().getServiceInfo(componentName, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
 
     @Override
     public boolean onActionButtonClick(final Context context, final Bundle extras, final int notificationId) {
@@ -34,13 +50,16 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
     public boolean onMessageReceived(final Context applicationContext, final Bundle message, final String pushType) {
         try {
             PTLog.debug("Inside Push Templates");
-            // initial setup
-            INotificationRenderer templateRenderer = new TemplateRenderer(applicationContext, message);
-            CleverTapAPI cleverTapAPI = CleverTapAPI
-                    .getGlobalInstance(applicationContext,
-                            PushNotificationUtil.getAccountIdFromNotificationBundle(message));
-            Objects.requireNonNull(cleverTapAPI)
-                    .renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message);
+
+            TemplateRenderer templateRenderer = new TemplateRenderer(applicationContext, message);
+            if (isServiceDeclared(applicationContext, "com.clevertap.android.pushtemplates.TimerService") && templateRenderer.getTemplateType() == TemplateType.TIMER) {
+                Intent serviceIntent = new Intent(applicationContext, TimerTemplateService.class);
+                serviceIntent.putExtras(message);
+                ContextCompat.startForegroundService(applicationContext, serviceIntent);
+            } else {
+                CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(applicationContext, PushNotificationUtil.getAccountIdFromNotificationBundle(message));
+                Objects.requireNonNull(cleverTapAPI).renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message);
+            }
 
         } catch (Throwable throwable) {
             PTLog.verbose("Error parsing FCM payload", throwable);
@@ -52,5 +71,4 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
     public boolean onNewToken(final Context applicationContext, final String token, final String pushType) {
         return true;
     }
-
 }
