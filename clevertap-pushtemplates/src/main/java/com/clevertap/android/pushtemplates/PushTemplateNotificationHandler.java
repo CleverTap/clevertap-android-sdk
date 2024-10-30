@@ -52,7 +52,7 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
             PTLog.debug("Inside Push Templates");
 
             TemplateRenderer templateRenderer = new TemplateRenderer(applicationContext, message);
-            if (isServiceDeclared(applicationContext, "com.clevertap.android.pushtemplates.TimerService") && templateRenderer.getTemplateType() == TemplateType.TIMER) {
+            if (isServiceDeclared(applicationContext, "com.clevertap.android.pushtemplates.TimerTemplateService") && templateRenderer.getTemplateType() == TemplateType.TIMER) {
                 Intent serviceIntent = new Intent(applicationContext, TimerTemplateService.class);
                 serviceIntent.putExtras(message);
                 ContextCompat.startForegroundService(applicationContext, serviceIntent);
