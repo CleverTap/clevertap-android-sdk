@@ -2,14 +2,20 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+
+import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.validation.Validator;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class SessionManager extends BaseSessionManager {
 
     private long appLastSeen = 0;
 
     private int lastVisitTime;
+    private long userLastVisitTs;
 
     private final CoreMetaData cleverTapMetaData;
 
@@ -85,6 +91,10 @@ public class SessionManager extends BaseSessionManager {
             lastVisitTime = ed.getLastTime();
         }
     }
+    @WorkerThread
+    void setUserLastVisitTs() {
+        userLastVisitTs = localDataStore.readUserEventLogLastTs(Constants.APP_LAUNCHED_EVENT);
+    }
 
     private void createSession(final Context context) {
         int sessionId = getNow();
@@ -118,4 +128,7 @@ public class SessionManager extends BaseSessionManager {
         return (int) (System.currentTimeMillis() / 1000);
     }
 
+    public long getUserLastVisitTs() {
+        return userLastVisitTs;
+    }
 }

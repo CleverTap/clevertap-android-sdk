@@ -1246,6 +1246,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("setStatesAsync", () -> {
             CleverTapAPI.this.coreState.getSessionManager().setLastVisitTime();
+            CleverTapAPI.this.coreState.getSessionManager().setUserLastVisitTs();
             CleverTapAPI.this.coreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
             CleverTapAPI.this.coreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
             return null;
@@ -2034,10 +2035,27 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the timestamp of the previous visit
      *
      * @return Timestamp of previous visit in int
+     * @deprecated since <code>v7.0.2</code>. Use {@link #getUserLastVisitTs()} instead.
+     * getUserLastVisitTs() provides user-specific last visit timestamp.
      */
     @SuppressWarnings({"unused"})
     public int getPreviousVisitTime() {
         return coreState.getSessionManager().getLastVisitTime();
+    }
+
+    /**
+     * Retrieves timestamp of last visit by current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * long lastVisitTs = getUserLastVisitTs()
+     * </code>
+     *
+     * @return Timestamp of last visit by current user, or -1 if there was an error
+     */
+    public long getUserLastVisitTs() {
+        return coreState.getSessionManager().getUserLastVisitTs();
     }
 
     /**
