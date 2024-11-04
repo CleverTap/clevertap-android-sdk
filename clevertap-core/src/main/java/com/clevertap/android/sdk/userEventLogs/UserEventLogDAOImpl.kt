@@ -297,7 +297,7 @@ internal class UserEventLogDAOImpl(
                 ORDER BY ${Column.LAST_TS} ASC 
                 LIMIT (
                 SELECT CASE 
-                    WHEN COUNT(*) > ? THEN COUNT(*) - ?
+                    WHEN COUNT(*) > ? THEN COUNT(*) / 2
                     ELSE 0
                 END 
                 FROM $tName
@@ -306,8 +306,8 @@ internal class UserEventLogDAOImpl(
         """.trimIndent()
 
             // Execute the delete query with the threshold as an argument
-            db.writableDatabase.execSQL(query, arrayOf(threshold,threshold))
-            logger.verbose("Cleaned up extra events in $tName, keeping only $threshold rows.")
+            db.writableDatabase.execSQL(query, arrayOf(threshold))
+            logger.verbose("If events are above $threshold then cleaned up half of the events in $tName")
             true
         } catch (e: Exception) {
             logger.verbose("Error cleaning up extra events in $tName.", e)

@@ -18,6 +18,7 @@ internal class DBManager(
 ) : BaseDatabaseManager {
 
     private var dbAdapter: DBAdapter? = null
+    private val userEventLogsThreshold = 11_520 //12.59 MB table and index size
 
     @WorkerThread
     @Synchronized
@@ -30,6 +31,7 @@ internal class DBManager(
             dbAdapter.cleanupStaleEvents(PROFILE_EVENTS)
             dbAdapter.cleanupStaleEvents(PUSH_NOTIFICATION_VIEWED)
             dbAdapter.cleanUpPushNotifications()
+            dbAdapter.userEventLogDAO().cleanUpExtraEvents(userEventLogsThreshold)
         }
         return dbAdapter
     }
