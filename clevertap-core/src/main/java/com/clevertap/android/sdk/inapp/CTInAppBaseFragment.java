@@ -91,7 +91,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
             String callToAction = formData.getString(Constants.KEY_C2A);
             if (callToAction != null) {
-                final String[] parts = callToAction.split("__dl__");
+                final String[] parts = callToAction.split(Constants.URL_PARAM_DL_SEPARATOR);
                 if (parts.length == 2) {
                     // Decode it here as wzrk_c2a is not decoded by UriHelper
                     callToAction = URLDecoder.decode(parts[0], "UTF-8");
