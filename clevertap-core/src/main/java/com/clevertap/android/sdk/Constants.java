@@ -446,4 +446,5 @@ public interface Constants {
 
    String FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME = "CTFlushPushImpressionsOneTime";
 
+    String URL_PARAM_DL_SEPARATOR = "__dl__";
 }
