@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.userEventLogs.UserEventLog;
 
+//import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,6 +69,9 @@ public class LocalDataStore {
         resetLocalProfileSync();
     }
 
+    /**
+     * @deprecated since <code>v7.0.2</code>. Use {@link #readUserEventLog(String)}
+     */
     EventDetail getEventDetail(String eventName) {
         try {
             if (!isPersonalisationEnabled()) {
@@ -85,7 +89,9 @@ public class LocalDataStore {
             return null;
         }
     }
-
+    /**
+     * @deprecated since <code>v7.0.2</code>. Use {@link #readUserEventLogs()}
+     */
     Map<String, EventDetail> getEventHistory(Context context) {
         try {
             String namespace;
@@ -108,6 +114,9 @@ public class LocalDataStore {
         }
     }
 
+    /**
+     * @deprecated since <code>v7.0.2</code>. Use {@link #persistUserEventLog(String)}
+     */
     @WorkerThread
     public void persistEvent(Context context, JSONObject event, int type) {
 
@@ -395,6 +404,9 @@ public class LocalDataStore {
         }
     }
 
+    /**
+     * @deprecated since <code>v7.0.2</code> in favor of DB. See {@link UserEventLog}
+     */
     private EventDetail decodeEventDetails(String name, String encoded) {
         if (encoded == null) {
             return null;
@@ -405,6 +417,9 @@ public class LocalDataStore {
                 Integer.parseInt(parts[2]), name);
     }
 
+    /**
+     * @deprecated since <code>v7.0.2</code> in favor of DB. See {@link UserEventLog}
+     */
     private String encodeEventDetails(int first, int last, int count) {
         return count + "|" + first + "|" + last;
     }
@@ -431,6 +446,9 @@ public class LocalDataStore {
         return getIntFromPrefs("local_cache_expires_in", defaultInterval);
     }
 
+    /**
+     * @deprecated since <code>v7.0.2</code> in favor of DB. See {@link UserEventLog}
+     */
     private String getStringFromPrefs(String rawKey, String defaultValue, String nameSpace) {
         if (this.config.isDefaultInstance()) {
             String _new = StorageHelper
@@ -503,6 +521,9 @@ public class LocalDataStore {
         return this.config.isPersonalizationEnabled();
     }
 
+    /**
+     * @deprecated since <code>v7.0.2</code>. Use {@link #persistUserEventLog(String)}
+     */
     @SuppressWarnings("ConstantConditions")
     @SuppressLint("CommitPrefEdits")
     private void persistEvent(Context context, JSONObject event) {
@@ -643,7 +664,6 @@ public class LocalDataStore {
             }
         }
     }
-    //int k = 0;
     private void _setProfileField(String key, Object value) {
         if (value == null) {
             return;
@@ -664,14 +684,16 @@ public class LocalDataStore {
      * @param fields, a map of key value pairs to be updated locally. The value will be null if that key needs to be
      *                removed
      */
+//    int k = 0;
     public void updateProfileFields(Map<String, Object> fields) {
         if(fields.isEmpty())
             return;
         /*Set<String> events = new HashSet<>();
         for (int i = 0; i < 5000; i++) {
-            events.add("profile key - "+i+" - "+ k);
-        }*/
-        //k++;
+            String s = "profile field - "+k+"-"+i;//RandomStringUtils.randomAlphanumeric(512);
+            events.add(s);
+        }
+        k++;*/
         long start = System.currentTimeMillis();
         persistUserEventLogsInBulk(fields.keySet());
 //        persistUserEventLogsInBulk(events);
