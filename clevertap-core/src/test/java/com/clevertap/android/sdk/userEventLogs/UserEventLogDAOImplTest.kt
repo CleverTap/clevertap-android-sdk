@@ -458,4 +458,54 @@ class UserEventLogDAOImplTest {
         }
     }
 
+    @Test
+    fun `test eventExistsByDeviceID returns false when event does not exist`() {
+        // When
+        val result = userEventLogDAO.eventExistsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test eventExistsByDeviceID when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>()
+        every { dbHelper.readableDatabase } throws SQLiteException()
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+
+        // When
+        val result = dao.eventExistsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test eventExistsByDeviceID returns true after insert`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.eventExistsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test eventExistsByDeviceID returns true for specific deviceID only`() {
+        // Given
+        val otherDeviceId = "other_device_id"
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val resultForTestDevice = userEventLogDAO.eventExistsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val resultForOtherDevice = userEventLogDAO.eventExistsByDeviceID(otherDeviceId, TEST_EVENT_NAME)
+
+        // Then
+        assertTrue(resultForTestDevice)
+        assertFalse(resultForOtherDevice)
+    }
+
 }
