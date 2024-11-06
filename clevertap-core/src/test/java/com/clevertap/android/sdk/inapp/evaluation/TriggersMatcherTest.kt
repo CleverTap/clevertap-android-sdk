@@ -2,21 +2,29 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import android.location.Location
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.LocalDataStore
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.*
-import org.junit.Assert.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
 
 class TriggersMatcherTest : BaseTestCase() {
 
     private lateinit var triggersMatcher: TriggersMatcher
+    private lateinit var localDataStore: LocalDataStore
 
     @Before
     override fun setUp() {
         super.setUp()
-        triggersMatcher = TriggersMatcher()
+        localDataStore = mockk<LocalDataStore>(relaxed = true)
+        triggersMatcher = TriggersMatcher(localDataStore)
     }
 
     @Test
