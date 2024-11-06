@@ -221,4 +221,77 @@ class UserEventLogDAOImplTest {
         }
     }
 
+    @Test
+    fun `test readEventByDeviceID returns null when event does not exist`() {
+        // When
+        val result = userEventLogDAO.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `test readEventByDeviceID returns correct event log after insert`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertNotNull(result)
+        with(requireNotNull(result)) {
+            assertEquals(TEST_EVENT_NAME, eventName)
+            assertEquals(TEST_DEVICE_ID, deviceID)
+            assertEquals(1, countOfEvents)
+            assertEquals(MOCK_TIME, firstTs)
+            assertEquals(MOCK_TIME, lastTs)
+        }
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
+    @Test
+    fun `test readEventByDeviceID after multiple updates`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Mock different time for update
+        val updateTime = MOCK_TIME + 1000
+        every { Utils.getNowInMillis() } returns updateTime
+
+        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertNotNull(result)
+        with(requireNotNull(result)) {
+            assertEquals(TEST_EVENT_NAME, eventName)
+            assertEquals(TEST_DEVICE_ID, deviceID)
+            assertEquals(2, countOfEvents)
+            assertEquals(MOCK_TIME, firstTs) // First timestamp should remain same
+            assertEquals(updateTime, lastTs) // Last timestamp should be updated
+        }
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
+    @Test
+    fun `test readEventByDeviceID when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>()
+        every { dbHelper.readableDatabase } throws SQLiteException()
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+
+        // When
+        val result = dao.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertNull(result)
+    }
+
 }
