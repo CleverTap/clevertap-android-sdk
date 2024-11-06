@@ -294,4 +294,53 @@ class UserEventLogDAOImplTest {
         assertNull(result)
     }
 
+    @Test
+    fun `test readEventCountByDeviceID returns minus one when event does not exist`() {
+        // When
+        val result = userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertEquals(-1, result)
+    }
+
+    @Test
+    fun `test readEventCountByDeviceID when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>()
+        every { dbHelper.readableDatabase } throws SQLiteException()
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+
+        // When
+        val result = dao.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertEquals(-1, result)
+    }
+
+    @Test
+    fun `test readEventCountByDeviceID returns correct count after insert`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertEquals(1, result)
+    }
+
+    @Test
+    fun `test readEventCountByDeviceID returns correct count after multiple updates`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertEquals(3, result)
+    }
+
 }
