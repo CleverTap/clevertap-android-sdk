@@ -2,18 +2,25 @@ package com.clevertap.android.sdk
 
 import android.content.Context
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.db.BaseDatabaseManager
+import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
+import com.clevertap.android.sdk.userEventLogs.UserEventLogDAO
+import com.clevertap.android.sdk.userEventLogs.UserEventLogDAOImpl
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.*
-import org.mockito.kotlin.*
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.*
+import org.junit.Test
+import org.mockito.Mockito
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
-@RunWith(RobolectricTestRunner::class)
 class LocalDataStoreTest : BaseTestCase() {
+    private lateinit var userEventLogDaoMock: UserEventLogDAO
+    private lateinit var baseDatabaseManager: BaseDatabaseManager
     private lateinit var defConfig: CleverTapInstanceConfig
     private lateinit var config: CleverTapInstanceConfig
 
@@ -22,6 +29,7 @@ class LocalDataStoreTest : BaseTestCase() {
     private lateinit var localDataStoreWithConfigSpy: LocalDataStore
     private lateinit var cryptHandler : CryptHandler
     private lateinit var deviceInfo : DeviceInfo
+    private lateinit var dbAdapter: DBAdapter
 
     override fun setUp() {
         super.setUp()
@@ -29,10 +37,27 @@ class LocalDataStoreTest : BaseTestCase() {
         defConfig = CleverTapInstanceConfig.createDefaultInstance(appCtx, "id", "token", "region")
         cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
         deviceInfo = MockDeviceInfo(appCtx, defConfig, "id", metaData)
-        localDataStoreWithDefConfig = LocalDataStore(appCtx, defConfig, cryptHandler, deviceInfo)
+        baseDatabaseManager = Mockito.mock(DBManager::class.java)
+        dbAdapter = Mockito.mock(DBAdapter::class.java)
+        userEventLogDaoMock = Mockito.mock(UserEventLogDAOImpl::class.java)
+        localDataStoreWithDefConfig = LocalDataStore(
+            appCtx,
+            defConfig,
+            cryptHandler,
+            deviceInfo,
+            baseDatabaseManager
+        )
         config = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
-        localDataStoreWithConfig = LocalDataStore(appCtx, config, cryptHandler, deviceInfo)
+        localDataStoreWithConfig = LocalDataStore(
+            appCtx,
+            config,
+            cryptHandler,
+            deviceInfo,
+            baseDatabaseManager
+        )
         localDataStoreWithConfigSpy = Mockito.spy(localDataStoreWithConfig)
+        Mockito.`when`(baseDatabaseManager.loadDBAdapter(appCtx)).thenReturn(dbAdapter)
+        Mockito.`when`(dbAdapter.userEventLogDAO()).thenReturn(userEventLogDaoMock)
     }
 
     @Test
