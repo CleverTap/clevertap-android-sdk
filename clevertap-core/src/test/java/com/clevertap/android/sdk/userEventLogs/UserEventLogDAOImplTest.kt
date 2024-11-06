@@ -401,4 +401,61 @@ class UserEventLogDAOImplTest {
         }
     }
 
+    @Test
+    fun `test readEventLastTsByDeviceID returns minus one when event does not exist`() {
+        // When
+        val result = userEventLogDAO.readEventLastTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertEquals(-1L, result)
+    }
+
+    @Test
+    fun `test readEventLastTsByDeviceID when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>()
+        every { dbHelper.readableDatabase } throws SQLiteException()
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+
+        // When
+        val result = dao.readEventLastTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertEquals(-1L, result)
+    }
+
+    @Test
+    fun `test readEventLastTsByDeviceID returns correct timestamp after insert`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.readEventLastTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertEquals(MOCK_TIME, result)
+    }
+
+    @Test
+    fun `test readEventLastTsByDeviceID returns updated timestamp after updates`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Mock different time for update
+        val updateTime = MOCK_TIME + 1000
+        every { Utils.getNowInMillis() } returns updateTime
+
+        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.readEventLastTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertEquals(updateTime, result) // Last timestamp should be updated
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
 }
