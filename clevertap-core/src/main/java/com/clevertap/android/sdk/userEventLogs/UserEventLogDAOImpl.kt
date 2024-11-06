@@ -44,7 +44,7 @@ internal class UserEventLogDAOImpl(
                 values,
                 SQLiteDatabase.CONFLICT_REPLACE
             )
-        } catch (e: SQLiteException) {
+        } catch (e: Exception) {
             logger.verbose("Error adding row to table $tableName Recreating DB")
             db.deleteDatabase()
             DB_UPDATE_ERROR
@@ -54,7 +54,7 @@ internal class UserEventLogDAOImpl(
     @WorkerThread
     override fun updateEventByDeviceID(deviceID: String, eventName: String): Boolean {
         val tableName = table.tableName
-        val now = System.currentTimeMillis()
+        val now = Utils.getNowInMillis()
 
         return try {
             val query = """
