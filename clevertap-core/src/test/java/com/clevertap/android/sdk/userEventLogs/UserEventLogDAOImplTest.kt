@@ -15,11 +15,14 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertFalse
 
 @RunWith(RobolectricTestRunner::class)
 class UserEventLogDAOImplTest {
@@ -114,5 +117,72 @@ class UserEventLogDAOImplTest {
 
     }
 
+    @Test
+    fun `test updateEventByDeviceID success`() {
+        // Given
+        val insertResult = userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        assertTrue(insertResult > 0)
+
+        // When
+        val updateResult1 = userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val updateResult2 = userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertTrue(updateResult1)
+        assertTrue(updateResult2)
+
+        // Verify count increased
+        val count = userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        assertEquals(3, count)
+    }
+
+    @Test
+    fun `test updateEventByDeviceID when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>(relaxed = true)
+        every {
+            dbHelper.writableDatabase.execSQL(
+                any(),
+                any()
+            )
+        } throws SQLiteException()
+
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+
+        // When
+        val result = dao.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test updateEventByDeviceID success with timestamp verification`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Mock different time for update
+        val updateTime = MOCK_TIME + 1000
+        every { Utils.getNowInMillis() } returns updateTime
+
+        // When
+        val result = userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Then
+        assertTrue(result)
+
+        // Verify event details
+        val eventLog = userEventLogDAO.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        assertNotNull(eventLog)
+        with(requireNotNull(eventLog)) {
+            assertEquals(2, countOfEvents)
+            assertEquals(MOCK_TIME, firstTs)
+            assertEquals(updateTime, lastTs)
+        }
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
 
 }
