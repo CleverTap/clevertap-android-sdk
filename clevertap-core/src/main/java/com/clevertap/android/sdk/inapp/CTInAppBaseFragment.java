@@ -89,13 +89,13 @@ public abstract class CTInAppBaseFragment extends Fragment {
         try {
             final Bundle formData = UriHelper.getAllKeyValuePairs(url, false);
 
-            String actionParts = formData.getString(Constants.KEY_C2A);
-            String callToAction = null;
-            if (actionParts != null) {
-                final String[] parts = actionParts.split("__dl__");
+            String callToAction = formData.getString(Constants.KEY_C2A);
+            if (callToAction != null) {
+                final String[] parts = callToAction.split(Constants.URL_PARAM_DL_SEPARATOR);
                 if (parts.length == 2) {
                     // Decode it here as wzrk_c2a is not decoded by UriHelper
                     callToAction = URLDecoder.decode(parts[0], "UTF-8");
+                    formData.putString(Constants.KEY_C2A, callToAction);
                     url = parts[1];
                 }
             }
