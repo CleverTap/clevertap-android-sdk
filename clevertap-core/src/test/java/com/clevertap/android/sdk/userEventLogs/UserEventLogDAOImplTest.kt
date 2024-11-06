@@ -185,4 +185,40 @@ class UserEventLogDAOImplTest {
         }
     }
 
+    @Test
+    fun `test upSertEventsByDeviceID with new and existing events`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val eventNames = setOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
+
+        // When
+        val result = userEventLogDAO.upSertEventsByDeviceID(TEST_DEVICE_ID, eventNames)
+
+        // Then
+        assertTrue(result)
+        assertEquals(2, userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME))
+        assertEquals(1, userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME_2))
+    }
+
+    @Test
+    fun `test upSertEventsByDeviceID when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>(relaxed = true)
+        every { dbHelper.writableDatabase.beginTransaction() } throws SQLiteException()
+
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+        val eventNames = setOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
+
+        // When
+        val result = dao.upSertEventsByDeviceID(TEST_DEVICE_ID, eventNames)
+
+        // Then
+        assertFalse(result)
+
+        verify {
+            dbHelper.writableDatabase.beginTransaction()
+            dbHelper.writableDatabase.endTransaction() // verify that endTransaction is called even when error occurs
+        }
+    }
+
 }
