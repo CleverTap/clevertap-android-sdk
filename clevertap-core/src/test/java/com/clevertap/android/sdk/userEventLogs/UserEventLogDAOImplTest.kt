@@ -508,4 +508,82 @@ class UserEventLogDAOImplTest {
         assertFalse(resultForOtherDevice)
     }
 
+    @Test
+    fun `test eventExistsByDeviceIDAndCount returns false when event does not exist`() {
+        // When
+        val result = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 1)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test eventExistsByDeviceIDAndCount when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>()
+        every { dbHelper.readableDatabase } throws SQLiteException()
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+
+        // When
+        val result = dao.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 1)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test eventExistsByDeviceIDAndCount returns true for matching count`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 1)
+
+        // Then
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test eventExistsByDeviceIDAndCount returns false for non-matching count`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 2)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test eventExistsByDeviceIDAndCount verifies count after updates`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val resultForCount1 = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 1)
+        val resultForCount2 = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 2)
+
+        // Then
+        assertFalse(resultForCount1)
+        assertTrue(resultForCount2)
+    }
+
+    @Test fun `test eventExistsByDeviceIDAndCount returns true for specific deviceID and count`(){
+        // Given
+        val otherDeviceId = "other_device_id"
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEventByDeviceID(otherDeviceId, TEST_EVENT_NAME)
+        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val resultForTestDevice = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 2)
+        val resultForOtherDevice = userEventLogDAO.eventExistsByDeviceIDAndCount(otherDeviceId, TEST_EVENT_NAME, 1)
+
+        // Then
+        assertTrue(resultForTestDevice)
+        assertTrue(resultForOtherDevice)
+    }
+
 }
