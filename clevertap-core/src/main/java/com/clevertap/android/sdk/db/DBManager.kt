@@ -19,6 +19,7 @@ internal class DBManager(
 
     private var dbAdapter: DBAdapter? = null
     private val userEventLogsThreshold = 11_520 //12.59 MB table and index size
+    private val numberOfRowsToCleanupForUserEventLogs = 2_304 //( 2048 events + 256 profile props =  1 user)
 
     @WorkerThread
     @Synchronized
@@ -31,7 +32,8 @@ internal class DBManager(
             dbAdapter.cleanupStaleEvents(PROFILE_EVENTS)
             dbAdapter.cleanupStaleEvents(PUSH_NOTIFICATION_VIEWED)
             dbAdapter.cleanUpPushNotifications()
-            dbAdapter.userEventLogDAO().cleanUpExtraEvents(userEventLogsThreshold)
+            dbAdapter.userEventLogDAO()
+                .cleanUpExtraEvents(userEventLogsThreshold, numberOfRowsToCleanupForUserEventLogs)
         }
         return dbAdapter
     }
