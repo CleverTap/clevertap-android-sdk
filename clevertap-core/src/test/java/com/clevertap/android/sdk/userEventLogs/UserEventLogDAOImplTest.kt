@@ -674,4 +674,110 @@ class UserEventLogDAOImplTest {
         }
     }
 
+    @Test
+    fun `test allEvents returns empty list when no events exist`() {
+        // When
+        val result = userEventLogDAO.allEvents()
+
+        // Then
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `test allEvents when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>()
+        every { dbHelper.readableDatabase } throws SQLiteException()
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+
+        // When
+        val result = dao.allEvents()
+
+        // Then
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `test allEvents returns all events from different users`() {
+        // Given
+        val deviceIds = listOf(TEST_DEVICE_ID, "other_device_id")
+        val eventNames = listOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
+
+        deviceIds.forEach { deviceId ->
+            eventNames.forEach { eventName ->
+                userEventLogDAO.insertEventByDeviceID(deviceId, eventName)
+            }
+        }
+
+        // When
+        val result = userEventLogDAO.allEvents()
+
+        // Then
+        assertEquals(4, result.size)
+        result.all {
+            deviceIds.contains(it.deviceID) && eventNames.contains(it.eventName)
+        }
+    }
+
+    @Test
+    fun `test allEvents returns events ordered by lastTs`() {
+        // Given
+        val events = listOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
+
+        events.forEachIndexed { index, eventName ->
+            val mockTime = MOCK_TIME + (index * 1000L)
+            every { Utils.getNowInMillis() } returns mockTime
+            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+        }
+
+        // When
+        val result = userEventLogDAO.allEvents()
+
+        // Then
+        assertEquals(2, result.size)
+        result.zipWithNext { a, b ->
+            assertTrue(a.lastTs <= b.lastTs)
+        }
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
+    @Test
+    fun `test allEvents returns correct event details`() {
+        // Given
+        data class EventData(val deviceId: String, val name: String, val count: Int)
+
+        val testData = listOf(
+            EventData(TEST_DEVICE_ID, TEST_EVENT_NAME, 2),
+            EventData("other_device_id", TEST_EVENT_NAME_2, 1)
+        )
+
+        testData.forEach { (deviceId, eventName, updateCount) ->
+            userEventLogDAO.insertEventByDeviceID(deviceId, eventName)
+            repeat(updateCount - 1) {
+                userEventLogDAO.updateEventByDeviceID(deviceId, eventName)
+            }
+        }
+
+        // When
+        val result = userEventLogDAO.allEvents()
+            .groupBy { it.deviceID }
+            .mapValues { (_, events) -> events.associateBy { it.eventName } }
+
+        // Then
+        testData.forEach { (deviceId, eventName, expectedCount) ->
+            val event = result[deviceId]?.get(eventName)
+            assertNotNull(event)
+            with(requireNotNull(event)) {
+                assertEquals(deviceId, this.deviceID)
+                assertEquals(eventName, this.eventName)
+                assertEquals(expectedCount, this.countOfEvents)
+                assertEquals(MOCK_TIME, this.firstTs)
+                assertEquals(MOCK_TIME, this.lastTs)
+            }
+        }
+    }
+
 }
