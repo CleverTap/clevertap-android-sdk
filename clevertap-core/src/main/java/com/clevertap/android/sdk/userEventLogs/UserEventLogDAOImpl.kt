@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.userEventLogs
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
@@ -148,26 +147,26 @@ internal class UserEventLogDAOImpl(
     @WorkerThread
     override fun readEventFirstTsByDeviceID(deviceID: String, eventName: String): Long =
         readEventColumnByDeviceID(
-        deviceID,
-        eventName,
-        Column.FIRST_TS,
-        defaultValueExtractor = { -1L },
-        valueExtractor = { cursor, columnName ->
-            cursor.getLong(cursor.getColumnIndexOrThrow(columnName))
-        }
-    )
+            deviceID,
+            eventName,
+            Column.FIRST_TS,
+            defaultValueExtractor = { -1L },
+            valueExtractor = { cursor, columnName ->
+                cursor.getLong(cursor.getColumnIndexOrThrow(columnName))
+            }
+        )
 
     @WorkerThread
     override fun readEventLastTsByDeviceID(deviceID: String, eventName: String): Long =
         readEventColumnByDeviceID(
-        deviceID,
-        eventName,
-        Column.LAST_TS,
-        defaultValueExtractor = { -1L },
-        valueExtractor = { cursor, columnName ->
-            cursor.getLong(cursor.getColumnIndexOrThrow(columnName))
-        }
-    )
+            deviceID,
+            eventName,
+            Column.LAST_TS,
+            defaultValueExtractor = { -1L },
+            valueExtractor = { cursor, columnName ->
+                cursor.getLong(cursor.getColumnIndexOrThrow(columnName))
+            }
+        )
 
     @WorkerThread
     override fun eventExistsByDeviceID(deviceID: String, eventName: String): Boolean {
@@ -284,11 +283,26 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun cleanUpExtraEvents(threshold: Int): Boolean {
+    override fun cleanUpExtraEvents(threshold: Int, numberOfRowsToCleanup: Int): Boolean {
+        if (threshold <= 0) {
+            logger.verbose("Invalid threshold value: $threshold. Threshold should be greater than 0")
+            return false
+        }
+        if (numberOfRowsToCleanup < 0) {
+            logger.verbose("Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be greater than or equal to 0")
+            return false
+        }
+        if (numberOfRowsToCleanup >= threshold) {
+            logger.verbose("Invalid numberOfRowsToCleanup value: $numberOfRowsToCleanup. Should be less than threshold: $threshold")
+            return false
+        }
+
         val tName = table.tableName
+        val numberOfRowsToKeep = threshold - numberOfRowsToCleanup
 
         return try {
             // SQL query to delete only the least recently used rows, using a subquery with LIMIT
+            // When above threshold is reached, delete in such a way that (threshold - numberOfRowsToCleanup) rows exists after cleanup
             val query = """
             DELETE FROM $tName
             WHERE (${Column.EVENT_NAME}, ${Column.DEVICE_ID}) IN (
@@ -297,7 +311,7 @@ internal class UserEventLogDAOImpl(
                 ORDER BY ${Column.LAST_TS} ASC 
                 LIMIT (
                 SELECT CASE 
-                    WHEN COUNT(*) > ? THEN COUNT(*) / 2
+                    WHEN COUNT(*) > ? THEN COUNT(*) - ?
                     ELSE 0
                 END 
                 FROM $tName
@@ -306,8 +320,8 @@ internal class UserEventLogDAOImpl(
         """.trimIndent()
 
             // Execute the delete query with the threshold as an argument
-            db.writableDatabase.execSQL(query, arrayOf(threshold))
-            logger.verbose("If events are above $threshold then cleaned up half of the events in $tName")
+            db.writableDatabase.execSQL(query, arrayOf(threshold,numberOfRowsToKeep))
+            logger.verbose("If row count is above $threshold then only keep $numberOfRowsToKeep rows in $tName")
             true
         } catch (e: Exception) {
             logger.verbose("Error cleaning up extra events in $tName.", e)

@@ -47,5 +47,5 @@ interface UserEventLogDAO {
     @WorkerThread
     fun allEvents(): List<UserEventLog>
     @WorkerThread
-    fun cleanUpExtraEvents(threshold: Int): Boolean
+    fun cleanUpExtraEvents(threshold: Int = 11_520, numberOfRowsToCleanup: Int = 2_304): Boolean
 }

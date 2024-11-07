@@ -263,9 +263,9 @@ public class LocalDataStore {
     }
 
     @WorkerThread
-    public boolean cleanUpExtraEvents(int threshold){
+    public boolean cleanUpExtraEvents(int threshold, int numberOfRowsToCleanup){
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        boolean cleanUpExtraEvents = dbAdapter.userEventLogDAO().cleanUpExtraEvents(threshold);
+        boolean cleanUpExtraEvents = dbAdapter.userEventLogDAO().cleanUpExtraEvents(threshold, numberOfRowsToCleanup);
         getConfigLogger().verbose("cleanUpExtraEvents boolean= "+cleanUpExtraEvents);
         return cleanUpExtraEvents;
     }
