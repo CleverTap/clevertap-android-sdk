@@ -780,4 +780,306 @@ class UserEventLogDAOImplTest {
         }
     }
 
+    @Test
+    fun `test cleanUpExtraEvents with zero threshold`() {
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(0, 2)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents with negative threshold`() {
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(-5, 2)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents with negative numberOfRowsToCleanup`() {
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(5, -2)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents with zero numberOfRowsToCleanup`() {
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(5, 0)
+
+        // Then
+        assertTrue(result)  // Should pass as 0 is valid now
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents with numberOfRowsToCleanup equal to threshold`() {
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(5, 5)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents with numberOfRowsToCleanup greater than threshold`() {
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(5, 6)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents validation ensures database is not modified with invalid params`() {
+        // Given
+        val events = (1..5).map { "event_$it" }
+        events.forEach { eventName ->
+            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+        }
+
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(5, 6)
+
+        // Then
+        assertFalse(result)
+        assertEquals(5, userEventLogDAO.allEvents().size) // Verify no events were deleted
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents when no events exist`() {
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(5, 2)
+
+        // Then
+        assertTrue(result)
+        assertTrue(userEventLogDAO.allEvents().isEmpty())
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>()
+        every { dbHelper.writableDatabase } throws SQLiteException()
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+
+        // When
+        val result = dao.cleanUpExtraEvents(5, 2)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents deletes correct number of events when above threshold`() {
+        // Given
+        val events = (1..10).map { "event_$it" }
+
+        events.forEachIndexed { index, eventName ->
+            val mockTime = MOCK_TIME + (index * 1000L)
+            every { Utils.getNowInMillis() } returns mockTime
+            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+        }
+
+        val threshold = 6
+        val numberOfRowsToCleanup = 2
+
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
+
+        // Then
+        assertTrue(result)
+
+        val remainingEvents = userEventLogDAO.allEvents()
+        assertEquals(threshold - numberOfRowsToCleanup, remainingEvents.size) // Should have 4 events remaining
+
+        // Verify oldest events were deleted and newest remain
+        remainingEvents
+            .map { it.eventName }
+            .let { eventNames ->
+                // First 6 events should be deleted (10 - 4 = 6)
+                (1..6).forEach {
+                    assertFalse(eventNames.contains("event_$it"))
+                }
+                // Last 4 events should remain
+                (7..10).forEach {
+                    assertTrue(eventNames.contains("event_$it"))
+                }
+            }
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents maintains events when below threshold`() {
+        // Given
+        val events = (1..3).map { "event_$it" }
+
+        events.forEachIndexed { index, eventName ->
+            val mockTime = MOCK_TIME + (index * 1000L)
+            every { Utils.getNowInMillis() } returns mockTime
+            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+        }
+
+        val threshold = 5
+        val numberOfRowsToCleanup = 2
+
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
+
+        // Then
+        assertTrue(result)
+
+        userEventLogDAO.allEvents()
+            .map { it.eventName }
+            .let { eventNames ->
+                assertEquals(3, eventNames.size) // All events should remain
+                assertTrue(eventNames.containsAll(events))
+            }
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents maintains correct order after cleanup`() {
+        // Given
+        val eventCount = 10
+        val events = (1..eventCount).map { "event_$it" }
+
+        events.forEachIndexed { index, eventName ->
+            val mockTime = MOCK_TIME + (index * 1000L)
+            every { Utils.getNowInMillis() } returns mockTime
+            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+        }
+
+        val threshold = 6
+        val numberOfRowsToCleanup = 2
+
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
+
+        // Then
+        assertTrue(result)
+
+        userEventLogDAO.allEvents().let { remainingEvents ->
+            assertEquals(4, remainingEvents.size) // threshold - numberOfRowsToCleanup
+            remainingEvents.zipWithNext { a, b ->
+                assertTrue(a.lastTs <= b.lastTs)
+            }
+        }
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents with threshold 1 and numberOfRowsToCleanup 0 when single event exists`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(1, 0)
+
+        // Then
+        assertTrue(result)
+        userEventLogDAO.allEvents().let { events ->
+            assertEquals(1, events.size)
+            assertEquals(TEST_EVENT_NAME, events[0].eventName)
+        }
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents with threshold 1 and numberOfRowsToCleanup 0 when multiple events exist`() {
+        // Given
+        val events = (1..3).map { "event_$it" }
+
+        events.forEachIndexed { index, eventName ->
+            val mockTime = MOCK_TIME + (index * 1000L)
+            every { Utils.getNowInMillis() } returns mockTime
+            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+        }
+
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(1, 0)
+
+        // Then
+        assertTrue(result)
+        userEventLogDAO.allEvents().let { remainingEvents ->
+            assertEquals(1, remainingEvents.size)
+            assertEquals("event_3", remainingEvents[0].eventName) // Should keep the most recent event
+            assertEquals(MOCK_TIME + 2000L, remainingEvents[0].lastTs)
+        }
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents with threshold 1 and numberOfRowsToCleanup 0 with multiple users`() {
+        // Given
+        val devices = listOf(TEST_DEVICE_ID, "other_device_id")
+
+        devices.forEachIndexed { index, deviceId ->
+            val mockTime = MOCK_TIME + (index * 1000L)
+            every { Utils.getNowInMillis() } returns mockTime
+            userEventLogDAO.insertEventByDeviceID(deviceId, TEST_EVENT_NAME)
+        }
+
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(1, 0)
+
+        // Then
+        assertTrue(result)
+        userEventLogDAO.allEvents().let { remainingEvents ->
+            assertEquals(1, remainingEvents.size)
+            // Should keep the last inserted event
+            assertEquals("other_device_id", remainingEvents[0].deviceID)
+        }
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents with threshold 1 and numberOfRowsToCleanup 0 maintains order after cleanup`() {
+        // Given
+        (1..5).forEach { index ->
+            val mockTime = MOCK_TIME + (index * 1000L)
+            every { Utils.getNowInMillis() } returns mockTime
+            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, "event_$index")
+
+            // Add some updates to earlier events to mix up lastTs
+            if (index > 1) {
+                every { Utils.getNowInMillis() } returns mockTime + 100
+                userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, "event_1")
+            }
+        }
+
+        // When
+        val result = userEventLogDAO.cleanUpExtraEvents(1, 0)
+
+        // Then
+        assertTrue(result)
+        userEventLogDAO.allEvents().let { remainingEvents ->
+            assertEquals(1, remainingEvents.size)
+            // Should keep event_1 as it has the latest lastTs due to updates
+            assertEquals("event_1", remainingEvents[0].eventName)
+        }
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
 }
