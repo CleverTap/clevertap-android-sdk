@@ -586,4 +586,92 @@ class UserEventLogDAOImplTest {
         assertTrue(resultForOtherDevice)
     }
 
+    @Test
+    fun `test allEventsByDeviceID returns empty list when no events exist`() {
+        // When
+        val result = userEventLogDAO.allEventsByDeviceID(TEST_DEVICE_ID)
+
+        // Then
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `test allEventsByDeviceID when db error occurs`() {
+        // Given
+        val dbHelper = mockk<DatabaseHelper>()
+        every { dbHelper.readableDatabase } throws SQLiteException()
+        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
+
+        // When
+        val result = dao.allEventsByDeviceID(TEST_DEVICE_ID)
+
+        // Then
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `test allEventsByDeviceID returns correct list after inserts`() {
+        // Given
+        val list = listOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
+            list.forEach {
+                userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, it)
+            }
+
+        // When
+        val result = userEventLogDAO.allEventsByDeviceID(TEST_DEVICE_ID)
+
+        // Then
+        assertEquals(2, result.size)
+
+        assertTrue(result.all {
+            list.contains(it.eventName) && it.deviceID == TEST_DEVICE_ID
+        })
+    }
+
+    @Test
+    fun `test allEventsByDeviceID returns events for specific deviceID only`() {
+        // Given
+        val otherDeviceId = "other_device_id"
+        listOf(TEST_DEVICE_ID, otherDeviceId).forEach { deviceId ->
+            userEventLogDAO.insertEventByDeviceID(deviceId, TEST_EVENT_NAME)
+        }
+
+        // When
+        val results = listOf(TEST_DEVICE_ID, otherDeviceId)
+            .associateWith { deviceId ->
+                userEventLogDAO.allEventsByDeviceID(deviceId)
+            }
+
+        // Then
+        results.forEach { (deviceId, events) ->
+            assertEquals(1, events.size)
+            assertTrue(events.all { it.deviceID == deviceId })
+        }
+    }
+
+    @Test
+    fun `test allEventsByDeviceID returns events ordered by lastTs`() {
+        // Given
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+
+        // Mock different time for second event
+        val laterTime = MOCK_TIME + 1000
+        every { Utils.getNowInMillis() } returns laterTime
+
+        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME_2)
+
+        // When
+        val result = userEventLogDAO.allEventsByDeviceID(TEST_DEVICE_ID)
+
+        // Then
+        assertEquals(2, result.size)
+        assertEquals(TEST_EVENT_NAME, result[0].eventName)  // Earlier event first
+        assertEquals(TEST_EVENT_NAME_2, result[1].eventName) // Later event second
+        assertTrue(result[0].lastTs < result[1].lastTs)
+
+        verify {
+            Utils.getNowInMillis()
+        }
+    }
+
 }
