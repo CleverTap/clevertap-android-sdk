@@ -580,4 +580,46 @@ class TriggerAdapterTest {
         assertEquals(geoRadiusArray, triggerJSON.optJSONArray(Constants.KEY_GEO_RADIUS_PROPERTIES))
     }
 
+
+    @Test
+    fun `test firstTimeOnly with firstTimeOnly value as true`() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        triggerJSON.put(Constants.KEY_FIRST_TIME_ONLY, true)
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val actualFirstTimeOnly = triggerAdapter.firstTimeOnly
+
+        // Assert
+        assertTrue(actualFirstTimeOnly)
+    }
+
+    @Test
+    fun `test firstTimeOnly with firstTimeOnly value as false`(){
+        // Arrange
+        val triggerJSON = JSONObject()
+        triggerJSON.put(Constants.KEY_FIRST_TIME_ONLY, false)
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val actualFirstTimeOnly = triggerAdapter.firstTimeOnly
+
+        // Assert
+        assertFalse(actualFirstTimeOnly)
+    }
+
+    @Test
+    fun `test firstTimeOnly with firstTimeOnly value as null`() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val actualFirstTimeOnly = triggerAdapter.firstTimeOnly
+
+        // Assert
+        assertFalse(actualFirstTimeOnly)
+    }
+
 }
