@@ -133,15 +133,15 @@ public class LocalDataStore {
         }
     }
     @WorkerThread
-    public void persistUserEventLogsInBulk(Set<String> eventNames){
-        upSertUserEventLogsInBulk(eventNames);
+    public boolean persistUserEventLogsInBulk(Set<String> eventNames){
+        return upSertUserEventLogsInBulk(eventNames);
     }
 
     @WorkerThread
-    public void persistUserEventLog(String eventName) {
+    public boolean persistUserEventLog(String eventName) {
 
         if (eventName == null) {
-            return;
+            return false;
         }
 
         Logger logger = config.getLogger();
@@ -150,10 +150,10 @@ public class LocalDataStore {
             logger.verbose(accountId,"UserEventLog: Persisting EventLog for event "+eventName);
             if (isUserEventLogExists(eventName)){
                 logger.verbose(accountId,"UserEventLog: Updating EventLog for event "+eventName);
-                updateUserEventLog(eventName);
+                return updateUserEventLog(eventName);
             } else {
                 logger.verbose(accountId,"UserEventLog: Inserting EventLog for event "+eventName);
-                insertUserEventLog(eventName );
+                return insertUserEventLog(eventName );
             }
             /*
              * ==========TESTING BLOCK START ==========
@@ -186,41 +186,46 @@ public class LocalDataStore {
              */
         } catch (Throwable t) {
             logger.verbose(accountId, "UserEventLog: Failed to insert user event log: for event" + eventName, t);
+            return false;
         }
     }
 
     @WorkerThread
-    private void updateEventByDeviceID(String deviceID, String eventName) {
+    private boolean updateEventByDeviceID(String deviceID, String eventName) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
         boolean updatedEventByDeviceID = dbAdapter.userEventLogDAO().updateEventByDeviceID(deviceID, eventName);
         getConfigLogger().verbose("updatedEventByDeviceID = "+updatedEventByDeviceID);
+        return updatedEventByDeviceID;
     }
 
     @WorkerThread
-    public void updateUserEventLog(String eventName) {
+    public boolean updateUserEventLog(String eventName) {
         String deviceID = deviceInfo.getDeviceID();
-        updateEventByDeviceID(deviceID,eventName);
+        return updateEventByDeviceID(deviceID,eventName);
     }
 
     @WorkerThread
-    public void upSertUserEventLogsInBulk(Set<String> eventNames){
+    public boolean upSertUserEventLogsInBulk(Set<String> eventNames){
         String deviceID = deviceInfo.getDeviceID();
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
         boolean upSertEventByDeviceID = dbAdapter.userEventLogDAO().upSertEventsByDeviceID(deviceID, eventNames);
         getConfigLogger().verbose("upSertEventByDeviceID = "+upSertEventByDeviceID);
+        return upSertEventByDeviceID;
     }
 
     @WorkerThread
-    private void insertEventByDeviceID(String deviceID, String eventName) {
+    private long insertEventByDeviceID(String deviceID, String eventName) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
         long rowId = dbAdapter.userEventLogDAO().insertEventByDeviceID(deviceID, eventName);
         getConfigLogger().verbose("inserted rowId = "+rowId);
+        return rowId;
     }
 
     @WorkerThread
-    public void insertUserEventLog(String eventName) {
+    public boolean insertUserEventLog(String eventName) {
         String deviceID = deviceInfo.getDeviceID();
-        insertEventByDeviceID(deviceID,eventName);
+        long rowId = insertEventByDeviceID(deviceID, eventName);
+        return rowId >= 0;
     }
 
     @WorkerThread
