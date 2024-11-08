@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.userEventLogs.UserEventLogDAOImpl
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -296,5 +297,100 @@ class LocalDataStoreTest : BaseTestCase() {
         assertEquals(true, localDataStoreWithConfig.getProfileProperty("key2"))
         assertNull(localDataStoreWithConfig.getProfileProperty("key3"))
         assertEquals(2, localDataStoreWithConfig.getProfileProperty("key4"))
+    }
+
+    @Test
+    fun `test persistUserEventLog when event name is null returns false`() {
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(null)
+
+        // Then
+        assertFalse(result)
+        Mockito.verify(dbAdapter, Mockito.never()).userEventLogDAO()
+        Mockito.verify(userEventLogDaoMock, Mockito.never()).eventExistsByDeviceID(anyString(), anyString())
+    }
+
+    @Test
+    fun `test persistUserEventLog when event exists updates event successfully`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(true)
+        Mockito.`when`(userEventLogDaoMock.updateEventByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(true)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertTrue(result)
+        Mockito.verify(userEventLogDaoMock).eventExistsByDeviceID(deviceInfo.deviceID, eventName)
+        Mockito.verify(userEventLogDaoMock).updateEventByDeviceID(deviceInfo.deviceID, eventName)
+        Mockito.verify(userEventLogDaoMock, Mockito.never()).insertEventByDeviceID(anyString(), anyString())
+    }
+
+    @Test
+    fun `test persistUserEventLog when event exists but update fails returns false`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(true)
+        Mockito.`when`(userEventLogDaoMock.updateEventByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(false)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test persistUserEventLog when event does not exist inserts successfully`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(false)
+        Mockito.`when`(userEventLogDaoMock.insertEventByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(1L)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertTrue(result)
+        Mockito.verify(userEventLogDaoMock).eventExistsByDeviceID(deviceInfo.deviceID, eventName)
+        Mockito.verify(userEventLogDaoMock).insertEventByDeviceID(deviceInfo.deviceID, eventName)
+        Mockito.verify(userEventLogDaoMock, Mockito.never()).updateEventByDeviceID(anyString(), anyString())
+    }
+
+    @Test
+    fun `test persistUserEventLog when event does not exist and insert fails returns false`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(false)
+        Mockito.`when`(userEventLogDaoMock.insertEventByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(-1L)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test persistUserEventLog when exception occurs returns false`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceID(deviceInfo.deviceID, eventName))
+            .thenThrow(RuntimeException("DB Error"))
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertFalse(result)
     }
 }
