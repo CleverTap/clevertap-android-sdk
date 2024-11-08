@@ -80,7 +80,7 @@ class TriggersMatcher(private val localDataStore: LocalDataStore) {
 
     // TODO: matchFirstTimeOnly(trigger, event) implementation
     @WorkerThread
-    internal fun matchFirstTimeOnly(trigger: TriggerAdapter): Boolean {
+    private fun matchFirstTimeOnly(trigger: TriggerAdapter): Boolean {
         if (!trigger.firstTimeOnly) {
             return true
         }
