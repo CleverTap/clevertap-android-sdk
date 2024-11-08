@@ -1294,6 +1294,59 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `test match when firstTimeOnly is true and event is not first time returns false`() {
+        // Given
+        val trigger = createTriggerAdapter(
+            eventName = "EventA",
+            firstTimeOnly = true
+        )
+        val event = createEventAdapter("EventA")
+        every { localDataStore.isUserEventLogFirstTime("EventA") } returns false
+
+        // When
+        val result = triggersMatcher.match(trigger, event)
+
+        // Then
+        assertFalse(result)
+        verify { localDataStore.isUserEventLogFirstTime("EventA") }
+    }
+
+    @Test
+    fun `test match when firstTimeOnly is true and event is first time proceeds with other checks`() {
+        // Given
+        val trigger = createTriggerAdapter(
+            eventName = "EventA",
+            firstTimeOnly = true
+        )
+        val event = createEventAdapter("EventA")
+        every { localDataStore.isUserEventLogFirstTime("EventA") } returns true
+
+        // When
+        val result = triggersMatcher.match(trigger, event)
+
+        // Then
+        assertTrue(result)
+        verify { localDataStore.isUserEventLogFirstTime("EventA") }
+    }
+
+    @Test
+    fun `test match when firstTimeOnly is false skips firstTime check`() {
+        // Given
+        val trigger = createTriggerAdapter(
+            eventName = "EventA",
+            firstTimeOnly = false
+        )
+        val event = createEventAdapter("EventA")
+
+        // When
+        val result = triggersMatcher.match(trigger, event)
+
+        // Then
+        assertTrue(result)
+        verify(exactly = 0) { localDataStore.isUserEventLogFirstTime(any()) }
+    }
+
+    @Test
     fun testMatch_WhenChargedEventItemPropertyConditionsAreMet_ShouldReturnTrue() {
         val trigger = createTriggerAdapter(
             Constants.CHARGED_EVENT, listOf(), listOf(
@@ -1533,10 +1586,12 @@ class TriggersMatcherTest : BaseTestCase() {
         propertyConditions: List<TriggerCondition> = emptyList(),
         itemConditions: List<TriggerCondition> = emptyList(),
         geoRadiusConditions: List<TriggerGeoRadius> = emptyList(),
-        profileAttrName: String? = null
+        profileAttrName: String? = null,
+        firstTimeOnly: Boolean = false
     ): TriggerAdapter {
         val triggerJSON = JSONObject().apply {
             put("eventName", eventName)
+            put("firstTimeOnly", firstTimeOnly)
             if(profileAttrName != null)
                 put("profileAttrName",profileAttrName)
             if (propertyConditions.isNotEmpty()) {
