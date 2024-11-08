@@ -423,4 +423,133 @@ class LocalDataStoreTest : BaseTestCase() {
         assertFalse(result)
         Mockito.verify(userEventLogDaoMock).upSertEventsByDeviceID(deviceInfo.deviceID, eventNames)
     }
+
+    @Test
+    fun `test isUserEventLogFirstTime when count is 1 returns true`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(1)
+
+        // When
+        val result = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertTrue(result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime when count is greater than 1 returns false`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(2)
+
+        // When
+        val result = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime caches result for subsequent calls`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(2)
+
+        // When
+        val firstCall = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+        val secondCall = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(firstCall)
+        assertFalse(secondCall)
+        // Should only call readEventCountByDeviceID once as result is cached
+        Mockito.verify(userEventLogDaoMock, Mockito.times(1))
+            .readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime when count is 0 returns false`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(0)
+
+        // When
+        val result = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime when count is -1 returns false`() {
+        // Given
+        val eventName = "test_event"
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(-1)
+
+        // When
+        val result = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime behavior with changing event counts`() {
+        // Given
+        val eventName = "test_event"
+
+        // First call setup - count 0
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(0)
+
+        // When - First call
+        val firstCallResult = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(firstCallResult)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+
+        // Given - Second call setup - count 1
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(1)
+
+        // When - Second call
+        val secondCallResult = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertTrue(secondCallResult)
+        Mockito.verify(userEventLogDaoMock, Mockito.times(2))
+            .readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+
+        // Given - Third call setup - count 2
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(2)
+
+        // When - Third call
+        val thirdCallResult = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(thirdCallResult)
+        Mockito.verify(userEventLogDaoMock, Mockito.times(3))
+            .readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+
+        // When - Fourth call (should use cached result)
+        val fourthCallResult = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(fourthCallResult)
+        // Should not make additional DB call as result is now cached
+        Mockito.verify(userEventLogDaoMock, Mockito.times(3))
+            .readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+    }
 }
