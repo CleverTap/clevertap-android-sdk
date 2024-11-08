@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
+import com.clevertap.android.sdk.userEventLogs.UserEventLog
 import com.clevertap.android.sdk.userEventLogs.UserEventLogDAO
 import com.clevertap.android.sdk.userEventLogs.UserEventLogDAOImpl
 import com.clevertap.android.shared.test.BaseTestCase
@@ -551,5 +552,38 @@ class LocalDataStoreTest : BaseTestCase() {
         // Should not make additional DB call as result is now cached
         Mockito.verify(userEventLogDaoMock, Mockito.times(3))
             .readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents success`() {
+        // Given
+        val threshold = 5
+        val numberOfRowsToCleanup = 2
+        Mockito.`when`(userEventLogDaoMock.cleanUpExtraEvents(threshold, numberOfRowsToCleanup))
+            .thenReturn(true)
+
+        // When
+        val result = localDataStoreWithConfig.cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
+
+        // Then
+        assertTrue(result)
+        Mockito.verify(userEventLogDaoMock).cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
+    }
+
+    @Test
+    fun `test readUserEventLog success`() {
+        // Given
+        val eventName = "test_event"
+        val userEventLog = UserEventLog(eventName, 123L, 456L, 1, deviceInfo.deviceID)
+        Mockito.`when`(userEventLogDaoMock.readEventByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(userEventLog)
+
+        // When
+        val result = localDataStoreWithConfig.readUserEventLog(eventName)
+
+        // Then
+        assertNotNull(result)
+        assertEquals(userEventLog, result)
+        Mockito.verify(userEventLogDaoMock).readEventByDeviceID(deviceInfo.deviceID, eventName)
     }
 }
