@@ -586,4 +586,100 @@ class LocalDataStoreTest : BaseTestCase() {
         assertEquals(userEventLog, result)
         Mockito.verify(userEventLogDaoMock).readEventByDeviceID(deviceInfo.deviceID, eventName)
     }
+
+    @Test
+    fun `test readUserEventLogCount returns correct count when event exists`() {
+        // Given
+        val eventName = "test_event"
+        val expectedCount = 5
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceID(deviceInfo.deviceID, eventName))
+            .thenReturn(expectedCount)
+
+        // When
+        val result = localDataStoreWithConfig.readUserEventLogCount(eventName)
+
+        // Then
+        assertEquals(expectedCount, result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceID(deviceInfo.deviceID, eventName)
+    }
+
+    @Test
+    fun `test readUserEventLogLastTs returns correct timestamp when event exists`() {
+        // Given
+        val eventName = "test_event"
+        val expectedTs = 1234567890L
+        Mockito.`when`(
+            userEventLogDaoMock.readEventLastTsByDeviceID(
+                deviceInfo.deviceID,
+                eventName
+            )
+        )
+            .thenReturn(expectedTs)
+
+        // When
+        val result = localDataStoreWithConfig.readUserEventLogLastTs(eventName)
+
+        // Then
+        assertEquals(expectedTs, result)
+        Mockito.verify(userEventLogDaoMock)
+            .readEventLastTsByDeviceID(deviceInfo.deviceID, eventName)
+    }
+
+    @Test
+    fun `test readUserEventLogFirstTs returns correct timestamp when event exists`() {
+        // Given
+        val eventName = "test_event"
+        val expectedTs = 1234567890L
+        Mockito.`when`(
+            userEventLogDaoMock.readEventFirstTsByDeviceID(
+                deviceInfo.deviceID,
+                eventName
+            )
+        )
+            .thenReturn(expectedTs)
+
+        // When
+        val result = localDataStoreWithConfig.readUserEventLogFirstTs(eventName)
+
+        // Then
+        assertEquals(expectedTs, result)
+        Mockito.verify(userEventLogDaoMock)
+            .readEventFirstTsByDeviceID(deviceInfo.deviceID, eventName)
+    }
+
+    @Test
+    fun `test readUserEventLogs returns correct event list for device`() {
+        // Given
+        val expectedLogs = listOf(
+            UserEventLog("event1", 1L, 2L, 1, deviceInfo.deviceID),
+            UserEventLog("event2", 3L, 4L, 2, deviceInfo.deviceID)
+        )
+        Mockito.`when`(userEventLogDaoMock.allEventsByDeviceID(deviceInfo.deviceID))
+            .thenReturn(expectedLogs)
+
+        // When
+        val result = localDataStoreWithConfig.readUserEventLogs()
+
+        // Then
+        assertEquals(expectedLogs, result)
+        Mockito.verify(userEventLogDaoMock).allEventsByDeviceID(deviceInfo.deviceID)
+    }
+
+    @Test
+    fun `test readEventLogsForAllUsers returns correct event list`() {
+        // Given
+        val expectedLogs = listOf(
+            UserEventLog("event1", 1L, 2L, 1, "user1"),
+            UserEventLog("event2", 3L, 4L, 2, "user2")
+        )
+        Mockito.`when`(userEventLogDaoMock.allEvents())
+            .thenReturn(expectedLogs)
+
+        // When
+        val result = localDataStoreWithConfig.readEventLogsForAllUsers()
+
+        // Then
+        assertEquals(expectedLogs, result)
+        Mockito.verify(userEventLogDaoMock).allEvents()
+    }
 }
