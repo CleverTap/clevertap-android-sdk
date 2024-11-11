@@ -15,7 +15,7 @@ class TimerTemplateService : Service() {
 
     @SuppressLint("WrongConstant")
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        val message = intent.extras!!
+        val message = intent.extras ?: return super.onStartCommand(intent, flags, startId)
         val templateRenderer = TemplateRenderer(this@TimerTemplateService, message)
 
         val cleverTapAPI = CleverTapAPI.getGlobalInstance(
@@ -28,7 +28,6 @@ class TimerTemplateService : Service() {
             val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void>()
             task.execute("TimerTemplateService") {
                 try {
-
                     val notificationBuilder = cleverTapAPI?.getPushNotificationOnCallerThread(
                         templateRenderer, this@TimerTemplateService, message
                     )
