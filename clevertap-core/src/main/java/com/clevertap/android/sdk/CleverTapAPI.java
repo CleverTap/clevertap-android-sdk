@@ -3260,7 +3260,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 }
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
+            config.getLogger().debug(config.getAccountId(), "Failed to process getPushNotification()", t);
             return null;
         }
     }
