@@ -21,9 +21,7 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
         CleverTapInstanceConfig config = extras.getParcelable("config");
 
         if (dismissOnClick != null && dismissOnClick.equalsIgnoreCase("true")) {
-            /**
-             * For input box remind CTA,pt_dismiss_on_click must be true to raise event
-             */
+            // For input box remind CTA,pt_dismiss_on_click must be true to raise event
             if (actionID != null && actionID.contains("remind")) {
                 Utils.raiseCleverTapEvent(context, config, extras);
             }
@@ -40,6 +38,7 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
             TemplateRenderer templateRenderer = new TemplateRenderer(applicationContext, message);
             if (ManifestValidator.isComponentPresentInManifest(applicationContext, "com.clevertap.android.pushtemplates.TimerTemplateService", ManifestValidator.ComponentType.SERVICE)
                     && templateRenderer.getTemplateType() == TemplateType.TIMER) {
+                PTLog.debug("Starting service for Timer Template");
                 Intent serviceIntent = new Intent(applicationContext, TimerTemplateService.class);
                 serviceIntent.putExtras(message);
                 ContextCompat.startForegroundService(applicationContext, serviceIntent);
