@@ -30,6 +30,7 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 import androidx.core.content.ContextCompat;
@@ -46,12 +47,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
+import java.util.regex.Pattern;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public final class Utils {
+
+    private static final Pattern normalizedNameExcludePattern = Pattern.compile("\\s+");
 
     public static boolean containsIgnoreCase(Collection<String> collection, String key) {
         if (collection == null || key == null) {
@@ -550,5 +556,28 @@ public final class Utils {
             // Read the entire content of the file into a String
             return new Scanner(inputStream).useDelimiter("\\A").next();
         }
+    }
+
+    /**
+     * Get the CT normalized version of an event or a property name.
+     *
+     * @param name The event/property name
+     */
+    public static String getNormalizedName(@Nullable String name) {
+        if (name == null) {
+            return null;
+        }
+        return normalizedNameExcludePattern.matcher(name).replaceAll("").toLowerCase();
+    }
+
+    /**
+     * Check if two event/property names are equal with applied CT normalization
+     *
+     * @param name  Event or property name
+     * @param other Event or property name to compare to
+     * @see #getNormalizedName(String)
+     */
+    public static boolean areNamesNormalizedEqual(@Nullable String name, @Nullable String other) {
+        return Objects.equals(getNormalizedName(name), getNormalizedName(other));
     }
 }

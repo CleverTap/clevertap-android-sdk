@@ -24,11 +24,9 @@ class TriggersMatcher {
      * within that event are met, the function returns `true`.
      *
      * @param whenTriggers A list of event triggers with conditions to match against the event.
-     * @param eventName The name of the event to be matched.
-     * @param eventProperties A map of event properties where keys are property names and
-     *        values are property values.
-     * @return `true` if any event matches, and all conditions
-     * within that event are met, `false` otherwise.
+     * @param event The [EventAdapter] having event to be matched
+     * @return `true` if any event matches, and all condition within that event are met,
+     * `false` otherwise.
      */
     fun matchEvent(
         whenTriggers: List<TriggerAdapter>,
@@ -51,7 +49,13 @@ class TriggersMatcher {
     @VisibleForTesting
     internal fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean {
         // Evaluate further if either the eventNames match or the profileAttrName's match. Make sure both profileAttrName's are not null and equal
-        if (event.eventName != trigger.eventName && (event.profileAttrName == null || !event.profileAttrName.equals(trigger.profileAttrName, true))) {
+        if (!Utils.areNamesNormalizedEqual(
+                event.eventName,
+                trigger.eventName
+            ) && (event.profileAttrName == null || !Utils.areNamesNormalizedEqual(
+                event.profileAttrName, trigger.profileAttrName
+            ))
+        ) {
             return false
         }
 

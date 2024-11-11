@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
+
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Date;
@@ -338,7 +340,7 @@ public final class Validator {
             return error;
         }
         for (String x : restrictedNames) {
-            if (name.equalsIgnoreCase(x)) {
+            if (Utils.areNamesNormalizedEqual(name, x)) {
                 // The event name is restricted
                 ValidationResult vr = ValidationResultFactory.create(513, Constants.RESTRICTED_EVENT_NAME, name);
                 error.setErrorCode(vr.getErrorCode());
