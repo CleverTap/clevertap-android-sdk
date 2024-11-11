@@ -8,6 +8,8 @@ import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
@@ -168,6 +170,17 @@ class SessionManagerTest : BaseTestCase() {
         sessionManagerDef.lazyCreateSession(ctxSpy)
         Mockito.verify(coreMetaDataSpy,Mockito.times(1)).lastSessionLength = 10
         Mockito.verify(coreMetaDataSpy,Mockito.times(1)).isFirstSession= true
+
+    }
+
+    @Test
+    fun `test setUserLastVisitTs`(){
+        val localDataStoreMockk = mockk<LocalDataStore>()
+        sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreMockk)
+        every { localDataStoreMockk.readUserEventLogLastTs(Constants.APP_LAUNCHED_EVENT) } returns 1000000L
+        sessionManagerDef.setUserLastVisitTs()
+        assertEquals(1000000L,sessionManagerDef.userLastVisitTs)
+
 
     }
 
