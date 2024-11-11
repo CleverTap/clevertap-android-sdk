@@ -244,7 +244,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     val applicationContext = context.applicationContext
                     if (ManifestValidator.isComponentPresentInManifest(
                             applicationContext,
-                            "TimerTemplateService",
+                            "com.clevertap.android.pushtemplates.TimerTemplateService",
                             ManifestValidator.ComponentType.SERVICE)) {
                         val intent = Intent(context, TimerTemplateService::class.java)
                         context.stopService(intent)
