@@ -28,6 +28,7 @@ import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
+import com.clevertap.android.sdk.validation.ManifestValidator
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -240,9 +241,14 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         notificationId
                     ) && ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true
                 ) {
-                    val intent = Intent(context, TimerTemplateService::class.java)
-                    context.stopService(intent)
                     val applicationContext = context.applicationContext
+                    if (ManifestValidator.isComponentPresentInManifest(
+                            applicationContext,
+                            "TimerTemplateService",
+                            ManifestValidator.ComponentType.SERVICE)) {
+                        val intent = Intent(context, TimerTemplateService::class.java)
+                        context.stopService(intent)
+                    }
                     val basicTemplateBundle = extras.clone() as Bundle
                     basicTemplateBundle.remove("wzrk_rnv")
                     basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check

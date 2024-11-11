@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.validation;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
@@ -57,24 +56,21 @@ public final class ManifestValidator {
 
     @SuppressWarnings("ConstantConditions")
     private static void checkReceiversServices(final Context context, PushProviders pushProviders) {
-        try {
-            validateReceiverInManifest((Application) context.getApplicationContext(),
-                    CTPushNotificationReceiver.class.getName());
-            validateServiceInManifest((Application) context.getApplicationContext(),
-                    CTNotificationIntentService.class.getName());
-            validateActivityInManifest((Application) context.getApplicationContext(),
-                    InAppNotificationActivity.class);
-            validateActivityInManifest((Application) context.getApplicationContext(),
-                    CTInboxActivity.class);
-            validateReceiverInManifest((Application) context.getApplicationContext(),
-                    "com.clevertap.android.geofence.CTGeofenceReceiver");
-            validateReceiverInManifest((Application) context.getApplicationContext(),
-                    "com.clevertap.android.geofence.CTLocationUpdateReceiver");
-            validateReceiverInManifest((Application) context.getApplicationContext(),
-                    "com.clevertap.android.geofence.CTGeofenceBootReceiver");
-        } catch (Exception e) {
-            Logger.v("Receiver/Service issue : " + e.toString());
-        }
+        validateComponentInManifest(context.getApplicationContext(),
+                CTPushNotificationReceiver.class.getName(), ComponentType.RECEIVER);
+        validateComponentInManifest(context.getApplicationContext(),
+                CTNotificationIntentService.class.getName(), ComponentType.SERVICE);
+        validateComponentInManifest(context.getApplicationContext(),
+                InAppNotificationActivity.class.getName(), ComponentType.ACTIVITY);
+        validateComponentInManifest(context.getApplicationContext(),
+                CTInboxActivity.class.getName(), ComponentType.ACTIVITY);
+        validateComponentInManifest(context.getApplicationContext(),
+                "com.clevertap.android.geofence.CTGeofenceReceiver", ComponentType.RECEIVER);
+        validateComponentInManifest(context.getApplicationContext(),
+                "com.clevertap.android.geofence.CTLocationUpdateReceiver", ComponentType.RECEIVER);
+        validateComponentInManifest(context.getApplicationContext(),
+                "com.clevertap.android.geofence.CTGeofenceBootReceiver", ComponentType.RECEIVER);
+
         ArrayList<PushType> enabledPushTypes = pushProviders.getAvailablePushTypes();
         if (enabledPushTypes == null) {
             return;
@@ -82,27 +78,14 @@ public final class ManifestValidator {
 
         for (PushType pushType : enabledPushTypes) {
             if (pushType == PushType.FCM) {
-                try {
-                    // use class name string directly here to avoid class not found issues on class import
-                    validateServiceInManifest((Application) context.getApplicationContext(),
-                            "com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService");
-                } catch (Exception e) {
-                    Logger.v("Receiver/Service issue : " + e.toString());
+                // use class name string directly here to avoid class not found issues on class import
+                validateComponentInManifest(context.getApplicationContext(),
+                        "com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService", ComponentType.SERVICE);
 
-                } catch (Error error) {
-                    Logger.v("FATAL : " + error.getMessage());
-                }
-            }else if(pushType == PushType.HPS){
-                try {
-                    // use class name string directly here to avoid class not found issues on class import
-                    validateServiceInManifest((Application) context.getApplicationContext(),
-                            "com.clevertap.android.hms.CTHmsMessageService");
-                } catch (Exception e) {
-                    Logger.v("Receiver/Service issue : " + e.toString());
-
-                } catch (Error error) {
-                    Logger.v("FATAL : " + error.getMessage());
-                }
+            } else if (pushType == PushType.HPS) {
+                // use class name string directly here to avoid class not found issues on class import
+                validateComponentInManifest(context.getApplicationContext(),
+                        "com.clevertap.android.hms.CTHmsMessageService", ComponentType.SERVICE);
             }
         }
 
@@ -112,55 +95,55 @@ public final class ManifestValidator {
         Logger.i("SDK Version Code is " + deviceInfo.getSdkVersion());
     }
 
-    @SuppressWarnings({"SameParameterValue", "rawtypes"})
-    private static void validateActivityInManifest(Application application, Class activityClass)
-            throws PackageManager.NameNotFoundException {
-        PackageManager pm = application.getPackageManager();
-        String packageName = application.getPackageName();
+    public enum ComponentType {
+        RECEIVER(PackageManager.GET_RECEIVERS),
+        SERVICE(PackageManager.GET_SERVICES),
+        ACTIVITY(PackageManager.GET_ACTIVITIES);
 
-        PackageInfo packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
-        ActivityInfo[] activities = packageInfo.activities;
-        String activityClassName = activityClass.getName();
-        for (ActivityInfo activityInfo : activities) {
-            if (activityInfo.name.equals(activityClassName)) {
-                Logger.i(activityClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
-                return;
-            }
+        final int flag;
+
+        ComponentType(int flag) {
+            this.flag = flag;
         }
-        Logger.i(activityClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
     }
 
-    private static void validateReceiverInManifest(Application application, String receiverClassName)
-            throws PackageManager.NameNotFoundException {
-        PackageManager pm = application.getPackageManager();
-        String packageName = application.getPackageName();
-
-        PackageInfo packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_RECEIVERS);
-        ActivityInfo[] receivers = packageInfo.receivers;
-
-        for (ActivityInfo activityInfo : receivers) {
-            if (activityInfo.name.equals(receiverClassName)) {
-                Logger.i(receiverClassName.replaceFirst("com.clevertap.android.", "") + " is present");
-                return;
-            }
+    private static void validateComponentInManifest(Context context, String componentClassName, ComponentType componentType) {
+        if (isComponentPresentInManifest(context, componentClassName, componentType)) {
+            Logger.i(componentClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
+        } else {
+            Logger.i(componentClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
         }
-        Logger.i(receiverClassName.replaceFirst("com.clevertap.android.", "") + " not present");
     }
 
-    private static void validateServiceInManifest(Application application, String serviceClassName)
-            throws PackageManager.NameNotFoundException {
-        PackageManager pm = application.getPackageManager();
-        String packageName = application.getPackageName();
+    public static boolean isComponentPresentInManifest(Context context, String componentClassName, ComponentType componentType) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            String packageName = context.getPackageName();
 
-        PackageInfo packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
-        ServiceInfo[] services = packageInfo.services;
-        for (ServiceInfo serviceInfo : services) {
-            if (serviceInfo.name.equals(serviceClassName)) {
-                Logger.i(serviceClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
-                return;
+            PackageInfo packageInfo = pm.getPackageInfo(packageName, componentType.flag);
+            if (componentType == ComponentType.SERVICE && packageInfo.services != null) {
+                for (ServiceInfo serviceInfo : packageInfo.services) {
+                    if (componentClassName.equals(serviceInfo.name)) {
+                        return true;
+                    }
+                }
+            } else if (componentType == ComponentType.RECEIVER && packageInfo.receivers != null) {
+                for (ActivityInfo receiverInfo : packageInfo.receivers) {
+                    if (componentClassName.equals(receiverInfo.name)) {
+                        return true;
+                    }
+                }
+            } else if(componentType == ComponentType.ACTIVITY && packageInfo.activities != null) {
+                for (ActivityInfo activityInfo : packageInfo.activities) {
+                    if (componentClassName.equals(activityInfo.name)) {
+                        return true;
+                    }
+                }
             }
+        } catch (PackageManager.NameNotFoundException e) {
+            Logger.v("Issue in " + componentType.name().toLowerCase() + ": " + componentClassName + " - " + e);
         }
-        Logger.i(serviceClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
+        return false;
     }
 
     private static void validationApplicationLifecyleCallback(final Context context) {
