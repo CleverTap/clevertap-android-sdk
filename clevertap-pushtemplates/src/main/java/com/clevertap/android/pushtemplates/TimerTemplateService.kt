@@ -3,9 +3,7 @@ package com.clevertap.android.pushtemplates
 import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import androidx.core.app.NotificationCompat
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
