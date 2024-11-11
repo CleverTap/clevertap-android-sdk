@@ -38,18 +38,15 @@ class TimerTemplateService : Service() {
                     notificationBuilder?.let {
                         it.setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
                         val nb = it.build()
-                        Handler(Looper.getMainLooper()).post {
-                            startForeground(templateRenderer.notificationId, nb)
-                        }
+                        startForeground(templateRenderer.notificationId, nb)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
                 null
             }
-
-            return super.onStartCommand(intent, flags, startId)
         }
+        return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onBind(intent: Intent): IBinder? {
