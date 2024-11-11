@@ -72,6 +72,56 @@ class EventQueueManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun `test queueEvent when type is raised event updates local store`() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig))
+                .thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+
+            // Given
+            val event = JSONObject()
+            event.put("evtName", "test_event")
+
+            `when`(corestate.eventMediator.getEventName(event)).thenReturn("test_event")
+
+            // When
+            eventQueueManager.queueEvent(application, event, Constants.RAISED_EVENT)
+
+            // Then
+            verify(corestate.localDataStore).persistUserEventLog("test_event")
+        }
+    }
+
+    @Test
+    fun `test queueEvent when type is not raised event does not update local store`() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig))
+                .thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+
+            // Given
+            val event = JSONObject()
+            event.put("evtName", "test_event")
+            `when`(corestate.eventMediator.getEventName(event)).thenReturn("test_event")
+
+            // Test for different event types that are not RAISED_EVENT
+            listOf(
+                Constants.PROFILE_EVENT,
+                Constants.FETCH_EVENT,
+                Constants.DATA_EVENT,
+                Constants.PING_EVENT,
+                Constants.PAGE_EVENT,
+                Constants.NV_EVENT
+            ).forEach { eventType ->
+
+                // When
+                eventQueueManager.queueEvent(application, event, eventType)
+
+                // Then
+                verify(corestate.localDataStore, never()).persistUserEventLog(any())
+            }
+        }
+    }
+
+    @Test
     fun test_queueEvent_will_not_add_to_queue_when_event_should_be_dropped() {
         mockStatic(CTExecutorFactory::class.java).use {
             `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(
