@@ -13,7 +13,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commitNow
 import com.clevertap.android.sdk.*
-import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inapp.CTInAppNotification
@@ -37,7 +36,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     PushPermissionResponseListener,
     InAppNotificationButtonListener {
 
-    var cleverTapDefaultInstance: CleverTapAPI? = null
+    var cleverTapDefaultInstance: CleverTapAPI? = MyApplication.ctInstance // access singleton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,36 +49,8 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             }
         }
 
-        /*val bundle = Bundle().apply {
-            putString("wzrk_acct_id", "TEST-46W-WWR-R85Z")
-            putString("nm", "Grab 'em on Myntra's Maxessorize Sale")
-            putString("nt", "Ye dil ❤️️ maange more accessories?")
-            putString("pr", "")
-            putString("wzrk_pivot", "")
-            putString("wzrk_sound", "true")
-            putString("wzrk_cid", "BRTesting")
-            putString("wzrk_clr", "#ed732d")
-            putString("wzrk_nms", "Grab 'em on Myntra's Maxessorize Sale")
-            putString("wzrk_pid", (10000_00000..99999_99999).random().toString())
-            putString("wzrk_rnv", "true")
-            putString("wzrk_ttl", "1627731067")
-            putString("wzrk_push_amp", "false")
-            putString("wzrk_bc", "")
-            putString("wzrk_bi", "2")
-            putString("wzrk_bp", "https://imgur.com/6DavQwg.jpg")
-            putString("wzrk_dl", "")
-            putString("wzrk_dt", "FIREBASE")
-            putString("wzrk_id", "1627639375_20210730")
-            putString("wzrk_pn", "true")
-        }
-
-        Thread {
-            CleverTapAPI.createNotification(applicationContext, bundle)
-        }.start()
-        Thread {
-            CleverTapAPI.createNotification(applicationContext, bundle)
-        }.start()*/
-        initCleverTap()
+        fakeNotification(send = false)
+        cleverTapListeners()
 
         val isReadPolicy: Boolean
         val email: String?
@@ -127,13 +98,44 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         }
     }
 
-    private fun initCleverTap() {
+    private fun fakeNotification(send: Boolean = false) {
 
-        //Set Debug level for CleverTap
-        CleverTapAPI.setDebugLevel(VERBOSE)
+        if (send.not()) {
+            return
+        }
 
-        //Create CleverTap's default instance
-        cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this)
+        val bundle = Bundle().apply {
+            putString("wzrk_acct_id", "TEST-46W-WWR-R85Z")
+            putString("nm", "Grab 'em on Myntra's Maxessorize Sale")
+            putString("nt", "Ye dil ❤️️ maange more accessories?")
+            putString("pr", "")
+            putString("wzrk_pivot", "")
+            putString("wzrk_sound", "true")
+            putString("wzrk_cid", "BRTesting")
+            putString("wzrk_clr", "#ed732d")
+            putString("wzrk_nms", "Grab 'em on Myntra's Maxessorize Sale")
+            putString("wzrk_pid", (10000_00000..99999_99999).random().toString())
+            putString("wzrk_rnv", "true")
+            putString("wzrk_ttl", "1627731067")
+            putString("wzrk_push_amp", "false")
+            putString("wzrk_bc", "")
+            putString("wzrk_bi", "2")
+            putString("wzrk_bp", "https://imgur.com/6DavQwg.jpg")
+            putString("wzrk_dl", "")
+            putString("wzrk_dt", "FIREBASE")
+            putString("wzrk_id", "1627639375_20210730")
+            putString("wzrk_pn", "true")
+        }
+
+        Thread {
+            CleverTapAPI.createNotification(applicationContext, bundle)
+        }.start()
+        Thread {
+            CleverTapAPI.createNotification(applicationContext, bundle)
+        }.start()
+    }
+
+    private fun cleverTapListeners() {
 
         cleverTapDefaultInstance?.apply {
             syncListener = this@HomeScreenActivity
