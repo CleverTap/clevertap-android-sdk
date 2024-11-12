@@ -124,7 +124,19 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         handshakeDomain: String? = null
     ): CleverTapAPI {
         val ctInstance = if (useDefaultInstance) {
-            CleverTapAPI.getDefaultInstance(this)!!
+            //CleverTapAPI.getDefaultInstance(this)!!
+
+            val sp = getSharedPreferences("MigrationPrefs", MODE_PRIVATE)
+            val migrationDone = sp.getBoolean("Migration Done", false)
+
+            if (migrationDone.not()) {
+                val editor = getSharedPreferences("WizRocket", Context.MODE_PRIVATE).edit()
+                editor.clear()
+                editor.apply()
+                CleverTapAPI.setInstances(null)
+                sp.edit().putBoolean("Migration Done", true).apply()
+            }
+            CleverTapAPI.getDefaultInstance(this, "custom-ct-id")
         } else {
             val config = CleverTapInstanceConfig.createInstance(
                 applicationContext,
