@@ -36,6 +36,7 @@ class TimerTemplateService : Service() {
                         val nb = it.build()
                         PTLog.verbose("Starting foreground service with notification ID: ${templateRenderer.notificationId}")
                         startForeground(templateRenderer.notificationId, nb)
+                        cleverTapAPI.coreState?.pushProviders?.storePushNotification(message)
                     } ?: run {
                         PTLog.verbose("NotificationBuilder is null.")
                     }

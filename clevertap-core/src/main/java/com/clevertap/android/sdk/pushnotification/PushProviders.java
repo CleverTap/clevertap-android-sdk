@@ -64,18 +64,6 @@ import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
-
-    public static class NotificationResult {
-        public final NotificationCompat.Builder builder;
-        public final int notificationId;
-
-        public NotificationResult(NotificationCompat.Builder builder, int notificationId) {
-            this.builder = builder;
-            this.notificationId = notificationId;
-        }
-    }
-
-
     private static final int DEFAULT_FLEX_INTERVAL = 5;
     private static final int PING_FREQUENCY_VALUE = 240;
     private static final String PF_JOB_ID = "pfjobid";
@@ -146,7 +134,7 @@ public class PushProviders implements CTPushProviderListener {
 
     /**
      * Launches an asynchronous task to download the notification icon from CleverTap,
-     * and create the Android notification.
+     * and render the Android notification.
      * <p/>
      * If your app is using CleverTap SDK's built in FCM message handling,
      * this method does not need to be called explicitly.
@@ -160,9 +148,10 @@ public class PushProviders implements CTPushProviderListener {
      */
     public void _createNotification(final Context context, final Bundle extras, int notificationId) {
         try {
-            NotificationResult result = getPreparedNotificationBuilder(context, extras, notificationId);
-            if (result.builder != null) {
-                triggerNotification(result.builder, result.notificationId);
+            int generatedNotificationId = generateNotificationId(notificationId, extras);
+            NotificationCompat.Builder nb = getPreparedNotificationBuilder(context, extras, generatedNotificationId);
+            if (nb != null) {
+                triggerNotification(nb, generatedNotificationId);
                 storePushNotification(extras);
             }
         } catch (Throwable t) {
@@ -171,12 +160,21 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
+    /**
+     * Launches an asynchronous task to download the notification icon from CleverTap,
+     * and get the Android notification builder. This function doesn't render the Android notification
+     *
+     * @param context        A reference to an Android context
+     * @param extras         The {@link Bundle} object received by the broadcast receiver
+     * @param notificationId A custom id to build a notification
+     */
+    @RestrictTo(Scope.LIBRARY)
     public NotificationCompat.Builder _getNotification(final Context context, final Bundle extras, int notificationId) {
         try {
-            NotificationResult result = getPreparedNotificationBuilder(context, extras, notificationId);
-            if (result.builder != null) {
-                storePushNotification(extras);
-                return result.builder;
+            int generatedNotificationId = generateNotificationId(notificationId, extras);
+            NotificationCompat.Builder nb = getPreparedNotificationBuilder(context, extras, generatedNotificationId);
+            if (nb != null) {
+                return nb;
             }
         } catch (Throwable t) {
             config.getLogger()
@@ -185,29 +183,30 @@ public class PushProviders implements CTPushProviderListener {
         return null;
     }
 
-    private NotificationResult getPreparedNotificationBuilder(final Context context, final Bundle extras, int notificationId) {
-        preProcessNotification(extras);
-        int generatedNotificationId = generateNotificationId(notificationId, extras);
-        NotificationCompat.Builder builder = prepareNotificationBuilder(context, extras, generatedNotificationId);
-        return new NotificationResult(builder, generatedNotificationId);
+    private NotificationCompat.Builder getPreparedNotificationBuilder(final Context context, final Bundle extras, int generatedNotificationId) {
+        boolean proceed = canRenderNotification(extras);
+        if (!proceed) {
+            return null;
+        }
+        return prepareNotificationBuilder(context, extras, generatedNotificationId);
     }
 
-    private void preProcessNotification(Bundle extras) {
+    private boolean canRenderNotification(Bundle extras) {
         if (extras == null || extras.get(Constants.NOTIFICATION_TAG) == null) {
-            return;
+            return false;
         }
 
         if (config.isAnalyticsOnly()) {
             config.getLogger()
                     .debug(config.getAccountId(),
                             "Instance is set for Analytics only, cannot create notification");
-            return;
+            return false;
         }
 
         boolean isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equalsIgnoreCase("true");
         if (isSilent) {
             analyticsManager.pushNotificationViewedEvent(extras);
-            return;
+            return false;
         }
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
@@ -221,7 +220,7 @@ public class PushProviders implements CTPushProviderListener {
                                 extras.getString(Constants.WZRK_PUSH_ID))) {
                     config.getLogger().debug(config.getAccountId(),
                             "Push Notification already rendered, not showing again");
-                    return;
+                    return false;
                 }
             }
             String notifMessage = iNotificationRenderer.getMessage(extras);
@@ -237,8 +236,10 @@ public class PushProviders implements CTPushProviderListener {
                 if (!TextUtils.isEmpty(pingFreq)) {
                     updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
                 }
+                return false;
             }
         }
+        return true;
     }
 
     /**
@@ -930,6 +931,15 @@ public class PushProviders implements CTPushProviderListener {
                 return null;
             }
             nb = new NotificationCompat.Builder(context, updatedChannelId);
+            int badgeIconType = getNotificationBadgeIconType(extras);
+            if (badgeIconType >= 0) {
+                nb.setBadgeIconType(badgeIconType);
+            }
+
+            int badgeCount = getNotificationBadgeCount(extras);
+            if (badgeCount >= 0) {
+                nb.setNumber(badgeCount);
+            }
         } else {
             nb = new NotificationCompat.Builder(context);
         }
@@ -938,8 +948,7 @@ public class PushProviders implements CTPushProviderListener {
         int smallIcon = getSmallIcon(context);
         iNotificationRenderer.setSmallIcon(smallIcon, context);
 
-        setNotificationPriority(nb, extras);
-        setNotificationBadge(nb, extras);
+        nb.setPriority(getNotificationPriority(extras));
 
         if (iNotificationRenderer instanceof AudibleNotification) {
             nb = ((AudibleNotification) iNotificationRenderer).setSound(context, extras, nb, config);
@@ -1008,7 +1017,7 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
-    private void setNotificationPriority(NotificationCompat.Builder nb, Bundle extras) {
+    private int getNotificationPriority(Bundle extras) {
         int priorityInt = NotificationCompat.PRIORITY_DEFAULT;
         String priority = extras.getString(Constants.NOTIF_PRIORITY);
         if (priority != null) {
@@ -1019,36 +1028,37 @@ public class PushProviders implements CTPushProviderListener {
                 priorityInt = NotificationCompat.PRIORITY_MAX;
             }
         }
-        nb.setPriority(priorityInt);
+        return priorityInt;
     }
 
-    private void setNotificationBadge(NotificationCompat.Builder nb, Bundle extras) {
-        // Set badge icon
+    private int getNotificationBadgeIconType(Bundle extras) {
+        // Get badge icon
         String badgeIconParam = extras.getString(Constants.WZRK_BADGE_ICON, null);
+        int badgeIconType = -1;
         if (badgeIconParam != null) {
             try {
-                int badgeIconType = Integer.parseInt(badgeIconParam);
-                if (badgeIconType >= 0) {
-                    nb.setBadgeIconType(badgeIconType);
-                }
+                badgeIconType = Integer.parseInt(badgeIconParam);
             } catch (Throwable t) {
                 // no-op
             }
         }
+        return badgeIconType;
+    }
 
-        // Set badge count
+    private int getNotificationBadgeCount(Bundle extras) {
+        // Get badge count
         String badgeCountParam = extras.getString(Constants.WZRK_BADGE_COUNT, null);
+        int badgeCount = -1;
         if (badgeCountParam != null) {
             try {
-                int badgeCount = Integer.parseInt(badgeCountParam);
-                if (badgeCount >= 0) {
-                    nb.setNumber(badgeCount);
-                }
+                badgeCount = Integer.parseInt(badgeCountParam);
             } catch (Throwable t) {
                 // no-op
             }
         }
+        return badgeCount;
     }
+
 
     private int generateNotificationId(int notificationId, Bundle extras) {
         // if we have no user set notificationID then try collapse key
@@ -1093,7 +1103,7 @@ public class PushProviders implements CTPushProviderListener {
         return  notificationId;
     }
 
-    private void storePushNotification(Bundle extras) {
+    public void storePushNotification(Bundle extras) {
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
             String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
