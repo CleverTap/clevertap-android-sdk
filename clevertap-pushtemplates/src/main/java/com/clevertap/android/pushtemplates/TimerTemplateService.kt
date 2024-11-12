@@ -34,8 +34,8 @@ class TimerTemplateService : Service() {
                     notificationBuilder?.let {
                         it.setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
                         val nb = it.build()
+                        PTLog.verbose("Starting foreground service with notification ID: ${templateRenderer.notificationId}")
                         startForeground(templateRenderer.notificationId, nb)
-                        PTLog.verbose("Started foreground service with notification ID: ${templateRenderer.notificationId}")
                     } ?: run {
                         PTLog.verbose("NotificationBuilder is null.")
                     }
