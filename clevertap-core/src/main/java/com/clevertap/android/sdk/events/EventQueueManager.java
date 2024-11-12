@@ -314,7 +314,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 }
                 localDataStore.setDataSyncFlag(event);
                 baseDatabaseManager.queueEventToDB(context, event, eventType);
-                //updateLocalStore(context, event, eventType);// TODO: remove from here
                 scheduleQueueFlush(context);
 
             } catch (Throwable e) {
@@ -459,7 +458,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             @Override
             @WorkerThread
             public Void call() {
-                // TODO: add here updateLocalStore(context, event, eventType);
                 String eventName = eventMediator.getEventName(event);
                 Location userLocation = cleverTapMetaData.getLocationFromUser();
 
@@ -596,10 +594,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @WorkerThread
     private void updateLocalStore(final String eventName, final int type) {
         if (type == Constants.RAISED_EVENT) {
-            // TODO: persist event in DB
-
             localDataStore.persistUserEventLog(eventName);
-
         }
     }
 

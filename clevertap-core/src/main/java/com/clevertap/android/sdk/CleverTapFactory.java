@@ -118,7 +118,7 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
-        TriggersMatcher triggersMatcher = new TriggersMatcher(localDataStore/* TODO: inject localDataStore */);
+        TriggersMatcher triggersMatcher = new TriggersMatcher(localDataStore);
         TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
         ImpressionManager impressionManager = new ImpressionManager(storeRegistry);
         LimitsMatcher limitsMatcher = new LimitsMatcher(impressionManager, triggersManager);
