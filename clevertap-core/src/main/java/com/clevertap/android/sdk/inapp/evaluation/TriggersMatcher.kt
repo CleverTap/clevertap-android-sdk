@@ -60,9 +60,7 @@ class TriggersMatcher(private val localDataStore: LocalDataStore) {
         if (!matchPropertyConditions(trigger, event)) {
             return false
         }
-        /**
-         * TODO: Add matchFirstTimeOnly(trigger, event)
-         */
+
         if (!matchFirstTimeOnly(trigger)) {
             return false
         }
@@ -78,7 +76,6 @@ class TriggersMatcher(private val localDataStore: LocalDataStore) {
         return true
     }
 
-    // TODO: matchFirstTimeOnly(trigger, event) implementation
     @WorkerThread
     private fun matchFirstTimeOnly(trigger: TriggerAdapter): Boolean {
         if (!trigger.firstTimeOnly) {

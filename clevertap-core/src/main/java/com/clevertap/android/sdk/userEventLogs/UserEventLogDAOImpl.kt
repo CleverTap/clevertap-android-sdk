@@ -222,7 +222,7 @@ internal class UserEventLogDAOImpl(
         }
     }
 
-    //TODO: Create index on deviceID,lastTs column if this method is frequently used
+    // Create index on deviceID,lastTs column if this method is frequently used
     @WorkerThread
     override fun allEventsByDeviceID(deviceID: String): List<UserEventLog> {
         val tName = table.tableName
@@ -253,7 +253,7 @@ internal class UserEventLogDAOImpl(
         }
     }
 
-    //TODO: Create index on lastTs column if this method is frequently used
+    // Create index on lastTs column if this method is frequently used
     @WorkerThread
     override fun allEvents(): List<UserEventLog> {
         val tName = table.tableName
