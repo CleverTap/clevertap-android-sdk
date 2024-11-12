@@ -157,7 +157,6 @@ public class LocalDataStore {
             }
             /*
              * ==========TESTING BLOCK START ==========
-             * TODO: Remove block code after testing
              */
             /*cleanUpExtraEvents(50);
 
