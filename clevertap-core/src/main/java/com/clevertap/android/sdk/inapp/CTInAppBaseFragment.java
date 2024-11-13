@@ -14,6 +14,8 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.utils.UriHelper;
+
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.URLDecoder;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -81,31 +83,47 @@ public abstract class CTInAppBaseFragment extends Fragment {
             @NonNull CTInAppAction action,
             @Nullable String callToAction,
             @Nullable Bundle additionalData) {
+        if (action.getType() == InAppActionType.OPEN_URL) {
+            //All URL parameters should be tracked as additional data
+            final Bundle urlActionData = UriHelper.getAllKeyValuePairs(action.getActionUrl(), false);
+
+            // callToAction is handled as a parameter
+            String callToActionUrlParam = urlActionData.getString(Constants.KEY_C2A);
+            // no need to keep it in the data bundle
+            urlActionData.remove(Constants.KEY_C2A);
+
+            // add all additional params, overriding the url params if there is a collision
+            if (additionalData != null) {
+                urlActionData.putAll(additionalData);
+            }
+            // Use the merged data for the action
+            additionalData = urlActionData;
+            if (callToActionUrlParam != null) {
+                // check if there is a deeplink within the callToAction param
+                final String[] parts = callToActionUrlParam.split(Constants.URL_PARAM_DL_SEPARATOR);
+                if (parts.length == 2) {
+                    // Decode it here as it is not decoded by UriHelper
+                    try {
+                        // Extract the actual callToAction value
+                        callToActionUrlParam = URLDecoder.decode(parts[0], "UTF-8");
+                    } catch (UnsupportedEncodingException | IllegalArgumentException e) {
+                        config.getLogger().debug("Error parsing c2a param", e);
+                    }
+                    // use the url from the callToAction param
+                    action = CTInAppAction.createOpenUrlAction(parts[1]);
+                }
+            }
+            if (callToAction == null) {
+                // Use the url param value only if no other value is passed
+                callToAction = callToActionUrlParam;
+            }
+        }
         Bundle actionData = notifyActionTriggered(action, callToAction != null ? callToAction : "", additionalData);
         didDismiss(actionData);
     }
 
     void openActionUrl(String url) {
-        try {
-            final Bundle formData = UriHelper.getAllKeyValuePairs(url, false);
-
-            String callToAction = formData.getString(Constants.KEY_C2A);
-            if (callToAction != null) {
-                final String[] parts = callToAction.split(Constants.URL_PARAM_DL_SEPARATOR);
-                if (parts.length == 2) {
-                    // Decode it here as wzrk_c2a is not decoded by UriHelper
-                    callToAction = URLDecoder.decode(parts[0], "UTF-8");
-                    formData.putString(Constants.KEY_C2A, callToAction);
-                    url = parts[1];
-                }
-            }
-
-            CTInAppAction action = CTInAppAction.createOpenUrlAction(url);
-            config.getLogger().debug("Executing call to action for in-app: " + url);
-            triggerAction(action, callToAction != null ? callToAction : "", formData);
-        } catch (Throwable t) {
-            config.getLogger().debug("Error parsing the in-app notification action!", t);
-        }
+        triggerAction(CTInAppAction.createOpenUrlAction(url), null, null);
     }
 
     public void didDismiss(Bundle data) {
