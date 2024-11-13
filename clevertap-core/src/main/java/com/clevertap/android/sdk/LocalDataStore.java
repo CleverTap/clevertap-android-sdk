@@ -70,8 +70,9 @@ public class LocalDataStore {
     }
 
     /**
-     * @deprecated since <code>v7.0.2</code>. Use {@link #readUserEventLog(String)}
+     * @deprecated since <code>v7.1.0</code>. Use {@link #readUserEventLog(String)}
      */
+    @Deprecated(since = "7.1.0")
     EventDetail getEventDetail(String eventName) {
         try {
             if (!isPersonalisationEnabled()) {
@@ -90,8 +91,9 @@ public class LocalDataStore {
         }
     }
     /**
-     * @deprecated since <code>v7.0.2</code>. Use {@link #readUserEventLogs()}
+     * @deprecated since <code>v7.1.0</code>. Use {@link #readUserEventLogs()}
      */
+    @Deprecated(since = "7.1.0")
     Map<String, EventDetail> getEventHistory(Context context) {
         try {
             String namespace;
@@ -115,8 +117,9 @@ public class LocalDataStore {
     }
 
     /**
-     * @deprecated since <code>v7.0.2</code>. Use {@link #persistUserEventLog(String)}
+     * @deprecated since <code>v7.1.0</code>. Use {@link #persistUserEventLog(String)}
      */
+    @Deprecated(since = "7.1.0")
     @WorkerThread
     public void persistEvent(Context context, JSONObject event, int type) {
 
@@ -134,7 +137,7 @@ public class LocalDataStore {
     }
     @WorkerThread
     public boolean persistUserEventLogsInBulk(Set<String> eventNames){
-        return upSertUserEventLogsInBulk(eventNames);
+        return upsertUserEventLogsInBulk(eventNames);
     }
 
     @WorkerThread
@@ -157,7 +160,6 @@ public class LocalDataStore {
             }
             /*
              * ==========TESTING BLOCK START ==========
-             * TODO: Remove block code after testing
              */
             /*cleanUpExtraEvents(50);
 
@@ -205,12 +207,12 @@ public class LocalDataStore {
     }
 
     @WorkerThread
-    public boolean upSertUserEventLogsInBulk(Set<String> eventNames){
+    public boolean upsertUserEventLogsInBulk(Set<String> eventNames){
         String deviceID = deviceInfo.getDeviceID();
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        boolean upSertEventByDeviceID = dbAdapter.userEventLogDAO().upSertEventsByDeviceID(deviceID, eventNames);
-        getConfigLogger().verbose("upSertEventByDeviceID = "+upSertEventByDeviceID);
-        return upSertEventByDeviceID;
+        boolean upsertEventByDeviceID = dbAdapter.userEventLogDAO().upsertEventsByDeviceID(deviceID, eventNames);
+        getConfigLogger().verbose("upsertEventByDeviceID = "+upsertEventByDeviceID);
+        return upsertEventByDeviceID;
     }
 
     @WorkerThread
@@ -410,8 +412,9 @@ public class LocalDataStore {
     }
 
     /**
-     * @deprecated since <code>v7.0.2</code> in favor of DB. See {@link UserEventLog}
+     * @deprecated since <code>v7.1.0</code> in favor of DB. See {@link UserEventLog}
      */
+    @Deprecated(since = "7.1.0")
     private EventDetail decodeEventDetails(String name, String encoded) {
         if (encoded == null) {
             return null;
@@ -423,8 +426,9 @@ public class LocalDataStore {
     }
 
     /**
-     * @deprecated since <code>v7.0.2</code> in favor of DB. See {@link UserEventLog}
+     * @deprecated since <code>v7.1.0</code> in favor of DB. See {@link UserEventLog}
      */
+    @Deprecated(since = "7.1.0")
     private String encodeEventDetails(int first, int last, int count) {
         return count + "|" + first + "|" + last;
     }
@@ -452,8 +456,9 @@ public class LocalDataStore {
     }
 
     /**
-     * @deprecated since <code>v7.0.2</code> in favor of DB. See {@link UserEventLog}
+     * @deprecated since <code>v7.1.0</code> in favor of DB. See {@link UserEventLog}
      */
+    @Deprecated(since = "7.1.0")
     private String getStringFromPrefs(String rawKey, String defaultValue, String nameSpace) {
         if (this.config.isDefaultInstance()) {
             String _new = StorageHelper
@@ -527,8 +532,9 @@ public class LocalDataStore {
     }
 
     /**
-     * @deprecated since <code>v7.0.2</code>. Use {@link #persistUserEventLog(String)}
+     * @deprecated since <code>v7.1.0</code>. Use {@link #persistUserEventLog(String)}
      */
+    @Deprecated(since = "7.1.0")
     @SuppressWarnings("ConstantConditions")
     @SuppressLint("CommitPrefEdits")
     private void persistEvent(Context context, JSONObject event) {
