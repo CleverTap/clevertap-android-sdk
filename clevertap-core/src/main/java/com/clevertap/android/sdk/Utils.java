@@ -47,6 +47,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -567,7 +568,8 @@ public final class Utils {
         if (name == null) {
             return null;
         }
-        return normalizedNameExcludePattern.matcher(name).replaceAll("").toLowerCase();
+        // lowercase with English locale for consistent behavior with the backend and across different device locales
+        return normalizedNameExcludePattern.matcher(name).replaceAll("").toLowerCase(Locale.ENGLISH);
     }
 
     /**
