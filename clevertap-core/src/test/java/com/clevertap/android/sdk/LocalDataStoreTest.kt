@@ -399,7 +399,7 @@ class LocalDataStoreTest : BaseTestCase() {
     fun `test persistUserEventLogsInBulk success`() {
         // Given
         val eventNames = setOf("event1", "event2")
-        Mockito.`when`(userEventLogDaoMock.upSertEventsByDeviceID(deviceInfo.deviceID, eventNames))
+        Mockito.`when`(userEventLogDaoMock.upsertEventsByDeviceID(deviceInfo.deviceID, eventNames))
             .thenReturn(true)
 
         // When
@@ -407,14 +407,14 @@ class LocalDataStoreTest : BaseTestCase() {
 
         // Then
         assertTrue(result)
-        Mockito.verify(userEventLogDaoMock).upSertEventsByDeviceID(deviceInfo.deviceID, eventNames)
+        Mockito.verify(userEventLogDaoMock).upsertEventsByDeviceID(deviceInfo.deviceID, eventNames)
     }
 
     @Test
     fun `test persistUserEventLogsInBulk when operation fails returns false`() {
         // Given
         val eventNames = setOf("event1", "event2")
-        Mockito.`when`(userEventLogDaoMock.upSertEventsByDeviceID(deviceInfo.deviceID, eventNames))
+        Mockito.`when`(userEventLogDaoMock.upsertEventsByDeviceID(deviceInfo.deviceID, eventNames))
             .thenReturn(false)
 
         // When
@@ -422,7 +422,7 @@ class LocalDataStoreTest : BaseTestCase() {
 
         // Then
         assertFalse(result)
-        Mockito.verify(userEventLogDaoMock).upSertEventsByDeviceID(deviceInfo.deviceID, eventNames)
+        Mockito.verify(userEventLogDaoMock).upsertEventsByDeviceID(deviceInfo.deviceID, eventNames)
     }
 
     @Test
