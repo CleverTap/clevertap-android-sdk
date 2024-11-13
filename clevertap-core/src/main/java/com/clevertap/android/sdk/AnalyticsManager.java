@@ -1168,7 +1168,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             // default to false; only return true if we are sure we've seen this one before
             boolean isDupe = false;
             try {
-                String notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
+                String notificationIdTag = extras.getString(Constants.WZRK_PUSH_ID);
                 long now = System.currentTimeMillis();
                 if (notificationTagMap.containsKey(notificationIdTag)) {
                     long timestamp;
