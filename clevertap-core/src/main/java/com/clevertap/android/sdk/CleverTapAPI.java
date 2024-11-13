@@ -1612,10 +1612,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param event The event for which you want to get the total count
      * @return Total count in int
      *
-     * @deprecated since <code>v7.0.2</code>. Use {@link #getUserEventLogCount(String)} instead.
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogCount(String)} instead.
      * getUserEventLogCount() provides user-specific event counts.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getCount(String event) {
         EventDetail eventDetail = coreState.getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
@@ -1650,10 +1651,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event name for which you want the Event details
      * @return The {@link EventDetail} object
-     * @deprecated since <code>v7.0.2</code>. Use {@link #getUserEventLog(String)} instead.
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLog(String)} instead.
      * getUserEventLog() provides user-specific event log.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public EventDetail getDetails(String event) {
         return coreState.getLocalDataStore().getEventDetail(event);
     }
@@ -1774,10 +1776,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event name for which you want the first time timestamp
      * @return The timestamp in int
-     * @deprecated since <code>v7.0.2</code>. Use {@link #getUserEventLogFirstTs(String)} instead.
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogFirstTs(String)} instead.
      * getUserEventLogFirstTs() provides user-specific event first occurrence timestamp.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getFirstTime(String event) {
         EventDetail eventDetail = coreState.getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
@@ -1833,10 +1836,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns a Map of event names and corresponding event details of all the events raised
      *
      * @return A Map of Event Name and its corresponding EventDetail object
-     * @deprecated since <code>v7.0.2</code>. Use {@link #getUserEventLogHistory()} instead.
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogHistory()} instead.
      * getUserEventLogHistory() provides user-specific event logs.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public Map<String, EventDetail> getHistory() {
         return coreState.getLocalDataStore().getEventHistory(context);
     }
@@ -1975,10 +1979,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event name for which you want the last time timestamp
      * @return The timestamp in int
-     * @deprecated since <code>v7.0.2</code>. Use {@link #getUserEventLogLastTs(String)} instead.
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogLastTs(String)} instead.
      * getUserEventLogLastTs() provides user-specific event last occurrence timestamp.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getLastTime(String event) {
         EventDetail eventDetail = coreState.getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
@@ -2035,10 +2040,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the timestamp of the previous visit
      *
      * @return Timestamp of previous visit in int
-     * @deprecated since <code>v7.0.2</code>. Use {@link #getUserLastVisitTs()} instead.
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserLastVisitTs()} instead.
      * getUserLastVisitTs() provides user-specific last visit timestamp.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getPreviousVisitTime() {
         return coreState.getSessionManager().getLastVisitTime();
     }
@@ -2132,10 +2138,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the total number of times the app has been launched
      *
      * @return Total number of app launches in int
-     * @deprecated since <code>v7.0.2</code>. Use {@link #getUserAppLaunchCount()} instead.
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserAppLaunchCount()} instead.
      * getUserAppLaunchCount() provides user-specific app launch count.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getTotalVisits() {
         EventDetail ed = coreState.getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
         if (ed != null) {
