@@ -134,7 +134,7 @@ public class LocalDataStore {
     }
     @WorkerThread
     public boolean persistUserEventLogsInBulk(Set<String> eventNames){
-        return upSertUserEventLogsInBulk(eventNames);
+        return upsertUserEventLogsInBulk(eventNames);
     }
 
     @WorkerThread
@@ -204,12 +204,12 @@ public class LocalDataStore {
     }
 
     @WorkerThread
-    public boolean upSertUserEventLogsInBulk(Set<String> eventNames){
+    public boolean upsertUserEventLogsInBulk(Set<String> eventNames){
         String deviceID = deviceInfo.getDeviceID();
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        boolean upSertEventByDeviceID = dbAdapter.userEventLogDAO().upSertEventsByDeviceID(deviceID, eventNames);
-        getConfigLogger().verbose("upSertEventByDeviceID = "+upSertEventByDeviceID);
-        return upSertEventByDeviceID;
+        boolean upsertEventByDeviceID = dbAdapter.userEventLogDAO().upsertEventsByDeviceID(deviceID, eventNames);
+        getConfigLogger().verbose("upsertEventByDeviceID = "+upsertEventByDeviceID);
+        return upsertEventByDeviceID;
     }
 
     @WorkerThread

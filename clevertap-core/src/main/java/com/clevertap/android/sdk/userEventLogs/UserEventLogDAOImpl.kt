@@ -75,7 +75,7 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun upSertEventsByDeviceID(deviceID: String, eventNameList: Set<String>): Boolean {
+    override fun upsertEventsByDeviceID(deviceID: String, eventNameList: Set<String>): Boolean {
         val tableName = table.tableName
         logger.verbose("UserEventLog: upSert EventLog for bulk events")
         return try {

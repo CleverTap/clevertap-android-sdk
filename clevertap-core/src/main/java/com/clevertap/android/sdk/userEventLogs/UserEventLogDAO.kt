@@ -13,7 +13,7 @@ interface UserEventLogDAO {
     fun updateEventByDeviceID(deviceID: String, eventName: String): Boolean
 
     @WorkerThread
-    fun upSertEventsByDeviceID(deviceID: String, eventNameList: Set<String>): Boolean
+    fun upsertEventsByDeviceID(deviceID: String, eventNameList: Set<String>): Boolean
 
     // Read an event by deviceID
     @WorkerThread
