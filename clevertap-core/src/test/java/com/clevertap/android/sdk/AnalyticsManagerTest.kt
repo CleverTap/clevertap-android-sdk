@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk
 
+import android.content.Context
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventQueueManager
+import com.clevertap.android.sdk.fixtures.CleverTapFixtures
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
@@ -9,7 +11,6 @@ import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.sdk.validation.Validator.ValidationContext.Profile
-import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
@@ -26,24 +27,25 @@ import org.skyscreamer.jsonassert.JSONAssert
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class AnalyticsManagerTest : BaseTestCase() {
+class AnalyticsManagerTest {
 
     private lateinit var analyticsManagerSUT: AnalyticsManager
     private lateinit var coreState: MockCoreState
     private lateinit var validator: Validator
     private lateinit var validationResultStack: ValidationResultStack
     private lateinit var baseEventQueueManager: BaseEventQueueManager
+    private lateinit var cleverTapInstanceConfig: CleverTapInstanceConfig
 
     @Before
-    override fun setUp() {
-        super.setUp()
+    fun setUp() {
+        cleverTapInstanceConfig = CleverTapFixtures.provideCleverTapInstanceConfig()
         validator = mock(Validator::class.java)
         validationResultStack = mock(ValidationResultStack::class.java)
         baseEventQueueManager = mock(EventQueueManager::class.java)
         val inAppResponse = mock(InAppResponse::class.java)
-        coreState = MockCoreState(application, cleverTapInstanceConfig)
+        coreState = MockCoreState(cleverTapInstanceConfig)
         analyticsManagerSUT = AnalyticsManager(
-            application,
+            mock(Context::class.java),
             cleverTapInstanceConfig,
             baseEventQueueManager,
             validator,

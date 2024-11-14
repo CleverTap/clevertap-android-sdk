@@ -34,7 +34,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        coreState = MockCoreState(appCtx,cleverTapInstanceConfig)
+        coreState = MockCoreState(cleverTapInstanceConfig)
         listener = mock(CTPushProviderListener::class.java)
         manifestInfo = mock(ManifestInfo::class.java)
         activityLifeCycleManager = ActivityLifeCycleManager(

@@ -33,6 +33,7 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory;
@@ -765,7 +766,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             PackageManager pm = context.getPackageManager();
             ApplicationInfo ai = pm.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             metaData = ai.metaData;
-            String x = Utils._getManifestStringValueForKey(metaData, Constants.LABEL_NOTIFICATION_ICON);
+            String x = Utils._getManifestStringValueForKey(metaData, ManifestInfo.LABEL_NOTIFICATION_ICON);
             if (x == null) {
                 throw new IllegalArgumentException();
             }

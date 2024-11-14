@@ -25,7 +25,7 @@ class CleverTapAPITest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        corestate = MockCoreState(application, cleverTapInstanceConfig)
+        corestate = MockCoreState(cleverTapInstanceConfig)
     }
 
     /* @Test

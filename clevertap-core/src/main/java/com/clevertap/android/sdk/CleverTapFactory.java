@@ -44,7 +44,7 @@ class CleverTapFactory {
 
     static CoreState getCoreState(Context context, CleverTapInstanceConfig cleverTapInstanceConfig,
             String cleverTapID) {
-        CoreState coreState = new CoreState(context);
+        CoreState coreState = new CoreState();
 
         TemplatesManager templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig);
         coreState.setTemplatesManager(templatesManager);

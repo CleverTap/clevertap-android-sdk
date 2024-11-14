@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk
 
-import android.content.Context
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.events.EventQueueManager
@@ -14,7 +13,8 @@ import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
 import org.mockito.*
 
-class MockCoreState(context: Context, cleverTapInstanceConfig: CleverTapInstanceConfig) : CoreState(context) {
+// todo lp check usages and eliminate context setup
+class MockCoreState(cleverTapInstanceConfig: CleverTapInstanceConfig) : CoreState() {
 
     init {
         config = cleverTapInstanceConfig

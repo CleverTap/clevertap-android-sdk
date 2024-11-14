@@ -2,8 +2,6 @@ package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAll;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.toArray;
-import static com.clevertap.android.sdk.utils.CTJsonConverter.toJsonArray;
-import static com.clevertap.android.sdk.utils.CTJsonConverter.toList;
 
 import android.content.Context;
 import android.os.Parcel;
@@ -11,8 +9,10 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.VisibleForTesting;
 
 import com.clevertap.android.sdk.Constants.IdentityType;
 import com.clevertap.android.sdk.cryption.CryptHandler;
@@ -40,73 +40,88 @@ public class CleverTapInstanceConfig implements Parcelable {
     };
 
     private String accountId;
-
     private String accountRegion;
-
     private String accountToken;
-
     private String proxyDomain;
-
     private String spikyProxyDomain;
-
     private String customHandshakeDomain;
-
-    @NonNull
-    private ArrayList<String> allowedPushTypes = getAll();
-
+    @NonNull private ArrayList<String> allowedPushTypes = getAll();
     private boolean analyticsOnly;
-
     private boolean backgroundSync;
-
     private boolean beta;
-
     private boolean createdPostAppLaunch;
-
     private int debugLevel;
-
     private boolean disableAppLaunchedEvent;
-
     private boolean enableCustomCleverTapId;
-
     private String fcmSenderId;
-
     private boolean isDefaultInstance;
-
     private Logger logger;
-
     private String packageName;
-
     private boolean personalization;
-
     private String[] identityKeys = Constants.NULL_STRING_ARRAY;
-
     private boolean sslPinning;
-
     private boolean useGoogleAdId;
     private int encryptionLevel;
 
-
     @SuppressWarnings("unused")
-    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
-            @NonNull String accountToken) {
-
-        //noinspection ConstantConditions
-        if (accountId == null || accountToken == null) {
-            Logger.i("CleverTap accountId and accountToken cannot be null");
-            return null;
-        }
-        return new CleverTapInstanceConfig(context, accountId, accountToken, null, false);
+    public static CleverTapInstanceConfig createInstance(
+            Context context,
+            @NonNull String accountId,
+            @NonNull String accountToken
+    ) {
+        return CleverTapInstanceConfig.createInstance(context, accountId, accountToken, null);
     }
 
     @SuppressWarnings({"unused"})
-    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
-            @NonNull String accountToken, String accountRegion) {
+    public static CleverTapInstanceConfig createInstance(
+            @NonNull Context context,
+            @NonNull String accountId,
+            @NonNull String accountToken,
+            @Nullable String accountRegion
+    ) {
         //noinspection ConstantConditions
         if (accountId == null || accountToken == null) {
             Logger.i("CleverTap accountId and accountToken cannot be null");
             return null;
         }
-        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, false);
+        ManifestInfo manifestInfo = ManifestInfo.getInstance(context);
+        return CleverTapInstanceConfig.createInstanceWithManifest(manifestInfo, accountId, accountToken, accountRegion, false);
+    }
+
+
+    // convenience to construct the internal only default config
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    protected static CleverTapInstanceConfig createDefaultInstance(
+            @NonNull Context context,
+            @NonNull String accountId,
+            @NonNull String accountToken,
+            @Nullable String accountRegion
+    ) {
+        ManifestInfo manifestInfo = ManifestInfo.getInstance(context);
+        return CleverTapInstanceConfig.createInstanceWithManifest(manifestInfo, accountId, accountToken, accountRegion, true);
+    }
+
+    // todo lp visibility
+    @VisibleForTesting
+    public static CleverTapInstanceConfig createInstanceWithManifest(
+            @NonNull ManifestInfo manifest,
+            @NonNull String accountId,
+            @NonNull String accountToken,
+            @Nullable String accountRegion,
+            boolean isDefaultInstance
+    ) {
+        return new CleverTapInstanceConfig(manifest, accountId, accountToken, accountRegion, isDefaultInstance);
+    }
+
+    // for internal use only!
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    @Nullable
+    protected static CleverTapInstanceConfig createInstance(@NonNull String jsonString) {
+        try {
+            return new CleverTapInstanceConfig(jsonString);
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     CleverTapInstanceConfig(CleverTapInstanceConfig config) {
@@ -134,9 +149,13 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.encryptionLevel = config.encryptionLevel;
     }
 
-    private
-    CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
-            boolean isDefault) {
+    private CleverTapInstanceConfig(
+            ManifestInfo manifest,
+            String accountId,
+            String accountToken,
+            String accountRegion,
+            boolean isDefault
+    ) {
         this.accountId = accountId;
         this.accountToken = accountToken;
         this.accountRegion = accountRegion;
@@ -147,7 +166,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.logger = new Logger(this.debugLevel);
         this.createdPostAppLaunch = false;
 
-        ManifestInfo manifest = ManifestInfo.getInstance(context);
         this.useGoogleAdId = manifest.useGoogleAdId();
         this.disableAppLaunchedEvent = manifest.isAppLaunchedDisabled();
         this.sslPinning = manifest.isSSLPinningEnabled();
@@ -515,22 +533,4 @@ public class CleverTapInstanceConfig implements Parcelable {
     private String getDefaultSuffix(@NonNull String tag) {
         return "[" + ((!TextUtils.isEmpty(tag) ? ":" + tag : "") + ":" + accountId + "]");
     }
-
-    // convenience to construct the internal only default config
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    protected static CleverTapInstanceConfig createDefaultInstance(Context context, @NonNull String accountId,
-            @NonNull String accountToken, String accountRegion) {
-        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, true);
-    }
-
-    // for internal use only!
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    protected static CleverTapInstanceConfig createInstance(@NonNull String jsonString) {
-        try {
-            return new CleverTapInstanceConfig(jsonString);
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
 }
