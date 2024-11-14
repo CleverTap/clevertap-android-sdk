@@ -84,6 +84,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -1846,7 +1847,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Retrieves history of all event logs associated with the current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * Retrieves history of all event logs associated with the current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID} in the ascending order of lastTs.
      * This operation involves a database query and should be called from a background thread.
      * <br>
      * Example usage:
@@ -1861,7 +1862,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @WorkerThread
     public Map<String, UserEventLog> getUserEventLogHistory() {
         List<UserEventLog> logs = coreState.getLocalDataStore().readUserEventLogs();
-        Map<String, UserEventLog> history = new HashMap<>();
+        Map<String, UserEventLog> history = new LinkedHashMap<>();
         for (UserEventLog log : logs) {
             history.put(log.getEventName(), log);
         }
