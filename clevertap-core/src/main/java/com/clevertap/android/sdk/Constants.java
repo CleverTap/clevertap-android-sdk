@@ -77,6 +77,7 @@ public interface Constants {
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
     String INAPP_IMAGE_INTERSTITIAL_TYPE = "image-interstitial";
+    String INAPP_ADVANCED_BUILDER_TYPE = "advanced-builder";
     String INAPP_IMAGE_INTERSTITIAL_CONFIG = "imageInterstitialConfig";
     String INAPP_HTML_SPLIT = "\"##Vars##\"";
     String INAPP_IMAGE_INTERSTITIAL_HTML_NAME = "image_interstitial.html";
