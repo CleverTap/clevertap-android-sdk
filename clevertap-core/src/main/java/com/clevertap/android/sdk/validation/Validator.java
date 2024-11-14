@@ -310,7 +310,7 @@ public final class Validator {
         }
         if (getDiscardedEvents() != null) {
             for (String x : getDiscardedEvents()) {
-                if (name.equalsIgnoreCase(x)) {
+                if (Utils.areNamesNormalizedEqual(name, x)) {
                     // The event name is discarded
                     ValidationResult vr = ValidationResultFactory.create(513, Constants.DISCARDED_EVENT_NAME, name);
                     error.setErrorCode(vr.getErrorCode());
