@@ -27,6 +27,7 @@ import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.demo.BuildConfig
 import com.clevertap.demo.HomeScreenActivity
+import com.clevertap.demo.MyApplication
 import com.clevertap.demo.R
 import com.clevertap.demo.ViewModelFactory
 import com.clevertap.demo.WebViewActivity
@@ -45,7 +46,7 @@ data class HomeScreenFragmentBinding(
 class HomeScreenFragment : Fragment() {
 
     private val viewModel by viewModels<HomeScreenViewModel> {
-        ViewModelFactory((activity as? HomeScreenActivity)?.cleverTapDefaultInstance)
+        ViewModelFactory(MyApplication.ctInstance)
     }
 
     companion object {
