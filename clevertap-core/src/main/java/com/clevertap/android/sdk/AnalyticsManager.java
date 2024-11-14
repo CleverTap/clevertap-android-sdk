@@ -60,11 +60,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final InAppResponse inAppResponse;
 
-    private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
+    private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
 
     private final Object notificationMapLock = new Object();
 
-    private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
+    private final HashMap<String, Long> notificationViewedIdTagMap = new HashMap<>();
 
     AnalyticsManager(Context context,
                      CleverTapInstanceConfig config,
@@ -1162,8 +1162,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    private boolean checkDuplicateNotificationIds(Bundle extras, HashMap<String, Object> notificationTagMap,
-            int interval) {
+    private boolean checkDuplicateNotificationIds(
+            Bundle extras,
+            HashMap<String, Long> notificationTagMap,
+            int interval
+    ) {
         synchronized (notificationMapLock) {
             // default to false; only return true if we are sure we've seen this one before
             boolean isDupe = false;
@@ -1173,7 +1176,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 if (notificationTagMap.containsKey(notificationIdTag)) {
                     long timestamp;
                     // noinspection ConstantConditions
-                    timestamp = (Long) notificationTagMap.get(notificationIdTag);
+                    timestamp = notificationTagMap.get(notificationIdTag);
                     // same notificationId within time internal treat as dupe
                     if (now - timestamp < interval) {
                         isDupe = true;
