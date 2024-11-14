@@ -710,8 +710,8 @@ class CleverTapAPITest : BaseTestCase() {
     fun `test getUserEventLogHistory`() {
         // Arrange
         val logs = listOf(
-            UserEventLog("event1", 1000L, 1000L, 1, "dId"),
-            UserEventLog("event2", 2000L, 2000L, 2, "dId")
+            UserEventLog("z", 1000L, 1000L, 1, "dId"),
+            UserEventLog("a", 2000L, 2000L, 2, "dId")
         )
         `when`(corestate.localDataStore.readUserEventLogs()).thenReturn(logs)
 
@@ -728,8 +728,8 @@ class CleverTapAPITest : BaseTestCase() {
 
                 // Assert
                 assertEquals(2, historyActual.size)
-                assertEquals(logs[0], historyActual["event1"])
-                assertEquals(logs[1], historyActual["event2"])
+                assertEquals(logs[0], historyActual.values.elementAt(0))
+                assertEquals(logs[1], historyActual.values.elementAt(1))
                 verify(corestate.localDataStore).readUserEventLogs()
             }
         }
