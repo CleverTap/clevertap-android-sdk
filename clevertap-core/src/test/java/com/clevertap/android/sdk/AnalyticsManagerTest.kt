@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
+import android.os.Bundle
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventQueueManager
 import com.clevertap.android.sdk.fixtures.CleverTapFixtures
@@ -57,6 +58,29 @@ class AnalyticsManagerTest {
             coreState.ctLockManager,
             inAppResponse
         )
+    }
+
+    @Test
+    fun `clevertap does not process push notification viewed event if it is not from clevertap`() {
+        val bundle = Bundle().apply {
+            putString("some", "random")
+            putString("non clevertap", "bundle")
+        }
+
+        analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+        verifyNoInteractions(baseEventQueueManager)
+    }
+
+    @Test
+    fun `clevertap does not process push notification viewed event if wzrk_id is not present`() {
+        val bundle = Bundle().apply {
+            putString("some", "random")
+            putString("non clevertap", "bundle")
+            putString("wzrk_pid", "pid")
+        }
+
+        analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+        verifyNoInteractions(baseEventQueueManager)
     }
 
     @Test

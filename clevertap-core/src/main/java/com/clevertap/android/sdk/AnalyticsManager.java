@@ -66,16 +66,18 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
-    AnalyticsManager(Context context,
-                     CleverTapInstanceConfig config,
-                     BaseEventQueueManager baseEventQueueManager,
-                     Validator validator,
-                     ValidationResultStack validationResultStack,
-                     CoreMetaData coreMetaData,
-                     DeviceInfo deviceInfo,
-                     BaseCallbackManager callbackManager, ControllerManager controllerManager,
-                     final CTLockManager ctLockManager,
-                     InAppResponse inAppResponse) {
+    AnalyticsManager(
+            Context context,
+            CleverTapInstanceConfig config,
+            BaseEventQueueManager baseEventQueueManager,
+            Validator validator,
+            ValidationResultStack validationResultStack,
+            CoreMetaData coreMetaData,
+            DeviceInfo deviceInfo,
+            BaseCallbackManager callbackManager, ControllerManager controllerManager,
+            final CTLockManager ctLockManager,
+            InAppResponse inAppResponse
+    ) {
         this.context = context;
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
@@ -658,11 +660,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG)
-                == null)) {
+        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG)
+                || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             config.getLogger().debug(config.getAccountId(),
-                    "Push notification ID Tag is null, not processing Notification Viewed event for:  " + extras
-                            .toString());
+                    "Push notification ID Tag is null, not processing Notification Viewed event for:  " + extras);
             return;
         }
 
@@ -671,11 +672,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL);
         if (isDuplicate) {
             config.getLogger().debug(config.getAccountId(),
-                    "Already processed Notification Viewed event for " + extras.toString() + ", dropping duplicate.");
+                    "Already processed Notification Viewed event for " + extras + ", dropping duplicate.");
             return;
         }
 
-        config.getLogger().debug("Recording Notification Viewed event for notification:  " + extras.toString());
+        config.getLogger().debug("Recording Notification Viewed event for notification:  " + extras);
 
         JSONObject event = new JSONObject();
         try {
