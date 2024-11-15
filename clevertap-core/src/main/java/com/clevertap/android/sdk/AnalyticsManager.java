@@ -474,60 +474,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-            task.execute("testInappNotification",new Callable<Void>() {
-                @Override
-                public Void call() {
-                    try {
-                        String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
-                        String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
-                        JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
-
-                        JSONArray inappNotifs = new JSONArray();
-                        if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
-                                || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
-                            inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
-                        } else {
-                            inappNotifs.put(inappPreviewPayload);
-                        }
-
-                        JSONObject inAppResponseJson = new JSONObject();
-                        inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
-
-                        inAppResponse.processResponse(inAppResponseJson, null, context);
-                    } catch (Throwable t) {
-                        Logger.v("Failed to display inapp notification from push notification payload", t);
-                    }
-                    return null;
-                }
-            });
+            handleInAppPreview(extras);
             return;
         }
 
         if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-            task.execute("testInboxNotification",new Callable<Void>() {
-                @Override
-                public Void call() {
-                    try {
-                        Logger.v("Received inbox via push payload: " + extras
-                                .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                        JSONObject r = new JSONObject();
-                        JSONArray inboxNotifs = new JSONArray();
-                        r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs);
-                        JSONObject testPushObject = new JSONObject(
-                                extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                        testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
-                        inboxNotifs.put(testPushObject);
-
-                        CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
-                        cleverTapResponse.processResponse(r, null, context);
-                    } catch (Throwable t) {
-                        Logger.v("Failed to process inbox message from push notification payload", t);
-                    }
-                    return null;
-                }
-            });
+            handleInboxPreview(extras);
             return;
         }
 
@@ -581,6 +533,62 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } else {
             Logger.d("CTPushNotificationListener is not set");
         }
+    }
+
+    private void handleInboxPreview(Bundle extras) {
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("testInboxNotification",new Callable<Void>() {
+            @Override
+            public Void call() {
+                try {
+                    Logger.v("Received inbox via push payload: " + extras
+                            .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                    JSONObject r = new JSONObject();
+                    JSONArray inboxNotifs = new JSONArray();
+                    r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs);
+                    JSONObject testPushObject = new JSONObject(
+                            extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                    testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
+                    inboxNotifs.put(testPushObject);
+
+                    CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
+                    cleverTapResponse.processResponse(r, null, context);
+                } catch (Throwable t) {
+                    Logger.v("Failed to process inbox message from push notification payload", t);
+                }
+                return null;
+            }
+        });
+    }
+
+    private void handleInAppPreview(Bundle extras) {
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("testInappNotification",new Callable<Void>() {
+            @Override
+            public Void call() {
+                try {
+                    String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
+                    String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
+                    JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
+
+                    JSONArray inappNotifs = new JSONArray();
+                    if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
+                            || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
+                        inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
+                    } else {
+                        inappNotifs.put(inappPreviewPayload);
+                    }
+
+                    JSONObject inAppResponseJson = new JSONObject();
+                    inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
+
+                    inAppResponse.processResponse(inAppResponseJson, null, context);
+                } catch (Throwable t) {
+                    Logger.v("Failed to display inapp notification from push notification payload", t);
+                }
+                return null;
+            }
+        });
     }
 
     private JSONObject getHalfInterstitialInApp(final JSONObject inapp) throws JSONException {
