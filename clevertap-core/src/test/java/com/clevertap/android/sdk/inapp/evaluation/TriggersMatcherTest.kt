@@ -1591,7 +1591,7 @@ class TriggersMatcherTest : BaseTestCase() {
     ): TriggerAdapter {
         val triggerJSON = JSONObject().apply {
             put("eventName", eventName)
-            put("firstTimeOnly", firstTimeOnly)
+            put(TriggerAdapter.KEY_FIRST_TIME_ONLY, firstTimeOnly)
             if(profileAttrName != null)
                 put("profileAttrName",profileAttrName)
             if (propertyConditions.isNotEmpty()) {

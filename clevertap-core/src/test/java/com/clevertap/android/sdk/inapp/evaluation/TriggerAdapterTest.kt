@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_FIRST_TIME_ONLY
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
@@ -585,7 +586,7 @@ class TriggerAdapterTest {
     fun `test firstTimeOnly with firstTimeOnly value as true`() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_FIRST_TIME_ONLY, true)
+        triggerJSON.put(KEY_FIRST_TIME_ONLY, true)
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
@@ -599,7 +600,7 @@ class TriggerAdapterTest {
     fun `test firstTimeOnly with firstTimeOnly value as false`(){
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_FIRST_TIME_ONLY, false)
+        triggerJSON.put(KEY_FIRST_TIME_ONLY, false)
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
