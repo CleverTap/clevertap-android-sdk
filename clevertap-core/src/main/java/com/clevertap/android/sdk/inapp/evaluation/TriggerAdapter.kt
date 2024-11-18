@@ -101,7 +101,7 @@ class TriggerAdapter(triggerJSON: JSONObject) {
      */
     val profileAttrName: String? = triggerJSON.optString(Constants.KEY_PROFILE_ATTR_NAME, null)
 
-    val firstTimeOnly: Boolean = triggerJSON.optBoolean(Constants.KEY_FIRST_TIME_ONLY, false)
+    val firstTimeOnly: Boolean = triggerJSON.optBoolean(KEY_FIRST_TIME_ONLY, false)
 
     /**
      * Get the count of event property trigger conditions.
@@ -120,6 +120,10 @@ class TriggerAdapter(triggerJSON: JSONObject) {
      */
     val geoRadiusCount: Int
         get() = geoRadiusArray?.length() ?: 0
+
+    companion object {
+        const val KEY_FIRST_TIME_ONLY = "firstTimeOnly"
+    }
 
     /**
      * Internal function to create a TriggerCondition from a JSON property object.

@@ -229,7 +229,6 @@ public interface Constants {
     String KEY_ITEM_PROPERTIES = "itemProperties";
     String KEY_GEO_RADIUS_PROPERTIES = "geoRadius";
     String KEY_PROFILE_ATTR_NAME = "profileAttrName";
-    String KEY_FIRST_TIME_ONLY = "firstTimeOnly";
     String KEY_PROPERTY_VALUE = "propertyValue";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
