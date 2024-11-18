@@ -1,7 +1,15 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.INAPP_OPERATOR
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.INAPP_PROPERTYNAME
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_EVENT_NAME
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_EVENT_PROPERTIES
 import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_FIRST_TIME_ONLY
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_GEO_RADIUS_PROPERTIES
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_ITEM_PROPERTIES
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_PROFILE_ATTR_NAME
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_PROPERTY_VALUE
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
@@ -13,17 +21,17 @@ class TriggerAdapterTest {
     fun testPropertyAtIndexValid() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val propertiesArray = JSONArray()
         val propertyObject = JSONObject()
 
-        propertyObject.put(Constants.INAPP_PROPERTYNAME, "Property1")
-        propertyObject.put(Constants.INAPP_OPERATOR, 1)
-        propertyObject.put(Constants.KEY_PROPERTY_VALUE, "Value1")
+        propertyObject.put(INAPP_PROPERTYNAME, "Property1")
+        propertyObject.put(INAPP_OPERATOR, 1)
+        propertyObject.put(KEY_PROPERTY_VALUE, "Value1")
         propertiesArray.put(propertyObject)
 
-        triggerJSON.put(Constants.KEY_EVENT_PROPERTIES, propertiesArray)
+        triggerJSON.put(KEY_EVENT_PROPERTIES, propertiesArray)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -40,16 +48,16 @@ class TriggerAdapterTest {
     fun testPropertyAtIndexInvalidIndex() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val propertiesArray = JSONArray()
         val propertyObject = JSONObject()
-        propertyObject.put(Constants.INAPP_PROPERTYNAME, "Property1")
-        propertyObject.put(Constants.INAPP_OPERATOR, 1)
-        propertyObject.put(Constants.KEY_PROPERTY_VALUE, "Value1")
+        propertyObject.put(INAPP_PROPERTYNAME, "Property1")
+        propertyObject.put(INAPP_OPERATOR, 1)
+        propertyObject.put(KEY_PROPERTY_VALUE, "Value1")
         propertiesArray.put(propertyObject)
 
-        triggerJSON.put(Constants.KEY_EVENT_PROPERTIES, propertiesArray)
+        triggerJSON.put(KEY_EVENT_PROPERTIES, propertiesArray)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -64,16 +72,16 @@ class TriggerAdapterTest {
     fun testItemAtIndexValid() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val itemsArray = JSONArray()
         val itemObject = JSONObject()
-        itemObject.put(Constants.INAPP_PROPERTYNAME, "ItemProperty1")
-        itemObject.put(Constants.INAPP_OPERATOR, 2)
-        itemObject.put(Constants.KEY_PROPERTY_VALUE, "ItemValue1")
+        itemObject.put(INAPP_PROPERTYNAME, "ItemProperty1")
+        itemObject.put(INAPP_OPERATOR, 2)
+        itemObject.put(KEY_PROPERTY_VALUE, "ItemValue1")
         itemsArray.put(itemObject)
 
-        triggerJSON.put(Constants.KEY_ITEM_PROPERTIES, itemsArray)
+        triggerJSON.put(KEY_ITEM_PROPERTIES, itemsArray)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -90,16 +98,16 @@ class TriggerAdapterTest {
     fun testItemAtIndexInvalidIndex() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val itemsArray = JSONArray()
         val itemObject = JSONObject()
-        itemObject.put(Constants.INAPP_PROPERTYNAME, "ItemProperty1")
-        itemObject.put(Constants.INAPP_OPERATOR, 2)
-        itemObject.put(Constants.KEY_PROPERTY_VALUE, "ItemValue1")
+        itemObject.put(INAPP_PROPERTYNAME, "ItemProperty1")
+        itemObject.put(INAPP_OPERATOR, 2)
+        itemObject.put(KEY_PROPERTY_VALUE, "ItemValue1")
         itemsArray.put(itemObject)
 
-        triggerJSON.put(Constants.KEY_ITEM_PROPERTIES, itemsArray)
+        triggerJSON.put(KEY_ITEM_PROPERTIES, itemsArray)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -114,10 +122,10 @@ class TriggerAdapterTest {
     fun testItemPropertiesNull() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         // 'itemProperties' is null
-        triggerJSON.put(Constants.KEY_ITEM_PROPERTIES, null)
+        triggerJSON.put(KEY_ITEM_PROPERTIES, null)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -132,14 +140,14 @@ class TriggerAdapterTest {
     fun testItemAtIndexObjectNull() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val itemsArray = JSONArray()
         // Object at index 0 is null
         itemsArray.put(null)
         itemsArray.put(JSONObject()) // Valid item object
 
-        triggerJSON.put(Constants.KEY_ITEM_PROPERTIES, itemsArray)
+        triggerJSON.put(KEY_ITEM_PROPERTIES, itemsArray)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -154,10 +162,10 @@ class TriggerAdapterTest {
     fun testEventPropertiesNull() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         // 'eventProperties' is null
-        triggerJSON.put(Constants.KEY_EVENT_PROPERTIES, null)
+        triggerJSON.put(KEY_EVENT_PROPERTIES, null)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -172,14 +180,14 @@ class TriggerAdapterTest {
     fun testPropertyAtIndexObjectNull() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val propertiesArray = JSONArray()
         // Object at index 0 is null
         propertiesArray.put(null)
         propertiesArray.put(JSONObject()) // Valid property object
 
-        triggerJSON.put(Constants.KEY_EVENT_PROPERTIES, propertiesArray)
+        triggerJSON.put(KEY_EVENT_PROPERTIES, propertiesArray)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -194,9 +202,9 @@ class TriggerAdapterTest {
     fun testTriggerConditionFromJSON() {
         // Arrange
         val propertyObject = JSONObject()
-        propertyObject.put(Constants.INAPP_PROPERTYNAME, "propertyName")
-        propertyObject.put(Constants.INAPP_OPERATOR, 1)
-        propertyObject.put(Constants.KEY_PROPERTY_VALUE, "TestValue")
+        propertyObject.put(INAPP_PROPERTYNAME, "propertyName")
+        propertyObject.put(INAPP_OPERATOR, 1)
+        propertyObject.put(KEY_PROPERTY_VALUE, "TestValue")
 
         val triggerAdapter = TriggerAdapter(JSONObject())
 
@@ -216,7 +224,7 @@ class TriggerAdapterTest {
         val propertiesArray = JSONArray()
         propertiesArray.put(JSONObject())
         propertiesArray.put(JSONObject())
-        triggerJSON.put(Constants.KEY_EVENT_PROPERTIES, propertiesArray)
+        triggerJSON.put(KEY_EVENT_PROPERTIES, propertiesArray)
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
@@ -246,7 +254,7 @@ class TriggerAdapterTest {
         val itemsArray = JSONArray()
         itemsArray.put(JSONObject())
         itemsArray.put(JSONObject())
-        triggerJSON.put(Constants.KEY_ITEM_PROPERTIES, itemsArray)
+        triggerJSON.put(KEY_ITEM_PROPERTIES, itemsArray)
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
@@ -273,7 +281,7 @@ class TriggerAdapterTest {
     fun testEventNameWithNonNullEventName() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "SampleEventName")
+        triggerJSON.put(KEY_EVENT_NAME, "SampleEventName")
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
@@ -300,7 +308,7 @@ class TriggerAdapterTest {
     fun testProfileAttrNameWithNonNullProfileAttributeName() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_PROFILE_ATTR_NAME, "SampleAttr")
+        triggerJSON.put(KEY_PROFILE_ATTR_NAME, "SampleAttr")
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
@@ -330,7 +338,7 @@ class TriggerAdapterTest {
         val propertiesArray = JSONArray()
         propertiesArray.put(JSONObject())
         propertiesArray.put(JSONObject())
-        triggerJSON.put(Constants.KEY_EVENT_PROPERTIES, propertiesArray)
+        triggerJSON.put(KEY_EVENT_PROPERTIES, propertiesArray)
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
@@ -360,7 +368,7 @@ class TriggerAdapterTest {
         val itemsArray = JSONArray()
         itemsArray.put(JSONObject())
         itemsArray.put(JSONObject())
-        triggerJSON.put(Constants.KEY_ITEM_PROPERTIES, itemsArray)
+        triggerJSON.put(KEY_ITEM_PROPERTIES, itemsArray)
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
@@ -387,10 +395,10 @@ class TriggerAdapterTest {
     fun testOptTriggerOperatorWithNonNullValue() {
         // Arrange
         val jsonObject = JSONObject()
-        jsonObject.put(Constants.INAPP_OPERATOR, TriggerOperator.GreaterThan.operatorValue)
+        jsonObject.put(INAPP_OPERATOR, TriggerOperator.GreaterThan.operatorValue)
 
         // Act
-        val triggerOperator = jsonObject.optTriggerOperator(Constants.INAPP_OPERATOR)
+        val triggerOperator = jsonObject.optTriggerOperator(INAPP_OPERATOR)
 
         // Assert
         assertEquals(TriggerOperator.GreaterThan, triggerOperator)
@@ -412,7 +420,7 @@ class TriggerAdapterTest {
     fun testGeoRadiusAtIndexValid() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val geoRadiusArray = JSONArray()
         val geoRadiusObject = JSONObject()
@@ -421,7 +429,7 @@ class TriggerAdapterTest {
         geoRadiusObject.put("rad", 1000.0)
         geoRadiusArray.put(geoRadiusObject)
 
-        triggerJSON.put(Constants.KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
+        triggerJSON.put(KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -439,7 +447,7 @@ class TriggerAdapterTest {
     fun testGeoRadiusAtIndexInvalidIndex() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val geoRadiusArray = JSONArray()
         val geoRadiusObject = JSONObject()
@@ -448,7 +456,7 @@ class TriggerAdapterTest {
         geoRadiusObject.put("rad", 1000.0)
         geoRadiusArray.put(geoRadiusObject)
 
-        triggerJSON.put(Constants.KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
+        triggerJSON.put(KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -463,13 +471,13 @@ class TriggerAdapterTest {
     fun testGeoRadiusAtIndexInvalidOutOfBoundIndex() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val geoRadiusArray = JSONArray()
         geoRadiusArray.put(JSONObject())
         geoRadiusArray.put(JSONObject())
 
-        triggerJSON.put(Constants.KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
+        triggerJSON.put(KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
 
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
@@ -487,7 +495,7 @@ class TriggerAdapterTest {
         val itemsArray = JSONArray()
         itemsArray.put(JSONObject())
         itemsArray.put(JSONObject())
-        triggerJSON.put(Constants.KEY_GEO_RADIUS_PROPERTIES, itemsArray)
+        triggerJSON.put(KEY_GEO_RADIUS_PROPERTIES, itemsArray)
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
@@ -517,7 +525,7 @@ class TriggerAdapterTest {
         val geoRadiusArray = JSONArray()
         geoRadiusArray.put(JSONObject())
         geoRadiusArray.put(JSONObject())
-        triggerJSON.put(Constants.KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
+        triggerJSON.put(KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
         val triggerAdapter = TriggerAdapter(triggerJSON)
 
         // Act
@@ -544,7 +552,7 @@ class TriggerAdapterTest {
     fun testToJsonObject() {
         // Arrange
         val triggerJSON = JSONObject()
-        triggerJSON.put(Constants.KEY_EVENT_NAME, "TestEvent")
+        triggerJSON.put(KEY_EVENT_NAME, "TestEvent")
 
         val propertiesArray = JSONArray()
         val propertyObject = JSONObject()
@@ -553,16 +561,16 @@ class TriggerAdapterTest {
         propertyObject.put("value", "Value1")
         propertiesArray.put(propertyObject)
 
-        triggerJSON.put(Constants.KEY_EVENT_PROPERTIES, propertiesArray)
+        triggerJSON.put(KEY_EVENT_PROPERTIES, propertiesArray)
 
         val itemsArray = JSONArray()
         val itemObject = JSONObject()
-        itemObject.put(Constants.INAPP_PROPERTYNAME, "ItemProperty1")
-        itemObject.put(Constants.INAPP_OPERATOR, 2)
-        itemObject.put(Constants.KEY_PROPERTY_VALUE, "ItemValue1")
+        itemObject.put(INAPP_PROPERTYNAME, "ItemProperty1")
+        itemObject.put(INAPP_OPERATOR, 2)
+        itemObject.put(KEY_PROPERTY_VALUE, "ItemValue1")
         itemsArray.put(itemObject)
 
-        triggerJSON.put(Constants.KEY_ITEM_PROPERTIES, itemsArray)
+        triggerJSON.put(KEY_ITEM_PROPERTIES, itemsArray)
 
         val geoRadiusArray = JSONArray()
         val geoRadiusObject = JSONObject()
@@ -571,14 +579,14 @@ class TriggerAdapterTest {
         geoRadiusObject.put("rad", 1000.0)
         geoRadiusArray.put(geoRadiusObject)
 
-        triggerJSON.put(Constants.KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
+        triggerJSON.put(KEY_GEO_RADIUS_PROPERTIES, geoRadiusArray)
 
         // Assert
         assertNotNull(triggerJSON)
-        assertEquals("TestEvent", triggerJSON.optString(Constants.KEY_EVENT_NAME))
-        assertEquals(propertiesArray, triggerJSON.optJSONArray(Constants.KEY_EVENT_PROPERTIES))
-        assertEquals(itemsArray, triggerJSON.optJSONArray(Constants.KEY_ITEM_PROPERTIES))
-        assertEquals(geoRadiusArray, triggerJSON.optJSONArray(Constants.KEY_GEO_RADIUS_PROPERTIES))
+        assertEquals("TestEvent", triggerJSON.optString(KEY_EVENT_NAME))
+        assertEquals(propertiesArray, triggerJSON.optJSONArray(KEY_EVENT_PROPERTIES))
+        assertEquals(itemsArray, triggerJSON.optJSONArray(KEY_ITEM_PROPERTIES))
+        assertEquals(geoRadiusArray, triggerJSON.optJSONArray(KEY_GEO_RADIUS_PROPERTIES))
     }
 
 
