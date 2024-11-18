@@ -22,6 +22,67 @@ class CleverTapAPITest : BaseTestCase() {
 
     private lateinit var corestate: MockCoreState
 
+    // Common setup helper functions
+    private fun setupMockExecutors(block: () -> Unit) {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(any())).thenReturn(
+                MockCTExecutors(cleverTapInstanceConfig)
+            )
+            block()
+        }
+    }
+
+    private fun setupMockFactory(block: () -> Unit) {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                .thenReturn(corestate)
+            block()
+        }
+    }
+
+    private fun setupMockFactoryWithAny(block: () -> Unit) {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(
+                CleverTapFactory.getCoreState(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any()
+                )
+            )
+                .thenReturn(corestate)
+            block()
+        }
+    }
+
+    private fun setupBasicTest(block: () -> Unit) {
+        setupMockExecutors {
+            setupMockFactory {
+                block()
+            }
+        }
+    }
+
+    private fun setupBasicTestWithAny(block: () -> Unit) {
+        setupMockExecutors {
+            setupMockFactoryWithAny {
+                block()
+            }
+        }
+    }
+
+    private fun initializeCleverTapAPI() {
+        cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+    }
+
+    private fun verifyCommonConstructorBehavior() {
+        verify(corestate.sessionManager).setLastVisitTime()
+        verify(corestate.sessionManager).setUserLastVisitTs()
+        verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
+        verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
+        val actualConfig = StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
+        assertEquals(cleverTapInstanceConfig.toJSONString(), actualConfig)
+    }
+
     @Before
     @Throws(Exception::class)
     override fun setUp() {
@@ -31,365 +92,229 @@ class CleverTapAPITest : BaseTestCase() {
 
     @Test
     fun testCleverTapAPI_constructor_when_InitialAppEnteredForegroundTime_greater_than_5_secs() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                mockStatic(Utils::class.java).use {
+        setupBasicTest {
+            mockStatic(Utils::class.java).use {
+                // Arrange
+                `when`(Utils.getNow()).thenReturn(Int.MAX_VALUE)
+                CoreMetaData.setInitialAppEnteredForegroundTime(0)
 
-                    // Arrange
-                    `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                            .thenReturn(corestate)
-                    `when`(Utils.getNow()).thenReturn(Int.MAX_VALUE)
+                // Act
+                initializeCleverTapAPI()
 
-                    CoreMetaData.setInitialAppEnteredForegroundTime(0)
-
-                    // Act
-                    CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-
-                    // Assert
-                    assertTrue("isCreatedPostAppLaunch must be true", cleverTapInstanceConfig.isCreatedPostAppLaunch)
-                    verify(corestate.sessionManager).setLastVisitTime()
-                    verify(corestate.sessionManager).setUserLastVisitTs()
-                    verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
-                    verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
-                    val actualConfig =
-                            StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
-                    assertEquals(cleverTapInstanceConfig.toJSONString(), actualConfig)
-                }
+                // Assert
+                assertTrue("isCreatedPostAppLaunch must be true", cleverTapInstanceConfig.isCreatedPostAppLaunch)
+                verifyCommonConstructorBehavior()
             }
         }
     }
 
     @Test
     fun testCleverTapAPI_constructor_when_InitialAppEnteredForegroundTime_less_than_5_secs() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
-            )
+        setupBasicTest {
             mockStatic(Utils::class.java).use {
-                mockStatic(CleverTapFactory::class.java).use {
-                    // Arrange
-                    `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                            .thenReturn(corestate)
-                    `when`(Utils.getNow()).thenReturn(0)
+                // Arrange
+                `when`(Utils.getNow()).thenReturn(0)
+                CoreMetaData.setInitialAppEnteredForegroundTime(Int.MAX_VALUE)
 
-                    CoreMetaData.setInitialAppEnteredForegroundTime(Int.MAX_VALUE)
+                // Act
+                initializeCleverTapAPI()
 
-                    // Act
-                    CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-
-                    // Assert
-                    assertFalse(
-                            "isCreatedPostAppLaunch must be false",
-                            cleverTapInstanceConfig.isCreatedPostAppLaunch
-                    )
-                    verify(corestate.sessionManager).setLastVisitTime()
-                    verify(corestate.sessionManager).setUserLastVisitTs()
-                    verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
-                    verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
-
-                    val string =
-                            StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
-                    assertEquals(cleverTapInstanceConfig.toJSONString(), string)
-                }
+                // Assert
+                assertFalse("isCreatedPostAppLaunch must be false", cleverTapInstanceConfig.isCreatedPostAppLaunch)
+                verifyCommonConstructorBehavior()
             }
         }
     }
 
     @Test
     fun test_setLocationForGeofences() {
-        val location = Location("")
-        location.apply {
-            latitude = 17.4444
-            longitude = 4.444
-        }
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
-            )
-
-            mockStatic(CleverTapFactory::class.java).use {
-                // Arrange
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                        .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                cleverTapAPI.setLocationForGeofences(location, 45)
-                assertTrue(corestate.coreMetaData.isLocationForGeofence)
-                assertEquals(corestate.coreMetaData.geofenceSDKVersion, 45)
-                verify(corestate.locationManager)._setLocation(location)
+        setupBasicTest {
+            val location = Location("").apply {
+                latitude = 17.4444
+                longitude = 4.444
             }
+
+            initializeCleverTapAPI()
+            cleverTapAPI.setLocationForGeofences(location, 45)
+
+            assertTrue(corestate.coreMetaData.isLocationForGeofence)
+            assertEquals(corestate.coreMetaData.geofenceSDKVersion, 45)
+            verify(corestate.locationManager)._setLocation(location)
         }
     }
 
     @Test
     fun test_setGeofenceCallback() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                // Arrange
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                        .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-
-                val geofenceCallback = object : GeofenceCallback {
-                    override fun handleGeoFences(jsonObject: JSONObject?) {
-                        TODO("Not yet implemented")
-                    }
-
-                    override fun triggerLocation() {
-                        TODO("Not yet implemented")
-                    }
+        setupBasicTest {
+            // Arrange
+            val geofenceCallback = object : GeofenceCallback {
+                override fun handleGeoFences(jsonObject: JSONObject?) {
                 }
-
-                cleverTapAPI.geofenceCallback = geofenceCallback
-
-                assertEquals(geofenceCallback, cleverTapAPI.geofenceCallback)
+                override fun triggerLocation() {
+                }
             }
+
+            // Act
+            initializeCleverTapAPI()
+            cleverTapAPI.geofenceCallback = geofenceCallback
+
+            // Assert
+            assertEquals(geofenceCallback, cleverTapAPI.geofenceCallback)
         }
     }
 
     @Test
     fun test_pushGeoFenceError() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                        .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+        setupBasicTest {
+            // Arrange
+            val expectedErrorCode = 999
+            val expectedErrorMessage = "Fire in the hall"
 
-                val expectedErrorCode = 999
-                val expectedErrorMessage = "Fire in the hall"
+            // Act
+            initializeCleverTapAPI()
+            cleverTapAPI.pushGeoFenceError(expectedErrorCode, expectedErrorMessage)
 
-                cleverTapAPI.pushGeoFenceError(expectedErrorCode, expectedErrorMessage)
-
-                val actualValidationResult = corestate.validationResultStack.popValidationResult()
-                assertEquals(999, actualValidationResult.errorCode)
-                assertEquals("Fire in the hall", actualValidationResult.errorDesc)
-            }
+            // Assert
+            val actualValidationResult = corestate.validationResultStack.popValidationResult()
+            assertEquals(expectedErrorCode, actualValidationResult.errorCode)
+            assertEquals(expectedErrorMessage, actualValidationResult.errorDesc)
         }
     }
 
     @Test
     fun test_pushGeoFenceExitedEvent() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
+        setupBasicTest {
+            // Arrange
+            val expectedJson = JSONObject("{\"key\":\"value\"}")
+            val argumentCaptor = ArgumentCaptor.forClass(JSONObject::class.java)
+
+            // Act
+            initializeCleverTapAPI()
+            cleverTapAPI.pushGeoFenceExitedEvent(expectedJson)
+
+            // Assert
+            verify(corestate.analyticsManager).raiseEventForGeofences(
+                ArgumentMatchers.anyString(),
+                argumentCaptor.capture()
             )
-            mockStatic(CleverTapFactory::class.java).use {
-                val argumentCaptor =
-                        ArgumentCaptor.forClass(
-                                JSONObject::class.java
-                        )
-
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                        .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-
-                val expectedJson = JSONObject("{\"key\":\"value\"}")
-
-                cleverTapAPI.pushGeoFenceExitedEvent(expectedJson)
-
-                verify(corestate.analyticsManager).raiseEventForGeofences(
-                        ArgumentMatchers.anyString(), argumentCaptor.capture()
-                )
-
-                assertEquals(expectedJson, argumentCaptor.value)
-            }
+            assertEquals(expectedJson, argumentCaptor.value)
         }
     }
 
     @Test
     fun test_pushGeoFenceEnteredEvent() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
+        setupBasicTest {
+            // Arrange
+            val expectedJson = JSONObject("{\"key\":\"value\"}")
+            val argumentCaptor = ArgumentCaptor.forClass(JSONObject::class.java)
+
+            // Act
+            initializeCleverTapAPI()
+            cleverTapAPI.pushGeofenceEnteredEvent(expectedJson)
+
+            // Assert
+            verify(corestate.analyticsManager).raiseEventForGeofences(
+                ArgumentMatchers.anyString(),
+                argumentCaptor.capture()
             )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                        .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-
-                val expectedJson = JSONObject("{\"key\":\"value\"}")
-
-                cleverTapAPI.pushGeofenceEnteredEvent(expectedJson)
-                val argumentCaptor =
-                        ArgumentCaptor.forClass(
-                                JSONObject::class.java
-                        )
-
-                verify(corestate.analyticsManager).raiseEventForGeofences(
-                        ArgumentMatchers.anyString(), argumentCaptor.capture()
-                )
-
-                assertEquals(expectedJson, argumentCaptor.value)
-            }
+            assertEquals(expectedJson, argumentCaptor.value)
         }
     }
 
     @Test
     fun test_changeCredentials_whenDefaultConfigNotNull_credentialsMustNotChange() {
-        mockStatic(CleverTapFactory::class.java).use {
-            mockStatic(CTExecutorFactory::class.java).use {
-                `when`(CTExecutorFactory.executors(any())).thenReturn(
-                        MockCTExecutors(
-                                cleverTapInstanceConfig
-                        )
-                )
-                `when`(
-                        CleverTapFactory.getCoreState(
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any()
-                        )
-                )
-                        .thenReturn(corestate)
-                CleverTapAPI.getDefaultInstance(application)
-                CleverTapAPI.changeCredentials("acct123", "token123", "eu")
-                val instance = ManifestInfo.getInstance(application)
-                assertNotEquals("acct123", instance.accountId)
-                assertNotEquals("token123", instance.acountToken)
-                assertNotEquals("eu", instance.accountRegion)
+        setupBasicTestWithAny {
+            val expectedAccountId = "acct123"
+            val expectedToken = "token123"
+            val expectedRegion = "eu"
+            CleverTapAPI.getDefaultInstance(application)
+
+            val manifestInfo = ManifestInfo.getInstance(application)
+            // Act
+            CleverTapAPI.changeCredentials(expectedAccountId, expectedToken, expectedRegion)
+
+            // Assert
+            with(manifestInfo) {
+                assertNotEquals(expectedAccountId, accountId)
+                assertNotEquals(expectedToken, acountToken)
+                assertNotEquals(expectedRegion, accountRegion)
             }
         }
     }
 
     @Test
     fun test_changeCredentials_whenDefaultConfigNull_credentialsMustChange() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
-            )
+        setupMockExecutors {
+            // Arrange
+            val expectedAccountId = "acct123"
+            val expectedToken = "token123"
+            val expectedRegion = "eu"
             CleverTapAPI.defaultConfig = null
-            CleverTapAPI.changeCredentials("acct123", "token123", "eu")
-            val instance = ManifestInfo.getInstance(application)
-            assertEquals("acct123", instance.accountId)
-            assertEquals("token123", instance.acountToken)
-            assertEquals("eu", instance.accountRegion)
+
+            // Act
+            CleverTapAPI.changeCredentials(expectedAccountId, expectedToken, expectedRegion)
+
+            // Assert
+            val manifestInfo = ManifestInfo.getInstance(application)
+            with(manifestInfo) {
+                assertEquals(expectedAccountId, accountId)
+                assertEquals(expectedToken, acountToken)
+                assertEquals(expectedRegion, accountRegion)
+            }
         }
     }
 
     @Test
     fun test_createNotification_whenInstancesNull__createNotificationMustBeCalled() {
-
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
+        setupBasicTestWithAny {
+            val bundle = Bundle()
+            val lock = Object()
+            //CleverTapAPI.getDefaultInstance(application)
+            //CleverTapAPI.setInstances(null)
+            `when`(corestate.pushProviders.pushRenderingLock).thenReturn(lock)
+            CleverTapAPI.createNotification(application, bundle)
+            verify(corestate.pushProviders).pushNotificationRenderer =
+                any(CoreNotificationRenderer::class.java)
+            verify(corestate.pushProviders)._createNotification(
+                application,
+                bundle,
+                Constants.EMPTY_NOTIFICATION_ID
             )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CTExecutorFactory.executors(any())).thenReturn(
-                        MockCTExecutors(
-                                cleverTapInstanceConfig
-                        )
-                )
-                `when`(
-                        CleverTapFactory.getCoreState(
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any()
-                        )
-                )
-                        .thenReturn(corestate)
-                val bundle = Bundle()
-                val lock = Object()
-                //CleverTapAPI.getDefaultInstance(application)
-                //CleverTapAPI.setInstances(null)
-                `when`(corestate.pushProviders.pushRenderingLock).thenReturn(lock)
-                CleverTapAPI.createNotification(application, bundle)
-                verify(corestate.pushProviders).pushNotificationRenderer = any(CoreNotificationRenderer::class.java)
-                verify(corestate.pushProviders)._createNotification(
-                        application,
-                        bundle,
-                        Constants.EMPTY_NOTIFICATION_ID
-                )
-            }
         }
     }
 
     @Test
     fun test_createNotification_whenInstanceNotNullAndAcctIDMatches__createNotificationMustBeCalled() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(
-                        CleverTapFactory.getCoreState(
-                            ArgumentMatchers.any(),
-                            ArgumentMatchers.any(),
-                            ArgumentMatchers.any()
-                        )
-                )
-                    .thenReturn(corestate)
-                val bundle = Bundle()
-                val lock = Object()
-                bundle.putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
-                CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+        setupBasicTestWithAny {
+            val bundle = Bundle()
+            val lock = Object()
+            bundle.putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
+            CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
 
-                `when`(corestate.pushProviders.pushRenderingLock).thenReturn(lock)
-                CleverTapAPI.createNotification(application, bundle)
-                verify(corestate.pushProviders).pushNotificationRenderer = any(CoreNotificationRenderer::class.java)
-                verify(corestate.pushProviders)._createNotification(
-                    application,
-                    bundle,
-                    Constants.EMPTY_NOTIFICATION_ID
-                )
-            }
+            `when`(corestate.pushProviders.pushRenderingLock).thenReturn(lock)
+            CleverTapAPI.createNotification(application, bundle)
+            verify(corestate.pushProviders).pushNotificationRenderer =
+                any(CoreNotificationRenderer::class.java)
+            verify(corestate.pushProviders)._createNotification(
+                application,
+                bundle,
+                Constants.EMPTY_NOTIFICATION_ID
+            )
         }
     }
 
     @Test
     fun test_createNotification_whenInstanceNotNullAndAcctIdDontMatch_createNotificationMustNotBeCalled() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
+        setupMockFactoryWithAny {
+            val bundle = Bundle()
+            bundle.putString(Constants.WZRK_ACCT_ID_KEY, "acct123")
+            CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+            CleverTapAPI.createNotification(application, bundle)
+            verify(corestate.pushProviders, never())._createNotification(
+                application,
+                bundle,
+                Constants.EMPTY_NOTIFICATION_ID
             )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(
-                        CleverTapFactory.getCoreState(
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any()
-                        )
-                )
-                        .thenReturn(corestate)
-                val bundle = Bundle()
-                bundle.putString(Constants.WZRK_ACCT_ID_KEY, "acct123")
-                CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                CleverTapAPI.createNotification(application, bundle)
-                verify(corestate.pushProviders, never())._createNotification(
-                        application,
-                        bundle,
-                        Constants.EMPTY_NOTIFICATION_ID
-                )
-            }
         }
     }
 
@@ -434,53 +359,21 @@ class CleverTapAPITest : BaseTestCase() {
     @Test
     fun test_processPushNotification_whenInstancesNull__processCustomPushNotificationMustBeCalled() {
 
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(
-                        CleverTapFactory.getCoreState(
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any()
-                        )
-                )
-                        .thenReturn(corestate)
-                val bundle = Bundle()
-                //CleverTapAPI.getDefaultInstance(application)
-                //CleverTapAPI.setInstances(null)
-                CleverTapAPI.processPushNotification(application, bundle)
-                verify(corestate.pushProviders).processCustomPushNotification(bundle)
-            }
+        setupMockFactoryWithAny {
+            val bundle = Bundle()
+            CleverTapAPI.processPushNotification(application, bundle)
+            verify(corestate.pushProviders).processCustomPushNotification(bundle)
         }
     }
 
     @Test
     fun test_processPushNotification_whenInstancesNotNull__processCustomPushNotificationMustBeCalled() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                    MockCTExecutors(
-                            cleverTapInstanceConfig
-                    )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(
-                        CleverTapFactory.getCoreState(
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any()
-                        )
-                )
-                        .thenReturn(corestate)
-                val bundle = Bundle()
-                bundle.putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
-                CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                CleverTapAPI.processPushNotification(application, bundle)
-                verify(corestate.pushProviders).processCustomPushNotification(bundle)
-            }
+        setupBasicTestWithAny {
+            val bundle = Bundle()
+            bundle.putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
+            CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+            CleverTapAPI.processPushNotification(application, bundle)
+            verify(corestate.pushProviders).processCustomPushNotification(bundle)
         }
     }
 
@@ -493,23 +386,14 @@ class CleverTapAPITest : BaseTestCase() {
         corestate.controllerManager=controllerManager
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                `when`(controllerManager.ctInboxController).thenReturn(inboxController)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
+        setupBasicTest {
+            `when`(controllerManager.ctInboxController).thenReturn(inboxController)
+            initializeCleverTapAPI()
+            cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
 
-                // Assert
-                verify(controllerManager).ctInboxController
-                verifyNoMoreInteractions(controllerManager)
-            }
+            // Assert
+            verify(controllerManager).ctInboxController
+            verifyNoMoreInteractions(controllerManager)
         }
     }
 
@@ -522,23 +406,14 @@ class CleverTapAPITest : BaseTestCase() {
         corestate.controllerManager = controllerManager
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                `when`(controllerManager.ctInboxController).thenReturn(inboxController)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
+        setupBasicTest {
+            `when`(controllerManager.ctInboxController).thenReturn(inboxController)
+            initializeCleverTapAPI()
+            cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
 
-                // Assert
-                verify(controllerManager,times(2)).ctInboxController
-                verify(inboxController).deleteInboxMessagesForIDs(messageIDs)
-            }
+            // Assert
+            verify(controllerManager, times(2)).ctInboxController
+            verify(inboxController).deleteInboxMessagesForIDs(messageIDs)
         }
     }
 
@@ -551,23 +426,14 @@ class CleverTapAPITest : BaseTestCase() {
         corestate.controllerManager=controllerManager
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                `when`(controllerManager.ctInboxController).thenReturn(inboxController)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
+        setupBasicTest {
+            `when`(controllerManager.ctInboxController).thenReturn(inboxController)
+            initializeCleverTapAPI()
+            cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
 
-                // Assert
-                verify(controllerManager).ctInboxController
-                verifyNoMoreInteractions(controllerManager)
-            }
+            // Assert
+            verify(controllerManager).ctInboxController
+            verifyNoMoreInteractions(controllerManager)
         }
     }
 
@@ -580,23 +446,14 @@ class CleverTapAPITest : BaseTestCase() {
         corestate.controllerManager = controllerManager
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                `when`(controllerManager.ctInboxController).thenReturn(inboxController)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
+        setupBasicTest {
+            `when`(controllerManager.ctInboxController).thenReturn(inboxController)
+            initializeCleverTapAPI()
+            cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
 
-                // Assert
-                verify(controllerManager,times(2)).ctInboxController
-                verify(inboxController).markReadInboxMessagesForIDs(messageIDs)
-            }
+            // Assert
+            verify(controllerManager, times(2)).ctInboxController
+            verify(inboxController).markReadInboxMessagesForIDs(messageIDs)
         }
     }
 
@@ -607,22 +464,13 @@ class CleverTapAPITest : BaseTestCase() {
         `when`(corestate.localDataStore.readUserEventLogCount(evt)).thenReturn(1)
         
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                val userEventLogCountActual = cleverTapAPI.getUserEventLogCount(evt)
+        setupBasicTest {
+            initializeCleverTapAPI()
+            val userEventLogCountActual = cleverTapAPI.getUserEventLogCount(evt)
 
-                // Assert
-                assertEquals(1, userEventLogCountActual)
-                verify(corestate.localDataStore).readUserEventLogCount(evt)
-            }
+            // Assert
+            assertEquals(1, userEventLogCountActual)
+            verify(corestate.localDataStore).readUserEventLogCount(evt)
         }
     }
 
@@ -634,22 +482,13 @@ class CleverTapAPITest : BaseTestCase() {
         `when`(corestate.localDataStore.readUserEventLog(evt)).thenReturn(log)
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                val userEventLogActual = cleverTapAPI.getUserEventLog(evt)
+        setupBasicTest {
+            initializeCleverTapAPI()
+            val userEventLogActual = cleverTapAPI.getUserEventLog(evt)
 
-                // Assert
-                assertSame(log, userEventLogActual)
-                verify(corestate.localDataStore).readUserEventLog(evt)
-            }
+            // Assert
+            assertSame(log, userEventLogActual)
+            verify(corestate.localDataStore).readUserEventLog(evt)
         }
     }
 
@@ -660,22 +499,13 @@ class CleverTapAPITest : BaseTestCase() {
         `when`(corestate.localDataStore.readUserEventLogFirstTs(evt)).thenReturn(1000L)
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                val firstTsActual = cleverTapAPI.getUserEventLogFirstTs(evt)
+        setupBasicTest {
+            initializeCleverTapAPI()
+            val firstTsActual = cleverTapAPI.getUserEventLogFirstTs(evt)
 
-                // Assert
-                assertEquals(1000L, firstTsActual)
-                verify(corestate.localDataStore).readUserEventLogFirstTs(evt)
-            }
+            // Assert
+            assertEquals(1000L, firstTsActual)
+            verify(corestate.localDataStore).readUserEventLogFirstTs(evt)
         }
     }
 
@@ -686,22 +516,13 @@ class CleverTapAPITest : BaseTestCase() {
         `when`(corestate.localDataStore.readUserEventLogLastTs(evt)).thenReturn(1000L)
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                val lastTsActual = cleverTapAPI.getUserEventLogLastTs(evt)
+        setupBasicTest {
+            initializeCleverTapAPI()
+            val lastTsActual = cleverTapAPI.getUserEventLogLastTs(evt)
 
-                // Assert
-                assertEquals(1000L, lastTsActual)
-                verify(corestate.localDataStore).readUserEventLogLastTs(evt)
-            }
+            // Assert
+            assertEquals(1000L, lastTsActual)
+            verify(corestate.localDataStore).readUserEventLogLastTs(evt)
         }
 
     }
@@ -716,22 +537,15 @@ class CleverTapAPITest : BaseTestCase() {
         `when`(corestate.localDataStore.readUserEventLogs()).thenReturn(logs)
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(cleverTapInstanceConfig)
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                val historyActual = cleverTapAPI.userEventLogHistory
+        setupBasicTest {
+            initializeCleverTapAPI()
+            val historyActual = cleverTapAPI.userEventLogHistory
 
-                // Assert
-                assertEquals(2, historyActual.size)
-                assertEquals(logs[0], historyActual.values.elementAt(0))
-                assertEquals(logs[1], historyActual.values.elementAt(1))
-                verify(corestate.localDataStore).readUserEventLogs()
-            }
+            // Assert
+            assertEquals(2, historyActual.size)
+            assertEquals(logs[0], historyActual.values.elementAt(0))
+            assertEquals(logs[1], historyActual.values.elementAt(1))
+            verify(corestate.localDataStore).readUserEventLogs()
         }
     }
 
@@ -741,20 +555,13 @@ class CleverTapAPITest : BaseTestCase() {
         `when`(corestate.sessionManager.userLastVisitTs).thenReturn(1000L)
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(cleverTapInstanceConfig)
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                val lastVisitTsActual = cleverTapAPI.userLastVisitTs
+        setupBasicTest {
+            initializeCleverTapAPI()
+            val lastVisitTsActual = cleverTapAPI.userLastVisitTs
 
-                // Assert
-                assertEquals(1000L, lastVisitTsActual)
-                verify(corestate.sessionManager).userLastVisitTs
-            }
+            // Assert
+            assertEquals(1000L, lastVisitTsActual)
+            verify(corestate.sessionManager).userLastVisitTs
         }
     }
 
@@ -765,20 +572,13 @@ class CleverTapAPITest : BaseTestCase() {
             .thenReturn(5)
 
         // Act
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(cleverTapInstanceConfig)
-            )
-            mockStatic(CleverTapFactory::class.java).use {
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-                val appLaunchCountActual = cleverTapAPI.userAppLaunchCount
+        setupBasicTest {
+            initializeCleverTapAPI()
+            val appLaunchCountActual = cleverTapAPI.userAppLaunchCount
 
-                // Assert
-                assertEquals(5, appLaunchCountActual)
-                verify(corestate.localDataStore).readUserEventLogCount(Constants.APP_LAUNCHED_EVENT)
-            }
+            // Assert
+            assertEquals(5, appLaunchCountActual)
+            verify(corestate.localDataStore).readUserEventLogCount(Constants.APP_LAUNCHED_EVENT)
         }
     }
 /* @Test
