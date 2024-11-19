@@ -53,6 +53,7 @@ import com.google.firebase.messaging.RemoteMessage
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
+import org.junit.jupiter.api.assertAll
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
@@ -832,6 +833,18 @@ class UtilsTest : BaseTestCase() {
                 it
             }), application)
         }
+    }
+
+    @Test
+    fun test_areNormalizedNamesEqual_should_compare_correctly() {
+        assertTrue(Utils.areNamesNormalizedEqual(null, null))
+        assertTrue(Utils.areNamesNormalizedEqual("", ""))
+        assertTrue(Utils.areNamesNormalizedEqual("Event 1", "Event1"))
+        assertTrue(Utils.areNamesNormalizedEqual("Event 1", "event1"))
+        assertTrue(Utils.areNamesNormalizedEqual("Event 1", "EVENT   1"))
+        assertFalse(Utils.areNamesNormalizedEqual("Event 1", null))
+        assertFalse(Utils.areNamesNormalizedEqual("", null))
+        assertFalse(Utils.areNamesNormalizedEqual("Event 1", "Event 2"))
     }
 
     //------------------------------------------------------------------------------------

@@ -25,7 +25,7 @@ class WebViewActivity : AppCompatActivity() {
             settings.allowContentAccess = false
             settings.allowFileAccess = false
             settings.allowFileAccessFromFileURLs = false
-            addJavascriptInterface(CTWebInterface(CleverTapAPI.getDefaultInstance(this@WebViewActivity)), "CleverTap")
+            addJavascriptInterface(CTWebInterface(MyApplication.ctInstance), "CleverTap")
         }
     }
 
