@@ -121,7 +121,7 @@ class TriggerAdapter(triggerJSON: JSONObject) {
     val geoRadiusCount: Int
         get() = geoRadiusArray?.length() ?: 0
 
-    companion object {
+    internal companion object {
         const val KEY_FIRST_TIME_ONLY = "firstTimeOnly"
         const val KEY_EVENT_NAME = "eventName"
         const val KEY_EVENT_PROPERTIES = "eventProperties"
