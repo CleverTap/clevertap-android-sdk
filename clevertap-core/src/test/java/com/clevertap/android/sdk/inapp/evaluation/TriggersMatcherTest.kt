@@ -2,21 +2,29 @@ package com.clevertap.android.sdk.inapp.evaluation
 
 import android.location.Location
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.LocalDataStore
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.*
-import org.junit.Assert.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
 
 class TriggersMatcherTest : BaseTestCase() {
 
     private lateinit var triggersMatcher: TriggersMatcher
+    private lateinit var localDataStore: LocalDataStore
 
     @Before
     override fun setUp() {
         super.setUp()
-        triggersMatcher = TriggersMatcher()
+        localDataStore = mockk<LocalDataStore>(relaxed = true)
+        triggersMatcher = TriggersMatcher(localDataStore)
     }
 
     @Test
@@ -1286,6 +1294,59 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `test match when firstTimeOnly is true and event is not first time returns false`() {
+        // Given
+        val trigger = createTriggerAdapter(
+            eventName = "EventA",
+            firstTimeOnly = true
+        )
+        val event = createEventAdapter("EventA")
+        every { localDataStore.isUserEventLogFirstTime("EventA") } returns false
+
+        // When
+        val result = triggersMatcher.match(trigger, event)
+
+        // Then
+        assertFalse(result)
+        verify { localDataStore.isUserEventLogFirstTime("EventA") }
+    }
+
+    @Test
+    fun `test match when firstTimeOnly is true and event is first time proceeds with other checks`() {
+        // Given
+        val trigger = createTriggerAdapter(
+            eventName = "EventA",
+            firstTimeOnly = true
+        )
+        val event = createEventAdapter("EventA")
+        every { localDataStore.isUserEventLogFirstTime("EventA") } returns true
+
+        // When
+        val result = triggersMatcher.match(trigger, event)
+
+        // Then
+        assertTrue(result)
+        verify { localDataStore.isUserEventLogFirstTime("EventA") }
+    }
+
+    @Test
+    fun `test match when firstTimeOnly is false skips firstTime check`() {
+        // Given
+        val trigger = createTriggerAdapter(
+            eventName = "EventA",
+            firstTimeOnly = false
+        )
+        val event = createEventAdapter("EventA")
+
+        // When
+        val result = triggersMatcher.match(trigger, event)
+
+        // Then
+        assertTrue(result)
+        verify(exactly = 0) { localDataStore.isUserEventLogFirstTime(any()) }
+    }
+
+    @Test
     fun testMatch_WhenChargedEventItemPropertyConditionsAreMet_ShouldReturnTrue() {
         val trigger = createTriggerAdapter(
             Constants.CHARGED_EVENT, listOf(), listOf(
@@ -1525,10 +1586,12 @@ class TriggersMatcherTest : BaseTestCase() {
         propertyConditions: List<TriggerCondition> = emptyList(),
         itemConditions: List<TriggerCondition> = emptyList(),
         geoRadiusConditions: List<TriggerGeoRadius> = emptyList(),
-        profileAttrName: String? = null
+        profileAttrName: String? = null,
+        firstTimeOnly: Boolean = false
     ): TriggerAdapter {
         val triggerJSON = JSONObject().apply {
             put("eventName", eventName)
+            put(TriggerAdapter.KEY_FIRST_TIME_ONLY, firstTimeOnly)
             if(profileAttrName != null)
                 put("profileAttrName",profileAttrName)
             if (propertyConditions.isNotEmpty()) {

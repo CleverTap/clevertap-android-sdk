@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_FIRST_TIME_ONLY
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
@@ -578,6 +579,48 @@ class TriggerAdapterTest {
         assertEquals(propertiesArray, triggerJSON.optJSONArray(Constants.KEY_EVENT_PROPERTIES))
         assertEquals(itemsArray, triggerJSON.optJSONArray(Constants.KEY_ITEM_PROPERTIES))
         assertEquals(geoRadiusArray, triggerJSON.optJSONArray(Constants.KEY_GEO_RADIUS_PROPERTIES))
+    }
+
+
+    @Test
+    fun `test firstTimeOnly with firstTimeOnly value as true`() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        triggerJSON.put(KEY_FIRST_TIME_ONLY, true)
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val actualFirstTimeOnly = triggerAdapter.firstTimeOnly
+
+        // Assert
+        assertTrue(actualFirstTimeOnly)
+    }
+
+    @Test
+    fun `test firstTimeOnly with firstTimeOnly value as false`(){
+        // Arrange
+        val triggerJSON = JSONObject()
+        triggerJSON.put(KEY_FIRST_TIME_ONLY, false)
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val actualFirstTimeOnly = triggerAdapter.firstTimeOnly
+
+        // Assert
+        assertFalse(actualFirstTimeOnly)
+    }
+
+    @Test
+    fun `test firstTimeOnly with firstTimeOnly value as null`() {
+        // Arrange
+        val triggerJSON = JSONObject()
+        val triggerAdapter = TriggerAdapter(triggerJSON)
+
+        // Act
+        val actualFirstTimeOnly = triggerAdapter.firstTimeOnly
+
+        // Assert
+        assertFalse(actualFirstTimeOnly)
     }
 
 }

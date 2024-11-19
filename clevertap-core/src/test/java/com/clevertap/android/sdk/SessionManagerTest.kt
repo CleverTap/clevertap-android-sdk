@@ -3,9 +3,13 @@ package com.clevertap.android.sdk
 
 import android.content.Context
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.db.BaseDatabaseManager
+import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
@@ -23,6 +27,7 @@ class SessionManagerTest : BaseTestCase() {
     private lateinit var localDataStoreDef: LocalDataStore
     private lateinit var cryptHandler : CryptHandler
     private lateinit var deviceInfo : DeviceInfo
+    private lateinit var baseDatabaseManager: BaseDatabaseManager
     override fun setUp() {
         super.setUp()
         config = CleverTapInstanceConfig.createInstance(application, "id", "token", "region")
@@ -34,7 +39,14 @@ class SessionManagerTest : BaseTestCase() {
         cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
         cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
         deviceInfo = MockDeviceInfo(appCtx, configDef, "id", coreMetaData)
-        localDataStoreDef = LocalDataStore(application, configDef, cryptHandler, deviceInfo)
+        baseDatabaseManager = Mockito.mock(DBManager::class.java)
+        localDataStoreDef = LocalDataStore(
+            application,
+            configDef,
+            cryptHandler,
+            deviceInfo,
+            baseDatabaseManager
+        )
 
         sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreDef)
 
@@ -158,6 +170,17 @@ class SessionManagerTest : BaseTestCase() {
         sessionManagerDef.lazyCreateSession(ctxSpy)
         Mockito.verify(coreMetaDataSpy,Mockito.times(1)).lastSessionLength = 10
         Mockito.verify(coreMetaDataSpy,Mockito.times(1)).isFirstSession= true
+
+    }
+
+    @Test
+    fun `test setUserLastVisitTs`(){
+        val localDataStoreMockk = mockk<LocalDataStore>()
+        sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreMockk)
+        every { localDataStoreMockk.readUserEventLogLastTs(Constants.APP_LAUNCHED_EVENT) } returns 1000000L
+        sessionManagerDef.setUserLastVisitTs()
+        assertEquals(1000000L,sessionManagerDef.userLastVisitTs)
+
 
     }
 
