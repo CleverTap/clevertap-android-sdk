@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.userEventLogs
+package com.clevertap.android.sdk.usereventlogs
 
 import android.content.Context
 import android.database.sqlite.SQLiteException

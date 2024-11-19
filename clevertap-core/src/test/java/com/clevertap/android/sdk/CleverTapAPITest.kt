@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
-import com.clevertap.android.sdk.userEventLogs.UserEventLog
+import com.clevertap.android.sdk.usereventlogs.UserEventLog
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.Constant
 import org.json.JSONObject

@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
-import com.clevertap.android.sdk.userEventLogs.UserEventLog;
+import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 
 //import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONArray;

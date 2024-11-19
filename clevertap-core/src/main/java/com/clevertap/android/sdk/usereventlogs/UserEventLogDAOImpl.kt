@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.userEventLogs
+package com.clevertap.android.sdk.usereventlogs
 
 import android.content.ContentValues
 import android.database.Cursor

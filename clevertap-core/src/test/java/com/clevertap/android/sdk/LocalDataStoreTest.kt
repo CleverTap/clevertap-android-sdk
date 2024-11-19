@@ -6,9 +6,9 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
-import com.clevertap.android.sdk.userEventLogs.UserEventLog
-import com.clevertap.android.sdk.userEventLogs.UserEventLogDAO
-import com.clevertap.android.sdk.userEventLogs.UserEventLogDAOImpl
+import com.clevertap.android.sdk.usereventlogs.UserEventLog
+import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
+import com.clevertap.android.sdk.usereventlogs.UserEventLogDAOImpl
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.Test
