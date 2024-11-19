@@ -143,9 +143,13 @@ class CTInAppBaseFragmentTest {
         verify {
             inAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
-                action = any(),
+                action = match { action ->
+                    // the open-url action should be performed with the url after __dl__
+                    dl == action.actionUrl
+                },
                 callToAction = callToActionParam,
                 additionalData = match { data ->
+                    // only the params of the original url should be tracked
                     data.size() == 1
                             && param1 == data.getString("param1")
                 },
@@ -158,9 +162,13 @@ class CTInAppBaseFragmentTest {
         verify {
             inAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
-                action = any(),
+                action = match { action ->
+                    // the open-url action should be performed with the url after __dl__
+                    dl == action.actionUrl
+                },
                 callToAction = callToActionArgument,
                 additionalData = match { data ->
+                    // only the params of the original url should be tracked
                     data.size() == 1
                             && param1 == data.getString("param1")
                 },
