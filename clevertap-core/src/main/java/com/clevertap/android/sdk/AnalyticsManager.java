@@ -484,7 +484,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
 
                         JSONArray inappNotifs = new JSONArray();
-                        if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)) {
+                        if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
+                                || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
                             inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
                         } else {
                             inappNotifs.put(inappPreviewPayload);
