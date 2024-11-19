@@ -130,14 +130,26 @@ class AnalyticsManagerTest {
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
 
         verify {
-            eventQueueManager.queueEvent(context, any(), Constants.NV_EVENT)
+            eventQueueManager.queueEvent(
+                context,
+                withArg {
+                    JSONAssert.assertEquals(json, it, true)
+                },
+                Constants.NV_EVENT
+            )
         }
 
         // Send duplicate PN
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
 
         verify(exactly = 1) {
-            eventQueueManager.queueEvent(context, any(), Constants.NV_EVENT)
+            eventQueueManager.queueEvent(
+                context,
+                withArg {
+                    JSONAssert.assertEquals(json, it, true)
+                },
+                Constants.NV_EVENT
+            )
         }
         confirmVerified(eventQueueManager)
     }
