@@ -34,6 +34,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import kotlin.jvm.functions.Function0;
+
 public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final CTLockManager ctLockManager;
@@ -48,6 +50,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final ValidationResultStack validationResultStack;
     private final Validator validator;
     private final InAppResponse inAppResponse;
+    private final Function0<Long> currentTimeProvider;
     private final Object notificationMapLock = new Object();
 
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
@@ -63,7 +66,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             DeviceInfo deviceInfo,
             BaseCallbackManager callbackManager, ControllerManager controllerManager,
             final CTLockManager ctLockManager,
-            InAppResponse inAppResponse
+            InAppResponse inAppResponse,
+            Function0<Long> currentTimeProvider
     ) {
         this.context = context;
         this.config = config;
@@ -76,6 +80,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
         this.inAppResponse = inAppResponse;
+        this.currentTimeProvider = currentTimeProvider;
     }
 
     @Override
@@ -1167,7 +1172,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             boolean isDupe = false;
             try {
                 String notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
-                long now = System.currentTimeMillis();
+                long now = currentTimeProvider.invoke();
                 if (notificationTagMap.containsKey(notificationIdTag)) {
                     long timestamp;
                     // noinspection ConstantConditions

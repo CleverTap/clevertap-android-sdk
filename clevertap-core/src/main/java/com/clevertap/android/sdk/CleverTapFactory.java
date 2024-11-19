@@ -266,7 +266,8 @@ class CleverTapFactory {
                 callbackManager,
                 controllerManager,
                 ctLockManager,
-                inAppResponseForSendTestInApp
+                inAppResponseForSendTestInApp,
+                System::currentTimeMillis
         );
         coreState.setAnalyticsManager(analyticsManager);
 
