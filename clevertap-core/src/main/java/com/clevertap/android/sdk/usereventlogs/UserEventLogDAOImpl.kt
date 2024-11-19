@@ -173,19 +173,20 @@ internal class UserEventLogDAOImpl(
         val tName = table.tableName
         val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ?"
         val selectionArgs = arrayOf(deviceID, eventName)
+        val resultColumn = "eventExists"
 
         val query = """
             SELECT EXISTS(
                 SELECT 1 
                 FROM $tName 
                 WHERE $selection
-            ) AS eventExists;
+            ) AS $resultColumn;
         """.trimIndent()
 
         return try {
             db.readableDatabase.rawQuery(query, selectionArgs)?.use { cursor ->
                 if (cursor.moveToFirst()) {
-                    cursor.getInt(cursor.getColumnIndexOrThrow("eventExists")) == 1
+                    cursor.getInt(cursor.getColumnIndexOrThrow(resultColumn)) == 1
                 } else {
                     false
                 }
@@ -201,17 +202,19 @@ internal class UserEventLogDAOImpl(
         val tName = table.tableName
         val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ? AND ${Column.COUNT} = ?"
         val selectionArgs = arrayOf(deviceID, eventName, count.toString())
+        val resultColumn = "eventExists"
+
         val query = """
             SELECT EXISTS(
                 SELECT 1 
                 FROM $tName 
                 WHERE $selection
-                ) AS eventExists;
+                ) AS $resultColumn;
         """.trimIndent()
         return try {
             db.readableDatabase.rawQuery(query, selectionArgs)?.use { cursor ->
                 if (cursor.moveToFirst()) {
-                    cursor.getInt(cursor.getColumnIndexOrThrow("eventExists")) == 1
+                    cursor.getInt(cursor.getColumnIndexOrThrow(resultColumn)) == 1
                 } else {
                     false
                 }
