@@ -37,33 +37,20 @@ import org.json.JSONObject;
 public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final CTLockManager ctLockManager;
-
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
-
     private final BaseEventQueueManager baseEventQueueManager;
-
     private final BaseCallbackManager callbackManager;
-
     private final CleverTapInstanceConfig config;
-
     private final Context context;
-
     private final ControllerManager controllerManager;
-
     private final CoreMetaData coreMetaData;
-
     private final DeviceInfo deviceInfo;
-
     private final ValidationResultStack validationResultStack;
-
     private final Validator validator;
-
     private final InAppResponse inAppResponse;
-
-    private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
-
     private final Object notificationMapLock = new Object();
 
+    private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
     AnalyticsManager(
@@ -668,7 +655,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (2 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationViewedIdTagMap,
+        boolean isDuplicate = checkDuplicateNotificationIds(extras,
+                notificationViewedIdTagMap,
                 Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL);
         if (isDuplicate) {
             config.getLogger().debug(config.getAccountId(),
