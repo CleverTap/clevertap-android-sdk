@@ -624,7 +624,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             if (html != null && content != null) {
                 String[] parts = html.split(Constants.INAPP_HTML_SPLIT);
                 if (parts.length == 2) {
-                    return String.format("%s'%s'%s", parts[0], content, parts[1]);
+                    return parts[0] + content + parts[1];
                 }
             }
         } catch (IOException e) {
