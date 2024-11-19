@@ -73,7 +73,6 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
                 executeStatement(db, INBOX_MESSAGES_COMP_ID_USERID_INDEX)
                 executeStatement(db, NOTIFICATION_VIEWED_INDEX)
                 migrateUserProfilesTable(db)
-                executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates 1 to 5
             }
 
             2 -> {
@@ -82,18 +81,16 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
                 executeStatement(db, CREATE_NOTIFICATION_VIEWED_TABLE)
                 executeStatement(db, NOTIFICATION_VIEWED_INDEX)
                 migrateUserProfilesTable(db)
-                executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates 2 to 5
             }
 
             3 -> {
                 // For DB Version 4, just migrate userProfiles table
                 migrateUserProfilesTable(db)
-                executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates 3 to 5
             }
+        }
 
-            4 -> {
-                executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates 4 to 5
-            }
+        if (oldVersion < 5) {
+            executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates [1,2,3,4] to 5
         }
     }
 

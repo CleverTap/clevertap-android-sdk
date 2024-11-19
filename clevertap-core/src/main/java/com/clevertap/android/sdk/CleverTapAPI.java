@@ -70,7 +70,7 @@ import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.userEventLogs.UserEventLog;
+import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;

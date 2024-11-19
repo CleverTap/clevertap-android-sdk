@@ -7,8 +7,6 @@ import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.MockCoreState
 import com.clevertap.android.sdk.MockDeviceInfo
-import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm.AES
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
@@ -164,9 +162,6 @@ class NetworkManagerTest : BaseTestCase() {
         val dbManager = DBManager(cleverTapInstanceConfig, lockManager)
         val controllerManager =
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
-        val cryptHandler = CryptHandler(0, AES, cleverTapInstanceConfig.accountId)
-       /* val localDataStore =
-            LocalDataStoreProvider.provideLocalDataStore(appCtx, cleverTapInstanceConfig, cryptHandler, deviceInfo)*/
         val triggersManager = TriggerManager(appCtx, cleverTapInstanceConfig.accountId, deviceInfo)
         val inAppResponse =
             InAppResponse(

@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 import android.location.Location
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.LocalDataStore
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_PROPERTY_VALUE
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
@@ -68,7 +69,7 @@ class TriggersMatcherTest : BaseTestCase() {
             put("eventProperties", JSONArray().put(JSONObject().apply {
                 put("propertyName", "Property2")
                 put("op", TriggerOperator.Equals.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "Value2")
+                put(KEY_PROPERTY_VALUE, "Value2")
             }))
         }
         //whenTriggers.put(triggerJSON1)
@@ -79,7 +80,7 @@ class TriggersMatcherTest : BaseTestCase() {
             put("eventProperties", JSONArray().put(JSONObject().apply {
                 put("propertyName", "Property1")
                 put("op", TriggerOperator.Equals.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "Value1")
+                put(KEY_PROPERTY_VALUE, "Value1")
             }))
         }
         //whenTriggers.put(triggerJSON2)
@@ -100,7 +101,7 @@ class TriggersMatcherTest : BaseTestCase() {
             put("eventProperties", JSONArray().put(JSONObject().apply {
                 put("propertyName", "Property2")
                 put("op", TriggerOperator.Equals.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "Value2")
+                put(KEY_PROPERTY_VALUE, "Value2")
             }))
         }
 
@@ -110,7 +111,7 @@ class TriggersMatcherTest : BaseTestCase() {
             put("eventProperties", JSONArray().put(JSONObject().apply {
                 put("propertyName", "Property1")
                 put("op", TriggerOperator.Equals.operatorValue)
-                put(Constants.KEY_PROPERTY_VALUE, "Value1")
+                put(KEY_PROPERTY_VALUE, "Value1")
             }))
         }
 
@@ -1626,7 +1627,7 @@ class TriggersMatcherTest : BaseTestCase() {
         return JSONObject().apply {
             put("propertyName", condition.propertyName)
             put("operator", condition.op.operatorValue)
-            put(Constants.KEY_PROPERTY_VALUE, condition.value.value)
+            put(KEY_PROPERTY_VALUE, condition.value.value)
         }
     }
 }

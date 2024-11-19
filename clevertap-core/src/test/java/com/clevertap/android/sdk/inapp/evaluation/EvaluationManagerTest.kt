@@ -6,6 +6,9 @@ import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.EventType.PROFILE
 import com.clevertap.android.sdk.inapp.evaluation.EventType.RAISED
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.INAPP_OPERATOR
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.INAPP_PROPERTYNAME
+import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_PROPERTY_VALUE
 import com.clevertap.android.sdk.inapp.evaluation.TriggerOperator.Equals
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
@@ -448,9 +451,9 @@ class EvaluationManagerTest : BaseTestCase() {
                   "${Constants.KEY_EVT_NAME}": "TestEvent",
                   "eventProperties": [
                     {
-                      "${Constants.INAPP_PROPERTYNAME}": "Property1",
-                      "${Constants.INAPP_OPERATOR}": 1,
-                      "${Constants.KEY_PROPERTY_VALUE}": "Value1"
+                      "$INAPP_PROPERTYNAME": "Property1",
+                      "$INAPP_OPERATOR": 1,
+                      "$KEY_PROPERTY_VALUE": "Value1"
                     }
                   ]
                 }

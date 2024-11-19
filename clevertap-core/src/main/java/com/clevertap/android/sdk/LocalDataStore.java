@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
-import com.clevertap.android.sdk.userEventLogs.UserEventLog;
+import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 
 //import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONArray;
@@ -705,15 +705,15 @@ public class LocalDataStore {
             events.add(s);
         }
         k++;*/
-        long start = System.currentTimeMillis();
+        long start = System.nanoTime();
         persistUserEventLogsInBulk(fields.keySet());
 //        persistUserEventLogsInBulk(events);
         /*for (String key : events)
         {
             persistUserEventLog(key);
         }*/
-        long end = System.currentTimeMillis();
-        config.getLogger().verbose(config.getAccountId(),"UserEventLog: persistUserEventLog execution time = "+(end-start)/1000+" seconds");
+        long end = System.nanoTime();
+        config.getLogger().verbose(config.getAccountId(),"UserEventLog: persistUserEventLog execution time = "+(end - start)+" nano seconds");
         for (Map.Entry<String, Object> entry : fields.entrySet()) {
             String key = entry.getKey();
             Object newValue = entry.getValue();

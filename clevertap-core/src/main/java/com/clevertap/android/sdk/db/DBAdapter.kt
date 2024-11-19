@@ -14,8 +14,8 @@ import com.clevertap.android.sdk.db.Table.UNINSTALL_TS
 import com.clevertap.android.sdk.db.Table.USER_EVENT_LOGS_TABLE
 import com.clevertap.android.sdk.db.Table.USER_PROFILES
 import com.clevertap.android.sdk.inbox.CTMessageDAO
-import com.clevertap.android.sdk.userEventLogs.UserEventLogDAO
-import com.clevertap.android.sdk.userEventLogs.UserEventLogDAOImpl
+import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
+import com.clevertap.android.sdk.usereventlogs.UserEventLogDAOImpl
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject

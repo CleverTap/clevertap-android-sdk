@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.userEventLogs
+package com.clevertap.android.sdk.usereventlogs
 
 data class UserEventLog(
     val eventName: String,   // The name of the event
