@@ -501,11 +501,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject event = AnalyticsManagerBundler.INSTANCE.notificationViewedJson(extras);
 
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
-            try {
-                coreMetaData.setWzrkParams(AnalyticsManagerBundler.INSTANCE.wzrkBundleToJson(extras));
-            } catch (Throwable t) {
-                // no-op
-            }
+            coreMetaData.setWzrkParams(AnalyticsManagerBundler.INSTANCE.wzrkBundleToJson(extras));
         } catch (Throwable t) {
             // We won't get here
         }
