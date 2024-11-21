@@ -498,21 +498,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        JSONObject event = new JSONObject();
-        JSONObject notif = new JSONObject();
         try {
-            for (String x : extras.keySet()) {
-                if (!x.startsWith(Constants.WZRK_PREFIX)) {
-                    continue;
-                }
-                Object value = extras.get(x);
-                notif.put(x, value);
-            }
+            // convert bundle to json
+            JSONObject event = AnalyticsManagerBundler.INSTANCE.notificationViewedJson(extras);
 
-            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
-            event.put("evtData", notif);
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
-
             try {
                 coreMetaData.setWzrkParams(AnalyticsManagerBundler.INSTANCE.wzrkBundleToJson(extras));
             } catch (Throwable t) {
