@@ -248,6 +248,7 @@ public interface Constants {
     String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
     String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
     String WZRK_PUSH_ID = "wzrk_pid";
+    String WZRK_DEDUPE = "wzrk_dd";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
     String EXTRAS_FROM = "extras_from";
     String NOTIF_MSG = "nm";

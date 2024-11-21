@@ -1171,7 +1171,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             // default to false; only return true if we are sure we've seen this one before
             boolean isDupe = false;
             try {
-                String notificationIdTag = extras.getString(Constants.WZRK_PUSH_ID);
+
+                // This flag is used so that we can release in phased manner, eventually the check has to go away.
+                boolean checkUsingPid = extras.getBoolean(Constants.WZRK_DEDUPE);
+
+                String notificationIdTag;
+                if (checkUsingPid) {
+                    notificationIdTag = extras.getString(Constants.WZRK_PUSH_ID);
+                } else {
+                    notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
+                }
+
                 long now = System.currentTimeMillis();
                 if (notificationTagMap.containsKey(notificationIdTag)) {
                     long timestamp;
