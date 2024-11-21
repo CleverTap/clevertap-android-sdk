@@ -458,8 +458,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         boolean shouldProcess = (accountId == null && config.isDefaultInstance())
-                || config.getAccountId()
-                .equals(accountId);
+                || config.getAccountId().equals(accountId);
 
         if (!shouldProcess) {
             config.getLogger().debug(config.getAccountId(),
@@ -484,8 +483,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             config.getLogger().debug(config.getAccountId(),
-                    "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras
-                            .toString());
+                    "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras);
             return;
         }
 

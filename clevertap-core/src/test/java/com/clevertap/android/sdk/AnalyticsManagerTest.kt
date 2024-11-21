@@ -36,7 +36,7 @@ class AnalyticsManagerTest {
 
     private lateinit var analyticsManagerSUT: AnalyticsManager
     private lateinit var coreState: MockCoreStateKotlin
-    private val cleverTapInstanceConfig: CleverTapInstanceConfig = CleverTapFixtures.provideCleverTapInstanceConfig()
+    private val cleverTapInstanceConfig = CleverTapFixtures.provideCleverTapInstanceConfig()
 
     @MockK(relaxed = true)
     private lateinit var validator: Validator
@@ -192,7 +192,7 @@ class AnalyticsManagerTest {
         // Send duplicate PN
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
 
-        // verify it was not called again, one time was from before
+        // verify queue event called again
         verify(exactly = 2) {
             eventQueueManager.queueEvent(
                 context,
@@ -200,6 +200,96 @@ class AnalyticsManagerTest {
                     JSONAssert.assertEquals(json, it, true)
                 },
                 Constants.NV_EVENT
+            )
+        }
+        confirmVerified(eventQueueManager)
+    }
+
+    @Test
+    fun `clevertap does not process duplicate (same wzrk_id) PN clicked within 2 seconds - case 2nd click happens in 200ms`() {
+        // send PN first time
+        val bundle = Bundle().apply {
+            putString("wzrk_pn", "wzrk_pn")
+            putString("wzrk_id", "duplicate-id")
+            putString("wzrk_pid", "pid")
+            putString("wzrk_someid", "someid")
+        }
+
+        val json = notificationViewedJson(bundle);
+
+        every { timeProvider.invoke() } returns 10000
+
+        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(
+                context,
+                withArg {
+                    JSONAssert.assertEquals(json, it, true)
+                },
+                Constants.RAISED_EVENT
+            )
+        }
+
+        // setup again, 10000 ms has passed
+        every { timeProvider.invoke() } returns 12000
+
+        // Send duplicate PN
+        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+
+        // verify it was not called again, one time was from before
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(
+                context,
+                withArg {
+                    JSONAssert.assertEquals(json, it, true)
+                },
+                Constants.RAISED_EVENT
+            )
+        }
+        confirmVerified(eventQueueManager)
+    }
+
+    @Test
+    fun `clevertap processes PN clicked for same wzrk_id if separated by a span of greater than 5 seconds`() {
+        // send PN first time
+        val bundle = Bundle().apply {
+            putString("wzrk_pn", "wzrk_pn")
+            putString("wzrk_id", "duplicate-id")
+            putString("wzrk_pid", "pid")
+            putString("wzrk_someid", "someid")
+        }
+
+        val json = notificationViewedJson(bundle);
+
+        every { timeProvider.invoke() } returns 10000
+
+        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(
+                context,
+                withArg {
+                    JSONAssert.assertEquals(json, it, true)
+                },
+                Constants.RAISED_EVENT
+            )
+        }
+
+        // setup again, 10000 ms has passed
+        every { timeProvider.invoke() } returns 20000
+
+        // Send duplicate PN
+        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+
+        // verify queue event called again
+        verify(exactly = 2) {
+            eventQueueManager.queueEvent(
+                context,
+                withArg {
+                    JSONAssert.assertEquals(json, it, true)
+                },
+                Constants.RAISED_EVENT
             )
         }
         confirmVerified(eventQueueManager)
