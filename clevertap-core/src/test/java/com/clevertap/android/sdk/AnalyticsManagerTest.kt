@@ -53,6 +53,9 @@ class AnalyticsManagerTest {
     @MockK(relaxed = true)
     private lateinit var inAppResponse: InAppResponse
 
+    @MockK(relaxed = true)
+    private lateinit var timeProvider: (() -> Long)
+
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
@@ -70,10 +73,9 @@ class AnalyticsManagerTest {
             coreState.callbackManager,
             coreState.controllerManager,
             coreState.ctLockManager,
-            inAppResponse
-        ) {
-            10000
-        }
+            inAppResponse,
+            timeProvider
+        )
     }
 
     @After
@@ -127,6 +129,8 @@ class AnalyticsManagerTest {
             put("evtData", CTJsonConverter.getWzrkFields(bundle))
         }
 
+        every { timeProvider.invoke() } returns 10000
+
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
 
         verify {
@@ -139,9 +143,13 @@ class AnalyticsManagerTest {
             )
         }
 
+        // setup again, 200 ms has passed
+        every { timeProvider.invoke() } returns 10200
+
         // Send duplicate PN
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
 
+        // verify it was not called again, one time was from before
         verify(exactly = 1) {
             eventQueueManager.queueEvent(
                 context,
