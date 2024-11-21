@@ -187,25 +187,6 @@ public class CTJsonConverter {
         return renderedTargets;
     }
 
-    public static JSONObject getWzrkFields(Bundle root) throws JSONException {
-        final JSONObject fields = new JSONObject();
-        for (String s : root.keySet()) {
-            final Object o = root.get(s);
-            if (o instanceof Bundle) {
-                final JSONObject wzrkFields = getWzrkFields((Bundle) o);
-                final Iterator<String> keys = wzrkFields.keys();
-                while (keys.hasNext()) {
-                    final String k = keys.next();
-                    fields.put(k, wzrkFields.get(k));
-                }
-            } else if (s.startsWith(Constants.WZRK_PREFIX)) {
-                fields.put(s, root.get(s));
-            }
-        }
-
-        return fields;
-    }
-
     public static JSONObject getWzrkFields(CTInAppNotification root) throws JSONException {
         final JSONObject fields = new JSONObject();
         JSONObject jsonObject = root.getJsonDescription();

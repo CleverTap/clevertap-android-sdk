@@ -2,12 +2,12 @@ package com.clevertap.android.sdk
 
 import android.content.Context
 import android.os.Bundle
+import com.clevertap.android.sdk.AnalyticsManagerBundler.notificationViewedJson
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.fixtures.CleverTapFixtures
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
-import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
@@ -114,7 +114,7 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `clevertap does not process duplicate PN viewed within 2 seconds`() {
+    fun `clevertap does not process duplicate PN viewed within 2 seconds - case 2nd notif in 200ms`() {
 
         // send PN first time
         val bundle = Bundle().apply {
@@ -124,10 +124,7 @@ class AnalyticsManagerTest {
             putString("wzrk_someid", "someid")
         }
 
-        val json = JSONObject().apply {
-            put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
-            put("evtData", CTJsonConverter.getWzrkFields(bundle))
-        }
+        val json = notificationViewedJson(bundle);
 
         every { timeProvider.invoke() } returns 10000
 
