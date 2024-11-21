@@ -119,7 +119,7 @@ class AnalyticsManagerTest {
         // send PN first time
         val bundle = Bundle().apply {
             putString("wzrk_pn", "wzrk_pn")
-            putString("wzrk_id", "id")
+            putString("wzrk_id", "duplicate-id")
             putString("wzrk_pid", "pid")
             putString("wzrk_someid", "someid")
         }
@@ -148,6 +148,52 @@ class AnalyticsManagerTest {
 
         // verify it was not called again, one time was from before
         verify(exactly = 1) {
+            eventQueueManager.queueEvent(
+                context,
+                withArg {
+                    JSONAssert.assertEquals(json, it, true)
+                },
+                Constants.NV_EVENT
+            )
+        }
+        confirmVerified(eventQueueManager)
+    }
+
+    @Test
+    fun `clevertap processes PN viewed for same wzrk_id if separated by a span of greater than 2 seconds`() {
+
+        // send PN first time
+        val bundle = Bundle().apply {
+            putString("wzrk_pn", "wzrk_pn")
+            putString("wzrk_id", "duplicate-id")
+            putString("wzrk_pid", "pid")
+            putString("wzrk_someid", "someid")
+        }
+
+        val json = notificationViewedJson(bundle);
+
+        every { timeProvider.invoke() } returns 10000
+
+        analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(
+                context,
+                withArg {
+                    JSONAssert.assertEquals(json, it, true)
+                },
+                Constants.NV_EVENT
+            )
+        }
+
+        // setup again, 10000 ms has passed
+        every { timeProvider.invoke() } returns 20000
+
+        // Send duplicate PN
+        analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+
+        // verify it was not called again, one time was from before
+        verify(exactly = 2) {
             eventQueueManager.queueEvent(
                 context,
                 withArg {
