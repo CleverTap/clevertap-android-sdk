@@ -56,6 +56,13 @@ class AnalyticsManagerTest {
     @MockK(relaxed = true)
     private lateinit var timeProvider: (() -> Long)
 
+    private val bundle = Bundle().apply {
+        putString("wzrk_pn", "wzrk_pn")
+        putString("wzrk_id", "duplicate-id")
+        putString("wzrk_pid", "pid")
+        putString("wzrk_someid", "someid")
+    }
+
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
@@ -86,17 +93,19 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `clevertap does not process push notification viewed event if it is not from clevertap`() {
+    fun `clevertap does not process push notification viewed or clicked event if it is not from clevertap`() {
         val bundle = Bundle().apply {
             putString("some", "random")
             putString("non clevertap", "bundle")
         }
 
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
 
         verify {
             eventQueueManager wasNot called
         }
+        confirmVerified(eventQueueManager)
     }
 
     @Test
@@ -108,26 +117,20 @@ class AnalyticsManagerTest {
         }
 
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
         verify {
             eventQueueManager wasNot called
         }
+        confirmVerified(eventQueueManager)
     }
 
     @Test
     fun `clevertap does not process duplicate PN viewed within 2 seconds - case 2nd notif in 200ms`() {
-
-        // send PN first time
-        val bundle = Bundle().apply {
-            putString("wzrk_pn", "wzrk_pn")
-            putString("wzrk_id", "duplicate-id")
-            putString("wzrk_pid", "pid")
-            putString("wzrk_someid", "someid")
-        }
-
-        val json = notificationViewedJson(bundle);
+        val json = notificationViewedJson(bundle)
 
         every { timeProvider.invoke() } returns 10000
 
+        // send PN first time
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
 
         verify {
@@ -162,18 +165,11 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap processes PN viewed for same wzrk_id if separated by a span of greater than 2 seconds`() {
 
-        // send PN first time
-        val bundle = Bundle().apply {
-            putString("wzrk_pn", "wzrk_pn")
-            putString("wzrk_id", "duplicate-id")
-            putString("wzrk_pid", "pid")
-            putString("wzrk_someid", "someid")
-        }
-
         val json = notificationViewedJson(bundle);
 
         every { timeProvider.invoke() } returns 10000
 
+        // send PN first time
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
 
         verify(exactly = 1) {
@@ -206,19 +202,25 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `clevertap does not process duplicate (same wzrk_id) PN clicked within 2 seconds - case 2nd click happens in 200ms`() {
+    fun `clevertap does not process PN Clicked if SDK is set to analytics only`() {
+        cleverTapInstanceConfig.isAnalyticsOnly = true
+
         // send PN first time
-        val bundle = Bundle().apply {
-            putString("wzrk_pn", "wzrk_pn")
-            putString("wzrk_id", "duplicate-id")
-            putString("wzrk_pid", "pid")
-            putString("wzrk_someid", "someid")
+        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+
+        verify {
+            eventQueueManager wasNot called
         }
+        confirmVerified(eventQueueManager)
+    }
 
-        val json = notificationViewedJson(bundle);
+    @Test
+    fun `clevertap does not process duplicate (same wzrk_id) PN clicked within 2 seconds - case 2nd click happens in 200ms`() {
 
+        val json = notificationViewedJson(bundle)
         every { timeProvider.invoke() } returns 10000
 
+        // send PN first time
         analyticsManagerSUT.pushNotificationClickedEvent(bundle)
 
         verify(exactly = 1) {
@@ -252,18 +254,11 @@ class AnalyticsManagerTest {
 
     @Test
     fun `clevertap processes PN clicked for same wzrk_id if separated by a span of greater than 5 seconds`() {
-        // send PN first time
-        val bundle = Bundle().apply {
-            putString("wzrk_pn", "wzrk_pn")
-            putString("wzrk_id", "duplicate-id")
-            putString("wzrk_pid", "pid")
-            putString("wzrk_someid", "someid")
-        }
 
         val json = notificationViewedJson(bundle);
-
         every { timeProvider.invoke() } returns 10000
 
+        // send PN first time
         analyticsManagerSUT.pushNotificationClickedEvent(bundle)
 
         verify(exactly = 1) {
