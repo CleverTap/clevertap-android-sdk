@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.evaluation
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
+import org.junit.Assert.assertNotEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -26,6 +27,69 @@ class EventAdapterTest : BaseTestCase() {
         assertNull(result.numberValue())
         assertNull(result.listValue())
         assertFalse { expected.isList() }
+    }
+
+    @Test
+    fun testGetPropertyPresentNormalisations() {
+        // Arrange
+        val eventProperties = mapOf("   name " to "John", "a ge  " to 30)
+        val eventAdapter = EventAdapter("eventName", eventProperties)
+
+        // Act
+        val result = eventAdapter.getPropertyValue("name")
+        val expected = TriggerValue("John")
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(expected.stringValue(), result.stringValue())
+        assertNull(result.numberValue())
+        assertNull(result.listValue())
+        assertFalse { expected.isList() }
+
+        // Act
+        val result1 = eventAdapter.getPropertyValue("age")
+        val expected1 = TriggerValue(30)
+
+        // Assert
+        assertNotNull(result1)
+        assertEquals(expected1.numberValue(), result1.numberValue())
+        assertNull(result1.stringValue())
+        assertNull(result1.listValue())
+        assertFalse { expected1.isList() }
+    }
+
+    @Test
+    fun testGetPropertyPresentNormalisations2() {
+        // Arrange
+        val eventProperties = mapOf("   name " to "John Doe", "Lucky Numbers" to listOf(1, 2))
+        val eventAdapter = EventAdapter("eventName", eventProperties)
+
+        // Act
+        val result = eventAdapter.getPropertyValue("name")
+        val expected = TriggerValue("John Doe")
+        val notExpected = TriggerValue("JohnDoe")
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(expected.stringValue(), result.stringValue())
+        assertNotEquals(notExpected.stringValue(), result.stringValue())
+        assertNull(result.numberValue())
+        assertNull(result.listValue())
+        assertFalse { expected.isList() }
+
+        // Act
+        val result1 = eventAdapter.getPropertyValue("luckynumbers")
+        val expected1 = TriggerValue(
+            value = null,
+            listValue = listOf(1, 2)
+        )
+
+        // Assert
+        assertNotNull(result1)
+        assertEquals(expected1.listValue(), result1.listValue())
+        assertNull(result1.stringValue())
+        assertNull(result1.numberValue())
+        assertTrue { expected1.isList() }
     }
 
     @Test
