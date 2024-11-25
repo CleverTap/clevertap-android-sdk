@@ -81,13 +81,12 @@ class EventAdapter(
         return items
             .filterNotNull()
             .map { productMap: Map<String, Any> ->
-
                 val normalisedMap = productMap.map {
                     Utils.getNormalizedName(it.key) to it.value
                 }.toMap()
 
                 TriggerValue(normalisedMap[Utils.getNormalizedName(propertyName)])
-            }
+            }.filter { it.value != null }
     }
 
     /**
