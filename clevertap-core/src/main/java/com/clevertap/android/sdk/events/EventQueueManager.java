@@ -460,12 +460,18 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
                 if (eventMediator.isChargedEvent(event)) {
                     controllerManager.getInAppController()
-                            .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
-                                    eventMediator.getChargedEventItemDetails(event), userLocation);
+                            .onQueueChargedEvent(
+                                    eventMediator.getChargedEventDetails(event),
+                                    eventMediator.getChargedEventItemDetails(event),
+                                    userLocation
+                            );
                 } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
                     // in case device is offline just evaluate all events
-                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
-                            eventMediator.getEventProperties(event), userLocation);
+                    controllerManager.getInAppController().onQueueEvent(
+                            eventMediator.getEventName(event),
+                            eventMediator.getEventProperties(event),
+                            userLocation
+                    );
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     // in case profile event, evaluate for user attribute changes
                     Map<String, Map<String, Object>> userAttributeChangedProperties
@@ -474,8 +480,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                             .onQueueProfileEvent(userAttributeChangedProperties, userLocation);
                 } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
                     // in case device is online only evaluate non-appLaunched events
-                    controllerManager.getInAppController().onQueueEvent(eventMediator.getEventName(event),
-                            eventMediator.getEventProperties(event), userLocation);
+                    controllerManager.getInAppController().onQueueEvent(
+                            eventMediator.getEventName(event),
+                            eventMediator.getEventProperties(event),
+                            userLocation
+                    );
                 }
 
                 if (eventMediator.shouldDropEvent(event, eventType)) {

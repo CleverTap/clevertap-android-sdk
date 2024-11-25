@@ -2,6 +2,8 @@ package com.clevertap.android.sdk.variables;
 
 import android.text.Editable;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -50,6 +52,10 @@ public class JsonUtil {
   }
 
   public static <T> Map<String, T> mapFromJson(JSONObject object) {
+    return mapFromJson(object, false);
+  }
+
+  public static <T> Map<String, T> mapFromJson(JSONObject object, boolean normaliseNames) {
     if (object == null) {
       return null;
     }
@@ -68,7 +74,9 @@ public class JsonUtil {
         value = null;
       }
       T castedValue = uncheckedCast(value);
-      result.put(key, castedValue);
+      if (normaliseNames) {
+        result.put(Utils.getNormalizedName(key), castedValue);
+      }
     }
     return result;
   }

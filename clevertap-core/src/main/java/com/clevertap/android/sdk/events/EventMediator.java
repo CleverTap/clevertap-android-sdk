@@ -111,7 +111,7 @@ public class EventMediator {
     public Map<String, Object> getEventProperties(JSONObject event) {
         if (event.has(Constants.KEY_EVT_NAME) && event.has(Constants.KEY_EVT_DATA)) {
             try {
-                return JsonUtil.mapFromJson(event.getJSONObject(Constants.KEY_EVT_DATA));
+                return JsonUtil.mapFromJson(event.getJSONObject(Constants.KEY_EVT_DATA), true);
             } catch (JSONException e) {
                 Logger.v("Could not convert JSONObject to Map - " + e
                         .getMessage());
@@ -141,8 +141,7 @@ public class EventMediator {
     public Map<String, Object> getChargedEventDetails(JSONObject event) {
         try {
             final Object items = event.getJSONObject(Constants.KEY_EVT_DATA).remove(Constants.KEY_ITEMS);
-            final Map<String, Object> chargedDetails = JsonUtil.mapFromJson(
-                    event.getJSONObject(Constants.KEY_EVT_DATA));
+            final Map<String, Object> chargedDetails = JsonUtil.mapFromJson(event.getJSONObject(Constants.KEY_EVT_DATA));
             event.getJSONObject(Constants.KEY_EVT_DATA).put(Constants.KEY_ITEMS, items);
             return chargedDetails;
         } catch (JSONException e) {
