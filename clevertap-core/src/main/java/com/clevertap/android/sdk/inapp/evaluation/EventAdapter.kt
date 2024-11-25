@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.Constants.CLTAP_PROP_VARIANT
 import com.clevertap.android.sdk.Constants.CLTAP_SDK_VERSION
 import com.clevertap.android.sdk.Constants.INAPP_WZRK_PIVOT
 import com.clevertap.android.sdk.Constants.NOTIFICATION_ID_TAG
+import com.clevertap.android.sdk.Utils
 
 /**
  * Represents an event and its associated properties.
@@ -99,7 +100,11 @@ class EventAdapter(
 
     @VisibleForTesting
     internal fun getActualPropertyValue(propertyName: String): Any? {
-        var value = eventProperties[propertyName]
+        val normalisedMap = eventProperties.map { item ->
+            Utils.getNormalizedName(item.key) to item.value
+        }.toMap()
+
+        var value = normalisedMap[Utils.getNormalizedName(propertyName)]
 
         if (value == null) {
             value = when (propertyName) {

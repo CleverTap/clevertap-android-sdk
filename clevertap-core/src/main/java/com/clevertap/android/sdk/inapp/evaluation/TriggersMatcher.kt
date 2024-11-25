@@ -74,15 +74,18 @@ class TriggersMatcher {
         return true
     }
 
-    private fun matchPropertyConditions(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+    private fun matchPropertyConditions(
+        triggerAdapter: TriggerAdapter,
+        event: EventAdapter
+    ): Boolean {
         // Property conditions are AND-ed
-        return (0 until trigger.propertyCount)
-            .mapNotNull { trigger.propertyAtIndex(it) }
+        return (0 until triggerAdapter.propertyCount)
+            .mapNotNull { triggerAdapter.propertyAtIndex(it) }
             .all {
                 evaluate(
-                    it.op,
-                    it.value,
-                    event.getPropertyValue(it.propertyName)
+                    op = it.op,
+                    expected = it.value,
+                    actual = event.getPropertyValue(it.propertyName)
                 )
             }
     }
