@@ -113,8 +113,7 @@ public class EventMediator {
             try {
                 return JsonUtil.mapFromJson(event.getJSONObject(Constants.KEY_EVT_DATA), true);
             } catch (JSONException e) {
-                Logger.v("Could not convert JSONObject to Map - " + e
-                        .getMessage());
+                Logger.v("Could not convert JSONObject to Map - " + e.getMessage());
             }
         }
         return new HashMap<>();

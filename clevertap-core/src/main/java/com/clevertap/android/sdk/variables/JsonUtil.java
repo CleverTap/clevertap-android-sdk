@@ -60,14 +60,14 @@ public class JsonUtil {
       return null;
     }
     Map<String, T> result = new HashMap<>();
-    Iterator<?> keysIterator = object.keys();
+    Iterator<String> keysIterator = object.keys();
     while (keysIterator.hasNext()) {
-      String key = (String) keysIterator.next();
+      String key = keysIterator.next();
       Object value = object.opt(key);
       if (value == null || value == JSONObject.NULL) {
         value = null;
       } else if (value instanceof JSONObject) {
-        value = mapFromJson((JSONObject) value);
+        value = mapFromJson((JSONObject) value, normaliseNames);
       } else if (value instanceof JSONArray) {
         value = listFromJson((JSONArray) value);
       } else if (JSONObject.NULL.equals(value)) {
@@ -76,6 +76,8 @@ public class JsonUtil {
       T castedValue = uncheckedCast(value);
       if (normaliseNames) {
         result.put(Utils.getNormalizedName(key), castedValue);
+      } else {
+        result.put(key, castedValue);
       }
     }
     return result;
