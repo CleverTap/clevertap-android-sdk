@@ -90,17 +90,20 @@ class TriggersMatcher {
             }
     }
 
-    private fun matchChargedItemConditions(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+    private fun matchChargedItemConditions(
+        trigger: TriggerAdapter,
+        event: EventAdapter
+    ): Boolean {
         // (chargedEvent only) Property conditions for items are AND-ed
         return (0 until trigger.itemsCount)
             .mapNotNull { trigger.itemAtIndex(it) }
             .all { condition ->
                 event.getItemValue(condition.propertyName)
-                    .any {
+                    .any { item ->
                         evaluate(
-                            condition.op,
-                            condition.value,
-                            it
+                            op = condition.op,
+                            expected = condition.value,
+                            actual = item
                         )
                     }
             }

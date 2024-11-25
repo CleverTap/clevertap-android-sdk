@@ -60,6 +60,7 @@ class EventAdapter(
 
     /**
      * Gets the property value for the specified property name.
+     * Note: Compares after normalising (removing all whitespaces)
      *
      * @param propertyName The name of the property to retrieve.
      * @return A [TriggerValue] representing the property value.
@@ -71,12 +72,22 @@ class EventAdapter(
 
     /**
      * Gets the item value for the specified property name from the list of items.
+     * Note: Compares after normalising (removing all whitespaces)
      *
      * @param propertyName The name of the property to retrieve from the items.
      * @return A [TriggerValue] representing the item value.
      */
     fun getItemValue(propertyName: String): List<TriggerValue> {
-        return items.filterNotNull().map { TriggerValue(it[propertyName]) }
+        return items
+            .filterNotNull()
+            .map { productMap: Map<String, Any> ->
+
+                val normalisedMap = productMap.map {
+                    Utils.getNormalizedName(it.key) to it.value
+                }.toMap()
+
+                TriggerValue(normalisedMap[Utils.getNormalizedName(propertyName)])
+            }
     }
 
     /**
