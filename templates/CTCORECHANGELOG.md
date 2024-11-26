@@ -1,5 +1,11 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.0.3 (November 26, 2024)
+
+#### Bug Fixes
+* Changes campaign triggering evaluation of event names, event properties, and profile properties to ignore letter case and whitespace.
+* Adds support for previewing in-apps created through the new dashboard advanced builder.
+
 ### Version 7.0.2 (October 10, 2024)
 
 #### New Features
