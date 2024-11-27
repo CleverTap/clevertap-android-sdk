@@ -1,7 +1,7 @@
 [versions]
 # Project
 android_compileSdk = "34"
-android_gradle_plugin = "8.2.2"
+android_gradle_plugin = "8.7.0"
 android_minSdk = "19"
 kotlin_plugin = "1.7.20"
 sonarqube_plugin = "3.3"
