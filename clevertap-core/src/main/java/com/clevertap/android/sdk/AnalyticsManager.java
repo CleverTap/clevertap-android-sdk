@@ -1173,10 +1173,20 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             try {
 
                 // This flag is used so that we can release in phased manner, eventually the check has to go away.
-                boolean checkUsingPid = extras.getBoolean(Constants.WZRK_DEDUPE);
+                Object doDedupeCheck = extras.get(Constants.WZRK_DEDUPE);
+
+                boolean check = false;
+                if (doDedupeCheck != null) {
+                    if (doDedupeCheck instanceof String) {
+                        check = "true".equalsIgnoreCase((String) doDedupeCheck);
+                    }
+                    if (doDedupeCheck instanceof Boolean) {
+                        check = (Boolean) doDedupeCheck;
+                    }
+                }
 
                 String notificationIdTag;
-                if (checkUsingPid) {
+                if (check) {
                     notificationIdTag = extras.getString(Constants.WZRK_PUSH_ID);
                 } else {
                     notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
