@@ -93,6 +93,40 @@ class EventAdapterTest : BaseTestCase() {
     }
 
     @Test
+    fun testGetPropertyPresentNormalisationsExactMatch() {
+        // Arrange
+        val eventProperties = mapOf(
+            "fullname" to "John",
+            "full name" to "Lenon",
+            "FullName" to "Augustus",
+            "age" to 30
+        )
+        val eventAdapter = EventAdapter("eventName", eventProperties)
+
+        // Act
+        val result = eventAdapter.getPropertyValue("fullname")
+        val expected = TriggerValue("John")
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(expected.stringValue(), result.stringValue())
+        assertNull(result.numberValue())
+        assertNull(result.listValue())
+        assertFalse { expected.isList() }
+
+        // Act
+        val result1 = eventAdapter.getPropertyValue("full name")
+        val expected1 = TriggerValue("Lenon")
+
+        // Assert
+        assertNotNull(result1)
+        assertEquals(expected1.stringValue(), result1.stringValue())
+        assertNull(result1.numberValue())
+        assertNull(result1.listValue())
+        assertFalse { expected1.isList() }
+    }
+
+    @Test
     fun testGetPropertyMissing() {
         // Arrange
         val eventProperties = mapOf("age" to 30)
