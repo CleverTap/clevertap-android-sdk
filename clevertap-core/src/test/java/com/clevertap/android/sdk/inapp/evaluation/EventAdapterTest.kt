@@ -30,6 +30,49 @@ class EventAdapterTest : BaseTestCase() {
     }
 
     @Test
+    fun testGetPropertyPresentSpecialCases() {
+        // Arrange
+        val eventProperties = mapOf(
+            "name" to "John",
+            Constants.CLTAP_PROP_CAMPAIGN_ID to "cpid",
+            Constants.NOTIFICATION_ID_TAG to "some_wzrk_id",
+            Constants.CLTAP_PROP_VARIANT to "some variant",
+            Constants.INAPP_WZRK_PIVOT to "some_wzrk_pivot",
+        )
+        val eventAdapter = EventAdapter("eventName", eventProperties)
+
+        val triggerProps = listOf(
+            Constants.CLTAP_PROP_CAMPAIGN_ID,
+            Constants.NOTIFICATION_ID_TAG,
+            Constants.CLTAP_PROP_VARIANT,
+            Constants.INAPP_WZRK_PIVOT
+        )
+
+        val expectedResults = listOf(
+            TriggerValue("cpid"),
+            TriggerValue("some_wzrk_id"),
+            TriggerValue("some variant"),
+            TriggerValue("some_wzrk_pivot")
+        )
+
+        val results = mutableListOf<TriggerValue>().apply {
+            triggerProps.forEach {
+                add(eventAdapter.getPropertyValue(it))
+            }
+        }
+
+        results.forEachIndexed { index, result ->
+            val expected = expectedResults[index]
+            // Assert
+            assertNotNull(result)
+            assertEquals(expected.stringValue(), result.stringValue())
+            assertNull(result.numberValue())
+            assertNull(result.listValue())
+            assertFalse { expected.isList() }
+        }
+    }
+
+    @Test
     fun testGetPropertyPresentNormalisations() {
         // Arrange
         val eventProperties = mapOf("   name " to "John", "a ge  " to 30)
@@ -127,6 +170,60 @@ class EventAdapterTest : BaseTestCase() {
     }
 
     @Test
+    fun testGetPropertyPresentNormalisationsNormalisedMatch() {
+        // Arrange
+        val eventProperties = mapOf(
+            "fullname" to "John",
+            "full-name" to "Lennon",
+            "age" to 30
+        )
+        val eventAdapter = EventAdapter("eventName", eventProperties)
+
+        // Act
+        val result = eventAdapter.getPropertyValue("full name")
+        val expected = TriggerValue("John")
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(expected.stringValue(), result.stringValue())
+        assertNull(result.numberValue())
+        assertNull(result.listValue())
+        assertFalse { expected.isList() }
+
+        // Act
+        val result1 = eventAdapter.getPropertyValue("FullName")
+        val expected1 = TriggerValue("John")
+
+        // Assert
+        assertNotNull(result1)
+        assertEquals(expected1.stringValue(), result1.stringValue())
+        assertNull(result1.numberValue())
+        assertNull(result1.listValue())
+        assertFalse { expected1.isList() }
+    }
+
+    @Test
+    fun testGetPropertyPresentNormalisationsNormalisedMatchBothSides() {
+        // Arrange
+        val eventProperties = mapOf(
+            "FullName" to "John",
+            "age" to 30
+        )
+        val eventAdapter = EventAdapter("eventName", eventProperties)
+
+        // Act
+        val result = eventAdapter.getPropertyValue("full name")
+        val expected = TriggerValue("John")
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(expected.stringValue(), result.stringValue())
+        assertNull(result.numberValue())
+        assertNull(result.listValue())
+        assertFalse { expected.isList() }
+    }
+
+    @Test
     fun testGetPropertyMissing() {
         // Arrange
         val eventProperties = mapOf("age" to 30)
@@ -220,6 +317,73 @@ class EventAdapterTest : BaseTestCase() {
             assertNull(it.listValue())
         }
         assertEquals(listOf(330), result4.map { it.numberValue() })
+    }
+
+    @Test
+    fun testGetItemValuePresentExactMatch() {
+        // Arrange
+        val items = listOf(
+            mapOf("itemName" to "item1", "itemPrice" to 10),
+            mapOf("item mame" to "item2", "itemPrice" to 20)
+        )
+        val eventAdapter = EventAdapter("itemName", emptyMap(), items)
+        val expected = TriggerValue("item1")
+
+        // Act
+        val result = eventAdapter.getItemValue("itemName")
+
+        // Assert
+        assertNotNull(result)
+        result.onEach {
+            assertNull(it.numberValue())
+            assertNull(it.listValue())
+        }
+        assertEquals(listOf("item1"), result.map { it.stringValue() })
+        assertFalse(expected.isList())
+    }
+
+    @Test
+    fun testGetItemValuePresentNormalisedMatch() {
+        // Arrange
+        val items = listOf(
+            mapOf("itemName" to "item1", "itemPrice" to 10),
+        )
+        val eventAdapter = EventAdapter("item name", emptyMap(), items)
+        val expected = TriggerValue("item1")
+
+        // Act
+        val result = eventAdapter.getItemValue("itemName")
+
+        // Assert
+        assertNotNull(result)
+        result.onEach {
+            assertNull(it.numberValue())
+            assertNull(it.listValue())
+        }
+        assertEquals(listOf("item1"), result.map { it.stringValue() })
+        assertFalse(expected.isList())
+    }
+
+    @Test
+    fun testGetItemValuePresentNormalisedMatchBothWays() {
+        // Arrange
+        val items = listOf(
+            mapOf("item name" to "item1", "itemPrice" to 10),
+        )
+        val eventAdapter = EventAdapter("ItemName", emptyMap(), items)
+        val expected = TriggerValue("item1")
+
+        // Act
+        val result = eventAdapter.getItemValue("itemName")
+
+        // Assert
+        assertNotNull(result)
+        result.onEach {
+            assertNull(it.numberValue())
+            assertNull(it.listValue())
+        }
+        assertEquals(listOf("item1"), result.map { it.stringValue() })
+        assertFalse(expected.isList())
     }
 
     @Test

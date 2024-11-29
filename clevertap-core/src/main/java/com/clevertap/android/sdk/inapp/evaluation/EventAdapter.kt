@@ -34,7 +34,7 @@ class EventAdapter(
     val profileAttrName: String? = null // for profile events only
 ) {
 
-    private val systemPropToKey = mapOf(
+    internal val systemPropToKey = mapOf(
         "CT App Version" to CLTAP_APP_VERSION,
         "ct_app_version" to CLTAP_APP_VERSION,
         "CT Latitude" to CLTAP_LATITUDE,
