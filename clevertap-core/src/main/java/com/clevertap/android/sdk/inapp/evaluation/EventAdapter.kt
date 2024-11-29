@@ -34,7 +34,7 @@ class EventAdapter(
     val profileAttrName: String? = null // for profile events only
 ) {
 
-    private val systemPropToKey = mapOf(
+    internal val systemPropToKey = mapOf(
         "CT App Version" to CLTAP_APP_VERSION,
         "ct_app_version" to CLTAP_APP_VERSION,
         "CT Latitude" to CLTAP_LATITUDE,
@@ -81,11 +81,20 @@ class EventAdapter(
         return items
             .filterNotNull()
             .map { productMap: Map<String, Any> ->
-                val normalisedMap = productMap.map {
-                    Utils.getNormalizedName(it.key) to it.value
-                }.toMap()
 
-                TriggerValue(normalisedMap[Utils.getNormalizedName(propertyName)])
+                var op = productMap[propertyName]
+
+                if (op == null) {
+                    op = productMap[Utils.getNormalizedName(propertyName)]
+                }
+
+                if (op == null) {
+                    val normalisedMap = productMap.map {
+                        Utils.getNormalizedName(it.key) to it.value
+                    }.toMap()
+                    op = normalisedMap[Utils.getNormalizedName(propertyName)]
+                }
+                TriggerValue(op)
             }.filter { it.value != null }
     }
 
@@ -110,22 +119,35 @@ class EventAdapter(
 
     @VisibleForTesting
     internal fun getActualPropertyValue(propertyName: String): Any? {
-        val normalisedMap = eventProperties.map { item ->
-            Utils.getNormalizedName(item.key) to item.value
-        }.toMap()
 
-        var value = normalisedMap[Utils.getNormalizedName(propertyName)]
+        var value = evaluateActualPropertyValue(propertyName)
 
         if (value == null) {
             value = when (propertyName) {
-                CLTAP_PROP_CAMPAIGN_ID -> eventProperties[NOTIFICATION_ID_TAG]
-                NOTIFICATION_ID_TAG -> eventProperties[CLTAP_PROP_CAMPAIGN_ID]
-                CLTAP_PROP_VARIANT -> eventProperties[INAPP_WZRK_PIVOT]
-                INAPP_WZRK_PIVOT -> eventProperties[CLTAP_PROP_VARIANT]
-                else -> systemPropToKey[propertyName]?.let { eventProperties[it] }
+                CLTAP_PROP_CAMPAIGN_ID -> evaluateActualPropertyValue(NOTIFICATION_ID_TAG)
+                NOTIFICATION_ID_TAG -> evaluateActualPropertyValue(CLTAP_PROP_CAMPAIGN_ID)
+                CLTAP_PROP_VARIANT -> evaluateActualPropertyValue(INAPP_WZRK_PIVOT)
+                INAPP_WZRK_PIVOT -> evaluateActualPropertyValue(CLTAP_PROP_VARIANT)
+                else -> systemPropToKey[propertyName]?.let { evaluateActualPropertyValue(it) }
             }
         }
 
+        return value
+    }
+
+    private fun evaluateActualPropertyValue(propertyName: String): Any? {
+        var value = eventProperties[propertyName]
+
+        if (value == null) {
+            value = eventProperties[Utils.getNormalizedName(propertyName)]
+        }
+
+        if (value == null) {
+            val normalisedMap = eventProperties.map { item ->
+                Utils.getNormalizedName(item.key) to item.value
+            }.toMap()
+            value = normalisedMap[Utils.getNormalizedName(propertyName)]
+        }
         return value
     }
 }
