@@ -219,6 +219,7 @@ object Column {
     const val WZRKPARAMS = "wzrkParams"
     const val DEVICE_ID = "deviceID"
     const val EVENT_NAME = "eventName"
+    const val NORMALIZED_EVENT_NAME = "normalizedEventName"
     const val FIRST_TS = "firstTs"
     const val LAST_TS = "lastTs"
     const val COUNT = "count"
@@ -235,12 +236,12 @@ private val CREATE_EVENTS_TABLE = """
 private val CREATE_USER_EVENT_LOGS_TABLE = """
     CREATE TABLE ${Table.USER_EVENT_LOGS_TABLE.tableName} (
         ${Column.EVENT_NAME} STRING NOT NULL,
+        ${Column.NORMALIZED_EVENT_NAME} STRING NOT NULL,
         ${Column.FIRST_TS} INTEGER NOT NULL,
         ${Column.LAST_TS} INTEGER NOT NULL,
         ${Column.COUNT} INTEGER NOT NULL,
         ${Column.DEVICE_ID} STRING NOT NULL,
-        PRIMARY KEY (${Column.EVENT_NAME}, ${Column.DEVICE_ID})
-        
+        PRIMARY KEY (${Column.NORMALIZED_EVENT_NAME}, ${Column.DEVICE_ID})
     );
 """
 
