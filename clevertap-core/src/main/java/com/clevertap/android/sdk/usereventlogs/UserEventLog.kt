@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.usereventlogs
 
 data class UserEventLog(
     val eventName: String,   // The name of the event
+    val normalizedEventName: String, // normalized version of the name of the event
     val firstTs: Long,       // The timestamp of the first occurrence of the event
     val lastTs: Long,        // The timestamp of the last occurrence of the event
     val countOfEvents: Int,  // The number of times the event has occurred
