@@ -6,38 +6,41 @@ interface UserEventLogDAO {
 
     // Insert a new event by deviceID
     @WorkerThread
-    fun insertEventByDeviceID(deviceID: String, eventName: String): Long
+    fun insertEvent(deviceID: String, eventName: String, normalizedEventName: String): Long
 
     // Update an event by deviceID
     @WorkerThread
-    fun updateEventByDeviceID(deviceID: String, eventName: String): Boolean
+    fun updateEventByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Boolean
 
     @WorkerThread
-    fun upsertEventsByDeviceID(deviceID: String, eventNameList: Set<String>): Boolean
+    fun upsertEventsByDeviceIdAndNormalizedEventName(
+        deviceID: String,
+        setOfActualAndNormalizedEventNamePair: Set<Pair<String, String>>
+    ): Boolean
 
     // Read an event by deviceID
     @WorkerThread
-    fun readEventByDeviceID(deviceID: String, eventName: String): UserEventLog?
+    fun readEventByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): UserEventLog?
 
     // Read an event count by deviceID
     @WorkerThread
-    fun readEventCountByDeviceID(deviceID: String, eventName: String): Int
+    fun readEventCountByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Int
 
     // Read an event firstTs by deviceID
     @WorkerThread
-    fun readEventFirstTsByDeviceID(deviceID: String, eventName: String): Long
+    fun readEventFirstTsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Long
 
     // Read an event lastTs by deviceID
     @WorkerThread
-    fun readEventLastTsByDeviceID(deviceID: String, eventName: String): Long
+    fun readEventLastTsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Long
 
     // Check if an event exists by deviceID
     @WorkerThread
-    fun eventExistsByDeviceID(deviceID: String, eventName: String): Boolean
+    fun eventExistsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Boolean
 
     // Check if an event exists by deviceID and count
     @WorkerThread
-    fun eventExistsByDeviceIDAndCount(deviceID: String, eventName: String, count: Int): Boolean
+    fun eventExistsByDeviceIdAndNormalizedEventNameAndCount(deviceID: String, normalizedEventName: String, count: Int): Boolean
 
     // Get all events for a particular deviceID
     @WorkerThread
