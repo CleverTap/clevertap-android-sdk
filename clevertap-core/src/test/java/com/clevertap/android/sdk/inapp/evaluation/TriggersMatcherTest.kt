@@ -1313,6 +1313,27 @@ class TriggersMatcherTest : BaseTestCase() {
     }
 
     @Test
+    fun `test match when firstTimeOnly is true and profileProperty is not first time returns false`() {
+        // Given
+        val eventName = "blood_sugar_first_time_event"
+        val profileAttrName = "Blood Sugar"
+        val trigger = createTriggerAdapter(
+            eventName = eventName,
+            firstTimeOnly = true,
+            profileAttrName = profileAttrName
+        )
+        val event = createEventAdapter(eventName = eventName, profileAttrName = profileAttrName)
+        every { localDataStore.isUserEventLogFirstTime(profileAttrName) } returns false
+
+        // When
+        val result = triggersMatcher.match(trigger, event)
+
+        // Then
+        assertFalse(result)
+        verify { localDataStore.isUserEventLogFirstTime(profileAttrName) }
+    }
+
+    @Test
     fun `test match when firstTimeOnly is true and event is first time proceeds with other checks`() {
         // Given
         val trigger = createTriggerAdapter(
@@ -1328,6 +1349,27 @@ class TriggersMatcherTest : BaseTestCase() {
         // Then
         assertTrue(result)
         verify { localDataStore.isUserEventLogFirstTime("EventA") }
+    }
+
+    @Test
+    fun `test match when firstTimeOnly is true and profileProperty is first time proceeds with other checks`() {
+        // Given
+        val eventName = "blood_sugar_first_time_event"
+        val profileAttrName = "Blood Sugar"
+        val trigger = createTriggerAdapter(
+            eventName = eventName,
+            firstTimeOnly = true,
+            profileAttrName = profileAttrName
+        )
+        val event = createEventAdapter(eventName)
+        every { localDataStore.isUserEventLogFirstTime(profileAttrName) } returns true
+
+        // When
+        val result = triggersMatcher.match(trigger, event)
+
+        // Then
+        assertTrue(result)
+        verify { localDataStore.isUserEventLogFirstTime(profileAttrName) }
     }
 
     @Test
