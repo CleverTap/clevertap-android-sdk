@@ -49,13 +49,8 @@ class TriggersMatcher {
     @VisibleForTesting
     internal fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean {
         // Evaluate further if either the eventNames match or the profileAttrName's match. Make sure both profileAttrName's are not null and equal
-        if (!Utils.areNamesNormalizedEqual(
-                event.eventName,
-                trigger.eventName
-            ) && (event.profileAttrName == null || !Utils.areNamesNormalizedEqual(
-                event.profileAttrName, trigger.profileAttrName
-            ))
-        ) {
+        if (!Utils.areNamesNormalizedEqual(event.eventName, trigger.eventName)
+            && (event.profileAttrName == null || !Utils.areNamesNormalizedEqual(event.profileAttrName, trigger.profileAttrName))) {
             return false
         }
 
@@ -74,30 +69,36 @@ class TriggersMatcher {
         return true
     }
 
-    private fun matchPropertyConditions(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+    private fun matchPropertyConditions(
+        triggerAdapter: TriggerAdapter,
+        event: EventAdapter
+    ): Boolean {
         // Property conditions are AND-ed
-        return (0 until trigger.propertyCount)
-            .mapNotNull { trigger.propertyAtIndex(it) }
+        return (0 until triggerAdapter.propertyCount)
+            .mapNotNull { triggerAdapter.propertyAtIndex(it) }
             .all {
                 evaluate(
-                    it.op,
-                    it.value,
-                    event.getPropertyValue(it.propertyName)
+                    op = it.op,
+                    expected = it.value,
+                    actual = event.getPropertyValue(it.propertyName)
                 )
             }
     }
 
-    private fun matchChargedItemConditions(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+    private fun matchChargedItemConditions(
+        trigger: TriggerAdapter,
+        event: EventAdapter
+    ): Boolean {
         // (chargedEvent only) Property conditions for items are AND-ed
         return (0 until trigger.itemsCount)
             .mapNotNull { trigger.itemAtIndex(it) }
             .all { condition ->
                 event.getItemValue(condition.propertyName)
-                    .any {
+                    .any { item ->
                         evaluate(
-                            condition.op,
-                            condition.value,
-                            it
+                            op = condition.op,
+                            expected = condition.value,
+                            actual = item
                         )
                     }
             }
