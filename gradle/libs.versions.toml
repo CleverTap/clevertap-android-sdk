@@ -72,7 +72,7 @@ exoplayer_ui = "2.19.1"
 media3 = "1.1.1"
 
 #Play Services
-play_services_ads = "22.3.0"
+play_services_ads = "23.6.0"
 play_services_location = "21.0.0"
 
 #Gson
