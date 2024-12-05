@@ -19,9 +19,13 @@ internal class UserEventLogDAOImpl(
     private val table: Table
 ) : UserEventLogDAO {
 
-
+    // Replace multiple params with single POJO param if param length increases
     @WorkerThread
-    override fun insertEventByDeviceID(deviceID: String, eventName: String): Long {
+    override fun insertEvent(
+        deviceID: String,
+        eventName: String,
+        normalizedEventName: String
+    ): Long {
         if (!db.belowMemThreshold()) {
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return DB_OUT_OF_MEMORY_ERROR
@@ -31,6 +35,7 @@ internal class UserEventLogDAOImpl(
         val now = Utils.getNowInMillis()
         val values = ContentValues().apply {
             put(Column.EVENT_NAME, eventName)
+            put(Column.NORMALIZED_EVENT_NAME, normalizedEventName)
             put(Column.FIRST_TS, now)
             put(Column.LAST_TS, now)
             put(Column.COUNT, 1)
@@ -51,7 +56,7 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun updateEventByDeviceID(deviceID: String, eventName: String): Boolean {
+    override fun updateEventByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Boolean {
         val tableName = table.tableName
         val now = Utils.getNowInMillis()
 
@@ -62,11 +67,11 @@ internal class UserEventLogDAOImpl(
                 ${Column.COUNT} = ${Column.COUNT} + 1,
                 ${Column.LAST_TS} = ?
             WHERE ${Column.DEVICE_ID} = ? 
-            AND ${Column.EVENT_NAME} = ?;
+            AND ${Column.NORMALIZED_EVENT_NAME} = ?;
         """.trimIndent()
 
-            logger.verbose("Updating event $eventName with deviceID = $deviceID in $tableName")
-            db.writableDatabase.execSQL(query, arrayOf(now, deviceID, eventName))
+            logger.verbose("Updating event $normalizedEventName with deviceID = $deviceID in $tableName")
+            db.writableDatabase.execSQL(query, arrayOf(now, deviceID, normalizedEventName))
             true
         } catch (e: Exception) {
             logger.verbose("Could not update event in database $tableName.", e)
@@ -75,18 +80,21 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun upsertEventsByDeviceID(deviceID: String, eventNameList: Set<String>): Boolean {
+    override fun upsertEventsByDeviceIdAndNormalizedEventName(
+        deviceID: String,
+        setOfActualAndNormalizedEventNamePair: Set<Pair<String, String>>
+    ): Boolean {
         val tableName = table.tableName
         logger.verbose("UserEventLog: upSert EventLog for bulk events")
         return try {
             db.writableDatabase.beginTransaction()
-            eventNameList.forEach {
-                if (eventExistsByDeviceID(deviceID, it)) {
+            setOfActualAndNormalizedEventNamePair.forEach {
+                if (eventExistsByDeviceIdAndNormalizedEventName(deviceID, it.second)) {
                     logger.verbose("UserEventLog: Updating EventLog for event $it")
-                    updateEventByDeviceID(deviceID, it)
+                    updateEventByDeviceIdAndNormalizedEventName(deviceID, it.second)
                 } else {
                     logger.verbose("UserEventLog: Inserting EventLog for event $it")
-                    insertEventByDeviceID(deviceID, it)
+                    insertEvent(deviceID, it.first, it.second)
                 }
             }
             db.writableDatabase.setTransactionSuccessful()
@@ -104,10 +112,10 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun readEventByDeviceID(deviceID: String, eventName: String): UserEventLog? {
+    override fun readEventByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): UserEventLog? {
         val tName = table.tableName
-        val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ?"
-        val selectionArgs = arrayOf(deviceID, eventName)
+        val selection = "${Column.DEVICE_ID} = ? AND ${Column.NORMALIZED_EVENT_NAME} = ?"
+        val selectionArgs = arrayOf(deviceID, normalizedEventName)
         return try {
             db.readableDatabase.query(
                 tName, null, selection, selectionArgs, null, null, null, null
@@ -115,6 +123,7 @@ internal class UserEventLogDAOImpl(
                 if (cursor.moveToFirst()) {
                     val eventLog = UserEventLog(
                         eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
+                        normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)),
                         firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
                         lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
                         countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
@@ -132,10 +141,10 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun readEventCountByDeviceID(deviceID: String, eventName: String): Int =
-        readEventColumnByDeviceID(
+    override fun readEventCountByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Int =
+        readEventColumnByDeviceIdAndNormalizedEventName(
             deviceID,
-            eventName,
+            normalizedEventName,
             Column.COUNT,
             defaultValueExtractor = { -1 },
             valueExtractor = { cursor, columnName ->
@@ -145,10 +154,10 @@ internal class UserEventLogDAOImpl(
 
 
     @WorkerThread
-    override fun readEventFirstTsByDeviceID(deviceID: String, eventName: String): Long =
-        readEventColumnByDeviceID(
+    override fun readEventFirstTsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Long =
+        readEventColumnByDeviceIdAndNormalizedEventName(
             deviceID,
-            eventName,
+            normalizedEventName,
             Column.FIRST_TS,
             defaultValueExtractor = { -1L },
             valueExtractor = { cursor, columnName ->
@@ -157,10 +166,10 @@ internal class UserEventLogDAOImpl(
         )
 
     @WorkerThread
-    override fun readEventLastTsByDeviceID(deviceID: String, eventName: String): Long =
-        readEventColumnByDeviceID(
+    override fun readEventLastTsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Long =
+        readEventColumnByDeviceIdAndNormalizedEventName(
             deviceID,
-            eventName,
+            normalizedEventName,
             Column.LAST_TS,
             defaultValueExtractor = { -1L },
             valueExtractor = { cursor, columnName ->
@@ -169,10 +178,10 @@ internal class UserEventLogDAOImpl(
         )
 
     @WorkerThread
-    override fun eventExistsByDeviceID(deviceID: String, eventName: String): Boolean {
+    override fun eventExistsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Boolean {
         val tName = table.tableName
-        val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ?"
-        val selectionArgs = arrayOf(deviceID, eventName)
+        val selection = "${Column.DEVICE_ID} = ? AND ${Column.NORMALIZED_EVENT_NAME} = ?"
+        val selectionArgs = arrayOf(deviceID, normalizedEventName)
         val resultColumn = "eventExists"
 
         val query = """
@@ -198,10 +207,10 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun eventExistsByDeviceIDAndCount(deviceID: String, eventName: String, count: Int): Boolean {
+    override fun eventExistsByDeviceIdAndNormalizedEventNameAndCount(deviceID: String, normalizedEventName: String, count: Int): Boolean {
         val tName = table.tableName
-        val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ? AND ${Column.COUNT} = ?"
-        val selectionArgs = arrayOf(deviceID, eventName, count.toString())
+        val selection = "${Column.DEVICE_ID} = ? AND ${Column.NORMALIZED_EVENT_NAME} = ? AND ${Column.COUNT} = ?"
+        val selectionArgs = arrayOf(deviceID, normalizedEventName, count.toString())
         val resultColumn = "eventExists"
 
         val query = """
@@ -241,6 +250,7 @@ internal class UserEventLogDAOImpl(
                 while (cursor.moveToNext()) {
                     val eventLog = UserEventLog(
                         eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
+                        normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)),
                         firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
                         lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
                         countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
@@ -270,6 +280,7 @@ internal class UserEventLogDAOImpl(
                 while (cursor.moveToNext()) {
                     val eventLog = UserEventLog(
                         eventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.EVENT_NAME)),
+                        normalizedEventName = cursor.getString(cursor.getColumnIndexOrThrow(Column.NORMALIZED_EVENT_NAME)),
                         firstTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.FIRST_TS)),
                         lastTs = cursor.getLong(cursor.getColumnIndexOrThrow(Column.LAST_TS)),
                         countOfEvents = cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT)),
@@ -308,8 +319,8 @@ internal class UserEventLogDAOImpl(
             // When above threshold is reached, delete in such a way that (threshold - numberOfRowsToCleanup) rows exists after cleanup
             val query = """
             DELETE FROM $tName
-            WHERE (${Column.EVENT_NAME}, ${Column.DEVICE_ID}) IN (
-                SELECT ${Column.EVENT_NAME}, ${Column.DEVICE_ID}
+            WHERE (${Column.NORMALIZED_EVENT_NAME}, ${Column.DEVICE_ID}) IN (
+                SELECT ${Column.NORMALIZED_EVENT_NAME}, ${Column.DEVICE_ID}
                 FROM $tName
                 ORDER BY ${Column.LAST_TS} ASC 
                 LIMIT (
@@ -333,16 +344,16 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    private fun <T> readEventColumnByDeviceID(
+    private fun <T> readEventColumnByDeviceIdAndNormalizedEventName(
         deviceID: String,
-        eventName: String,
+        normalizedEventName: String,
         column: String,
         defaultValueExtractor: () -> T,
         valueExtractor: (cursor: Cursor, columnName: String) -> T
     ): T {
         val tName = table.tableName
-        val selection = "${Column.DEVICE_ID} = ? AND ${Column.EVENT_NAME} = ?"
-        val selectionArgs = arrayOf(deviceID, eventName)
+        val selection = "${Column.DEVICE_ID} = ? AND ${Column.NORMALIZED_EVENT_NAME} = ?"
+        val selectionArgs = arrayOf(deviceID, normalizedEventName)
         val projection = arrayOf(column)
 
         return try {

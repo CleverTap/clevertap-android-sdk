@@ -80,7 +80,8 @@ class TriggersMatcher(private val localDataStore: LocalDataStore) {
         if (!trigger.firstTimeOnly) {
             return true
         }
-        return localDataStore.isUserEventLogFirstTime(trigger.eventName)
+        val keyToCheckFirstTime: String = trigger.profileAttrName ?: trigger.eventName
+        return localDataStore.isUserEventLogFirstTime(keyToCheckFirstTime)
     }
 
     private fun matchPropertyConditions(

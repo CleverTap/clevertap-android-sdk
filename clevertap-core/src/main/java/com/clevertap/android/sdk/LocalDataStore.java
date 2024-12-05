@@ -32,6 +32,10 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import kotlin.Pair;
+import kotlin.collections.CollectionsKt;
+import kotlin.collections.MapsKt;
+
 @SuppressWarnings("unused")
 @RestrictTo(Scope.LIBRARY)
 public class LocalDataStore {
@@ -53,6 +57,7 @@ public class LocalDataStore {
 
     private final DeviceInfo deviceInfo;
     private final Set<String> userEventLogKeys = Collections.synchronizedSet(new HashSet<>());
+    private final Map<String, String> normalizedEventNames = new HashMap<>();
 
     LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
         this.context = context;
@@ -137,7 +142,10 @@ public class LocalDataStore {
     }
     @WorkerThread
     public boolean persistUserEventLogsInBulk(Set<String> eventNames){
-        return upsertUserEventLogsInBulk(eventNames);
+        Set<Pair<String, String>> setOfActualAndNormalizedEventNamePair = new HashSet<>();
+        CollectionsKt.mapTo(eventNames, setOfActualAndNormalizedEventNamePair,
+                (actualEventName) -> new Pair<>(actualEventName, getOrPutNormalizedEventName(actualEventName)));
+        return upsertUserEventLogsInBulk(setOfActualAndNormalizedEventNamePair);
     }
 
     @WorkerThread
@@ -193,64 +201,73 @@ public class LocalDataStore {
     }
 
     @WorkerThread
-    private boolean updateEventByDeviceID(String deviceID, String eventName) {
+    private boolean updateEventByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        boolean updatedEventByDeviceID = dbAdapter.userEventLogDAO().updateEventByDeviceID(deviceID, eventName);
-        getConfigLogger().verbose("updatedEventByDeviceID = "+updatedEventByDeviceID);
+        boolean updatedEventByDeviceID = dbAdapter.userEventLogDAO().updateEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+        getConfigLogger().verbose("updatedEventByDeviceID = " + updatedEventByDeviceID);
         return updatedEventByDeviceID;
     }
 
     @WorkerThread
     public boolean updateUserEventLog(String eventName) {
         String deviceID = deviceInfo.getDeviceID();
-        return updateEventByDeviceID(deviceID,eventName);
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return updateEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
-    public boolean upsertUserEventLogsInBulk(Set<String> eventNames){
+    private boolean upsertUserEventLogsInBulk(Set<Pair<String, String>> setOfActualAndNormalizedEventNamePair) {
         String deviceID = deviceInfo.getDeviceID();
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        boolean upsertEventByDeviceID = dbAdapter.userEventLogDAO().upsertEventsByDeviceID(deviceID, eventNames);
-        getConfigLogger().verbose("upsertEventByDeviceID = "+upsertEventByDeviceID);
+        boolean upsertEventByDeviceID = dbAdapter.userEventLogDAO()
+                .upsertEventsByDeviceIdAndNormalizedEventName(deviceID, setOfActualAndNormalizedEventNamePair);
+        getConfigLogger().verbose("upsertEventByDeviceID = " + upsertEventByDeviceID);
         return upsertEventByDeviceID;
     }
 
     @WorkerThread
-    private long insertEventByDeviceID(String deviceID, String eventName) {
+    private long insertEvent(String deviceID, String actualEventName, String normalizedEventName) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        long rowId = dbAdapter.userEventLogDAO().insertEventByDeviceID(deviceID, eventName);
-        getConfigLogger().verbose("inserted rowId = "+rowId);
+        long rowId = dbAdapter.userEventLogDAO().insertEvent(deviceID, actualEventName, normalizedEventName);
+        getConfigLogger().verbose("inserted rowId = " + rowId);
         return rowId;
+    }
+
+    private String getOrPutNormalizedEventName(String actualEventName) {
+        return MapsKt.getOrPut(normalizedEventNames, actualEventName,
+                () -> Utils.getNormalizedName(actualEventName));
     }
 
     @WorkerThread
     public boolean insertUserEventLog(String eventName) {
         String deviceID = deviceInfo.getDeviceID();
-        long rowId = insertEventByDeviceID(deviceID, eventName);
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        long rowId = insertEvent(deviceID, eventName, normalizedEventName);
         return rowId >= 0;
     }
 
     @WorkerThread
-    private boolean eventExistsByDeviceID(String deviceID, String eventName) {
+    private boolean eventExistsByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        boolean eventExistsByDeviceID = dbAdapter.userEventLogDAO().eventExistsByDeviceID(deviceID, eventName);
-        getConfigLogger().verbose("eventExistsByDeviceID = "+eventExistsByDeviceID);
-        return eventExistsByDeviceID;
+        boolean eventExists = dbAdapter.userEventLogDAO().eventExistsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+        getConfigLogger().verbose("eventExists = "+eventExists);
+        return eventExists;
     }
 
     @WorkerThread
     public boolean isUserEventLogExists(String eventName) {
         String deviceID = deviceInfo.getDeviceID();
-        return eventExistsByDeviceID(deviceID,eventName);
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return eventExistsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
-    private boolean eventExistsByDeviceIDAndCount(String deviceID, String eventName, int count) {
+    private boolean eventExistsByDeviceIdAndNormalizedEventNameAndCount(String deviceID, String normalizedEventName, int count) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
         boolean eventExistsByDeviceIDAndCount = dbAdapter.userEventLogDAO()
-                .eventExistsByDeviceIDAndCount(deviceID, eventName, count);
+                .eventExistsByDeviceIdAndNormalizedEventNameAndCount(deviceID, normalizedEventName, count);
 
-        getConfigLogger().verbose("eventExistsByDeviceIDAndCount = "+eventExistsByDeviceIDAndCount);
+        getConfigLogger().verbose("eventExistsByDeviceIDAndCount = " + eventExistsByDeviceIDAndCount);
         return eventExistsByDeviceIDAndCount;
     }
 
@@ -261,8 +278,9 @@ public class LocalDataStore {
         }
 
         String deviceID = deviceInfo.getDeviceID();
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
 
-        int count = readEventCountByDeviceID(deviceID, eventName);
+        int count = readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
         if (count > 1) {
             userEventLogKeys.add(eventName);
         }
@@ -278,51 +296,55 @@ public class LocalDataStore {
     }
 
     @WorkerThread
-    private UserEventLog readEventByDeviceID(String deviceID, String eventName) {
+    private UserEventLog readEventByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        return dbAdapter.userEventLogDAO().readEventByDeviceID(deviceID, eventName);
+        return dbAdapter.userEventLogDAO().readEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
     public UserEventLog readUserEventLog(String eventName) {
         String deviceID = deviceInfo.getDeviceID();
-        return readEventByDeviceID(deviceID,eventName);
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return readEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
-    private int readEventCountByDeviceID(String deviceID, String eventName) {
+    private int readEventCountByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        return dbAdapter.userEventLogDAO().readEventCountByDeviceID(deviceID, eventName);
+        return dbAdapter.userEventLogDAO().readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
     public int readUserEventLogCount(String eventName) {
         String deviceID = deviceInfo.getDeviceID();
-        return readEventCountByDeviceID(deviceID,eventName);
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
-    private long readEventLastTsByDeviceID(String deviceID, String eventName) {
+    private long readEventLastTsByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        return dbAdapter.userEventLogDAO().readEventLastTsByDeviceID(deviceID, eventName);
+        return dbAdapter.userEventLogDAO().readEventLastTsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
     public long readUserEventLogLastTs(String eventName) {
         String deviceID = deviceInfo.getDeviceID();
-        return readEventLastTsByDeviceID(deviceID,eventName);
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return readEventLastTsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
-    private long readEventFirstTsByDeviceID(String deviceID, String eventName) {
+    private long readEventFirstTsByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        return dbAdapter.userEventLogDAO().readEventFirstTsByDeviceID(deviceID, eventName);
+        return dbAdapter.userEventLogDAO().readEventFirstTsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
     public long readUserEventLogFirstTs(String eventName) {
         String deviceID = deviceInfo.getDeviceID();
-        return readEventFirstTsByDeviceID(deviceID,eventName);
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return readEventFirstTsByDeviceIdAndNormalizedEventName(deviceID,normalizedEventName);
     }
 
     @WorkerThread

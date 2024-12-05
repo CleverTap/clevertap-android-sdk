@@ -37,11 +37,17 @@ class UserEventLogDAOImplTest {
     private val accID = "accountID"
     private val accToken = "token"
     private val accRegion = "sk1"
+    private val testDeviceId = UserEventLogTestData.TestDeviceIds.SAMPLE_DEVICE_ID
+    private val testEventName = UserEventLogTestData.EventNames.TEST_EVENT
+    private val testEventName2 = UserEventLogTestData.EventNames.TEST_EVENT_2
+    private val testEventNameNormalized = UserEventLogTestData.EventNames.eventNameToNormalizedMap[testEventName]!!
+    private val testEventNameNormalized2 = UserEventLogTestData.EventNames.eventNameToNormalizedMap[testEventName2]!!
+    private val setOfActualAndNormalizedEventNamePair = UserEventLogTestData.EventNames.setOfActualAndNormalizedEventNamePair
+
 
     companion object {
-        private const val TEST_DEVICE_ID = "test_device_id"
-        private const val TEST_EVENT_NAME = "test_event"
-        private const val TEST_EVENT_NAME_2 = "test_event_2"
+        private const val TEST_EVENT_NAME_2 = "TEST_EVENT_2"
+        private const val TEST_EVENT_NAME_2_NORMALIZED = "TEST_EVENT_2"
         private const val TEST_DB_NAME = "test_clevertap.db"
         private const val MOCK_TIME = 1234567890L
     }
@@ -68,31 +74,31 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test insertEventByDeviceID when below memory threshold`() {
+    fun `test insertEvent when below memory threshold`() {
 
         // When
-        val result = userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
 
         // Then
         assertTrue(result > 0)
     }
 
     @Test
-    fun `test insertEventByDeviceID when above memory threshold`() {
+    fun `test insertEvent when above memory threshold`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>(relaxed = true)
         every { dbHelper.belowMemThreshold() } returns false
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = dao.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
 
         // Then
         assertEquals(-2L, result) // DB_OUT_OF_MEMORY_ERROR
     }
 
     @Test
-    fun `test insertEventByDeviceID when db error occurs`() {
+    fun `test insertEvent when db error occurs`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>(relaxed = true)
         every { dbHelper.belowMemThreshold() } returns true
@@ -106,7 +112,7 @@ class UserEventLogDAOImplTest {
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = dao.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
 
         // Then
         assertEquals(-1L, result) // DB_UPDATE_ERROR
@@ -118,26 +124,26 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test updateEventByDeviceID success`() {
+    fun `test updateEventByDeviceIdAndNormalizedEventName success`() {
         // Given
-        val insertResult = userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val insertResult = userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
         assertTrue(insertResult > 0)
 
         // When
-        val updateResult1 = userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
-        val updateResult2 = userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val updateResult1 = userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
+        val updateResult2 = userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertTrue(updateResult1)
         assertTrue(updateResult2)
 
         // Verify count increased
-        val count = userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val count = userEventLogDAO.readEventCountByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
         assertEquals(3, count)
     }
 
     @Test
-    fun `test updateEventByDeviceID when db error occurs`() {
+    fun `test updateEventByDeviceIdAndNormalizedEventName when db error occurs`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>(relaxed = true)
         every {
@@ -150,29 +156,29 @@ class UserEventLogDAOImplTest {
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = dao.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertFalse(result)
     }
 
     @Test
-    fun `test updateEventByDeviceID success with timestamp verification`() {
+    fun `test updateEventByDeviceIdAndNormalizedEventName success with timestamp verification`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
 
         // Mock different time for update
         val updateTime = MOCK_TIME + 1000
         every { Utils.getNowInMillis() } returns updateTime
 
         // When
-        val result = userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertTrue(result)
 
         // Verify event details
-        val eventLog = userEventLogDAO.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val eventLog = userEventLogDAO.readEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
         assertNotNull(eventLog)
         with(requireNotNull(eventLog)) {
             assertEquals(2, countOfEvents)
@@ -186,31 +192,29 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test upsertEventsByDeviceID with new and existing events`() {
+    fun `test upsertEventsByDeviceIdAndNormalizedEventName with new and existing events`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
-        val eventNames = setOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
+        userEventLogDAO.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.upsertEventsByDeviceID(TEST_DEVICE_ID, eventNames)
+        val result = userEventLogDAO.upsertEventsByDeviceIdAndNormalizedEventName(testDeviceId, setOfActualAndNormalizedEventNamePair)
 
         // Then
         assertTrue(result)
-        assertEquals(2, userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME))
-        assertEquals(1, userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME_2))
+        assertEquals(2, userEventLogDAO.readEventCountByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized))
+        assertEquals(1, userEventLogDAO.readEventCountByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized2))
     }
 
     @Test
-    fun `test upsertEventsByDeviceID when db error occurs`() {
+    fun `test upsertEventsByDeviceIdAndNormalizedEventName when db error occurs`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>(relaxed = true)
         every { dbHelper.writableDatabase.beginTransaction() } throws SQLiteException()
 
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
-        val eventNames = setOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
 
         // When
-        val result = dao.upsertEventsByDeviceID(TEST_DEVICE_ID, eventNames)
+        val result = dao.upsertEventsByDeviceIdAndNormalizedEventName(testDeviceId, setOfActualAndNormalizedEventNamePair)
 
         // Then
         assertFalse(result)
@@ -222,27 +226,28 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test readEventByDeviceID returns null when event does not exist`() {
+    fun `test readEventByDeviceIdAndNormalizedEventName returns null when event does not exist`() {
         // When
-        val result = userEventLogDAO.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertNull(result)
     }
 
     @Test
-    fun `test readEventByDeviceID returns correct event log after insert`() {
+    fun `test readEventByDeviceIdAndNormalizedEventName returns correct event log after insert`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertNotNull(result)
         with(requireNotNull(result)) {
-            assertEquals(TEST_EVENT_NAME, eventName)
-            assertEquals(TEST_DEVICE_ID, deviceID)
+            assertEquals(testEventName, eventName)
+            assertEquals(testEventNameNormalized, normalizedEventName)
+            assertEquals(testDeviceId, deviceID)
             assertEquals(1, countOfEvents)
             assertEquals(MOCK_TIME, firstTs)
             assertEquals(MOCK_TIME, lastTs)
@@ -253,24 +258,25 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test readEventByDeviceID after multiple updates`() {
+    fun `test readEventByDeviceIdAndNormalizedEventName after multiple updates`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // Mock different time for update
         val updateTime = MOCK_TIME + 1000
         every { Utils.getNowInMillis() } returns updateTime
 
-        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertNotNull(result)
         with(requireNotNull(result)) {
-            assertEquals(TEST_EVENT_NAME, eventName)
-            assertEquals(TEST_DEVICE_ID, deviceID)
+            assertEquals(testEventName, eventName)
+            assertEquals(testEventNameNormalized, normalizedEventName)
+            assertEquals(testDeviceId, deviceID)
             assertEquals(2, countOfEvents)
             assertEquals(MOCK_TIME, firstTs) // First timestamp should remain same
             assertEquals(updateTime, lastTs) // Last timestamp should be updated
@@ -281,117 +287,117 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test readEventByDeviceID when db error occurs`() {
+    fun `test readEventByDeviceIdAndNormalizedEventName when db error occurs`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>()
         every { dbHelper.readableDatabase } throws SQLiteException()
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.readEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = dao.readEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertNull(result)
     }
 
     @Test
-    fun `test readEventCountByDeviceID returns minus one when event does not exist`() {
+    fun `test readEventCountByDeviceIdAndNormalizedEventName returns minus one when event does not exist`() {
         // When
-        val result = userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventCountByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(-1, result)
     }
 
     @Test
-    fun `test readEventCountByDeviceID when db error occurs`() {
+    fun `test readEventCountByDeviceIdAndNormalizedEventName when db error occurs`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>()
         every { dbHelper.readableDatabase } throws SQLiteException()
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = dao.readEventCountByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(-1, result)
     }
 
     @Test
-    fun `test readEventCountByDeviceID returns correct count after insert`() {
+    fun `test readEventCountByDeviceIdAndNormalizedEventName returns correct count after insert`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventCountByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(1, result)
     }
 
     @Test
-    fun `test readEventCountByDeviceID returns correct count after multiple updates`() {
+    fun `test readEventCountByDeviceIdAndNormalizedEventName returns correct count after multiple updates`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
-        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
-        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
+        userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
+        userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventCountByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventCountByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(3, result)
     }
 
     @Test
-    fun `test readEventFirstTsByDeviceID returns minus one when event does not exist`() {
+    fun `test readEventFirstTsByDeviceIdAndNormalizedEventName returns minus one when event does not exist`() {
         // When
-        val result = userEventLogDAO.readEventFirstTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventFirstTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(-1L, result)
     }
 
     @Test
-    fun `test readEventFirstTsByDeviceID when db error occurs`() {
+    fun `test readEventFirstTsByDeviceIdAndNormalizedEventName when db error occurs`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>()
         every { dbHelper.readableDatabase } throws SQLiteException()
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.readEventFirstTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = dao.readEventFirstTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(-1L, result)
     }
 
     @Test
-    fun `test readEventFirstTsByDeviceID returns correct timestamp after insert`() {
+    fun `test readEventFirstTsByDeviceIdAndNormalizedEventName returns correct timestamp after insert`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventFirstTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventFirstTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(MOCK_TIME, result)
     }
 
     @Test
-    fun `test readEventFirstTsByDeviceID returns same timestamp after updates`() {
+    fun `test readEventFirstTsByDeviceIdAndNormalizedEventName returns same timestamp after updates`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // Mock different time for update
         val updateTime = MOCK_TIME + 1000
         every { Utils.getNowInMillis() } returns updateTime
 
-        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
-        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
+        userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventFirstTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventFirstTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(MOCK_TIME, result) // First timestamp should remain same after updates
@@ -402,53 +408,53 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test readEventLastTsByDeviceID returns minus one when event does not exist`() {
+    fun `test readEventLastTsByDeviceIdAndNormalizedEventName returns minus one when event does not exist`() {
         // When
-        val result = userEventLogDAO.readEventLastTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventLastTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(-1L, result)
     }
 
     @Test
-    fun `test readEventLastTsByDeviceID when db error occurs`() {
+    fun `test readEventLastTsByDeviceIdAndNormalizedEventName when db error occurs`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>()
         every { dbHelper.readableDatabase } throws SQLiteException()
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.readEventLastTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = dao.readEventLastTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(-1L, result)
     }
 
     @Test
-    fun `test readEventLastTsByDeviceID returns correct timestamp after insert`() {
+    fun `test readEventLastTsByDeviceIdAndNormalizedEventName returns correct timestamp after insert`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventLastTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventLastTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(MOCK_TIME, result)
     }
 
     @Test
-    fun `test readEventLastTsByDeviceID returns updated timestamp after updates`() {
+    fun `test readEventLastTsByDeviceIdAndNormalizedEventName returns updated timestamp after updates`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // Mock different time for update
         val updateTime = MOCK_TIME + 1000
         every { Utils.getNowInMillis() } returns updateTime
 
-        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventLastTsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.readEventLastTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertEquals(updateTime, result) // Last timestamp should be updated
@@ -459,49 +465,49 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test eventExistsByDeviceID returns false when event does not exist`() {
+    fun `test eventExistsByDeviceIdAndNormalizedEventName returns false when event does not exist`() {
         // When
-        val result = userEventLogDAO.eventExistsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertFalse(result)
     }
 
     @Test
-    fun `test eventExistsByDeviceID when db error occurs`() {
+    fun `test eventExistsByDeviceIdAndNormalizedEventName when db error occurs`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>()
         every { dbHelper.readableDatabase } throws SQLiteException()
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.eventExistsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = dao.eventExistsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertFalse(result)
     }
 
     @Test
-    fun `test eventExistsByDeviceID returns true after insert`() {
+    fun `test eventExistsByDeviceIdAndNormalizedEventName returns true after insert`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.eventExistsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        val result = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
         assertTrue(result)
     }
 
     @Test
-    fun `test eventExistsByDeviceID returns true for specific deviceID only`() {
+    fun `test eventExistsByDeviceIdAndNormalizedEventName returns true for specific deviceID only`() {
         // Given
         val otherDeviceId = "other_device_id"
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // When
-        val resultForTestDevice = userEventLogDAO.eventExistsByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
-        val resultForOtherDevice = userEventLogDAO.eventExistsByDeviceID(otherDeviceId, TEST_EVENT_NAME)
+        val resultForTestDevice = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
+        val resultForOtherDevice = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventName(otherDeviceId, testEventNameNormalized)
 
         // Then
         assertTrue(resultForTestDevice)
@@ -509,77 +515,77 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test eventExistsByDeviceIDAndCount returns false when event does not exist`() {
+    fun `test eventExistsByDeviceIdAndNormalizedEventNameAndCount returns false when event does not exist`() {
         // When
-        val result = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 1)
+        val result = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventNameAndCount(testDeviceId, testEventNameNormalized, 1)
 
         // Then
         assertFalse(result)
     }
 
     @Test
-    fun `test eventExistsByDeviceIDAndCount when db error occurs`() {
+    fun `test eventExistsByDeviceIdAndNormalizedEventNameAndCount when db error occurs`() {
         // Given
         val dbHelper = mockk<DatabaseHelper>()
         every { dbHelper.readableDatabase } throws SQLiteException()
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 1)
+        val result = dao.eventExistsByDeviceIdAndNormalizedEventNameAndCount(testDeviceId, testEventNameNormalized, 1)
 
         // Then
         assertFalse(result)
     }
 
     @Test
-    fun `test eventExistsByDeviceIDAndCount returns true for matching count`() {
+    fun `test eventExistsByDeviceIdAndNormalizedEventNameAndCount returns true for matching count`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 1)
+        val result = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventNameAndCount(testDeviceId, testEventNameNormalized, 1)
 
         // Then
         assertTrue(result)
     }
 
     @Test
-    fun `test eventExistsByDeviceIDAndCount returns false for non-matching count`() {
+    fun `test eventExistsByDeviceIdAndNormalizedEventNameAndCount returns false for non-matching count`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 2)
+        val result = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventNameAndCount(testDeviceId, testEventNameNormalized, 2)
 
         // Then
         assertFalse(result)
     }
 
     @Test
-    fun `test eventExistsByDeviceIDAndCount verifies count after updates`() {
+    fun `test eventExistsByDeviceIdAndNormalizedEventNameAndCount verifies count after updates`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
-        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
+        userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // When
-        val resultForCount1 = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 1)
-        val resultForCount2 = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 2)
+        val resultForCount1 = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventNameAndCount(testDeviceId, testEventNameNormalized, 1)
+        val resultForCount2 = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventNameAndCount(testDeviceId, testEventNameNormalized, 2)
 
         // Then
         assertFalse(resultForCount1)
         assertTrue(resultForCount2)
     }
 
-    @Test fun `test eventExistsByDeviceIDAndCount returns true for specific deviceID and count`(){
+    @Test fun `test eventExistsByDeviceIdAndNormalizedEventNameAndCount returns true for specific deviceID and count`(){
         // Given
         val otherDeviceId = "other_device_id"
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
-        userEventLogDAO.insertEventByDeviceID(otherDeviceId, TEST_EVENT_NAME)
-        userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
+        userEventLogDAO.insertEvent(otherDeviceId, testEventName, testEventNameNormalized)
+        userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // When
-        val resultForTestDevice = userEventLogDAO.eventExistsByDeviceIDAndCount(TEST_DEVICE_ID, TEST_EVENT_NAME, 2)
-        val resultForOtherDevice = userEventLogDAO.eventExistsByDeviceIDAndCount(otherDeviceId, TEST_EVENT_NAME, 1)
+        val resultForTestDevice = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventNameAndCount(testDeviceId, testEventNameNormalized, 2)
+        val resultForOtherDevice = userEventLogDAO.eventExistsByDeviceIdAndNormalizedEventNameAndCount(otherDeviceId, testEventNameNormalized, 1)
 
         // Then
         assertTrue(resultForTestDevice)
@@ -589,7 +595,7 @@ class UserEventLogDAOImplTest {
     @Test
     fun `test allEventsByDeviceID returns empty list when no events exist`() {
         // When
-        val result = userEventLogDAO.allEventsByDeviceID(TEST_DEVICE_ID)
+        val result = userEventLogDAO.allEventsByDeviceID(testDeviceId)
 
         // Then
         assertTrue(result.isEmpty())
@@ -603,7 +609,7 @@ class UserEventLogDAOImplTest {
         val dao = UserEventLogDAOImpl(dbHelper, logger, table)
 
         // When
-        val result = dao.allEventsByDeviceID(TEST_DEVICE_ID)
+        val result = dao.allEventsByDeviceID(testDeviceId)
 
         // Then
         assertTrue(result.isEmpty())
@@ -612,19 +618,18 @@ class UserEventLogDAOImplTest {
     @Test
     fun `test allEventsByDeviceID returns correct list after inserts`() {
         // Given
-        val list = listOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
-            list.forEach {
-                userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, it)
+            setOfActualAndNormalizedEventNamePair.forEach {
+                userEventLogDAO.insertEvent(testDeviceId, it.first,it.second)
             }
 
         // When
-        val result = userEventLogDAO.allEventsByDeviceID(TEST_DEVICE_ID)
+        val result = userEventLogDAO.allEventsByDeviceID(testDeviceId)
 
         // Then
         assertEquals(2, result.size)
 
         assertTrue(result.all {
-            list.contains(it.eventName) && it.deviceID == TEST_DEVICE_ID
+            setOfActualAndNormalizedEventNamePair.contains(Pair(it.eventName,it.normalizedEventName)) && it.deviceID == testDeviceId
         })
     }
 
@@ -632,12 +637,12 @@ class UserEventLogDAOImplTest {
     fun `test allEventsByDeviceID returns events for specific deviceID only`() {
         // Given
         val otherDeviceId = "other_device_id"
-        listOf(TEST_DEVICE_ID, otherDeviceId).forEach { deviceId ->
-            userEventLogDAO.insertEventByDeviceID(deviceId, TEST_EVENT_NAME)
+        listOf(testDeviceId, otherDeviceId).forEach { deviceId ->
+            userEventLogDAO.insertEvent(deviceId,testEventName, testEventNameNormalized)
         }
 
         // When
-        val results = listOf(TEST_DEVICE_ID, otherDeviceId)
+        val results = listOf(testDeviceId, otherDeviceId)
             .associateWith { deviceId ->
                 userEventLogDAO.allEventsByDeviceID(deviceId)
             }
@@ -652,21 +657,21 @@ class UserEventLogDAOImplTest {
     @Test
     fun `test allEventsByDeviceID returns events ordered by lastTs`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // Mock different time for second event
         val laterTime = MOCK_TIME + 1000
         every { Utils.getNowInMillis() } returns laterTime
 
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME_2)
+        userEventLogDAO.insertEvent(testDeviceId, testEventName2, testEventNameNormalized2)
 
         // When
-        val result = userEventLogDAO.allEventsByDeviceID(TEST_DEVICE_ID)
+        val result = userEventLogDAO.allEventsByDeviceID(testDeviceId)
 
         // Then
         assertEquals(2, result.size)
-        assertEquals(TEST_EVENT_NAME, result[0].eventName)  // Earlier event first
-        assertEquals(TEST_EVENT_NAME_2, result[1].eventName) // Later event second
+        assertEquals(testEventNameNormalized, result[0].normalizedEventName)  // Earlier event first
+        assertEquals(testEventNameNormalized2, result[1].normalizedEventName) // Later event second
         assertTrue(result[0].lastTs < result[1].lastTs)
 
         verify {
@@ -700,12 +705,11 @@ class UserEventLogDAOImplTest {
     @Test
     fun `test allEvents returns all events from different users`() {
         // Given
-        val deviceIds = listOf(TEST_DEVICE_ID, "other_device_id")
-        val eventNames = listOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
+        val deviceIds = listOf(testDeviceId, "other_device_id")
 
         deviceIds.forEach { deviceId ->
-            eventNames.forEach { eventName ->
-                userEventLogDAO.insertEventByDeviceID(deviceId, eventName)
+            setOfActualAndNormalizedEventNamePair.forEach { pair ->
+                userEventLogDAO.insertEvent(deviceId, pair.first, pair.second)
             }
         }
 
@@ -715,19 +719,23 @@ class UserEventLogDAOImplTest {
         // Then
         assertEquals(4, result.size)
         result.all {
-            deviceIds.contains(it.deviceID) && eventNames.contains(it.eventName)
+            deviceIds.contains(it.deviceID) && setOfActualAndNormalizedEventNamePair.contains(
+                Pair(
+                    it.eventName,
+                    it.normalizedEventName
+                )
+            )
         }
     }
 
     @Test
     fun `test allEvents returns events ordered by lastTs`() {
         // Given
-        val events = listOf(TEST_EVENT_NAME, TEST_EVENT_NAME_2)
 
-        events.forEachIndexed { index, eventName ->
+        setOfActualAndNormalizedEventNamePair.forEachIndexed { index, pair ->
             val mockTime = MOCK_TIME + (index * 1000L)
             every { Utils.getNowInMillis() } returns mockTime
-            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+            userEventLogDAO.insertEvent(testDeviceId,pair.first, pair.second)
         }
 
         // When
@@ -747,17 +755,17 @@ class UserEventLogDAOImplTest {
     @Test
     fun `test allEvents returns correct event details`() {
         // Given
-        data class EventData(val deviceId: String, val name: String, val count: Int)
+        data class EventData(val deviceId: String, val name: String, val normalizedName: String, val count: Int)
 
         val testData = listOf(
-            EventData(TEST_DEVICE_ID, TEST_EVENT_NAME, 2),
-            EventData("other_device_id", TEST_EVENT_NAME_2, 1)
+            EventData(testDeviceId, testEventName, testEventNameNormalized, 2),
+            EventData("other_device_id", testEventName2, testEventNameNormalized2, 1)
         )
 
-        testData.forEach { (deviceId, eventName, updateCount) ->
-            userEventLogDAO.insertEventByDeviceID(deviceId, eventName)
+        testData.forEach { (deviceId, eventName, normalizedName, updateCount) ->
+            userEventLogDAO.insertEvent(deviceId, eventName, normalizedName)
             repeat(updateCount - 1) {
-                userEventLogDAO.updateEventByDeviceID(deviceId, eventName)
+                userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(deviceId, normalizedName)
             }
         }
 
@@ -767,12 +775,13 @@ class UserEventLogDAOImplTest {
             .mapValues { (_, events) -> events.associateBy { it.eventName } }
 
         // Then
-        testData.forEach { (deviceId, eventName, expectedCount) ->
+        testData.forEach { (deviceId, eventName, normalizedName, expectedCount) ->
             val event = result[deviceId]?.get(eventName)
             assertNotNull(event)
             with(requireNotNull(event)) {
                 assertEquals(deviceId, this.deviceID)
                 assertEquals(eventName, this.eventName)
+                assertEquals(normalizedName, this.normalizedEventName)
                 assertEquals(expectedCount, this.countOfEvents)
                 assertEquals(MOCK_TIME, this.firstTs)
                 assertEquals(MOCK_TIME, this.lastTs)
@@ -838,8 +847,11 @@ class UserEventLogDAOImplTest {
     fun `test cleanUpExtraEvents validation ensures database is not modified with invalid params`() {
         // Given
         val events = (1..5).map { "event_$it" }
-        events.forEach { eventName ->
-            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+        val setOfActualAndNormalizedEventNamePair = events.map {
+            Pair(it, Utils.getNormalizedName(it))
+        }.toSet()
+        setOfActualAndNormalizedEventNamePair.forEach { pair ->
+            userEventLogDAO.insertEvent(testDeviceId, pair.first,pair.second)
         }
 
         // When
@@ -878,11 +890,14 @@ class UserEventLogDAOImplTest {
     fun `test cleanUpExtraEvents deletes correct number of events when above threshold`() {
         // Given
         val events = (1..10).map { "event_$it" }
+        val setOfActualAndNormalizedEventNamePair = events.map {
+            Pair(it, Utils.getNormalizedName(it))
+        }.toSet()
 
-        events.forEachIndexed { index, eventName ->
+        setOfActualAndNormalizedEventNamePair.forEachIndexed { index, pair ->
             val mockTime = MOCK_TIME + (index * 1000L)
             every { Utils.getNowInMillis() } returns mockTime
-            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+            userEventLogDAO.insertEvent(testDeviceId, pair.first,pair.second)
         }
 
         val threshold = 6
@@ -899,15 +914,15 @@ class UserEventLogDAOImplTest {
 
         // Verify oldest events were deleted and newest remain
         remainingEvents
-            .map { it.eventName }
-            .let { eventNames ->
+            .map { it.normalizedEventName }
+            .let { normalizedEventNames ->
                 // First 6 events should be deleted (10 - 4 = 6)
                 (1..6).forEach {
-                    assertFalse(eventNames.contains("event_$it"))
+                    assertFalse(normalizedEventNames.contains("event_$it"))
                 }
                 // Last 4 events should remain
                 (7..10).forEach {
-                    assertTrue(eventNames.contains("event_$it"))
+                    assertTrue(normalizedEventNames.contains("event_$it"))
                 }
             }
 
@@ -920,11 +935,14 @@ class UserEventLogDAOImplTest {
     fun `test cleanUpExtraEvents maintains events when below threshold`() {
         // Given
         val events = (1..3).map { "event_$it" }
+        val setOfActualAndNormalizedEventNamePair = events.map {
+            Pair(it, Utils.getNormalizedName(it))
+        }.toSet()
 
-        events.forEachIndexed { index, eventName ->
+        setOfActualAndNormalizedEventNamePair.forEachIndexed { index, pair ->
             val mockTime = MOCK_TIME + (index * 1000L)
             every { Utils.getNowInMillis() } returns mockTime
-            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+            userEventLogDAO.insertEvent(testDeviceId, pair.first,pair.second)
         }
 
         val threshold = 5
@@ -937,10 +955,10 @@ class UserEventLogDAOImplTest {
         assertTrue(result)
 
         userEventLogDAO.allEvents()
-            .map { it.eventName }
-            .let { eventNames ->
-                assertEquals(3, eventNames.size) // All events should remain
-                assertTrue(eventNames.containsAll(events))
+            .map { it.normalizedEventName }
+            .let { normalizedEventNames ->
+                assertEquals(3, normalizedEventNames.size) // All events should remain
+                assertTrue(normalizedEventNames.containsAll(events))
             }
 
         verify {
@@ -953,11 +971,14 @@ class UserEventLogDAOImplTest {
         // Given
         val eventCount = 10
         val events = (1..eventCount).map { "event_$it" }
+        val setOfActualAndNormalizedEventNamePair = events.map {
+            Pair(it, Utils.getNormalizedName(it))
+        }.toSet()
 
-        events.forEachIndexed { index, eventName ->
+        setOfActualAndNormalizedEventNamePair.forEachIndexed { index, pair ->
             val mockTime = MOCK_TIME + (index * 1000L)
             every { Utils.getNowInMillis() } returns mockTime
-            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+            userEventLogDAO.insertEvent(testDeviceId, pair.first, pair.second)
         }
 
         val threshold = 6
@@ -984,7 +1005,7 @@ class UserEventLogDAOImplTest {
     @Test
     fun `test cleanUpExtraEvents with threshold 1 and numberOfRowsToCleanup 0 when single event exists`() {
         // Given
-        userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, TEST_EVENT_NAME)
+        userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // When
         val result = userEventLogDAO.cleanUpExtraEvents(1, 0)
@@ -993,7 +1014,7 @@ class UserEventLogDAOImplTest {
         assertTrue(result)
         userEventLogDAO.allEvents().let { events ->
             assertEquals(1, events.size)
-            assertEquals(TEST_EVENT_NAME, events[0].eventName)
+            assertEquals(testEventNameNormalized, events[0].normalizedEventName)
         }
     }
 
@@ -1001,11 +1022,14 @@ class UserEventLogDAOImplTest {
     fun `test cleanUpExtraEvents with threshold 1 and numberOfRowsToCleanup 0 when multiple events exist`() {
         // Given
         val events = (1..3).map { "event_$it" }
+        val setOfActualAndNormalizedEventNamePair = events.map {
+            Pair(it, Utils.getNormalizedName(it))
+        }.toSet()
 
-        events.forEachIndexed { index, eventName ->
+        setOfActualAndNormalizedEventNamePair.forEachIndexed { index, pair ->
             val mockTime = MOCK_TIME + (index * 1000L)
             every { Utils.getNowInMillis() } returns mockTime
-            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, eventName)
+            userEventLogDAO.insertEvent(testDeviceId, pair.first, pair.second)
         }
 
         // When
@@ -1015,7 +1039,7 @@ class UserEventLogDAOImplTest {
         assertTrue(result)
         userEventLogDAO.allEvents().let { remainingEvents ->
             assertEquals(1, remainingEvents.size)
-            assertEquals("event_3", remainingEvents[0].eventName) // Should keep the most recent event
+            assertEquals("event_3", remainingEvents[0].normalizedEventName) // Should keep the most recent event
             assertEquals(MOCK_TIME + 2000L, remainingEvents[0].lastTs)
         }
 
@@ -1027,12 +1051,12 @@ class UserEventLogDAOImplTest {
     @Test
     fun `test cleanUpExtraEvents with threshold 1 and numberOfRowsToCleanup 0 with multiple users`() {
         // Given
-        val devices = listOf(TEST_DEVICE_ID, "other_device_id")
+        val devices = listOf(testDeviceId, "other_device_id")
 
         devices.forEachIndexed { index, deviceId ->
             val mockTime = MOCK_TIME + (index * 1000L)
             every { Utils.getNowInMillis() } returns mockTime
-            userEventLogDAO.insertEventByDeviceID(deviceId, TEST_EVENT_NAME)
+            userEventLogDAO.insertEvent(deviceId, testEventName, testEventNameNormalized)
         }
 
         // When
@@ -1057,12 +1081,13 @@ class UserEventLogDAOImplTest {
         (1..5).forEach { index ->
             val mockTime = MOCK_TIME + (index * 1000L)
             every { Utils.getNowInMillis() } returns mockTime
-            userEventLogDAO.insertEventByDeviceID(TEST_DEVICE_ID, "event_$index")
+            val eventName = "EV e n t_$index"
+            userEventLogDAO.insertEvent(testDeviceId, eventName,Utils.getNormalizedName(eventName))
 
             // Add some updates to earlier events to mix up lastTs
             if (index > 1) {
                 every { Utils.getNowInMillis() } returns mockTime + 100
-                userEventLogDAO.updateEventByDeviceID(TEST_DEVICE_ID, "event_1")
+                userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, "event_1")
             }
         }
 
@@ -1074,7 +1099,7 @@ class UserEventLogDAOImplTest {
         userEventLogDAO.allEvents().let { remainingEvents ->
             assertEquals(1, remainingEvents.size)
             // Should keep event_1 as it has the latest lastTs due to updates
-            assertEquals("event_1", remainingEvents[0].eventName)
+            assertEquals("event_1", remainingEvents[0].normalizedEventName)
         }
 
         verify {
