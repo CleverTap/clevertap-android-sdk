@@ -23,7 +23,6 @@ open class ExoplayerPlayerListener : Player.Listener {
     override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {}
     override fun onTrackSelectionParametersChanged(parameters: TrackSelectionParameters) {}
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {}
-    override fun onPlaybackStateChanged(playbackState: Int) {}
     override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {}
     override fun onPlaybackSuppressionReasonChanged(playbackSuppressionReason: Int) {}
     override fun onIsPlayingChanged(isPlaying: Boolean) {}
