@@ -56,7 +56,7 @@ public class LocalDataStore {
     private final String eventNamespace = "local_events";
 
     private final DeviceInfo deviceInfo;
-    private final Set<String> userEventLogKeys = Collections.synchronizedSet(new HashSet<>());
+    private final Set<String> userNormalizedEventLogKeys = Collections.synchronizedSet(new HashSet<>());
     private final Map<String, String> normalizedEventNames = new HashMap<>();
 
     LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
@@ -70,7 +70,7 @@ public class LocalDataStore {
 
     @WorkerThread
     public void changeUser() {
-        userEventLogKeys.clear();
+        userNormalizedEventLogKeys.clear();
         resetLocalProfileSync();
     }
 
@@ -273,16 +273,15 @@ public class LocalDataStore {
 
     @WorkerThread
     public boolean isUserEventLogFirstTime(String eventName) {
-        if (userEventLogKeys.contains(eventName)) {
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        if (userNormalizedEventLogKeys.contains(normalizedEventName)) {
             return false;
         }
 
         String deviceID = deviceInfo.getDeviceID();
-        String normalizedEventName = getOrPutNormalizedEventName(eventName);
-
         int count = readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
         if (count > 1) {
-            userEventLogKeys.add(eventName);
+            userNormalizedEventLogKeys.add(normalizedEventName);
         }
         return count == 1;
     }

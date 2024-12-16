@@ -235,13 +235,13 @@ private val CREATE_EVENTS_TABLE = """
 
 private val CREATE_USER_EVENT_LOGS_TABLE = """
     CREATE TABLE ${Table.USER_EVENT_LOGS_TABLE.tableName} (
+        ${Column.DEVICE_ID} STRING NOT NULL,
         ${Column.EVENT_NAME} STRING NOT NULL,
         ${Column.NORMALIZED_EVENT_NAME} STRING NOT NULL,
         ${Column.FIRST_TS} INTEGER NOT NULL,
         ${Column.LAST_TS} INTEGER NOT NULL,
         ${Column.COUNT} INTEGER NOT NULL,
-        ${Column.DEVICE_ID} STRING NOT NULL,
-        PRIMARY KEY (${Column.NORMALIZED_EVENT_NAME}, ${Column.DEVICE_ID})
+        PRIMARY KEY (${Column.DEVICE_ID}, ${Column.NORMALIZED_EVENT_NAME})
     );
 """
 
