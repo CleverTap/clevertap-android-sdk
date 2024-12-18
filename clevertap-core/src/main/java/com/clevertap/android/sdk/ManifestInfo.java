@@ -162,9 +162,7 @@ public class ManifestInfo {
         profileKeys = parseProfileKeys(metaData);
     }
 
-    // todo lp visibility -> private
-    @VisibleForTesting
-    public ManifestInfo(
+    ManifestInfo(
             String accountId,
             String accountToken,
             String accountRegion,
