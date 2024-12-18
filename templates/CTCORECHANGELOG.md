@@ -25,6 +25,10 @@
   * `getTotalVisits()`: Use `getUserAppLaunchCount()` instead for user-specific app launch count
   * `getHistory()`: Use `getUserEventLogHistory()` instead for user-specific event history
 
+#### Bug Fixes
+* Fixes [#671](https://github.com/CleverTap/clevertap-android-sdk/issues/671) - an `AbstractMethodError` in the AppInbox feature when using audio/video.
+
+
 ### Version 7.0.3 (November 29, 2024)
 
 #### New Features
