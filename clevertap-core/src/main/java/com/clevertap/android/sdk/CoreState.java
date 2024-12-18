@@ -110,9 +110,6 @@ public class CoreState {
         this.parser = parser;
     }
 
-    CoreState() {
-    }
-
     public ActivityLifeCycleManager getActivityLifeCycleManager() {
         return activityLifeCycleManager;
     }
