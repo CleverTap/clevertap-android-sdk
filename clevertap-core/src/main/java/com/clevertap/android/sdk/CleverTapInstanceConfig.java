@@ -101,9 +101,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return CleverTapInstanceConfig.createInstanceWithManifest(manifestInfo, accountId, accountToken, accountRegion, true);
     }
 
-    // todo lp visibility
-    @VisibleForTesting
-    public static CleverTapInstanceConfig createInstanceWithManifest(
+    static CleverTapInstanceConfig createInstanceWithManifest(
             @NonNull ManifestInfo manifest,
             @NonNull String accountId,
             @NonNull String accountToken,

@@ -1,7 +1,5 @@
-package com.clevertap.android.sdk.fixtures
+package com.clevertap.android.sdk
 
-import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.shared.test.Constant
 
 class CleverTapFixtures {

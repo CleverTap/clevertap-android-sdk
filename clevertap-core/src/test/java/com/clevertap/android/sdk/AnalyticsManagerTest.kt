@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import com.clevertap.android.sdk.AnalyticsManagerBundler.notificationViewedJson
 import com.clevertap.android.sdk.events.BaseEventQueueManager
-import com.clevertap.android.sdk.fixtures.CleverTapFixtures
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
