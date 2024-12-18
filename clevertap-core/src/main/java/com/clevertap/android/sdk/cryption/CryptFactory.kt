@@ -8,7 +8,7 @@ class CryptFactory {
         @JvmStatic
         fun getCrypt(type: CryptHandler.EncryptionAlgorithm): Crypt {
             return when (type) {
-                CryptHandler.EncryptionAlgorithm.AES -> AESCrypt()
+                CryptHandler.EncryptionAlgorithm.AES -> AESGCMCrypt()
             }
         }
     }
