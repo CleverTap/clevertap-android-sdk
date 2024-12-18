@@ -7,6 +7,7 @@ import org.json.JSONObject
 object AnalyticsManagerBundler {
 
     @Throws(JSONException::class)
+    @JvmStatic
     fun wzrkBundleToJson(root: Bundle): JSONObject {
         val fields = JSONObject()
         for (s in root.keySet()) {
@@ -26,6 +27,7 @@ object AnalyticsManagerBundler {
         return fields
     }
 
+    @JvmStatic
     fun notificationViewedJson(root: Bundle): JSONObject {
         val event = JSONObject()
         try {

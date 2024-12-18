@@ -499,10 +499,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         try {
             // convert bundle to json
-            JSONObject event = AnalyticsManagerBundler.INSTANCE.notificationViewedJson(extras);
+            JSONObject event = AnalyticsManagerBundler.notificationViewedJson(extras);
 
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
-            coreMetaData.setWzrkParams(AnalyticsManagerBundler.INSTANCE.wzrkBundleToJson(extras));
+            coreMetaData.setWzrkParams(AnalyticsManagerBundler.wzrkBundleToJson(extras));
         } catch (Throwable t) {
             // We won't get here
         }
@@ -656,7 +656,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         config.getLogger().debug("Recording Notification Viewed event for notification:  " + extras);
 
-        JSONObject event = AnalyticsManagerBundler.INSTANCE.notificationViewedJson(extras);
+        JSONObject event = AnalyticsManagerBundler.notificationViewedJson(extras);
         baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT);
     }
 
