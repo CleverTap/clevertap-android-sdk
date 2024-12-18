@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
+import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
@@ -50,7 +51,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final ValidationResultStack validationResultStack;
     private final Validator validator;
     private final InAppResponse inAppResponse;
-    private final Function0<Long> currentTimeProvider;
+    private final Clock currentTimeProvider;
     private final Object notificationMapLock = new Object();
 
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
@@ -67,7 +68,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             BaseCallbackManager callbackManager, ControllerManager controllerManager,
             final CTLockManager ctLockManager,
             InAppResponse inAppResponse,
-            Function0<Long> currentTimeProvider
+            Clock currentTimeProvider
     ) {
         this.context = context;
         this.config = config;
@@ -1149,7 +1150,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             boolean isDupe = false;
             try {
                 String notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
-                long now = currentTimeProvider.invoke();
+                long now = currentTimeProvider.currentTimeMillis();
                 if (notificationTagMap.containsKey(notificationIdTag)) {
                     long timestamp;
                     // noinspection ConstantConditions

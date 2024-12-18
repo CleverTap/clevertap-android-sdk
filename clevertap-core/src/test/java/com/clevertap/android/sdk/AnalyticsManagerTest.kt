@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.fixtures.CleverTapFixtures
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
+import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
@@ -54,7 +55,7 @@ class AnalyticsManagerTest {
     private lateinit var inAppResponse: InAppResponse
 
     @MockK(relaxed = true)
-    private lateinit var timeProvider: (() -> Long)
+    private lateinit var timeProvider: Clock
 
     private val bundle = Bundle().apply {
         putString("wzrk_pn", "wzrk_pn")
@@ -128,7 +129,7 @@ class AnalyticsManagerTest {
     fun `clevertap does not process duplicate PN viewed within 2 seconds - case 2nd notif in 200ms`() {
         val json = notificationViewedJson(bundle)
 
-        every { timeProvider.invoke() } returns 10000
+        every { timeProvider.currentTimeMillis() } returns 10000
 
         // send PN first time
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
@@ -144,7 +145,7 @@ class AnalyticsManagerTest {
         }
 
         // setup again, 200 ms has passed
-        every { timeProvider.invoke() } returns 10200
+        every { timeProvider.currentTimeMillis() } returns 10200
 
         // Send duplicate PN
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
@@ -167,7 +168,7 @@ class AnalyticsManagerTest {
 
         val json = notificationViewedJson(bundle);
 
-        every { timeProvider.invoke() } returns 10000
+        every { timeProvider.currentTimeMillis() } returns 10000
 
         // send PN first time
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
@@ -183,7 +184,7 @@ class AnalyticsManagerTest {
         }
 
         // setup again, 10000 ms has passed
-        every { timeProvider.invoke() } returns 20000
+        every { timeProvider.currentTimeMillis() } returns 20000
 
         // Send duplicate PN
         analyticsManagerSUT.pushNotificationViewedEvent(bundle)
@@ -218,7 +219,7 @@ class AnalyticsManagerTest {
     fun `clevertap does not process duplicate (same wzrk_id) PN clicked within 2 seconds - case 2nd click happens in 200ms`() {
 
         val json = notificationViewedJson(bundle)
-        every { timeProvider.invoke() } returns 10000
+        every { timeProvider.currentTimeMillis() } returns 10000
 
         // send PN first time
         analyticsManagerSUT.pushNotificationClickedEvent(bundle)
@@ -234,7 +235,7 @@ class AnalyticsManagerTest {
         }
 
         // setup again, 10000 ms has passed
-        every { timeProvider.invoke() } returns 12000
+        every { timeProvider.currentTimeMillis() } returns 12000
 
         // Send duplicate PN
         analyticsManagerSUT.pushNotificationClickedEvent(bundle)
@@ -256,7 +257,7 @@ class AnalyticsManagerTest {
     fun `clevertap processes PN clicked for same wzrk_id if separated by a span of greater than 5 seconds`() {
 
         val json = notificationViewedJson(bundle);
-        every { timeProvider.invoke() } returns 10000
+        every { timeProvider.currentTimeMillis() } returns 10000
 
         // send PN first time
         analyticsManagerSUT.pushNotificationClickedEvent(bundle)
@@ -272,7 +273,7 @@ class AnalyticsManagerTest {
         }
 
         // setup again, 10000 ms has passed
-        every { timeProvider.invoke() } returns 20000
+        every { timeProvider.currentTimeMillis() } returns 20000
 
         // Send duplicate PN
         analyticsManagerSUT.pushNotificationClickedEvent(bundle)
