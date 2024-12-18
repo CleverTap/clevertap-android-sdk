@@ -43,8 +43,8 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
     fun encrypt(plainText: String, key: String): String? {
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM ->
-                if (key in Constants.MEDIUM_CRYPT_KEYS && !isTextEncrypted(plainText))
-                    return crypt.encryptInternal(plainText, accountID)
+                if (key in Constants.MEDIUM_CRYPT_KEYS && !isTextAESEncrypted(plainText))
+                    return crypt.encryptInternal(plainText)
 
             else -> return plainText
         }
@@ -52,7 +52,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
     }
 
     fun encrypt(plainText: String): String? {
-        return crypt.encryptInternal(plainText, accountID)
+        return crypt.encryptInternal(plainText)
     }
 
     /**
@@ -64,15 +64,15 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
      * @return decrypted text
      */
     fun decrypt(cipherText: String, key: String): String? {
-        if (isTextEncrypted(cipherText)) {
+        if (isTextAESEncrypted(cipherText)) {
             when (encryptionLevel) {
                 EncryptionLevel.MEDIUM -> {
                     if (key in Constants.MEDIUM_CRYPT_KEYS)
-                        return crypt.decryptInternal(cipherText, accountID)
+                        return crypt.decryptInternal(cipherText)
                 }
 
                 else -> {
-                    return crypt.decryptInternal(cipherText, accountID)
+                    return crypt.decryptInternal(cipherText)
                 }
             }
         }
@@ -80,7 +80,7 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
     }
 
     fun decrypt(cipherText: String): String? {
-        return crypt.decryptInternal(cipherText, accountID)
+        return crypt.decryptInternal(cipherText)
     }
 
     companion object {
@@ -92,8 +92,13 @@ class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, ac
          * @return boolean indicating if text is encrypted
          */
         @JvmStatic
-        fun isTextEncrypted(plainText: String): Boolean {
+        fun isTextAESEncrypted(plainText: String): Boolean {
             return plainText.startsWith('[') && plainText.endsWith(']')
+        }
+
+        @JvmStatic
+        fun isTextAESGCMEncrypted(plainText: String): Boolean {
+            return plainText.startsWith('<') && plainText.endsWith('>')
         }
     }
 }
