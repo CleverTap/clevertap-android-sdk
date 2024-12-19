@@ -11,7 +11,6 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.cryption.CryptHandler;
-import com.clevertap.android.sdk.cryption.CryptUtils;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 
 import org.json.JSONObject;
@@ -64,7 +63,8 @@ public class LoginInfoProvider {
         if (encryptedIdentifier == null) {
             // If encrypted is null then fallback to plain text
             encryptedIdentifier = identifier;
-            CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_CGK_SUCCESS, cryptHandler);
+            // todo replace with constant/ enum
+            cryptHandler.updateEncryptionStateOnFailure(context, "currentStateCgk");
         }
         String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();

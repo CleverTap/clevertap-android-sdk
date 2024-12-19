@@ -3,134 +3,291 @@ package com.clevertap.android.sdk.cryption
 import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
-import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_ALL_SUCCESS
 import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_CGK_SUCCESS
 import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_DB_SUCCESS
-import com.clevertap.android.sdk.Constants.ENCRYPTION_FLAG_FAIL
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_FLAG_STATUS
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_MIGRATION
 import com.clevertap.android.sdk.Constants.piiDBKeys
 import com.clevertap.android.sdk.StorageHelper
+import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionDataState
+import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionDataState.*
+import com.clevertap.android.sdk.cryption.CryptUtils.MigrationStep
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
+import java.io.File
 
 /**
  * This class is a utils class, mainly used to handle migration when encryption fails or encryption level is changed
  */
 internal object CryptUtils {
+    // todo - Add syntactic sugar,
+    // todo - enums for states,
+    // todo - constants where needed,
+    // todo - better data structures and more readable
+    // todo - fix logs
+    // todo - better names for variables
 
-    /**
-     * This method migrates the encryption level of the stored data for the current account ID
-     *
-     * @param context - The Android context
-     * @param config  - The [CleverTapInstanceConfig] object
-     * @param cryptHandler - The [CryptHandler] object
-     * @param dbAdapter - The [DBAdapter] object
-     */
+    private fun isWorstStateNeeded(storedEncryptionLevel: Int, configEncryptionLevel: Int, encryptionAlgorithm: Int): Boolean {
+        // todo - add more logic for worst state if required
+        return (storedEncryptionLevel != configEncryptionLevel) || encryptionAlgorithm == 0
+    }
+
+    private fun getRequiredEncryptedDataState(configEncryptionLevel: Int): EncryptionDataState {
+        return if (configEncryptionLevel == 0)
+            ENCRYPTED_AES
+        else
+            ENCRYPTED_AES_GCM
+    }
+
+    private fun getCurrentEncryptedDataState(
+        storedEncryptionLevel: Int,
+        encryptionFlagStatus: Int,
+        storedCurrentState: String?,
+        configEncryptionLevel: Int,
+        encryptionAlgorithm: Int,
+        requiredState: EncryptionDataState
+    ): MutableMap<String, EncryptionDataState> {
+        return when {
+            storedCurrentState == null && encryptionFlagStatus == -1 -> {
+                // User has cleared the data / fresh install of app
+                mutableMapOf(
+                    "currentStateDb" to requiredState,
+                    "currentStateCgk" to requiredState,
+                    "currentStateInApp" to requiredState
+                )
+            }
+
+            storedCurrentState == null -> {
+                // First migration attempt from old to new
+                // todo - verify below logic
+                val currentStateCgk =
+                    if ((encryptionFlagStatus and ENCRYPTION_FLAG_CGK_SUCCESS) != 0 && storedEncryptionLevel == 0) ENCRYPTED_AES else PLAIN_TEXT
+                val currentStateDb =
+                    if ((encryptionFlagStatus and ENCRYPTION_FLAG_DB_SUCCESS) != 0 && storedEncryptionLevel == 0) ENCRYPTED_AES else PLAIN_TEXT
+
+                mutableMapOf(
+                    "currentStateDb" to currentStateDb,
+                    "currentStateCgk" to currentStateCgk,
+                    "currentStateInApp" to ENCRYPTED_AES
+                )
+            }
+
+            isWorstStateNeeded(
+                storedEncryptionLevel,
+                configEncryptionLevel,
+                encryptionAlgorithm
+            ) -> {
+                when {
+                    encryptionAlgorithm == 0 -> mutableMapOf(
+                        "currentStateDb" to PLAIN_TEXT,
+                        "currentStateCgk" to PLAIN_TEXT,
+                        "currentStateInApp" to PLAIN_TEXT
+                    )
+
+                    configEncryptionLevel == 0 -> mutableMapOf(
+                        "currentStateDb" to ENCRYPTED_AES_GCM,
+                        "currentStateCgk" to ENCRYPTED_AES_GCM,
+                        "currentStateInApp" to ENCRYPTED_AES_GCM
+                    )
+
+                    else -> mutableMapOf(
+                        "currentStateDb" to ENCRYPTED_AES,
+                        "currentStateCgk" to ENCRYPTED_AES,
+                        "currentStateInApp" to ENCRYPTED_AES
+                    )
+                }
+            }
+
+            else -> {
+                storedCurrentState.split(",").associate {
+                    val (key, value) = it.split(":")
+                    key to EncryptionDataState.fromState(value.toInt())
+                }.toMutableMap()
+            }
+        }
+    }
+
+
+
     @JvmStatic
-    fun migrateEncryptionLevel(
+    fun migrateEncryption(
         context: Context,
         config: CleverTapInstanceConfig,
         cryptHandler: CryptHandler,
         dbAdapter: DBAdapter
     ) {
-
-        val encryptionFlagStatus: Int
         val configEncryptionLevel = config.encryptionLevel
         val storedEncryptionLevel = StorageHelper.getInt(
             context,
             StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_LEVEL),
+            0
+        )
+
+        val storedCurrentState = StorageHelper.getString(
+            context,
+            StorageHelper.storageKeyWithSuffix(config, "currentEncryptionState"),
+            null
+        )
+
+        val encryptionAlgorithm = StorageHelper.getInt(
+            context,
+            StorageHelper.storageKeyWithSuffix(config, "encryptionAlgorithm"),
+            0
+        )
+
+        val encryptionFlagStatus = StorageHelper.getInt(
+            context,
+            StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_FLAG_STATUS),
             -1
         )
-
-        // Nothing to migrate if a new app install and configEncryption level is 0, hence return
-        // If encryption level is updated (0 to 1 or 1 to 0) then set status to all migrations failed (0)
-        encryptionFlagStatus = if (storedEncryptionLevel == -1 && configEncryptionLevel == 0)
-            return
-        else if (storedEncryptionLevel != configEncryptionLevel) {
-            ENCRYPTION_FLAG_FAIL
-        } else {
-            StorageHelper.getInt(
-                context,
-                StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_FLAG_STATUS),
-                ENCRYPTION_FLAG_FAIL
-            )
-        }
-        StorageHelper.putInt(
-            context,
-            StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_LEVEL),
-            configEncryptionLevel
-        )
-
-        if (encryptionFlagStatus == ENCRYPTION_FLAG_ALL_SUCCESS) {
-            config.logger.verbose(
-                config.accountId,
-                "Encryption flag status is 100% success, no need to migrate"
-            )
-            cryptHandler.encryptionFlagStatus = ENCRYPTION_FLAG_ALL_SUCCESS
-            return
-        }
-
-        config.logger.verbose(
-            config.accountId,
-            "Migrating encryption level from $storedEncryptionLevel to $configEncryptionLevel with current flag status $encryptionFlagStatus"
-        )
-
-        // If configEncryptionLevel is one then encrypt otherwise decrypt
-        migrateEncryption(
-            configEncryptionLevel == 1,
-            context,
-            config,
-            cryptHandler,
+        val requiredState = getRequiredEncryptedDataState(configEncryptionLevel)
+        val currentStateMap = getCurrentEncryptedDataState(
+            storedEncryptionLevel,
             encryptionFlagStatus,
+            storedCurrentState,
+            configEncryptionLevel,
+            encryptionAlgorithm,
+            requiredState
+        )
+
+        performMigrationSteps(
+            currentStateMap,
+            requiredState,
+            config,
+            context,
+            cryptHandler,
             dbAdapter
         )
     }
 
-    /**
-     * This method migrates the encryption level. There are currently 2 migrations required.
-     * The migration strategy is such that even if one entry fails in one of the 2 migrations, flag bit for that migration is set to 0
-     * and reattempted during the next instance creation
-     *
-     * @param encrypt - Flag to indicate the task to be either encryption or decryption
-     * @param config  - The [CleverTapInstanceConfig] object
-     * @param context - The Android context
-     * @param cryptHandler - The [CryptHandler] object
-     * @param encryptionFlagStatus - Current value of the flag
-     * @param dbAdapter - The [dbAdapter] object
-     */
-    private fun migrateEncryption(
-        encrypt: Boolean,
-        context: Context,
+
+    fun interface MigrationStep {
+        fun execute(
+            encrypt: Boolean,
+            algorithm: Boolean,
+            config: CleverTapInstanceConfig,
+            context: Context,
+            cryptHandler: CryptHandler,
+            dbAdapter: DBAdapter
+        ): Boolean
+    }
+
+    data class MigrationStepDetails(
+        val encrypt: Boolean,
+        val algorithm: Boolean,
+        val step: Int
+    )
+
+    private fun performMigrationSteps(
+        currentStateMap: MutableMap<String, EncryptionDataState>,
+        requiredState: EncryptionDataState,
         config: CleverTapInstanceConfig,
+        context: Context,
         cryptHandler: CryptHandler,
-        encryptionFlagStatus: Int,
         dbAdapter: DBAdapter
     ) {
-        // And operation checks if the required bit is set or not
-        var cgkFlag = encryptionFlagStatus and ENCRYPTION_FLAG_CGK_SUCCESS
-        if (cgkFlag == ENCRYPTION_FLAG_FAIL)
-            cgkFlag = migrateCachedGuidsKeyPref(encrypt, config, context, cryptHandler)
+        // Define migration handlers for each key
+        val migrationHandlers = createMigrationHandlers()
 
-        var dbFlag = encryptionFlagStatus and ENCRYPTION_FLAG_DB_SUCCESS
-        if (dbFlag == ENCRYPTION_FLAG_FAIL)
-            dbFlag = migrateDBProfile(encrypt, config, cryptHandler, dbAdapter)
+        var completeMigrationSuccess = true
+        // Iterate through the current state and perform migration steps
+        currentStateMap.forEach { (key, currentState) ->
+            val requiredSteps = currentState.state xor requiredState.state
+            var updatedState = currentState.state
+            var stepSuccess = true
 
-        val updatedFlagStatus = cgkFlag or dbFlag
+            // Find the appropriate handler and perform migration steps
+            migrationHandlers[key]?.let { handler ->
+                val steps = generateMigrationSteps(currentState, requiredState)
 
-        config.logger.verbose(
-            config.accountId,
-            "Updating encryption flag status to $updatedFlagStatus"
-        )
-        StorageHelper.putInt(
-            context,
-            StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_FLAG_STATUS),
-            updatedFlagStatus
-        )
-        cryptHandler.encryptionFlagStatus = updatedFlagStatus
+                // Execute each step based on the migration conditions
+                for (stepDetails in steps) {
+                    if (requiredSteps and stepDetails.step != 0 && stepSuccess) {
+                        stepSuccess = executeMigrationStep(
+                            handler, stepDetails, config, context, cryptHandler, dbAdapter
+                        )
+                        if (stepSuccess) {
+                            updatedState = updatedState xor stepDetails.step
+                        }
+                    }
+                }
+            }
+
+            // Track migration success/failure
+            if (updatedState != requiredState.state) completeMigrationSuccess = false
+            currentStateMap[key] = EncryptionDataState.fromState(updatedState)
+        }
+
+        // Store updated states and handle success/failure
+        storeUpdatedState(currentStateMap, config, context)
+
+        cryptHandler.currentEncryptionState = currentStateMap
+
+        if (completeMigrationSuccess) {
+            // Update encryption level and algorithm in shared preferences
+           storeEncryptionSettings(config, context)
+        }
     }
+
+    // Creates the migration handlers
+    private fun createMigrationHandlers(): Map<String, MigrationStep> {
+        return mapOf(
+            "currentStateCgk" to MigrationStep { encrypt, algorithm, config, context, cryptHandler, _ ->
+                migrateCachedGuidsKeyPref(encrypt, algorithm, config, context, cryptHandler)
+            },
+            "currentStateDb" to MigrationStep { encrypt, algorithm, config, _, cryptHandler, dbAdapter ->
+                migrateDBProfile(encrypt, algorithm, config, cryptHandler, dbAdapter)
+            },
+            "currentStateInApp" to MigrationStep { encrypt, algorithm, config, context, cryptHandler, _ ->
+                migrateInAppData(encrypt, algorithm, config, context, cryptHandler)
+            }
+        )
+    }
+
+    private fun generateMigrationSteps(currentState: EncryptionDataState, requiredState: EncryptionDataState): List<MigrationStepDetails> {
+        return listOf(
+            MigrationStepDetails(currentState > requiredState, false, ENCRYPTED_AES.state),
+            MigrationStepDetails(currentState < requiredState, true, ENCRYPTED_AES_GCM.state)
+        )
+    }
+
+    // Executes the migration step and returns the success status
+    private fun executeMigrationStep(
+        handler: MigrationStep,
+        stepDetails: MigrationStepDetails,
+        config: CleverTapInstanceConfig,
+        context: Context,
+        cryptHandler: CryptHandler,
+        dbAdapter: DBAdapter
+    ): Boolean {
+        return handler.execute(
+            encrypt = stepDetails.encrypt,
+            algorithm = stepDetails.algorithm,
+            config = config,
+            context = context,
+            cryptHandler = cryptHandler,
+            dbAdapter = dbAdapter
+        )
+    }
+
+    // Stores the updated state map into persistent storage
+    private fun storeUpdatedState(currentStateMap: MutableMap<String, EncryptionDataState>, config: CleverTapInstanceConfig, context: Context) {
+        val serializedMap = currentStateMap.entries.joinToString(",") { "${it.key}:${it.value}" }
+        StorageHelper.putString(
+            context,
+            StorageHelper.storageKeyWithSuffix(config, "currentEncryptionState"),
+            serializedMap
+        )
+    }
+
+    // Updates encryption settings based on migration success
+    private fun storeEncryptionSettings(config: CleverTapInstanceConfig, context: Context) {
+        // Add logic to update encryption level and algorithm in shared preferences or wherever necessary
+        // This can involve updating `SharedPreferences` based on `completeMigrationSuccess`
+    }
+
 
     /**
      * This method migrates the encryption level of the value under cachedGUIDsKey stored in the shared preference file
@@ -144,10 +301,12 @@ internal object CryptUtils {
      */
     private fun migrateCachedGuidsKeyPref(
         encrypt: Boolean,
+        algorithm: Boolean,
         config: CleverTapInstanceConfig,
         context: Context,
         cryptHandler: CryptHandler
-    ): Int {
+    ): Boolean {
+        // todo - add use of correct algorithm if needed or remove
         config.logger.verbose(
             config.accountId,
             "Migrating encryption level for cachedGUIDsKey prefs"
@@ -156,7 +315,7 @@ internal object CryptUtils {
             StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)
         val cachedGuidJsonObj = CTJsonConverter.toJsonObject(json, config.logger, config.accountId)
         val newGuidJsonObj = JSONObject()
-        var migrationStatus = ENCRYPTION_FLAG_CGK_SUCCESS
+        var migrationStatus = true
         try {
             val i = cachedGuidJsonObj.keys()
             while (i.hasNext()) {
@@ -174,7 +333,7 @@ internal object CryptUtils {
                         "Error migrating $identifier in Cached Guid Key Pref"
                     )
                     crypted = identifier
-                    migrationStatus = ENCRYPTION_FLAG_FAIL
+                    migrationStatus = false
                 }
                 val cryptedKey = "${key}_$crypted"
                 newGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextJSONObjKey])
@@ -193,7 +352,7 @@ internal object CryptUtils {
             }
         } catch (t: Throwable) {
             config.logger.verbose(config.accountId, "Error migrating cached guids: $t")
-            migrationStatus = ENCRYPTION_FLAG_FAIL
+            migrationStatus = false
         }
         return migrationStatus
     }
@@ -211,15 +370,20 @@ internal object CryptUtils {
      */
     private fun migrateDBProfile(
         encrypt: Boolean,
+        algorithm: Boolean,
         config: CleverTapInstanceConfig,
         cryptHandler: CryptHandler,
         dbAdapter: DBAdapter
-    ): Int {
-        config.logger.verbose(config.accountId, "Migrating encryption level for user profiles in DB")
+    ): Boolean {
+        // todo - add use of correct algorithm if needed or remove
+        config.logger.verbose(
+            config.accountId,
+            "Migrating encryption level for user profiles in DB"
+        )
         val profiles = dbAdapter.fetchUserProfilesByAccountId(config.accountId)
 
-        var migrationStatus = ENCRYPTION_FLAG_DB_SUCCESS
-        for(profileIterator in profiles) {
+        var migrationStatus = true
+        for (profileIterator in profiles) {
             val profile = profileIterator.value
             try {
                 for (piiKey in piiDBKeys) {
@@ -236,53 +400,77 @@ internal object CryptUtils {
                                     "Error migrating $piiKey entry in db profile"
                                 )
                                 crypted = value
-                                migrationStatus = ENCRYPTION_FLAG_FAIL
+                                migrationStatus = false
                             }
                             profile.put(piiKey, crypted)
                         }
                     }
                 }
-                if (dbAdapter.storeUserProfile(config.accountId, profileIterator.key, profile) <= -1L)
-                    migrationStatus = ENCRYPTION_FLAG_FAIL
+                if (dbAdapter.storeUserProfile(
+                        config.accountId,
+                        profileIterator.key,
+                        profile
+                    ) <= -1L
+                )
+                    migrationStatus = false
             } catch (e: Exception) {
-                config.logger.verbose(config.accountId, "Error migrating local DB profile for $profileIterator.key: $e")
-                migrationStatus = ENCRYPTION_FLAG_FAIL
+                config.logger.verbose(
+                    config.accountId,
+                    "Error migrating local DB profile for $profileIterator.key: $e"
+                )
+                migrationStatus = false
             }
         }
         return migrationStatus
     }
 
-    /**
-     * This method updates the encryptionFlagStatus if encryption fails when new data is added
-     *
-     * @param context - Context object
-     * @param config  - The [CleverTapInstanceConfig] object
-     * @param failedFlag - Indicates which encryption has failed
-     * @param cryptHandler - The [CryptHandler] object
-     */
-    @JvmStatic
-    fun updateEncryptionFlagOnFailure(
-        context: Context,
+    private fun migrateInAppData(
+        encrypt: Boolean,
+        algorithm: Boolean,
         config: CleverTapInstanceConfig,
-        failedFlag: Int,
+        context: Context,
         cryptHandler: CryptHandler
-    ) {
+    ): Boolean {
 
-        // This operation sets the bit for the required encryption fail to 0
-        val updatedEncryptionFlag =
-            (failedFlag xor cryptHandler.encryptionFlagStatus) and cryptHandler.encryptionFlagStatus
         config.logger.verbose(
             config.accountId,
-            "Updating encryption flag status after error in $failedFlag to $updatedEncryptionFlag"
+            "Migrating encryption for InAppData"
         )
-        StorageHelper.putInt(
-            context, StorageHelper.storageKeyWithSuffix(
-                config,
-                KEY_ENCRYPTION_FLAG_STATUS
-            ),
-            updatedEncryptionFlag
-        )
-        cryptHandler.encryptionFlagStatus = updatedEncryptionFlag
+        // todo - add use of correct algorithm if needed or remove
+        var migrationStatus = true
+        val sharedPrefsDir = File(context.applicationInfo.dataDir, "shared_prefs")
 
+        // Fetch all SharedPreferences files starting with "inApp" and ending with the accountId
+        val prefsFiles = sharedPrefsDir.listFiles { _, name ->
+            name.startsWith("inApp") && name.endsWith(config.accountId + ".xml")
+        }
+
+        prefsFiles?.forEach { file ->
+            val prefName = file.nameWithoutExtension
+            val inAppSharedPrefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
+
+            // todo - replace with constants
+            val keysToProcess = listOf("inapp_notifs_cs", "inapp_notifs_ss")
+
+            // Process each key for encryption/decryption
+            keysToProcess.forEach { key ->
+                val data = inAppSharedPrefs.getString(key, null)
+
+                // If data exists, attempt to encrypt or decrypt
+                if (!data.isNullOrEmpty()) {
+                    val processedData =
+                        if (encrypt) cryptHandler.encrypt(data) else cryptHandler.decrypt(data)
+
+                    // Check if encryption/decryption was successful
+                    if (processedData == null) {
+                        migrationStatus = false // Mark failure if the result is null
+                    } else {
+                        // Save the processed data back to SharedPreferences
+                        inAppSharedPrefs.edit().putString(key, processedData).apply()
+                    }
+                }
+            }
+        }
+        return migrationStatus
     }
 }

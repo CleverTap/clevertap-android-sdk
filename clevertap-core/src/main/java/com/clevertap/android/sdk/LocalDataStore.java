@@ -587,7 +587,8 @@ public class LocalDataStore {
                     JSONObject jsonObjectEncrypted = new JSONObject(profile);
 
                     if (!passFlag)
-                        CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_DB_SUCCESS, cryptHandler);
+                        // todo replace with constant/ enum
+                        cryptHandler.updateEncryptionStateOnFailure(context, "currentStateDb");
 
                     DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                     long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);

@@ -106,6 +106,11 @@ public final class StorageHelper {
         return key + ":" + config.getAccountId();
     }
 
+    public static String storageKeyWithSuffix(String accountID, @NonNull String key) {
+        // todo - use this throughout the sdk instead of the one-above
+        return key + ":" + accountID;
+    }
+
     @SuppressWarnings("SameParameterValue")
     public static boolean getBoolean(Context context, String key, boolean defaultValue) {
         return getPreferences(context).getBoolean(key, defaultValue);
