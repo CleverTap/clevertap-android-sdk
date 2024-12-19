@@ -6,9 +6,10 @@ package com.clevertap.android.sdk.cryption
 class CryptFactory {
     companion object {
         @JvmStatic
-        fun getCrypt(type: CryptHandler.EncryptionAlgorithm): Crypt {
+        fun getCrypt(type: CryptHandler.EncryptionAlgorithm, accountID: String): Crypt {
             return when (type) {
-                CryptHandler.EncryptionAlgorithm.AES -> AESGCMCrypt()
+                CryptHandler.EncryptionAlgorithm.AES -> AESCrypt(accountID)
+                CryptHandler.EncryptionAlgorithm.AES_GCM -> AESGCMCrypt()
             }
         }
     }
