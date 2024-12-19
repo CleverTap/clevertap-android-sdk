@@ -84,12 +84,12 @@ class CleverTapFactory {
         DBManager baseDatabaseManager = new DBManager(config, ctLockManager);
         coreState.setDatabaseManager(baseDatabaseManager);
 
-        CryptHandler cryptHandler = new CryptHandler(config.getEncryptionLevel(),
-                CryptHandler.EncryptionAlgorithm.AES, config.getAccountId());
+        // todo - check if app is upgraded and launched from push notif
+        CryptHandler cryptHandler = new CryptHandler(config.getEncryptionLevel(), config.getAccountId());
         coreState.setCryptHandler(cryptHandler);
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("migratingEncryptionLevel", () -> {
-            CryptUtils.migrateEncryptionLevel(context, config, cryptHandler,
+        task.execute("migratingEncryption", () -> {
+            CryptUtils.migrateEncryption(context, config, cryptHandler,
                     baseDatabaseManager.loadDBAdapter(context));
             return null;
         });
