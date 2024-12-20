@@ -1644,6 +1644,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @WorkerThread
     public int getUserEventLogCount(String eventName) {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
         return coreState.getLocalDataStore().readUserEventLogCount(eventName);
     }
 
@@ -1681,6 +1684,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @WorkerThread
     public UserEventLog getUserEventLog(String eventName) {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return null;
+        }
         return coreState.getLocalDataStore().readUserEventLog(eventName);
     }
 
@@ -1845,8 +1851,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @WorkerThread
     public Map<String, UserEventLog> getUserEventLogHistory() {
-        List<UserEventLog> logs = coreState.getLocalDataStore().readUserEventLogs();
         Map<String, UserEventLog> history = new LinkedHashMap<>();
+        if (!getConfig().isPersonalizationEnabled()) {
+            return history;
+        }
+        List<UserEventLog> logs = coreState.getLocalDataStore().readUserEventLogs();
         for (UserEventLog log : logs) {
             history.put(log.getEventName(), log);
         }
@@ -2027,6 +2036,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return Timestamp of last visit by current user, or -1 if there was an error
      */
     public long getUserLastVisitTs() {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
         return coreState.getSessionManager().getUserLastVisitTs();
     }
 
@@ -2133,6 +2145,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @WorkerThread
     public int getUserAppLaunchCount() {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
         return coreState.getLocalDataStore().readUserEventLogCount(Constants.APP_LAUNCHED_EVENT);
     }
 
