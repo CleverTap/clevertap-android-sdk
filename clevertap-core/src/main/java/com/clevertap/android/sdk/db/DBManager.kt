@@ -36,7 +36,7 @@ internal class DBManager(
             dbAdapter.cleanupStaleEvents(PUSH_NOTIFICATION_VIEWED)
             dbAdapter.cleanUpPushNotifications()
             dbAdapter.userEventLogDAO()
-                .cleanUpExtraEvents(USER_EVENT_LOG_ROWS_THRESHOLD, USER_EVENT_LOG_ROWS_THRESHOLD)
+                .cleanUpExtraEvents(USER_EVENT_LOG_ROWS_THRESHOLD, USER_EVENT_LOG_ROWS_PER_USER)
         }
         return dbAdapter
     }
