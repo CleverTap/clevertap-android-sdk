@@ -1628,7 +1628,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Retrieves the count of logged events for a specific event name associated with the current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * Retrieves the count of logged events for a specific event name associated with the current
+     * user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
      * This operation involves a database query and should be called from a background thread.
      * <br>
      * Example usage:
@@ -1639,9 +1640,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * </code>
      *
      * @param eventName Name of the event to get the count for (e.g., "navigation_clicked", "item_selected")
-     * @return The number of times the specified event has occurred for current user, or -1 if the event does not exist or there was an error
+     * @return The number of times the specified event has occurred for current user, or -1 if there was an error
      */
+    @WorkerThread
     public int getUserEventLogCount(String eventName) {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
         return coreState.getLocalDataStore().readUserEventLogCount(eventName);
     }
 
@@ -1662,7 +1667,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Retrieves user-specific event log associated with the current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * Retrieves user-specific event log associated with the current user/
+     * {@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
      * This operation involves a database query and should be called from a background thread.
      * <br>
      * Example usage:
@@ -1678,6 +1684,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @WorkerThread
     public UserEventLog getUserEventLog(String eventName) {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return null;
+        }
         return coreState.getLocalDataStore().readUserEventLog(eventName);
     }
 
@@ -1777,8 +1786,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event name for which you want the first time timestamp
      * @return The timestamp in int
-     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogFirstTs(String)} instead.
-     * getUserEventLogFirstTs() provides user-specific event first occurrence timestamp.
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLog(String)} instead.
+     * It provides user-specific event log with first occurrence timestamp.
      */
     @SuppressWarnings({"unused"})
     @Deprecated(since = "7.1.0")
@@ -1789,25 +1798,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         return -1;
-    }
-
-    /**
-     * Retrieves first occurrence timestamp of event associated with the current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
-     * This operation involves a database query and should be called from a background thread.
-     * <br>
-     * Example usage:
-     * <br>
-     * <code>
-     * // Call from background thread <br>
-     * long firstTs = getUserEventLogFirstTs("navigation_clicked")
-     * </code>
-     *
-     * @param eventName Name of the event to get first timestamp for (e.g., "navigation_clicked", "item_selected")
-     * @return First occurrence timestamp of the event for current user, or -1 if the event does not exist or there was an error
-     */
-    @WorkerThread
-    public long getUserEventLogFirstTs(String eventName) {
-        return coreState.getLocalDataStore().readUserEventLogFirstTs(eventName);
     }
 
     /**
@@ -1861,8 +1851,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @WorkerThread
     public Map<String, UserEventLog> getUserEventLogHistory() {
-        List<UserEventLog> logs = coreState.getLocalDataStore().readUserEventLogs();
         Map<String, UserEventLog> history = new LinkedHashMap<>();
+        if (!getConfig().isPersonalizationEnabled()) {
+            return history;
+        }
+        List<UserEventLog> logs = coreState.getLocalDataStore().readUserEventLogs();
         for (UserEventLog log : logs) {
             history.put(log.getEventName(), log);
         }
@@ -1980,8 +1973,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event name for which you want the last time timestamp
      * @return The timestamp in int
-     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogLastTs(String)} instead.
-     * getUserEventLogLastTs() provides user-specific event last occurrence timestamp.
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLog(String)} instead.
+     * It provides user-specific event log with last occurrence timestamp.
      */
     @SuppressWarnings({"unused"})
     @Deprecated(since = "7.1.0")
@@ -1992,25 +1985,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         return -1;
-    }
-
-    /**
-     * Retrieves last occurrence timestamp of event associated with the current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
-     * This operation involves a database query and should be called from a background thread.
-     * <br>
-     * Example usage:
-     * <br>
-     * <code>
-     * // Call from background thread <br>
-     * long lastTs = getUserEventLogLastTs("navigation_clicked")
-     * </code>
-     *
-     * @param eventName Name of the event to get last timestamp for (e.g., "navigation_clicked", "item_selected")
-     * @return Last occurrence timestamp of the event for current user, or -1 if the event does not exist or there was an error
-     */
-    @WorkerThread
-    public long getUserEventLogLastTs(String eventName) {
-        return coreState.getLocalDataStore().readUserEventLogLastTs(eventName);
     }
 
     /**
@@ -2062,6 +2036,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return Timestamp of last visit by current user, or -1 if there was an error
      */
     public long getUserLastVisitTs() {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
         return coreState.getSessionManager().getUserLastVisitTs();
     }
 
@@ -2168,6 +2145,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @WorkerThread
     public int getUserAppLaunchCount() {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
         return coreState.getLocalDataStore().readUserEventLogCount(Constants.APP_LAUNCHED_EVENT);
     }
 

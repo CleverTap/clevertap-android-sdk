@@ -594,48 +594,6 @@ class LocalDataStoreTest : BaseTestCase() {
     }
 
     @Test
-    fun `test readUserEventLogLastTs returns correct timestamp when event exists`() {
-        // Given
-        val expectedTs = UserEventLogTestData.TestTimestamps.SAMPLE_TIMESTAMP
-        Mockito.`when`(
-            userEventLogDaoMock.readEventLastTsByDeviceIdAndNormalizedEventName(
-                deviceInfo.deviceID,
-                normalizedEventName
-            )
-        )
-            .thenReturn(expectedTs)
-
-        // When
-        val result = localDataStoreWithConfig.readUserEventLogLastTs(eventName)
-
-        // Then
-        assertEquals(expectedTs, result)
-        Mockito.verify(userEventLogDaoMock)
-            .readEventLastTsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
-    }
-
-    @Test
-    fun `test readUserEventLogFirstTs returns correct timestamp when event exists`() {
-        // Given
-        val expectedTs = UserEventLogTestData.TestTimestamps.SAMPLE_TIMESTAMP
-        Mockito.`when`(
-            userEventLogDaoMock.readEventFirstTsByDeviceIdAndNormalizedEventName(
-                deviceInfo.deviceID,
-                normalizedEventName
-            )
-        )
-            .thenReturn(expectedTs)
-
-        // When
-        val result = localDataStoreWithConfig.readUserEventLogFirstTs(eventName)
-
-        // Then
-        assertEquals(expectedTs, result)
-        Mockito.verify(userEventLogDaoMock)
-            .readEventFirstTsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
-    }
-
-    @Test
     fun `test readUserEventLogs returns correct event list for device`() {
         // Given
         val expectedLogs = UserEventLogTestData.EventNames.sampleUserEventLogsForSameDeviceId

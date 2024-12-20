@@ -7,6 +7,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.events.EventDetail;
+import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.validation.Validator;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -93,7 +94,8 @@ public class SessionManager extends BaseSessionManager {
     }
     @WorkerThread
     void setUserLastVisitTs() {
-        userLastVisitTs = localDataStore.readUserEventLogLastTs(Constants.APP_LAUNCHED_EVENT);
+        UserEventLog appLaunchedEventLog = localDataStore.readUserEventLog(Constants.APP_LAUNCHED_EVENT);
+        userLastVisitTs = appLaunchedEventLog != null ? appLaunchedEventLog.getLastTs() : -1;
     }
 
     private void createSession(final Context context) {

@@ -321,32 +321,6 @@ public class LocalDataStore {
     }
 
     @WorkerThread
-    private long readEventLastTsByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
-        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        return dbAdapter.userEventLogDAO().readEventLastTsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
-    }
-
-    @WorkerThread
-    public long readUserEventLogLastTs(String eventName) {
-        String deviceID = deviceInfo.getDeviceID();
-        String normalizedEventName = getOrPutNormalizedEventName(eventName);
-        return readEventLastTsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
-    }
-
-    @WorkerThread
-    private long readEventFirstTsByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
-        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        return dbAdapter.userEventLogDAO().readEventFirstTsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
-    }
-
-    @WorkerThread
-    public long readUserEventLogFirstTs(String eventName) {
-        String deviceID = deviceInfo.getDeviceID();
-        String normalizedEventName = getOrPutNormalizedEventName(eventName);
-        return readEventFirstTsByDeviceIdAndNormalizedEventName(deviceID,normalizedEventName);
-    }
-
-    @WorkerThread
     private List<UserEventLog> allEventsByDeviceID(String deviceID) {
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
         return dbAdapter.userEventLogDAO().allEventsByDeviceID(deviceID);

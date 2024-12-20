@@ -212,7 +212,6 @@ class EventQueueManagerTest : BaseTestCase() {
                     cleverTapInstanceConfig
                 )
             )
-            val captor = ArgumentCaptor.forClass(Runnable::class.java)
             val mockInAppController = mock(InAppController::class.java)
             `when`(corestate.eventMediator.shouldDropEvent(json, Constants.PROFILE_EVENT))
                 .thenReturn(false)
@@ -223,7 +222,6 @@ class EventQueueManagerTest : BaseTestCase() {
             `when`(corestate.controllerManager.inAppController)
                 .thenReturn(mockInAppController)
 
-            doNothing().`when`(eventQueueManager).addToQueue(application, json, Constants.PROFILE_EVENT)
             doNothing().`when`(eventQueueManager).pushInitialEventsAsync()
             doNothing().`when`(corestate.sessionManager).lazyCreateSession(application)
 
