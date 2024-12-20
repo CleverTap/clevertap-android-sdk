@@ -301,12 +301,12 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test readEventCountByDeviceIdAndNormalizedEventName returns minus one when event does not exist`() {
+    fun `test readEventCountByDeviceIdAndNormalizedEventName returns 0 when event does not exist`() {
         // When
         val result = userEventLogDAO.readEventCountByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
-        assertEquals(-1, result)
+        assertEquals(0, result)
     }
 
     @Test
@@ -350,42 +350,19 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test readEventFirstTsByDeviceIdAndNormalizedEventName returns minus one when event does not exist`() {
-        // When
-        val result = userEventLogDAO.readEventFirstTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
-
-        // Then
-        assertEquals(-1L, result)
-    }
-
-    @Test
-    fun `test readEventFirstTsByDeviceIdAndNormalizedEventName when db error occurs`() {
-        // Given
-        val dbHelper = mockk<DatabaseHelper>()
-        every { dbHelper.readableDatabase } throws SQLiteException()
-        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
-
-        // When
-        val result = dao.readEventFirstTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
-
-        // Then
-        assertEquals(-1L, result)
-    }
-
-    @Test
-    fun `test readEventFirstTsByDeviceIdAndNormalizedEventName returns correct timestamp after insert`() {
+    fun `test readEventByDeviceIdAndNormalizedEventName returns correct first timestamp after insert`() {
         // Given
         userEventLogDAO.insertEvent(testDeviceId, testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventFirstTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
+        val eventLog = userEventLogDAO.readEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
-        assertEquals(MOCK_TIME, result)
+        assertEquals(MOCK_TIME, eventLog?.firstTs)
     }
 
     @Test
-    fun `test readEventFirstTsByDeviceIdAndNormalizedEventName returns same timestamp after updates`() {
+    fun `test readEventByDeviceIdAndNormalizedEventName returns same timestamp after updates`() {
         // Given
         userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
@@ -397,10 +374,10 @@ class UserEventLogDAOImplTest {
         userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventFirstTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
+        val eventLog = userEventLogDAO.readEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
-        assertEquals(MOCK_TIME, result) // First timestamp should remain same after updates
+        assertEquals(MOCK_TIME, eventLog?.firstTs) // First timestamp should remain same after updates
 
         verify {
             Utils.getNowInMillis()
@@ -408,42 +385,19 @@ class UserEventLogDAOImplTest {
     }
 
     @Test
-    fun `test readEventLastTsByDeviceIdAndNormalizedEventName returns minus one when event does not exist`() {
-        // When
-        val result = userEventLogDAO.readEventLastTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
-
-        // Then
-        assertEquals(-1L, result)
-    }
-
-    @Test
-    fun `test readEventLastTsByDeviceIdAndNormalizedEventName when db error occurs`() {
-        // Given
-        val dbHelper = mockk<DatabaseHelper>()
-        every { dbHelper.readableDatabase } throws SQLiteException()
-        val dao = UserEventLogDAOImpl(dbHelper, logger, table)
-
-        // When
-        val result = dao.readEventLastTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
-
-        // Then
-        assertEquals(-1L, result)
-    }
-
-    @Test
-    fun `test readEventLastTsByDeviceIdAndNormalizedEventName returns correct timestamp after insert`() {
+    fun `test readEventByDeviceIdAndNormalizedEventName returns correct last timestamp after insert`() {
         // Given
         userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventLastTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
+        val eventLog = userEventLogDAO.readEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
-        assertEquals(MOCK_TIME, result)
+        assertEquals(MOCK_TIME, eventLog?.lastTs)
     }
 
     @Test
-    fun `test readEventLastTsByDeviceIdAndNormalizedEventName returns updated timestamp after updates`() {
+    fun `test readEventByDeviceIdAndNormalizedEventName returns updated last timestamp after updates`() {
         // Given
         userEventLogDAO.insertEvent(testDeviceId,testEventName, testEventNameNormalized)
 
@@ -454,10 +408,10 @@ class UserEventLogDAOImplTest {
         userEventLogDAO.updateEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // When
-        val result = userEventLogDAO.readEventLastTsByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
+        val eventLog = userEventLogDAO.readEventByDeviceIdAndNormalizedEventName(testDeviceId, testEventNameNormalized)
 
         // Then
-        assertEquals(updateTime, result) // Last timestamp should be updated
+        assertEquals(updateTime, eventLog?.lastTs) // Last timestamp should be updated
 
         verify {
             Utils.getNowInMillis()

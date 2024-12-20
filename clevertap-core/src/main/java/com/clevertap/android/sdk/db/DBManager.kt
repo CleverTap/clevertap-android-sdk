@@ -17,9 +17,12 @@ internal class DBManager(
     private val ctLockManager: CTLockManager
 ) : BaseDatabaseManager {
 
+    private companion object {
+        private const val USER_EVENT_LOG_ROWS_PER_USER = 2_048 + 256 // events + profile props
+        private const val USER_EVENT_LOG_ROWS_THRESHOLD = 5 * USER_EVENT_LOG_ROWS_PER_USER
+    }
+
     private var dbAdapter: DBAdapter? = null
-    private val userEventLogsThreshold = 11_520 //12.59 MB table and index size
-    private val numberOfRowsToCleanupForUserEventLogs = 2_304 //( 2048 events + 256 profile props =  1 user)
 
     @WorkerThread
     @Synchronized
@@ -33,7 +36,7 @@ internal class DBManager(
             dbAdapter.cleanupStaleEvents(PUSH_NOTIFICATION_VIEWED)
             dbAdapter.cleanUpPushNotifications()
             dbAdapter.userEventLogDAO()
-                .cleanUpExtraEvents(userEventLogsThreshold, numberOfRowsToCleanupForUserEventLogs)
+                .cleanUpExtraEvents(USER_EVENT_LOG_ROWS_THRESHOLD, USER_EVENT_LOG_ROWS_THRESHOLD)
         }
         return dbAdapter
     }

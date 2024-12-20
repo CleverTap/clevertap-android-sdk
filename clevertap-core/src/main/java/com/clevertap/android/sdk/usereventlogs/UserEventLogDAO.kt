@@ -26,14 +26,6 @@ interface UserEventLogDAO {
     @WorkerThread
     fun readEventCountByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Int
 
-    // Read an event firstTs by deviceID
-    @WorkerThread
-    fun readEventFirstTsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Long
-
-    // Read an event lastTs by deviceID
-    @WorkerThread
-    fun readEventLastTsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Long
-
     // Check if an event exists by deviceID
     @WorkerThread
     fun eventExistsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Boolean
@@ -49,6 +41,7 @@ interface UserEventLogDAO {
     // Get all events
     @WorkerThread
     fun allEvents(): List<UserEventLog>
+
     @WorkerThread
-    fun cleanUpExtraEvents(threshold: Int = 11_520, numberOfRowsToCleanup: Int = 2_304): Boolean
+    fun cleanUpExtraEvents(rowsThreshold: Int, numberOfRowsToCleanup: Int): Boolean
 }

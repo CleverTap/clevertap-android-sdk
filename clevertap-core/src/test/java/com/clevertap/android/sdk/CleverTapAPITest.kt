@@ -502,45 +502,6 @@ class CleverTapAPITest : BaseTestCase() {
     }
 
     @Test
-    fun `test getUserEventLogFirstTs`() {
-        // Arrange
-        val evt = UserEventLogTestData.EventNames.TEST_EVENT
-        val firstTsExpected = UserEventLogTestData.TestTimestamps.SAMPLE_TIMESTAMP
-        `when`(corestate.localDataStore.readUserEventLogFirstTs(evt)).thenReturn(
-            firstTsExpected
-        )
-
-        // Act
-        executeBasicTest {
-            initializeCleverTapAPI()
-            val firstTsActual = cleverTapAPI.getUserEventLogFirstTs(evt)
-
-            // Assert
-            assertEquals(firstTsExpected, firstTsActual)
-            verify(corestate.localDataStore).readUserEventLogFirstTs(evt)
-        }
-    }
-
-    @Test
-    fun `test getUserEventLogLastTs`() {
-        // Arrange
-        val evt = UserEventLogTestData.EventNames.TEST_EVENT
-        val lastTsExpected = UserEventLogTestData.TestTimestamps.SAMPLE_TIMESTAMP
-        `when`(corestate.localDataStore.readUserEventLogLastTs(evt)).thenReturn(lastTsExpected)
-
-        // Act
-        executeBasicTest {
-            initializeCleverTapAPI()
-            val lastTsActual = cleverTapAPI.getUserEventLogLastTs(evt)
-
-            // Assert
-            assertEquals(lastTsExpected, lastTsActual)
-            verify(corestate.localDataStore).readUserEventLogLastTs(evt)
-        }
-
-    }
-
-    @Test
     fun `test getUserEventLogHistory`() {
         // Arrange
         val logs = UserEventLogTestData.EventNames.sampleUserEventLogsForSameDeviceId

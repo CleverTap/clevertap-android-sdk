@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
+import com.clevertap.android.sdk.usereventlogs.UserEventLog
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
@@ -177,11 +178,17 @@ class SessionManagerTest : BaseTestCase() {
     fun `test setUserLastVisitTs`(){
         val localDataStoreMockk = mockk<LocalDataStore>()
         sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreMockk)
-        every { localDataStoreMockk.readUserEventLogLastTs(Constants.APP_LAUNCHED_EVENT) } returns 1000000L
+        val appLaunchedEventLog = UserEventLog(
+            Constants.APP_LAUNCHED_EVENT,
+            Utils.getNormalizedName(Constants.APP_LAUNCHED_EVENT),
+            0,
+            1000000L,
+            1,
+            deviceInfo.deviceID
+        )
+        every { localDataStoreMockk.readUserEventLog(Constants.APP_LAUNCHED_EVENT) } returns appLaunchedEventLog
         sessionManagerDef.setUserLastVisitTs()
-        assertEquals(1000000L,sessionManagerDef.userLastVisitTs)
-
-
+        assertEquals(appLaunchedEventLog.lastTs, sessionManagerDef.userLastVisitTs)
     }
 
 

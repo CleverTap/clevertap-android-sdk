@@ -49,7 +49,7 @@ internal class UserEventLogDAOImpl(
                 SQLiteDatabase.CONFLICT_REPLACE
             )
         } catch (e: Exception) {
-            logger.verbose("Error adding row to table $tableName Recreating DB")
+            logger.verbose("Error adding row to table $tableName Recreating DB. Exception: $e")
             db.deleteDatabase()
             DB_UPDATE_ERROR
         }
@@ -85,7 +85,7 @@ internal class UserEventLogDAOImpl(
         setOfActualAndNormalizedEventNamePair: Set<Pair<String, String>>
     ): Boolean {
         val tableName = table.tableName
-        logger.verbose("UserEventLog: upSert EventLog for bulk events")
+        logger.verbose("UserEventLog: upsert EventLog for bulk events")
         return try {
             db.writableDatabase.beginTransaction()
             setOfActualAndNormalizedEventNamePair.forEach {
@@ -141,41 +141,27 @@ internal class UserEventLogDAOImpl(
     }
 
     @WorkerThread
-    override fun readEventCountByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Int =
-        readEventColumnByDeviceIdAndNormalizedEventName(
-            deviceID,
-            normalizedEventName,
-            Column.COUNT,
-            defaultValueExtractor = { -1 },
-            valueExtractor = { cursor, columnName ->
-                cursor.getInt(cursor.getColumnIndexOrThrow(columnName))
-            }
-        )
+    override fun readEventCountByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Int {
+        val tName = table.tableName
+        val selection = "${Column.DEVICE_ID} = ? AND ${Column.NORMALIZED_EVENT_NAME} = ?"
+        val selectionArgs = arrayOf(deviceID, normalizedEventName)
+        val projection = arrayOf(Column.COUNT)
 
-
-    @WorkerThread
-    override fun readEventFirstTsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Long =
-        readEventColumnByDeviceIdAndNormalizedEventName(
-            deviceID,
-            normalizedEventName,
-            Column.FIRST_TS,
-            defaultValueExtractor = { -1L },
-            valueExtractor = { cursor, columnName ->
-                cursor.getLong(cursor.getColumnIndexOrThrow(columnName))
-            }
-        )
-
-    @WorkerThread
-    override fun readEventLastTsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Long =
-        readEventColumnByDeviceIdAndNormalizedEventName(
-            deviceID,
-            normalizedEventName,
-            Column.LAST_TS,
-            defaultValueExtractor = { -1L },
-            valueExtractor = { cursor, columnName ->
-                cursor.getLong(cursor.getColumnIndexOrThrow(columnName))
-            }
-        )
+        return try {
+            db.readableDatabase.query(
+                tName, projection, selection, selectionArgs, null, null, null, null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    cursor.getInt(cursor.getColumnIndexOrThrow(Column.COUNT))
+                } else {
+                    0
+                }
+            } ?: -1
+        } catch (e: Exception) {
+            logger.verbose("Could not fetch records out of database $tName.", e)
+            -1
+        }
+    }
 
     @WorkerThread
     override fun eventExistsByDeviceIdAndNormalizedEventName(deviceID: String, normalizedEventName: String): Boolean {
@@ -342,34 +328,4 @@ internal class UserEventLogDAOImpl(
             false
         }
     }
-
-    @WorkerThread
-    private fun <T> readEventColumnByDeviceIdAndNormalizedEventName(
-        deviceID: String,
-        normalizedEventName: String,
-        column: String,
-        defaultValueExtractor: () -> T,
-        valueExtractor: (cursor: Cursor, columnName: String) -> T
-    ): T {
-        val tName = table.tableName
-        val selection = "${Column.DEVICE_ID} = ? AND ${Column.NORMALIZED_EVENT_NAME} = ?"
-        val selectionArgs = arrayOf(deviceID, normalizedEventName)
-        val projection = arrayOf(column)
-
-        return try {
-            db.readableDatabase.query(
-                tName, projection, selection, selectionArgs, null, null, null, null
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    valueExtractor(cursor, column)
-                } else {
-                    defaultValueExtractor()
-                }
-            } ?: defaultValueExtractor()
-        } catch (e: Exception) {
-            logger.verbose("Could not fetch $column from database $tName.", e)
-            defaultValueExtractor()
-        }
-    }
-
 }
