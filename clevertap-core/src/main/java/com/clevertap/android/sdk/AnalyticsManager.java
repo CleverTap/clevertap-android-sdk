@@ -252,9 +252,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     @Override
     public void pushEvent(String eventName, Map<String, Object> eventActions) {
 
-        if (eventName 
-            
-            null || eventName.equals("")) {
+        if (eventName == null || eventName.equals("")) {
             return;
         }
 
