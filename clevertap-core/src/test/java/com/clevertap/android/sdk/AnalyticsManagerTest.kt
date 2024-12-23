@@ -233,7 +233,7 @@ class AnalyticsManagerTest {
             )
         }
 
-        // setup again, 10000 ms has passed
+        // setup again, 2000 ms has passed
         every { timeProvider.currentTimeMillis() } returns 12000
 
         // Send duplicate PN
@@ -271,8 +271,7 @@ class AnalyticsManagerTest {
             )
         }
 
-        // setup again, 10000 ms has passed
-        every { timeProvider.currentTimeMillis() } returns 20000
+        every { timeProvider.currentTimeMillis() } returns 15001
 
         // Send duplicate PN
         analyticsManagerSUT.pushNotificationClickedEvent(bundle)
