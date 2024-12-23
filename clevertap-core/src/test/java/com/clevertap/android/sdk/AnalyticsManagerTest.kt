@@ -218,7 +218,7 @@ class AnalyticsManagerTest {
     fun `clevertap does not process duplicate (same wzrk_id) PN clicked within 2 seconds - case 2nd click happens in 200ms`() {
 
         val json = notificationViewedJson(bundle)
-        every { timeProvider.currentTimeMillis() } returns 10000
+        every { timeProvider.currentTimeMillis() } returns 0
 
         // send PN first time
         analyticsManagerSUT.pushNotificationClickedEvent(bundle)
@@ -234,7 +234,7 @@ class AnalyticsManagerTest {
         }
 
         // setup again, 2000 ms has passed
-        every { timeProvider.currentTimeMillis() } returns 12000
+        every { timeProvider.currentTimeMillis() } returns 200
 
         // Send duplicate PN
         analyticsManagerSUT.pushNotificationClickedEvent(bundle)
@@ -286,6 +286,57 @@ class AnalyticsManagerTest {
                 Constants.RAISED_EVENT
             )
         }
+        confirmVerified(eventQueueManager)
+    }
+
+    @Test
+    fun `clevertap dedupe check is based on wzrk_pid only if flag (wzrk_dd) is enabled`() {
+
+        // Setup
+        val notif1 = Bundle().apply {
+            putString("wzrk_pn", "wzrk_pn")
+            putString("wzrk_id", "wzrk_id_1111")
+            putString("wzrk_someid", "someid1111")
+            putString("wzrk_dd", "true")
+
+            putString("wzrk_pid", "same_pid")
+        }
+
+        val notif2 = Bundle().apply {
+            putString("wzrk_pn", "wzrk_pn")
+            putString("wzrk_id", "wzrk_id_2222")
+            putString("wzrk_someid", "someid2222")
+            putString("wzrk_dd", "true")
+
+            putString("wzrk_pid", "same_pid")
+        }
+
+        val json1 = notificationViewedJson(notif1)
+        val json2 = notificationViewedJson(notif1)
+
+        every { timeProvider.currentTimeMillis() } returns 0
+
+        // ACT : send PN first time
+        analyticsManagerSUT.pushNotificationClickedEvent(notif1)
+
+        // Validate
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(
+                context,
+                withArg {
+                    JSONAssert.assertEquals(json1, it, true)
+                },
+                Constants.RAISED_EVENT
+            )
+        }
+
+        // More setup, 100ms passed
+        every { timeProvider.currentTimeMillis() } returns 100
+
+        // ACT : send PN second time
+        analyticsManagerSUT.pushNotificationClickedEvent(notif2)
+
+        // Validate
         confirmVerified(eventQueueManager)
     }
 
