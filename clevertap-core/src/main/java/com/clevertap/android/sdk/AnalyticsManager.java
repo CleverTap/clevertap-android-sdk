@@ -489,7 +489,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (5 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationIdTagMap, Constants.NOTIFICATION_ID_TAG_INTERVAL);
+        boolean isDuplicate = checkDuplicateNotificationIds(
+                dedupeCheckKey(extras),
+                notificationIdTagMap,
+                Constants.NOTIFICATION_ID_TAG_INTERVAL
+        );
         if (isDuplicate) {
             config.getLogger().debug(config.getAccountId(),
                     "Already processed Notification Clicked event for " + extras.toString()
@@ -645,9 +649,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (2 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(extras,
+        boolean isDuplicate = checkDuplicateNotificationIds(
+                dedupeCheckKey(extras),
                 notificationViewedIdTagMap,
-                Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL);
+                Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL
+        );
         if (isDuplicate) {
             config.getLogger().debug(config.getAccountId(),
                     "Already processed Notification Viewed event for " + extras + ", dropping duplicate.");
@@ -1143,8 +1149,31 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
+    String dedupeCheckKey(Bundle extras) {
+        // This flag is used so that we can release in phased manner, eventually the check has to go away.
+        Object doDedupeCheck = extras.get(Constants.WZRK_DEDUPE);
+
+        boolean check = false;
+        if (doDedupeCheck != null) {
+            if (doDedupeCheck instanceof String) {
+                check = "true".equalsIgnoreCase((String) doDedupeCheck);
+            }
+            if (doDedupeCheck instanceof Boolean) {
+                check = (Boolean) doDedupeCheck;
+            }
+        }
+
+        String notificationIdTag;
+        if (check) {
+            notificationIdTag = extras.getString(Constants.WZRK_PUSH_ID);
+        } else {
+            notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
+        }
+        return notificationIdTag;
+    }
+
     private boolean checkDuplicateNotificationIds(
-            Bundle extras,
+            String notificationIdTag,
             HashMap<String, Long> notificationTagMap,
             int interval
     ) {
@@ -1152,26 +1181,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             // default to false; only return true if we are sure we've seen this one before
             boolean isDupe = false;
             try {
-                // This flag is used so that we can release in phased manner, eventually the check has to go away.
-                Object doDedupeCheck = extras.get(Constants.WZRK_DEDUPE);
-
-                boolean check = false;
-                if (doDedupeCheck != null) {
-                    if (doDedupeCheck instanceof String) {
-                        check = "true".equalsIgnoreCase((String) doDedupeCheck);
-                    }
-                    if (doDedupeCheck instanceof Boolean) {
-                        check = (Boolean) doDedupeCheck;
-                    }
-                }
-
-                String notificationIdTag;
-                if (check) {
-                    notificationIdTag = extras.getString(Constants.WZRK_PUSH_ID);
-                } else {
-                    notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
-                }
-
                 long now = currentTimeProvider.currentTimeMillis();
                 if (notificationTagMap.containsKey(notificationIdTag)) {
                     long timestamp;

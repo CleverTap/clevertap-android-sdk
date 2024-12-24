@@ -56,11 +56,19 @@ class AnalyticsManagerTest {
     @MockK(relaxed = true)
     private lateinit var timeProvider: Clock
 
-    private val bundle = Bundle().apply {
+    private val bundleIdCheck = Bundle().apply {
         putString("wzrk_pn", "wzrk_pn")
         putString("wzrk_id", "duplicate-id")
         putString("wzrk_pid", "pid")
         putString("wzrk_someid", "someid")
+    }
+
+    private val bundlePidCheck = Bundle().apply {
+        putString("wzrk_pn", "wzrk_pn")
+        putString("wzrk_id", "duplicate-id")
+        putString("wzrk_pid", "pid")
+        putString("wzrk_someid", "someid")
+        putBoolean("wzrk_dd", true)
     }
 
     @Before
@@ -126,12 +134,12 @@ class AnalyticsManagerTest {
 
     @Test
     fun `clevertap does not process duplicate PN viewed within 2 seconds - case 2nd notif in 200ms`() {
-        val json = notificationViewedJson(bundle)
+        val json = notificationViewedJson(bundleIdCheck)
 
         every { timeProvider.currentTimeMillis() } returns 10000
 
         // send PN first time
-        analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+        analyticsManagerSUT.pushNotificationViewedEvent(bundleIdCheck)
 
         verify {
             eventQueueManager.queueEvent(
@@ -147,7 +155,7 @@ class AnalyticsManagerTest {
         every { timeProvider.currentTimeMillis() } returns 10200
 
         // Send duplicate PN
-        analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+        analyticsManagerSUT.pushNotificationViewedEvent(bundleIdCheck)
 
         // verify it was not called again, one time was from before
         verify(exactly = 1) {
@@ -165,12 +173,12 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap processes PN viewed for same wzrk_id if separated by a span of greater than 2 seconds`() {
 
-        val json = notificationViewedJson(bundle);
+        val json = notificationViewedJson(bundleIdCheck);
 
         every { timeProvider.currentTimeMillis() } returns 10000
 
         // send PN first time
-        analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+        analyticsManagerSUT.pushNotificationViewedEvent(bundleIdCheck)
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(
@@ -186,7 +194,7 @@ class AnalyticsManagerTest {
         every { timeProvider.currentTimeMillis() } returns 20000
 
         // Send duplicate PN
-        analyticsManagerSUT.pushNotificationViewedEvent(bundle)
+        analyticsManagerSUT.pushNotificationViewedEvent(bundleIdCheck)
 
         // verify queue event called again
         verify(exactly = 2) {
@@ -206,7 +214,7 @@ class AnalyticsManagerTest {
         cleverTapInstanceConfig.isAnalyticsOnly = true
 
         // send PN first time
-        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+        analyticsManagerSUT.pushNotificationClickedEvent(bundleIdCheck)
 
         verify {
             eventQueueManager wasNot called
@@ -217,11 +225,11 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap does not process duplicate (same wzrk_id) PN clicked within 2 seconds - case 2nd click happens in 200ms`() {
 
-        val json = notificationViewedJson(bundle)
+        val json = notificationViewedJson(bundleIdCheck)
         every { timeProvider.currentTimeMillis() } returns 0
 
         // send PN first time
-        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+        analyticsManagerSUT.pushNotificationClickedEvent(bundleIdCheck)
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(
@@ -237,7 +245,7 @@ class AnalyticsManagerTest {
         every { timeProvider.currentTimeMillis() } returns 200
 
         // Send duplicate PN
-        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+        analyticsManagerSUT.pushNotificationClickedEvent(bundleIdCheck)
 
         // verify it was not called again, one time was from before
         verify(exactly = 1) {
@@ -255,11 +263,11 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap processes PN clicked for same wzrk_id if separated by a span of greater than 5 seconds`() {
 
-        val json = notificationViewedJson(bundle);
+        val json = notificationViewedJson(bundleIdCheck);
         every { timeProvider.currentTimeMillis() } returns 10000
 
         // send PN first time
-        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+        analyticsManagerSUT.pushNotificationClickedEvent(bundleIdCheck)
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(
@@ -274,7 +282,7 @@ class AnalyticsManagerTest {
         every { timeProvider.currentTimeMillis() } returns 15001
 
         // Send duplicate PN
-        analyticsManagerSUT.pushNotificationClickedEvent(bundle)
+        analyticsManagerSUT.pushNotificationClickedEvent(bundleIdCheck)
 
         // verify queue event called again
         verify(exactly = 2) {
@@ -287,6 +295,41 @@ class AnalyticsManagerTest {
             )
         }
         confirmVerified(eventQueueManager)
+    }
+
+    @Test
+    fun `dedupeCheckKey used wzrk_id incase wzrk_dd key is false or not present`() {
+        val key1 = analyticsManagerSUT.dedupeCheckKey(bundleIdCheck)
+        assertEquals("duplicate-id", key1)
+
+        val bundleIdCheckKeyFalse = Bundle().apply {
+            putString("wzrk_pn", "wzrk_pn")
+            putString("wzrk_id", "duplicate-id")
+            putString("wzrk_pid", "pid")
+            putString("wzrk_someid", "someid")
+            putString("wzrk_dd", "false")
+        }
+
+        val key2 = analyticsManagerSUT.dedupeCheckKey(bundleIdCheckKeyFalse)
+        assertEquals("duplicate-id", key2)
+    }
+
+    @Test
+    fun `dedupeCheckKey used wzrk_pid incase wzrk_dd key is true string or boolean`() {
+
+        val key1 = analyticsManagerSUT.dedupeCheckKey(bundlePidCheck)
+        assertEquals("pid", key1)
+
+        val bundlePidCheckString = Bundle().apply {
+            putString("wzrk_pn", "wzrk_pn")
+            putString("wzrk_id", "duplicate-id")
+            putString("wzrk_pid", "pid")
+            putString("wzrk_someid", "someid")
+            putString("wzrk_dd", "TRUE")
+        }
+
+        val key2 = analyticsManagerSUT.dedupeCheckKey(bundlePidCheckString)
+        assertEquals("pid", key2)
     }
 
     @Test
