@@ -25,6 +25,7 @@
 
 #### Bug Fixes
 * Fixes [#671](https://github.com/CleverTap/clevertap-android-sdk/issues/671) - an `AbstractMethodError` in the AppInbox feature when using audio/video.
+* Fixes issues when File type variable changes from validValue -> null
 
 
 ### Version 7.0.3 (November 29, 2024)
