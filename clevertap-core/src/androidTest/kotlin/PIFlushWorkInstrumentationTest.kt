@@ -12,12 +12,13 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
+import com.clevertap.android.sdk.AnalyticsManagerBundler.notificationViewedJson
+import com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.work.CTFlushPushImpressionsWork
-import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.*
 import org.json.JSONObject
@@ -83,14 +84,7 @@ class PIFlushWorkInstrumentationTest{
         }
 
         listOf(Pair(defaultInstance,bundle),Pair(ctInstance1,bundle1), Pair(ctInstance2,bundle2)).map {
-            val event = JSONObject()
-            try {
-                val notif: JSONObject = CTJsonConverter.getWzrkFields(it.second)
-                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
-                event.put("evtData", notif)
-            } catch (ignored: Throwable) {
-                //no-op
-            }
+            val event = notificationViewedJson(it.second)
             Pair(it.first,event)
         }.forEach {
             it.first!!.coreState!!.databaseManager.queuePushNotificationViewedEventToDB(myContext, it.second)
