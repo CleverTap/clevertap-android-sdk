@@ -11,6 +11,7 @@
   * `getUserLastVisitTs()`: Get timestamp of user's last app visit
   * `getUserAppLaunchCount()`: Get total number of times user has launched the app
   * `getUserEventLogHistory()`: Get full event history for current user
+* Adds support to hide large icon in android notification by sending wzrk_hide_large_icon key in notification payload.
     
 #### API Changes
 
@@ -25,6 +26,7 @@
 
 #### Bug Fixes
 * Fixes [#671](https://github.com/CleverTap/clevertap-android-sdk/issues/671) - an `AbstractMethodError` in the AppInbox feature when using audio/video.
+* Fixes issues when File type variable changes from validValue -> null
 
 
 ### Version 7.0.3 (November 29, 2024)
