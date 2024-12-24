@@ -242,11 +242,11 @@ class EventQueueManagerTest : BaseTestCase() {
                     cleverTapInstanceConfig
                 )
             )
-            doNothing().`when`(eventQueueManager).processPushNotificationViewedEvent(application, json)
+            doNothing().`when`(eventQueueManager).processPushNotificationViewedEvent(application, json, Constants.NV_EVENT)
 
             eventQueueManager.addToQueue(application, json, Constants.NV_EVENT)
 
-            verify(eventQueueManager).processPushNotificationViewedEvent(application, json)
+            verify(eventQueueManager).processPushNotificationViewedEvent(application, json, Constants.NV_EVENT)
             verify(eventQueueManager, never()).processEvent(application, json, Constants.NV_EVENT)
         }
     }
@@ -263,7 +263,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT)
 
-            verify(eventQueueManager, never()).processPushNotificationViewedEvent(application, json)
+            verify(eventQueueManager, never()).processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
             verify(eventQueueManager).processEvent(application, json, Constants.PROFILE_EVENT)
         }
     }
@@ -280,8 +280,9 @@ class EventQueueManagerTest : BaseTestCase() {
             corestate.coreMetaData.currentSessionId = 1000
             `when`(eventQueueManager.now).thenReturn(7000)
             doNothing().`when`(eventQueueManager).flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED)
+            doNothing().`when`(eventQueueManager).initInAppEvaluation(application, json, Constants.PROFILE_EVENT)
 
-            eventQueueManager.processPushNotificationViewedEvent(application, json)
+            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
 
             assertNull(json.optJSONObject(Constants.ERROR_KEY))
             assertEquals("event", json.getString("type"))
@@ -317,9 +318,10 @@ class EventQueueManagerTest : BaseTestCase() {
             corestate.coreMetaData.currentSessionId = 1000
             `when`(eventQueueManager.now).thenReturn(7000)
             doNothing().`when`(eventQueueManager).flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED)
+            doNothing().`when`(eventQueueManager).initInAppEvaluation(application, json, Constants.PROFILE_EVENT)
 
             // Act
-            eventQueueManager.processPushNotificationViewedEvent(application, json)
+            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
 
             // Assert
             assertEquals(validationResult.errorCode, json.getJSONObject(Constants.ERROR_KEY)["c"])
