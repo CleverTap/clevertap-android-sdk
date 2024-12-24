@@ -761,6 +761,8 @@ if (eventLog != null) {
     long lastTime = eventLog.getLastTs();
     int count = eventLog.getCountOfEvents();
     String deviceId = eventLog.getDeviceID();
+} else {
+    System.out.println("Event not performed");
 }
 ```
 Kotlin
@@ -771,7 +773,7 @@ clevertap.getUserEventLog("Product Viewed")?.let { eventLog ->
     val lastTime = eventLog.lastTs 
     val count = eventLog.countOfEvents
     val deviceId = eventLog.deviceID
-}
+} ?: println("Event not performed")
 ```
 Get count of event occurrences
 
@@ -782,25 +784,6 @@ int eventCount = clevertap.getUserEventLogCount("Product Viewed");
 Kotlin
 ```kotlin
 val eventCount = clevertap.getUserEventLogCount("Product Viewed")
-```
-Get timestamp of first occurrence
-
-Java
-```java
-long firstTs = clevertap.getUserEventLogFirstTs("Product Viewed");
-```
-```kotlin
-val firstTs = clevertap.getUserEventLogFirstTs("Product Viewed")
-```
-Get timestamp of last occurrence
-
-Java
-```java
-long lastTs = clevertap.getUserEventLogLastTs("Product Viewed");
-```
-Kotlin
-```kotlin
-val lastTs = clevertap.getUserEventLogLastTs("Product Viewed")
 ```
 Get user's last app visit timestamp
 
@@ -838,5 +821,5 @@ Kotlin
 val eventHistory = clevertap.userEventLogHistory
 eventHistory?.forEach { (eventName, log) ->
     // Process event details
-}
+} ?: println("Events not performed")
 ```

@@ -8,8 +8,6 @@
 * Adds new user-level event log tracking system to store and manage user event history. New APIs include:
   * `getUserEventLog()`: Get details about a specific event
   * `getUserEventLogCount()`: Get count of times an event occurred
-  * `getUserEventLogFirstTs()`: Get timestamp of first occurrence
-  * `getUserEventLogLastTs()`: Get timestamp of last occurrence
   * `getUserLastVisitTs()`: Get timestamp of user's last app visit
   * `getUserAppLaunchCount()`: Get total number of times user has launched the app
   * `getUserEventLogHistory()`: Get full event history for current user
@@ -19,8 +17,8 @@
 * **Deprecated:**  The old event tracking APIs tracked events at the device level rather than the user level, making it difficult to maintain accurate user-specific event histories, especially in multi-user scenarios. The following methods have been deprecated in favor of new user-specific event tracking APIs that provide more accurate, user-level analytics. These deprecated methods will be removed in future versions with prior notice:
   * `getDetails()`: Use `getUserEventLog()` instead for user-specific event details
   * `getCount()`: Use `getUserEventLogCount()` instead for user-specific event counts
-  * `getFirstTime()`: Use `getUserEventLogFirstTs()` instead for user-specific first occurrence timestamp
-  * `getLastTime()`: Use `getUserEventLogLastTs()` instead for user-specific last occurrence timestamp
+  * `getFirstTime()`: Use `getUserEventLog()` instead for user-specific first occurrence timestamp
+  * `getLastTime()`: Use `getUserEventLog()` instead for user-specific last occurrence timestamp
   * `getPreviousVisitTime()`: Use `getUserLastVisitTs()` instead for user-specific last visit timestamp
   * `getTotalVisits()`: Use `getUserAppLaunchCount()` instead for user-specific app launch count
   * `getHistory()`: Use `getUserEventLogHistory()` instead for user-specific event history
