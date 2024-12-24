@@ -39,8 +39,8 @@ private const val TAG = "HomeScreenFragment"
 private const val PERMISSIONS_REQUEST_CODE = 34
 
 data class HomeScreenFragmentBinding(
-   val expandableListView: ExpandableListView,
-   val root: CoordinatorLayout
+    val expandableListView: ExpandableListView,
+    val root: CoordinatorLayout
 )
 
 class HomeScreenFragment : Fragment() {

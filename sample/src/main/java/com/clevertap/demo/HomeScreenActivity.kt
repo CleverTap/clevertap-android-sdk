@@ -190,8 +190,8 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         }
 
         /**
-        * On Android 12, clear notification on CTA click when Activity is already running in activity backstack
-        */
+         * On Android 12, clear notification on CTA click when Activity is already running in activity backstack
+         */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             NotificationUtils.dismissNotification(intent, applicationContext)
         }
