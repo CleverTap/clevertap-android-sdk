@@ -156,7 +156,7 @@ class NetworkManagerTest : BaseTestCase() {
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
-        val coreState = MockCoreState(appCtx, cleverTapInstanceConfig)
+        val coreState = MockCoreState(cleverTapInstanceConfig)
         val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         val lockManager = CTLockManager()
         val dbManager = DBManager(cleverTapInstanceConfig, lockManager)

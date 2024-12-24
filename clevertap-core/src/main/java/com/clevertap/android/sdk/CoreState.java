@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
@@ -22,8 +23,6 @@ import com.clevertap.android.sdk.variables.Parser;
 import com.clevertap.android.sdk.variables.VarCache;
 
 public class CoreState {
-
-    private final Context context;
 
     private BaseLocationManager baseLocationManager;
 
@@ -111,10 +110,6 @@ public class CoreState {
         this.parser = parser;
     }
 
-    CoreState(final Context context) {
-        this.context = context;
-    }
-
     public ActivityLifeCycleManager getActivityLifeCycleManager() {
         return activityLifeCycleManager;
     }
@@ -189,8 +184,8 @@ public class CoreState {
      * </p>
      */
     @Deprecated
-    public CTProductConfigController getCtProductConfigController() {
-        initProductConfig();
+    public CTProductConfigController getCtProductConfigController(Context context) {
+        initProductConfig(context);
         return getControllerManager().getCTProductConfigController();
     }
 
@@ -336,7 +331,7 @@ public class CoreState {
      * </p>
      */
     @Deprecated
-    private void initProductConfig() {
+    private void initProductConfig(Context context) {
         if (getConfig().isAnalyticsOnly()) {
             getConfig().getLogger()
                     .debug(getConfig().getAccountId(), "Product Config is not enabled for this instance");

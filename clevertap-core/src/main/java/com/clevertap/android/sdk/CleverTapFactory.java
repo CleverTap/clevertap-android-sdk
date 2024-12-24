@@ -33,6 +33,7 @@ import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
 import com.clevertap.android.sdk.variables.CTVariables;
@@ -44,7 +45,7 @@ class CleverTapFactory {
 
     static CoreState getCoreState(Context context, CleverTapInstanceConfig cleverTapInstanceConfig,
             String cleverTapID) {
-        CoreState coreState = new CoreState(context);
+        CoreState coreState = new CoreState();
 
         TemplatesManager templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig);
         coreState.setTemplatesManager(templatesManager);
@@ -266,7 +267,8 @@ class CleverTapFactory {
                 callbackManager,
                 controllerManager,
                 ctLockManager,
-                inAppResponseForSendTestInApp
+                inAppResponseForSendTestInApp,
+                Clock.Companion.getSYSTEM()
         );
         coreState.setAnalyticsManager(analyticsManager);
 

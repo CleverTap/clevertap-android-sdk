@@ -2357,7 +2357,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfig().getLogger().debug(getAccountId(),
                     "Product config is not supported with analytics only configuration");
         }
-        return coreState.getCtProductConfigController();
+        return coreState.getCtProductConfigController(context);
     }
 
     /**
@@ -3242,13 +3242,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         String spikyProxyDomain = manifest.getSpikeyProxyDomain();
         String handshakeDomain = manifest.getHandshakeDomain();
         if (accountId == null || accountToken == null) {
-            Logger.i(
-                    "Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
+            Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
             return null;
         }
         if (accountRegion == null) {
             Logger.i("Account Region not specified in the AndroidManifest - using default region");
         }
+
+        // todo lp pass manifest info here
         CleverTapInstanceConfig defaultInstanceConfig = CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
 
         if (proxyDomain != null && !proxyDomain.trim().isEmpty()) {

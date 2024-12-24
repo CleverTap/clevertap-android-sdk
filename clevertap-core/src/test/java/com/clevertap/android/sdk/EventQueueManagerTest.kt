@@ -46,7 +46,7 @@ class EventQueueManagerTest : BaseTestCase() {
                     cleverTapInstanceConfig
                 )
             )
-            corestate = MockCoreState(application, cleverTapInstanceConfig)
+            corestate = MockCoreState(cleverTapInstanceConfig)
             eventQueueManager =
                 spy(
                     EventQueueManager(
