@@ -123,7 +123,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                 .setSmallIcon(smallIcon);
 
         String icoPath = extras.getString(Constants.NOTIF_ICON);// uncommon
-        boolean showIcon = !"true".equalsIgnoreCase(extras.getString(Constants.NOTIF_HIDE_APP_ICON));
+        boolean showIcon = !"true".equalsIgnoreCase(extras.getString(Constants.NOTIF_HIDE_APP_LARGE_ICON));
         if (showIcon) {
             // uncommon
             nb.setLargeIcon(Utils.getNotificationBitmapWithTimeout(icoPath, true, context,
