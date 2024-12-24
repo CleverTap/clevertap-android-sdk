@@ -11,6 +11,7 @@
   * `getUserLastVisitTs()`: Get timestamp of user's last app visit
   * `getUserAppLaunchCount()`: Get total number of times user has launched the app
   * `getUserEventLogHistory()`: Get full event history for current user
+* Adds support to hide large icon in android notification by sending wzrk_hide_large_icon key in notification payload.
     
 #### API Changes
 
