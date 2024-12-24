@@ -70,6 +70,7 @@ import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
@@ -83,6 +84,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -1244,6 +1247,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("setStatesAsync", () -> {
             CleverTapAPI.this.coreState.getSessionManager().setLastVisitTime();
+            CleverTapAPI.this.coreState.getSessionManager().setUserLastVisitTs();
             CleverTapAPI.this.coreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
             CleverTapAPI.this.coreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
             return null;
@@ -1608,8 +1612,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event for which you want to get the total count
      * @return Total count in int
+     *
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogCount(String)} instead.
+     * getUserEventLogCount() provides user-specific event counts.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getCount(String event) {
         EventDetail eventDetail = coreState.getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
@@ -1620,16 +1628,66 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Retrieves the count of logged events for a specific event name associated with the current
+     * user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * This operation involves a database query and should be called from a background thread.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * // Call from background thread <br>
+     * int itemSelectedCount = getUserEventLogCount("item_selected")
+     * </code>
+     *
+     * @param eventName Name of the event to get the count for (e.g., "navigation_clicked", "item_selected")
+     * @return The number of times the specified event has occurred for current user, or -1 if there was an error
+     */
+    @WorkerThread
+    public int getUserEventLogCount(String eventName) {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
+        return coreState.getLocalDataStore().readUserEventLogCount(eventName);
+    }
+
+    /**
      * Returns an EventDetail object for the particular event passed. EventDetail consists of event name, count, first
      * time
      * and last time timestamp of the event.
      *
      * @param event The event name for which you want the Event details
      * @return The {@link EventDetail} object
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLog(String)} instead.
+     * getUserEventLog() provides user-specific event log.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public EventDetail getDetails(String event) {
         return coreState.getLocalDataStore().getEventDetail(event);
+    }
+
+    /**
+     * Retrieves user-specific event log associated with the current user/
+     * {@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * This operation involves a database query and should be called from a background thread.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * // Call from background thread <br>
+     * UserEventLog log = getUserEventLog("navigation_clicked") <br>
+     * long firstOccurrence = log.firstTs
+     * </code>
+     *
+     * @param eventName Name of the event to get the log for (e.g., "navigation_clicked", "item_selected")
+     * @return {@link UserEventLog} or null if the event log does not exist or there was an error
+     */
+    @WorkerThread
+    public UserEventLog getUserEventLog(String eventName) {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return null;
+        }
+        return coreState.getLocalDataStore().readUserEventLog(eventName);
     }
 
     /**
@@ -1728,8 +1786,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event name for which you want the first time timestamp
      * @return The timestamp in int
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLog(String)} instead.
+     * It provides user-specific event log with first occurrence timestamp.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getFirstTime(String event) {
         EventDetail eventDetail = coreState.getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
@@ -1766,10 +1827,39 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns a Map of event names and corresponding event details of all the events raised
      *
      * @return A Map of Event Name and its corresponding EventDetail object
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogHistory()} instead.
+     * getUserEventLogHistory() provides user-specific event logs.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public Map<String, EventDetail> getHistory() {
         return coreState.getLocalDataStore().getEventHistory(context);
+    }
+
+    /**
+     * Retrieves history of all event logs associated with the current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID} in the ascending order of lastTs.
+     * This operation involves a database query and should be called from a background thread.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * // Call from background thread <br>
+     * Map&lt;String, UserEventLog&gt; history = getUserEventLogHistory()
+     * </code>
+     *
+     * @return Map of event name to {@link UserEventLog} for all events by current user, or empty map if there was an error
+     */
+    @WorkerThread
+    public Map<String, UserEventLog> getUserEventLogHistory() {
+        Map<String, UserEventLog> history = new LinkedHashMap<>();
+        if (!getConfig().isPersonalizationEnabled()) {
+            return history;
+        }
+        List<UserEventLog> logs = coreState.getLocalDataStore().readUserEventLogs();
+        for (UserEventLog log : logs) {
+            history.put(log.getEventName(), log);
+        }
+        return history;
     }
 
     /**
@@ -1883,8 +1973,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event name for which you want the last time timestamp
      * @return The timestamp in int
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLog(String)} instead.
+     * It provides user-specific event log with last occurrence timestamp.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getLastTime(String event) {
         EventDetail eventDetail = coreState.getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
@@ -1922,10 +2015,31 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the timestamp of the previous visit
      *
      * @return Timestamp of previous visit in int
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserLastVisitTs()} instead.
+     * getUserLastVisitTs() provides user-specific last visit timestamp.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getPreviousVisitTime() {
         return coreState.getSessionManager().getLastVisitTime();
+    }
+
+    /**
+     * Retrieves timestamp of last visit by current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * long lastVisitTs = getUserLastVisitTs()
+     * </code>
+     *
+     * @return Timestamp of last visit by current user, or -1 if there was an error
+     */
+    public long getUserLastVisitTs() {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
+        return coreState.getSessionManager().getUserLastVisitTs();
     }
 
     /**
@@ -2002,8 +2116,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the total number of times the app has been launched
      *
      * @return Total number of app launches in int
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserAppLaunchCount()} instead.
+     * getUserAppLaunchCount() provides user-specific app launch count.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getTotalVisits() {
         EventDetail ed = coreState.getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
         if (ed != null) {
@@ -2011,6 +2128,27 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         return 0;
+    }
+
+    /**
+     * Retrieves number of times app launched by current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * This operation involves a database query and should be called from a background thread.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * // Call from background thread <br>
+     * int launchCount = getUserAppLaunchCount()
+     * </code>
+     *
+     * @return Number of times app launched by current user, or -1 if there was an error
+     */
+    @WorkerThread
+    public int getUserAppLaunchCount() {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
+        return coreState.getLocalDataStore().readUserEventLogCount(Constants.APP_LAUNCHED_EVENT);
     }
 
     /**

@@ -592,6 +592,18 @@ class DBAdapterTest : BaseTestCase() {
         }
     }
 
+    @Test
+    fun `test userEventLogDAO returns singleton instance`() {
+        // When
+        val dao1 = dbAdapter.userEventLogDAO()
+        val dao2 = dbAdapter.userEventLogDAO()
+
+        // Then
+        assertNotNull(dao1)
+        assertSame(dao1, dao2) // Verify same instance is returned
+    }
+
+
     private fun getCtMsgDao(
         id: String = "1",
         userId: String = "1",

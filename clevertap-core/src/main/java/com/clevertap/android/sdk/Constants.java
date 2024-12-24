@@ -205,12 +205,6 @@ public interface Constants {
     String KEY_TEXT = "text";
     String KEY_KEY = "key";
     String KEY_VALUE = "value";
-    String KEY_EVENT_NAME = "eventName";
-    String KEY_EVENT_PROPERTIES = "eventProperties";
-    String KEY_ITEM_PROPERTIES = "itemProperties";
-    String KEY_GEO_RADIUS_PROPERTIES = "geoRadius";
-    String KEY_PROFILE_ATTR_NAME = "profileAttrName";
-    String KEY_PROPERTY_VALUE = "propertyValue";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
     String KEY_HIDE_CLOSE = "close";
@@ -254,8 +248,6 @@ public interface Constants {
     String INAPP_SUPPRESSED = "suppressed";
     String INAPP_SS_EVAL_META = "inapps_eval";
     String INAPP_SUPPRESSED_META = "inapps_suppressed";
-    String INAPP_OPERATOR = "operator";
-    String INAPP_PROPERTYNAME = "propertyName";
     String INAPP_WHEN_TRIGGERS = "whenTriggers";
     String INAPP_WHEN_LIMITS = "whenLimit";
     String INAPP_FC_LIMITS = "frequencyLimits";

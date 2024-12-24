@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import android.location.Location
+import androidx.annotation.WorkerThread
 import androidx.annotation.VisibleForTesting
+import com.clevertap.android.sdk.LocalDataStore
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.isValid
@@ -13,7 +15,7 @@ import com.clevertap.android.sdk.isValid
  *
  * @constructor Creates an instance of the `TriggersMatcher` class.
  */
-class TriggersMatcher {
+class TriggersMatcher(private val localDataStore: LocalDataStore) {
 
     /**
      * Matches a standard event against a set of trigger conditions.
@@ -58,6 +60,10 @@ class TriggersMatcher {
             return false
         }
 
+        if (!matchFirstTimeOnly(trigger)) {
+            return false
+        }
+
         if (event.isChargedEvent() && !matchChargedItemConditions(trigger, event)) {
             return false
         }
@@ -67,6 +73,15 @@ class TriggersMatcher {
         }
 
         return true
+    }
+
+    @WorkerThread
+    private fun matchFirstTimeOnly(trigger: TriggerAdapter): Boolean {
+        if (!trigger.firstTimeOnly) {
+            return true
+        }
+        val keyToCheckFirstTime: String = trigger.profileAttrName ?: trigger.eventName
+        return localDataStore.isUserEventLogFirstTime(keyToCheckFirstTime)
     }
 
     private fun matchPropertyConditions(

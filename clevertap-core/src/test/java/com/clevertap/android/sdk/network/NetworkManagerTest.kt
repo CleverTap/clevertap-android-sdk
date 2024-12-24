@@ -5,11 +5,8 @@ import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.LocalDataStoreProvider
 import com.clevertap.android.sdk.MockCoreState
 import com.clevertap.android.sdk.MockDeviceInfo
-import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm.AES
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
@@ -24,12 +21,15 @@ import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.*
+import io.mockk.mockk
 import org.json.JSONObject
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.*
-import org.mockito.Mockito.*
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -162,9 +162,6 @@ class NetworkManagerTest : BaseTestCase() {
         val dbManager = DBManager(cleverTapInstanceConfig, lockManager)
         val controllerManager =
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
-        val cryptHandler = CryptHandler(0, AES, cleverTapInstanceConfig.accountId)
-        val localDataStore =
-            LocalDataStoreProvider.provideLocalDataStore(appCtx, cleverTapInstanceConfig, cryptHandler, deviceInfo)
         val triggersManager = TriggerManager(appCtx, cleverTapInstanceConfig.accountId, deviceInfo)
         val inAppResponse =
             InAppResponse(

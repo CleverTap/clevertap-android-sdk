@@ -748,3 +748,78 @@ val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
 clevertapAdditionalInstanceConfig.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
 val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext ,clevertapAdditionalInstanceConfig)
 ```
+
+### User event logging APIs
+Get user event details
+
+Java
+```java
+UserEventLog eventLog = clevertap.getUserEventLog("Product Viewed");
+if (eventLog != null) {
+    String eventName = eventLog.getEventName();
+    long firstTime = eventLog.getFirstTs();
+    long lastTime = eventLog.getLastTs();
+    int count = eventLog.getCountOfEvents();
+    String deviceId = eventLog.getDeviceID();
+} else {
+    System.out.println("Event not performed");
+}
+```
+Kotlin
+```kotlin
+clevertap.getUserEventLog("Product Viewed")?.let { eventLog ->
+    val eventName = eventLog.eventName
+    val firstTime = eventLog.firstTs
+    val lastTime = eventLog.lastTs 
+    val count = eventLog.countOfEvents
+    val deviceId = eventLog.deviceID
+} ?: println("Event not performed")
+```
+Get count of event occurrences
+
+Java
+```java
+int eventCount = clevertap.getUserEventLogCount("Product Viewed");
+```
+Kotlin
+```kotlin
+val eventCount = clevertap.getUserEventLogCount("Product Viewed")
+```
+Get user's last app visit timestamp
+
+Java
+```java
+long lastVisitTs = clevertap.getUserLastVisitTs();
+```
+Kotlin
+```kotlin
+val lastVisitTs = clevertap.userLastVisitTs
+```
+Get total number of app launches by user
+
+Java
+```java
+int appLaunchCount = clevertap.getUserAppLaunchCount();
+```
+Kotlin
+```kotlin
+val appLaunchCount = cleverTapAPI?.userAppLaunchCount
+```
+Get full event history for user
+
+Java
+```java
+Map<String, UserEventLog> eventHistory = clevertap.getUserEventLogHistory();
+for (Map.Entry<String, UserEventLog> entry : eventHistory.entrySet()) {
+String eventName = entry.getKey();
+UserEventLog log = entry.getValue();
+// Process event details
+}
+```
+Kotlin
+```kotlin
+val eventHistory = clevertap.userEventLogHistory
+eventHistory?.forEach { (eventName, log) ->
+    // Process event details
+} ?: println("Events not performed")
+```

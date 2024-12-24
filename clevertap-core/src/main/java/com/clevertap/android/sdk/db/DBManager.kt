@@ -17,6 +17,11 @@ internal class DBManager(
     private val ctLockManager: CTLockManager
 ) : BaseDatabaseManager {
 
+    private companion object {
+        private const val USER_EVENT_LOG_ROWS_PER_USER = 2_048 + 256 // events + profile props
+        private const val USER_EVENT_LOG_ROWS_THRESHOLD = 5 * USER_EVENT_LOG_ROWS_PER_USER
+    }
+
     private var dbAdapter: DBAdapter? = null
 
     @WorkerThread
@@ -30,6 +35,8 @@ internal class DBManager(
             dbAdapter.cleanupStaleEvents(PROFILE_EVENTS)
             dbAdapter.cleanupStaleEvents(PUSH_NOTIFICATION_VIEWED)
             dbAdapter.cleanUpPushNotifications()
+            dbAdapter.userEventLogDAO()
+                .cleanUpExtraEvents(USER_EVENT_LOG_ROWS_THRESHOLD, USER_EVENT_LOG_ROWS_PER_USER)
         }
         return dbAdapter
     }

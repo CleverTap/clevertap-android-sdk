@@ -1,7 +1,7 @@
 [versions]
 # Project
 android_compileSdk = "34"
-android_gradle_plugin = "8.2.2"
+android_gradle_plugin = "8.7.0"
 android_minSdk = "19"
 kotlin_plugin = "1.7.20"
 sonarqube_plugin = "3.3"
@@ -54,7 +54,7 @@ coroutines_test = "1.7.3"
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "7.0.3"
+clevertap_android_sdk = "7.1.0"
 clevertap_rendermax_sdk = "1.0.3"
 clevertap_geofence_sdk = "1.3.0"
 clevertap_hms_sdk = "1.3.4"

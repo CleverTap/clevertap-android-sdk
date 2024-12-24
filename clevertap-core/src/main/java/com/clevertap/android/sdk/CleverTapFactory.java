@@ -98,7 +98,7 @@ class CleverTapFactory {
         coreState.setDeviceInfo(deviceInfo);
         deviceInfo.onInitDeviceInfo(cleverTapID);
 
-        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler, deviceInfo);
+        LocalDataStore localDataStore = new LocalDataStore(context, config, cryptHandler, deviceInfo, baseDatabaseManager);
         coreState.setLocalDataStore(localDataStore);
 
         ProfileValueHandler profileValueHandler = new ProfileValueHandler(validator, validationResultStack);
@@ -119,7 +119,7 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
-        TriggersMatcher triggersMatcher = new TriggersMatcher();
+        TriggersMatcher triggersMatcher = new TriggersMatcher(localDataStore);
         TriggerManager triggersManager = new TriggerManager(context, config.getAccountId(), deviceInfo);
         ImpressionManager impressionManager = new ImpressionManager(storeRegistry);
         LimitsMatcher limitsMatcher = new LimitsMatcher(impressionManager, triggersManager);
