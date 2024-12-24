@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
+import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
@@ -34,48 +35,41 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import kotlin.jvm.functions.Function0;
+
 public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final CTLockManager ctLockManager;
-
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
-
     private final BaseEventQueueManager baseEventQueueManager;
-
     private final BaseCallbackManager callbackManager;
-
     private final CleverTapInstanceConfig config;
-
     private final Context context;
-
     private final ControllerManager controllerManager;
-
     private final CoreMetaData coreMetaData;
-
     private final DeviceInfo deviceInfo;
-
     private final ValidationResultStack validationResultStack;
-
     private final Validator validator;
-
     private final InAppResponse inAppResponse;
-
-    private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
-
+    private final Clock currentTimeProvider;
     private final Object notificationMapLock = new Object();
 
-    private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
+    private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
+    private final HashMap<String, Long> notificationViewedIdTagMap = new HashMap<>();
 
-    AnalyticsManager(Context context,
-                     CleverTapInstanceConfig config,
-                     BaseEventQueueManager baseEventQueueManager,
-                     Validator validator,
-                     ValidationResultStack validationResultStack,
-                     CoreMetaData coreMetaData,
-                     DeviceInfo deviceInfo,
-                     BaseCallbackManager callbackManager, ControllerManager controllerManager,
-                     final CTLockManager ctLockManager,
-                     InAppResponse inAppResponse) {
+    AnalyticsManager(
+            Context context,
+            CleverTapInstanceConfig config,
+            BaseEventQueueManager baseEventQueueManager,
+            Validator validator,
+            ValidationResultStack validationResultStack,
+            CoreMetaData coreMetaData,
+            DeviceInfo deviceInfo,
+            BaseCallbackManager callbackManager, ControllerManager controllerManager,
+            final CTLockManager ctLockManager,
+            InAppResponse inAppResponse,
+            Clock currentTimeProvider
+    ) {
         this.context = context;
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
@@ -87,6 +81,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
         this.inAppResponse = inAppResponse;
+        this.currentTimeProvider = currentTimeProvider;
     }
 
     @Override
@@ -464,8 +459,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         boolean shouldProcess = (accountId == null && config.isDefaultInstance())
-                || config.getAccountId()
-                .equals(accountId);
+                || config.getAccountId().equals(accountId);
 
         if (!shouldProcess) {
             config.getLogger().debug(config.getAccountId(),
@@ -474,60 +468,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-            task.execute("testInappNotification",new Callable<Void>() {
-                @Override
-                public Void call() {
-                    try {
-                        String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
-                        String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
-                        JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
-
-                        JSONArray inappNotifs = new JSONArray();
-                        if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
-                                || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
-                            inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
-                        } else {
-                            inappNotifs.put(inappPreviewPayload);
-                        }
-
-                        JSONObject inAppResponseJson = new JSONObject();
-                        inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
-
-                        inAppResponse.processResponse(inAppResponseJson, null, context);
-                    } catch (Throwable t) {
-                        Logger.v("Failed to display inapp notification from push notification payload", t);
-                    }
-                    return null;
-                }
-            });
+            handleInAppPreview(extras);
             return;
         }
 
         if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-            task.execute("testInboxNotification",new Callable<Void>() {
-                @Override
-                public Void call() {
-                    try {
-                        Logger.v("Received inbox via push payload: " + extras
-                                .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                        JSONObject r = new JSONObject();
-                        JSONArray inboxNotifs = new JSONArray();
-                        r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs);
-                        JSONObject testPushObject = new JSONObject(
-                                extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                        testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
-                        inboxNotifs.put(testPushObject);
-
-                        CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
-                        cleverTapResponse.processResponse(r, null, context);
-                    } catch (Throwable t) {
-                        Logger.v("Failed to process inbox message from push notification payload", t);
-                    }
-                    return null;
-                }
-            });
+            handleInboxPreview(extras);
             return;
         }
 
@@ -538,13 +484,16 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             config.getLogger().debug(config.getAccountId(),
-                    "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras
-                            .toString());
+                    "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras);
             return;
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (5 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationIdTagMap, Constants.NOTIFICATION_ID_TAG_INTERVAL);
+        boolean isDuplicate = checkDuplicateNotificationIds(
+                dedupeCheckKey(extras),
+                notificationIdTagMap,
+                Constants.NOTIFICATION_ID_TAG_INTERVAL
+        );
         if (isDuplicate) {
             config.getLogger().debug(config.getAccountId(),
                     "Already processed Notification Clicked event for " + extras.toString()
@@ -552,26 +501,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        JSONObject event = new JSONObject();
-        JSONObject notif = new JSONObject();
         try {
-            for (String x : extras.keySet()) {
-                if (!x.startsWith(Constants.WZRK_PREFIX)) {
-                    continue;
-                }
-                Object value = extras.get(x);
-                notif.put(x, value);
-            }
+            // convert bundle to json
+            JSONObject event = AnalyticsManagerBundler.notificationViewedJson(extras);
 
-            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
-            event.put("evtData", notif);
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
-
-            try {
-                coreMetaData.setWzrkParams(getWzrkFields(extras));
-            } catch (Throwable t) {
-                // no-op
-            }
+            coreMetaData.setWzrkParams(AnalyticsManagerBundler.wzrkBundleToJson(extras));
         } catch (Throwable t) {
             // We won't get here
         }
@@ -581,6 +516,62 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } else {
             Logger.d("CTPushNotificationListener is not set");
         }
+    }
+
+    private void handleInboxPreview(Bundle extras) {
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("testInboxNotification",new Callable<Void>() {
+            @Override
+            public Void call() {
+                try {
+                    Logger.v("Received inbox via push payload: " + extras
+                            .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                    JSONObject r = new JSONObject();
+                    JSONArray inboxNotifs = new JSONArray();
+                    r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs);
+                    JSONObject testPushObject = new JSONObject(
+                            extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                    testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
+                    inboxNotifs.put(testPushObject);
+
+                    CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
+                    cleverTapResponse.processResponse(r, null, context);
+                } catch (Throwable t) {
+                    Logger.v("Failed to process inbox message from push notification payload", t);
+                }
+                return null;
+            }
+        });
+    }
+
+    private void handleInAppPreview(Bundle extras) {
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("testInappNotification",new Callable<Void>() {
+            @Override
+            public Void call() {
+                try {
+                    String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
+                    String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
+                    JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
+
+                    JSONArray inappNotifs = new JSONArray();
+                    if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
+                            || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
+                        inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
+                    } else {
+                        inappNotifs.put(inappPreviewPayload);
+                    }
+
+                    JSONObject inAppResponseJson = new JSONObject();
+                    inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
+
+                    inAppResponse.processResponse(inAppResponseJson, null, context);
+                } catch (Throwable t) {
+                    Logger.v("Failed to display inapp notification from push notification payload", t);
+                }
+                return null;
+            }
+        });
     }
 
     private JSONObject getHalfInterstitialInApp(final JSONObject inapp) throws JSONException {
@@ -650,33 +641,28 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG)
-                == null)) {
+        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG)
+                || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             config.getLogger().debug(config.getAccountId(),
-                    "Push notification ID Tag is null, not processing Notification Viewed event for:  " + extras
-                            .toString());
+                    "Push notification ID Tag is null, not processing Notification Viewed event for:  " + extras);
             return;
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (2 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationViewedIdTagMap,
-                Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL);
+        boolean isDuplicate = checkDuplicateNotificationIds(
+                dedupeCheckKey(extras),
+                notificationViewedIdTagMap,
+                Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL
+        );
         if (isDuplicate) {
             config.getLogger().debug(config.getAccountId(),
-                    "Already processed Notification Viewed event for " + extras.toString() + ", dropping duplicate.");
+                    "Already processed Notification Viewed event for " + extras + ", dropping duplicate.");
             return;
         }
 
-        config.getLogger().debug("Recording Notification Viewed event for notification:  " + extras.toString());
+        config.getLogger().debug("Recording Notification Viewed event for notification:  " + extras);
 
-        JSONObject event = new JSONObject();
-        try {
-            JSONObject notif = getWzrkFields(extras);
-            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
-            event.put("evtData", notif);
-        } catch (Throwable ignored) {
-            //no-op
-        }
+        JSONObject event = AnalyticsManagerBundler.notificationViewedJson(extras);
         baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT);
     }
 
@@ -1163,18 +1149,43 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    private boolean checkDuplicateNotificationIds(Bundle extras, HashMap<String, Object> notificationTagMap,
-            int interval) {
+    String dedupeCheckKey(Bundle extras) {
+        // This flag is used so that we can release in phased manner, eventually the check has to go away.
+        Object doDedupeCheck = extras.get(Constants.WZRK_DEDUPE);
+
+        boolean check = false;
+        if (doDedupeCheck != null) {
+            if (doDedupeCheck instanceof String) {
+                check = "true".equalsIgnoreCase((String) doDedupeCheck);
+            }
+            if (doDedupeCheck instanceof Boolean) {
+                check = (Boolean) doDedupeCheck;
+            }
+        }
+
+        String notificationIdTag;
+        if (check) {
+            notificationIdTag = extras.getString(Constants.WZRK_PUSH_ID);
+        } else {
+            notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
+        }
+        return notificationIdTag;
+    }
+
+    private boolean checkDuplicateNotificationIds(
+            String notificationIdTag,
+            HashMap<String, Long> notificationTagMap,
+            int interval
+    ) {
         synchronized (notificationMapLock) {
             // default to false; only return true if we are sure we've seen this one before
             boolean isDupe = false;
             try {
-                String notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
-                long now = System.currentTimeMillis();
+                long now = currentTimeProvider.currentTimeMillis();
                 if (notificationTagMap.containsKey(notificationIdTag)) {
                     long timestamp;
                     // noinspection ConstantConditions
-                    timestamp = (Long) notificationTagMap.get(notificationIdTag);
+                    timestamp = notificationTagMap.get(notificationIdTag);
                     // same notificationId within time internal treat as dupe
                     if (now - timestamp < interval) {
                         isDupe = true;

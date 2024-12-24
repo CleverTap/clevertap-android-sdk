@@ -46,7 +46,7 @@ class EventQueueManagerTest : BaseTestCase() {
                     cleverTapInstanceConfig
                 )
             )
-            corestate = MockCoreState(application, cleverTapInstanceConfig)
+            corestate = MockCoreState(cleverTapInstanceConfig)
             eventQueueManager =
                 spy(
                     EventQueueManager(
@@ -68,6 +68,56 @@ class EventQueueManagerTest : BaseTestCase() {
                     )
                 )
             json = JSONObject()
+        }
+    }
+
+    @Test
+    fun `test queueEvent when type is raised event updates local store`() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig))
+                .thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+
+            // Given
+            val event = JSONObject()
+            event.put("evtName", "test_event")
+
+            `when`(corestate.eventMediator.getEventName(event)).thenReturn("test_event")
+
+            // When
+            eventQueueManager.queueEvent(application, event, Constants.RAISED_EVENT)
+
+            // Then
+            verify(corestate.localDataStore).persistUserEventLog("test_event")
+        }
+    }
+
+    @Test
+    fun `test queueEvent when type is not raised event does not update local store`() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig))
+                .thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+
+            // Given
+            val event = JSONObject()
+            event.put("evtName", "test_event")
+            `when`(corestate.eventMediator.getEventName(event)).thenReturn("test_event")
+
+            // Test for different event types that are not RAISED_EVENT
+            listOf(
+                Constants.PROFILE_EVENT,
+                Constants.FETCH_EVENT,
+                Constants.DATA_EVENT,
+                Constants.PING_EVENT,
+                Constants.PAGE_EVENT,
+                Constants.NV_EVENT
+            ).forEach { eventType ->
+
+                // When
+                eventQueueManager.queueEvent(application, event, eventType)
+
+                // Then
+                verify(corestate.localDataStore, never()).persistUserEventLog(any())
+            }
         }
     }
 
@@ -162,7 +212,6 @@ class EventQueueManagerTest : BaseTestCase() {
                     cleverTapInstanceConfig
                 )
             )
-            val captor = ArgumentCaptor.forClass(Runnable::class.java)
             val mockInAppController = mock(InAppController::class.java)
             `when`(corestate.eventMediator.shouldDropEvent(json, Constants.PROFILE_EVENT))
                 .thenReturn(false)
@@ -173,7 +222,6 @@ class EventQueueManagerTest : BaseTestCase() {
             `when`(corestate.controllerManager.inAppController)
                 .thenReturn(mockInAppController)
 
-            doNothing().`when`(eventQueueManager).addToQueue(application, json, Constants.PROFILE_EVENT)
             doNothing().`when`(eventQueueManager).pushInitialEventsAsync()
             doNothing().`when`(corestate.sessionManager).lazyCreateSession(application)
 
@@ -194,11 +242,11 @@ class EventQueueManagerTest : BaseTestCase() {
                     cleverTapInstanceConfig
                 )
             )
-            doNothing().`when`(eventQueueManager).processPushNotificationViewedEvent(application, json)
+            doNothing().`when`(eventQueueManager).processPushNotificationViewedEvent(application, json, Constants.NV_EVENT)
 
             eventQueueManager.addToQueue(application, json, Constants.NV_EVENT)
 
-            verify(eventQueueManager).processPushNotificationViewedEvent(application, json)
+            verify(eventQueueManager).processPushNotificationViewedEvent(application, json, Constants.NV_EVENT)
             verify(eventQueueManager, never()).processEvent(application, json, Constants.NV_EVENT)
         }
     }
@@ -215,7 +263,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT)
 
-            verify(eventQueueManager, never()).processPushNotificationViewedEvent(application, json)
+            verify(eventQueueManager, never()).processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
             verify(eventQueueManager).processEvent(application, json, Constants.PROFILE_EVENT)
         }
     }
@@ -232,8 +280,9 @@ class EventQueueManagerTest : BaseTestCase() {
             corestate.coreMetaData.currentSessionId = 1000
             `when`(eventQueueManager.now).thenReturn(7000)
             doNothing().`when`(eventQueueManager).flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED)
+            doNothing().`when`(eventQueueManager).initInAppEvaluation(application, json, Constants.PROFILE_EVENT)
 
-            eventQueueManager.processPushNotificationViewedEvent(application, json)
+            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
 
             assertNull(json.optJSONObject(Constants.ERROR_KEY))
             assertEquals("event", json.getString("type"))
@@ -269,9 +318,10 @@ class EventQueueManagerTest : BaseTestCase() {
             corestate.coreMetaData.currentSessionId = 1000
             `when`(eventQueueManager.now).thenReturn(7000)
             doNothing().`when`(eventQueueManager).flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED)
+            doNothing().`when`(eventQueueManager).initInAppEvaluation(application, json, Constants.PROFILE_EVENT)
 
             // Act
-            eventQueueManager.processPushNotificationViewedEvent(application, json)
+            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
 
             // Assert
             assertEquals(validationResult.errorCode, json.getJSONObject(Constants.ERROR_KEY)["c"])

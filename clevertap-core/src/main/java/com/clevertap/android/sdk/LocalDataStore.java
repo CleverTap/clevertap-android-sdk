@@ -12,18 +12,29 @@ import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptUtils;
+import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
+import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 
+//import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import kotlin.Pair;
+import kotlin.collections.CollectionsKt;
+import kotlin.collections.MapsKt;
 
 @SuppressWarnings("unused")
 @RestrictTo(Scope.LIBRARY)
@@ -38,28 +49,35 @@ public class LocalDataStore {
     private final Context context;
 
     private final CryptHandler cryptHandler;
-
-    private DBAdapter dbAdapter;
+    private final BaseDatabaseManager baseDatabaseManager;
 
     private final ExecutorService es;
 
     private final String eventNamespace = "local_events";
 
     private final DeviceInfo deviceInfo;
+    private final Set<String> userNormalizedEventLogKeys = Collections.synchronizedSet(new HashSet<>());
+    private final Map<String, String> normalizedEventNames = new HashMap<>();
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo) {
+    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
         this.cryptHandler = cryptHandler;
         this.deviceInfo = deviceInfo;
+        this.baseDatabaseManager = baseDatabaseManager;
     }
 
     @WorkerThread
     public void changeUser() {
+        userNormalizedEventLogKeys.clear();
         resetLocalProfileSync();
     }
 
+    /**
+     * @deprecated since <code>v7.1.0</code>. Use {@link #readUserEventLog(String)}
+     */
+    @Deprecated(since = "7.1.0")
     EventDetail getEventDetail(String eventName) {
         try {
             if (!isPersonalisationEnabled()) {
@@ -77,7 +95,10 @@ public class LocalDataStore {
             return null;
         }
     }
-
+    /**
+     * @deprecated since <code>v7.1.0</code>. Use {@link #readUserEventLogs()}
+     */
+    @Deprecated(since = "7.1.0")
     Map<String, EventDetail> getEventHistory(Context context) {
         try {
             String namespace;
@@ -100,6 +121,10 @@ public class LocalDataStore {
         }
     }
 
+    /**
+     * @deprecated since <code>v7.1.0</code>. Use {@link #persistUserEventLog(String)}
+     */
+    @Deprecated(since = "7.1.0")
     @WorkerThread
     public void persistEvent(Context context, JSONObject event, int type) {
 
@@ -114,6 +139,203 @@ public class LocalDataStore {
         } catch (Throwable t) {
             getConfigLogger().verbose(getConfigAccountId(), "Failed to sync with upstream", t);
         }
+    }
+    @WorkerThread
+    public boolean persistUserEventLogsInBulk(Set<String> eventNames){
+        Set<Pair<String, String>> setOfActualAndNormalizedEventNamePair = new HashSet<>();
+        CollectionsKt.mapTo(eventNames, setOfActualAndNormalizedEventNamePair,
+                (actualEventName) -> new Pair<>(actualEventName, getOrPutNormalizedEventName(actualEventName)));
+        return upsertUserEventLogsInBulk(setOfActualAndNormalizedEventNamePair);
+    }
+
+    @WorkerThread
+    public boolean persistUserEventLog(String eventName) {
+
+        if (eventName == null) {
+            return false;
+        }
+
+        Logger logger = config.getLogger();
+        String accountId = config.getAccountId();
+        try {
+            logger.verbose(accountId,"UserEventLog: Persisting EventLog for event "+eventName);
+            if (isUserEventLogExists(eventName)){
+                logger.verbose(accountId,"UserEventLog: Updating EventLog for event "+eventName);
+                return updateUserEventLog(eventName);
+            } else {
+                logger.verbose(accountId,"UserEventLog: Inserting EventLog for event "+eventName);
+                return insertUserEventLog(eventName );
+            }
+            /*
+             * ==========TESTING BLOCK START ==========
+             */
+            /*cleanUpExtraEvents(50);
+
+            UserEventLog userEventLog = readUserEventLog(eventName);
+            logger.verbose(accountId,"UserEventLog: EventLog for event "+eventName+" = "+userEventLog);
+
+            List<UserEventLog> list = readUserEventLogs();
+            logger.verbose(accountId,"UserEventLog: All EventLog list for User "+list);
+
+            List<UserEventLog> list1 = readEventLogsForAllUsers();
+            logger.verbose(accountId,"UserEventLog: All user EventLog list "+list1);
+
+            int count = readUserEventLogCount(eventName);
+            logger.verbose(accountId,"UserEventLog: EventLog count for event "+eventName+" = "+count);
+
+            long logFirstTs = readUserEventLogFirstTs(eventName);
+            logger.verbose(accountId,"UserEventLog: EventLog firstTs for event "+eventName+" = "+logFirstTs);
+
+            long logLastTs = readUserEventLogLastTs(eventName);
+            logger.verbose(accountId,"UserEventLog: EventLog lastTs for event "+eventName+" = "+logLastTs);
+
+            boolean isUserEventLogFirstTime = isUserEventLogFirstTime(eventName);
+            logger.verbose(accountId,"UserEventLog: EventLog isUserEventLogFirstTime for event "+eventName+" = "+isUserEventLogFirstTime);*/
+            /*
+             * ==========TESTING BLOCK END ==========
+             */
+        } catch (Throwable t) {
+            logger.verbose(accountId, "UserEventLog: Failed to insert user event log: for event" + eventName, t);
+            return false;
+        }
+    }
+
+    @WorkerThread
+    private boolean updateEventByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        boolean updatedEventByDeviceID = dbAdapter.userEventLogDAO().updateEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+        getConfigLogger().verbose("updatedEventByDeviceID = " + updatedEventByDeviceID);
+        return updatedEventByDeviceID;
+    }
+
+    @WorkerThread
+    public boolean updateUserEventLog(String eventName) {
+        String deviceID = deviceInfo.getDeviceID();
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return updateEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+    }
+
+    @WorkerThread
+    private boolean upsertUserEventLogsInBulk(Set<Pair<String, String>> setOfActualAndNormalizedEventNamePair) {
+        String deviceID = deviceInfo.getDeviceID();
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        boolean upsertEventByDeviceID = dbAdapter.userEventLogDAO()
+                .upsertEventsByDeviceIdAndNormalizedEventName(deviceID, setOfActualAndNormalizedEventNamePair);
+        getConfigLogger().verbose("upsertEventByDeviceID = " + upsertEventByDeviceID);
+        return upsertEventByDeviceID;
+    }
+
+    @WorkerThread
+    private long insertEvent(String deviceID, String actualEventName, String normalizedEventName) {
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        long rowId = dbAdapter.userEventLogDAO().insertEvent(deviceID, actualEventName, normalizedEventName);
+        getConfigLogger().verbose("inserted rowId = " + rowId);
+        return rowId;
+    }
+
+    private String getOrPutNormalizedEventName(String actualEventName) {
+        return MapsKt.getOrPut(normalizedEventNames, actualEventName,
+                () -> Utils.getNormalizedName(actualEventName));
+    }
+
+    @WorkerThread
+    public boolean insertUserEventLog(String eventName) {
+        String deviceID = deviceInfo.getDeviceID();
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        long rowId = insertEvent(deviceID, eventName, normalizedEventName);
+        return rowId >= 0;
+    }
+
+    @WorkerThread
+    private boolean eventExistsByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        boolean eventExists = dbAdapter.userEventLogDAO().eventExistsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+        getConfigLogger().verbose("eventExists = "+eventExists);
+        return eventExists;
+    }
+
+    @WorkerThread
+    public boolean isUserEventLogExists(String eventName) {
+        String deviceID = deviceInfo.getDeviceID();
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return eventExistsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+    }
+
+    @WorkerThread
+    private boolean eventExistsByDeviceIdAndNormalizedEventNameAndCount(String deviceID, String normalizedEventName, int count) {
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        boolean eventExistsByDeviceIDAndCount = dbAdapter.userEventLogDAO()
+                .eventExistsByDeviceIdAndNormalizedEventNameAndCount(deviceID, normalizedEventName, count);
+
+        getConfigLogger().verbose("eventExistsByDeviceIDAndCount = " + eventExistsByDeviceIDAndCount);
+        return eventExistsByDeviceIDAndCount;
+    }
+
+    @WorkerThread
+    public boolean isUserEventLogFirstTime(String eventName) {
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        if (userNormalizedEventLogKeys.contains(normalizedEventName)) {
+            return false;
+        }
+
+        String deviceID = deviceInfo.getDeviceID();
+        int count = readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+        if (count > 1) {
+            userNormalizedEventLogKeys.add(normalizedEventName);
+        }
+        return count == 1;
+    }
+
+    @WorkerThread
+    public boolean cleanUpExtraEvents(int threshold, int numberOfRowsToCleanup){
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        boolean cleanUpExtraEvents = dbAdapter.userEventLogDAO().cleanUpExtraEvents(threshold, numberOfRowsToCleanup);
+        getConfigLogger().verbose("cleanUpExtraEvents boolean= "+cleanUpExtraEvents);
+        return cleanUpExtraEvents;
+    }
+
+    @WorkerThread
+    private UserEventLog readEventByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        return dbAdapter.userEventLogDAO().readEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+    }
+
+    @WorkerThread
+    public UserEventLog readUserEventLog(String eventName) {
+        String deviceID = deviceInfo.getDeviceID();
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return readEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+    }
+
+    @WorkerThread
+    private int readEventCountByDeviceIdAndNormalizedEventName(String deviceID, String normalizedEventName) {
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        return dbAdapter.userEventLogDAO().readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+    }
+
+    @WorkerThread
+    public int readUserEventLogCount(String eventName) {
+        String deviceID = deviceInfo.getDeviceID();
+        String normalizedEventName = getOrPutNormalizedEventName(eventName);
+        return readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
+    }
+
+    @WorkerThread
+    private List<UserEventLog> allEventsByDeviceID(String deviceID) {
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        return dbAdapter.userEventLogDAO().allEventsByDeviceID(deviceID);
+    }
+
+    @WorkerThread
+    public List<UserEventLog> readUserEventLogs(){
+        String deviceID = deviceInfo.getDeviceID();
+        return allEventsByDeviceID(deviceID);
+    }
+
+    @WorkerThread
+    public List<UserEventLog> readEventLogsForAllUsers() {
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        return dbAdapter.userEventLogDAO().allEvents();
     }
 
     @WorkerThread
@@ -184,6 +406,10 @@ public class LocalDataStore {
         }
     }
 
+    /**
+     * @deprecated since <code>v7.1.0</code> in favor of DB. See {@link UserEventLog}
+     */
+    @Deprecated(since = "7.1.0")
     private EventDetail decodeEventDetails(String name, String encoded) {
         if (encoded == null) {
             return null;
@@ -194,6 +420,10 @@ public class LocalDataStore {
                 Integer.parseInt(parts[2]), name);
     }
 
+    /**
+     * @deprecated since <code>v7.1.0</code> in favor of DB. See {@link UserEventLog}
+     */
+    @Deprecated(since = "7.1.0")
     private String encodeEventDetails(int first, int last, int count) {
         return count + "|" + first + "|" + last;
     }
@@ -220,6 +450,10 @@ public class LocalDataStore {
         return getIntFromPrefs("local_cache_expires_in", defaultInterval);
     }
 
+    /**
+     * @deprecated since <code>v7.1.0</code> in favor of DB. See {@link UserEventLog}
+     */
+    @Deprecated(since = "7.1.0")
     private String getStringFromPrefs(String rawKey, String defaultValue, String nameSpace) {
         if (this.config.isDefaultInstance()) {
             String _new = StorageHelper
@@ -242,9 +476,7 @@ public class LocalDataStore {
         this.postAsyncSafely("LocalDataStore#inflateLocalProfileAsync", new Runnable() {
             @Override
             public void run() {
-                if (dbAdapter == null) {
-                    dbAdapter = new DBAdapter(context, config);
-                }
+                DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
                     try {
                         JSONObject profile = dbAdapter.fetchUserProfileByAccountIdAndDeviceID(accountID, deviceInfo.getDeviceID());
@@ -294,6 +526,10 @@ public class LocalDataStore {
         return this.config.isPersonalizationEnabled();
     }
 
+    /**
+     * @deprecated since <code>v7.1.0</code>. Use {@link #persistUserEventLog(String)}
+     */
+    @Deprecated(since = "7.1.0")
     @SuppressWarnings("ConstantConditions")
     @SuppressLint("CommitPrefEdits")
     private void persistEvent(Context context, JSONObject event) {
@@ -353,6 +589,7 @@ public class LocalDataStore {
                     if (!passFlag)
                         CryptUtils.updateEncryptionFlagOnFailure(context, config, Constants.ENCRYPTION_FLAG_DB_SUCCESS, cryptHandler);
 
+                    DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                     long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);
                     getConfigLogger().verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);
@@ -433,7 +670,6 @@ public class LocalDataStore {
             }
         }
     }
-
     private void _setProfileField(String key, Object value) {
         if (value == null) {
             return;
@@ -454,10 +690,25 @@ public class LocalDataStore {
      * @param fields, a map of key value pairs to be updated locally. The value will be null if that key needs to be
      *                removed
      */
+//    int k = 0;
     public void updateProfileFields(Map<String, Object> fields) {
         if(fields.isEmpty())
             return;
-
+        /*Set<String> events = new HashSet<>();
+        for (int i = 0; i < 5000; i++) {
+            String s = "profile field - "+k+"-"+i;//RandomStringUtils.randomAlphanumeric(512);
+            events.add(s);
+        }
+        k++;*/
+        long start = System.nanoTime();
+        persistUserEventLogsInBulk(fields.keySet());
+//        persistUserEventLogsInBulk(events);
+        /*for (String key : events)
+        {
+            persistUserEventLog(key);
+        }*/
+        long end = System.nanoTime();
+        config.getLogger().verbose(config.getAccountId(),"UserEventLog: persistUserEventLog execution time = "+(end - start)+" nano seconds");
         for (Map.Entry<String, Object> entry : fields.entrySet()) {
             String key = entry.getKey();
             Object newValue = entry.getValue();

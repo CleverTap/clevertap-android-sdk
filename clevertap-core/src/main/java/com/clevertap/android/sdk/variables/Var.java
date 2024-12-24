@@ -2,6 +2,8 @@ package com.clevertap.android.sdk.variables;
 
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
@@ -238,6 +240,7 @@ public class Var<T> {
         }
     }
 
+    @Nullable
     String rawFileValue() {
         if (CTVariableUtils.FILE.equals(kind)) {
             return stringValue;

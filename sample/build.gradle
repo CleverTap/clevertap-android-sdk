@@ -18,8 +18,8 @@ android {
         applicationId "com.clevertap.demo"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 7000003
-        versionName "7.0.3"
+        versionCode 7000010
+        versionName "7.1.0"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -118,7 +118,7 @@ dependencies {
     implementation("androidx.concurrent:concurrent-futures:1.1.0") // Needed for geofence
 
     implementation("com.google.firebase:firebase-messaging:23.0.6") //Needed for FCM
-    implementation("com.google.android.gms:play-services-ads:20.4.0") //Needed to use Google Ad Ids
+    implementation("com.google.android.gms:play-services-ads:23.6.0") //Needed to use Google Ad Ids
 
     //ExoPlayer Libraries for Audio/Video InApp Notifications
     //implementation("com.google.android.exoplayer:exoplayer:2.19.1")
@@ -159,12 +159,12 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72"
     implementation "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"*/
 
-    remoteImplementation("com.clevertap.android:clevertap-android-sdk:7.0.3")
+    remoteImplementation("com.clevertap.android:clevertap-android-sdk:7.1.0")
     remoteImplementation("com.clevertap.android:clevertap-geofence-sdk:1.3.0")
     remoteImplementation("com.clevertap.android:push-templates:1.2.4")
     remoteImplementation("com.clevertap.android:clevertap-hms-sdk:1.3.4")
 
-    stagingImplementation("com.clevertap.android:clevertap-android-sdk:7.0.3")
+    stagingImplementation("com.clevertap.android:clevertap-android-sdk:7.1.0")
     stagingImplementation("com.clevertap.android:clevertap-geofence-sdk:1.3.0")
     stagingImplementation("com.clevertap.android:push-templates:1.2.4")
     stagingImplementation("com.clevertap.android:clevertap-hms-sdk:1.3.4")
