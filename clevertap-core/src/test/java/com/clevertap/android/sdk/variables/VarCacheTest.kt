@@ -5,6 +5,8 @@ import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.inapp.data.CtCacheType.FILES
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
+import com.clevertap.android.sdk.task.CTExecutorFactory
+import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.variables.VariableDefinitions.NullDefaultValue
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.shared.test.BaseTestCase
@@ -31,6 +33,9 @@ class VarCacheTest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
+        mockkStatic(CTExecutorFactory::class)
+        every { CTExecutorFactory.executors(any()) } returns MockCTExecutors()
+
         fileResourcesRepoImpl = mockk(relaxed = true)
         fileResourceProvider = mockk(relaxed = true)
 
@@ -49,6 +54,7 @@ class VarCacheTest : BaseTestCase() {
             Constants.CACHED_VARIABLES_KEY
         )
         StorageHelper.removeImmediate(application, varCacheKey)
+        unmockkStatic(CTExecutorFactory::class)
     }
 
     @Test
