@@ -235,6 +235,7 @@ public interface Constants {
     String NOTIF_MSG = "nm";
     String NOTIF_TITLE = "nt";
     String NOTIF_ICON = "ico";
+    String NOTIF_HIDE_APP_ICON = "wzrk_hide_icon";
     String WZRK_ACTIONS = "wzrk_acts";
     String WZRK_BIG_PICTURE = "wzrk_bp";
     String WZRK_MSG_SUMMARY = "wzrk_nms";

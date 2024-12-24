@@ -57,7 +57,6 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
     @Override
     public Builder renderNotification(final Bundle extras, final Context context,
             final Builder nb, final CleverTapInstanceConfig config, final int notificationId) {
-        String icoPath = extras.getString(Constants.NOTIF_ICON);// uncommon
 
         // uncommon - START
         NotificationCompat.Style style;
@@ -123,9 +122,13 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                 .setStyle(style)
                 .setSmallIcon(smallIcon);
 
-        // uncommon
-        nb.setLargeIcon(Utils.getNotificationBitmapWithTimeout(icoPath, true, context,
-                config, Constants.PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS).getBitmap());//uncommon
+        String icoPath = extras.getString(Constants.NOTIF_ICON);// uncommon
+        boolean showIcon = !"true".equalsIgnoreCase(extras.getString(Constants.NOTIF_HIDE_APP_ICON));
+        if (showIcon) {
+            // uncommon
+            nb.setLargeIcon(Utils.getNotificationBitmapWithTimeout(icoPath, true, context,
+                    config, Constants.PN_LARGE_ICON_DOWNLOAD_TIMEOUT_IN_MILLIS).getBitmap());//uncommon
+        }
 
         // Uncommon - START
         // add actions if any
