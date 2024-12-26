@@ -29,7 +29,11 @@ internal object CryptUtils {
     // todo - fix logs
     // todo - better names for variables
 
-    private fun isWorstStateNeeded(storedEncryptionLevel: Int, configEncryptionLevel: Int, encryptionAlgorithm: Int): Boolean {
+    private fun isWorstStateNeeded(
+        storedEncryptionLevel: Int,
+        configEncryptionLevel: Int,
+        encryptionAlgorithm: Int
+    ): Boolean {
         // todo - add more logic for worst state if required
         return (storedEncryptionLevel != configEncryptionLevel) || encryptionAlgorithm == 0
     }
@@ -75,9 +79,9 @@ internal object CryptUtils {
             }
 
             isWorstStateNeeded(
-                storedEncryptionLevel,
-                configEncryptionLevel,
-                encryptionAlgorithm
+                storedEncryptionLevel = storedEncryptionLevel,
+                configEncryptionLevel = configEncryptionLevel,
+                encryptionAlgorithm = encryptionAlgorithm
             ) -> {
                 when {
                     encryptionAlgorithm == 0 -> mutableMapOf(
@@ -143,22 +147,23 @@ internal object CryptUtils {
             -1
         )
         val requiredState = getRequiredEncryptedDataState(configEncryptionLevel)
+
         val currentStateMap = getCurrentEncryptedDataState(
-            storedEncryptionLevel,
-            encryptionFlagStatus,
-            storedCurrentState,
-            configEncryptionLevel,
-            encryptionAlgorithm,
-            requiredState
+            storedEncryptionLevel = storedEncryptionLevel,
+            encryptionFlagStatus = encryptionFlagStatus,
+            storedCurrentState = storedCurrentState,
+            configEncryptionLevel = configEncryptionLevel,
+            encryptionAlgorithm = encryptionAlgorithm,
+            requiredState = requiredState
         )
 
         performMigrationSteps(
-            currentStateMap,
-            requiredState,
-            config,
-            context,
-            cryptHandler,
-            dbAdapter
+            currentStateMap = currentStateMap,
+            requiredState = requiredState,
+            config = config,
+            context = context,
+            cryptHandler = cryptHandler,
+            dbAdapter = dbAdapter
         )
     }
 
@@ -189,24 +194,30 @@ internal object CryptUtils {
         dbAdapter: DBAdapter
     ) {
         // Define migration handlers for each key
-        val migrationHandlers = createMigrationHandlers()
+        val migrationHandlers: Map<String, MigrationStep> = createMigrationHandlers()
 
         var completeMigrationSuccess = true
         // Iterate through the current state and perform migration steps
-        currentStateMap.forEach { (key, currentState) ->
+        currentStateMap.forEach { (key: String, currentState: EncryptionDataState) ->
+
             val requiredSteps = currentState.state xor requiredState.state
             var updatedState = currentState.state
             var stepSuccess = true
 
             // Find the appropriate handler and perform migration steps
-            migrationHandlers[key]?.let { handler ->
+            migrationHandlers[key]?.let { handler: MigrationStep ->
                 val steps = generateMigrationSteps(currentState, requiredState)
 
                 // Execute each step based on the migration conditions
                 for (stepDetails in steps) {
                     if (requiredSteps and stepDetails.step != 0 && stepSuccess) {
                         stepSuccess = executeMigrationStep(
-                            handler, stepDetails, config, context, cryptHandler, dbAdapter
+                            handler = handler,
+                            stepDetails = stepDetails,
+                            config = config,
+                            context = context,
+                            cryptHandler = cryptHandler,
+                            dbAdapter = dbAdapter
                         )
                         if (stepSuccess) {
                             updatedState = updatedState xor stepDetails.step
