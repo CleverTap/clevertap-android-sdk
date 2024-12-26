@@ -156,7 +156,7 @@ class CryptUtilsTest : BaseTestCase() {
 
     @Test
     fun `test migrateEncryptionLevel when encryption level is not present in prefs`() {
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.NONE)
+        config.setEncryptionLevel(EncryptionLevel.NONE)
         StorageHelper.putInt(
             application,
             StorageHelper.storageKeyWithSuffix(config, Constants.KEY_ENCRYPTION_LEVEL),
@@ -168,7 +168,7 @@ class CryptUtilsTest : BaseTestCase() {
 
     @Test
     fun `test migrateEncryptionLevel when config encryption level is 1 and stored encryption level is 0`() {
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
 
         /* sequenceOf<String>("ARP:id:12345678","ARP:id:123456666","ARP:id:1234567777","ARP:WWW-111-000:1234567777")
              .forEach {
@@ -198,7 +198,7 @@ class CryptUtilsTest : BaseTestCase() {
 
     @Test
     fun `test migrateEncryptionLevel when config encryption level and stored encryption level are equal`() {
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
         StorageHelper.putInt(
             application,
             StorageHelper.storageKeyWithSuffix(config, Constants.KEY_ENCRYPTION_LEVEL),
@@ -214,7 +214,7 @@ class CryptUtilsTest : BaseTestCase() {
 
     @Test
     fun `test migrateEncryptionLevel when config encryption level and stored encryption level are equal and flagStatus is 3`() {
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
         StorageHelper.putInt(
             application,
             StorageHelper.storageKeyWithSuffix(config, Constants.KEY_ENCRYPTION_LEVEL),
@@ -240,7 +240,7 @@ class CryptUtilsTest : BaseTestCase() {
         val originalIdentifier = "originalIdentifier"
         val originalKey = "originalKey"
 
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
 
         put(Constants.KEY_ENCRYPTION_LEVEL, 0)
         put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_FAIL)
@@ -304,7 +304,7 @@ class CryptUtilsTest : BaseTestCase() {
         val originalIdentifier = "originalIdentifier"
         val originalKey = "originalKey"
 
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.NONE)
+        config.setEncryptionLevel(EncryptionLevel.NONE)
 
         put(Constants.KEY_ENCRYPTION_LEVEL, 1)
         put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_FAIL)
@@ -369,9 +369,9 @@ class CryptUtilsTest : BaseTestCase() {
         val originalIdentifier = "originalIdentifier"
         val originalKey = "originalKey"
 
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
 
-        put(Constants.KEY_ENCRYPTION_LEVEL, CryptHandler.EncryptionLevel.MEDIUM.intValue())
+        put(Constants.KEY_ENCRYPTION_LEVEL, EncryptionLevel.MEDIUM.intValue())
         put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_DB_SUCCESS)
 
         // Pref
@@ -413,9 +413,9 @@ class CryptUtilsTest : BaseTestCase() {
         val originalIdentifier = "originalIdentifier"
         val originalKey = "originalKey"
 
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
 
-        put(Constants.KEY_ENCRYPTION_LEVEL, CryptHandler.EncryptionLevel.MEDIUM.intValue())
+        put(Constants.KEY_ENCRYPTION_LEVEL, EncryptionLevel.MEDIUM.intValue())
         put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_CGK_SUCCESS)
 
         // Pref
@@ -473,7 +473,7 @@ class CryptUtilsTest : BaseTestCase() {
         val encryptedIdentifier = "encryptedIdentifier"
         val originalIdentifier = "originalIdentifier"
 
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
 
         put(Constants.KEY_ENCRYPTION_LEVEL, 0)
         put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_FAIL)
@@ -507,7 +507,7 @@ class CryptUtilsTest : BaseTestCase() {
         val encryptedIdentifier = "encryptedIdentifier"
         val originalIdentifier = "originalIdentifier"
 
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
 
         put(Constants.KEY_ENCRYPTION_LEVEL, 0)
         put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_FAIL)
@@ -541,7 +541,7 @@ class CryptUtilsTest : BaseTestCase() {
         val originalIdentifier = "originalIdentifier"
         val originalKey = "originalKey"
 
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
 
         put(Constants.KEY_ENCRYPTION_LEVEL, 0)
         put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_FAIL)
@@ -579,7 +579,7 @@ class CryptUtilsTest : BaseTestCase() {
         val originalIdentifier = "originalIdentifier"
         val failOriginalIdentifier = "failOriginalIdentifier"
 
-        config.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
+        config.setEncryptionLevel(EncryptionLevel.MEDIUM)
 
         put(Constants.KEY_ENCRYPTION_LEVEL, 0)
         put(Constants.KEY_ENCRYPTION_FLAG_STATUS, Constants.ENCRYPTION_FLAG_FAIL)

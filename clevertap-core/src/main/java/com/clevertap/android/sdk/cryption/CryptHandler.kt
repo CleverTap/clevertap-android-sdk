@@ -11,11 +11,10 @@ import com.clevertap.android.sdk.StorageHelper
  * @param encryptionLevel - The encryption level to use.
  * @param accountID - The account ID for which the cryptographic operations are performed.
  */
-class CryptHandler(
-    encryptionLevel: Int,
+class CryptHandler constructor(
+    private val encryptionLevel: EncryptionLevel,
     private val accountID: String
 ) {
-    private val encryptionLevel: EncryptionLevel
 
     // Cache to hold instances of Crypt for different encryption algorithms.
     private val cryptInstances: MutableMap<EncryptionAlgorithm, Crypt> = mutableMapOf()
@@ -30,16 +29,6 @@ class CryptHandler(
         AES_GCM(1);
     }
 
-    /**
-     * Encryption levels indicating the degree of security.
-     */
-    enum class EncryptionLevel(private val value: Int) {
-        NONE(0),    // No encryption
-        MEDIUM(1);  // Medium level encryption
-
-        fun intValue(): Int = value
-    }
-
     /** Enum for encryption states */
     enum class EncryptionDataState(val state: Int) {
         ENCRYPTED_AES(0b00),
@@ -51,11 +40,6 @@ class CryptHandler(
                 return values().first { it.state == stateValue }
             }
         }
-    }
-
-
-    init {
-        this.encryptionLevel = EncryptionLevel.values()[encryptionLevel]
     }
 
     /**

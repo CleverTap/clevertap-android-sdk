@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptUtils;
+import com.clevertap.android.sdk.cryption.EncryptionLevel;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.events.EventQueueManager;
@@ -85,7 +86,10 @@ class CleverTapFactory {
         coreState.setDatabaseManager(baseDatabaseManager);
 
         // todo - check if app is upgraded and launched from push notif
-        CryptHandler cryptHandler = new CryptHandler(config.getEncryptionLevel(), config.getAccountId());
+        CryptHandler cryptHandler = new CryptHandler(
+                EncryptionLevel.fromInt(config.getEncryptionLevel()),
+                config.getAccountId()
+        );
         coreState.setCryptHandler(cryptHandler);
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("migratingEncryption", () -> {
