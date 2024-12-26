@@ -38,7 +38,8 @@ class AESGCMCrypt : Crypt() {
 
     private fun parseCipherText(cipherText: String): Pair<ByteArray, ByteArray>? {
         return try {
-            val content = cipherText.trim('<', '>')
+            // removes the brackets <>
+            val content = cipherText.substring(1, cipherText.length - 1)
             val ivLength = 16  // Base64 length for 12-byte IV (encoded length is 16)
             val iv = content.substring(0, ivLength).fromBase64()
             val encryptedBytes = content.substring(ivLength).fromBase64()
