@@ -16,8 +16,8 @@ class AESGCMCrypt : Crypt() {
 
     override fun encryptInternal(plainText: String): String? {
         return performCryptOperation(
-            Cipher.ENCRYPT_MODE,
-            plainText.toByteArray(StandardCharsets.UTF_8)
+            mode = Cipher.ENCRYPT_MODE,
+            data = plainText.toByteArray(StandardCharsets.UTF_8)
         )?.let { (iv, encryptedBytes) ->
             // Concatenate IV and encrypted text and surround with <>
             "<${iv.toBase64()}${encryptedBytes.toBase64()}>"
@@ -26,7 +26,11 @@ class AESGCMCrypt : Crypt() {
 
     override fun decryptInternal(cipherText: String): String? {
         return parseCipherText(cipherText)?.let { (iv, encryptedBytes) ->
-            performCryptOperation(Cipher.DECRYPT_MODE, encryptedBytes, iv)
+            performCryptOperation(
+                mode = Cipher.DECRYPT_MODE,
+                data = encryptedBytes,
+                iv = iv
+            )
         }?.let { (_, decryptedBytes) ->
             String(decryptedBytes, StandardCharsets.UTF_8)
         }
@@ -54,20 +58,29 @@ class AESGCMCrypt : Crypt() {
             val secretKey = generateOrGetKey()
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
 
-            if (mode == Cipher.ENCRYPT_MODE) {
-                cipher.init(mode, secretKey)
-                val generatedIv = cipher.iv // Automatically generates 12-byte IV for GCM
-                val encryptedBytes = cipher.doFinal(data)
-                Pair(generatedIv, encryptedBytes)
-            } else if (iv != null) {
-                val gcmParameterSpec =
-                    GCMParameterSpec(128, iv) // 128-bit authentication tag length
-                cipher.init(mode, secretKey, gcmParameterSpec)
-                val decryptedBytes = cipher.doFinal(data)
-                Pair(iv, decryptedBytes)
-            } else {
-                Logger.v("IV is required for decryption")
-                null
+            when (mode) {
+                Cipher.ENCRYPT_MODE -> {
+                    cipher.init(mode, secretKey)
+                    val generatedIv = cipher.iv // Automatically generates 12-byte IV for GCM
+                    val encryptedBytes = cipher.doFinal(data)
+                    Pair(generatedIv, encryptedBytes)
+                }
+                Cipher.DECRYPT_MODE -> {
+                    if (iv != null) {
+                        val gcmParameterSpec =
+                            GCMParameterSpec(128, iv) // 128-bit authentication tag length
+                        cipher.init(mode, secretKey, gcmParameterSpec)
+                        val decryptedBytes = cipher.doFinal(data)
+                        Pair(iv, decryptedBytes)
+                    } else {
+                        Logger.v("IV is required for decryption")
+                        null
+                    }
+                }
+                else -> {
+                    Logger.v("Invalid mode used")
+                    null
+                }
             }
         } catch (e: Exception) {
             Logger.v("Error performing crypt operation", e)
