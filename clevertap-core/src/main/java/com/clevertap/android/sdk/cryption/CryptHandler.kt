@@ -52,9 +52,10 @@ class CryptHandler constructor(
     fun encrypt(
         plainText: String,
         key: String,
+        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
     ): String? {
         // Use AES_GCM algorithm by default.
-        val crypt = getCryptInstance(EncryptionAlgorithm.AES_GCM)
+        val crypt = getCryptInstance(algorithm)
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM -> {
                 // Encrypt only if the key is valid and the text is not already encrypted.
@@ -81,14 +82,15 @@ class CryptHandler constructor(
         key: String,
         algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
     ): String? {
+        val crypt = getCryptInstance(algorithm)
         // Determine the appropriate Crypt instance based on the cipher text's format.
-        val crypt = if (isTextAESEncrypted(cipherText)) {
+        /*val crypt = if (isTextAESEncrypted(cipherText)) {
             getCryptInstance(EncryptionAlgorithm.AES)
         } else if (isTextAESGCMEncrypted(cipherText)) {
             getCryptInstance(EncryptionAlgorithm.AES_GCM)
         } else {
             return cipherText
-        }
+        }*/
 
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM -> {
@@ -176,12 +178,12 @@ class CryptHandler constructor(
         }
 
         // Determines if the text is AES encrypted.
-        private fun isTextAESEncrypted(plainText: String): Boolean {
+        fun isTextAESEncrypted(plainText: String): Boolean {
             return plainText.startsWith('[') && plainText.endsWith(']')
         }
 
         // Determines if the text is AES_GCM encrypted.
-        private fun isTextAESGCMEncrypted(plainText: String): Boolean {
+        fun isTextAESGCMEncrypted(plainText: String): Boolean {
             return plainText.startsWith('<') && plainText.endsWith('>')
         }
     }

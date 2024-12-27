@@ -2,7 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import com.clevertap.android.sdk.cryption.CryptHandler;
-import com.clevertap.android.sdk.cryption.CryptUtils;
+import com.clevertap.android.sdk.cryption.CryptUtils2;
 import com.clevertap.android.sdk.cryption.EncryptionLevel;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.EventMediator;
@@ -93,8 +93,9 @@ class CleverTapFactory {
         coreState.setCryptHandler(cryptHandler);
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("migratingEncryption", () -> {
-            CryptUtils.migrateEncryption(context, config, cryptHandler,
-                    baseDatabaseManager.loadDBAdapter(context));
+            //CryptUtils.migrateEncryption(context, config, cryptHandler, baseDatabaseManager.loadDBAdapter(context));
+            CryptUtils2 c2 = new CryptUtils2(context, config, cryptHandler, baseDatabaseManager.loadDBAdapter(context));
+            c2.migrateEncryption();
             return null;
         });
 
