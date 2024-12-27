@@ -334,10 +334,11 @@ internal object CryptUtils {
                 val key = nextJSONObjKey.substringBefore("_")
                 val identifier = nextJSONObjKey.substringAfter("_")
                 var crypted: String? =
-                    if (encrypt)
+                    if (encrypt) {
                         cryptHandler.encrypt(identifier, key)
-                    else
+                    } else {
                         cryptHandler.decrypt(identifier, KEY_ENCRYPTION_MIGRATION)
+                    }
                 if (crypted == null) {
                     config.logger.verbose(
                         config.accountId,
