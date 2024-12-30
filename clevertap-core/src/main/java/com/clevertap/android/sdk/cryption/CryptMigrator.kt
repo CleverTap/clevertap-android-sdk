@@ -20,9 +20,10 @@ internal data class CryptMigrator(
     private val dbAdapter: DBAdapter
 ) {
 
-    /**
-     * Migrates the encryption level of stored data for the current account ID.
-     */
+    companion object {
+        private const val MIGRATION_FAILURE_COUNT_KEY = "encryptionMigrationFailureCount"
+    }
+
     fun migrateEncryption() {
         val configEncryptionLevel = config.encryptionLevel
         val storedEncryptionLevel = StorageHelper.getInt(
@@ -31,10 +32,6 @@ internal data class CryptMigrator(
             -1
         )
 
-        // Determine migration failure count:
-        // 1. No migration needed for new installs with encryption level 0.
-        // 2. Increment failure count if encryption levels differ.
-        // 3. Otherwise, retain existing failure count.
         val migrationFailureCount = when {
             storedEncryptionLevel == -1 && configEncryptionLevel == 0 -> {
                 cryptHandler.updateMigrationFailureCount(context, false)
@@ -44,19 +41,17 @@ internal data class CryptMigrator(
             storedEncryptionLevel != configEncryptionLevel -> 1
             else -> StorageHelper.getInt(
                 context,
-                StorageHelper.storageKeyWithSuffix(config, "encryptionMigrationFailureCount"),
+                StorageHelper.storageKeyWithSuffix(config, MIGRATION_FAILURE_COUNT_KEY),
                 1
             )
         }
 
-        // Update stored encryption level to the current config value.
         StorageHelper.putInt(
             context,
             StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_LEVEL),
             configEncryptionLevel
         )
 
-        // If no migration is required, log and exit.
         if (migrationFailureCount == 0) {
             config.logger.verbose(
                 config.accountId,
@@ -66,17 +61,13 @@ internal data class CryptMigrator(
             return
         }
 
-        // Log migration start and handle encryption/decryption as needed.
         config.logger.verbose(
             config.accountId,
             "Starting migration from encryption level $storedEncryptionLevel to $configEncryptionLevel"
         )
         val migrationSuccess = handleAllMigrations(configEncryptionLevel == 1)
-
-        // Update migration status based on the operation outcome.
         cryptHandler.updateMigrationFailureCount(context, migrationSuccess)
     }
-
 
     private fun handleAllMigrations(encrypt: Boolean): Boolean {
         return migrateCachedGuidsKeyPref(encrypt) &&
@@ -98,37 +89,36 @@ internal data class CryptMigrator(
             config.accountId,
             "Migrating encryption level for cachedGUIDsKey prefs"
         )
-        val json =
-            StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)
+
+        val json = StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)
         val cachedGuidJsonObj = CTJsonConverter.toJsonObject(json, config.logger, config.accountId)
         val newGuidJsonObj = JSONObject()
         var migrationSuccessful = true
+
         try {
-            val i = cachedGuidJsonObj.keys()
-            while (i.hasNext()) {
-                val nextJSONObjKey = i.next()
-                val key = nextJSONObjKey.substringBefore("_")
-                val identifier = nextJSONObjKey.substringAfter("_")
+            val keysIterator = cachedGuidJsonObj.keys()
+            while (keysIterator.hasNext()) {
+                val nextKey = keysIterator.next()
+                val (key, identifier) = nextKey.split("_", limit = 2)
                 val migrationResult =
                     performMigrationStep(getFinalEncryptionState(encrypt), identifier)
                 migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
                 val cryptedKey = "${key}_${migrationResult.data}"
-                newGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextJSONObjKey])
+                newGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextKey])
             }
             if (cachedGuidJsonObj.length() > 0) {
-                val cachedGuid = newGuidJsonObj.toString()
                 StorageHelper.putString(
                     context,
                     StorageHelper.storageKeyWithSuffix(config, CACHED_GUIDS_KEY),
-                    cachedGuid
+                    newGuidJsonObj.toString()
                 )
                 config.logger.verbose(
                     config.accountId,
-                    "setCachedGUIDs after migration:[$cachedGuid]"
+                    "Cached GUIDs migrated successfully: [${newGuidJsonObj}]"
                 )
             }
         } catch (t: Throwable) {
-            config.logger.verbose(config.accountId, "Error migrating cached guids: $t")
+            config.logger.verbose(config.accountId, "Error migrating cached GUIDs: $t")
             migrationSuccessful = false
         }
         return migrationSuccessful
@@ -148,83 +138,66 @@ internal data class CryptMigrator(
             config.accountId,
             "Migrating encryption level for user profiles in DB"
         )
+
         val profiles = dbAdapter.fetchUserProfilesByAccountId(config.accountId)
 
         var migrationSuccessful = true
-        for (profileIterator in profiles) {
-            val profile = profileIterator.value
+        for ((deviceID, profile) in profiles) {
             try {
-                for (piiKey in piiDBKeys) {
-                    if (profile.has(piiKey)) {
-                        val value = profile[piiKey]
-                        if (value is String) {
-                            val migrationResult =
-                                performMigrationStep(getFinalEncryptionState(encrypt), value)
-                            migrationSuccessful =
-                                migrationSuccessful && migrationResult.migrationSuccessful
-                            profile.put(piiKey, migrationResult.data)
-                        }
+                piiDBKeys.forEach { piiKey ->
+                    profile.optString(piiKey).let { value ->
+                        val migrationResult =
+                            performMigrationStep(getFinalEncryptionState(encrypt), value)
+                        migrationSuccessful =
+                            migrationSuccessful && migrationResult.migrationSuccessful
+                        profile.put(piiKey, migrationResult.data)
                     }
                 }
-                if (dbAdapter.storeUserProfile(
-                        config.accountId,
-                        profileIterator.key,
-                        profile
-                    ) <= -1L
-                )
+                if (dbAdapter.storeUserProfile(config.accountId, deviceID, profile) <= -1L) {
                     migrationSuccessful = false
+                }
             } catch (e: Exception) {
-                config.logger.verbose(
-                    config.accountId,
-                    "Error migrating local DB profile for $profileIterator.key: $e"
-                )
+                config.logger.verbose(config.accountId, "Error migrating profile $deviceID: $e")
                 migrationSuccessful = false
             }
         }
+
         return migrationSuccessful
     }
 
 
     /**
-     * This method migrates the encryption level of the inapp data stored in prefs. Migration(if needed) is always performed to AES_GCM
+     * This method migrates the encryption level of the inapp data stored in the shared preferences file.
+     * Migration(if needed) is always performed to AES_GCM
      *
      * Returns true if migration was successful and false otherwise
      */
     private fun migrateInAppData(): Boolean {
+        config.logger.verbose(config.accountId, "Migrating encryption for InAppData")
+        var migrationSuccessful = true
 
-        config.logger.verbose(
-            config.accountId,
-            "Migrating encryption for InAppData"
-        )
-        var migrationStatus = true
         val sharedPrefsDir = File(context.applicationInfo.dataDir, "shared_prefs")
 
         // Fetch all SharedPreferences files starting with "inApp" and ending with the accountId
         val prefsFiles = sharedPrefsDir.listFiles { _, name ->
-            name.startsWith("inApp") && name.endsWith(config.accountId + ".xml")
+            name.startsWith("inApp") && name.endsWith("${config.accountId}.xml")
         }
 
         prefsFiles?.forEach { file ->
             val prefName = file.nameWithoutExtension
-            val inAppSharedPrefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
-
+            val prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
             val keysToProcess = listOf("inapp_notifs_cs", "inapp_notifs_ss")
 
-            // Process each key for encryption/decryption
             keysToProcess.forEach { key ->
-                val data = inAppSharedPrefs.getString(key, null)
-
-                // If data exists, attempt to encrypt or decrypt
-                if (!data.isNullOrEmpty()) {
+                prefs.getString(key, null)?.let { data ->
                     val migrationResult = performMigrationStep(getFinalEncryptionState(true), data)
-                    migrationStatus = migrationStatus && migrationResult.migrationSuccessful
-
-                    // Save the processed data back to SharedPreferences
-                    inAppSharedPrefs.edit().putString(key, migrationResult.data).apply()
+                    migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
+                    prefs.edit().putString(key, migrationResult.data).apply()
                 }
             }
         }
-        return migrationStatus
+
+        return migrationSuccessful
     }
 
     private fun performMigrationStep(finalState: EncryptionState, data: String): MigrationResult {
