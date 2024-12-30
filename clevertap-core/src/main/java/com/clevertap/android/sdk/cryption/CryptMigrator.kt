@@ -40,6 +40,7 @@ internal data class CryptMigrator(
                 cryptHandler.updateMigrationFailureCount(context, false)
                 0
             }
+
             storedEncryptionLevel != configEncryptionLevel -> 1
             else -> StorageHelper.getInt(
                 context,
@@ -77,10 +78,10 @@ internal data class CryptMigrator(
     }
 
 
-    private fun handleAllMigrations(encrypt: Boolean) : Boolean {
+    private fun handleAllMigrations(encrypt: Boolean): Boolean {
         return migrateCachedGuidsKeyPref(encrypt) &&
-        migrateDBProfile(encrypt) &&
-        migrateInAppData()
+                migrateDBProfile(encrypt) &&
+                migrateInAppData()
     }
 
     /**
@@ -108,7 +109,8 @@ internal data class CryptMigrator(
                 val nextJSONObjKey = i.next()
                 val key = nextJSONObjKey.substringBefore("_")
                 val identifier = nextJSONObjKey.substringAfter("_")
-                val migrationResult = performMigrationStep(getFinalEncryptionState(encrypt), identifier)
+                val migrationResult =
+                    performMigrationStep(getFinalEncryptionState(encrypt), identifier)
                 migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
                 val cryptedKey = "${key}_${migrationResult.data}"
                 newGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextJSONObjKey])
@@ -156,8 +158,10 @@ internal data class CryptMigrator(
                     if (profile.has(piiKey)) {
                         val value = profile[piiKey]
                         if (value is String) {
-                            val migrationResult = performMigrationStep(getFinalEncryptionState(encrypt), value)
-                            migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
+                            val migrationResult =
+                                performMigrationStep(getFinalEncryptionState(encrypt), value)
+                            migrationSuccessful =
+                                migrationSuccessful && migrationResult.migrationSuccessful
                             profile.put(piiKey, migrationResult.data)
                         }
                     }
@@ -227,19 +231,34 @@ internal data class CryptMigrator(
         var processedData: String? = data
         when {
             CryptHandler.isTextAESEncrypted(data) -> {
-                processedData = cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES)
+                processedData =
+                    cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES)
                 if (finalState == EncryptionState.ENCRYPTED_AES_GCM && processedData != null) {
-                    processedData = cryptHandler.encrypt(processedData, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
+                    processedData = cryptHandler.encrypt(
+                        processedData,
+                        KEY_ENCRYPTION_MIGRATION,
+                        EncryptionAlgorithm.AES_GCM
+                    )
                 }
             }
+
             CryptHandler.isTextAESGCMEncrypted(data) -> {
                 if (finalState == EncryptionState.PLAIN_TEXT) {
-                    processedData = cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
+                    processedData = cryptHandler.decrypt(
+                        data,
+                        KEY_ENCRYPTION_MIGRATION,
+                        EncryptionAlgorithm.AES_GCM
+                    )
                 }
             }
-            finalState == EncryptionState.ENCRYPTED_AES_GCM-> {
+
+            finalState == EncryptionState.ENCRYPTED_AES_GCM -> {
                 // Data here is plain text
-                processedData = cryptHandler.encrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
+                processedData = cryptHandler.encrypt(
+                    data,
+                    KEY_ENCRYPTION_MIGRATION,
+                    EncryptionAlgorithm.AES_GCM
+                )
             }
         }
 
@@ -250,7 +269,7 @@ internal data class CryptMigrator(
     }
 
     private fun getFinalEncryptionState(encrypt: Boolean): EncryptionState {
-        return when(encrypt) {
+        return when (encrypt) {
             true -> EncryptionState.ENCRYPTED_AES_GCM
             false -> EncryptionState.PLAIN_TEXT
         }
