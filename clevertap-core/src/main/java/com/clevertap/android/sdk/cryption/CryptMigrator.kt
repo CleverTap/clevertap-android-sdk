@@ -101,7 +101,7 @@ internal data class CryptMigrator(
                 val nextKey = keysIterator.next()
                 val (key, identifier) = nextKey.split("_", limit = 2)
                 val migrationResult =
-                    performMigrationStep(getFinalEncryptionState(encrypt), identifier)
+                    performMigrationStep(encrypt, identifier)
                 migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
                 val cryptedKey = "${key}_${migrationResult.data}"
                 newGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextKey])
@@ -147,7 +147,7 @@ internal data class CryptMigrator(
                 piiDBKeys.forEach { piiKey ->
                     profile.optString(piiKey).let { value ->
                         val migrationResult =
-                            performMigrationStep(getFinalEncryptionState(encrypt), value)
+                            performMigrationStep(encrypt, value)
                         migrationSuccessful =
                             migrationSuccessful && migrationResult.migrationSuccessful
                         profile.put(piiKey, migrationResult.data)
@@ -190,7 +190,7 @@ internal data class CryptMigrator(
 
             keysToProcess.forEach { key ->
                 prefs.getString(key, null)?.let { data ->
-                    val migrationResult = performMigrationStep(getFinalEncryptionState(true), data)
+                    val migrationResult = performMigrationStep(true, data)
                     migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
                     prefs.edit().putString(key, migrationResult.data).apply()
                 }
@@ -200,45 +200,22 @@ internal data class CryptMigrator(
         return migrationSuccessful
     }
 
-    private fun performMigrationStep(finalState: EncryptionState, data: String): MigrationResult {
-        var processedData: String? = data
-        when {
-            CryptHandler.isTextAESEncrypted(data) -> {
-                processedData =
-                    cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES)
-                if (finalState == EncryptionState.ENCRYPTED_AES_GCM && processedData != null) {
-                    processedData = cryptHandler.encrypt(
-                        processedData,
-                        KEY_ENCRYPTION_MIGRATION,
-                        EncryptionAlgorithm.AES_GCM
-                    )
-                }
-            }
+    private fun performMigrationStep(encrypt: Boolean, data: String): MigrationResult {
+        val currentState = getCurrentEncryptionState(data)
+        val finalState = getFinalEncryptionState(encrypt)
 
-            CryptHandler.isTextAESGCMEncrypted(data) -> {
-                if (finalState == EncryptionState.PLAIN_TEXT) {
-                    processedData = cryptHandler.decrypt(
-                        data,
-                        KEY_ENCRYPTION_MIGRATION,
-                        EncryptionAlgorithm.AES_GCM
-                    )
-                }
-            }
-
-            finalState == EncryptionState.ENCRYPTED_AES_GCM -> {
-                // Data here is plain text
-                processedData = cryptHandler.encrypt(
-                    data,
-                    KEY_ENCRYPTION_MIGRATION,
-                    EncryptionAlgorithm.AES_GCM
-                )
-            }
+        if (currentState == finalState) {
+            // No migration needed if current state matches the final state
+            return MigrationResult(data, true)
         }
 
-        return MigrationResult(
-            data = processedData ?: data,
-            migrationSuccessful = processedData != null
-        )
+        return try {
+            val processedData = currentState.transitionTo(finalState, data, cryptHandler)
+            MigrationResult(data = processedData?:data, migrationSuccessful = processedData != null)
+        } catch (e: Exception) {
+            config.logger.verbose(config.accountId, "Migration step failed for data: $e")
+            MigrationResult(data = data, migrationSuccessful = false)
+        }
     }
 
     private fun getFinalEncryptionState(encrypt: Boolean): EncryptionState {
@@ -248,10 +225,68 @@ internal data class CryptMigrator(
         }
     }
 
+    private fun getCurrentEncryptionState(data: String): EncryptionState {
+        return when {
+            CryptHandler.isTextAESEncrypted(data) -> EncryptionState.ENCRYPTED_AES
+            CryptHandler.isTextAESGCMEncrypted(data) -> EncryptionState.ENCRYPTED_AES_GCM
+            else -> EncryptionState.PLAIN_TEXT
+        }
+    }
+
     data class MigrationResult(val data: String, val migrationSuccessful: Boolean)
+
+    /**
+     * Enum representing encryption states and their transition logic.
+     */
     enum class EncryptionState {
-        ENCRYPTED_AES,
-        PLAIN_TEXT,
-        ENCRYPTED_AES_GCM;
+        ENCRYPTED_AES {
+            override fun transitionTo(
+                targetState: EncryptionState,
+                data: String,
+                cryptHandler: CryptHandler
+            ): String? {
+                val decrypted = cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES)
+                return when (targetState) {
+                    ENCRYPTED_AES_GCM -> decrypted?.let { cryptHandler.encrypt(it, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM) }
+                    PLAIN_TEXT -> decrypted
+                    else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES to $targetState")
+                }
+            }
+        },
+        ENCRYPTED_AES_GCM {
+            override fun transitionTo(
+                targetState: EncryptionState,
+                data: String,
+                cryptHandler: CryptHandler
+            ): String? {
+                val decrypted = cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
+                return when (targetState) {
+                    PLAIN_TEXT -> decrypted
+                    else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES_GCM to $targetState")
+                }
+            }
+        },
+        PLAIN_TEXT {
+            override fun transitionTo(
+                targetState: EncryptionState,
+                data: String,
+                cryptHandler: CryptHandler
+            ): String? {
+                return when (targetState) {
+                    ENCRYPTED_AES -> cryptHandler.encrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES)
+                    ENCRYPTED_AES_GCM -> cryptHandler.encrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
+                    else -> throw IllegalArgumentException("Invalid transition from PLAIN_TEXT to $targetState")
+                }
+            }
+        };
+
+        /**
+         * Defines the logic to transition from one encryption state to another.
+         */
+        abstract fun transitionTo(
+            targetState: EncryptionState,
+            data: String,
+            cryptHandler: CryptHandler
+        ): String?
     }
 }
