@@ -325,6 +325,12 @@ public interface Constants {
     String CRYPTION_SALT = "W1ZRCl3>";
     String CRYPTION_IV = "__CL3>3Rt#P__1V_";
 
+    String AES_PREFIX = "[";
+    String AES_SUFFIX = "]";
+
+    String AES_GCM_PREFIX = "<ct<";
+    String AES_GCM_SUFFIX = ">ct>";
+
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
     int FETCH_TYPE_VARIABLES = 4;

@@ -4,6 +4,8 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import com.clevertap.android.sdk.Constants.AES_GCM_PREFIX
+import com.clevertap.android.sdk.Constants.AES_GCM_SUFFIX
 import com.clevertap.android.sdk.Logger
 import java.nio.charset.StandardCharsets
 import java.security.KeyStore
@@ -38,8 +40,8 @@ class AESGCMCrypt : Crypt() {
 
     private fun parseCipherText(cipherText: String): Pair<ByteArray, ByteArray>? {
         return try {
-            // removes the brackets <>
-            val content = cipherText.substring(1, cipherText.length - 1)
+            // removes the postfix and prefix
+            val content = cipherText.removePrefix(AES_GCM_PREFIX).removeSuffix(AES_GCM_SUFFIX)
             val ivLength = 16  // Base64 length for 12-byte IV (encoded length is 16)
             val iv = content.substring(0, ivLength).fromBase64()
             val encryptedBytes = content.substring(ivLength).fromBase64()
