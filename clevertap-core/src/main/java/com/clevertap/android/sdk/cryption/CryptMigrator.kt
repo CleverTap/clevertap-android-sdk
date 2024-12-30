@@ -218,8 +218,8 @@ internal data class CryptMigrator(
         var crypted: String? = data
         if(CryptHandler.isTextAESEncrypted(data)) {
             crypted = cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES)
-            if(finalState) {
-                crypted = cryptHandler.encrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
+            if(finalState && crypted != null) {
+                crypted = cryptHandler.encrypt(crypted, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
             }
         } else if (CryptHandler.isTextAESGCMEncrypted(data)) {
             if(!finalState) {
