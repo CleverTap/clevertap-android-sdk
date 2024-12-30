@@ -22,7 +22,7 @@ class AESGCMCrypt : Crypt() {
             data = plainText.toByteArray(StandardCharsets.UTF_8)
         )?.let { (iv, encryptedBytes) ->
             // Concatenate IV and encrypted text and surround with <>
-            "<${iv.toBase64()}${encryptedBytes.toBase64()}>"
+            "$AES_GCM_PREFIX${iv.toBase64()}${encryptedBytes.toBase64()}$AES_GCM_SUFFIX"
         }
     }
 
@@ -38,14 +38,14 @@ class AESGCMCrypt : Crypt() {
         }
     }
 
-    private fun parseCipherText(cipherText: String): Pair<ByteArray, ByteArray>? {
+    private fun parseCipherText(cipherText: String): AESGCMCryptResult? {
         return try {
             // removes the postfix and prefix
             val content = cipherText.removePrefix(AES_GCM_PREFIX).removeSuffix(AES_GCM_SUFFIX)
             val ivLength = 16  // Base64 length for 12-byte IV (encoded length is 16)
             val iv = content.substring(0, ivLength).fromBase64()
             val encryptedBytes = content.substring(ivLength).fromBase64()
-            Pair(iv, encryptedBytes)
+            AESGCMCryptResult(iv, encryptedBytes)
         } catch (e: Exception) {
             Logger.v("Error parsing cipherText", e)
             null
@@ -56,7 +56,7 @@ class AESGCMCrypt : Crypt() {
         mode: Int,
         data: ByteArray,
         iv: ByteArray? = null
-    ): Pair<ByteArray, ByteArray>? {
+    ): AESGCMCryptResult? {
         return try {
             val secretKey = generateOrGetKey()
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
@@ -66,7 +66,7 @@ class AESGCMCrypt : Crypt() {
                     cipher.init(mode, secretKey)
                     val generatedIv = cipher.iv // Automatically generates 12-byte IV for GCM
                     val encryptedBytes = cipher.doFinal(data)
-                    Pair(generatedIv, encryptedBytes)
+                    AESGCMCryptResult(generatedIv, encryptedBytes)
                 }
                 Cipher.DECRYPT_MODE -> {
                     if (iv != null) {
@@ -74,7 +74,7 @@ class AESGCMCrypt : Crypt() {
                             GCMParameterSpec(128, iv) // 128-bit authentication tag length
                         cipher.init(mode, secretKey, gcmParameterSpec)
                         val decryptedBytes = cipher.doFinal(data)
-                        Pair(iv, decryptedBytes)
+                        AESGCMCryptResult(iv, decryptedBytes)
                     } else {
                         Logger.v("IV is required for decryption")
                         null
@@ -122,6 +122,8 @@ class AESGCMCrypt : Crypt() {
             null
         }
     }
+
+    private data class AESGCMCryptResult(val iv: ByteArray, val encryptedBytes: ByteArray)
 
     // Utility extension functions for Base64 encoding/decoding
     private fun ByteArray.toBase64(): String = Base64.encodeToString(this, Base64.NO_WRAP)
