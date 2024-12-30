@@ -59,7 +59,7 @@ public class LoginInfoProvider {
         if (isErrorDeviceId() || guid == null || key == null || identifier == null) {
             return;
         }
-        String encryptedIdentifier = cryptHandler.encrypt(identifier, key, CryptHandler.EncryptionAlgorithm.AES_GCM);
+        String encryptedIdentifier = cryptHandler.encrypt(identifier, key);
         if (encryptedIdentifier == null) {
             // If encrypted is null then fallback to plain text
             encryptedIdentifier = identifier;
@@ -178,7 +178,7 @@ public class LoginInfoProvider {
         if (key == null || identifier == null) {
             return null;
         }
-        String encryptedIdentifier = cryptHandler.encrypt(identifier, key, CryptHandler.EncryptionAlgorithm.AES_GCM);
+        String encryptedIdentifier = cryptHandler.encrypt(identifier, key);
         String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
         try {

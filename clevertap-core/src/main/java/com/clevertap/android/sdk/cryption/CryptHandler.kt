@@ -11,7 +11,7 @@ import com.clevertap.android.sdk.StorageHelper
  * @param encryptionLevel - The encryption level to use.
  * @param accountID - The account ID for which the cryptographic operations are performed.
  */
-class CryptHandler constructor(
+class CryptHandler(
     private val encryptionLevel: EncryptionLevel,
     private val accountID: String
 ) {
@@ -36,6 +36,7 @@ class CryptHandler constructor(
      * @param key - The key used for encryption.
      * @return The encrypted text, or the original plain text if encryption is not required.
      */
+    @JvmOverloads
     fun encrypt(
         plainText: String,
         key: String,
@@ -45,7 +46,7 @@ class CryptHandler constructor(
         val crypt = getCryptInstance(algorithm)
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM -> {
-                // Encrypt only if the key is valid and the text is not already encrypted.
+                // Encrypt only if the key is valid
                 if (key in Constants.MEDIUM_CRYPT_KEYS) {
                     return crypt.encryptInternal(plainText)
                 }
