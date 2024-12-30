@@ -2,6 +2,10 @@ package com.clevertap.android.sdk.cryption
 
 import android.content.Context
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Constants.AES_GCM_SUFFIX
+import com.clevertap.android.sdk.Constants.AES_GCM_PREFIX
+import com.clevertap.android.sdk.Constants.AES_SUFFIX
+import com.clevertap.android.sdk.Constants.AES_PREFIX
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 
@@ -157,12 +161,12 @@ class CryptHandler(
 
         // Determines if the text is AES encrypted.
         fun isTextAESEncrypted(plainText: String): Boolean {
-            return plainText.startsWith('[') && plainText.endsWith(']')
+            return plainText.startsWith(AES_PREFIX) && plainText.endsWith(AES_SUFFIX)
         }
 
         // Determines if the text is AES_GCM encrypted.
         fun isTextAESGCMEncrypted(plainText: String): Boolean {
-            return plainText.startsWith('<') && plainText.endsWith('>')
+            return plainText.startsWith(AES_GCM_PREFIX) && plainText.endsWith(AES_GCM_SUFFIX)
         }
     }
 }
