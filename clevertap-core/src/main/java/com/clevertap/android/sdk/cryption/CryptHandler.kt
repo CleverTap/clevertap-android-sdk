@@ -46,7 +46,7 @@ class CryptHandler constructor(
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM -> {
                 // Encrypt only if the key is valid and the text is not already encrypted.
-                if (key in Constants.MEDIUM_CRYPT_KEYS && !isTextEncrypted(plainText)) {
+                if (key in Constants.MEDIUM_CRYPT_KEYS) {
                     return crypt.encryptInternal(plainText)
                 }
             }
@@ -70,15 +70,6 @@ class CryptHandler constructor(
         algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
     ): String? {
         val crypt = getCryptInstance(algorithm)
-        // Determine the appropriate Crypt instance based on the cipher text's format.
-        /*val crypt = if (isTextAESEncrypted(cipherText)) {
-            getCryptInstance(EncryptionAlgorithm.AES)
-        } else if (isTextAESGCMEncrypted(cipherText)) {
-            getCryptInstance(EncryptionAlgorithm.AES_GCM)
-        } else {
-            return cipherText
-        }*/
-
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM -> {
                 // Decrypt only if the key is valid.

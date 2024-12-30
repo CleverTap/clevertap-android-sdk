@@ -574,6 +574,9 @@ public class LocalDataStore {
                         if (profile.get(piiKey) != null) {
                             Object value = profile.get(piiKey);
                             if (value instanceof String) {
+                                if(CryptHandler.isTextEncrypted((String) value)) {
+                                    continue;
+                                }
                                 String encrypted = cryptHandler.encrypt((String) value, piiKey, CryptHandler.EncryptionAlgorithm.AES_GCM);
                                 if (encrypted == null) {
                                     passFlag = false;

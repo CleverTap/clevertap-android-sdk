@@ -75,7 +75,7 @@ internal data class CryptMigrator(
     private fun handleMigration(encrypt: Boolean) : Boolean {
         return migrateCachedGuidsKeyPref(encrypt) &&
         migrateDBProfile(encrypt) &&
-        migrateInAppData(encrypt)
+        migrateInAppData()
     }
 
     /**
@@ -175,9 +175,7 @@ internal data class CryptMigrator(
         return migrationSuccessful
     }
 
-    private fun migrateInAppData(
-        encrypt: Boolean
-    ): Boolean {
+    private fun migrateInAppData(): Boolean {
 
         config.logger.verbose(
             config.accountId,
@@ -203,7 +201,7 @@ internal data class CryptMigrator(
 
                 // If data exists, attempt to encrypt or decrypt
                 if (!data.isNullOrEmpty()) {
-                    val migrationResult = performMigrationStep(encrypt, data)
+                    val migrationResult = performMigrationStep(true, data)
                     migrationStatus = migrationStatus && migrationResult.migrationSuccessful
 
                     // Save the processed data back to SharedPreferences
