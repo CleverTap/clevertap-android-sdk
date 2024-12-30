@@ -19,7 +19,7 @@ class CryptHandler constructor(
     // Cache to hold instances of Crypt for different encryption algorithms.
     private val cryptInstances: MutableMap<EncryptionAlgorithm, Crypt> = mutableMapOf()
 
-    lateinit var currentEncryptionState: MutableMap<String, EncryptionDataState>
+    private var migrationFailureCount: Int = 0
 
     /**
      * Supported encryption algorithms.
@@ -27,19 +27,6 @@ class CryptHandler constructor(
     enum class EncryptionAlgorithm(val value: Int) {
         AES(0),
         AES_GCM(1);
-    }
-
-    /** Enum for encryption states */
-    enum class EncryptionDataState(val state: Int) {
-        ENCRYPTED_AES(0b00),
-        PLAIN_TEXT(0b01),
-        ENCRYPTED_AES_GCM(0b11);
-
-        companion object {
-            fun fromState(stateValue: Int): EncryptionDataState {
-                return values().first { it.state == stateValue }
-            }
-        }
     }
 
     /**
@@ -142,26 +129,25 @@ class CryptHandler constructor(
      * Updates the encryption state in case of failure while processing new data.
      *
      * @param context - The application context.
-     * @param failedKey - The key for which encryption failed.
+     * @param migrationSuccessful - Indicates if migration was successful
      */
-    fun updateEncryptionStateOnFailure(
+    fun updateMigrationFailureCount(
         context: Context,
-        failedKey: String,
+        migrationSuccessful: Boolean
     ) {
-        val currentState = currentEncryptionState[failedKey]
-        val updatedState = (0b10 xor currentState!!.state) and currentState.state
-
-        currentEncryptionState[failedKey] = EncryptionDataState.fromState(updatedState)
+        if(!migrationSuccessful)
+            migrationFailureCount += 1
+        else
+            migrationFailureCount = 0
         Logger.v(
             accountID,
-            "Updating encryption flag status after error for $failedKey to $updatedState"
+            "Updating migrationFailureCount to $migrationFailureCount"
         )
-        val serializedMap = currentEncryptionState.entries.joinToString(",") { "${it.key}:${it.value}" }
 
-        StorageHelper.putString(
+        StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(accountID, "currentEncryptionState"),
-            serializedMap
+            StorageHelper.storageKeyWithSuffix(accountID, "encryptionMigrationFailureCount"),
+            migrationFailureCount
         )
     }
 
