@@ -131,10 +131,12 @@ class CryptHandler(
         context: Context,
         migrationSuccessful: Boolean
     ) {
-        if(!migrationSuccessful)
-            migrationFailureCount += 1
-        else
-            migrationFailureCount = 0
+        migrationFailureCount = if (migrationSuccessful) {
+            0
+        } else {
+            migrationFailureCount + 1
+        }
+
         Logger.v(
             accountID,
             "Updating migrationFailureCount to $migrationFailureCount"

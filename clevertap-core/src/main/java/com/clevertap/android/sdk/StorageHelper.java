@@ -102,6 +102,11 @@ public final class StorageHelper {
     }
 
     //Preferences
+
+    @Deprecated
+    /*
+      Use the method storageKeyWithSuffix(String accountID, String key) instead.")
+     */
     public static String storageKeyWithSuffix(@NonNull CleverTapInstanceConfig config,@NonNull String key) {
         return key + ":" + config.getAccountId();
     }

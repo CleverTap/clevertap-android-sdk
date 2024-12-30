@@ -3,13 +3,17 @@ package com.clevertap.android.sdk.cryption
 import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
+import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_MIGRATION
+import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
+import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.piiDBKeys
 import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.utils.CTJsonConverter
+import com.clevertap.android.sdk.utils.getStringOrNull
 import org.json.JSONObject
 import java.io.File
 
@@ -22,33 +26,36 @@ internal data class CryptMigrator(
 
     companion object {
         private const val MIGRATION_FAILURE_COUNT_KEY = "encryptionMigrationFailureCount"
+        private const val UNKNOWN_LEVEL = -1
+        private const val MIGRATION_NOT_NEEDED = 0
+        private const val MIGRATION_NEEDED = 1
     }
 
     fun migrateEncryption() {
         val configEncryptionLevel = config.encryptionLevel
         val storedEncryptionLevel = StorageHelper.getInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_LEVEL),
-            -1
+            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_ENCRYPTION_LEVEL),
+            UNKNOWN_LEVEL
         )
 
         val migrationFailureCount = when {
-            storedEncryptionLevel == -1 && configEncryptionLevel == 0 -> {
+            storedEncryptionLevel == UNKNOWN_LEVEL && configEncryptionLevel == EncryptionLevel.NONE.intValue() -> {
                 cryptHandler.updateMigrationFailureCount(context, false)
-                0
+                MIGRATION_NOT_NEEDED
             }
 
-            storedEncryptionLevel != configEncryptionLevel -> 1
+            storedEncryptionLevel != configEncryptionLevel -> MIGRATION_NEEDED
             else -> StorageHelper.getInt(
                 context,
-                StorageHelper.storageKeyWithSuffix(config, MIGRATION_FAILURE_COUNT_KEY),
-                1
+                StorageHelper.storageKeyWithSuffix(config.accountId, MIGRATION_FAILURE_COUNT_KEY),
+                MIGRATION_NEEDED
             )
         }
 
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config, KEY_ENCRYPTION_LEVEL),
+            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_ENCRYPTION_LEVEL),
             configEncryptionLevel
         )
 
@@ -65,7 +72,7 @@ internal data class CryptMigrator(
             config.accountId,
             "Starting migration from encryption level $storedEncryptionLevel to $configEncryptionLevel"
         )
-        val migrationSuccess = handleAllMigrations(configEncryptionLevel == 1)
+        val migrationSuccess = handleAllMigrations(configEncryptionLevel == EncryptionLevel.MEDIUM.intValue())
         cryptHandler.updateMigrationFailureCount(context, migrationSuccess)
     }
 
@@ -109,7 +116,7 @@ internal data class CryptMigrator(
             if (cachedGuidJsonObj.length() > 0) {
                 StorageHelper.putString(
                     context,
-                    StorageHelper.storageKeyWithSuffix(config, CACHED_GUIDS_KEY),
+                    StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
                     newGuidJsonObj.toString()
                 )
                 config.logger.verbose(
@@ -145,7 +152,7 @@ internal data class CryptMigrator(
         for ((deviceID, profile) in profiles) {
             try {
                 piiDBKeys.forEach { piiKey ->
-                    profile.optString(piiKey).let { value ->
+                    profile.getStringOrNull(piiKey)?.let { value ->
                         val migrationResult =
                             performMigrationStep(encrypt, value)
                         migrationSuccessful =
@@ -180,13 +187,14 @@ internal data class CryptMigrator(
 
         // Fetch all SharedPreferences files starting with "inApp" and ending with the accountId
         val prefsFiles = sharedPrefsDir.listFiles { _, name ->
-            name.startsWith("inApp") && name.endsWith("${config.accountId}.xml")
+            // Check StoreProvider.constructStorePreferenceName() to check how the name is constructed
+            name.startsWith(INAPP_KEY) && name.endsWith("${config.accountId}.xml")
         }
 
         prefsFiles?.forEach { file ->
             val prefName = file.nameWithoutExtension
             val prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
-            val keysToProcess = listOf("inapp_notifs_cs", "inapp_notifs_ss")
+            val keysToProcess = listOf(PREFS_INAPP_KEY_CS, PREFS_INAPP_KEY_SS)
 
             keysToProcess.forEach { key ->
                 prefs.getString(key, null)?.let { data ->
@@ -224,7 +232,6 @@ internal data class CryptMigrator(
             EncryptionState.PLAIN_TEXT
         }
     }
-
 
     private fun getCurrentEncryptionState(data: String): EncryptionState {
         return when {
