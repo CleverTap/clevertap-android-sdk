@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.cryption
 
+import android.content.Context
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -7,14 +8,18 @@ import android.util.Base64
 import com.clevertap.android.sdk.Constants.AES_GCM_PREFIX
 import com.clevertap.android.sdk.Constants.AES_GCM_SUFFIX
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.StorageHelper
 import java.nio.charset.StandardCharsets
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
-class AESGCMCrypt : Crypt() {
+private const val ENCRYPTION_KEY = "EncryptionKey"
+
+class AESGCMCrypt(private val context: Context) : Crypt() {
 
     override fun encryptInternal(plainText: String): String? {
         return performCryptOperation(
@@ -98,13 +103,13 @@ class AESGCMCrypt : Crypt() {
                 val keyStore = KeyStore.getInstance("AndroidKeyStore")
                 keyStore.load(null)
 
-                if (keyStore.containsAlias("EncryptionKey")) {
-                    keyStore.getKey("EncryptionKey", null) as SecretKey
+                if (keyStore.containsAlias(ENCRYPTION_KEY)) {
+                    keyStore.getKey(ENCRYPTION_KEY, null) as SecretKey
                 } else {
                     val keyGenerator =
                         KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
                     val keyGenParameterSpec = KeyGenParameterSpec.Builder(
-                        "EncryptionKey",
+                        ENCRYPTION_KEY,
                         KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
                     )
                         .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
@@ -119,7 +124,23 @@ class AESGCMCrypt : Crypt() {
             }
         } else {
             Logger.v("KeyStore is not supported on API levels below 23")
-            null
+
+            val encodedKey = StorageHelper.getString(context, ENCRYPTION_KEY, null)
+            if (encodedKey != null) {
+                // If the key exists, decode it and return as SecretKey
+                val decodedKey = Base64.decode(encodedKey, Base64.NO_WRAP)
+                SecretKeySpec(decodedKey, "AES")
+            } else {
+                // If key doesn't exist, generate a new one and store it
+                val keyGenerator = KeyGenerator.getInstance("AES")
+                keyGenerator.init(256) // 256-bit AES key
+                val secretKey = keyGenerator.generateKey()
+
+                // Store the key in SharedPreferences
+                val encodedNewKey = Base64.encodeToString(secretKey.encoded, Base64.NO_WRAP)
+                StorageHelper.putString(context, ENCRYPTION_KEY, encodedNewKey)
+                secretKey
+            }
         }
     }
 

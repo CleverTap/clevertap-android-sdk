@@ -17,7 +17,8 @@ import com.clevertap.android.sdk.StorageHelper
  */
 class CryptHandler(
     private val encryptionLevel: EncryptionLevel,
-    private val accountID: String
+    private val accountID: String,
+    private val context: Context
 ) {
 
     // Cache to hold instances of Crypt for different encryption algorithms.
@@ -118,7 +119,7 @@ class CryptHandler(
      * @return The Crypt instance for the specified algorithm.
      */
     private fun getCryptInstance(algorithm: EncryptionAlgorithm): Crypt {
-        return cryptInstances.getOrPut(algorithm) { CryptFactory.getCrypt(algorithm, accountID) }
+        return cryptInstances.getOrPut(algorithm) { CryptFactory.getCrypt(algorithm, accountID, context) }
     }
 
     /**
