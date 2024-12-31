@@ -88,7 +88,8 @@ class CleverTapFactory {
         // todo - check if app is upgraded and launched from push notif
         CryptHandler cryptHandler = new CryptHandler(
                 EncryptionLevel.fromInt(config.getEncryptionLevel()),
-                config.getAccountId()
+                config.getAccountId(),
+                context
         );
         coreState.setCryptHandler(cryptHandler);
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
