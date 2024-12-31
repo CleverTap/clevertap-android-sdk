@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.StorageHelper
  * @param encryptionLevel - The encryption level to use.
  * @param accountID - The account ID for which the cryptographic operations are performed.
  */
-class CryptHandler(
+class CryptHandler constructor(
     private val encryptionLevel: EncryptionLevel,
     private val accountID: String,
     private val context: Context

@@ -5,11 +5,9 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
 import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
-import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_MIGRATION
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.piiDBKeys
-import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.utils.CTJsonConverter
@@ -241,64 +239,4 @@ internal data class CryptMigrator(
         }
     }
 
-    data class MigrationResult(val data: String, val migrationSuccessful: Boolean)
-
-    /**
-     * Enum representing encryption states and their transition logic.
-     */
-    enum class EncryptionState {
-        ENCRYPTED_AES {
-            override fun transitionTo(
-                targetState: EncryptionState,
-                data: String,
-                cryptHandler: CryptHandler
-            ): MigrationResult {
-                val decrypted = cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES)
-                return when (targetState) {
-                    ENCRYPTED_AES_GCM -> {
-                        val encrypted = decrypted?.let {
-                            cryptHandler.encrypt(it, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
-                        }
-                        MigrationResult(encrypted ?: decrypted ?: data, encrypted != null)
-                    }
-                    PLAIN_TEXT -> MigrationResult(decrypted ?: data, decrypted != null)
-                    else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES to $targetState")
-                }
-            }
-        },
-        ENCRYPTED_AES_GCM {
-            override fun transitionTo(
-                targetState: EncryptionState,
-                data: String,
-                cryptHandler: CryptHandler
-            ): MigrationResult {
-                val decrypted = cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
-                return when (targetState) {
-                    PLAIN_TEXT -> MigrationResult(decrypted ?: data, decrypted != null)
-                    else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES_GCM to $targetState")
-                }
-            }
-        },
-        PLAIN_TEXT {
-            override fun transitionTo(
-                targetState: EncryptionState,
-                data: String,
-                cryptHandler: CryptHandler
-            ): MigrationResult {
-                return when (targetState) {
-                    ENCRYPTED_AES_GCM -> {
-                        val encrypted = cryptHandler.encrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES_GCM)
-                        MigrationResult(encrypted ?: data, encrypted != null)
-                    }
-                    else -> throw IllegalArgumentException("Invalid transition from PLAIN_TEXT to $targetState")
-                }
-            }
-        };
-
-        abstract fun transitionTo(
-            targetState: EncryptionState,
-            data: String,
-            cryptHandler: CryptHandler
-        ): MigrationResult
-    }
 }
