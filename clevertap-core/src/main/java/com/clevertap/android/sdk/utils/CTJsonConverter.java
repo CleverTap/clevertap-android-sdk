@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 @RestrictTo(Scope.LIBRARY)
 public class CTJsonConverter {
 
+    @NonNull
     public static JSONObject toJsonObject(String json, Logger logger, String accountId) {
         JSONObject cache = null;
         if (json != null) {

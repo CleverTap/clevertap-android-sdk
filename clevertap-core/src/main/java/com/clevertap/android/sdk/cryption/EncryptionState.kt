@@ -12,21 +12,29 @@ internal enum class EncryptionState {
             data: String,
             cryptHandler: CryptHandler
         ): MigrationResult {
-            val decrypted = cryptHandler.decrypt(data,
-                Constants.KEY_ENCRYPTION_MIGRATION,
-                CryptHandler.EncryptionAlgorithm.AES
+            val decrypted = cryptHandler.decrypt(
+                cipherText = data,
+                key = Constants.KEY_ENCRYPTION_MIGRATION,
+                algorithm = CryptHandler.EncryptionAlgorithm.AES
             )
             return when (targetState) {
                 ENCRYPTED_AES_GCM -> {
                     val encrypted = decrypted?.let {
-                        cryptHandler.encrypt(it,
-                            Constants.KEY_ENCRYPTION_MIGRATION,
-                            CryptHandler.EncryptionAlgorithm.AES_GCM
+                        cryptHandler.encrypt(
+                            plainText = it,
+                            key = Constants.KEY_ENCRYPTION_MIGRATION,
+                            algorithm = CryptHandler.EncryptionAlgorithm.AES_GCM
                         )
                     }
-                    MigrationResult(encrypted ?: decrypted ?: data, encrypted != null)
+                    MigrationResult(
+                        data = encrypted ?: decrypted ?: data,
+                        migrationSuccessful = encrypted != null
+                    )
                 }
-                PLAIN_TEXT -> MigrationResult(decrypted ?: data, decrypted != null)
+                PLAIN_TEXT -> MigrationResult(
+                    data = decrypted ?: data,
+                    migrationSuccessful = decrypted != null
+                )
                 else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES to $targetState")
             }
         }
@@ -37,12 +45,16 @@ internal enum class EncryptionState {
             data: String,
             cryptHandler: CryptHandler
         ): MigrationResult {
-            val decrypted = cryptHandler.decrypt(data,
-                Constants.KEY_ENCRYPTION_MIGRATION,
-                CryptHandler.EncryptionAlgorithm.AES_GCM
+            val decrypted = cryptHandler.decrypt(
+                cipherText = data,
+                key = Constants.KEY_ENCRYPTION_MIGRATION,
+                algorithm = CryptHandler.EncryptionAlgorithm.AES_GCM
             )
             return when (targetState) {
-                PLAIN_TEXT -> MigrationResult(decrypted ?: data, decrypted != null)
+                PLAIN_TEXT -> MigrationResult(
+                    data = decrypted ?: data,
+                    migrationSuccessful = decrypted != null
+                )
                 else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES_GCM to $targetState")
             }
         }
@@ -55,11 +67,15 @@ internal enum class EncryptionState {
         ): MigrationResult {
             return when (targetState) {
                 ENCRYPTED_AES_GCM -> {
-                    val encrypted = cryptHandler.encrypt(data,
-                        Constants.KEY_ENCRYPTION_MIGRATION,
-                        CryptHandler.EncryptionAlgorithm.AES_GCM
+                    val encrypted = cryptHandler.encrypt(
+                        plainText = data,
+                        key = Constants.KEY_ENCRYPTION_MIGRATION,
+                        algorithm = CryptHandler.EncryptionAlgorithm.AES_GCM
                     )
-                    MigrationResult(encrypted ?: data, encrypted != null)
+                    MigrationResult(
+                        data = encrypted ?: data,
+                        migrationSuccessful = encrypted != null
+                    )
                 }
                 else -> throw IllegalArgumentException("Invalid transition from PLAIN_TEXT to $targetState")
             }

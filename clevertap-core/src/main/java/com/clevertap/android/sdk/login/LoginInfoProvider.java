@@ -63,7 +63,7 @@ public class LoginInfoProvider {
         if (encryptedIdentifier == null) {
             // If encrypted is null then fallback to plain text
             encryptedIdentifier = identifier;
-            cryptHandler.updateMigrationFailureCount(context, false);
+            cryptHandler.updateMigrationFailureCount(false);
         }
         String cacheKey = key + "_" + encryptedIdentifier;
         JSONObject cache = getCachedGUIDs();
