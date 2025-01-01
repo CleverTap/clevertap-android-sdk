@@ -75,6 +75,10 @@ class CryptHandler(
         key: String,
         algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
     ): String? {
+        if (!isTextEncrypted(cipherText)) {
+            return cipherText
+        }
+
         val crypt = getCryptInstance(algorithm)
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM -> {
