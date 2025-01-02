@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueData;
 import com.clevertap.android.sdk.events.EventGroup;
@@ -95,6 +96,8 @@ public class NetworkManager {
 
     private int minDelayFrequency = 0;
 
+    private final CryptHandler cryptHandler;
+
     private final List<NetworkHeadersListener> mNetworkHeadersListeners = new ArrayList<>();
 
     public void addNetworkHeadersListener(NetworkHeadersListener listener) {
@@ -134,7 +137,8 @@ public class NetworkManager {
             CTLockManager ctLockManager,
             Validator validator,
             InAppResponse inAppResponse,
-            final CtApiWrapper ctApiWrapper
+            final CtApiWrapper ctApiWrapper,
+            CryptHandler cryptHandler
     ) {
         this.context = context;
         this.config = config;
@@ -148,6 +152,7 @@ public class NetworkManager {
         this.controllerManager = controllerManager;
         databaseManager = baseDatabaseManager;
         this.ctApiWrapper = ctApiWrapper;
+        this.cryptHandler = cryptHandler;
 
         cleverTapResponses.add(inAppResponse);
         cleverTapResponses.add(new MetadataResponse(config, deviceInfo, this));
@@ -395,7 +400,7 @@ public class NetworkManager {
             // Add ct_pi (identities)
             header.put("ct_pi", IdentityRepoFactory
                     .getRepo(this.context, config, deviceInfo,
-                            validationResultStack).getIdentitySet().toString());
+                            validationResultStack, cryptHandler).getIdentitySet().toString());
 
             // Add ddnd (Do Not Disturb)
             header.put("ddnd",

@@ -30,14 +30,8 @@ public class LoginInfoProvider {
 
     private final DeviceInfo deviceInfo;
 
-    private CryptHandler cryptHandler;
+    private final CryptHandler cryptHandler;
 
-    public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
-        this.context = context;
-        this.config = config;
-        this.deviceInfo = deviceInfo;
-        // TODO - cryptHandler is needed in this flow as well, remove overloaded constructor and pass the dependency
-    }
     public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo, CryptHandler cryptHandler) {
         this.context = context;
         this.config = config;

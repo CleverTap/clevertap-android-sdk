@@ -99,7 +99,7 @@ class CleverTapFactory {
             return null;
         });
 
-        DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
+        DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData, cryptHandler);
         coreState.setDeviceInfo(deviceInfo);
         deviceInfo.onInitDeviceInfo(cleverTapID);
 
@@ -228,7 +228,8 @@ class CleverTapFactory {
                 ctLockManager,
                 validator,
                 inAppResponse,
-                ctApiWrapper
+                ctApiWrapper,
+                cryptHandler
         );
         coreState.setNetworkManager(networkManager);
 
