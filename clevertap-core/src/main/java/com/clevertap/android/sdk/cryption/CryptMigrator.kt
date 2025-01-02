@@ -5,7 +5,6 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
 import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
-import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_MIGRATION
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.piiDBKeys
@@ -291,7 +290,6 @@ internal data class CryptMigrator(
                         val encrypted = decrypted?.let {
                             cryptHandler.encrypt(
                                 it,
-                                KEY_ENCRYPTION_MIGRATION,
                                 EncryptionAlgorithm.AES_GCM
                             )
                         }
@@ -329,7 +327,6 @@ internal data class CryptMigrator(
                     ENCRYPTED_AES_GCM -> {
                         val encrypted = cryptHandler.encrypt(
                             data,
-                            KEY_ENCRYPTION_MIGRATION,
                             EncryptionAlgorithm.AES_GCM
                         )
                         MigrationResult(encrypted ?: data, encrypted != null)

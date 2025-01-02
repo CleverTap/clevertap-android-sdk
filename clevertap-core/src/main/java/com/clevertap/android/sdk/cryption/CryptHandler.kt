@@ -100,8 +100,8 @@ class CryptHandler(
      * @param plainText - The text to encrypt.
      * @return The encrypted text, or null if encryption fails.
      */
-    fun encrypt(plainText: String): String? {
-        val crypt = getCryptInstance(EncryptionAlgorithm.AES_GCM)
+    fun encrypt(plainText: String, algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM): String? {
+        val crypt = getCryptInstance(algorithm)
         return crypt.encryptInternal(plainText)
     }
 
