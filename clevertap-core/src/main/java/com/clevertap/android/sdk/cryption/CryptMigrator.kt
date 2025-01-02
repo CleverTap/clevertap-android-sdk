@@ -285,7 +285,7 @@ internal data class CryptMigrator(
                 data: String,
                 cryptHandler: CryptHandler
             ): MigrationResult {
-                val decrypted = cryptHandler.decrypt(data, KEY_ENCRYPTION_MIGRATION, EncryptionAlgorithm.AES)
+                val decrypted = cryptHandler.decrypt(data, EncryptionAlgorithm.AES)
                 return when (targetState) {
                     ENCRYPTED_AES_GCM -> {
                         val encrypted = decrypted?.let {
@@ -311,7 +311,6 @@ internal data class CryptMigrator(
             ): MigrationResult {
                 val decrypted = cryptHandler.decrypt(
                     data,
-                    KEY_ENCRYPTION_MIGRATION,
                     EncryptionAlgorithm.AES_GCM
                 )
                 return when (targetState) {
