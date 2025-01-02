@@ -27,11 +27,7 @@ internal data class CryptMigrator(
     fun migrateEncryption() {
         val storedEncryptionLevel = cryptRepository.storedEncryptionLevel()
 
-        val storedFailureCount = StorageHelper.getInt(
-            context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, MIGRATION_FAILURE_COUNT_KEY),
-            MIGRATION_FIRST_UPGRADE
-        )
+        val storedFailureCount = cryptRepository.migrationFailureCount()
 
         val migrationFailureCount = when {
             // Fresh install
@@ -88,28 +84,20 @@ internal data class CryptMigrator(
             logPrefix,
             "Migrating encryption level for cachedGUIDsKey prefs"
         )
-
-        var cgkString = dataMigrationRepository.cachedGuidJsonObject()
-
-        if (firstUpgrade) {
-            cgkString =
-                migrateFormatForCachedGuidsKeyPref(cgkString)
+        val cgkString: String = if (firstUpgrade) {
+            // translate from old format to new format, in new format we encrypt entire string
+            migrateFormatForCachedGuidsKeyPref().toString()
+        } else {
+            dataMigrationRepository.cachedGuidString() ?: return true
         }
 
-        var migrationSuccessful = true
-
         val migrationResult = performMigrationStep(encrypt, cgkString)
-        migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
-        StorageHelper.putString(
-            context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
-            migrationResult.data
-        )
-        config.logger.verbose(
-            config.accountId,
+        dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
+        logger.verbose(
+            logPrefix,
             "Cached GUIDs migrated successfully: [${cgkString}]"
         )
-        return migrationSuccessful
+        return migrationResult.migrationSuccessful
     }
 
 
@@ -118,13 +106,10 @@ internal data class CryptMigrator(
      * The older format when encryption level is 1 was {Email_[]:__g... , Name_[]:__i...} -> Only the identifier was encrypted
      * The migrated format will encrypt the entire JSONObject and not just the identifier
      *
-     * @param cgkString - The string retrieved from the prefs that needs to be upgraded
      * Returns true if migration was successful and false otherwise
      */
-    private fun migrateFormatForCachedGuidsKeyPref(
-        cgkString: String,
-    ): String {
-        val cachedGuidJsonObj = CTJsonConverter.toJsonObject(cgkString, config.logger, config.accountId)
+    private fun migrateFormatForCachedGuidsKeyPref(): JSONObject {
+        val cachedGuidJsonObj = dataMigrationRepository.cachedGuidJsonObject()
         val migratedGuidJsonObj = JSONObject()
         try {
             val keysIterator = cachedGuidJsonObj.keys()
@@ -143,7 +128,7 @@ internal data class CryptMigrator(
                 "Error migrating format for cached GUIDs: Clearing and starting fresh $t"
             )
         }
-        return migratedGuidJsonObj.toString()
+        return migratedGuidJsonObj
     }
 
     /**

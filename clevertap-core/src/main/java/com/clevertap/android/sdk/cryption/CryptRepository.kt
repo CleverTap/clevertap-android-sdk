@@ -5,7 +5,7 @@ import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.MIGRATION_FAILURE_COUNT_KEY
-import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.MIGRATION_NEEDED
+import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.MIGRATION_FIRST_UPGRADE
 import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.UNKNOWN_LEVEL
 
 interface ICryptRepository {
@@ -31,7 +31,7 @@ class CryptRepository(
     override fun migrationFailureCount() = StorageHelper.getInt(
         context,
         StorageHelper.storageKeyWithSuffix(accountId, MIGRATION_FAILURE_COUNT_KEY),
-        MIGRATION_NEEDED
+        MIGRATION_FIRST_UPGRADE
     )
 
     override fun updateEncryptionLevel(configEncryptionLevel: Int) {

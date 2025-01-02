@@ -120,7 +120,7 @@ internal object CleverTapFactory {
             null
         }
 
-        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
+        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData, cryptHandler)
         coreState.deviceInfo = deviceInfo
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
@@ -275,7 +275,8 @@ internal object CleverTapFactory {
             ctLockManager,
             validator,
             inAppResponse,
-            ctApiWrapper
+            ctApiWrapper,
+            cryptHandler
         )
         coreState.networkManager = networkManager
 

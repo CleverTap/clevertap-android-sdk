@@ -13,7 +13,8 @@ import java.io.File
 
 interface IDataMigrationRepository {
     fun cachedGuidJsonObject(): JSONObject
-    fun saveCachedGuidJsonObject(newGuidJsonObj: JSONObject)
+    fun cachedGuidString(): String?
+    fun saveCachedGuidJson(json: String)
     fun userProfilesInAccount(): Map<String, JSONObject>
     fun saveUserProfile(deviceID: String, profile: JSONObject): Long
     fun inAppDataFiles(): List<SharedPreferences>
@@ -24,17 +25,21 @@ internal class DataMigrationRepository(
     private val config: CleverTapInstanceConfig,
     private val dbAdapter: DBAdapter
 ) : IDataMigrationRepository {
+
+    override fun cachedGuidString(): String? {
+        return StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)
+    }
     override fun cachedGuidJsonObject(): JSONObject {
-        val json = StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)
+        val json = cachedGuidString()
         val cachedGuidJsonObj = CTJsonConverter.toJsonObject(json, config.logger, config.accountId)
         return cachedGuidJsonObj
     }
 
-    override fun saveCachedGuidJsonObject(newGuidJsonObj: JSONObject) {
+    override fun saveCachedGuidJson(json: String) {
         StorageHelper.putString(
             context,
             StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
-            newGuidJsonObj.toString()
+            json
         )
     }
 
