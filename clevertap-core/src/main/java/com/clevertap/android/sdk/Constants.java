@@ -135,6 +135,7 @@ public interface Constants {
     String KEY_I = "comms_i";
     String KEY_J = "comms_j";
     String CACHED_GUIDS_KEY = "cachedGUIDsKey";
+    String CACHED_GUIDS_LENGTH_KEY = "cachedGUIDsLengthKey";
     String CACHED_VARIABLES_KEY = "variablesKey";
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";

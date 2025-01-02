@@ -28,9 +28,9 @@ public class LoginInfoProvider {
 
     private final Context context;
 
-    private final DeviceInfo deviceInfo;
+    private DeviceInfo deviceInfo;
 
-    private final CryptHandler cryptHandler;
+    private CryptHandler cryptHandler;
 
     public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo, CryptHandler cryptHandler) {
         this.context = context;
@@ -39,6 +39,11 @@ public class LoginInfoProvider {
         this.cryptHandler = cryptHandler;
     }
 
+    public LoginInfoProvider(Context context, CleverTapInstanceConfig config) {
+        // todo Check if this constructor is needed at all or is it better to have static methods
+        this.context = context;
+        this.config = config;
+    }
     //Profile
 
     /**
@@ -66,7 +71,7 @@ public class LoginInfoProvider {
                 encryptedCache = cache.toString();
                 cryptHandler.updateMigrationFailureCount(context, false);
             }
-            setCachedGUIDs(encryptedCache);
+            setCachedGUIDsAndLength(encryptedCache, cache.length());
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error caching guid: " + t);
         }
@@ -91,15 +96,10 @@ public class LoginInfoProvider {
                 String actualKeyInLowerCase = nextJSONObjKey.toLowerCase();
 
                 if (actualKeyInLowerCase.contains(key.toLowerCase()) &&
-                        cachedGuidJsonObj.getString(nextJSONObjKey).equals(guid)){
+                        cachedGuidJsonObj.getString(nextJSONObjKey).equals(guid)) {
 
                         cachedGuidJsonObj.remove(nextJSONObjKey);
-
-                        if (cachedGuidJsonObj.length() == 0){//Removes cachedGUIDs key from shared prefs if cachedGUIDs is empty
-                            removeCachedGuidFromSharedPrefs();
-                        }else {
-                            setCachedGUIDs(cachedGuidJsonObj.toString());
-                        }
+                        setCachedGUIDsAndLength(cachedGuidJsonObj.toString(), cachedGuidJsonObj.length());
                 }
             }
         } catch (Throwable t) {
@@ -108,8 +108,8 @@ public class LoginInfoProvider {
     }
 
     public boolean deviceIsMultiUser() {
-        JSONObject cachedGUIDs = getDecryptedCachedGUIDs();
-        boolean deviceIsMultiUser = cachedGUIDs.length() > 1;
+        int cgkLength = getCachedGuidsLength();
+        boolean deviceIsMultiUser = cgkLength > 1;
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "deviceIsMultiUser:[" + deviceIsMultiUser + "]");
         return deviceIsMultiUser;
@@ -118,7 +118,7 @@ public class LoginInfoProvider {
     /**
      * @return - All pairs of cached <Identity_Value, Guid> for this account in String format.
      */
-    public String getCachedGUIDStringFromPrefs() {
+    private String getCachedGUIDStringFromPrefs() {
         String json = StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "getCachedGUIDs:[" + json + "]");
@@ -142,23 +142,39 @@ public class LoginInfoProvider {
      *
      * @param cachedGUIDs - jsonObject of the Pairs
      */
-    public void setCachedGUIDs(String cachedGUIDs) {
+    public void setCachedGUIDsAndLength(String cachedGUIDs, int cgkLength) {
         if (cachedGUIDs == null) {
             return;
         }
-        try {
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY),
-                    cachedGUIDs);
-            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                    "setCachedGUIDs:[" + cachedGUIDs + "]");
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t);
+
+        storeCachedGuidsLength(cgkLength);
+        if(cgkLength == 0) {
+            removeCachedGuidFromSharedPrefs();
+            return;
         }
+
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_KEY),
+                cachedGUIDs);
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                "setCachedGUIDs:[" + cachedGUIDs + "]");
+    }
+
+    private void storeCachedGuidsLength(int length) {
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY), length);
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                "Storing size of cachedGUIDs: " + length);
+    }
+
+    private int getCachedGuidsLength() {
+        int cgkLength = StorageHelper.getInt(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY), 0);
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                "Retrieved size of cachedGUIDs: " + cgkLength);
+        return cgkLength;
     }
 
     public void removeCachedGuidFromSharedPrefs() {
         try {
-            StorageHelper.remove(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY));
+            StorageHelper.remove(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_KEY));
             config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "removeCachedGUIDs:[]");
         } catch (Throwable t) {
@@ -200,8 +216,8 @@ public class LoginInfoProvider {
     }
 
     public boolean isAnonymousDevice() {
-        JSONObject cachedGUIDs = getDecryptedCachedGUIDs();
-        boolean isAnonymousDevice = cachedGUIDs.length() <= 0;
+        int cgkLength = getCachedGuidsLength();
+        boolean isAnonymousDevice = cgkLength == 0;
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "isAnonymousDevice:[" + isAnonymousDevice + "]");
         return isAnonymousDevice;
@@ -213,9 +229,8 @@ public class LoginInfoProvider {
      * account.
      */
     public boolean isLegacyProfileLoggedIn() {
-        JSONObject jsonObject = getDecryptedCachedGUIDs();
-        boolean isLoggedIn = jsonObject != null && jsonObject.length() > 0 && TextUtils
-                .isEmpty(getCachedIdentityKeysForAccount());
+        int cgkLength = getCachedGuidsLength();
+        boolean isLoggedIn = cgkLength > 0 && TextUtils.isEmpty(getCachedIdentityKeysForAccount());
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "isLegacyProfileLoggedIn:" + isLoggedIn);
         return isLoggedIn;
     }

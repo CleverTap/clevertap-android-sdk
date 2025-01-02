@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.cryption
 import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
+import com.clevertap.android.sdk.Constants.CACHED_GUIDS_LENGTH_KEY
 import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
@@ -159,6 +160,11 @@ internal data class CryptMigrator(
                 "Error migrating format for cached GUIDs: Clearing and starting fresh $t"
             )
         }
+        StorageHelper.putInt(
+            context,
+            StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_LENGTH_KEY),
+            migratedGuidJsonObj.length()
+        )
         return migratedGuidJsonObj.toString()
     }
 
