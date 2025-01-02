@@ -21,87 +21,129 @@ internal data class CryptMigrator(
         const val UNKNOWN_LEVEL = -1
         const val MIGRATION_NOT_NEEDED = 0
         const val MIGRATION_NEEDED = 1
+        const val MIGRATION_FIRST_UPGRADE = -1
     }
 
     fun migrateEncryption() {
         val storedEncryptionLevel = cryptRepository.storedEncryptionLevel()
 
+        val storedFailureCount = StorageHelper.getInt(
+            context,
+            StorageHelper.storageKeyWithSuffix(config.accountId, MIGRATION_FAILURE_COUNT_KEY),
+            MIGRATION_FIRST_UPGRADE
+        )
+
         val migrationFailureCount = when {
+            // Fresh install
             storedEncryptionLevel == UNKNOWN_LEVEL && configEncryptionLevel == EncryptionLevel.NONE.intValue() -> {
                 cryptRepository.updateMigrationFailureCount(false)
                 MIGRATION_NOT_NEEDED
             }
-
-            storedEncryptionLevel != configEncryptionLevel -> MIGRATION_NEEDED
-            else -> cryptRepository.migrationFailureCount()
+            // Encryption level changed and upgrade to v2 already complete
+            storedEncryptionLevel != configEncryptionLevel && storedFailureCount != -1 -> MIGRATION_NEEDED
+            else -> storedFailureCount
         }
 
         cryptRepository.updateEncryptionLevel(configEncryptionLevel)
 
-        if (migrationFailureCount == 0) {
+        if (migrationFailureCount == MIGRATION_NOT_NEEDED) {
             logger.verbose(
                 logPrefix,
-                "Migration not required: config-encryption-level $configEncryptionLevel, stored-encryption-level $storedEncryptionLevel"
+                "Migration not required: config-encryption-level $configEncryptionLevel, " +
+                        "stored-encryption-level $storedEncryptionLevel"
             )
             return
         }
 
         logger.verbose(
             logPrefix,
-            "Starting migration from encryption level $storedEncryptionLevel to $configEncryptionLevel"
+            "Starting migration from encryption level $storedEncryptionLevel to $configEncryptionLevel " +
+                    "with migrationFailureCount $migrationFailureCount"
         )
-        val migrationSuccess = handleAllMigrations(configEncryptionLevel == EncryptionLevel.MEDIUM.intValue())
+        val migrationSuccess = handleAllMigrations(
+            configEncryptionLevel == EncryptionLevel.MEDIUM.intValue(),
+            migrationFailureCount == -1
+        )
         cryptRepository.updateMigrationFailureCount(migrationSuccess)
     }
 
-    private fun handleAllMigrations(encrypt: Boolean): Boolean {
-        return migrateCachedGuidsKeyPref(encrypt) &&
+    private fun handleAllMigrations(encrypt: Boolean, firstUpgrade: Boolean): Boolean {
+        return migrateCachedGuidsKeyPref(encrypt, firstUpgrade) &&
                 migrateDBProfile(encrypt) &&
                 migrateInAppData()
     }
 
     /**
      * This method migrates the encryption level of the value under cachedGUIDsKey stored in the shared preference file
-     * Only the value of the identifier(eg: johndoe@gmail.com) is encrypted/decrypted for this key throughout the sdk
      *
      * @param encrypt - Flag to indicate the task to be either encryption or decryption
+     * @param firstUpgrade - Flag to indicate whether this is the first upgrade to v2
      * Returns true if migration was successful and false otherwise
      */
     private fun migrateCachedGuidsKeyPref(
-        encrypt: Boolean
+        encrypt: Boolean,
+        firstUpgrade: Boolean,
     ): Boolean {
         logger.verbose(
             logPrefix,
             "Migrating encryption level for cachedGUIDsKey prefs"
         )
 
-        val cachedGuidJsonObj = dataMigrationRepository.cachedGuidJsonObject()
-        val newGuidJsonObj = JSONObject()
+        var cgkString = dataMigrationRepository.cachedGuidJsonObject()
+
+        if (firstUpgrade) {
+            cgkString =
+                migrateFormatForCachedGuidsKeyPref(cgkString)
+        }
+
         var migrationSuccessful = true
 
+        val migrationResult = performMigrationStep(encrypt, cgkString)
+        migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
+        StorageHelper.putString(
+            context,
+            StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
+            migrationResult.data
+        )
+        config.logger.verbose(
+            config.accountId,
+            "Cached GUIDs migrated successfully: [${cgkString}]"
+        )
+        return migrationSuccessful
+    }
+
+
+    /**
+     * This method migrates the format of cachedGuidsKey
+     * The older format when encryption level is 1 was {Email_[]:__g... , Name_[]:__i...} -> Only the identifier was encrypted
+     * The migrated format will encrypt the entire JSONObject and not just the identifier
+     *
+     * @param cgkString - The string retrieved from the prefs that needs to be upgraded
+     * Returns true if migration was successful and false otherwise
+     */
+    private fun migrateFormatForCachedGuidsKeyPref(
+        cgkString: String,
+    ): String {
+        val cachedGuidJsonObj = CTJsonConverter.toJsonObject(cgkString, config.logger, config.accountId)
+        val migratedGuidJsonObj = JSONObject()
         try {
             val keysIterator = cachedGuidJsonObj.keys()
             while (keysIterator.hasNext()) {
                 val nextKey = keysIterator.next()
                 val (key, identifier) = nextKey.split("_", limit = 2)
-                val migrationResult =
-                    performMigrationStep(encrypt, identifier)
-                migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
-                val cryptedKey = "${key}_${migrationResult.data}"
-                newGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextKey])
-            }
-            if (cachedGuidJsonObj.length() > 0) {
-                dataMigrationRepository.saveCachedGuidJsonObject(newGuidJsonObj)
-                logger.verbose(
-                    logPrefix,
-                    "Cached GUIDs migrated successfully: [${newGuidJsonObj}]"
-                )
+                val migrationResult = performMigrationStep(false, identifier)
+                if (migrationResult.migrationSuccessful) {
+                    val cryptedKey = "${key}_${migrationResult.data}"
+                    migratedGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextKey])
+                }
             }
         } catch (t: Throwable) {
-            logger.verbose(logPrefix, "Error migrating cached GUIDs: $t")
-            migrationSuccessful = false
+            logger.verbose(
+                logPrefix,
+                "Error migrating format for cached GUIDs: Clearing and starting fresh $t"
+            )
         }
-        return migrationSuccessful
+        return migratedGuidJsonObj.toString()
     }
 
     /**

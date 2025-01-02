@@ -7,6 +7,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.DeviceInfo;
+import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 
 /**
@@ -21,8 +22,8 @@ public class IdentityRepoFactory {
      * @return - repo provider
      */
     public static IdentityRepo getRepo(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo,
-            ValidationResultStack validationResultStack) {
-        final LoginInfoProvider infoProvider = new LoginInfoProvider(context, config, deviceInfo);
+                                       ValidationResultStack validationResultStack, CryptHandler cryptHandler) {
+        final LoginInfoProvider infoProvider = new LoginInfoProvider(context, config, deviceInfo, cryptHandler);
         final IdentityRepo repo;
         if (infoProvider.isLegacyProfileLoggedIn()) {
             repo = new LegacyIdentityRepo(
@@ -32,7 +33,7 @@ public class IdentityRepoFactory {
              * case 2: Not logged in & using default config
              * case 3: Not logged in & using multi instance config
              * -----------------------------------------------------*/
-            repo = new ConfigurableIdentityRepo(context, config, deviceInfo, validationResultStack);
+            repo = new ConfigurableIdentityRepo(config, infoProvider, validationResultStack);
         }
         config.log(LOG_TAG_ON_USER_LOGIN,
                 "Repo provider: " + repo.getClass().getSimpleName());

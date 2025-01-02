@@ -218,7 +218,7 @@ public class LoginController {
             // use the first one we find
             IdentityRepo iProfileHandler = IdentityRepoFactory
                     .getRepo(context, config, deviceInfo,
-                            validationResultStack);
+                            validationResultStack, cryptHandler);
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
                 boolean isProfileKey = iProfileHandler.hasIdentity(key);
@@ -228,7 +228,7 @@ public class LoginController {
                         if (value != null) {
                             identifier = value.toString();
                         }
-                        if (identifier != null && identifier.length() > 0) {
+                        if (identifier != null && !identifier.isEmpty()) {
                             haveIdentifier = true;
                             cachedGUID = loginInfoProvider.getGUIDForIdentifier(key, identifier);
                             if (cachedGUID != null) {
@@ -254,7 +254,7 @@ public class LoginController {
             // if identifier maps to current guid, push on current profile
             if (cachedGUID != null && cachedGUID.equals(currentGUID)) {
                 config.getLogger().debug(config.getAccountId(),
-                        "onUserLogin: " + profile.toString() + " maps to current device id " + currentGUID
+                        "onUserLogin: " + profile + " maps to current device id " + currentGUID
                                 + " pushing on current profile");
                 analyticsManager.pushProfile(profile);
                 return;
