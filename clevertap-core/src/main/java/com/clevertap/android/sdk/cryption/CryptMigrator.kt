@@ -106,7 +106,7 @@ internal data class CryptMigrator(
             "Migrating encryption level for cachedGUIDsKey prefs"
         )
 
-        var cgkString = StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)
+        var cgkString = StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)?:return true
 
         if (firstUpgrade) {
             cgkString =
@@ -124,7 +124,7 @@ internal data class CryptMigrator(
         )
         config.logger.verbose(
             config.accountId,
-            "Cached GUIDs migrated successfully: [${cgkString}]"
+            "Cached GUIDs migrated successfully"
         )
         return migrationSuccessful
     }

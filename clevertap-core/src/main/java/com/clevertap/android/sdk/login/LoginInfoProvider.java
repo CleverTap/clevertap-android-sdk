@@ -131,8 +131,10 @@ public class LoginInfoProvider {
      */
     public JSONObject getDecryptedCachedGUIDs() {
         String json = getCachedGUIDStringFromPrefs();
-        String decryptedJson = cryptHandler.decrypt(json, KEY_ENCRYPTION_CGK, CryptHandler.EncryptionAlgorithm.AES_GCM);
-        return CTJsonConverter.toJsonObject(decryptedJson, config.getLogger(), config.getAccountId());
+        if(json != null) {
+            json = cryptHandler.decrypt(json, KEY_ENCRYPTION_CGK, CryptHandler.EncryptionAlgorithm.AES_GCM);
+        }
+        return CTJsonConverter.toJsonObject(json, config.getLogger(), config.getAccountId());
     }
 
     /**
