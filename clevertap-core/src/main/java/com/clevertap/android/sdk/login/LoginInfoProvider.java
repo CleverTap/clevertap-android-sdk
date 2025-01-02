@@ -56,6 +56,9 @@ public class LoginInfoProvider {
         }
         String cacheKey = key + "_" + identifier;
         JSONObject cache = getDecryptedCachedGUIDs();
+        if(cache.optString(cacheKey).equals(guid)) {
+            return;
+        }
         try {
             cache.put(cacheKey, guid);
             String encryptedCache = cryptHandler.encrypt(cache.toString(), key);
