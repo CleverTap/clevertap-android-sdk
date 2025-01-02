@@ -36,7 +36,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
         }
     }
 
-    protected CTInAppWebView webView;
+    CTInAppWebView webView;
 
     @Override
     public void onAttach(@NonNull Context context) {
