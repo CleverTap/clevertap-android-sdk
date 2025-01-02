@@ -108,8 +108,9 @@ class CryptHandler(
      * @param cipherText - The text to decrypt.
      * @return The decrypted text, or null if decryption fails.
      */
-    fun decrypt(cipherText: String): String? {
-        val crypt = getCryptInstance(EncryptionAlgorithm.AES_GCM)
+    @JvmOverloads
+    fun decrypt(cipherText: String, algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM): String? {
+        val crypt = getCryptInstance(algorithm)
         return crypt.decryptInternal(cipherText)
     }
 

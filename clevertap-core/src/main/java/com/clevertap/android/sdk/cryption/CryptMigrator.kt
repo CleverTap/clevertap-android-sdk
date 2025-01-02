@@ -95,7 +95,7 @@ internal data class CryptMigrator(
         dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
         logger.verbose(
             logPrefix,
-            "Cached GUIDs migrated successfully: [${cgkString}]"
+            "Cached GUIDs migrated successfully"
         )
         return migrationResult.migrationSuccessful
     }
