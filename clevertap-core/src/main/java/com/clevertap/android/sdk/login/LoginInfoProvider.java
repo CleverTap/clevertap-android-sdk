@@ -133,9 +133,10 @@ public class LoginInfoProvider {
     }
 
     /**
-     * Caches the <Identity_Value, Guid> pairs for this account
+     * Caches or removes the <Identity_Value, Guid> pairs for this account
      *
      * @param cachedGUIDs - jsonObject of the Pairs
+     * @param cgkLength - length of the JSONObject
      */
     public void setCachedGUIDsAndLength(String cachedGUIDs, int cgkLength) {
         if (cachedGUIDs == null) {
