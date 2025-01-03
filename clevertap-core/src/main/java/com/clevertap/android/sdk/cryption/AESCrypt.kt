@@ -14,15 +14,13 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * This class implements the AES Cryption algorithm
  */
-class AESCrypt(val accountID: String) : Crypt() {
+class AESCrypt(accountID: String) : Crypt() {
     /**
      * This method returns the key-password to be used for encryption/decryption
      *
      * @return key-password
      */
-    private fun generateKeyPassword(): String {
-        return APP_ID_KEY_PREFIX + accountID + APP_ID_KEY_SUFFIX
-    }
+    private val keyPassword: String = APP_ID_KEY_PREFIX + accountID + APP_ID_KEY_SUFFIX
 
     /**
      * This method is used internally to encrypt the plain text
@@ -32,9 +30,9 @@ class AESCrypt(val accountID: String) : Crypt() {
      */
     override fun encryptInternal(plainText: String): String? {
         return performCryptOperation(
-            Cipher.ENCRYPT_MODE, generateKeyPassword(), plainText.toByteArray(
-                StandardCharsets.UTF_8
-            )
+            mode = Cipher.ENCRYPT_MODE,
+            password = keyPassword,
+            text = plainText.toByteArray(StandardCharsets.UTF_8)
         )?.let { encryptedBytes ->
             encryptedBytes.contentToString()
         }
@@ -49,7 +47,11 @@ class AESCrypt(val accountID: String) : Crypt() {
      */
     override fun decryptInternal(cipherText: String): String? {
         return parseCipherText(cipherText)?.let { bytes ->
-            performCryptOperation(Cipher.DECRYPT_MODE, generateKeyPassword(), bytes)
+            performCryptOperation(
+                mode = Cipher.DECRYPT_MODE,
+                password = keyPassword,
+                text = bytes
+            )
         }?.let { decryptedBytes ->
             String(decryptedBytes, StandardCharsets.UTF_8)
         }

@@ -182,7 +182,28 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
         }
     }
 
-    private data class AESGCMCryptResult(val iv: ByteArray, val encryptedBytes: ByteArray)
+    private data class AESGCMCryptResult(
+        val iv: ByteArray,
+        val encryptedBytes: ByteArray
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as AESGCMCryptResult
+
+            if (!iv.contentEquals(other.iv)) return false
+            if (!encryptedBytes.contentEquals(other.encryptedBytes)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = iv.contentHashCode()
+            result = 31 * result + encryptedBytes.contentHashCode()
+            return result
+        }
+    }
 
     // Utility extension functions for Base64 encoding/decoding
     private fun ByteArray.toBase64(): String = Base64.encodeToString(this, Base64.NO_WRAP)

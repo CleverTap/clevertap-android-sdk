@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.cryption
 
-import android.content.Context
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.AES_GCM_SUFFIX
 import com.clevertap.android.sdk.Constants.AES_GCM_PREFIX
@@ -13,15 +12,12 @@ import com.clevertap.android.sdk.Constants.AES_PREFIX
  * @param encryptionLevel - The encryption level to use.
  * @param accountID - The account ID for which the cryptographic operations are performed.
  */
-class CryptHandler(
+internal class CryptHandler constructor(
     private val encryptionLevel: EncryptionLevel,
     private val accountID: String,
-    private val context: Context,
-    private val repository: CryptRepository
+    private val repository: CryptRepository,
+    private val cryptFactory: CryptFactory
 ) {
-
-    // Cache to hold instances of Crypt for different encryption algorithms.
-    private val cryptInstances: MutableMap<EncryptionAlgorithm, Crypt> = mutableMapOf()
 
     /**
      * Supported encryption algorithms.
@@ -45,11 +41,12 @@ class CryptHandler(
         algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
     ): String? {
 
-        if(isTextEncrypted(plainText))
+        if (isTextEncrypted(plainText)) {
             return plainText
+        }
 
         // Use AES_GCM algorithm by default.
-        val crypt = getCryptInstance(algorithm)
+        val crypt = cryptFactory.getCryptInstance(algorithm)
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM -> {
                 // Encrypt only if the key is valid
@@ -57,7 +54,9 @@ class CryptHandler(
                     return crypt.encryptInternal(plainText)
                 }
             }
-            else -> return plainText
+            else -> {
+                return plainText
+            }
         }
         return plainText
     }
@@ -80,7 +79,7 @@ class CryptHandler(
             return cipherText
         }
 
-        val crypt = getCryptInstance(algorithm)
+        val crypt = cryptFactory.getCryptInstance(algorithm)
         when (encryptionLevel) {
             EncryptionLevel.MEDIUM -> {
                 // Decrypt only if the key is valid.
@@ -101,8 +100,11 @@ class CryptHandler(
      * @param plainText - The text to encrypt.
      * @return The encrypted text, or null if encryption fails.
      */
-    fun encrypt(plainText: String, algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM): String? {
-        val crypt = getCryptInstance(algorithm)
+    fun encrypt(
+        plainText: String,
+        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
+    ): String? {
+        val crypt = cryptFactory.getCryptInstance(algorithm)
         return crypt.encryptInternal(plainText)
     }
 
@@ -113,19 +115,12 @@ class CryptHandler(
      * @return The decrypted text, or null if decryption fails.
      */
     @JvmOverloads
-    fun decrypt(cipherText: String, algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM): String? {
-        val crypt = getCryptInstance(algorithm)
+    fun decrypt(
+        cipherText: String,
+        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
+    ): String? {
+        val crypt = cryptFactory.getCryptInstance(algorithm)
         return crypt.decryptInternal(cipherText)
-    }
-
-    /**
-     * Retrieves or creates a Crypt instance for the specified algorithm.
-     *
-     * @param algorithm - The encryption algorithm to use.
-     * @return The Crypt instance for the specified algorithm.
-     */
-    private fun getCryptInstance(algorithm: EncryptionAlgorithm): Crypt {
-        return cryptInstances.getOrPut(algorithm) { CryptFactory.getCrypt(algorithm, accountID, context) }
     }
 
     /**
