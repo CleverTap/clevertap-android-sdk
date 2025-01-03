@@ -1,99 +1,157 @@
 package com.clevertap.android.sdk.cryption
 
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Constants.AES_GCM_SUFFIX
+import com.clevertap.android.sdk.Constants.AES_GCM_PREFIX
+import com.clevertap.android.sdk.Constants.AES_SUFFIX
+import com.clevertap.android.sdk.Constants.AES_PREFIX
 
 /**
- * This class handles any encryption-decryption related tasks
+ * Handles encryption and decryption for various encryption algorithms and levels.
+ *
+ * @param encryptionLevel - The encryption level to use.
+ * @param accountID - The account ID for which the cryptographic operations are performed.
  */
-class CryptHandler(encryptionLevel: Int, encryptionType: EncryptionAlgorithm, accountID: String) {
-    private var encryptionLevel: EncryptionLevel
-    private var encryptionType: EncryptionAlgorithm
-    private var crypt: Crypt
-    private var accountID: String
-    var encryptionFlagStatus: Int
+internal class CryptHandler constructor(
+    private val encryptionLevel: EncryptionLevel,
+    private val accountID: String,
+    private val repository: CryptRepository,
+    private val cryptFactory: CryptFactory
+) {
 
-    enum class EncryptionAlgorithm {
-        AES
-    }
-
-    enum class EncryptionLevel(private val value: Int) {
-        NONE(0), MEDIUM(1);
-
-        fun intValue(): Int {
-            return value
-        }
-    }
-
-    init {
-        this.encryptionLevel = EncryptionLevel.values()[encryptionLevel]
-        this.encryptionType = encryptionType
-        this.accountID = accountID
-        this.encryptionFlagStatus = 0b00
-        this.crypt = CryptFactory.getCrypt(encryptionType)
+    /**
+     * Supported encryption algorithms.
+     */
+    enum class EncryptionAlgorithm(val value: Int) {
+        AES(0),
+        AES_GCM(1);
     }
 
     /**
-     * This method returns the encrypted text if the key is a part of the current encryption level and is not already encrypted
-     * Returns null if encryptInternal fails
+     * Encrypts the given plain text using a specific key and the AES_GCM algorithm by default.
      *
-     * @param plainText - plainText to be encrypted
-     * @param key       - key of the plainText to be encrypted
-     * @return encrypted text
+     * @param plainText - The text to encrypt.
+     * @param key - The key used for encryption.
+     * @return The encrypted text, or the original plain text if encryption is not required.
      */
-    fun encrypt(plainText: String, key: String): String? {
-        when (encryptionLevel) {
-            EncryptionLevel.MEDIUM ->
-                if (key in Constants.MEDIUM_CRYPT_KEYS && !isTextEncrypted(plainText))
-                    return crypt.encryptInternal(plainText, accountID)
+    @JvmOverloads
+    fun encrypt(
+        plainText: String,
+        key: String,
+        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
+    ): String? {
 
-            else -> return plainText
+        if (isTextEncrypted(plainText)) {
+            return plainText
+        }
+
+        // Use AES_GCM algorithm by default.
+        val crypt = cryptFactory.getCryptInstance(algorithm)
+        when (encryptionLevel) {
+            EncryptionLevel.MEDIUM -> {
+                // Encrypt only if the key is valid
+                if (key in Constants.MEDIUM_CRYPT_KEYS) {
+                    return crypt.encryptInternal(plainText)
+                }
+            }
+            else -> {
+                return plainText
+            }
         }
         return plainText
     }
 
-    fun encrypt(plainText: String): String? {
-        return crypt.encryptInternal(plainText, accountID)
-    }
-
     /**
-     * This method returns the decrypted text if the key is a part of the current encryption level
-     * Returns null if decryptInternal fails
+     * Decrypts the given cipher text using the specified algorithm.
      *
-     * @param cipherText - cipherText to be decrypted
-     * @param key        - key of the cipherText that needs to be decrypted
-     * @return decrypted text
+     * @param cipherText - The text to decrypt.
+     * @param key - The key used for decryption.
+     * @param algorithm - The encryption algorithm to use (default is AES_GCM).
+     * @return The decrypted text, or the original cipher text if decryption is not required.
      */
-    fun decrypt(cipherText: String, key: String): String? {
-        if (isTextEncrypted(cipherText)) {
-            when (encryptionLevel) {
-                EncryptionLevel.MEDIUM -> {
-                    if (key in Constants.MEDIUM_CRYPT_KEYS)
-                        return crypt.decryptInternal(cipherText, accountID)
-                }
+    @JvmOverloads
+    fun decrypt(
+        cipherText: String,
+        key: String,
+        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
+    ): String? {
+        if (!isTextEncrypted(cipherText)) {
+            return cipherText
+        }
 
-                else -> {
-                    return crypt.decryptInternal(cipherText, accountID)
+        val crypt = cryptFactory.getCryptInstance(algorithm)
+        when (encryptionLevel) {
+            EncryptionLevel.MEDIUM -> {
+                // Decrypt only if the key is valid.
+                if (key in Constants.MEDIUM_CRYPT_KEYS) {
+                    return crypt.decryptInternal(cipherText)
                 }
+            }
+            else -> {
+                return crypt.decryptInternal(cipherText)
             }
         }
         return cipherText
     }
 
-    fun decrypt(cipherText: String): String? {
-        return crypt.decryptInternal(cipherText, accountID)
+    /**
+     * Encrypts the given plain text without any checks
+     *
+     * @param plainText - The text to encrypt.
+     * @return The encrypted text, or null if encryption fails.
+     */
+    fun encrypt(
+        plainText: String,
+        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
+    ): String? {
+        val crypt = cryptFactory.getCryptInstance(algorithm)
+        return crypt.encryptInternal(plainText)
+    }
+
+    /**
+     * Decrypts the given cipher text without any checks.
+     *
+     * @param cipherText - The text to decrypt.
+     * @return The decrypted text, or null if decryption fails.
+     */
+    @JvmOverloads
+    fun decrypt(
+        cipherText: String,
+        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
+    ): String? {
+        val crypt = cryptFactory.getCryptInstance(algorithm)
+        return crypt.decryptInternal(cipherText)
+    }
+
+    /**
+     * Updates the encryption state in case of failure while processing new data.
+     *
+     * @param migrationSuccessful - Indicates if migration was successful
+     */
+    fun updateMigrationFailureCount(migrationSuccessful: Boolean) {
+        repository.updateMigrationFailureCount(migrationSuccessful)
     }
 
     companion object {
-
         /**
-         * This method checks if text is already encrypted. Encrypted text is always of the format [.....]
+         * Checks if the given text is encrypted (either using AES or AES_GCM).
          *
-         * @param plainText -  plain text
-         * @return boolean indicating if text is encrypted
+         * @param plainText - The text to check.
+         * @return True if the text is encrypted; false otherwise.
          */
         @JvmStatic
         fun isTextEncrypted(plainText: String): Boolean {
-            return plainText.startsWith('[') && plainText.endsWith(']')
+            return isTextAESEncrypted(plainText) || isTextAESGCMEncrypted(plainText)
+        }
+
+        // Determines if the text is AES encrypted.
+        fun isTextAESEncrypted(plainText: String): Boolean {
+            return plainText.startsWith(AES_PREFIX) && plainText.endsWith(AES_SUFFIX)
+        }
+
+        // Determines if the text is AES_GCM encrypted.
+        fun isTextAESGCMEncrypted(plainText: String): Boolean {
+            return plainText.startsWith(AES_GCM_PREFIX) && plainText.endsWith(AES_GCM_SUFFIX)
         }
     }
 }

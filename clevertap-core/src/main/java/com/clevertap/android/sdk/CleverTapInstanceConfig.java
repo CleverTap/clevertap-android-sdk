@@ -12,10 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import androidx.annotation.VisibleForTesting;
 
 import com.clevertap.android.sdk.Constants.IdentityType;
-import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.EncryptionLevel;
 import com.clevertap.android.sdk.login.LoginConstants;
 
 import org.json.JSONObject;
@@ -491,7 +490,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     void setCreatedPostAppLaunch() {
         this.createdPostAppLaunch = true;
     }
-    public void setEncryptionLevel(CryptHandler.EncryptionLevel encryptionLevel) {
+    public void setEncryptionLevel(EncryptionLevel encryptionLevel) {
         this.encryptionLevel = encryptionLevel.intValue();
     }
     public int getEncryptionLevel() {

@@ -30,7 +30,7 @@ const val STORE_TYPE_FILES = 5
  *
  * @property INSTANCE The singleton instance of the [StoreProvider].
  */
-class StoreProvider {
+internal class StoreProvider {
 
     companion object {
 

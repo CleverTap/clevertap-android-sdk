@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.login.LoginController
+import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
@@ -51,6 +52,7 @@ class LoginControllerTest : BaseTestCase() {
     private lateinit var cryptHandler: CryptHandler
     private lateinit var pushProviders: PushProviders
     private lateinit var loginController: LoginController
+    private lateinit var loginInfoProvider: LoginInfoProvider
 
     @Before
     override fun setUp() {
@@ -71,8 +73,11 @@ class LoginControllerTest : BaseTestCase() {
         cryptHandler = mockk(relaxed = true)
         pushProviders = mockk(relaxed = true)
 
-        every { controllerManager.getPushProviders() } returns pushProviders
+        every { controllerManager.pushProviders } returns pushProviders
 
+        loginInfoProvider = LoginInfoProvider(
+            context, config
+        )
         loginController = LoginController(
             context,
             config,
@@ -87,7 +92,7 @@ class LoginControllerTest : BaseTestCase() {
             callbackManager,
             dbManager,
             ctLockManager,
-            cryptHandler
+            loginInfoProvider
         )
     }
 
@@ -254,7 +259,7 @@ class LoginControllerTest : BaseTestCase() {
             cm,
             dbManager,
             ctLockManager,
-            cryptHandler
+            loginInfoProvider
         )
         //Act
         loginController.notifyChangeUserCallback()
@@ -288,7 +293,7 @@ class LoginControllerTest : BaseTestCase() {
             cm,
             dbManager,
             ctLockManager,
-            cryptHandler
+            loginInfoProvider
         )
 
         var isPassed = true

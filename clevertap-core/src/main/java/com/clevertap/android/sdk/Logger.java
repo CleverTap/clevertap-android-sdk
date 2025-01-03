@@ -6,6 +6,10 @@ public final class Logger implements ILogger {
 
     private int debugLevel;
 
+    Logger(int level) {
+        this.debugLevel = level;
+    }
+
     /**
      * Logs to Debug if the debug level is greater than 1.
      */
@@ -88,10 +92,6 @@ public final class Logger implements ILogger {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
             Log.v(Constants.CLEVERTAP_LOG_TAG, message, t);
         }
-    }
-
-    Logger(int level) {
-        this.debugLevel = level;
     }
 
     @Override

@@ -12,6 +12,7 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
+import com.clevertap.android.sdk.ILogger;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.db.DBAdapter;
@@ -32,14 +33,15 @@ import java.util.Map.Entry;
 @RestrictTo(Scope.LIBRARY)
 public class CTJsonConverter {
 
-    public static JSONObject toJsonObject(String json, Logger logger, String accountId) {
+    @NonNull
+    public static JSONObject toJsonObject(String json, ILogger logger, String logtag) {
         JSONObject cache = null;
         if (json != null) {
             try {
                 cache = new JSONObject(json);
             } catch (Throwable t) {
                 // no-op
-                logger.verbose(accountId, "Error reading guid cache: " + t.toString());
+                logger.verbose(logtag, "Error reading guid cache: " + t.toString());
             }
         }
 

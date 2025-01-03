@@ -2,7 +2,10 @@ package com.clevertap.android.sdk
 
 
 import android.content.Context
+import com.clevertap.android.sdk.cryption.CryptFactory
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.cryption.CryptRepository
+import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
@@ -37,8 +40,12 @@ class SessionManagerTest : BaseTestCase() {
         configDef = CleverTapInstanceConfig.createDefaultInstance(application, "id", "token", "region")
         coreMetaData = CoreMetaData()
         validator = Validator()
-        cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
-        cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
+        cryptHandler = CryptHandler(
+            EncryptionLevel.NONE,
+            "accountId",
+            Mockito.mock(CryptRepository::class.java),
+            Mockito.mock(CryptFactory::class.java),
+        )
         deviceInfo = MockDeviceInfo(appCtx, configDef, "id", coreMetaData)
         baseDatabaseManager = Mockito.mock(DBManager::class.java)
         localDataStoreDef = LocalDataStore(

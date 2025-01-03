@@ -33,7 +33,11 @@ class LoginInfoProviderTest: BaseTestCase() {
         defConfig = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
         deviceInfo = Mockito.mock(DeviceInfo::class.java)
         cryptHandler = Mockito.mock(CryptHandler::class.java)
-        loginInfoProvider = LoginInfoProvider(appCtx, defConfig, deviceInfo, cryptHandler)
+        loginInfoProvider = LoginInfoProvider(
+            appCtx,
+            defConfig,
+            cryptHandler
+        )
         loginInfoProviderSpy = Mockito.spy(loginInfoProvider)
     }
 
@@ -124,7 +128,6 @@ class LoginInfoProviderTest: BaseTestCase() {
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
         val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-        verify(cryptHandler, atLeastOnce()).encryptionFlagStatus
         assertEquals(
             "{\"email_abc@gmail.com\":\"__1234567\"}",
             sharedPreferences.getString("cachedGUIDsKey:id", "")
@@ -221,7 +224,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
         jsonObj.put("Identity_00002","__1234567")
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+        Mockito.`when`(loginInfoProviderSpy.decryptedCachedGUIDs).thenReturn(
             jsonObj)
 
         //Act
@@ -241,7 +244,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         val jsonObj = JSONObject()
         jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+        Mockito.`when`(loginInfoProviderSpy.decryptedCachedGUIDs).thenReturn(
             jsonObj)
 
         //Act
@@ -261,7 +264,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         val jsonObj = JSONObject()
         jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+        Mockito.`when`(loginInfoProviderSpy.decryptedCachedGUIDs).thenReturn(
             jsonObj)
 
         //Act
@@ -281,7 +284,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         val jsonObj = JSONObject()
         jsonObj.put("email_donjoe2862@gmail.com","__1234567")
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+        Mockito.`when`(loginInfoProviderSpy.decryptedCachedGUIDs).thenReturn(
             jsonObj)
 
         //Act
@@ -302,7 +305,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         jsonObj.put("email_donjoe2862@gmail.com","__1234567")
         jsonObj.put("identity_00002","__1234567")
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+        Mockito.`when`(loginInfoProviderSpy.decryptedCachedGUIDs).thenReturn(
             jsonObj)
 
         //Act
@@ -323,7 +326,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
         jsonObj.put("identity_00002","__1234567")
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+        Mockito.`when`(loginInfoProviderSpy.decryptedCachedGUIDs).thenReturn(
             jsonObj)
 
         //Act
@@ -344,7 +347,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         jsonObj.put("Identity_00002","__1234567")
         jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+        Mockito.`when`(loginInfoProviderSpy.decryptedCachedGUIDs).thenReturn(
             jsonObj)
 
         //Act
@@ -364,7 +367,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
 
         //Assert
-        Mockito.verify(loginInfoProviderSpy,Mockito.never()).cachedGUIDs
+        Mockito.verify(loginInfoProviderSpy,Mockito.never()).decryptedCachedGUIDs
     }
 
     @Test
@@ -376,7 +379,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
 
         //Assert
-        Mockito.verify(loginInfoProviderSpy,Mockito.never()).cachedGUIDs
+        Mockito.verify(loginInfoProviderSpy,Mockito.never()).decryptedCachedGUIDs
     }
 
     @Test
@@ -388,6 +391,6 @@ class LoginInfoProviderTest: BaseTestCase() {
         loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
 
         //Assert
-        Mockito.verify(loginInfoProviderSpy,Mockito.never()).cachedGUIDs
+        Mockito.verify(loginInfoProviderSpy,Mockito.never()).decryptedCachedGUIDs
     }
 }

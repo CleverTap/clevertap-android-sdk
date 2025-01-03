@@ -1,7 +1,10 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
+import com.clevertap.android.sdk.cryption.CryptFactory
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.cryption.CryptRepository
+import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
@@ -43,7 +46,12 @@ class LocalDataStoreTest : BaseTestCase() {
         super.setUp()
         val metaData = CoreMetaData()
         defConfig = CleverTapInstanceConfig.createDefaultInstance(appCtx, "id", "token", "region")
-        cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
+        cryptHandler = CryptHandler(
+            EncryptionLevel.NONE,
+            "accountId",
+            Mockito.mock(CryptRepository::class.java),
+            Mockito.mock(CryptFactory::class.java),
+        )
         deviceInfo = MockDeviceInfo(appCtx, defConfig, "id", metaData)
         baseDatabaseManager = Mockito.mock(DBManager::class.java)
         dbAdapter = Mockito.mock(DBAdapter::class.java)

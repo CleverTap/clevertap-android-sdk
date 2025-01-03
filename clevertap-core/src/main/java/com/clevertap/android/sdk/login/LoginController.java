@@ -15,7 +15,6 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.SessionManager;
-import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
@@ -65,7 +64,7 @@ public class LoginController {
 
     private final ValidationResultStack validationResultStack;
 
-    private final CryptHandler cryptHandler;
+    private final LoginInfoProvider loginInfoProvider;
 
     public LoginController(Context context,
             CleverTapInstanceConfig config,
@@ -80,7 +79,7 @@ public class LoginController {
             BaseCallbackManager callbackManager,
             DBManager dbManager,
             CTLockManager ctLockManager,
-            CryptHandler cryptHandler) {
+            LoginInfoProvider loginInfoProvider) {
         this.config = config;
         this.context = context;
         this.deviceInfo = deviceInfo;
@@ -95,7 +94,7 @@ public class LoginController {
         this.dbManager = dbManager;
         this.controllerManager = controllerManager;
         this.ctLockManager = ctLockManager;
-        this.cryptHandler = cryptHandler;
+        this.loginInfoProvider = loginInfoProvider;
     }
 
     public void asyncProfileSwitchUser(final Map<String, Object> profile, final String cacheGuid,
@@ -213,12 +212,11 @@ public class LoginController {
             }
 
             boolean haveIdentifier = false;
-            LoginInfoProvider loginInfoProvider = new LoginInfoProvider(context, config, deviceInfo, cryptHandler);
+
             // check for valid identifier keys
             // use the first one we find
             IdentityRepo iProfileHandler = IdentityRepoFactory
-                    .getRepo(context, config, deviceInfo,
-                            validationResultStack);
+                    .getRepo(context, config, validationResultStack);
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
                 boolean isProfileKey = iProfileHandler.hasIdentity(key);
@@ -228,7 +226,7 @@ public class LoginController {
                         if (value != null) {
                             identifier = value.toString();
                         }
-                        if (identifier != null && identifier.length() > 0) {
+                        if (identifier != null && !identifier.isEmpty()) {
                             haveIdentifier = true;
                             cachedGUID = loginInfoProvider.getGUIDForIdentifier(key, identifier);
                             if (cachedGUID != null) {
@@ -254,7 +252,7 @@ public class LoginController {
             // if identifier maps to current guid, push on current profile
             if (cachedGUID != null && cachedGUID.equals(currentGUID)) {
                 config.getLogger().debug(config.getAccountId(),
-                        "onUserLogin: " + profile.toString() + " maps to current device id " + currentGUID
+                        "onUserLogin: " + profile + " maps to current device id " + currentGUID
                                 + " pushing on current profile");
                 analyticsManager.pushProfile(profile);
                 return;
