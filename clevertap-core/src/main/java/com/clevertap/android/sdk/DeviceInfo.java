@@ -29,7 +29,6 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
-import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
@@ -445,7 +444,6 @@ public class DeviceInfo {
     private boolean limitAdTracking = false;
 
     private final CoreMetaData mCoreMetaData;
-    private final CryptHandler cryptHandler;
 
     private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
@@ -499,12 +497,11 @@ public class DeviceInfo {
     }
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
-            CoreMetaData coreMetaData, CryptHandler cryptHandler) {
+            CoreMetaData coreMetaData) {
         this.context = context;
         this.config = config;
         this.library = null;
         this.customLocale = null;
-        this.cryptHandler = cryptHandler;
         mCoreMetaData = coreMetaData;
     }
 
@@ -551,7 +548,7 @@ public class DeviceInfo {
         try {
             boolean deviceIsMultiUser = false;
             if (getGoogleAdID() != null) {
-                deviceIsMultiUser = new LoginInfoProvider(context, config, this, cryptHandler).deviceIsMultiUser();
+                deviceIsMultiUser = new LoginInfoProvider(context, config).deviceIsMultiUser();
             }
             return CTJsonConverter.from(this, mCoreMetaData, enableNetworkInfoReporting,
                     deviceIsMultiUser);

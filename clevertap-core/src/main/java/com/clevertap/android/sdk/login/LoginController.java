@@ -217,8 +217,7 @@ public class LoginController {
             // check for valid identifier keys
             // use the first one we find
             IdentityRepo iProfileHandler = IdentityRepoFactory
-                    .getRepo(context, config, deviceInfo,
-                            validationResultStack, cryptHandler);
+                    .getRepo(context, config, validationResultStack);
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
                 boolean isProfileKey = iProfileHandler.hasIdentity(key);

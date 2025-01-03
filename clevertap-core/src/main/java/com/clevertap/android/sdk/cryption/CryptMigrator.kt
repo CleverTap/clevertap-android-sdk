@@ -86,7 +86,14 @@ internal data class CryptMigrator(
         )
         val cgkString: String = if (firstUpgrade) {
             // translate from old format to new format, in new format we encrypt entire string
-            migrateFormatForCachedGuidsKeyPref().toString()
+            val cgkJson = migrateFormatForCachedGuidsKeyPref()
+            val cgkLength = cgkJson.length()
+            dataMigrationRepository.saveCachedGuidJsonLength(cgkLength)
+            if(cgkLength == 0) {
+                dataMigrationRepository.removeCachedGuidJson()
+                return true
+            }
+            cgkJson.toString()
         } else {
             dataMigrationRepository.cachedGuidString() ?: return true
         }

@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.cryption
 import android.content.Context
 import android.content.SharedPreferences
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
 import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.StorageHelper
@@ -15,6 +16,8 @@ interface IDataMigrationRepository {
     fun cachedGuidJsonObject(): JSONObject
     fun cachedGuidString(): String?
     fun saveCachedGuidJson(json: String)
+    fun removeCachedGuidJson()
+    fun saveCachedGuidJsonLength(length: Int)
     fun userProfilesInAccount(): Map<String, JSONObject>
     fun saveUserProfile(deviceID: String, profile: JSONObject): Long
     fun inAppDataFiles(): List<SharedPreferences>
@@ -40,6 +43,21 @@ internal class DataMigrationRepository(
             context,
             StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
             json
+        )
+    }
+
+    override fun removeCachedGuidJson() {
+        StorageHelper.remove(
+            context,
+            StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
+        )
+    }
+
+    override fun saveCachedGuidJsonLength(length: Int) {
+        StorageHelper.putInt(
+            context,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.CACHED_GUIDS_LENGTH_KEY),
+            length
         )
     }
 

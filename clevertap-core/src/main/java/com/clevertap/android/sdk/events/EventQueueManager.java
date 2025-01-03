@@ -387,7 +387,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             if (baseProfile != null && baseProfile.length() > 0) {
                 Iterator<String> i = baseProfile.keys();
                 IdentityRepo iProfileHandler = IdentityRepoFactory
-                        .getRepo(context, config, deviceInfo, validationResultStack, cryptHandler);
+                        .getRepo(context, config, validationResultStack);
                 setLoginInfoProvider(new LoginInfoProvider(context, config, deviceInfo, cryptHandler));
                 while (i.hasNext()) {
                     String next = i.next();

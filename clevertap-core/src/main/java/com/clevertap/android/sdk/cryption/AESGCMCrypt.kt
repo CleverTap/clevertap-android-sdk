@@ -98,7 +98,6 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
 
     private fun generateOrGetKey(): SecretKey? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // TODO add support for API 21 and 22
             try {
                 val keyStore = KeyStore.getInstance("AndroidKeyStore")
                 keyStore.load(null)
