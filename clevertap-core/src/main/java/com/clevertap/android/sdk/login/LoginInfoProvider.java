@@ -9,7 +9,6 @@ import androidx.annotation.RestrictTo.Scope;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
@@ -28,14 +27,11 @@ public class LoginInfoProvider {
 
     private final Context context;
 
-    private DeviceInfo deviceInfo;
-
     private CryptHandler cryptHandler;
 
-    public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo, CryptHandler cryptHandler) {
+    public LoginInfoProvider(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler) {
         this.context = context;
         this.config = config;
-        this.deviceInfo = deviceInfo;
         this.cryptHandler = cryptHandler;
     }
 
@@ -56,7 +52,7 @@ public class LoginInfoProvider {
      *                   "Email_abc@gmail.com:Guid"
      */
     public void cacheGUIDForIdentifier(String guid, String key, String identifier) {
-        if (isErrorDeviceId() || guid == null || key == null || identifier == null) {
+        if (guid == null || key == null || identifier == null) {
             return;
         }
         String cacheKey = key + "_" + identifier;
@@ -84,7 +80,7 @@ public class LoginInfoProvider {
      * @param key        - Identity Key e.g Email
      */
     public void removeValueFromCachedGUIDForIdentifier(String guid, String key) {
-        if (isErrorDeviceId() || guid == null || key == null) {
+        if (guid == null || key == null) {
             return;
         }
 
@@ -244,12 +240,5 @@ public class LoginInfoProvider {
         StorageHelper.putString(context, config, Constants.SP_KEY_PROFILE_IDENTITIES,
                 valueCommaSeparated);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "saveIdentityKeysForAccount:" + valueCommaSeparated);
-    }
-
-    private boolean isErrorDeviceId() {
-        boolean isErrorDeviceId = deviceInfo.isErrorDeviceId();
-        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                "isErrorDeviceId:[" + isErrorDeviceId + "]");
-        return isErrorDeviceId;
     }
 }

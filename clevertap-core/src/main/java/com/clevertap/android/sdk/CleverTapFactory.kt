@@ -26,6 +26,7 @@ import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginController
+import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.AppLaunchListener
 import com.clevertap.android.sdk.network.CompositeBatchListener
 import com.clevertap.android.sdk.network.FetchInAppListener
@@ -42,7 +43,6 @@ import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
-import java.util.concurrent.Callable
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -279,6 +279,12 @@ internal object CleverTapFactory {
         )
         coreState.networkManager = networkManager
 
+        val loginInfoProvider = LoginInfoProvider(
+            context,
+            config,
+            cryptHandler
+        )
+
         val baseEventQueueManager = EventQueueManager(
             baseDatabaseManager,
             context,
@@ -294,7 +300,7 @@ internal object CleverTapFactory {
             ctLockManager,
             localDataStore,
             controllerManager,
-            cryptHandler
+            loginInfoProvider
         )
         coreState.baseEventQueueManager = baseEventQueueManager
 
@@ -394,7 +400,7 @@ internal object CleverTapFactory {
             context, config, deviceInfo,
             validationResultStack, baseEventQueueManager, analyticsManager,
             coreMetaData, controllerManager, sessionManager,
-            localDataStore, callbackManager, baseDatabaseManager, ctLockManager, cryptHandler
+            localDataStore, callbackManager, baseDatabaseManager, ctLockManager, loginInfoProvider
         )
         coreState.loginController = loginController
 
