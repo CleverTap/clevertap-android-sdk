@@ -43,7 +43,7 @@ public class LoginInfoProvider {
     //Profile
 
     /**
-     * Caches a single pair of <Identity_Value, Guid> for this account
+     * Caches a single pair of <Identity_Value, Guid> for this account and updates the length of the cgk map
      *
      * @param guid       - guid of the user
      * @param key        - Identity Key e.g Email
@@ -74,7 +74,7 @@ public class LoginInfoProvider {
     }
 
     /**
-     * Removes value for PII(Email) pair of <Email_Value, Guid> for this account from shared prefs
+     * Removes value for PII(Email) pair of <Email_Value, Guid> for this account from shared prefs and updates the length of the cgk map
      *
      * @param guid       - guid of the user
      * @param key        - Identity Key e.g Email
@@ -93,7 +93,6 @@ public class LoginInfoProvider {
 
                 if (actualKeyInLowerCase.contains(key.toLowerCase()) &&
                         cachedGuidJsonObj.getString(nextJSONObjKey).equals(guid)) {
-
                         cachedGuidJsonObj.remove(nextJSONObjKey);
                         setCachedGUIDsAndLength(cachedGuidJsonObj.toString(), cachedGuidJsonObj.length());
                 }
@@ -142,13 +141,11 @@ public class LoginInfoProvider {
         if (cachedGUIDs == null) {
             return;
         }
-
         storeCachedGuidsLength(cgkLength);
         if(cgkLength == 0) {
             removeCachedGuidFromSharedPrefs();
             return;
         }
-
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_KEY),
                 cachedGUIDs);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
@@ -189,7 +186,7 @@ public class LoginInfoProvider {
 
     /**
      * Returns the Guid Value corresponding to the given <Key, Value>
-     * If guid for encrypted identifier is not found, then it tries searching for un-encrypted identifier
+     * If guid is not found, then it returns null
      * @param key        - Identity Key e.g Email
      * @param identifier - Value corresponding to the Key e.g abc@gmail.com
      * @return - String value of Guid if any entry is saved with Key_Value
