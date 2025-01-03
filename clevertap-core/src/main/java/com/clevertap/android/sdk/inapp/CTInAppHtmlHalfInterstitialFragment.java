@@ -1,5 +1,29 @@
 package com.clevertap.android.sdk.inapp;
 
-public class CTInAppHtmlHalfInterstitialFragment extends CTInAppBaseFullHtmlFragment {
+import static com.clevertap.android.sdk.CTXtensions.applyInsetsWithMarginAdjustment;
 
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+public class CTInAppHtmlHalfInterstitialFragment extends CTInAppBaseFullHtmlFragment {
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        View inAppView = super.onCreateView(inflater, container, savedInstanceState);
+        if (inAppView != null) {
+            applyInsetsWithMarginAdjustment(inAppView, (insets, mlp) -> {
+                mlp.leftMargin = insets.left;
+                mlp.rightMargin = insets.right;
+                mlp.topMargin = insets.top;
+                mlp.bottomMargin = insets.bottom;
+                return null;
+            });
+        }
+        return inAppView;
+    }
 }
