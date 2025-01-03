@@ -80,9 +80,10 @@ internal data class CryptMigrator(
     }
 
     private fun handleAllMigrations(encrypt: Boolean, firstUpgrade: Boolean): Boolean {
-        return migrateCachedGuidsKeyPref(encrypt, firstUpgrade) &&
-                migrateDBProfile(encrypt) &&
-                migrateInAppData()
+        val cgkMigrationSuccess = migrateCachedGuidsKeyPref(encrypt, firstUpgrade)
+        val dbMigrationSuccess = migrateDBProfile(encrypt)
+        val inAppMigrationSuccess = migrateInAppData()
+        return cgkMigrationSuccess && dbMigrationSuccess && inAppMigrationSuccess
     }
 
     /**
@@ -118,7 +119,7 @@ internal data class CryptMigrator(
         dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
         logger.verbose(
             logPrefix,
-            "Cached GUIDs migrated successfully"
+            "Cached GUIDs migrated successfully ${migrationResult.data}"
         )
         return migrationResult.migrationSuccessful
     }
@@ -185,6 +186,10 @@ internal data class CryptMigrator(
                         profile.put(piiKey, migrationResult.data)
                     }
                 }
+                logger.verbose(
+                    logPrefix,
+                    "DB migrated successfully $profile"
+                )
                 if (dataMigrationRepository.saveUserProfile(deviceID, profile) <= -1L) {
                     migrationSuccessful = false
                 }
@@ -216,6 +221,10 @@ internal data class CryptMigrator(
                     val migrationResult = performMigrationStep(true, data)
                     migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
                     prefs.edit().putString(key, migrationResult.data).apply()
+                    logger.verbose(
+                        logPrefix,
+                        "InApp Data migrated successfully ${migrationResult.data}"
+                    )
                 }
             }
         }
