@@ -68,7 +68,7 @@ class CryptHandler(
      * @param cipherText - The text to decrypt.
      * @param key - The key used for decryption.
      * @param algorithm - The encryption algorithm to use (default is AES_GCM).
-     * @return The decrypted text, or the original cipher text if decryption fails.
+     * @return The decrypted text, or the original cipher text if decryption is not required.
      */
     @JvmOverloads
     fun decrypt(
@@ -96,7 +96,7 @@ class CryptHandler(
     }
 
     /**
-     * Encrypts the given plain text using the default AES_GCM algorithm.
+     * Encrypts the given plain text without any checks
      *
      * @param plainText - The text to encrypt.
      * @return The encrypted text, or null if encryption fails.
@@ -107,7 +107,7 @@ class CryptHandler(
     }
 
     /**
-     * Decrypts the given cipher text using the default AES_GCM algorithm.
+     * Decrypts the given cipher text without any checks.
      *
      * @param cipherText - The text to decrypt.
      * @return The decrypted text, or null if decryption fails.

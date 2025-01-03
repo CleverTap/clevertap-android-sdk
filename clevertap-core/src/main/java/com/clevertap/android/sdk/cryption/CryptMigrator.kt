@@ -28,6 +28,23 @@ internal data class CryptMigrator(
         const val MIGRATION_FIRST_UPGRADE = -1
     }
 
+    /**
+     * Handles the migration of encryption levels for stored data.
+     *
+     *
+     * - Scenarios handled:
+     *   1. **Fresh Install**: If the stored encryption level is unknown and the configured level is
+     *      `EncryptionLevel.NONE`, no migration is needed.
+     *   2. **Encryption Level Upgrade**: If the stored encryption level differs from the configured
+     *      encryption level and migration failures are not recorded, migration is required.
+     *   3. **Existing Failures**: If there are recorded migration failures, the process attempts to
+     *      continue from where it left off.
+     *
+     * - Updates:
+     *   - Updates the stored encryption level to the current configuration.
+     *   - Updates the migration failure count based on the success or failure of the migration.
+     *
+     */
     fun migrateEncryption() {
         val storedEncryptionLevel = cryptRepository.storedEncryptionLevel()
 
@@ -113,11 +130,13 @@ internal data class CryptMigrator(
 
 
     /**
-     * This method migrates the format of cachedGuidsKey
+     * This method migrates converts the older format of cgk to an all plain text JSONObject
+     * If decryption for any key-value fails that key is dropped forever
+     *
      * The older format when encryption level is 1 was {Email_[]:__g... , Name_[]:__i...} -> Only the identifier was encrypted
      * The migrated format will encrypt the entire JSONObject and not just the identifier
      *
-     * Returns true if migration was successful and false otherwise
+     * @return JSONObject with all plain text
      */
     private fun migrateFormatForCachedGuidsKeyPref(): JSONObject {
         val cachedGuidJsonObj = dataMigrationRepository.cachedGuidJsonObject()
@@ -242,7 +261,20 @@ internal data class CryptMigrator(
         }
     }
 
-
+    /**
+     * Handles the transition of data encrypted from AES to the specified target state.
+     *
+     * This function decrypts the input data using AES encryption and then transitions it to the
+     * target encryption state:
+     * - **AES_GCM**: Re-encrypts the decrypted data using AES-GCM encryption.
+     * - **Plain Text**: Returns the decrypted data.
+     *
+     * @param targetState The target encryption state to which the data should transition.
+     * @param data The encrypted input data as a string.
+     * @param cryptHandler The cryptographic handler responsible for encryption and decryption.
+     * @return A `MigrationResult` containing the transformed data and whether the operation succeeded.
+     * @throws IllegalArgumentException If the transition to the target state is invalid.
+     */
     private fun handleEncryptedAesTransition(
         targetState: EncryptionState,
         data: String,
@@ -265,6 +297,18 @@ internal data class CryptMigrator(
         }
     }
 
+    /**
+     * Handles the transition of data encrypted from AES-GCM to the specified target state.
+     * Target State should will be PLAIN_TEXT
+     *
+     * This function decrypts the input data using AES-GCM algorithm
+     *
+     * @param targetState The target encryption state to which the data should transition.
+     * @param data The encrypted input data as a string.
+     * @param cryptHandler The cryptographic handler responsible for encryption and decryption.
+     * @return A `MigrationResult` containing the transformed data and whether the operation succeeded.
+     * @throws IllegalArgumentException If the transition to the target state is invalid.
+     */
     private fun handleEncryptedAesGcmTransition(
         targetState: EncryptionState,
         data: String,
@@ -280,6 +324,18 @@ internal data class CryptMigrator(
         }
     }
 
+    /**
+     * Handles the transition of plain text data to the specified target state.
+     *
+     * This function transitions the input plain text data to the desired encryption state:
+     * - **AES_GCM**: Encrypts the data using AES-GCM encryption.
+     *
+     * @param targetState The target encryption state to which the data should transition.
+     * @param data The input plain text data as a string.
+     * @param cryptHandler The cryptographic handler responsible for encryption and decryption.
+     * @return A `MigrationResult` containing the transformed data and whether the operation succeeded.
+     * @throws IllegalArgumentException If the transition to the target state is invalid.
+     */
     private fun handlePlainTextTransition(
         targetState: EncryptionState,
         data: String,

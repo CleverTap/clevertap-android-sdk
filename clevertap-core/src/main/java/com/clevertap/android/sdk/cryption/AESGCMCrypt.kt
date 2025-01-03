@@ -19,8 +19,18 @@ import javax.crypto.spec.SecretKeySpec
 
 private const val ENCRYPTION_KEY = "EncryptionKey"
 
+/**
+ * This class implements the AES-GCM Crypt algorithm
+ *
+ */
 class AESGCMCrypt(private val context: Context) : Crypt() {
 
+    /**
+     * This method is used internally to encrypt the plain text
+     *
+     * @param plainText - plainText to be encrypted
+     * @return encrypted text appended with iv, prefix and suffix
+     */
     override fun encryptInternal(plainText: String): String? {
         return performCryptOperation(
             mode = Cipher.ENCRYPT_MODE,
@@ -31,6 +41,12 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
         }
     }
 
+    /**
+     * This method is used internally to decrypt the cipher text
+     *
+     * @param cipherText - cipherText to be decrypted
+     * @return decrypted text
+     */
     override fun decryptInternal(cipherText: String): String? {
         return parseCipherText(cipherText)?.let { (iv, encryptedBytes) ->
             performCryptOperation(
@@ -43,6 +59,12 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
         }
     }
 
+    /**
+     * This method is used to parse the cipher text (i.e remove the prefix and suffix, extract out the IV and encryptedBytes) and convert it to a byte array
+     *
+     * @param cipherText - cipher text to be parsed
+     * @return AESGCMCryptResult
+     */
     private fun parseCipherText(cipherText: String): AESGCMCryptResult? {
         return try {
             // removes the postfix and prefix
@@ -57,6 +79,14 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
         }
     }
 
+    /**
+     * This method actually performs both the encryption and decryption crypt task.
+     *
+     * @param mode - mode to determine encryption/decryption
+     * @param data - data to be crypted
+     * @param iv - iv required for decryption
+     * @return AESGCMCryptResult
+     */
     private fun performCryptOperation(
         mode: Int,
         data: ByteArray,
@@ -96,6 +126,15 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
         }
     }
 
+    /**
+     * Generates or retrieves a secret key for encryption/decryption.
+     *
+     * This method uses the Android Keystore system on devices running API 23 (Marshmallow) or higher
+     * to securely store the key. If the Android Keystore is not available (on older API levels),
+     * it falls back to generating a key and storing it in SharedPreferences, encoded in Base64.
+     *
+     * @return The secret key for encryption/decryption, or null if an error occurs during key generation/retrieval.
+     */
     private fun generateOrGetKey(): SecretKey? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
