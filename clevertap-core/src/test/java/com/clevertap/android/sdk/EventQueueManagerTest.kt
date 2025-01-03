@@ -36,6 +36,7 @@ class EventQueueManagerTest : BaseTestCase() {
     private lateinit var corestate: MockCoreState
     private lateinit var eventQueueManager: EventQueueManager
     private lateinit var json: JSONObject
+    private lateinit var loginInfoProvider: LoginInfoProvider
 
     @Before
     override fun setUp() {
@@ -47,6 +48,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 )
             )
             corestate = MockCoreState(cleverTapInstanceConfig)
+            loginInfoProvider = Mockito.mock(LoginInfoProvider::class.java)
             eventQueueManager =
                 spy(
                     EventQueueManager(
@@ -64,7 +66,7 @@ class EventQueueManagerTest : BaseTestCase() {
                         corestate.ctLockManager,
                         corestate.localDataStore,
                         corestate.controllerManager,
-                        corestate.cryptHandler
+                        loginInfoProvider
                     )
                 )
             json = JSONObject()
@@ -629,7 +631,6 @@ class EventQueueManagerTest : BaseTestCase() {
                     IdentityRepoFactory.getRepo(
                         application,
                         corestate.config,
-                        corestate.deviceInfo,
                         corestate.validationResultStack
                     )
                 ).thenReturn(mockIdentityRepo)
@@ -681,12 +682,10 @@ class EventQueueManagerTest : BaseTestCase() {
             )
             mockStatic(IdentityRepoFactory::class.java).use {
                 val mockIdentityRepo = mock(IdentityRepo::class.java)
-                val mockLoginInfoProvider = mock(LoginInfoProvider::class.java)
                 `when`(
                     IdentityRepoFactory.getRepo(
                         application,
                         corestate.config,
-                        corestate.deviceInfo,
                         corestate.validationResultStack
                     )
                 ).thenReturn(mockIdentityRepo)
@@ -710,14 +709,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 inputJson.put("name", "abc")
                 inputJson.put("details", subInputJson)
 
-                `when`(eventQueueManager.loginInfoProvider).thenReturn(mockLoginInfoProvider)
                 `when`(mockIdentityRepo.hasIdentity("name")).thenReturn(true)
 
                 // Act
                 eventQueueManager.pushBasicProfile(inputJson,false)
 
                 // Assert
-                verify(mockLoginInfoProvider).cacheGUIDForIdentifier(expectedDeviceId, "name", "abc")
+                verify(loginInfoProvider).cacheGUIDForIdentifier(expectedDeviceId, "name", "abc")
                 verify(eventQueueManager).queueEvent(
                     ArgumentMatchers.any(),
                     captor.capture(),
@@ -748,7 +746,6 @@ class EventQueueManagerTest : BaseTestCase() {
                     IdentityRepoFactory.getRepo(
                         application,
                         corestate.config,
-                        corestate.deviceInfo,
                         corestate.validationResultStack
                     )
                 ).thenReturn(mockIdentityRepo)
@@ -777,7 +774,6 @@ class EventQueueManagerTest : BaseTestCase() {
                 val inputJson = JSONObject()
                 inputJson.put("Email", "abc@xyz.com")
 
-                `when`(eventQueueManager.loginInfoProvider).thenReturn(mockLoginInfoProvider)
                 `when`(mockIdentityRepo.hasIdentity("Email")).thenReturn(true)
 
                 //Act
@@ -813,12 +809,10 @@ class EventQueueManagerTest : BaseTestCase() {
 
             mockStatic(IdentityRepoFactory::class.java).use {
                 val mockIdentityRepo = mock(IdentityRepo::class.java)
-                val mockLoginInfoProvider = mock(LoginInfoProvider::class.java)
                 `when`(
                     IdentityRepoFactory.getRepo(
                         application,
                         corestate.config,
-                        corestate.deviceInfo,
                         corestate.validationResultStack
                     )
                 ).thenReturn(mockIdentityRepo)
@@ -846,7 +840,6 @@ class EventQueueManagerTest : BaseTestCase() {
                 val inputJson = JSONObject()
                 inputJson.put("Phone", "+919998988767")
 
-                `when`(eventQueueManager.loginInfoProvider).thenReturn(mockLoginInfoProvider)
                 `when`(mockIdentityRepo.hasIdentity("Phone")).thenReturn(false)
 
                 //Act
@@ -880,12 +873,10 @@ class EventQueueManagerTest : BaseTestCase() {
 
             mockStatic(IdentityRepoFactory::class.java).use {
                 val mockIdentityRepo = mock(IdentityRepo::class.java)
-                val mockLoginInfoProvider = mock(LoginInfoProvider::class.java)
                 `when`(
                     IdentityRepoFactory.getRepo(
                         application,
                         corestate.config,
-                        corestate.deviceInfo,
                         corestate.validationResultStack
                     )
                 ).thenReturn(mockIdentityRepo)
@@ -915,14 +906,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 val inputJson = JSONObject()
                 inputJson.put("Email","abc@xyz.com")
 
-                `when`(eventQueueManager.loginInfoProvider).thenReturn(mockLoginInfoProvider)
                 `when`(mockIdentityRepo.hasIdentity("Email")).thenReturn(true)
 
                 //Act
                 eventQueueManager.pushBasicProfile(inputJson,false)
 
                 //Assert
-                verify(mockLoginInfoProvider).cacheGUIDForIdentifier(expectedDeviceID,"Email",
+                verify(loginInfoProvider).cacheGUIDForIdentifier(expectedDeviceID,"Email",
                     "abc@xyz.com")
                 verify(eventQueueManager).queueEvent(
                     ArgumentMatchers.any(),
@@ -948,12 +938,10 @@ class EventQueueManagerTest : BaseTestCase() {
 
             mockStatic(IdentityRepoFactory::class.java).use {
                 val mockIdentityRepo = mock(IdentityRepo::class.java)
-                val mockLoginInfoProvider = mock(LoginInfoProvider::class.java)
                 `when`(
                     IdentityRepoFactory.getRepo(
                         application,
                         corestate.config,
-                        corestate.deviceInfo,
                         corestate.validationResultStack
                     )
                 ).thenReturn(mockIdentityRepo)
@@ -981,7 +969,6 @@ class EventQueueManagerTest : BaseTestCase() {
                 val inputJson = JSONObject()
                 inputJson.put("Phone", "+919998988767")
 
-                `when`(eventQueueManager.loginInfoProvider).thenReturn(mockLoginInfoProvider)
                 `when`(mockIdentityRepo.hasIdentity("Phone")).thenReturn(false)
 
                 //Act
