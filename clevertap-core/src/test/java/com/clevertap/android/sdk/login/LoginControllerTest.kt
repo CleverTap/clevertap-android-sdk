@@ -75,6 +75,9 @@ class LoginControllerTest : BaseTestCase() {
 
         every { controllerManager.pushProviders } returns pushProviders
 
+        loginInfoProvider = LoginInfoProvider(
+            context, config
+        )
         loginController = LoginController(
             context,
             config,
