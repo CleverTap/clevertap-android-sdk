@@ -44,6 +44,10 @@ class CryptHandler(
         key: String,
         algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
     ): String? {
+
+        if(isTextEncrypted(plainText))
+            return plainText
+
         // Use AES_GCM algorithm by default.
         val crypt = getCryptInstance(algorithm)
         when (encryptionLevel) {
