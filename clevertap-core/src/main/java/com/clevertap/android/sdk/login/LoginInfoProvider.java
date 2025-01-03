@@ -69,7 +69,7 @@ public class LoginInfoProvider {
             String encryptedCache = cryptHandler.encrypt(cache.toString(), key);
             if(encryptedCache == null) {
                 encryptedCache = cache.toString();
-                cryptHandler.updateMigrationFailureCount(context, false);
+                cryptHandler.updateMigrationFailureCount(false);
             }
             setCachedGUIDsAndLength(encryptedCache, cache.length());
         } catch (Throwable t) {

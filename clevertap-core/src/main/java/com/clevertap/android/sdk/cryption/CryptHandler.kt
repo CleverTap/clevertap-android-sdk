@@ -6,8 +6,6 @@ import com.clevertap.android.sdk.Constants.AES_GCM_SUFFIX
 import com.clevertap.android.sdk.Constants.AES_GCM_PREFIX
 import com.clevertap.android.sdk.Constants.AES_SUFFIX
 import com.clevertap.android.sdk.Constants.AES_PREFIX
-import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.StorageHelper
 
 /**
  * Handles encryption and decryption for various encryption algorithms and levels.
@@ -18,13 +16,12 @@ import com.clevertap.android.sdk.StorageHelper
 class CryptHandler(
     private val encryptionLevel: EncryptionLevel,
     private val accountID: String,
-    private val context: Context
+    private val context: Context,
+    private val repository: CryptRepository
 ) {
 
     // Cache to hold instances of Crypt for different encryption algorithms.
     private val cryptInstances: MutableMap<EncryptionAlgorithm, Crypt> = mutableMapOf()
-
-    private var migrationFailureCount: Int = 0
 
     /**
      * Supported encryption algorithms.
@@ -130,29 +127,10 @@ class CryptHandler(
     /**
      * Updates the encryption state in case of failure while processing new data.
      *
-     * @param context - The application context.
      * @param migrationSuccessful - Indicates if migration was successful
      */
-    fun updateMigrationFailureCount(
-        context: Context,
-        migrationSuccessful: Boolean
-    ) {
-        migrationFailureCount = if (migrationSuccessful) {
-            0
-        } else {
-            migrationFailureCount + 1
-        }
-
-        Logger.v(
-            accountID,
-            "Updating migrationFailureCount to $migrationFailureCount"
-        )
-
-        StorageHelper.putInt(
-            context,
-            StorageHelper.storageKeyWithSuffix(accountID, "encryptionMigrationFailureCount"),
-            migrationFailureCount
-        )
+    fun updateMigrationFailureCount(migrationSuccessful: Boolean) {
+        repository.updateMigrationFailureCount(migrationSuccessful)
     }
 
     companion object {

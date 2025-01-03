@@ -1,55 +1,38 @@
 package com.clevertap.android.sdk.cryption
 
-import android.content.Context
-import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
-import com.clevertap.android.sdk.Constants.CACHED_GUIDS_LENGTH_KEY
-import com.clevertap.android.sdk.Constants.INAPP_KEY
-import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.piiDBKeys
-import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
-import com.clevertap.android.sdk.StorageHelper
-import com.clevertap.android.sdk.db.DBAdapter
-import com.clevertap.android.sdk.utils.CTJsonConverter
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.utils.getStringOrNull
 import org.json.JSONObject
-import java.io.File
 
 internal data class CryptMigrator(
-    private val context: Context,
-    private val config: CleverTapInstanceConfig,
+    private val logPrefix: String,
+    private val configEncryptionLevel: Int,
+    private val logger: ILogger,
     private val cryptHandler: CryptHandler,
-    private val dbAdapter: DBAdapter
+    private val cryptRepository: CryptRepository,
+    private val dataMigrationRepository: DataMigrationRepository
 ) {
 
     companion object {
-        private const val MIGRATION_FAILURE_COUNT_KEY = "encryptionMigrationFailureCount"
-        private const val UNKNOWN_LEVEL = -1
-        private const val MIGRATION_NOT_NEEDED = 0
-        private const val MIGRATION_NEEDED = 1
-        private const val MIGRATION_FIRST_UPGRADE = -1
+        const val MIGRATION_FAILURE_COUNT_KEY = "encryptionMigrationFailureCount"
+        const val UNKNOWN_LEVEL = -1
+        const val MIGRATION_NOT_NEEDED = 0
+        const val MIGRATION_NEEDED = 1
+        const val MIGRATION_FIRST_UPGRADE = -1
     }
 
     fun migrateEncryption() {
-        val configEncryptionLevel = config.encryptionLevel
-        val storedEncryptionLevel = StorageHelper.getInt(
-            context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_ENCRYPTION_LEVEL),
-            UNKNOWN_LEVEL
-        )
+        val storedEncryptionLevel = cryptRepository.storedEncryptionLevel()
 
-        val storedFailureCount = StorageHelper.getInt(
-            context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, MIGRATION_FAILURE_COUNT_KEY),
-            MIGRATION_FIRST_UPGRADE
-        )
+        val storedFailureCount = cryptRepository.migrationFailureCount()
 
         val migrationFailureCount = when {
             // Fresh install
             storedEncryptionLevel == UNKNOWN_LEVEL && configEncryptionLevel == EncryptionLevel.NONE.intValue() -> {
-                cryptHandler.updateMigrationFailureCount(context, false)
+                cryptRepository.updateMigrationFailureCount(false)
                 MIGRATION_NOT_NEEDED
             }
             // Encryption level changed and upgrade to v2 already complete
@@ -57,23 +40,19 @@ internal data class CryptMigrator(
             else -> storedFailureCount
         }
 
-        StorageHelper.putInt(
-            context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_ENCRYPTION_LEVEL),
-            configEncryptionLevel
-        )
+        cryptRepository.updateEncryptionLevel(configEncryptionLevel)
 
         if (migrationFailureCount == MIGRATION_NOT_NEEDED) {
-            config.logger.verbose(
-                config.accountId,
+            logger.verbose(
+                logPrefix,
                 "Migration not required: config-encryption-level $configEncryptionLevel, " +
                         "stored-encryption-level $storedEncryptionLevel"
             )
             return
         }
 
-        config.logger.verbose(
-            config.accountId,
+        logger.verbose(
+            logPrefix,
             "Starting migration from encryption level $storedEncryptionLevel to $configEncryptionLevel " +
                     "with migrationFailureCount $migrationFailureCount"
         )
@@ -81,7 +60,7 @@ internal data class CryptMigrator(
             configEncryptionLevel == EncryptionLevel.MEDIUM.intValue(),
             migrationFailureCount == -1
         )
-        cryptHandler.updateMigrationFailureCount(context, migrationSuccess)
+        cryptRepository.updateMigrationFailureCount(migrationSuccess)
     }
 
     private fun handleAllMigrations(encrypt: Boolean, firstUpgrade: Boolean): Boolean {
@@ -101,32 +80,31 @@ internal data class CryptMigrator(
         encrypt: Boolean,
         firstUpgrade: Boolean,
     ): Boolean {
-        config.logger.verbose(
-            config.accountId,
+        logger.verbose(
+            logPrefix,
             "Migrating encryption level for cachedGUIDsKey prefs"
         )
-
-        var cgkString = StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)?:return true
-
-        if (firstUpgrade) {
-            cgkString =
-                migrateFormatForCachedGuidsKeyPref(cgkString)
+        val cgkString: String = if (firstUpgrade) {
+            // translate from old format to new format, in new format we encrypt entire string
+            val cgkJson = migrateFormatForCachedGuidsKeyPref()
+            val cgkLength = cgkJson.length()
+            dataMigrationRepository.saveCachedGuidJsonLength(cgkLength)
+            if(cgkLength == 0) {
+                dataMigrationRepository.removeCachedGuidJson()
+                return true
+            }
+            cgkJson.toString()
+        } else {
+            dataMigrationRepository.cachedGuidString() ?: return true
         }
 
-        var migrationSuccessful = true
-
         val migrationResult = performMigrationStep(encrypt, cgkString)
-        migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
-        StorageHelper.putString(
-            context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
-            migrationResult.data
-        )
-        config.logger.verbose(
-            config.accountId,
+        dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
+        logger.verbose(
+            logPrefix,
             "Cached GUIDs migrated successfully"
         )
-        return migrationSuccessful
+        return migrationResult.migrationSuccessful
     }
 
 
@@ -135,13 +113,10 @@ internal data class CryptMigrator(
      * The older format when encryption level is 1 was {Email_[]:__g... , Name_[]:__i...} -> Only the identifier was encrypted
      * The migrated format will encrypt the entire JSONObject and not just the identifier
      *
-     * @param cgkString - The string retrieved from the prefs that needs to be upgraded
      * Returns true if migration was successful and false otherwise
      */
-    private fun migrateFormatForCachedGuidsKeyPref(
-        cgkString: String,
-    ): String {
-        val cachedGuidJsonObj = CTJsonConverter.toJsonObject(cgkString, config.logger, config.accountId)
+    private fun migrateFormatForCachedGuidsKeyPref(): JSONObject {
+        val cachedGuidJsonObj = dataMigrationRepository.cachedGuidJsonObject()
         val migratedGuidJsonObj = JSONObject()
         try {
             val keysIterator = cachedGuidJsonObj.keys()
@@ -155,17 +130,12 @@ internal data class CryptMigrator(
                 }
             }
         } catch (t: Throwable) {
-            config.logger.verbose(
-                config.accountId,
+            logger.verbose(
+                logPrefix,
                 "Error migrating format for cached GUIDs: Clearing and starting fresh $t"
             )
         }
-        StorageHelper.putInt(
-            context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_LENGTH_KEY),
-            migratedGuidJsonObj.length()
-        )
-        return migratedGuidJsonObj.toString()
+        return migratedGuidJsonObj
     }
 
     /**
@@ -178,12 +148,12 @@ internal data class CryptMigrator(
     private fun migrateDBProfile(
         encrypt: Boolean
     ): Boolean {
-        config.logger.verbose(
-            config.accountId,
+        logger.verbose(
+            logPrefix,
             "Migrating encryption level for user profiles in DB"
         )
 
-        val profiles = dbAdapter.fetchUserProfilesByAccountId(config.accountId)
+        val profiles = dataMigrationRepository.userProfilesInAccount()
 
         var migrationSuccessful = true
         for ((deviceID, profile) in profiles) {
@@ -197,11 +167,11 @@ internal data class CryptMigrator(
                         profile.put(piiKey, migrationResult.data)
                     }
                 }
-                if (dbAdapter.storeUserProfile(config.accountId, deviceID, profile) <= -1L) {
+                if (dataMigrationRepository.saveUserProfile(deviceID, profile) <= -1L) {
                     migrationSuccessful = false
                 }
             } catch (e: Exception) {
-                config.logger.verbose(config.accountId, "Error migrating profile $deviceID: $e")
+                logger.verbose(logPrefix, "Error migrating profile $deviceID: $e")
                 migrationSuccessful = false
             }
         }
@@ -217,20 +187,10 @@ internal data class CryptMigrator(
      * Returns true if migration was successful and false otherwise
      */
     private fun migrateInAppData(): Boolean {
-        config.logger.verbose(config.accountId, "Migrating encryption for InAppData")
+        logger.verbose(logPrefix, "Migrating encryption for InAppData")
         var migrationSuccessful = true
 
-        val sharedPrefsDir = File(context.applicationInfo.dataDir, "shared_prefs")
-
-        // Fetch all SharedPreferences files starting with "inApp" and ending with the accountId
-        val prefsFiles = sharedPrefsDir.listFiles { _, name ->
-            // Check StoreProvider.constructStorePreferenceName() to check how the name is constructed
-            name.startsWith(INAPP_KEY) && name.endsWith("${config.accountId}.xml")
-        }
-
-        prefsFiles?.forEach { file ->
-            val prefName = file.nameWithoutExtension
-            val prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
+        dataMigrationRepository.inAppDataFiles().forEach { prefs ->
             val keysToProcess = listOf(PREFS_INAPP_KEY_CS, PREFS_INAPP_KEY_SS)
 
             keysToProcess.forEach { key ->
@@ -245,19 +205,26 @@ internal data class CryptMigrator(
         return migrationSuccessful
     }
 
-    private fun performMigrationStep(encrypt: Boolean, data: String): MigrationResult {
+    private fun performMigrationStep(
+        encrypt: Boolean,
+        data: String
+    ): MigrationResult {
         val currentState = getCurrentEncryptionState(data)
         val finalState = getFinalEncryptionState(encrypt)
 
         if (currentState == finalState) {
             // No migration needed if current state matches the final state
-            return MigrationResult(data, true)
+            return MigrationResult(data = data, migrationSuccessful = true)
         }
 
         return try {
-            return currentState.transitionTo(finalState, data, cryptHandler)
+            currentState.transitionTo(
+                targetState = finalState,
+                data = data,
+                cryptHandler = cryptHandler
+            )
         } catch (e: Exception) {
-            config.logger.verbose(config.accountId, "Migration step failed for data: $e")
+            logger.verbose(logPrefix, "Migration step failed for data: $e")
             MigrationResult(data = data, migrationSuccessful = false)
         }
     }
@@ -278,74 +245,4 @@ internal data class CryptMigrator(
         }
     }
 
-    data class MigrationResult(val data: String, val migrationSuccessful: Boolean)
-
-    /**
-     * Enum representing encryption states and their transition logic.
-     */
-    enum class EncryptionState {
-        ENCRYPTED_AES {
-            override fun transitionTo(
-                targetState: EncryptionState,
-                data: String,
-                cryptHandler: CryptHandler
-            ): MigrationResult {
-                val decrypted = cryptHandler.decrypt(data, EncryptionAlgorithm.AES)
-                return when (targetState) {
-                    ENCRYPTED_AES_GCM -> {
-                        val encrypted = decrypted?.let {
-                            cryptHandler.encrypt(
-                                it,
-                                EncryptionAlgorithm.AES_GCM
-                            )
-                        }
-                        MigrationResult(encrypted ?: decrypted ?: data, encrypted != null)
-                    }
-
-                    PLAIN_TEXT -> MigrationResult(decrypted ?: data, decrypted != null)
-                    else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES to $targetState")
-                }
-            }
-        },
-        ENCRYPTED_AES_GCM {
-            override fun transitionTo(
-                targetState: EncryptionState,
-                data: String,
-                cryptHandler: CryptHandler
-            ): MigrationResult {
-                val decrypted = cryptHandler.decrypt(
-                    data,
-                    EncryptionAlgorithm.AES_GCM
-                )
-                return when (targetState) {
-                    PLAIN_TEXT -> MigrationResult(decrypted ?: data, decrypted != null)
-                    else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES_GCM to $targetState")
-                }
-            }
-        },
-        PLAIN_TEXT {
-            override fun transitionTo(
-                targetState: EncryptionState,
-                data: String,
-                cryptHandler: CryptHandler
-            ): MigrationResult {
-                return when (targetState) {
-                    ENCRYPTED_AES_GCM -> {
-                        val encrypted = cryptHandler.encrypt(
-                            data,
-                            EncryptionAlgorithm.AES_GCM
-                        )
-                        MigrationResult(encrypted ?: data, encrypted != null)
-                    }
-                    else -> throw IllegalArgumentException("Invalid transition from PLAIN_TEXT to $targetState")
-                }
-            }
-        };
-
-        abstract fun transitionTo(
-            targetState: EncryptionState,
-            data: String,
-            cryptHandler: CryptHandler
-        ): MigrationResult
-    }
 }

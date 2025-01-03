@@ -589,7 +589,7 @@ public class LocalDataStore {
                     JSONObject jsonObjectEncrypted = new JSONObject(profile);
 
                     if (!passFlag)
-                        cryptHandler.updateMigrationFailureCount(context, false);
+                        cryptHandler.updateMigrationFailureCount(false);
 
                     DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                     long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);
