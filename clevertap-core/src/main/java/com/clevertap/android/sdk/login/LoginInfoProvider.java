@@ -40,7 +40,7 @@ public class LoginInfoProvider {
     }
 
     public LoginInfoProvider(Context context, CleverTapInstanceConfig config) {
-        // todo Check if this constructor is needed at all or is it better to have static methods
+        // todo Check if this constructor is needed at all or is it better to have static methods in a different class
         this.context = context;
         this.config = config;
     }
