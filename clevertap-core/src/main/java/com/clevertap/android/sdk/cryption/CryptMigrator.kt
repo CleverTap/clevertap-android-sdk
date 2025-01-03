@@ -232,6 +232,7 @@ internal data class CryptMigrator(
 
         if (currentState == targetState) {
             // No migration needed if current state matches the final state
+            logger.verbose(logPrefix, "No migration needed for $data")
             return MigrationResult(data = data, migrationSuccessful = true)
         }
 
