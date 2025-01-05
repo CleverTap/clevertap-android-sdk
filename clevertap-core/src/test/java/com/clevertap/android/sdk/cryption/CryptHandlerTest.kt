@@ -3,9 +3,11 @@ package com.clevertap.android.sdk.cryption
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.clevertap.android.sdk.Constants
 import io.mockk.MockKAnnotations
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.verify
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,7 +18,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CryptHandlerTest {
 
-    @MockK
+    @MockK(relaxed = true)
     private lateinit var repository: CryptRepository
 
     @MockK
@@ -39,6 +41,11 @@ class CryptHandlerTest {
         every { cryptFactory.getCryptInstance(any()) } returns crypt
     }
 
+    @After
+    fun teardown() {
+        confirmVerified(repository, cryptFactory, crypt)
+    }
+
     @Test
     fun encrypt_mediumEncryptionLevel_validKey() {
         val plainText = "testPlainText"
@@ -50,6 +57,8 @@ class CryptHandlerTest {
         val result = cryptHandler.encrypt(plainText, key)
 
         assertEquals(encryptedText, result)
+        verify { crypt.encryptInternal(plainText) } // Verify encryptInternal call
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) } // Verify getCryptInstance call
     }
 
     @Test
@@ -60,6 +69,7 @@ class CryptHandlerTest {
         val result = cryptHandler.encrypt(plainText, key)
 
         assertEquals(plainText, result)
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
     }
 
     @Test
@@ -76,11 +86,13 @@ class CryptHandlerTest {
         val result = cryptHandler.encrypt(plainText, key)
 
         assertEquals(plainText, result)
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+
     }
 
     @Test
     fun decrypt_mediumEncryptionLevel_validKey() {
-        val cipherText = "encryptedText"
+        val cipherText = "${Constants.AES_GCM_PREFIX}encryptedText${Constants.AES_GCM_SUFFIX}"
         val key = Constants.KEY_ENCRYPTION_EMAIL
         val decryptedText = "decryptedText"
 
@@ -89,6 +101,8 @@ class CryptHandlerTest {
         val result = cryptHandler.decrypt(cipherText, key)
 
         assertEquals(decryptedText, result)
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+        verify { crypt.decryptInternal(cipherText) }
     }
 
     @Test
@@ -103,7 +117,7 @@ class CryptHandlerTest {
 
     @Test
     fun decrypt_noneEncryptionLevel() {
-        val cipherText = "encryptedText"
+        val cipherText = "${Constants.AES_GCM_PREFIX}encryptedText${Constants.AES_GCM_SUFFIX}"
         val key = Constants.KEY_ENCRYPTION_EMAIL
         val decryptedText = "decryptedText"
         val cryptHandler = CryptHandler(
@@ -118,6 +132,9 @@ class CryptHandlerTest {
         val result = cryptHandler.decrypt(cipherText, key)
 
         assertEquals(decryptedText, result)
+
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+        verify { crypt.decryptInternal(cipherText) }
     }
 
     @Test
@@ -144,6 +161,9 @@ class CryptHandlerTest {
         val result = cryptHandler.encrypt(plainText)
 
         assertEquals(encryptedText, result)
+
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+        verify { crypt.encryptInternal(plainText) }
     }
 
     @Test
@@ -156,6 +176,8 @@ class CryptHandlerTest {
         val result = cryptHandler.decrypt(cipherText)
 
         assertEquals(decryptedText, result)
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+        verify { crypt.decryptInternal(cipherText) }
     }
 
     @Test
