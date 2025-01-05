@@ -89,6 +89,7 @@ internal data class CryptMigrator(
     /**
      * This method migrates the encryption level of the value under cachedGUIDsKey stored in the shared preference file
      *
+     * If decryption from AES to plain-text fails, this data is deleted
      * @param encrypt - Flag to indicate the task to be either encryption or decryption
      * @param firstUpgrade - Flag to indicate whether this is the first upgrade to v2
      * Returns true if migration was successful and false otherwise
@@ -116,7 +117,9 @@ internal data class CryptMigrator(
         }
 
         val migrationResult = performMigrationStep(encrypt, cgkString)
-        dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
+        if(migrationResult.data != null) {
+            dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
+        }
         logger.verbose(
             logPrefix,
             "Cached GUIDs migrated successfully ${migrationResult.data}"
@@ -161,6 +164,7 @@ internal data class CryptMigrator(
      * This method migrates the encryption level of the user profiles stored in the local db
      * Only pii data such as name, phone, email and identity are encrypted from the user profile, remaining are kept as is
      *
+     * If decryption from AES to plain-text fails, this data point is deleted
      * @param encrypt - Flag to indicate the task to be either encryption or decryption
      * Returns true if migration was successful and false otherwise
      */
@@ -183,7 +187,9 @@ internal data class CryptMigrator(
                             performMigrationStep(encrypt, value)
                         migrationSuccessful =
                             migrationSuccessful && migrationResult.migrationSuccessful
-                        profile.put(piiKey, migrationResult.data)
+                        if(migrationResult.data != null) {
+                            profile.put(piiKey, migrationResult.data)
+                        }
                     }
                 }
                 logger.verbose(
@@ -207,6 +213,7 @@ internal data class CryptMigrator(
      * This method migrates the encryption level of the inapp data stored in the shared preferences file.
      * Migration(if needed) is always performed to AES_GCM
      *
+     * If decryption from AES to plain-text fails, this data point is deleted
      * Returns true if migration was successful and false otherwise
      */
     private fun migrateInAppData(): Boolean {
@@ -220,7 +227,9 @@ internal data class CryptMigrator(
                 prefs.getString(key, null)?.let { data ->
                     val migrationResult = performMigrationStep(true, data)
                     migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
-                    prefs.edit().putString(key, migrationResult.data).apply()
+                    if(migrationResult.data != null) {
+                        prefs.edit().putString(key, migrationResult.data).apply()
+                    }
                     logger.verbose(
                         logPrefix,
                         "InApp Data migrated successfully ${migrationResult.data}"
@@ -272,7 +281,9 @@ internal data class CryptMigrator(
      * This function decrypts the input data using AES encryption and then transitions it to the
      * target encryption state:
      * - **AES_GCM**: Re-encrypts the decrypted data using AES-GCM encryption.
-     * - **Plain Text**: Returns the decrypted data.
+     * - **Plain Text**: Returns the decrypted data
+     *
+     * This function returns (null, true) when decryption from AES state fails. This indicates that the data must be deleted
      *
      * @param targetState The target encryption state to which the data should transition.
      * @param data The encrypted input data as a string.
@@ -294,7 +305,7 @@ internal data class CryptMigrator(
                         EncryptionAlgorithm.AES_GCM
                     )
                 }
-                MigrationResult(encrypted ?: decrypted ?: data, encrypted != null)
+                MigrationResult(encrypted ?: decrypted, encrypted != null || decrypted == null)
             }
 
             PLAIN_TEXT -> MigrationResult(decrypted ?: data, decrypted != null)
