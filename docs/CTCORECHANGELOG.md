@@ -3,6 +3,7 @@
 ### Version 7.2.0 (January 6, 2024)
 
 #### New Features
+
 * Adds support for Android 15, making it compliant with Android 15 requirements. Details [here](https://developer.android.com/about/versions/15/summary)
 * Upgrades the algorithm used for [encryption of PII data](EXAMPLES.md#encryption-of-pii-data-), making it compliant with [OWASP](https://mas.owasp.org/MASTG/0x04g-Testing-Cryptography/).
 
