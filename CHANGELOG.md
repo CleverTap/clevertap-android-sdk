@@ -1,6 +1,6 @@
 ## CHANGE LOG.
 
-### January 6, 2024
+### January 6, 2025
 * [CleverTap Android SDK v7.2.0](docs/CTCORECHANGELOG.md)
 
 ### December 24, 2024
