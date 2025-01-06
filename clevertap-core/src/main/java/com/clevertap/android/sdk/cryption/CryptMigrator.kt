@@ -187,7 +187,7 @@ internal data class CryptMigrator(
                             performMigrationStep(encrypt, value)
                         migrationSuccessful =
                             migrationSuccessful && migrationResult.migrationSuccessful
-                        if(migrationResult.data != null) {
+                        if (migrationResult.data != null) {
                             profile.put(piiKey, migrationResult.data)
                         }
                     }
