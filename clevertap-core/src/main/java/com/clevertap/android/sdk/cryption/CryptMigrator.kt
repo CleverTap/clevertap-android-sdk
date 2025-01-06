@@ -120,7 +120,7 @@ internal data class CryptMigrator(
         dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
         logger.verbose(
             logPrefix,
-            "Cached GUIDs migrated successfully with $migrationResult.migrationSuccessful = ${migrationResult.data}"
+            "Cached GUIDs migrated with success = $migrationResult.migrationSuccessful = ${migrationResult.data}"
         )
         return migrationResult.migrationSuccessful
     }
@@ -190,7 +190,7 @@ internal data class CryptMigrator(
                 }
                 logger.verbose(
                     logPrefix,
-                    "DB migrated successfully with $migrationSuccessful = $profile"
+                    "DB migrated with success = $migrationSuccessful = $profile"
                 )
                 if (dataMigrationRepository.saveUserProfile(deviceID, profile) <= -1L) {
                     migrationSuccessful = false
