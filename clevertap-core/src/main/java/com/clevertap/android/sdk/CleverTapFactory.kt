@@ -49,9 +49,15 @@ internal object CleverTapFactory {
     @JvmStatic
     fun getCoreState(
         context: Context?,
-        cleverTapInstanceConfig: CleverTapInstanceConfig,
+        cleverTapInstanceConfig: CleverTapInstanceConfig?,
         cleverTapID: String?
     ): CoreState {
+
+        if (context == null || cleverTapInstanceConfig == null) {
+            // todo this needs to be fixed with kotlin usage+using kotlin testing libs
+            throw RuntimeException("This is invalid case and will not happen. Context/Config is null")
+        }
+
         val coreState = CoreState()
 
         val templatesManager = createInstance(cleverTapInstanceConfig)
@@ -64,7 +70,7 @@ internal object CleverTapFactory {
         val storeRegistry = StoreRegistry(
             inAppStore = null,
             impressionStore = null,
-            legacyInAppStore = storeProvider.provideLegacyInAppStore(context = (context)!!, accountId = accountId),
+            legacyInAppStore = storeProvider.provideLegacyInAppStore(context = context, accountId = accountId),
             inAppAssetsStore = storeProvider.provideInAppAssetsStore(context, accountId),
             filesStore = storeProvider.provideFileStore(context, accountId)
         )
