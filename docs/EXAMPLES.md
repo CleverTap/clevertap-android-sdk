@@ -202,10 +202,10 @@ CleverTapAPI.changeCredentials(
 Add the following dependencies in your app's `build.gradle`
 
 ```groovy
-implementation "androidx.appcompat:appcompat:1.6.0-rc01"//MANDATORY for App Inbox
-implementation "androidx.recyclerview:recyclerview:1.2.1"//MANDATORY for App Inbox
+implementation "androidx.appcompat:appcompat:1.7.0"//MANDATORY for App Inbox
+implementation "androidx.recyclerview:recyclerview:1.3.2"//MANDATORY for App Inbox
 implementation "androidx.viewpager:viewpager:1.0.0"//MANDATORY for App Inbox
-implementation "com.google.android.material:material:1.4.0"//MANDATORY for App Inbox
+implementation "com.google.android.material:material:1.12.0"//MANDATORY for App Inbox
 implementation "com.github.bumptech.glide:glide:4.12.0"//MANDATORY for App Inbox
 
 //Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
@@ -219,9 +219,9 @@ Clevertap supports `AndroidX Media3` from `v7.0.0+` to replace the deprecated `E
 
 |         Old Dependency | New Dependency      |
 |-----------------------:|:--------------------|
-|     `com.google.android.exoplayer:exoplayer:2.19.1` | `androidx.media3:media3-exoplayer:1.1.1`     |
-| `com.google.android.exoplayer:exoplayer-hls:2.19.1` | `androidx.media3:media3-exoplayer-hls:1.1.1` |
-|  `com.google.android.exoplayer:exoplayer-ui:2.19.1` | `androidx.media3:media3-ui:1.1.1`  |
+|     `com.google.android.exoplayer:exoplayer:2.19.1` | `androidx.media3:media3-exoplayer:1.4.0`     |
+| `com.google.android.exoplayer:exoplayer-hls:2.19.1` | `androidx.media3:media3-exoplayer-hls:1.4.0` |
+|  `com.google.android.exoplayer:exoplayer-ui:2.19.1` | `androidx.media3:media3-ui:1.4.0`  |
 
 #### Initializing the Inbox
 
