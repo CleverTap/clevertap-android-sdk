@@ -11,6 +11,7 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -498,7 +499,7 @@ public class LocalDataStore {
                                 } else {
                                     Object decrypted = value;
                                     if (value instanceof String) {
-                                        decrypted = cryptHandler.decrypt((String) value, key);
+                                        decrypted = cryptHandler.decrypt((String) value, key, EncryptionAlgorithm.AES_GCM);
                                         if (decrypted == null)
                                             decrypted = value;
                                     }
@@ -574,7 +575,7 @@ public class LocalDataStore {
                         if (profile.get(piiKey) != null) {
                             Object value = profile.get(piiKey);
                             if (value instanceof String) {
-                                String encrypted = cryptHandler.encrypt((String) value, piiKey);
+                                String encrypted = cryptHandler.encrypt((String) value, piiKey, EncryptionAlgorithm.AES_GCM);
                                 if (encrypted == null) {
                                     passFlag = false;
                                     continue;
