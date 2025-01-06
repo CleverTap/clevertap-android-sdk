@@ -105,14 +105,16 @@ internal object CleverTapFactory {
             repository = repository,
             cryptFactory = cryptFactory
         )
-        val dataMigrationRepository = DataMigrationRepository(
-            context = context,
-            config = config,
-            dbAdapter = baseDatabaseManager.loadDBAdapter(context)
-        )
         coreState.cryptHandler = cryptHandler
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
         task.execute("migratingEncryption") {
+
+            val dataMigrationRepository = DataMigrationRepository(
+                context = context,
+                config = config,
+                dbAdapter = baseDatabaseManager.loadDBAdapter(context)
+            )
+
             val cryptMigrator = CryptMigrator(
                 logPrefix = config.accountId,
                 configEncryptionLevel = config.encryptionLevel,

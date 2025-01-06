@@ -107,7 +107,7 @@ internal data class CryptMigrator(
             val cgkJson = migrateFormatForCachedGuidsKeyPref()
             val cgkLength = cgkJson.length()
             dataMigrationRepository.saveCachedGuidJsonLength(cgkLength)
-            if(cgkLength == 0) {
+            if (cgkLength == 0) {
                 dataMigrationRepository.removeCachedGuidJson()
                 return true
             }
@@ -117,7 +117,7 @@ internal data class CryptMigrator(
         }
 
         val migrationResult = performMigrationStep(encrypt, cgkString)
-        if(migrationResult.data != null) {
+        if (migrationResult.data != null) {
             dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
         }
         logger.verbose(
@@ -239,14 +239,8 @@ internal data class CryptMigrator(
         val currentState = getCurrentEncryptionState(data)
         val targetState = getFinalEncryptionState(encrypt)
 
-        if (currentState == targetState) {
-            // No migration needed if current state matches the final state
-            logger.verbose(logPrefix, "No migration needed for $data")
-            return MigrationResult(data = data, migrationSuccessful = true)
-        }
-
         return try {
-            transitionEncryptionState(currentState, targetState, data, cryptHandler)
+            transitionEncryptionState(currentState, targetState, data)
         } catch (e: Exception) {
             logger.verbose(logPrefix, "Migration step failed for data: $e")
             MigrationResult(data = data, migrationSuccessful = false)
@@ -257,12 +251,18 @@ internal data class CryptMigrator(
         currentState: EncryptionState,
         targetState: EncryptionState,
         data: String,
-        cryptHandler: CryptHandler
     ): MigrationResult {
+
+        if (currentState == targetState) {
+            // No migration needed if current state matches the final state
+            logger.verbose(logPrefix, "No migration needed for $data")
+            return MigrationResult(data = data, migrationSuccessful = true)
+        }
+
         return when (currentState) {
-            ENCRYPTED_AES -> handleEncryptedAesTransition(targetState, data, cryptHandler)
-            ENCRYPTED_AES_GCM -> handleEncryptedAesGcmTransition(targetState, data, cryptHandler)
-            PLAIN_TEXT -> handlePlainTextTransition(targetState, data, cryptHandler)
+            ENCRYPTED_AES -> handleEncryptedAesTransition(targetState, data)
+            ENCRYPTED_AES_GCM -> handleEncryptedAesGcmTransition(targetState, data)
+            PLAIN_TEXT -> handlePlainTextTransition(targetState, data)
         }
     }
 
@@ -285,7 +285,6 @@ internal data class CryptMigrator(
     private fun handleEncryptedAesTransition(
         targetState: EncryptionState,
         data: String,
-        cryptHandler: CryptHandler
     ): MigrationResult {
         val decrypted = cryptHandler.decrypt(data, EncryptionAlgorithm.AES)
         return when (targetState) {
@@ -319,7 +318,6 @@ internal data class CryptMigrator(
     private fun handleEncryptedAesGcmTransition(
         targetState: EncryptionState,
         data: String,
-        cryptHandler: CryptHandler
     ): MigrationResult {
         val decrypted = cryptHandler.decrypt(
             data,
@@ -346,7 +344,6 @@ internal data class CryptMigrator(
     private fun handlePlainTextTransition(
         targetState: EncryptionState,
         data: String,
-        cryptHandler: CryptHandler
     ): MigrationResult {
         return when (targetState) {
             ENCRYPTED_AES_GCM -> {
