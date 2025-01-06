@@ -95,7 +95,7 @@ class LoginInfoProviderTest : BaseTestCase() {
     }
 
     @Test
-    fun `cacheGUIDForIdentifier saves plain identifier when encryption fails`() {
+    fun `cacheGUIDForIdentifier saves plain text when encryption fails`() {
         val guid = "__1234567"
         val key = "email"
         val identifier = "abc@gmail.com"
