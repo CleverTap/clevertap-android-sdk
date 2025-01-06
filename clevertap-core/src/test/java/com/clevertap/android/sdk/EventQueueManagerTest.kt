@@ -741,7 +741,6 @@ class EventQueueManagerTest : BaseTestCase() {
 
             mockStatic(IdentityRepoFactory::class.java).use {
                 val mockIdentityRepo = mock(IdentityRepo::class.java)
-                val mockLoginInfoProvider = mock(LoginInfoProvider::class.java)
                 `when`(
                     IdentityRepoFactory.getRepo(
                         application,
@@ -767,6 +766,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 `when`(corestate.deviceInfo.deviceID).thenReturn(expectedDeviceID)
                 `when`(corestate.deviceInfo.carrier).thenReturn(expectedDeviceCarrier)
                 `when`(corestate.deviceInfo.countryCode).thenReturn(expectedDeviceCC)
+                `when`(corestate.deviceInfo.isErrorDeviceId()).thenReturn(false)
 
                 val captor = ArgumentCaptor.forClass(JSONObject::class.java)
                 val captorEventType = ArgumentCaptor.forClass(Int::class.java)
@@ -780,7 +780,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 eventQueueManager.pushBasicProfile(inputJson, true)
 
                 //Assert
-                verify(mockLoginInfoProvider).removeValueFromCachedGUIDForIdentifier(
+                verify(loginInfoProvider).removeValueFromCachedGUIDForIdentifier(
                     expectedDeviceID,
                     "Email"
                 )
