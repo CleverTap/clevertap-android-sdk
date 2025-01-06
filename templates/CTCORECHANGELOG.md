@@ -1,6 +1,6 @@
 ## CleverTap Android SDK CHANGE LOG
 
-### Version 7.2.0 (January 6, 2025)
+### Version 7.2.0 (January 7, 2025)
 
 #### New Features
 

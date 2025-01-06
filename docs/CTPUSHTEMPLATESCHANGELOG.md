@@ -1,6 +1,6 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
-### Version 1.3.0 (January 6, 2025)
+### Version 1.3.0 (January 7, 2025)
 
 #### New features
 * Adds support for Android 15, making it compliant with Android 15 requirements. Details [here](https://developer.android.com/about/versions/15/summary)
