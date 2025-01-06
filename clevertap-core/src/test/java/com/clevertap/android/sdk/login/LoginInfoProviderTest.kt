@@ -10,6 +10,8 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
 class LoginInfoProviderTest : BaseTestCase() {
 
@@ -165,5 +167,58 @@ class LoginInfoProviderTest : BaseTestCase() {
         loginInfoProvider.removeValueFromCachedGUIDForIdentifier(guid, key)
 
         verify { loginInfoProvider.setCachedGUIDsAndLength(resultGuids.toString(), 1) }
+    }
+
+    @Test
+    fun `deviceIsMultiUser returns true when multiple guids in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 2)
+
+        assertTrue { loginInfoProvider.deviceIsMultiUser() }
+    }
+
+    @Test
+    fun `deviceIsMultiUser returns false when single guid in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 1)
+
+        assertFalse{ loginInfoProvider.deviceIsMultiUser() }
+    }
+
+    @Test
+    fun `isLegacyProfileLoggedIn returns false when guid in the prefs and non-empty identiy keys`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 1)
+
+        every { loginInfoProvider.cachedIdentityKeysForAccount } returns "dummy"
+
+        assertFalse{ loginInfoProvider.isLegacyProfileLoggedIn() }
+    }
+
+    @Test
+    fun `isLegacyProfileLoggedIn returns true when guid in the prefs but empty identity keys`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 1)
+
+        every { loginInfoProvider.cachedIdentityKeysForAccount } returns ""
+
+        assertTrue{ loginInfoProvider.isLegacyProfileLoggedIn() }
+    }
+
+    @Test
+    fun `isLegacyProfileLoggedIn returns false when no guids in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 0)
+
+        assertFalse { loginInfoProvider.isLegacyProfileLoggedIn() }
+    }
+
+    @Test
+    fun `isAnonymousDevice returns true when no guids in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 0)
+
+        assertTrue { loginInfoProvider.isAnonymousDevice() }
+    }
+
+    @Test
+    fun `isAnonymousDevice returns false when guids in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 1)
+
+        assertFalse{ loginInfoProvider.isAnonymousDevice() }
     }
 }

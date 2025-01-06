@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 
 import org.json.JSONObject;
@@ -62,7 +63,7 @@ public class LoginInfoProvider {
         }
         try {
             cache.put(cacheKey, guid);
-            String encryptedCache = cryptHandler.encrypt(cache.toString(), key, CryptHandler.EncryptionAlgorithm.AES_GCM);
+            String encryptedCache = cryptHandler.encrypt(cache.toString(), key, EncryptionAlgorithm.AES_GCM);
             if(encryptedCache == null) {
                 encryptedCache = cache.toString();
                 cryptHandler.updateMigrationFailureCount(false);
@@ -127,7 +128,7 @@ public class LoginInfoProvider {
     public JSONObject getDecryptedCachedGUIDs() {
         String json = getCachedGUIDStringFromPrefs();
         if(json != null) {
-            json = cryptHandler.decrypt(json, KEY_ENCRYPTION_CGK, CryptHandler.EncryptionAlgorithm.AES_GCM);
+            json = cryptHandler.decrypt(json, KEY_ENCRYPTION_CGK, EncryptionAlgorithm.AES_GCM);
         }
         return CTJsonConverter.toJsonObject(json, config.getLogger(), config.getAccountId());
     }
