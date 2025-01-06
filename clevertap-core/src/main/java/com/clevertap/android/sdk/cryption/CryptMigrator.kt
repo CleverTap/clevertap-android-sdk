@@ -220,23 +220,14 @@ internal data class CryptMigrator(
         logger.verbose(logPrefix, "Migrating encryption for InAppData")
         var migrationSuccessful = true
 
-        dataMigrationRepository.inAppDataFiles().forEach { prefs ->
-            val keysToProcess = listOf(PREFS_INAPP_KEY_CS, PREFS_INAPP_KEY_SS)
-
-            keysToProcess.forEach { key ->
-                prefs.getString(key, null)?.let { data ->
-                    val migrationResult = performMigrationStep(true, data)
-                    migrationSuccessful = migrationSuccessful && migrationResult.migrationSuccessful
-                    if(migrationResult.data != null) {
-                        prefs.edit().putString(key, migrationResult.data).apply()
-                    }
-                    logger.verbose(
-                        logPrefix,
-                        "InApp Data migrated successfully ${migrationResult.data}"
-                    )
-                }
-            }
+        val migrateCode: (String) -> String? = { spData: String ->
+            val result = performMigrationStep(true, spData)
+            migrationSuccessful = migrationSuccessful && result.migrationSuccessful
+            result.data
         }
+        val keysToProcess = listOf(PREFS_INAPP_KEY_CS, PREFS_INAPP_KEY_SS)
+
+        dataMigrationRepository.inAppDataFiles(keysToProcess, migrateCode)
 
         return migrationSuccessful
     }

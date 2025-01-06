@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.cryption
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
@@ -20,7 +19,7 @@ interface IDataMigrationRepository {
     fun saveCachedGuidJsonLength(length: Int)
     fun userProfilesInAccount(): Map<String, JSONObject>
     fun saveUserProfile(deviceID: String, profile: JSONObject): Long
-    fun inAppDataFiles(): List<SharedPreferences>
+    fun inAppDataFiles(keysToMigrate: List<String>, migrate: (String) -> String?)
 }
 
 internal class DataMigrationRepository(
@@ -69,15 +68,26 @@ internal class DataMigrationRepository(
         return dbAdapter.storeUserProfile(config.accountId, deviceID, profile)
     }
 
-    override fun inAppDataFiles(): List<SharedPreferences> {
-        // Fetch all SharedPreferences files starting with "inApp" and ending with the accountId
-        return File(context.applicationInfo.dataDir, "shared_prefs")
+    override fun inAppDataFiles(
+        keysToMigrate: List<String>,
+        migrate: (String) -> String?
+    ) {
+        File(context.applicationInfo.dataDir, "shared_prefs")
             .listFiles { _, name ->
                 // Check StoreProvider.constructStorePreferenceName() to check how the name is constructed
                 name.startsWith(INAPP_KEY) && name.endsWith("${config.accountId}.xml")
             }?.map { file ->
                 val prefName = file.nameWithoutExtension
                 context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
-            } ?: emptyList()
+            }?.forEach { sp ->
+            keysToMigrate.forEach { key ->
+                sp.getString(key, null)?.let { data ->
+                    val encryptedData = migrate(data)
+                    if (encryptedData != null) {
+                        sp.edit().putString(key, encryptedData).apply()
+                    }
+                }
+            }
+        }
     }
 }
