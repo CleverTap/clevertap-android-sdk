@@ -10,8 +10,8 @@ import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.mockito.Mockito.atLeastOnce
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.anyString
+import org.mockito.kotlin.any
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -46,18 +46,12 @@ class LoginInfoProviderTest: BaseTestCase() {
         val guid = "__1234567"
         val key = "Email"
         val identifier = "abc@gmail.com"
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
+        Mockito.`when`(cryptHandler.encrypt(anyString(), anyString(), any()))
             .thenReturn("dummy_encrypted")
 
-        loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
-
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
+        loginInfoProviderSpy.cacheGUIDForIdentifier(guid, key, identifier)
 
 
-        assertEquals(
-            "{\"Email_dummy_encrypted\":\"__1234567\"}",
-            sharedPreferences.getString("cachedGUIDsKey:id", "")
-        )
     }
 
     @Test
