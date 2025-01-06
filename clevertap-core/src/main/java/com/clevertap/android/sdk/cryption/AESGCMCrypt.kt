@@ -36,10 +36,11 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
             mode = Cipher.ENCRYPT_MODE,
             data = plainText.toByteArray(StandardCharsets.UTF_8)
         )?.let { (iv, encryptedBytes) ->
-            // Concatenate IV and encrypted text and surround with <>
-            "$AES_GCM_PREFIX${iv.toBase64()}${encryptedBytes.toBase64()}$AES_GCM_SUFFIX"
+            // Concatenate IV and encrypted text with a ":" delimiter
+            "$AES_GCM_PREFIX${iv.toBase64()}:${encryptedBytes.toBase64()}$AES_GCM_SUFFIX"
         }
     }
+
 
     /**
      * This method is used internally to decrypt the cipher text
@@ -67,11 +68,13 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
      */
     private fun parseCipherText(cipherText: String): AESGCMCryptResult? {
         return try {
-            // removes the postfix and prefix
+            // Remove the prefix and suffix
             val content = cipherText.removePrefix(AES_GCM_PREFIX).removeSuffix(AES_GCM_SUFFIX)
-            val ivLength = 16  // Base64 length for 12-byte IV (encoded length is 16)
-            val iv = content.substring(0, ivLength).fromBase64()
-            val encryptedBytes = content.substring(ivLength).fromBase64()
+
+            // Split IV and encrypted bytes using a delimiter
+            val parts = content.split(":") // Use ":" as a delimiter
+            val iv = parts[0].fromBase64()
+            val encryptedBytes = parts[1].fromBase64()
             AESGCMCryptResult(iv, encryptedBytes)
         } catch (e: Exception) {
             Logger.v("Error parsing cipherText", e)
@@ -166,7 +169,7 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
             val encodedKey = StorageHelper.getString(context, ENCRYPTION_KEY, null)
             if (encodedKey != null) {
                 // If the key exists, decode it and return as SecretKey
-                val decodedKey = Base64.decode(encodedKey, Base64.NO_WRAP)
+                val decodedKey = encodedKey.fromBase64()
                 SecretKeySpec(decodedKey, "AES")
             } else {
                 // If key doesn't exist, generate a new one and store it
@@ -175,7 +178,7 @@ class AESGCMCrypt(private val context: Context) : Crypt() {
                 val secretKey = keyGenerator.generateKey()
 
                 // Store the key in SharedPreferences
-                val encodedNewKey = Base64.encodeToString(secretKey.encoded, Base64.NO_WRAP)
+                val encodedNewKey = secretKey.encoded.toBase64()
                 StorageHelper.putString(context, ENCRYPTION_KEY, encodedNewKey)
                 secretKey
             }
