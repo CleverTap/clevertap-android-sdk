@@ -14,7 +14,7 @@ import java.io.File
 interface IDataMigrationRepository {
     fun cachedGuidJsonObject(): JSONObject
     fun cachedGuidString(): String?
-    fun saveCachedGuidJson(json: String)
+    fun saveCachedGuidJson(json: String?)
     fun removeCachedGuidJson()
     fun saveCachedGuidJsonLength(length: Int)
     fun userProfilesInAccount(): Map<String, JSONObject>
@@ -37,7 +37,7 @@ internal class DataMigrationRepository(
         return cachedGuidJsonObj
     }
 
-    override fun saveCachedGuidJson(json: String) {
+    override fun saveCachedGuidJson(json: String?) {
         StorageHelper.putString(
             context,
             StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
@@ -83,9 +83,7 @@ internal class DataMigrationRepository(
             keysToMigrate.forEach { key ->
                 sp.getString(key, null)?.let { data ->
                     val encryptedData = migrate(data)
-                    if (encryptedData != null) {
-                        sp.edit().putString(key, encryptedData).apply()
-                    }
+                    sp.edit().putString(key, encryptedData).apply()
                 }
             }
         }

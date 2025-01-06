@@ -117,9 +117,7 @@ internal data class CryptMigrator(
         }
 
         val migrationResult = performMigrationStep(encrypt, cgkString)
-        if (migrationResult.data != null) {
-            dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
-        }
+        dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
         logger.verbose(
             logPrefix,
             "Cached GUIDs migrated successfully ${migrationResult.data}"
@@ -187,9 +185,7 @@ internal data class CryptMigrator(
                             performMigrationStep(encrypt, value)
                         migrationSuccessful =
                             migrationSuccessful && migrationResult.migrationSuccessful
-                        if (migrationResult.data != null) {
-                            profile.put(piiKey, migrationResult.data)
-                        }
+                        profile.put(piiKey, migrationResult.data)
                     }
                 }
                 logger.verbose(
@@ -273,9 +269,8 @@ internal data class CryptMigrator(
      *
      * @param targetState The target encryption state to which the data should transition.
      * @param data The encrypted input data as a string.
-     * @param cryptHandler The cryptographic handler responsible for encryption and decryption.
+     *
      * @return A `MigrationResult` containing the transformed data and whether the operation succeeded.
-     * @throws IllegalArgumentException If the transition to the target state is invalid.
      */
     private fun handleEncryptedAesTransition(
         targetState: EncryptionState,
@@ -311,9 +306,8 @@ internal data class CryptMigrator(
      *
      * @param targetState The target encryption state to which the data should transition.
      * @param data The encrypted input data as a string.
-     * @param cryptHandler The cryptographic handler responsible for encryption and decryption.
+     *
      * @return A `MigrationResult` containing the transformed data and whether the operation succeeded.
-     * @throws IllegalArgumentException If the transition to the target state is invalid.
      */
     private fun handleEncryptedAesGcmTransition(
         targetState: EncryptionState,
@@ -342,9 +336,8 @@ internal data class CryptMigrator(
      *
      * @param targetState The target encryption state to which the data should transition.
      * @param data The input plain text data as a string.
-     * @param cryptHandler The cryptographic handler responsible for encryption and decryption.
+     *
      * @return A `MigrationResult` containing the transformed data and whether the operation succeeded.
-     * @throws IllegalArgumentException If the transition to the target state is invalid.
      */
     private fun handlePlainTextTransition(
         targetState: EncryptionState,
