@@ -62,7 +62,7 @@ public class LoginInfoProvider {
         }
         try {
             cache.put(cacheKey, guid);
-            String encryptedCache = cryptHandler.encrypt(cache.toString(), key);
+            String encryptedCache = cryptHandler.encrypt(cache.toString(), key, CryptHandler.EncryptionAlgorithm.AES_GCM);
             if(encryptedCache == null) {
                 encryptedCache = cache.toString();
                 cryptHandler.updateMigrationFailureCount(false);
