@@ -1226,8 +1226,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
 
-        CoreState coreState = CleverTapFactory
-                .getCoreState(context, config, cleverTapID);
+        CoreState coreState = CleverTapFactory.getCoreState(context, config, cleverTapID);
         setCoreState(coreState);
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "CoreState is set");
 
