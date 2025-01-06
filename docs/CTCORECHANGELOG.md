@@ -1,5 +1,15 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.2.0 (January 6, 2025)
+
+#### New Features
+
+* Adds support for Android 15, making it compliant with Android 15 requirements. Details [here](https://developer.android.com/about/versions/15/summary)
+* Upgrades the algorithm used for [encryption of PII data](EXAMPLES.md#encryption-of-pii-data-), making it compliant with [OWASP](https://mas.owasp.org/MASTG/0x04g-Testing-Cryptography/). Uses AndroidKeyStore for securely backing up encryption key on api levels 23+.
+
+> ⚠️ **NOTE**
+After upgrading the SDK to v7.2.0, don't downgrade in subsequent app releases. If you encounter any issues, please contact the CleverTap support team for assistance.
+
 ### Version 7.1.0 (December 24, 2024)
 
 #### New Features
@@ -11,6 +21,7 @@
   * `getUserLastVisitTs()`: Get timestamp of user's last app visit
   * `getUserAppLaunchCount()`: Get total number of times user has launched the app
   * `getUserEventLogHistory()`: Get full event history for current user
+* Adds support to hide large icon in android notification by sending wzrk_hide_large_icon key in notification payload.
     
 #### API Changes
 
