@@ -135,6 +135,7 @@ public interface Constants {
     String KEY_I = "comms_i";
     String KEY_J = "comms_j";
     String CACHED_GUIDS_KEY = "cachedGUIDsKey";
+    String CACHED_GUIDS_LENGTH_KEY = "cachedGUIDsLengthKey";
     String CACHED_VARIABLES_KEY = "variablesKey";
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";
@@ -324,6 +325,12 @@ public interface Constants {
 
     String CRYPTION_SALT = "W1ZRCl3>";
     String CRYPTION_IV = "__CL3>3Rt#P__1V_";
+
+    String AES_PREFIX = "[";
+    String AES_SUFFIX = "]";
+
+    String AES_GCM_PREFIX = "<ct<";
+    String AES_GCM_SUFFIX = ">ct>";
 
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;

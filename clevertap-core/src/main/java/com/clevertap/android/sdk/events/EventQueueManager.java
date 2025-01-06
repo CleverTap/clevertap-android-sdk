@@ -20,7 +20,6 @@ import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.SessionManager;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
@@ -64,8 +63,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private final Logger logger;
 
-    private LoginInfoProvider loginInfoProvider;
-
     private final MainLooperHandler mainLooperHandler;
 
     private final NetworkManager networkManager;
@@ -77,7 +74,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     private Runnable pushNotificationViewedRunnable = null;
 
     private final ControllerManager controllerManager;
-    private final CryptHandler cryptHandler;
+
+    private final LoginInfoProvider loginInfoProvider;
 
     public EventQueueManager(final BaseDatabaseManager baseDatabaseManager,
             Context context,
@@ -93,7 +91,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             CTLockManager ctLockManager,
             final LocalDataStore localDataStore,
             ControllerManager controllerManager,
-            CryptHandler cryptHandler) {
+            LoginInfoProvider loginInfoProvider) {
         this.baseDatabaseManager = baseDatabaseManager;
         this.context = context;
         this.config = config;
@@ -108,7 +106,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         cleverTapMetaData = coreMetaData;
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
-        this.cryptHandler = cryptHandler;
+        this.loginInfoProvider = loginInfoProvider;
 
         callbackManager.setFailureFlushListener(this);
     }
@@ -247,14 +245,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         }
     }
 
-    public LoginInfoProvider getLoginInfoProvider() {
-        return loginInfoProvider;
-    }
-
-    public void setLoginInfoProvider(final LoginInfoProvider loginInfoProvider) {
-        this.loginInfoProvider = loginInfoProvider;
-    }
-
     public int getNow() {
         return (int) (System.currentTimeMillis() / 1000);
     }
@@ -387,8 +377,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             if (baseProfile != null && baseProfile.length() > 0) {
                 Iterator<String> i = baseProfile.keys();
                 IdentityRepo iProfileHandler = IdentityRepoFactory
-                        .getRepo(context, config, deviceInfo, validationResultStack);
-                setLoginInfoProvider(new LoginInfoProvider(context, config, deviceInfo, cryptHandler));
+                        .getRepo(context, config, validationResultStack);
                 while (i.hasNext()) {
                     String next = i.next();
 
@@ -412,17 +401,18 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
                         /*If key is present in IdentitySet and removeFromSharedPrefs is true then
                         proceed to removing PII key(Email) from shared prefs*/
-                        if (isProfileKey && removeFromSharedPrefs){
-                            try{
-                                getLoginInfoProvider().removeValueFromCachedGUIDForIdentifier(guid,next);
-                            } catch (Throwable t){
-                                //no op
-                            }
-                        }else if (isProfileKey) {
+
+                        if (isProfileKey && !deviceInfo.isErrorDeviceId()) {
                             try {
-                                getLoginInfoProvider().cacheGUIDForIdentifier(guid, next, value.toString());
+                                if (removeFromSharedPrefs) {
+                                    // Remove the value associated with the GUID
+                                    loginInfoProvider.removeValueFromCachedGUIDForIdentifier(guid, next);
+                                } else {
+                                    // Cache the new value for the GUID
+                                    loginInfoProvider.cacheGUIDForIdentifier(guid, next, value.toString());
+                                }
                             } catch (Throwable t) {
-                                // no-op
+                                // Log or handle the exception if needed; currently no-op
                             }
                         }
                     }

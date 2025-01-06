@@ -170,6 +170,20 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         }
     }
 
+    /**
+     * Configures strict mode policies for both thread and VM operations to detect potential performance
+     * and correctness issues during app development.
+     *
+     * - For thread policy, it detects all possible thread-related issues such as network operations or
+     *   disk I/O on the main thread. It logs the violations for debugging purposes.
+     *
+     * - For VM policy, it monitors potential memory-related issues such as leaks or misuse of API calls.
+     *   Violations are logged, helping developers find and fix memory management problems.
+     *
+     * This method is typically used during the development phase to catch bugs early. The `penaltyLog()`
+     * method ensures that violations are logged without crashing the app, but more aggressive actions
+     * like crashing can be enabled by using `penaltyDeath()` if desired.
+     */
     private fun setupStrictMode(enable: Boolean = false) {
         if (enable) {
             StrictMode.setThreadPolicy(

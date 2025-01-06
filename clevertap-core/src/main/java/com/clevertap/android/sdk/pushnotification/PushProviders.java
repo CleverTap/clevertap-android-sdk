@@ -530,7 +530,7 @@ public class PushProviders implements CTPushProviderListener {
 
                 String workName = existingWorkName.equals("") ? config.getAccountId() : existingWorkName;
 
-                workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.REPLACE, request);
+                workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.UPDATE, request);
                 StorageHelper.putString(context, PF_WORK_ID, workName);
                 config.getLogger().debug(config.getAccountId(),
                         "Pushamp - Finished scheduling periodic work request - " + workName + " with repeatInterval- "

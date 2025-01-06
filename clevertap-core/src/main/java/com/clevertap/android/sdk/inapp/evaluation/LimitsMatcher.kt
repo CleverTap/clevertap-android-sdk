@@ -11,7 +11,7 @@ import com.clevertap.android.sdk.inapp.TriggerManager
  * @property manager The [ImpressionManager] used to track campaign impressions.
  * @property triggerManager The [TriggerManager] used to manage triggers for in-app notifications.
  */
-class LimitsMatcher(
+internal class LimitsMatcher(
     private val manager: ImpressionManager,
     private val triggerManager: TriggerManager
 ) {
