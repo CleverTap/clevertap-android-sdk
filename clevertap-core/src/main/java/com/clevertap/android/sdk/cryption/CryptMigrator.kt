@@ -298,8 +298,13 @@ internal data class CryptMigrator(
                 MigrationResult(encrypted ?: decrypted, encrypted != null || decrypted == null)
             }
 
-            PLAIN_TEXT -> MigrationResult(decrypted ?: data, decrypted != null)
-            else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES to $targetState")
+            PLAIN_TEXT -> {
+                MigrationResult(decrypted ?: data, decrypted != null)
+            }
+            else -> {
+                logger.verbose(logPrefix, "Invalid transition from ENCRYPTED_AES to $targetState")
+                MigrationResult.failure(data)
+            }
         }
     }
 
@@ -324,8 +329,13 @@ internal data class CryptMigrator(
             EncryptionAlgorithm.AES_GCM
         )
         return when (targetState) {
-            PLAIN_TEXT -> MigrationResult(decrypted ?: data, decrypted != null)
-            else -> throw IllegalArgumentException("Invalid transition from ENCRYPTED_AES_GCM to $targetState")
+            PLAIN_TEXT -> {
+                MigrationResult(decrypted ?: data, decrypted != null)
+            }
+            else -> {
+                logger.verbose(logPrefix, "Invalid transition from ENCRYPTED_AES_GCM to $targetState")
+                MigrationResult.failure(data)
+            }
         }
     }
 
@@ -353,7 +363,10 @@ internal data class CryptMigrator(
                 )
                 MigrationResult(encrypted ?: data, encrypted != null)
             }
-            else -> throw IllegalArgumentException("Invalid transition from PLAIN_TEXT to $targetState")
+            else -> {
+                logger.verbose(logPrefix, "Invalid transition from PLAIN_TEXT to $targetState")
+                MigrationResult.failure(data)
+            }
         }
     }
 
