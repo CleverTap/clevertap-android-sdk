@@ -1,11 +1,12 @@
 ## CleverTap Android SDK CHANGE LOG
 
-### Version 7.2.0 (January 6, 2025)
+### Version 7.2.0 (January 7, 2025)
 
 #### New Features
 
 * Adds support for Android 15, making it compliant with Android 15 requirements. Details [here](https://developer.android.com/about/versions/15/summary)
 * Upgrades the algorithm used for [encryption of PII data](EXAMPLES.md#encryption-of-pii-data-), making it compliant with [OWASP](https://mas.owasp.org/MASTG/0x04g-Testing-Cryptography/). Uses AndroidKeyStore for securely backing up encryption key on api levels 23+.
+* Updates Minimum Android SDK version to API 21 (Android 5.0)
 
 > ⚠️ **NOTE**
 After upgrading the SDK to v7.2.0, don't downgrade in subsequent app releases. If you encounter any issues, please contact the CleverTap support team for assistance.
