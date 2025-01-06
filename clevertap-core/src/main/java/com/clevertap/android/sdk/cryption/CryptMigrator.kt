@@ -239,12 +239,7 @@ internal data class CryptMigrator(
         val currentState = getCurrentEncryptionState(data)
         val targetState = getFinalEncryptionState(encrypt)
 
-        return try {
-            transitionEncryptionState(currentState, targetState, data)
-        } catch (e: Exception) {
-            logger.verbose(logPrefix, "Migration step failed for data: $e")
-            MigrationResult(data = data, migrationSuccessful = false)
-        }
+        return transitionEncryptionState(currentState, targetState, data)
     }
 
     private fun transitionEncryptionState(
