@@ -153,6 +153,7 @@ public class PushProviders implements CTPushProviderListener {
             if (nb != null) {
                 triggerNotification(nb, generatedNotificationId);
                 storePushNotification(extras);
+                processPushNotificationViewedEvent(extras);
             }
         } catch (Throwable t) {
             config.getLogger()
@@ -1114,25 +1115,28 @@ public class PushProviders implements CTPushProviderListener {
             config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
             dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
 
-            boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
-            if (!notificationViewedEnabled) {
-                ValidationResult notificationViewedError = ValidationResultFactory
-                        .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
-                config.getLogger().debug(notificationViewedError.getErrorDesc());
-                validationResultStack.pushValidationResult(notificationViewedError);
-                return;
-            }
-
-            long omrStart = extras.getLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, -1);
-            if (omrStart >= 0) {
-                long prt = System.currentTimeMillis() - omrStart;
-                config.getLogger()
-                        .verbose("Rendered Push Notification in " + prt + " millis");
-            }
-
-            ctWorkManager.init();
-            analyticsManager.pushNotificationViewedEvent(extras);
-
         }
+    }
+
+    public void processPushNotificationViewedEvent(Bundle extras) {
+        boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
+        if (!notificationViewedEnabled) {
+            ValidationResult notificationViewedError = ValidationResultFactory
+                    .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
+            config.getLogger().debug(notificationViewedError.getErrorDesc());
+            validationResultStack.pushValidationResult(notificationViewedError);
+            return;
+        }
+
+        long omrStart = extras.getLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, -1);
+        if (omrStart >= 0) {
+            long prt = System.currentTimeMillis() - omrStart;
+            config.getLogger()
+                    .verbose("Rendered Push Notification in " + prt + " millis");
+        }
+
+        ctWorkManager.init();
+        analyticsManager.pushNotificationViewedEvent(extras);
+
     }
 }
