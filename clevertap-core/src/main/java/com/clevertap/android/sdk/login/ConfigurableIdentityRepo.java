@@ -2,12 +2,10 @@ package com.clevertap.android.sdk.login;
 
 import static com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN;
 
-import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
@@ -25,11 +23,7 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
 
     private final ValidationResultStack validationResultStack;
 
-    public ConfigurableIdentityRepo(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo, ValidationResultStack mValidationResultStack) {
-       this(config,new LoginInfoProvider(context, config, deviceInfo),mValidationResultStack);
-    }
-
-    public ConfigurableIdentityRepo( CleverTapInstanceConfig config,LoginInfoProvider loginInfoProvider, ValidationResultStack mValidationResultStack) {
+    public ConfigurableIdentityRepo(CleverTapInstanceConfig config, LoginInfoProvider loginInfoProvider, ValidationResultStack mValidationResultStack) {
         this.config = config;
         this.infoProvider = loginInfoProvider;
         this.validationResultStack = mValidationResultStack;
@@ -54,14 +48,14 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
 
     /**
      * Loads the identity set . It executes 5 steps:
-     *
+     * ---------------------------------------------------------------------------
      * 1. creating : 'prefKeySet'
      *    1.1. A string is provided by loginInfoProvider.getCachedIdentityKeysForAccount()
      *       1.1.1  the above function gets either string or null from storage based on 5 scenarios:
      *              whether keyvalue are coming from sp of default/nondefault config, etc
      *   1.2 This string is of format "__,__,__etc" and is split by ',' .the new list is filtered for
      *      wrong keys and finally used to create 'prefKeySet'
-     *
+     * ---------------------------------------------------------------------------
      * 2. creating : 'configKeySet'
      *   2.1 A string array is provided by config.getIdentityKeys() . note that config is a
      *      dependency passed to ConfigurableIdentityRepo . it can be default or non default
@@ -70,17 +64,17 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
      *            of strings that are set post creation via config.setIdentityKeys(
      *            Constants.TYPE_EMAIL,Constants.TYPE_PHONE,..etc)
      *   2.2 this array is filtered for wrong keys and finally used to create 'configKeySet'
-     *
+     * ---------------------------------------------------------------------------
      * 3. validate sets  : handleError(prefKeySet, configKeySet)
      *   3.1 note that : the validation criteria is simply that KeySet must not be empty
      *   3.2 if prefKeySet.isValid() AND configKeySet.isValid() AND !prefKeySet.equals(configKeySet),
      *      it will generate a validation error on vr stack passed via external dependency
-     *
+     * ---------------------------------------------------------------------------
      * 4. setting identity set
      *   4.1  if prefKeySet is Valid, identitySet will be set as prefKeySet
      *   4.2  if above doesn't apply and configKeySet is Valid, identitySet will be set as configKeySet
      *   4.3  if above 2 doesn't apply identitySet will be set as defaultSet = ['Identity','Email']
-     *
+     * ---------------------------------------------------------------------------
      * 5. Saving Identity Keys For Account
      *   5.1 if prefKeySet was not valid, loginInfoProvider.saveIdentityKeysForAccount(identitySet)
      *       is also called on the newly initialised identitySet

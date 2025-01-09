@@ -1,5 +1,51 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.2.0 (January 7, 2025)
+
+#### New Features
+
+* Adds support for Android 15, making it compliant with Android 15 requirements. Details [here](https://developer.android.com/about/versions/15/summary)
+* Upgrades the algorithm used for [encryption of PII data](EXAMPLES.md#encryption-of-pii-data-), making it compliant with [OWASP](https://mas.owasp.org/MASTG/0x04g-Testing-Cryptography/). Uses AndroidKeyStore for securely backing up encryption key on api levels 23+.
+* Updates Minimum Android SDK version to API 21 (Android 5.0)
+
+> ⚠️ **NOTE**
+After upgrading the SDK to v7.2.0, don't downgrade in subsequent app releases. If you encounter any issues, please contact the CleverTap support team for assistance.
+
+### Version 7.1.0 (December 24, 2024)
+
+#### New Features
+
+* Adds support for triggering InApps based on first-time event filtering in multiple triggers. Now you can create campaign triggers that combine recurring and first-time events. For example: Trigger a campaign when "Charged" occurs (every time) OR "App Launched" occurs (first time only).
+* Adds new user-level event log tracking system to store and manage user event history. New APIs include:
+  * `getUserEventLog()`: Get details about a specific event
+  * `getUserEventLogCount()`: Get count of times an event occurred
+  * `getUserLastVisitTs()`: Get timestamp of user's last app visit
+  * `getUserAppLaunchCount()`: Get total number of times user has launched the app
+  * `getUserEventLogHistory()`: Get full event history for current user
+* Adds support to hide large icon in android notification by sending wzrk_hide_large_icon key in notification payload.
+    
+#### API Changes
+
+* **Deprecated:**  The old event tracking APIs tracked events at the device level rather than the user level, making it difficult to maintain accurate user-specific event histories, especially in multi-user scenarios. The following methods have been deprecated in favor of new user-specific event tracking APIs that provide more accurate, user-level analytics. These deprecated methods will be removed in future versions with prior notice:
+  * `getDetails()`: Use `getUserEventLog()` instead for user-specific event details
+  * `getCount()`: Use `getUserEventLogCount()` instead for user-specific event counts
+  * `getFirstTime()`: Use `getUserEventLog()` instead for user-specific first occurrence timestamp
+  * `getLastTime()`: Use `getUserEventLog()` instead for user-specific last occurrence timestamp
+  * `getPreviousVisitTime()`: Use `getUserLastVisitTs()` instead for user-specific last visit timestamp
+  * `getTotalVisits()`: Use `getUserAppLaunchCount()` instead for user-specific app launch count
+  * `getHistory()`: Use `getUserEventLogHistory()` instead for user-specific event history
+
+#### Bug Fixes
+* Fixes [#671](https://github.com/CleverTap/clevertap-android-sdk/issues/671) - an `AbstractMethodError` in the AppInbox feature when using audio/video.
+* Fixes issues when File type variable changes from validValue -> null
+
+
+### Version 7.0.3 (November 29, 2024)
+
+#### New Features
+* Changes campaign triggering evaluation of event names, event properties, and profile properties to ignore letter case and whitespace.
+* Adds support for previewing in-apps created through the new dashboard advanced builder.
+
 ### Version 7.0.2 (October 10, 2024)
 
 #### New Features

@@ -27,7 +27,7 @@ import org.json.JSONObject
  * @property ctPreference The shared preference handler for storing and retrieving data.
  * @property cryptHandler The handler used for encryption and decryption of In-App messages.
  */
-class InAppStore(
+internal class InAppStore(
     private val ctPreference: ICTPreference,
     private val cryptHandler: CryptHandler
 ) : ChangeUserCallback {

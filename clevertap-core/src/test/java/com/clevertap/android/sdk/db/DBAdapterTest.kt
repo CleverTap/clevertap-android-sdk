@@ -102,7 +102,7 @@ class DBAdapterTest : BaseTestCase() {
         msgList = dbAdapter.getMessages(userId)
         assertEquals(3, msgList.size)
 
-        msgIds.removeLast()
+        msgIds.removeAt(msgIds.lastIndex)
         msgIds.add("msg_4")
         result = dbAdapter.deleteMessagesForIDs(msgIds, userId)
         msgList = dbAdapter.getMessages(userId)
@@ -333,7 +333,7 @@ class DBAdapterTest : BaseTestCase() {
                 getCtMsgDao(msgIds[2], userId, read = false)
             )
         )
-        msgIds.removeLast()
+        msgIds.removeAt(msgIds.lastIndex)
         msgIds.add("msg_4")
         result = dbAdapter.markReadMessagesForIds(msgIds, userId)
         msgList = dbAdapter.getMessages(userId)
@@ -591,6 +591,18 @@ class DBAdapterTest : BaseTestCase() {
             assertTrue(it.contains("temp"))
         }
     }
+
+    @Test
+    fun `test userEventLogDAO returns singleton instance`() {
+        // When
+        val dao1 = dbAdapter.userEventLogDAO()
+        val dao2 = dbAdapter.userEventLogDAO()
+
+        // Then
+        assertNotNull(dao1)
+        assertSame(dao1, dao2) // Verify same instance is returned
+    }
+
 
     private fun getCtMsgDao(
         id: String = "1",

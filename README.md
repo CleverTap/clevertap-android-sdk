@@ -26,7 +26,7 @@ We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as depend
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:7.0.2"
+         implementation "com.clevertap.android:clevertap-android-sdk:7.2.0"
     }
 ```
 
@@ -34,7 +34,7 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-7.0.2", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-7.2.0", ext: 'aar')
     }
 ```
 
@@ -46,10 +46,10 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:7.0.2"
-         implementation "androidx.core:core:1.9.0"
-         implementation "com.google.firebase:firebase-messaging:23.0.6"
-         implementation "com.google.android.gms:play-services-ads:22.3.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
+         implementation "com.clevertap.android:clevertap-android-sdk:7.2.0"
+         implementation "androidx.core:core:1.13.0"
+         implementation "com.google.firebase:firebase-messaging:24.0.0"
+         implementation "com.google.android.gms:play-services-ads:23.6.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
      }
 ```
 
@@ -70,8 +70,8 @@ Also be sure to include the `google-services.json` classpath in your Project lev
         
          }       
          dependencies {      
-             classpath "com.android.tools.build:gradle:8.2.2"
-             classpath "com.google.gms:google-services:4.4.0"
+             classpath "com.android.tools.build:gradle:8.6.0"
+             classpath "com.google.gms:google-services:4.4.2"
         
              // NOTE: Do not place your application dependencies here; they belong       
              // in the individual module build.gradle files      

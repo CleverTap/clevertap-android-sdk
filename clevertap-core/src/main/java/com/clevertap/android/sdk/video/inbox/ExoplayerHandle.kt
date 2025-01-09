@@ -49,7 +49,7 @@ class ExoplayerHandle : InboxVideoPlayerHandle {
             .build()
             .apply {
                 volume = 0f // start off muted
-                addListener(object : Player.Listener {
+                addListener(object : ExoplayerPlayerListener() {
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         when (playbackState) {
                             Player.STATE_BUFFERING -> {

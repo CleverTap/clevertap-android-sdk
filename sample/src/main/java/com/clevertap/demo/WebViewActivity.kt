@@ -6,11 +6,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.ViewGroup
 import android.webkit.WebView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.CTWebInterface
 import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
 class WebViewActivity : AppCompatActivity() {
 
@@ -19,13 +22,19 @@ class WebViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.webview)
-        findViewById<WebView>(R.id.webview)?.apply {
+        val webView = findViewById<WebView>(R.id.webview)?.apply {
             settings.javaScriptEnabled = true
             loadUrl("file:///android_asset/sampleHTMLCode.html")
             settings.allowContentAccess = false
             settings.allowFileAccess = false
             settings.allowFileAccessFromFileURLs = false
-            addJavascriptInterface(CTWebInterface(CleverTapAPI.getDefaultInstance(this@WebViewActivity)), "CleverTap")
+            addJavascriptInterface(CTWebInterface(MyApplication.ctInstance), "CleverTap")
+        }
+        webView?.applyInsetsWithMarginAdjustment { insets: Insets, mlp: ViewGroup.MarginLayoutParams ->
+            mlp.leftMargin = insets.left
+            mlp.rightMargin = insets.right
+            mlp.topMargin = insets.top
+            mlp.bottomMargin = insets.bottom
         }
     }
 
