@@ -1,6 +1,5 @@
 package com.clevertap.android.pushtemplates
 
-import android.app.ActivityOptions
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ContentResolver
@@ -310,6 +309,9 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         applicationContext,
                         basicTemplateBundle
                     )
+                }
+                else {
+                    PTLog.verbose("Initial notification not in tray, not Rendering Timer Terminal Notification")
                 }
             }, (delay - 100).toLong())
         }
