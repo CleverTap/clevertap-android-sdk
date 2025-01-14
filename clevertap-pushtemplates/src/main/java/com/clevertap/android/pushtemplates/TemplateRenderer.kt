@@ -236,13 +236,6 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         if (delay != null) {
             handler.postDelayed({
                 val applicationContext = context.applicationContext
-                if (ManifestValidator.isComponentPresentInManifest(
-                        applicationContext,
-                        "com.clevertap.android.pushtemplates.TimerTemplateService",
-                        ManifestValidator.ComponentType.SERVICE)) {
-                    val intent = Intent(context, TimerTemplateService::class.java)
-                    context.stopService(intent)
-                }
                 if (Utils.isNotificationInTray(
                         context,
                         notificationId
@@ -313,6 +306,9 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 else {
                     PTLog.verbose("Initial notification not in tray, not Rendering Timer Terminal Notification")
                 }
+
+                val intent = Intent(context, TimerTemplateService::class.java)
+                context.stopService(intent)
             }, (delay - 100).toLong())
         }
     }
