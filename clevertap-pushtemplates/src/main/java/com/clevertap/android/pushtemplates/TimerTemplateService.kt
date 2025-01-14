@@ -15,7 +15,7 @@ class TimerTemplateService : Service() {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         val message = intent.extras ?: return super.onStartCommand(intent, flags, startId)
         val templateRenderer = TemplateRenderer(this@TimerTemplateService, message)
-        PTLog.verbose("Running Timer Template Service")
+        PTLog.verbose("Running TimerTemplateService")
 
         val cleverTapAPI = CleverTapAPI.getGlobalInstance(
             this@TimerTemplateService,
