@@ -1,6 +1,6 @@
 package com.clevertap.android.pushtemplates
 
-internal enum class TemplateType(private val templateType: String) {
+enum class TemplateType(private val templateType: String) {
     BASIC("pt_basic"), AUTO_CAROUSEL("pt_carousel"),
     MANUAL_CAROUSEL("pt_manual_carousel"), RATING("pt_rating"),
     FIVE_ICONS("pt_five_icons"), PRODUCT_DISPLAY("pt_product_display"),
