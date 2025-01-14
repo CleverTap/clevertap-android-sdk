@@ -235,19 +235,19 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
 
         if (delay != null) {
             handler.postDelayed({
+                val applicationContext = context.applicationContext
+                if (ManifestValidator.isComponentPresentInManifest(
+                        applicationContext,
+                        "com.clevertap.android.pushtemplates.TimerTemplateService",
+                        ManifestValidator.ComponentType.SERVICE)) {
+                    val intent = Intent(context, TimerTemplateService::class.java)
+                    context.stopService(intent)
+                }
                 if (Utils.isNotificationInTray(
                         context,
                         notificationId
                     ) && ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true
                 ) {
-                    val applicationContext = context.applicationContext
-                    if (ManifestValidator.isComponentPresentInManifest(
-                            applicationContext,
-                            "com.clevertap.android.pushtemplates.TimerTemplateService",
-                            ManifestValidator.ComponentType.SERVICE)) {
-                        val intent = Intent(context, TimerTemplateService::class.java)
-                        context.stopService(intent)
-                    }
                     val basicTemplateBundle = extras.clone() as Bundle
                     basicTemplateBundle.remove("wzrk_rnv")
                     basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
