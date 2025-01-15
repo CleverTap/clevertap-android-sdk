@@ -555,7 +555,15 @@ internal class EvaluationManager(
     @WorkerThread
     fun loadSuppressedCSAndEvaluatedSSInAppsIds() {
         storeRegistry.inAppStore?.let { store ->
-            evaluatedServerSideCampaignIds.putAll(JsonUtil.mapFromJson(store.readEvaluatedServerSideInAppIds()))
+            // store.readEvaluatedServerSideInAppIds() returns list of Int or Long as InApp IDs
+            val evaluatedSSInAppIdsMap =
+                JsonUtil.mapFromJson<MutableList<Number>>(store.readEvaluatedServerSideInAppIds())
+            // forcefully convert list of InApp IDs to Long as evaluatedServerSideCampaignIds expects Long
+            val evaluatedSsInAppIdsMapWithLongList =
+                evaluatedSSInAppIdsMap.mapValues { entry ->
+                    entry.value.map { number -> number.toLong() }.toMutableList()
+                }
+            evaluatedServerSideCampaignIds.putAll(evaluatedSsInAppIdsMapWithLongList)
             suppressedClientSideInApps.putAll(JsonUtil.mapFromJson(store.readSuppressedClientSideInAppIds()))
         }
     }
