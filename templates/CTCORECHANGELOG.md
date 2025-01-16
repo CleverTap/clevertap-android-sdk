@@ -1,6 +1,17 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.2.1 (January 16, 2025)
+This hotfix release addresses the following issue in `v7.2.0`:
+
+#### Bug Fixes
+* Fixes `ClassCastException` from `Integer` to `Long` for server side in-apps delivery. A bug occurs when the network is turned off, and the following steps are performed:
+  * send event <event_name_1> (triggers campaign <campaign_id_1>)
+  * stop the app
+  * turn network on and then restart the app.
+
 ### Version 7.2.0 (January 7, 2025)
+> ‼️ **NOTE**
+If you are using server side in-apps please use `7.2.1` instead. `7.2.0` has a bug related to server side in-apps.
 
 #### New Features
 
