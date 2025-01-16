@@ -18,8 +18,8 @@ android {
         applicationId "com.clevertap.demo"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 7000020
-        versionName "7.2.0"
+        versionCode 7000021
+        versionName "7.2.1"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -159,12 +159,12 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72"
     implementation "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"*/
 
-    remoteImplementation("com.clevertap.android:clevertap-android-sdk:7.2.0")
+    remoteImplementation("com.clevertap.android:clevertap-android-sdk:7.2.1")
     remoteImplementation("com.clevertap.android:clevertap-geofence-sdk:1.3.0")
     remoteImplementation("com.clevertap.android:push-templates:1.2.4")
     remoteImplementation("com.clevertap.android:clevertap-hms-sdk:1.3.4")
 
-    stagingImplementation("com.clevertap.android:clevertap-android-sdk:7.2.0")
+    stagingImplementation("com.clevertap.android:clevertap-android-sdk:7.2.1")
     stagingImplementation("com.clevertap.android:clevertap-geofence-sdk:1.3.0")
     stagingImplementation("com.clevertap.android:push-templates:1.2.4")
     stagingImplementation("com.clevertap.android:clevertap-hms-sdk:1.3.4")
