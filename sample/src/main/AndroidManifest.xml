@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING"/>
 
     <!--Enable below line to test for Android GO devices-->
     <!--<uses-feature android:name="android.hardware.ram.low" android:required="true"/>-->
@@ -57,13 +59,13 @@
         <!-- Add meta data for CleverTap Account Id and Account Token and Region-->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="YOUR ACCT ID" />
+            android:value="TEST-4RW-944-876Z" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="YOUR ACCT TOKEN" />
+            android:value="TEST-44c-024" />
         <meta-data
             android:name="CLEVERTAP_REGION"
-            android:value="YOUR ACCT REGION"/>
+            android:value="eu1" />
         <meta-data
             android:name="CLEVERTAP_HANDSHAKE_DOMAIN"
             android:value="YOUR HANDSHAKE DOMAIN"/>

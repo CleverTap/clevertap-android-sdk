@@ -2,6 +2,7 @@ package com.clevertap.android.pushtemplates;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import androidx.core.content.ContextCompat;
 import com.clevertap.android.sdk.CleverTapAPI;
@@ -36,8 +37,7 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
         try {
             PTLog.debug("Inside Push Templates");
             TemplateRenderer templateRenderer = new TemplateRenderer(applicationContext, message);
-            if (ManifestValidator.isComponentPresentInManifest(applicationContext, "com.clevertap.android.pushtemplates.TimerTemplateService", ManifestValidator.ComponentType.SERVICE)
-                    && templateRenderer.getTemplateType() == TemplateType.TIMER) {
+            if (shouldRenderTimerTemplateUsingFGS(applicationContext, templateRenderer.getTemplateType())) {
                 PTLog.debug("Starting service for Timer Template");
                 Intent serviceIntent = new Intent(applicationContext, TimerTemplateService.class);
                 serviceIntent.putExtras(message);
@@ -51,6 +51,26 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
             PTLog.verbose("Error parsing FCM payload", throwable);
         }
         return true;
+    }
+
+    public boolean shouldRenderTimerTemplateUsingFGS(Context applicationContext, TemplateType templateType) {
+        return ManifestValidator.isComponentPresentInManifest(applicationContext, "com.clevertap.android.pushtemplates.TimerTemplateService", ManifestValidator.ComponentType.SERVICE)
+                && templateType == TemplateType.TIMER
+                && areRevampedTimerTemplatePermissionsGranted(applicationContext);
+    }
+
+    public boolean areRevampedTimerTemplatePermissionsGranted(Context context) {
+        boolean foregroundServicePermission = ContextCompat.checkSelfPermission(
+                context,
+                "android.permission.FOREGROUND_SERVICE"
+        ) == PackageManager.PERMISSION_GRANTED;
+
+        boolean foregroundServiceRemoteMessagingPermission = ContextCompat.checkSelfPermission(
+                context,
+                "android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING"
+        ) == PackageManager.PERMISSION_GRANTED;
+
+        return foregroundServicePermission && foregroundServiceRemoteMessagingPermission;
     }
 
     @Override
