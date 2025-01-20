@@ -466,7 +466,6 @@ public class InAppController implements InAppListener,
         inAppNotification.didDismiss(resourceProvider);
 
         if (controllerManager.getInAppFCManager() != null) {
-            controllerManager.getInAppFCManager().didDismiss(inAppNotification);
             String templateName = inAppNotification.getCustomTemplateData() != null
                     ? inAppNotification.getCustomTemplateData().getTemplateName() : "";
             logger.verbose(config.getAccountId(),
