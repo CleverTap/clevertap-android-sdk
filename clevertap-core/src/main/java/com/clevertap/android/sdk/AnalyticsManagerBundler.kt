@@ -39,4 +39,17 @@ object AnalyticsManagerBundler {
         }
         return event
     }
+
+    @JvmStatic
+    fun notificationClickedJson(root: Bundle): JSONObject {
+        val event = JSONObject()
+        try {
+            val notif = wzrkBundleToJson(root)
+            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+            event.put("evtData", notif)
+        } catch (ignored: Throwable) {
+            //no-op
+        }
+        return event
+    }
 }

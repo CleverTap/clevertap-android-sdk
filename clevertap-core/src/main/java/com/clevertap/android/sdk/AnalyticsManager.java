@@ -35,8 +35,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import kotlin.jvm.functions.Function0;
-
 public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final CTLockManager ctLockManager;
@@ -496,14 +494,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         );
         if (isDuplicate) {
             config.getLogger().debug(config.getAccountId(),
-                    "Already processed Notification Clicked event for " + extras.toString()
+                    "Already processed Notification Clicked event for " + extras
                             + ", dropping duplicate.");
             return;
         }
 
         try {
             // convert bundle to json
-            JSONObject event = AnalyticsManagerBundler.notificationViewedJson(extras);
+            JSONObject event = AnalyticsManagerBundler.notificationClickedJson(extras);
 
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
             coreMetaData.setWzrkParams(AnalyticsManagerBundler.wzrkBundleToJson(extras));
@@ -1075,7 +1073,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             config.getLogger()
-                    .verbose(config.getAccountId(), "Constructed custom profile: " + customProfile.toString());
+                    .verbose(config.getAccountId(), "Constructed custom profile: " + customProfile);
 
             baseEventQueueManager.pushBasicProfile(customProfile, false);
 
@@ -1142,7 +1140,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             baseEventQueueManager.pushBasicProfile(fields, false);
 
             config.getLogger()
-                    .verbose(config.getAccountId(), "Constructed multi-value profile push: " + fields.toString());
+                    .verbose(config.getAccountId(), "Constructed multi-value profile push: " + fields);
 
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error pushing multiValue for key " + key, t);
