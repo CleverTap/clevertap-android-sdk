@@ -44,6 +44,8 @@ class CTInAppWebView extends WebView {
         setVerticalFadingEdgeEnabled(false);
         setOverScrollMode(View.OVER_SCROLL_NEVER);
         setBackgroundColor(0x00000000);
+        // set the text zoom in order to ignore device font size changes
+        getSettings().setTextZoom(100);
         //noinspection ResourceType
         setId(188293);
     }
