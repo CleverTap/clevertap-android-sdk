@@ -54,6 +54,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private PushPermissionManager pushPermissionManager;
 
+    private boolean invokedCallbacks = false;
+
     public interface PushPermissionResultCallback {
 
         void onPushPermissionAccept();
@@ -264,13 +266,23 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     void didDismiss(Bundle data) {
+        didDismiss(data, true);
+    }
+
+    void didDismiss(Bundle data, boolean killActivity) {
         if (isAlertVisible) {
             isAlertVisible = false;
         }
-        finish();
-        InAppListener listener = getListener();
-        if (listener != null && inAppNotification != null) {
-            listener.inAppNotificationDidDismiss(inAppNotification, data);
+
+        if (!invokedCallbacks) {
+            InAppListener listener = getListener();
+            if (listener != null && inAppNotification != null) {
+                listener.inAppNotificationDidDismiss(inAppNotification, data);
+            }
+            invokedCallbacks = true;
+        }
+        if (killActivity) {
+            finish();
         }
     }
 
@@ -448,5 +460,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
 
         didDismiss(clickData);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (!isChangingConfigurations()) {
+            didDismiss(null, false);
+        }
     }
 }

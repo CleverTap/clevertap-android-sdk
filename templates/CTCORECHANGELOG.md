@@ -1,6 +1,26 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.2.2 (January 21, 2025)
+
+This hotfix release addresses a critical issue from `v7.1.0` onwards:
+
+#### Bug Fixes
+* Fixes an issue where `Notification Clicked` event was not being raised.
+
+
+### Version 7.2.1 (January 16, 2025)
+> ‼️ **NOTE**
+A critical issue was identified in 7.2.1, please update to 7.2.2 and above
+
+#### Bug Fixes
+* Fixes `ClassCastException` from `Integer` to `Long` for server side in-apps delivery. A bug occurs when the network is turned off, and the following steps are performed:
+  * send event <event_name_1> (triggers campaign <campaign_id_1>)
+  * stop the app
+  * turn network on and then restart the app.
+
 ### Version 7.2.0 (January 7, 2025)
+> ‼️ **NOTE**
+A critical issue was identified in 7.2.0, please update to 7.2.2 and above
 
 #### New Features
 
@@ -12,6 +32,8 @@
 After upgrading the SDK to v7.2.0, don't downgrade in subsequent app releases. If you encounter any issues, please contact the CleverTap support team for assistance.
 
 ### Version 7.1.0 (December 24, 2024)
+> ‼️ **NOTE**
+A critical issue was identified in 7.1.0, please update to 7.2.2 and above 
 
 #### New Features
 
