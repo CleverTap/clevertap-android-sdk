@@ -3,6 +3,7 @@ package com.clevertap.android.pushtemplates;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.core.content.ContextCompat;
 import com.clevertap.android.sdk.CleverTapAPI;
@@ -54,8 +55,8 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
     }
 
     public boolean shouldRenderTimerTemplateUsingFGS(Context applicationContext, TemplateType templateType) {
-        return ManifestValidator.isComponentPresentInManifest(applicationContext, "com.clevertap.android.pushtemplates.TimerTemplateService", ManifestValidator.ComponentType.SERVICE)
-                && templateType == TemplateType.TIMER
+        return templateType == TemplateType.TIMER
+                && ManifestValidator.isComponentPresentInManifest(applicationContext, "com.clevertap.android.pushtemplates.TimerTemplateService", ManifestValidator.ComponentType.SERVICE)
                 && areRevampedTimerTemplatePermissionsGranted(applicationContext);
     }
 
@@ -65,7 +66,8 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
                 "android.permission.FOREGROUND_SERVICE"
         ) == PackageManager.PERMISSION_GRANTED;
 
-        boolean foregroundServiceRemoteMessagingPermission = ContextCompat.checkSelfPermission(
+        // FOREGROUND_SERVICE_REMOTE_MESSAGING is only required on API 34 and above
+        boolean foregroundServiceRemoteMessagingPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE || ContextCompat.checkSelfPermission(
                 context,
                 "android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING"
         ) == PackageManager.PERMISSION_GRANTED;
