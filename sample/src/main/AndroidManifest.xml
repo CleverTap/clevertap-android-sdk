@@ -113,11 +113,7 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        <service
-            android:name="com.clevertap.android.pushtemplates.TimerTemplateService"
-            android:foregroundServiceType="remoteMessaging"
-            android:exported="false">
-        </service>
+
         <!--        <service
                     android:name="com.clevertap.demo.MyFcmMessageListenerService"
                     android:exported="true">

@@ -11,5 +11,11 @@
             android:name="com.clevertap.android.pushtemplates.PushTemplateReceiver"
             android:enabled="true"
             android:exported="false" />
+
+        <service
+            android:name="com.clevertap.android.pushtemplates.TimerTemplateService"
+            android:foregroundServiceType="remoteMessaging"
+            android:exported="false">
+        </service>
     </application>
 </manifest>
