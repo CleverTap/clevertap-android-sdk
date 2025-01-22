@@ -1001,8 +1001,7 @@ public class PushProviders implements CTPushProviderListener {
         return updatedChannelId; // Return the valid channel ID
     }
 
-
-    private int getSmallIcon(Context context) {
+    public int getSmallIcon(Context context) {
         try {
             String iconName = ManifestInfo.getInstance(context).getNotificationIcon();
             if (iconName == null) {
