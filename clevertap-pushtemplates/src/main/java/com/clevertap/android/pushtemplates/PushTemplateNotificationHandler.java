@@ -38,7 +38,7 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
         try {
             PTLog.debug("Inside Push Templates");
             TemplateRenderer templateRenderer = new TemplateRenderer(applicationContext, message);
-            if (shouldRenderTimerTemplateUsingFGS(applicationContext, templateRenderer.getTemplateType())) {
+            if (shouldRenderTimerTemplateUsingFGS(applicationContext, templateRenderer.getTemplateType(), templateRenderer.getTimerShowTerminal(), templateRenderer.getTimerUseFGS())) {
                 PTLog.debug("Starting service for Timer Template");
                 Intent serviceIntent = new Intent(applicationContext, TimerTemplateService.class);
                 serviceIntent.putExtras(message);
@@ -54,8 +54,10 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
         return true;
     }
 
-    public boolean shouldRenderTimerTemplateUsingFGS(Context applicationContext, TemplateType templateType) {
+    public boolean shouldRenderTimerTemplateUsingFGS(Context applicationContext, TemplateType templateType, boolean showTerminalNotification, boolean useFGS) {
         return templateType == TemplateType.TIMER
+                && showTerminalNotification
+                && useFGS
                 && ManifestValidator.isComponentPresentInManifest(applicationContext, "com.clevertap.android.pushtemplates.TimerTemplateService", ManifestValidator.ComponentType.SERVICE)
                 && areRevampedTimerTemplatePermissionsGranted(applicationContext);
     }

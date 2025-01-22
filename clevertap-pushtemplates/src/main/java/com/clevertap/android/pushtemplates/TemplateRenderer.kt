@@ -27,7 +27,6 @@ import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
-import com.clevertap.android.sdk.validation.ManifestValidator
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -63,6 +62,8 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     internal var pt_input_auto_open: String? = null
     internal var pt_dismiss_on_click: String? = null
     var pt_timer_end = 0
+    private var pt_timer_show_terminal = true
+    private var pt_timer_use_fgs = true
     private var pt_title_alt: String? = null
     private var pt_msg_alt: String? = null
     private var pt_big_img_alt: String? = null
@@ -168,7 +169,9 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
                     val timerEnd = getTimerEnd()
                     if (timerEnd != null) {
-                        timerRunner(context, extras, notificationId, timerEnd)
+                        if(pt_timer_show_terminal) {
+                            timerRunner(context, extras, notificationId, timerEnd)
+                        }
                         return TimerStyle(this, extras).builderFromStyle(
                             context,
                             extras,
@@ -226,6 +229,14 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
 
     fun getTemplateType() : TemplateType? {
         return templateType
+    }
+
+    fun getTimerShowTerminal() : Boolean {
+        return pt_timer_show_terminal
+    }
+
+    fun getTimerUseFGS() : Boolean {
+        return pt_timer_use_fgs
     }
 
     @RequiresApi(VERSION_CODES.M)
@@ -379,6 +390,8 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
             }
             if (newExtras != null) extras.putAll(newExtras)
         }
+        pt_timer_use_fgs = extras.getString(PTConstants.PT_TIMER_USE_FGS).equals("true", ignoreCase = true)
+        pt_timer_show_terminal = extras.getString(PTConstants.PT_TIMER_SHOW_TERMINAL).equals("true", ignoreCase = true)
         pt_msg = extras.getString(PTConstants.PT_MSG)
         pt_msg_summary = extras.getString(PTConstants.PT_MSG_SUMMARY)
         pt_msg_clr = extras.getString(PTConstants.PT_MSG_COLOR)
