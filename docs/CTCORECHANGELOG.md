@@ -1,5 +1,12 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.1.1 (January 24, 2025)
+This release addresses a critical issue in `v7.1.0`:
+
+#### Bug Fixes
+* Fixes an issue where `Notification Clicked` event was not being raised.
+* Fixes an issue where InApp was not shown in a certain flow after clicking a notification.
+
 ### Version 7.1.0 (December 24, 2024)
 
 #### New Features
@@ -11,6 +18,7 @@
   * `getUserLastVisitTs()`: Get timestamp of user's last app visit
   * `getUserAppLaunchCount()`: Get total number of times user has launched the app
   * `getUserEventLogHistory()`: Get full event history for current user
+* Adds support to hide large icon in android notification by sending wzrk_hide_large_icon key in notification payload.
     
 #### API Changes
 
