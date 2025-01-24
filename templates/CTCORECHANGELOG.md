@@ -1,5 +1,13 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.1.1 (January xx, 2024)
+This hotfix release addresses a critical issue from `v7.1.0` onwards:
+
+#### Bug Fixes
+* Fixes an issue where `Notification Clicked` event was not being raised.
+* Fixes an issue where InApp was not shown in a certain flow after clicking a notificaion
+
+
 ### Version 7.1.0 (December 24, 2024)
 
 #### New Features
