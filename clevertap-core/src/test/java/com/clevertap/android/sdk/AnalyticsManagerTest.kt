@@ -2,6 +2,7 @@ package com.clevertap.android.sdk
 
 import android.content.Context
 import android.os.Bundle
+import com.clevertap.android.sdk.AnalyticsManagerBundler.notificationClickedJson
 import com.clevertap.android.sdk.AnalyticsManagerBundler.notificationViewedJson
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.response.InAppResponse
@@ -173,7 +174,7 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap processes PN viewed for same wzrk_id if separated by a span of greater than 2 seconds`() {
 
-        val json = notificationViewedJson(bundleIdCheck);
+        val json = notificationViewedJson(bundleIdCheck)
 
         every { timeProvider.currentTimeMillis() } returns 10000
 
@@ -225,7 +226,7 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap does not process duplicate (same wzrk_id) PN clicked within 2 seconds - case 2nd click happens in 200ms`() {
 
-        val json = notificationViewedJson(bundleIdCheck)
+        val json = notificationClickedJson(bundleIdCheck)
         every { timeProvider.currentTimeMillis() } returns 0
 
         // send PN first time
@@ -263,7 +264,7 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap processes PN clicked for same wzrk_id if separated by a span of greater than 5 seconds`() {
 
-        val json = notificationViewedJson(bundleIdCheck);
+        val json = notificationClickedJson(bundleIdCheck)
         every { timeProvider.currentTimeMillis() } returns 10000
 
         // send PN first time
@@ -354,8 +355,7 @@ class AnalyticsManagerTest {
             putString("wzrk_pid", "same_pid")
         }
 
-        val json1 = notificationViewedJson(notif1)
-        val json2 = notificationViewedJson(notif1)
+        val json1 = notificationClickedJson(notif1)
 
         every { timeProvider.currentTimeMillis() } returns 0
 
