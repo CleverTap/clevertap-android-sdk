@@ -1,5 +1,8 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.1.2 (January 29, 2025)
+This release uses JDK17 to compile to support unity.
+
 ### Version 7.1.1 (January 24, 2025)
 This release addresses a critical issue in `v7.1.0`:
 
