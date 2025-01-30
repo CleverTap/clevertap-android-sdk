@@ -492,7 +492,9 @@ public class NetworkManager {
             final Runnable handshakeSuccessCallback
     ) {
 
-        try (Response response = ctApiWrapper.getCtApi().performHandshakeForDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)) {
+        try {
+            boolean isViewedEvent = eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED;
+            Response response = ctApiWrapper.getCtApi().performHandshakeForDomain(isViewedEvent);
             if (response.isSuccess()) {
                 logger.verbose(config.getAccountId(), "Received success from handshake :)");
 
@@ -574,8 +576,8 @@ public class NetworkManager {
 
         final SendQueueRequestBody body = new SendQueueRequestBody(queueHeader, queue);
         logger.debug(config.getAccountId(), "Send queue contains " + queue.length() + " items: " + body);
-
-        try (Response response = callApiForEventGroup(eventGroup, body)) {
+        try {
+            Response response = callApiForEventGroup(eventGroup, body);
             networkRetryCount = 0;
             boolean isProcessed;
             if (eventGroup == EventGroup.VARIABLES) {
@@ -611,7 +613,8 @@ public class NetworkManager {
         final DefineTemplatesRequestBody body = new DefineTemplatesRequestBody(header, templates);
         logger.debug(config.getAccountId(), "Will define templates: " + body);
 
-        try (Response response = ctApiWrapper.getCtApi().defineTemplates(body)) {
+        try {
+            Response response = ctApiWrapper.getCtApi().defineTemplates(body);
             if (response.isSuccess()) {
                 handleTemplateResponseSuccess(response);
                 return true;

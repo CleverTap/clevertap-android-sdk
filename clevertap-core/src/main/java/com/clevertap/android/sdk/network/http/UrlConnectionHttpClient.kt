@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.network.http
 
 import com.clevertap.android.sdk.Logger
 import java.io.BufferedInputStream
+import java.io.BufferedReader
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -37,6 +38,7 @@ class UrlConnectionHttpClient(
 
     override fun execute(request: Request): Response {
         var connection: HttpsURLConnection? = null
+        var reader: BufferedReader? = null
 
         try {
             connection = openHttpsURLConnection(request)
@@ -46,28 +48,30 @@ class UrlConnectionHttpClient(
             // execute request
             val responseCode = connection.responseCode
             val headers = connection.headerFields
-            val disconnectConnection = { connection.disconnect() }
 
             return if (responseCode == HttpURLConnection.HTTP_OK) {
+                reader = connection.inputStream.bufferedReader(Charsets.UTF_8)
                 Response(
                     request = request,
                     code = responseCode,
                     headers = headers,
-                    bodyStream = connection.inputStream,
-                    closeDelegate = disconnectConnection
+                    body = reader.readText()
                 )
             } else {
+                reader = connection.errorStream.bufferedReader(Charsets.UTF_8)
                 Response(
                     request = request,
                     code = responseCode,
                     headers = headers,
-                    bodyStream = connection.errorStream,
-                    closeDelegate = disconnectConnection
+                    body = reader.readText()
                 )
             }
         } catch (e: Exception) {
-            connection?.disconnect()
+            // todo why should we throw and not model this into error response?
             throw e
+        } finally {
+            reader?.close()
+            connection?.disconnect()
         }
     }
 
