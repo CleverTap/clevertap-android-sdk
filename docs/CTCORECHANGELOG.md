@@ -39,7 +39,7 @@ After upgrading the SDK to v7.2.0, don't downgrade in subsequent app releases. I
 
 ### Version 7.1.0 (December 24, 2024)
 > ‼️ **NOTE**
-A critical issue was identified in 7.1.0, please update to 7.1.1 and above 
+A critical issue was identified in 7.1.0, please update to 7.1.2 and above 
 
 #### New Features
 
