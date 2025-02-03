@@ -33,12 +33,7 @@ After upgrading the SDK to v7.2.0, don't downgrade in subsequent app releases. I
 
 ### Version 7.1.2 (January 29, 2025)
 #### Bug Fixes
-* Fixes an R8 related issue by compiling with `JDK17` to support `Unity`, `ReactNative`, `Cordova` and `Flutter` hybrid SDKs of `CleverTap`
-
-### Version 7.1.1 (January 24, 2025)
-This release addresses a critical issue in `v7.1.0`:
-
-#### Bug Fixes
+* Avoids an R8 related issue by compiling with `JDK17` to support `Unity`, `ReactNative`, `Cordova` and `Flutter` hybrid SDKs of `CleverTap`
 * Fixes an issue where `Notification Clicked` event was not being raised.
 * Fixes an issue where InApp was not shown in a certain flow after clicking a notification.
 
