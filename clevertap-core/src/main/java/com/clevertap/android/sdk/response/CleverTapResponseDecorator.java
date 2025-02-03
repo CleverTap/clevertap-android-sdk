@@ -7,7 +7,7 @@ import org.json.JSONObject;
  * Abstract Decorator that will be used to decorate
  * <br>Extend this class to create different kind of response
  */
-abstract class CleverTapResponseDecorator extends CleverTapResponse {
+public abstract class CleverTapResponseDecorator extends CleverTapResponse {
 
     public abstract void processResponse(JSONObject jsonBody, String stringBody,
             Context context);
