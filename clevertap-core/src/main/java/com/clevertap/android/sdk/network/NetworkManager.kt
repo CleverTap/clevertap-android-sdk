@@ -470,8 +470,8 @@ internal open class NetworkManager(
 
             // Add ct_pi (identities)
             header.put(
-                "ct_pi", IdentityRepoFactory
-                    .getRepo(this.context, config, validationResultStack).identitySet.toString()
+                "ct_pi",
+                IdentityRepoFactory.getRepo(this.context, config, validationResultStack).identitySet.toString()
             )
 
             // Add ddnd (Do Not Disturb)
@@ -646,7 +646,9 @@ internal open class NetworkManager(
      * @return True if the queue was sent successfully, false otherwise.
      */
     fun sendQueue(
-        context: Context, eventGroup: EventGroup, queue: JSONArray?,
+        context: Context,
+        eventGroup: EventGroup,
+        queue: JSONArray?,
         caller: String?
     ): Boolean {
         if (queue == null || queue.length() <= 0) {
@@ -743,7 +745,7 @@ internal open class NetworkManager(
         } else {
             ctApiWrapper.ctApi.sendQueue(
                 eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
-                body
+                body.toString()
             )
         }
     }
@@ -806,7 +808,8 @@ internal open class NetworkManager(
 
     @WorkerThread
     private fun handleSendQueueResponse(
-        response: Response, body: SendQueueRequestBody,
+        response: Response,
+        body: SendQueueRequestBody,
         endpointId: EndpointId
     ): Boolean {
         if (!response.isSuccess()) {
@@ -816,10 +819,7 @@ internal open class NetworkManager(
 
         val newDomain: String? = response.getHeaderValue(Constants.HEADER_DOMAIN_NAME)
 
-        if (newDomain != null && newDomain.trim { it <= ' ' }.isNotEmpty() && hasDomainChanged(
-                newDomain
-            )
-        ) {
+        if (newDomain != null && newDomain.trim { it <= ' ' }.isNotEmpty() && hasDomainChanged(newDomain)) {
             setDomain(context, newDomain)
             logger.debug(
                 config.accountId,

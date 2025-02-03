@@ -25,6 +25,7 @@ public class ManifestInfo {
     private static final String LABEL_PROXY_DOMAIN = "CLEVERTAP_PROXY_DOMAIN";
     private static final String LABEL_SPIKY_PROXY_DOMAIN = "CLEVERTAP_SPIKY_PROXY_DOMAIN";
     private static final String LABEL_CLEVERTAP_HANDSHAKE_DOMAIN = "CLEVERTAP_HANDSHAKE_DOMAIN";
+    private static final String LABEL_CLEVERTAP_PUB_KEY = "CLEVERTAP_PUB_KEY";
     private static final String LABEL_DISABLE_APP_LAUNCH = "CLEVERTAP_DISABLE_APP_LAUNCHED";
     private static final String LABEL_SSL_PINNING = "CLEVERTAP_SSL_PINNING";
     private static final String LABEL_BACKGROUND_SYNC = "CLEVERTAP_BACKGROUND_SYNC";
@@ -74,7 +75,7 @@ public class ManifestInfo {
     private static String proxyDomain;
     private static String spikyProxyDomain;
     private static String handshakeDomain;
-
+    private static String publicEncryptionKey;
     private final boolean useADID;
     private final boolean appLaunchedDisabled;
     private final String notificationIcon;
@@ -124,7 +125,8 @@ public class ManifestInfo {
         }
         // end -> assign these if they did not happen in changeCredentials
 
-        notificationIcon = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_NOTIFICATION_ICON);
+        notificationIcon = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_CLEVERTAP_PUB_KEY);
+        publicEncryptionKey = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_NOTIFICATION_ICON);
         useADID = "1".equals(_getManifestStringValueForKey(metaData, ManifestInfo.LABEL_USE_GOOGLE_AD_ID));
         appLaunchedDisabled = "1".equals(_getManifestStringValueForKey(metaData, ManifestInfo.LABEL_DISABLE_APP_LAUNCH));
         excludedActivitiesForInApps = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_INAPP_EXCLUDE);
@@ -281,6 +283,12 @@ public class ManifestInfo {
     public String getHandshakeDomain() {
         Logger.v("ManifestInfo: getHandshakeDomain called, returning handshakeDomain:" + handshakeDomain);
         return handshakeDomain;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public String getPublicEncryptionKey() {
+        Logger.v("ManifestInfo: getPublicEncryptionKey called, returning publicEncryptionKey:" + publicEncryptionKey);
+        return publicEncryptionKey;
     }
 
     String getPackageName() {

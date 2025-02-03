@@ -47,13 +47,13 @@ internal class CtApi(
 
     fun sendQueue(
         isViewedEvent: Boolean,
-        body: SendQueueRequestBody
+        body: String
     ): Response =
         httpClient.execute(
             createRequest(
                 baseUrl = getActualDomain(isViewedEvent = isViewedEvent) ?: defaultDomain,
                 relativeUrl = "a1",
-                body = body.toString()
+                body = body
             )
         )
 
