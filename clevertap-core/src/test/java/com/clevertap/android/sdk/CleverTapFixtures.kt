@@ -6,6 +6,9 @@ class CleverTapFixtures {
 
     companion object {
 
+        const val PUBLIC_ENCRYPTION_KEY = "public-encryption-key"
+        const val PUBLIC_ENCRYPTION_KEY_VERSION = "public-encryption-key-version-v1"
+
         val manifestInfo = ManifestInfo(
             Constant.ACC_ID,
             Constant.ACC_TOKEN,
@@ -13,7 +16,7 @@ class CleverTapFixtures {
             "",
             "",
             "",
-            "public-encryption-key",
+            PUBLIC_ENCRYPTION_KEY,
             false,
             false,
             "notification icon",
@@ -37,7 +40,10 @@ class CleverTapFixtures {
                 Constant.ACC_TOKEN,
                 null,
                 true
-            )
+            ).apply {
+                publicEncryptionKey = PUBLIC_ENCRYPTION_KEY
+                publicEncryptionKeyVersion = PUBLIC_ENCRYPTION_KEY_VERSION
+            }
 
         fun configWithoutEncryptionKey(): CleverTapInstanceConfig =
             CleverTapInstanceConfig.createInstanceWithManifest(
@@ -48,6 +54,7 @@ class CleverTapFixtures {
                 true
             ).apply {
                 publicEncryptionKey = null
+                publicEncryptionKeyVersion = null
             }
     }
 }

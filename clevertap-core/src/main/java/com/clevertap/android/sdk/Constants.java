@@ -175,6 +175,7 @@ public interface Constants {
     String KEY_SPIKY_PROXY_DOMAIN = "spikyProxyDomain";
     String KEY_CUSTOM_HANDSHAKE_DOMAIN = "customHandshakeDomain";
     String KEY_PUBLIC_ENCRYPTION_KEY = "publicEncryptionKey";
+    String KEY_PUBLIC_ENCRYPTION_KEY_VERSION = "publicEncryptionKeyVersion";
     String KEY_ANALYTICS_ONLY = "analyticsOnly";
     String KEY_DEFAULT_INSTANCE = "isDefaultInstance";
     String KEY_USE_GOOGLE_AD_ID = "useGoogleAdId";

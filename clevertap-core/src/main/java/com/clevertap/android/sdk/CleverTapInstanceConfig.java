@@ -45,6 +45,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private String spikyProxyDomain;
     private String customHandshakeDomain;
     private String publicEncryptionKey;
+    private String publicEncryptionKeyVersion;
     @NonNull private ArrayList<String> allowedPushTypes = getAll();
     private boolean analyticsOnly;
     private boolean backgroundSync;
@@ -130,6 +131,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.spikyProxyDomain = config.spikyProxyDomain;
         this.customHandshakeDomain = config.customHandshakeDomain;
         this.publicEncryptionKey = config.publicEncryptionKey;
+        this.publicEncryptionKeyVersion = config.publicEncryptionKeyVersion;
         this.isDefaultInstance = config.isDefaultInstance;
         this.analyticsOnly = config.analyticsOnly;
         this.personalization = config.personalization;
@@ -208,6 +210,9 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (configJsonObject.has(Constants.KEY_PUBLIC_ENCRYPTION_KEY)) {
                 this.publicEncryptionKey = configJsonObject.optString(Constants.KEY_PUBLIC_ENCRYPTION_KEY, null);
             }
+            if (configJsonObject.has(Constants.KEY_PUBLIC_ENCRYPTION_KEY_VERSION)) {
+                this.publicEncryptionKeyVersion = configJsonObject.optString(Constants.KEY_PUBLIC_ENCRYPTION_KEY_VERSION, null);
+            }
             if (configJsonObject.has(Constants.KEY_ACCOUNT_REGION)) {
                 this.accountRegion = configJsonObject.getString(Constants.KEY_ACCOUNT_REGION);
             }
@@ -272,6 +277,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         spikyProxyDomain = in.readString();
         customHandshakeDomain = in.readString();
         publicEncryptionKey = in.readString();
+        publicEncryptionKeyVersion = in.readString();
         analyticsOnly = in.readByte() != 0x00;
         isDefaultInstance = in.readByte() != 0x00;
         useGoogleAdId = in.readByte() != 0x00;
@@ -358,8 +364,16 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.publicEncryptionKey = publicEncryptionKey;
     }
 
+    public String getPublicEncryptionKeyVersion() {
+        return publicEncryptionKeyVersion;
+    }
+
+    public void setPublicEncryptionKeyVersion(String publicEncryptionKeyVersion) {
+        this.publicEncryptionKeyVersion = publicEncryptionKeyVersion;
+    }
+
     public Boolean shouldEncryptResponse() {
-        return publicEncryptionKey != null;
+        return publicEncryptionKey != null && publicEncryptionKeyVersion != null;
     }
 
     @SuppressWarnings({"unused"})
@@ -445,6 +459,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeString(spikyProxyDomain);
         dest.writeString(customHandshakeDomain);
         dest.writeString(publicEncryptionKey);
+        dest.writeString(publicEncryptionKeyVersion);
         dest.writeByte((byte) (analyticsOnly ? 0x01 : 0x00));
         dest.writeByte((byte) (isDefaultInstance ? 0x01 : 0x00));
         dest.writeByte((byte) (useGoogleAdId ? 0x01 : 0x00));
@@ -526,6 +541,8 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_PROXY_DOMAIN, getProxyDomain());
             configJsonObject.put(Constants.KEY_SPIKY_PROXY_DOMAIN, getSpikyProxyDomain());
             configJsonObject.put(Constants.KEY_CUSTOM_HANDSHAKE_DOMAIN, getCustomHandshakeDomain());
+            configJsonObject.put(Constants.KEY_PUBLIC_ENCRYPTION_KEY, getPublicEncryptionKey());
+            configJsonObject.put(Constants.KEY_PUBLIC_ENCRYPTION_KEY_VERSION, getPublicEncryptionKeyVersion());
             configJsonObject.put(Constants.KEY_FCM_SENDER_ID, getFcmSenderId());
             configJsonObject.put(Constants.KEY_ANALYTICS_ONLY, isAnalyticsOnly());
             configJsonObject.put(Constants.KEY_DEFAULT_INSTANCE, isDefaultInstance());

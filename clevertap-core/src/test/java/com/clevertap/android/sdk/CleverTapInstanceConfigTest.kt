@@ -9,8 +9,8 @@ import kotlin.test.assertTrue
 @RunWith(AndroidJUnit4::class)
 class CleverTapInstanceConfigTest {
 
-    val configWithEncryption = CleverTapFixtures.provideCleverTapInstanceConfig()
-    val configWithoutEncryption = CleverTapFixtures.configWithoutEncryptionKey()
+    private val configWithEncryption = CleverTapFixtures.provideCleverTapInstanceConfig()
+    private val configWithoutEncryption = CleverTapFixtures.configWithoutEncryptionKey()
 
     @Test
     fun `should encrypt returns true if public encryption key is provided`() {
