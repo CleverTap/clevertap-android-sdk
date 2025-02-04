@@ -358,6 +358,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.publicEncryptionKey = publicEncryptionKey;
     }
 
+    public Boolean shouldEncryptResponse() {
+        return publicEncryptionKey != null;
+    }
+
     @SuppressWarnings({"unused"})
     public void setDebugLevel(CleverTapAPI.LogLevel debugLevel) {
         setDebugLevel(debugLevel.intValue());

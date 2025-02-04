@@ -739,15 +739,33 @@ internal open class NetworkManager(
     }
 
     @WorkerThread
-    private fun callApiForEventGroup(eventGroup: EventGroup, body: SendQueueRequestBody): Response {
+    private fun callApiForEventGroup(
+        eventGroup: EventGroup,
+        body: SendQueueRequestBody
+    ): Response {
         return if (eventGroup == EventGroup.VARIABLES) {
             ctApiWrapper.ctApi.defineVars(body)
         } else {
-            ctApiWrapper.ctApi.sendQueue(
-                eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
-                body.toString()
-            )
+            makeApiCallForA1(eventGroup, body)
         }
+    }
+
+    private fun makeApiCallForA1(
+        eventGroup: EventGroup,
+        body: SendQueueRequestBody
+    ): Response {
+
+        val requestBody = if (config.shouldEncryptResponse()) {
+            TODO()
+        } else {
+            body.toString()
+        }
+
+        val response = ctApiWrapper.ctApi.sendQueue(
+            eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+            requestBody
+        )
+        return response
     }
 
     private fun handleVariablesResponse(response: Response): Boolean {

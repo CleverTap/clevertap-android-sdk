@@ -75,7 +75,7 @@ public class ManifestInfo {
     private static String proxyDomain;
     private static String spikyProxyDomain;
     private static String handshakeDomain;
-    private static String publicEncryptionKey;
+    private String publicEncryptionKey;
     private final boolean useADID;
     private final boolean appLaunchedDisabled;
     private final String notificationIcon;
@@ -171,6 +171,7 @@ public class ManifestInfo {
             String proxyDomain,
             String spikyProxyDomain,
             String handshakeDomain,
+            String publicEncryptionKey,
             boolean useADID,
             boolean appLaunchedDisabled,
             String notificationIcon,
@@ -207,6 +208,7 @@ public class ManifestInfo {
             ManifestInfo.handshakeDomain = handshakeDomain;
         }
 
+        this.publicEncryptionKey = publicEncryptionKey;
         this.useADID = useADID;
         this.appLaunchedDisabled = appLaunchedDisabled;
         this.notificationIcon = notificationIcon;

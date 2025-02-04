@@ -13,6 +13,7 @@ class CleverTapFixtures {
             "",
             "",
             "",
+            "public-encryption-key",
             false,
             false,
             "notification icon",
@@ -37,5 +38,16 @@ class CleverTapFixtures {
                 null,
                 true
             )
+
+        fun configWithoutEncryptionKey(): CleverTapInstanceConfig =
+            CleverTapInstanceConfig.createInstanceWithManifest(
+                manifestInfo,
+                Constant.ACC_ID,
+                Constant.ACC_TOKEN,
+                null,
+                true
+            ).apply {
+                publicEncryptionKey = null
+            }
     }
 }
