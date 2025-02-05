@@ -11,7 +11,8 @@ import javax.crypto.SecretKey
 
 internal class NetworkEncryptionManager(
     private val keyGenerator: CTKeyGenerator,
-    private val aesgcm: AESGCMCrypt
+    private val aesgcm: AESGCMCrypt,
+    private val rsaCrypt: RSAEncryption
 ) {
 
     companion object {
@@ -25,8 +26,17 @@ internal class NetworkEncryptionManager(
         return sessionKey ?: keyGenerator.generateSecretKey().also { sessionKey = it }
     }
 
-    fun sessionKeyBytes() : String {
+    private fun sessionKeyBytes() : String {
         return convertByteArrayToString(sessionKeyForEncryption().encoded)
+    }
+
+    fun encryptedSessionKey() : String? {
+        val key = sessionKeyBytes()
+        val cryptKey = rsaCrypt.getPublicKeyFromString(key)
+        if (cryptKey != null) {
+            return rsaCrypt.encrypt(key.toByteArray(Charsets.UTF_8), cryptKey)
+        }
+        return null
     }
 
     /**

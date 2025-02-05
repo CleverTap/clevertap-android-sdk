@@ -761,19 +761,26 @@ internal open class NetworkManager(
     ): Response {
 
         val (requestBody, shouldEncrypt) = if (config.shouldEncryptResponse()) {
-            when (val encRespAndIv = networkCryptManager.encryptResponse(body.toString())) {
-                is EncryptionFailure -> {
-                    logger.verbose("Encryption failed, falling back to non encrypted request.")
-                    body.toString() to false
+
+            val encryptedKey = networkCryptManager.encryptedSessionKey()
+            if (encryptedKey != null) {
+                when (val encRespAndIv = networkCryptManager.encryptResponse(body.toString())) {
+                    is EncryptionFailure -> {
+                        logger.verbose("Encryption failure in securing response, falling back to non encrypted request.")
+                        body.toString() to false
+                    }
+                    is EncryptionSuccess -> {
+                        EncryptedSendQueueRequestBody(
+                            encryptedPayload = encRespAndIv.data,
+                            key = encryptedKey,
+                            keyVersion = config.publicEncryptionKeyVersion,
+                            iv = encRespAndIv.iv
+                        ).toJsonString() to true
+                    }
                 }
-                is EncryptionSuccess -> {
-                    EncryptedSendQueueRequestBody(
-                        encryptedPayload = encRespAndIv.data,
-                        key = networkCryptManager.sessionKeyBytes(),
-                        keyVersion = config.publicEncryptionKeyVersion,
-                        iv = encRespAndIv.iv
-                    ).toJsonString() to true
-                }
+            } else {
+                logger.verbose("Encryption failure in securing key, falling back to non encrypted request.")
+                body.toString() to false
             }
         } else {
             body.toString() to false

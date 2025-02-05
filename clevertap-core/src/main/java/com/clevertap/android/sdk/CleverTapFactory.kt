@@ -34,6 +34,7 @@ import com.clevertap.android.sdk.network.CompositeBatchListener
 import com.clevertap.android.sdk.network.FetchInAppListener
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.RSAEncryption
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
@@ -283,7 +284,8 @@ internal object CleverTapFactory {
         )
         val encryptionManager = NetworkEncryptionManager(
             keyGenerator = ctKeyGenerator,
-            aesgcm = cryptFactory.getAesGcmCrypt()
+            aesgcm = cryptFactory.getAesGcmCrypt(),
+            rsaCrypt = RSAEncryption()
         )
         val networkManager = NetworkManager(
             context = context,
