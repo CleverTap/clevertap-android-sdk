@@ -6,6 +6,7 @@ This hotfix release addresses a critical issue from `v7.1.0` onwards:
 
 #### Bug Fixes
 * Fixes an issue where `Notification Clicked` event was not being raised.
+* Fixes an issue where InApp was not shown in a certain flow after clicking a notification.
 
 
 ### Version 7.2.1 (January 16, 2025)
@@ -29,7 +30,7 @@ A critical issue was identified in 7.2.0, please update to 7.2.2 and above
 * Updates Minimum Android SDK version to API 21 (Android 5.0)
 
 > ⚠️ **NOTE**
-After upgrading the SDK to v7.2.0, don't downgrade in subsequent app releases. If you encounter any issues, please contact the CleverTap support team for assistance.
+After upgrading the SDK to v7.2.0+, don't downgrade in subsequent app releases. If you encounter any issues, please contact the CleverTap support team for assistance.
 
 ### Version 7.1.2 (January 29, 2025)
 #### Bug Fixes
@@ -39,7 +40,7 @@ After upgrading the SDK to v7.2.0, don't downgrade in subsequent app releases. I
 
 ### Version 7.1.0 (December 24, 2024)
 > ‼️ **NOTE**
-A critical issue was identified in 7.1.0, please update to 7.1.2 and above 
+A critical issue has been identified in version 7.1.0. Please update to version 7.1.2 if targeting Android 14, or version 7.2.2 if targeting Android 15.
 
 #### New Features
 
