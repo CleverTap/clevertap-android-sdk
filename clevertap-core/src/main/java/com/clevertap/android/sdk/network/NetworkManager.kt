@@ -760,7 +760,7 @@ internal open class NetworkManager(
         body: SendQueueRequestBody
     ): Response {
 
-        val bodyAndEncrypt = if (config.shouldEncryptResponse()) {
+        val (requestBody, shouldEncrypt) = if (config.shouldEncryptResponse()) {
             when (val encRespAndIv = networkCryptManager.encryptResponse(body.toString())) {
                 is EncryptionFailure -> {
                     logger.verbose("Encryption failed, falling back to non encrypted request.")
@@ -781,8 +781,8 @@ internal open class NetworkManager(
 
         val response = ctApiWrapper.ctApi.sendQueue(
             isViewedEvent = eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
-            body = bodyAndEncrypt.first,
-            isEncrypted = bodyAndEncrypt.second
+            body = requestBody,
+            isEncrypted = shouldEncrypt
         )
         return response
     }
