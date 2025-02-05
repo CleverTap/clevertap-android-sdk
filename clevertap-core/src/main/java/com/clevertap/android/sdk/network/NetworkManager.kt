@@ -669,15 +669,15 @@ internal open class NetworkManager(
         val queueHeader: JSONObject? = getQueueHeader(context, caller)
         applyQueueHeaderListeners(queueHeader, endpointId, queue.optJSONObject(0).has("profile"))
 
-        val body = SendQueueRequestBody(queueHeader, queue)
-        logger.debug(config.accountId, "Send queue contains " + queue.length() + " items: " + body)
+        val requestBody = SendQueueRequestBody(queueHeader, queue)
+        logger.debug(config.accountId, "Send queue contains " + queue.length() + " items: " + requestBody)
         try {
-            val response: Response = callApiForEventGroup(eventGroup, body)
+            val response: Response = callApiForEventGroup(eventGroup, requestBody)
             networkRetryCount = 0
             val isProcessed = if (eventGroup == EventGroup.VARIABLES) {
                 handleVariablesResponse(response)
             } else {
-                handleSendQueueResponse(response, body, endpointId)
+                handleSendQueueResponse(response, requestBody, endpointId)
             }
 
             if (isProcessed) {
@@ -763,18 +763,15 @@ internal open class NetworkManager(
         val bodyAndEncrypt = if (config.shouldEncryptResponse()) {
             when (val encRespAndIv = networkCryptManager.encryptResponse(body.toString())) {
                 is EncryptionFailure -> {
+                    logger.verbose("Encryption failed, falling back to non encrypted request.")
                     body.toString() to false
                 }
                 is EncryptionSuccess -> {
-                    val encryptedResponse = encRespAndIv.data
-                    val keyForSymEnc = networkCryptManager.sessionKeyForEncryption()
-                    val ivForSymKey = encRespAndIv.iv
-
                     EncryptedSendQueueRequestBody(
-                        encryptedPayload = encryptedResponse,
-                        key = keyForSymEnc,
+                        encryptedPayload = encRespAndIv.data,
+                        key = networkCryptManager.sessionKeyBytes(),
                         keyVersion = config.publicEncryptionKeyVersion,
-                        iv = ivForSymKey
+                        iv = encRespAndIv.iv
                     ).toJsonString() to true
                 }
             }
@@ -848,7 +845,7 @@ internal open class NetworkManager(
     @WorkerThread
     private fun handleSendQueueResponse(
         response: Response,
-        body: SendQueueRequestBody,
+        requestBody: SendQueueRequestBody,
         endpointId: EndpointId
     ): Boolean {
         if (!response.isSuccess()) {
@@ -867,10 +864,10 @@ internal open class NetworkManager(
             return false
         }
 
-        if (body.queueHeader != null) {
+        if (requestBody.queueHeader != null) {
             for (listener: NetworkHeadersListener in mNetworkHeadersListeners) {
-                val isProfile: Boolean = body.queue.optJSONObject(0).has("profile")
-                listener.onSentHeaders(body.queueHeader, endpointId, fromBoolean(isProfile))
+                val isProfile: Boolean = requestBody.queue.optJSONObject(0).has("profile")
+                listener.onSentHeaders(requestBody.queueHeader, endpointId, fromBoolean(isProfile))
             }
         }
 
@@ -886,7 +883,7 @@ internal open class NetworkManager(
         val bodyJson: JSONObject? = bodyString.toJsonOrNull()
         logger.verbose(config.accountId, "Processing response : $bodyJson")
 
-        val isFullResponse: Boolean = doesBodyContainAppLaunchedOrFetchEvents(body)
+        val isFullResponse: Boolean = doesBodyContainAppLaunchedOrFetchEvents(requestBody)
         for (processor: CleverTapResponse in cleverTapResponses) {
             processor.isFullResponse = isFullResponse
             processor.processResponse(bodyJson, bodyString, context)

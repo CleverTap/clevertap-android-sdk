@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.Constants.AES_GCM_SUFFIX
 import com.clevertap.android.sdk.Logger
 import java.nio.charset.StandardCharsets
 import javax.crypto.Cipher
+import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /**
@@ -83,12 +84,12 @@ internal class AESGCMCrypt(
     fun performCryptOperation(
         mode: Int,
         data: ByteArray,
-        iv: ByteArray? = null
+        iv: ByteArray? = null,
+        secretKey: SecretKey? = ctKeyGenerator.generateOrGetKey()
     ): AESGCMCryptResult? {
         return try {
 
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            val secretKey = ctKeyGenerator.generateOrGetKey()
 
             when (mode) {
                 Cipher.ENCRYPT_MODE -> {

@@ -21,11 +21,12 @@ internal class NetworkEncryptionManager(
     /**
      * Returns session key for encryption
      */
-    fun sessionKeyForEncryption(): String {
-        if (sessionKey == null) {
-            sessionKey = keyGenerator.generateSecretKey()
-        }
-        return convertByteArrayToString(sessionKey!!.encoded)
+    private fun sessionKeyForEncryption(): SecretKey {
+        return sessionKey ?: keyGenerator.generateSecretKey().also { sessionKey = it }
+    }
+
+    fun sessionKeyBytes() : String {
+        return convertByteArrayToString(sessionKeyForEncryption().encoded)
     }
 
     /**
@@ -33,7 +34,12 @@ internal class NetworkEncryptionManager(
      */
     fun encryptResponse(response: String): EncryptionResult {
         val result =
-            aesgcm.performCryptOperation(Cipher.ENCRYPT_MODE, data = response.toByteArray())
+            aesgcm.performCryptOperation(
+                mode = Cipher.ENCRYPT_MODE,
+                data = response.toByteArray(),
+                iv = null,
+                secretKey = sessionKeyForEncryption()
+            )
 
         return if (result != null) {
             EncryptionSuccess(
