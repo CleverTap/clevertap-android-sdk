@@ -32,6 +32,7 @@ import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.AppLaunchListener
 import com.clevertap.android.sdk.network.CompositeBatchListener
 import com.clevertap.android.sdk.network.FetchInAppListener
+import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.pushnotification.PushProviders
@@ -280,19 +281,24 @@ internal object CleverTapFactory {
             config = config,
             deviceInfo = deviceInfo
         )
+        val encryptionManager = NetworkEncryptionManager(
+            keyGenerator = ctKeyGenerator,
+            aesgcm = cryptFactory.getAesGcmCrypt()
+        )
         val networkManager = NetworkManager(
-            context,
-            config,
-            deviceInfo,
-            coreMetaData,
-            validationResultStack,
-            controllerManager,
-            baseDatabaseManager,
-            callbackManager,
-            ctLockManager,
-            validator,
-            inAppResponse,
-            ctApiWrapper
+            context = context,
+            config = config,
+            deviceInfo = deviceInfo,
+            coreMetaData = coreMetaData,
+            validationResultStack = validationResultStack,
+            controllerManager = controllerManager,
+            databaseManager = baseDatabaseManager,
+            callbackManager = callbackManager,
+            ctLockManager = ctLockManager,
+            validator = validator,
+            inAppResponse = inAppResponse,
+            ctApiWrapper = ctApiWrapper,
+            networkCryptManager = encryptionManager
         )
         coreState.networkManager = networkManager
 

@@ -80,7 +80,7 @@ internal class AESGCMCrypt(
      * @param iv - iv required for decryption
      * @return AESGCMCryptResult
      */
-    private fun performCryptOperation(
+    fun performCryptOperation(
         mode: Int,
         data: ByteArray,
         iv: ByteArray? = null
@@ -120,7 +120,7 @@ internal class AESGCMCrypt(
         }
     }
 
-    private data class AESGCMCryptResult(
+    internal data class AESGCMCryptResult(
         val iv: ByteArray,
         val encryptedBytes: ByteArray
     ) {

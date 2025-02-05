@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.cryption
 
 import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
+import com.clevertap.android.sdk.network.RSAEncryption
 
 /**
  * This class is a factory class to generate a Crypt object based on the EncryptionAlgorithm
@@ -14,6 +15,10 @@ internal class CryptFactory(
     private val cryptInstances: MutableMap<EncryptionAlgorithm, Crypt> = mutableMapOf()
 
     companion object {
+
+        // global for all instances
+        private var rsaCrypt: RSAEncryption? = null
+
         @JvmStatic
         fun getCrypt(
             type: EncryptionAlgorithm,
@@ -35,5 +40,13 @@ internal class CryptFactory(
      */
     fun getCryptInstance(algorithm: EncryptionAlgorithm): Crypt {
         return cryptInstances.getOrPut(algorithm) { getCrypt(algorithm, accountId, ctKeyGenerator) }
+    }
+
+    fun getAesGcmCrypt() : AESGCMCrypt {
+        return cryptInstances.getOrPut(EncryptionAlgorithm.AES_GCM) { getCrypt(EncryptionAlgorithm.AES_GCM, accountId, ctKeyGenerator) } as AESGCMCrypt
+    }
+
+    fun getRsaCrypt(): RSAEncryption {
+        return rsaCrypt ?: RSAEncryption().also { rsaCrypt = it }
     }
 }

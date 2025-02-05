@@ -43,7 +43,7 @@ internal class CTKeyGenerator(val cryptRepository: CryptRepository) {
         }
     }
 
-    private fun generateSecretKey(): SecretKey {
+    fun generateSecretKey(): SecretKey {
         // If key doesn't exist, generate a new one and store it
         val keyGenerator = KeyGenerator.getInstance("AES")
         keyGenerator.init(256) // 256-bit AES key

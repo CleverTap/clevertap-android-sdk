@@ -41,6 +41,35 @@ class CtApiTest {
     }
 
     @Test
+    fun test_sendRequests_attachesEncryptionHeaderIfEnabled() {
+        val expectedHeaders = mapOf(
+            "Content-Type" to "application/json; charset=utf-8",
+            "X-CleverTap-Account-ID" to CtApiTestProvider.ACCOUNT_ID,
+            "X-CleverTap-Token" to CtApiTestProvider.ACCOUNT_TOKEN,
+        )
+
+        val expectedHeadersForA1 = mapOf(
+            "Content-Type" to "application/json; charset=utf-8",
+            "X-CleverTap-Account-ID" to CtApiTestProvider.ACCOUNT_ID,
+            "X-CleverTap-Token" to CtApiTestProvider.ACCOUNT_TOKEN,
+            "X-CleverTap-Encryption-Enabled" to "true"
+        )
+
+        val sendQueueResponse = ctApi.sendQueue(
+            isViewedEvent = false,
+            body = getEmptyQueueBodyString(),
+            isEncrypted = true
+        )
+        assertEquals(expectedHeadersForA1, sendQueueResponse.request.headers)
+
+        val handshakeResponse = ctApi.performHandshakeForDomain(false)
+        assertEquals(expectedHeaders, handshakeResponse.request.headers)
+
+        val sendVarsResponse = ctApi.defineVars(getEmptyQueueBody())
+        assertEquals(expectedHeaders, sendVarsResponse.request.headers)
+    }
+
+    @Test
     fun `test hello request attaches extra header in case custom domain is mentioned in manifest`() {
 
         // setup

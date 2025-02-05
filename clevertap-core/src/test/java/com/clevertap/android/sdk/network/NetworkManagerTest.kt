@@ -23,6 +23,7 @@ import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,18 +39,25 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class NetworkManagerTest : BaseTestCase() {
 
+    private var closeable: AutoCloseable? = null
     private lateinit var networkManager: NetworkManager
     private lateinit var ctApi: CtApi
     private lateinit var mockHttpClient: MockHttpClient
     @Mock private lateinit var ctApiWrapper : CtApiWrapper
+    @Mock private lateinit var networkEncryptionManager: NetworkEncryptionManager
 
     @Before
-    fun setUpNetworkManager() {
-        MockitoAnnotations.openMocks(this)
+    fun setup() {
+        closeable = MockitoAnnotations.openMocks(this)
         mockHttpClient = MockHttpClient()
         ctApi = CtApiTestProvider.provideTestCtApiForConfig(cleverTapInstanceConfig, mockHttpClient)
         networkManager = provideNetworkManager()
         `when`(ctApiWrapper.ctApi).thenReturn(ctApi)
+    }
+
+    @After
+    fun tearDown() {
+        closeable?.close()
     }
 
     @Test
@@ -186,7 +194,8 @@ class NetworkManagerTest : BaseTestCase() {
             lockManager,
             Validator(),
             inAppResponse,
-            ctApiWrapper
+            ctApiWrapper,
+            networkEncryptionManager
         )
     }
 

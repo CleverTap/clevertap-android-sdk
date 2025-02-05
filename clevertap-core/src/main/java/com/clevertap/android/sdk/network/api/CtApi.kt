@@ -41,19 +41,27 @@ internal class CtApi(
         "t" to sdkVersion,
         "z" to accountId
     )
+    private val encryptionHeader = "X-CleverTap-Encryption-Enabled" to "true"
+
     private val spikyRegionSuffix = "-spiky"
     var currentRequestTimestampSeconds = 0
         private set
 
     fun sendQueue(
         isViewedEvent: Boolean,
-        body: String
+        body: String,
+        isEncrypted: Boolean = false
     ): Response =
         httpClient.execute(
             createRequest(
                 baseUrl = getActualDomain(isViewedEvent = isViewedEvent) ?: defaultDomain,
                 relativeUrl = "a1",
-                body = body
+                body = body,
+                headers = if (isEncrypted) {
+                    defaultHeaders.plus(encryptionHeader)
+                } else {
+                    defaultHeaders
+                }
             )
         )
 

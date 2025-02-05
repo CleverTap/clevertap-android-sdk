@@ -31,6 +31,8 @@ import com.clevertap.android.sdk.network.EndpointId.Companion.fromEventGroup
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody
 import com.clevertap.android.sdk.network.api.EncryptedSendQueueRequestBody
+import com.clevertap.android.sdk.network.api.EncryptionFailure
+import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
@@ -70,7 +72,8 @@ internal open class NetworkManager(
     ctLockManager: CTLockManager,
     private val validator: Validator,
     inAppResponse: InAppResponse,
-    private val ctApiWrapper: CtApiWrapper
+    private val ctApiWrapper: CtApiWrapper,
+    private val networkCryptManager: NetworkEncryptionManager
 ) {
 
     companion object {
@@ -751,30 +754,38 @@ internal open class NetworkManager(
         }
     }
 
+    @WorkerThread
     private fun makeApiCallForA1(
         eventGroup: EventGroup,
         body: SendQueueRequestBody
     ): Response {
 
-        val requestBody: String = if (config.shouldEncryptResponse()) {
+        val bodyAndEncrypt = if (config.shouldEncryptResponse()) {
+            when (val encRespAndIv = networkCryptManager.encryptResponse(body.toString())) {
+                is EncryptionFailure -> {
+                    body.toString() to false
+                }
+                is EncryptionSuccess -> {
+                    val encryptedResponse = encRespAndIv.data
+                    val keyForSymEnc = networkCryptManager.sessionKeyForEncryption()
+                    val ivForSymKey = encRespAndIv.iv
 
-            val encryptedResponse = ""
-            val keyForSymEnc = ""
-            val ivForSymKey = ""
-
-            EncryptedSendQueueRequestBody(
-                encryptedPayload = encryptedResponse,
-                key = keyForSymEnc,
-                keyVersion = config.publicEncryptionKeyVersion,
-                iv = ivForSymKey
-            ).toJsonString()
+                    EncryptedSendQueueRequestBody(
+                        encryptedPayload = encryptedResponse,
+                        key = keyForSymEnc,
+                        keyVersion = config.publicEncryptionKeyVersion,
+                        iv = ivForSymKey
+                    ).toJsonString() to true
+                }
+            }
         } else {
-            body.toString()
+            body.toString() to false
         }
 
         val response = ctApiWrapper.ctApi.sendQueue(
-            eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
-            requestBody
+            isViewedEvent = eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+            body = bodyAndEncrypt.first,
+            isEncrypted = bodyAndEncrypt.second
         )
         return response
     }
@@ -790,8 +801,7 @@ internal open class NetworkManager(
                 config, this,
                 validator,
                 controllerManager
-            )
-                .processResponse(bodyJson, bodyString, this.context)
+            ).processResponse(bodyJson, bodyString, this.context)
             return true
         } else {
             handleVarsOrTemplatesResponseError(response, "Variables")
