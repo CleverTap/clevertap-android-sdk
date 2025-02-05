@@ -1,14 +1,13 @@
 package com.clevertap.android.sdk.cryption
 
-import android.content.Context
 import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
 
 /**
  * This class is a factory class to generate a Crypt object based on the EncryptionAlgorithm
  */
 internal class CryptFactory(
-    private val context: Context,
-    private val accountId: String
+    private val accountId: String,
+    private val ctKeyGenerator: CTKeyGenerator
 ) {
 
     // Cache to hold instances of Crypt for different encryption algorithms.
@@ -16,10 +15,14 @@ internal class CryptFactory(
 
     companion object {
         @JvmStatic
-        fun getCrypt(type: EncryptionAlgorithm, accountID: String, context: Context): Crypt {
+        fun getCrypt(
+            type: EncryptionAlgorithm,
+            accountID: String,
+            ctKeyGenerator: CTKeyGenerator
+        ): Crypt {
             return when (type) {
                 EncryptionAlgorithm.AES -> AESCrypt(accountID)
-                EncryptionAlgorithm.AES_GCM -> AESGCMCrypt(context)
+                EncryptionAlgorithm.AES_GCM -> AESGCMCrypt(ctKeyGenerator)
             }
         }
     }
@@ -31,6 +34,6 @@ internal class CryptFactory(
      * @return The Crypt instance for the specified algorithm.
      */
     fun getCryptInstance(algorithm: EncryptionAlgorithm): Crypt {
-        return cryptInstances.getOrPut(algorithm) { getCrypt(algorithm, accountId, context) }
+        return cryptInstances.getOrPut(algorithm) { getCrypt(algorithm, accountId, ctKeyGenerator) }
     }
 }

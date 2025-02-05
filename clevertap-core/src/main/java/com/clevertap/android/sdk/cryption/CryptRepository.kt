@@ -8,9 +8,13 @@ import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.MIGRATION_FAIL
 import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.MIGRATION_FIRST_UPGRADE
 import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.UNKNOWN_LEVEL
 
+const val ENCRYPTION_KEY = "EncryptionKey"
+
 interface ICryptRepository {
     fun storedEncryptionLevel(): Int
     fun migrationFailureCount(): Int
+    fun localEncryptionKey(): String?
+    fun updateLocalEncryptionKey(key: String)
     fun updateEncryptionLevel(configEncryptionLevel: Int)
     fun updateMigrationFailureCount(migrationSuccessful: Boolean)
 }
@@ -33,6 +37,15 @@ class CryptRepository(
         StorageHelper.storageKeyWithSuffix(accountId, MIGRATION_FAILURE_COUNT_KEY),
         MIGRATION_FIRST_UPGRADE
     )
+
+    override fun localEncryptionKey(): String? {
+        val encodedKey = StorageHelper.getString(context, ENCRYPTION_KEY, null)
+        return encodedKey
+    }
+
+    override fun updateLocalEncryptionKey(key: String) {
+        StorageHelper.putString(context, ENCRYPTION_KEY, key)
+    }
 
     override fun updateEncryptionLevel(configEncryptionLevel: Int) {
         StorageHelper.putInt(

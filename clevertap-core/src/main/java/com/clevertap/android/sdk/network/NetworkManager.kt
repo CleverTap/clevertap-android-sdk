@@ -30,6 +30,7 @@ import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.network.EndpointId.Companion.fromEventGroup
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody
+import com.clevertap.android.sdk.network.api.EncryptedSendQueueRequestBody
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
@@ -755,8 +756,18 @@ internal open class NetworkManager(
         body: SendQueueRequestBody
     ): Response {
 
-        val requestBody = if (config.shouldEncryptResponse()) {
-            TODO()
+        val requestBody: String = if (config.shouldEncryptResponse()) {
+
+            val encryptedResponse = ""
+            val keyForSymEnc = ""
+            val ivForSymKey = ""
+
+            EncryptedSendQueueRequestBody(
+                encryptedPayload = encryptedResponse,
+                key = keyForSymEnc,
+                keyVersion = config.publicEncryptionKeyVersion,
+                iv = ivForSymKey
+            ).toJsonString()
         } else {
             body.toString()
         }
