@@ -40,7 +40,7 @@ After upgrading the SDK to v7.2.0+, don't downgrade in subsequent app releases. 
 
 ### Version 7.1.0 (December 24, 2024)
 > ‼️ **NOTE**
-A critical issue has been identified in version 7.1.0. Please update to version 7.1.2 if targeting Android 14, or version 7.2.2 if targeting Android 15.
+A critical issue has been identified in version 7.1.0. Please update to version 7.2.2 or above. This update should not introduce any build errors in most cases. However, if you encounter any issues during the update, consider updating to version 7.1.2 instead.
 
 #### New Features
 
