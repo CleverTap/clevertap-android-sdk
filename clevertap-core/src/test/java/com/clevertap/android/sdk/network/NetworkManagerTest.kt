@@ -14,6 +14,9 @@ import com.clevertap.android.sdk.events.EventGroup.VARIABLES
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.network.api.CtApi
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_MUTE
+import com.clevertap.android.sdk.network.api.CtApi.Companion.SPIKY_HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApiTestProvider
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.MockHttpClient
@@ -70,7 +73,7 @@ class NetworkManagerTest : BaseTestCase() {
     @Test
     fun test_initHandshake_muteHeadersTrue_neverCallSuccessCallback() {
         val callback = Mockito.mock(Runnable::class.java)
-        mockHttpClient.responseHeaders = mapOf(Constants.HEADER_MUTE to listOf("true"))
+        mockHttpClient.responseHeaders = mapOf(HEADER_MUTE to listOf("true"))
         networkManager.initHandshake(REGULAR, callback)
         Mockito.verify(callback, Mockito.never()).run()
     }
@@ -78,7 +81,7 @@ class NetworkManagerTest : BaseTestCase() {
     @Test
     fun test_initHandshake_muteHeadersFalse_callSuccessCallback() {
         val callback = Mockito.mock(Runnable::class.java)
-        mockHttpClient.responseHeaders = mapOf(Constants.HEADER_MUTE to listOf("false"))
+        mockHttpClient.responseHeaders = mapOf(HEADER_MUTE to listOf("false"))
         networkManager.initHandshake(REGULAR, callback)
         Mockito.verify(callback).run()
     }
@@ -91,8 +94,8 @@ class NetworkManagerTest : BaseTestCase() {
         // we only use changed domain when region is not configured
         ctApi.region = null
         mockHttpClient.responseHeaders = mapOf(
-            Constants.HEADER_DOMAIN_NAME to listOf(domain),
-            Constants.SPIKY_HEADER_DOMAIN_NAME to listOf(spikyDomain)
+            HEADER_DOMAIN_NAME to listOf(domain),
+            SPIKY_HEADER_DOMAIN_NAME to listOf(spikyDomain)
         )
         networkManager.initHandshake(REGULAR, callback)
 

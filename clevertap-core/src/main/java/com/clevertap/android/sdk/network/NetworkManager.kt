@@ -28,6 +28,9 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.inapp.evaluation.EventType.Companion.fromBoolean
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.network.EndpointId.Companion.fromEventGroup
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_MUTE
+import com.clevertap.android.sdk.network.api.CtApi.Companion.SPIKY_HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody
 import com.clevertap.android.sdk.network.api.EncryptedSendQueueRequestBody
@@ -610,7 +613,7 @@ internal open class NetworkManager(
      */
     @WorkerThread
     private fun processIncomingHeaders(context: Context, response: Response): Boolean {
-        val muteCommand: String? = response.getHeaderValue(Constants.HEADER_MUTE)
+        val muteCommand: String? = response.getHeaderValue(HEADER_MUTE)
         if (muteCommand != null && muteCommand.trim { it <= ' ' }.isNotEmpty()) {
             if (muteCommand == "true") {
                 setMuted(context, true)
@@ -620,13 +623,13 @@ internal open class NetworkManager(
             }
         }
 
-        val domainName: String? = response.getHeaderValue(Constants.HEADER_DOMAIN_NAME)
+        val domainName: String? = response.getHeaderValue(HEADER_DOMAIN_NAME)
         Logger.v("Getting domain from header - $domainName")
         if (domainName == null || domainName.trim { it <= ' ' }.isEmpty()) {
             return true
         }
 
-        val spikyDomainName: String? = response.getHeaderValue(Constants.SPIKY_HEADER_DOMAIN_NAME)
+        val spikyDomainName: String? = response.getHeaderValue(SPIKY_HEADER_DOMAIN_NAME)
         Logger.v("Getting spiky domain from header - $spikyDomainName")
 
         setMuted(context, false)
@@ -677,7 +680,22 @@ internal open class NetworkManager(
             val isProcessed = if (eventGroup == EventGroup.VARIABLES) {
                 handleVariablesResponse(response)
             } else {
-                handleSendQueueResponse(response, requestBody, endpointId)
+                handleSendQueueResponse(
+                    response = response,
+                    isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody)
+                ) {
+                    if (requestBody.queueHeader != null) {
+                        for (listener: NetworkHeadersListener in mNetworkHeadersListeners) {
+                            val isProfile: Boolean =
+                                requestBody.queue.optJSONObject(0).has("profile")
+                            listener.onSentHeaders(
+                                allHeaders = requestBody.queueHeader,
+                                endpointId = endpointId,
+                                eventType = fromBoolean(isProfile)
+                            )
+                        }
+                    }
+                }
             }
 
             if (isProcessed) {
@@ -852,15 +870,15 @@ internal open class NetworkManager(
     @WorkerThread
     private fun handleSendQueueResponse(
         response: Response,
-        requestBody: SendQueueRequestBody,
-        endpointId: EndpointId
+        isFullResponse: Boolean,
+        notifyNetworkHeaderListeners: () -> Unit
     ): Boolean {
         if (!response.isSuccess()) {
             handleSendQueueResponseError(response)
             return false
         }
 
-        val newDomain: String? = response.getHeaderValue(Constants.HEADER_DOMAIN_NAME)
+        val newDomain: String? = response.getHeaderValue(HEADER_DOMAIN_NAME)
 
         if (newDomain != null && newDomain.trim { it <= ' ' }.isNotEmpty() && hasDomainChanged(newDomain)) {
             setDomain(context, newDomain)
@@ -871,12 +889,7 @@ internal open class NetworkManager(
             return false
         }
 
-        if (requestBody.queueHeader != null) {
-            for (listener: NetworkHeadersListener in mNetworkHeadersListeners) {
-                val isProfile: Boolean = requestBody.queue.optJSONObject(0).has("profile")
-                listener.onSentHeaders(requestBody.queueHeader, endpointId, fromBoolean(isProfile))
-            }
-        }
+        notifyNetworkHeaderListeners()
 
         if (!processIncomingHeaders(context, response)) {
             return false
@@ -890,7 +903,6 @@ internal open class NetworkManager(
         val bodyJson: JSONObject? = bodyString.toJsonOrNull()
         logger.verbose(config.accountId, "Processing response : $bodyJson")
 
-        val isFullResponse: Boolean = doesBodyContainAppLaunchedOrFetchEvents(requestBody)
         for (processor: CleverTapResponse in cleverTapResponses) {
             processor.isFullResponse = isFullResponse
             processor.processResponse(bodyJson, bodyString, context)
