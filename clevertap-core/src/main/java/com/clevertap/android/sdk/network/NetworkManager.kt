@@ -29,12 +29,15 @@ import com.clevertap.android.sdk.inapp.evaluation.EventType.Companion.fromBoolea
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.network.EndpointId.Companion.fromEventGroup
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_MUTE
 import com.clevertap.android.sdk.network.api.CtApi.Companion.SPIKY_HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody
+import com.clevertap.android.sdk.network.api.EncryptedResponseBody
 import com.clevertap.android.sdk.network.api.EncryptedSendQueueRequestBody
 import com.clevertap.android.sdk.network.api.EncryptionFailure
+import com.clevertap.android.sdk.network.api.EncryptionResult
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
@@ -899,8 +902,33 @@ internal open class NetworkManager(
         lastRequestTimestamp = currentRequestTimestamp
         setFirstRequestTimestampIfNeeded(currentRequestTimestamp)
 
-        val bodyString: String? = response.readBody()
-        val bodyJson: JSONObject? = bodyString.toJsonOrNull()
+        val isEncryptedResponse = response.getHeaderValue(HEADER_ENCRYPTION_ENABLED).toBoolean()
+        var bodyString: String? = response.readBody()
+        var bodyJson: JSONObject? = bodyString.toJsonOrNull()
+
+        if (isEncryptedResponse && bodyString != null) {
+            val responseBody = EncryptedResponseBody.fromJsonString(bodyString)
+
+            val decryptResponse: EncryptionResult = networkCryptManager.decryptResponse(
+                response = responseBody.encryptedPayload,
+                iv = responseBody.iv
+            )
+
+            when (decryptResponse) {
+                is EncryptionFailure -> {
+                    return false // todo lp check if this should be considered as nw failure?
+                }
+                is EncryptionSuccess -> {
+                    // reassign before processing responses
+                    bodyString = decryptResponse.data
+                    bodyJson = bodyString.toJsonOrNull()
+                }
+            }
+
+        } else {
+            // no-op
+        }
+
         logger.verbose(config.accountId, "Processing response : $bodyJson")
 
         for (processor: CleverTapResponse in cleverTapResponses) {

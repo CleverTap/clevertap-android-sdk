@@ -33,6 +33,7 @@ internal class CtApi(
         const val HEADER_CONTENT_TYPE = "Content-Type"
         const val HEADER_ACCOUNT_ID = "X-CleverTap-Account-ID"
         const val HEADER_ACCOUNT_TOKEN = "X-CleverTap-Token"
+        const val HEADER_ENCRYPTION_ENABLED = "X-CleverTap-Encryption-Enabled"
 
         // Response Headers
         const val HEADER_MUTE: String = "X-WZRK-MUTE"
@@ -50,7 +51,7 @@ internal class CtApi(
         "t" to sdkVersion,
         "z" to accountId
     )
-    private val encryptionHeader = "X-CleverTap-Encryption-Enabled" to "true"
+    private val encryptionHeader = HEADER_ENCRYPTION_ENABLED to "true"
 
     private val spikyRegionSuffix = "-spiky"
     var currentRequestTimestampSeconds = 0

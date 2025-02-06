@@ -285,7 +285,10 @@ internal object CleverTapFactory {
         val encryptionManager = NetworkEncryptionManager(
             keyGenerator = ctKeyGenerator,
             aesgcm = cryptFactory.getAesGcmCrypt(),
-            rsaCrypt = RSAEncryption()
+            rsaCrypt = RSAEncryption(),
+            publicKeyForRsa = {
+                config.publicEncryptionKey
+            }
         )
         val networkManager = NetworkManager(
             context = context,

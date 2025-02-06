@@ -12,7 +12,8 @@ import javax.crypto.SecretKey
 internal class NetworkEncryptionManager(
     private val keyGenerator: CTKeyGenerator,
     private val aesgcm: AESGCMCrypt,
-    private val rsaCrypt: RSAEncryption
+    private val rsaCrypt: RSAEncryption,
+    private val publicKeyForRsa: () -> String
 ) {
 
     companion object {
@@ -31,10 +32,10 @@ internal class NetworkEncryptionManager(
     }
 
     fun encryptedSessionKey() : String? {
-        val key = sessionKeyBytes()
-        val cryptKey = rsaCrypt.getPublicKeyFromString(key)
+        val symmetricKey = sessionKeyBytes()
+        val cryptKey = rsaCrypt.getPublicKeyFromString(publicKeyForRsa())
         if (cryptKey != null) {
-            return rsaCrypt.encrypt(key.toByteArray(Charsets.UTF_8), cryptKey)
+            return rsaCrypt.encrypt(symmetricKey.toByteArray(Charsets.UTF_8), cryptKey)
         }
         return null
     }
@@ -48,6 +49,34 @@ internal class NetworkEncryptionManager(
                 mode = Cipher.ENCRYPT_MODE,
                 data = response.toByteArray(),
                 iv = null,
+                secretKey = sessionKeyForEncryption()
+            )
+
+        return if (result != null) {
+            EncryptionSuccess(
+                data = convertByteArrayToString(result.encryptedBytes),
+                iv = convertByteArrayToString(result.iv)
+            )
+        } else {
+            EncryptionFailure
+        }
+    }
+
+    /**
+     * Returns EncryptionResult which contains encrypted response, iv
+     */
+    fun decryptResponse(
+        response: String,
+        iv: String // base64 encoded from BE
+    ): EncryptionResult {
+
+        val decodedIv = Base64.decode(response.toByteArray(), Base64.DEFAULT)
+        val decodedResponse = Base64.decode(iv.toByteArray(), Base64.DEFAULT)
+        val result =
+            aesgcm.performCryptOperation(
+                mode = Cipher.DECRYPT_MODE,
+                data = decodedResponse,
+                iv = decodedIv,
                 secretKey = sessionKeyForEncryption()
             )
 
