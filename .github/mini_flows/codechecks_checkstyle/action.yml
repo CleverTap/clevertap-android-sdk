@@ -9,7 +9,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: checkstyle-clevertap-core
         path: clevertap-core/build/reports/checkstyle
@@ -23,7 +23,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: checkstyle-clevertap-geofence
         path: clevertap-geofence/build/reports/checkstyle
@@ -37,7 +37,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: checkstyle-clevertap-hms
         path: clevertap-hms/build/reports/checkstyle
@@ -51,7 +51,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: checkstyle-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/reports/checkstyle

@@ -12,7 +12,7 @@ runs:
 
     - name: Upload Unit tests
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: unit-tests-results
         path: |

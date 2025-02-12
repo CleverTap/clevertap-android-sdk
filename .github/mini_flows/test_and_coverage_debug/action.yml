@@ -9,14 +9,14 @@ runs:
 
     - name: Upload1
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: TestReportDebug-clevertap-core
         path: clevertap-core/build/reports/tests
 
     - name: Upload2
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: JacocoReportDebug-clevertap-core
         path: clevertap-core/build/reports/jacoco
@@ -30,14 +30,14 @@ runs:
 
     - name: Upload1
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: TestReportDebug-clevertap-geofence
         path: clevertap-geofence/build/reports/tests
 
     - name: Upload2
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: JacocoReportDebug-clevertap-geofence
         path: clevertap-geofence/build/reports/jacoco
@@ -51,14 +51,14 @@ runs:
 
     - name: Upload1
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: TestReportDebug-clevertap-hms
         path: clevertap-hms/build/reports/tests
 
     - name: Upload2
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: JacocoReportDebug-clevertap-hms
         path: clevertap-hms/build/reports/jacoco
@@ -73,14 +73,14 @@ runs:
 
     - name: Upload1
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: TestReportDebug-clevertap-pushtemplates
         path: clevertap-pushtemplates/build/reports/tests
 
     - name: Upload2
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: JacocoReportDebug-clevertap-pushtemplates
         path: clevertap-pushtemplates/build/reports/jacoco

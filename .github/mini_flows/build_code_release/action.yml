@@ -9,7 +9,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: assembleRelease-clevertap-core
         path: clevertap-core/build/outputs/aar
@@ -23,7 +23,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: assembleRelease-clevertap-geofence
         path: clevertap-geofence/build/outputs/aar
@@ -37,7 +37,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: assembleRelease-clevertap-hms
         path: clevertap-hms/build/outputs/aar
@@ -51,7 +51,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: assembleRelease-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/outputs/aar
