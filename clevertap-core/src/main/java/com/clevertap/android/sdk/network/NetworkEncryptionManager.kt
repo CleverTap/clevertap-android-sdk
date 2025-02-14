@@ -27,15 +27,15 @@ internal class NetworkEncryptionManager(
         return sessionKey ?: keyGenerator.generateSecretKey().also { sessionKey = it }
     }
 
-    private fun sessionKeyBytes() : String {
-        return convertByteArrayToString(sessionKeyForEncryption().encoded)
+    private fun sessionKeyBytes() : ByteArray? {
+        return sessionKeyForEncryption().encoded
     }
 
     fun encryptedSessionKey() : String? {
-        val symmetricKey = sessionKeyBytes()
+        val symmetricKey = sessionKeyBytes() ?: return null
         val cryptKey = rsaCrypt.getPublicKeyFromString(publicKeyForRsa())
         if (cryptKey != null) {
-            return rsaCrypt.encrypt(symmetricKey.toByteArray(Charsets.UTF_8), cryptKey)
+            return rsaCrypt.encrypt(symmetricKey, cryptKey)
         }
         return null
     }
@@ -96,7 +96,7 @@ internal class NetworkEncryptionManager(
     private fun convertByteArrayToString(arr: ByteArray) : String {
         //return arr.toString(Charsets.UTF_8) // might have some restricted chars
         // return java.util.Base64.getEncoder().encodeToString(arr) // Requires min api 26
-        return Base64.encodeToString(arr, Base64.DEFAULT)
+        return Base64.encodeToString(arr, Base64.NO_WRAP)
     }
 
 }
