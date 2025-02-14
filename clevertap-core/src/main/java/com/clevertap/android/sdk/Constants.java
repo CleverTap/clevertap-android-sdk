@@ -126,9 +126,6 @@ public interface Constants {
     String PRIMARY_DOMAIN = "clevertap-prod.com";
     String KEY_DOMAIN_NAME = "comms_dmn";
     String SPIKY_KEY_DOMAIN_NAME = "comms_dmn_spiky";
-    String HEADER_DOMAIN_NAME = "X-WZRK-RD";
-    String SPIKY_HEADER_DOMAIN_NAME = "X-WZRK-SPIKY-RD";
-    String HEADER_MUTE = "X-WZRK-MUTE";
     String NAMESPACE_IJ = "IJ";
     String KEY_LAST_TS = "comms_last_ts";
     String KEY_FIRST_TS = "comms_first_ts";
@@ -174,6 +171,8 @@ public interface Constants {
     String KEY_PROXY_DOMAIN = "proxyDomain";
     String KEY_SPIKY_PROXY_DOMAIN = "spikyProxyDomain";
     String KEY_CUSTOM_HANDSHAKE_DOMAIN = "customHandshakeDomain";
+    String KEY_PUBLIC_ENCRYPTION_KEY = "publicEncryptionKey";
+    String KEY_PUBLIC_ENCRYPTION_KEY_VERSION = "publicEncryptionKeyVersion";
     String KEY_ANALYTICS_ONLY = "analyticsOnly";
     String KEY_DEFAULT_INSTANCE = "isDefaultInstance";
     String KEY_USE_GOOGLE_AD_ID = "useGoogleAdId";

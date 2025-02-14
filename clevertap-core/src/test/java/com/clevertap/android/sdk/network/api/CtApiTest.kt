@@ -30,8 +30,37 @@ class CtApiTest {
             "X-CleverTap-Token" to CtApiTestProvider.ACCOUNT_TOKEN
         )
 
-        val sendQueueResponse = ctApi.sendQueue(false, getEmptyQueueBody())
+        val sendQueueResponse = ctApi.sendQueue(false, getEmptyQueueBodyString())
         assertEquals(expectedHeaders, sendQueueResponse.request.headers)
+
+        val handshakeResponse = ctApi.performHandshakeForDomain(false)
+        assertEquals(expectedHeaders, handshakeResponse.request.headers)
+
+        val sendVarsResponse = ctApi.defineVars(getEmptyQueueBody())
+        assertEquals(expectedHeaders, sendVarsResponse.request.headers)
+    }
+
+    @Test
+    fun test_sendRequests_attachesEncryptionHeaderIfEnabled() {
+        val expectedHeaders = mapOf(
+            "Content-Type" to "application/json; charset=utf-8",
+            "X-CleverTap-Account-ID" to CtApiTestProvider.ACCOUNT_ID,
+            "X-CleverTap-Token" to CtApiTestProvider.ACCOUNT_TOKEN,
+        )
+
+        val expectedHeadersForA1 = mapOf(
+            "Content-Type" to "application/json; charset=utf-8",
+            "X-CleverTap-Account-ID" to CtApiTestProvider.ACCOUNT_ID,
+            "X-CleverTap-Token" to CtApiTestProvider.ACCOUNT_TOKEN,
+            "X-CleverTap-Encryption-Enabled" to "true"
+        )
+
+        val sendQueueResponse = ctApi.sendQueue(
+            isViewedEvent = false,
+            body = getEmptyQueueBodyString(),
+            isEncrypted = true
+        )
+        assertEquals(expectedHeadersForA1, sendQueueResponse.request.headers)
 
         val handshakeResponse = ctApi.performHandshakeForDomain(false)
         assertEquals(expectedHeaders, handshakeResponse.request.headers)
@@ -84,7 +113,7 @@ class CtApiTest {
 
     @Test
     fun test_sendQueueAndVariables_updateCurrentRequestTimestamp() {
-        ctApi.sendQueue(true, getEmptyQueueBody())
+        ctApi.sendQueue(true, getEmptyQueueBodyString())
         val timestamp = ctApi.currentRequestTimestampSeconds
         Thread.sleep(1000)
         ctApi.defineVars(getEmptyQueueBody())
@@ -93,7 +122,7 @@ class CtApiTest {
 
     @Test
     fun test_sendQueue_attachDefaultQueryParams() {
-        val request = ctApi.sendQueue(false, getEmptyQueueBody()).request
+        val request = ctApi.sendQueue(false, getEmptyQueueBodyString()).request
         val urlString = request.url.toString()
         assertContains(urlString, "os=Android")
         assertContains(urlString, "t=${CtApiTestProvider.SDK_VERSION}")
@@ -312,5 +341,9 @@ class CtApiTest {
 
     private fun getEmptyQueueBody(): SendQueueRequestBody {
         return SendQueueRequestBody(null, JSONArray())
+    }
+
+    private fun getEmptyQueueBodyString(): String {
+        return SendQueueRequestBody(null, JSONArray()).toString()
     }
 }
