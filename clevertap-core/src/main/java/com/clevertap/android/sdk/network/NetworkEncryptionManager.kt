@@ -70,8 +70,8 @@ internal class NetworkEncryptionManager(
         iv: String // base64 encoded from BE
     ): EncryptionResult {
 
-        val decodedIv = Base64.decode(response.toByteArray(), Base64.DEFAULT)
-        val decodedResponse = Base64.decode(iv.toByteArray(), Base64.DEFAULT)
+        val decodedResponse = Base64.decode(response, Base64.NO_WRAP)
+        val decodedIv = Base64.decode(iv, Base64.NO_WRAP)
         val result =
             aesgcm.performCryptOperation(
                 mode = Cipher.DECRYPT_MODE,
@@ -82,8 +82,8 @@ internal class NetworkEncryptionManager(
 
         return if (result != null) {
             EncryptionSuccess(
-                data = convertByteArrayToString(result.encryptedBytes),
-                iv = convertByteArrayToString(result.iv)
+                data = String(result.encryptedBytes),
+                iv = String(result.iv)
             )
         } else {
             EncryptionFailure
