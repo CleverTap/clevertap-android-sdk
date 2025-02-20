@@ -28,32 +28,50 @@ internal class CtApi(
         const val DEFAULT_CONTENT_TYPE = "application/json; charset=utf-8"
         const val DEFAULT_QUERY_PARAM_OS = "Android"
 
+        // Request Headers
         const val HEADER_CUSTOM_HANDSHAKE = "X-CleverTap-Handshake-Domain"
+        const val HEADER_CONTENT_TYPE = "Content-Type"
+        const val HEADER_ACCOUNT_ID = "X-CleverTap-Account-ID"
+        const val HEADER_ACCOUNT_TOKEN = "X-CleverTap-Token"
+        const val HEADER_ENCRYPTION_ENABLED = "X-CleverTap-Encryption-Enabled"
+
+        // Response Headers
+        const val HEADER_MUTE: String = "X-WZRK-MUTE"
+        const val HEADER_DOMAIN_NAME: String = "X-WZRK-RD"
+        const val SPIKY_HEADER_DOMAIN_NAME: String = "X-WZRK-SPIKY-RD"
     }
 
     private val defaultHeaders: Map<String, String> = mapOf(
-        "Content-Type" to DEFAULT_CONTENT_TYPE,
-        "X-CleverTap-Account-ID" to accountId,
-        "X-CleverTap-Token" to accountToken
+        HEADER_CONTENT_TYPE to DEFAULT_CONTENT_TYPE,
+        HEADER_ACCOUNT_ID to accountId,
+        HEADER_ACCOUNT_TOKEN to accountToken
     )
     private val defaultQueryParams: Map<String, String> = mapOf(
         "os" to DEFAULT_QUERY_PARAM_OS,
         "t" to sdkVersion,
         "z" to accountId
     )
+    private val encryptionHeader = HEADER_ENCRYPTION_ENABLED to "true"
+
     private val spikyRegionSuffix = "-spiky"
     var currentRequestTimestampSeconds = 0
         private set
 
     fun sendQueue(
         isViewedEvent: Boolean,
-        body: SendQueueRequestBody
+        body: String,
+        isEncrypted: Boolean = false
     ): Response =
         httpClient.execute(
             createRequest(
                 baseUrl = getActualDomain(isViewedEvent = isViewedEvent) ?: defaultDomain,
                 relativeUrl = "a1",
-                body = body.toString()
+                body = body,
+                headers = if (isEncrypted) {
+                    defaultHeaders.plus(encryptionHeader)
+                } else {
+                    defaultHeaders
+                }
             )
         )
 

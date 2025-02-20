@@ -14,6 +14,9 @@ import com.clevertap.android.sdk.events.EventGroup.VARIABLES
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.network.api.CtApi
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_MUTE
+import com.clevertap.android.sdk.network.api.CtApi.Companion.SPIKY_HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApiTestProvider
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.MockHttpClient
@@ -23,6 +26,7 @@ import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,18 +42,25 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class NetworkManagerTest : BaseTestCase() {
 
+    private var closeable: AutoCloseable? = null
     private lateinit var networkManager: NetworkManager
     private lateinit var ctApi: CtApi
     private lateinit var mockHttpClient: MockHttpClient
     @Mock private lateinit var ctApiWrapper : CtApiWrapper
+    @Mock private lateinit var networkEncryptionManager: NetworkEncryptionManager
 
     @Before
-    fun setUpNetworkManager() {
-        MockitoAnnotations.openMocks(this)
+    fun setup() {
+        closeable = MockitoAnnotations.openMocks(this)
         mockHttpClient = MockHttpClient()
         ctApi = CtApiTestProvider.provideTestCtApiForConfig(cleverTapInstanceConfig, mockHttpClient)
         networkManager = provideNetworkManager()
         `when`(ctApiWrapper.ctApi).thenReturn(ctApi)
+    }
+
+    @After
+    fun tearDown() {
+        closeable?.close()
     }
 
     @Test
@@ -62,7 +73,7 @@ class NetworkManagerTest : BaseTestCase() {
     @Test
     fun test_initHandshake_muteHeadersTrue_neverCallSuccessCallback() {
         val callback = Mockito.mock(Runnable::class.java)
-        mockHttpClient.responseHeaders = mapOf(Constants.HEADER_MUTE to listOf("true"))
+        mockHttpClient.responseHeaders = mapOf(HEADER_MUTE to listOf("true"))
         networkManager.initHandshake(REGULAR, callback)
         Mockito.verify(callback, Mockito.never()).run()
     }
@@ -70,7 +81,7 @@ class NetworkManagerTest : BaseTestCase() {
     @Test
     fun test_initHandshake_muteHeadersFalse_callSuccessCallback() {
         val callback = Mockito.mock(Runnable::class.java)
-        mockHttpClient.responseHeaders = mapOf(Constants.HEADER_MUTE to listOf("false"))
+        mockHttpClient.responseHeaders = mapOf(HEADER_MUTE to listOf("false"))
         networkManager.initHandshake(REGULAR, callback)
         Mockito.verify(callback).run()
     }
@@ -83,8 +94,8 @@ class NetworkManagerTest : BaseTestCase() {
         // we only use changed domain when region is not configured
         ctApi.region = null
         mockHttpClient.responseHeaders = mapOf(
-            Constants.HEADER_DOMAIN_NAME to listOf(domain),
-            Constants.SPIKY_HEADER_DOMAIN_NAME to listOf(spikyDomain)
+            HEADER_DOMAIN_NAME to listOf(domain),
+            SPIKY_HEADER_DOMAIN_NAME to listOf(spikyDomain)
         )
         networkManager.initHandshake(REGULAR, callback)
 
@@ -186,7 +197,8 @@ class NetworkManagerTest : BaseTestCase() {
             lockManager,
             Validator(),
             inAppResponse,
-            ctApiWrapper
+            ctApiWrapper,
+            networkEncryptionManager
         )
     }
 

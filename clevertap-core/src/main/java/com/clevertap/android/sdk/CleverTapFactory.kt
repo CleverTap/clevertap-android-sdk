@@ -3,6 +3,7 @@ package com.clevertap.android.sdk
 import android.content.Context
 import com.clevertap.android.sdk.CTPreferenceCache.Companion.getInstance
 import com.clevertap.android.sdk.StoreProvider.Companion.getInstance
+import com.clevertap.android.sdk.cryption.CTKeyGenerator
 import com.clevertap.android.sdk.cryption.CryptFactory
 import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.cryption.CryptMigrator
@@ -31,7 +32,9 @@ import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.AppLaunchListener
 import com.clevertap.android.sdk.network.CompositeBatchListener
 import com.clevertap.android.sdk.network.FetchInAppListener
+import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.RSAEncryption
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
@@ -101,9 +104,12 @@ internal object CleverTapFactory {
             context = context,
             accountId = config.accountId
         )
+
+        val ctKeyGenerator = CTKeyGenerator(cryptRepository = repository)
+
         val cryptFactory = CryptFactory(
-            context = context,
-            accountId = config.accountId
+            accountId = config.accountId,
+            ctKeyGenerator = ctKeyGenerator
         )
         val cryptHandler = CryptHandler(
             encryptionLevel = fromInt(value = config.encryptionLevel),
@@ -276,19 +282,28 @@ internal object CleverTapFactory {
             config = config,
             deviceInfo = deviceInfo
         )
+        val encryptionManager = NetworkEncryptionManager(
+            keyGenerator = ctKeyGenerator,
+            aesgcm = cryptFactory.getAesGcmCrypt(),
+            rsaCrypt = RSAEncryption(),
+            publicKeyForRsa = {
+                config.publicEncryptionKey
+            }
+        )
         val networkManager = NetworkManager(
-            context,
-            config,
-            deviceInfo,
-            coreMetaData,
-            validationResultStack,
-            controllerManager,
-            baseDatabaseManager,
-            callbackManager,
-            ctLockManager,
-            validator,
-            inAppResponse,
-            ctApiWrapper
+            context = context,
+            config = config,
+            deviceInfo = deviceInfo,
+            coreMetaData = coreMetaData,
+            validationResultStack = validationResultStack,
+            controllerManager = controllerManager,
+            databaseManager = baseDatabaseManager,
+            callbackManager = callbackManager,
+            ctLockManager = ctLockManager,
+            validator = validator,
+            inAppResponse = inAppResponse,
+            ctApiWrapper = ctApiWrapper,
+            networkCryptManager = encryptionManager
         )
         coreState.networkManager = networkManager
 
