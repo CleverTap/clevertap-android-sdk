@@ -6,7 +6,7 @@ import com.clevertap.android.hms.HmsTestConstants.Companion.HMS_TOKEN
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.interfaces.INotificationParser
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS
+import com.clevertap.android.sdk.pushnotification.PushType.HPS
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.huawei.hms.push.RemoteMessage

@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.pushnotification.fcm
 
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM
+import com.clevertap.android.sdk.pushnotification.PushType.FCM
 import com.clevertap.android.sdk.pushnotification.fcm.TestFcmConstants.Companion.FCM_SENDER_ID
 import com.clevertap.android.sdk.utils.PackageUtils
 import com.clevertap.android.shared.test.BaseTestCase
