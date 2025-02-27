@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.pushnotification;
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
-import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
+import static com.clevertap.android.sdk.pushnotification.PushType.FCM;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -248,11 +248,7 @@ public class PushProviders implements CTPushProviderListener {
         if (TextUtils.isEmpty(token) || pushType == null) {
             return;
         }
-        switch (pushType) {
-            case FCM:
-                handleToken(token, PushType.FCM, true);
-                break;
-        }
+        handleToken(token, pushType, true);
     }
 
     /**
@@ -649,38 +645,35 @@ public class PushProviders implements CTPushProviderListener {
 
     //Session
 
-    private void findEnabledPushTypes() {
-        for (PushType pushType : getPushTypes(config.getAllowedPushTypes())) {
-            String className = pushType.getMessagingSDKClassName();
-            try {
-                Class.forName(className);
-                allEnabledPushTypes.add(pushType);
-                config.log(PushConstants.LOG_TAG, "SDK Class Available :" + className);
-
-                /*if (pushType.getRunningDevices() == PushConstants.NO_DEVICES) {
-                    allEnabledPushTypes.remove(pushType);
-                    allDisabledPushTypes.add(pushType);
-                    config.log(PushConstants.LOG_TAG,
-                            "disabling " + pushType + " due to flag set as PushConstants.NO_DEVICES");
-                }*/
-
-            } catch (Exception e) {
-                config.log(PushConstants.LOG_TAG,
-                        "SDK class Not available " + className + " Exception:" + e.getClass().getName());
-            }
+    private void checkFirebaseAdded() {
+        PushType pushType = FCM;
+        String className = pushType.getMessagingSDKClassName();
+        try {
+            Class.forName(className);
+            allEnabledPushTypes.add(pushType);
+            config.log(PushConstants.LOG_TAG, "SDK Class Available :" + className);
+        } catch (Exception e) {
+            config.log(PushConstants.LOG_TAG,
+                    "SDK class Not available " + className + " Exception:" + e.getClass().getName());
         }
     }
 
+    /**
+     * Adds new push provider similar to FCM
+     */
+    public void addPushService(PushType pushType) {
+        allEnabledPushTypes.add(pushType);
+    }
+
     private int getPingFrequency(Context context) {
-        return StorageHelper.getInt(context, PING_FREQUENCY,
-                PING_FREQUENCY_VALUE);
+        return StorageHelper.getInt(context, PING_FREQUENCY, PING_FREQUENCY_VALUE);
     }
 
     /**
      * Loads all the plugins that are currently supported by the device.
      */
     private void init() {
-        findEnabledPushTypes();
+        checkFirebaseAdded();
         List<CTPushProvider> providers = createProviders();
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
 
