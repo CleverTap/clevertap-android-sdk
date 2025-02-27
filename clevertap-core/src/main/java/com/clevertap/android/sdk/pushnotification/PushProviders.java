@@ -226,7 +226,7 @@ public class PushProviders implements CTPushProviderListener {
                     if (alreadyHaveToken(token, pushType)) {
                         return null;
                     }
-                    @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
+                    String key = pushType.getTokenPrefKey();
                     if (TextUtils.isEmpty(key)) {
                         return null;
                     }
@@ -283,7 +283,7 @@ public class PushProviders implements CTPushProviderListener {
      */
     public String getCachedToken(PushType pushType) {
         if (pushType != null) {
-            @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
+            String key = pushType.getTokenPrefKey();
             if (!TextUtils.isEmpty(key)) {
                 String cachedToken = StorageHelper.getStringFromPrefs(context, config, key, null);
                 config.log(PushConstants.LOG_TAG, pushType + "getting Cached Token - " + cachedToken);
