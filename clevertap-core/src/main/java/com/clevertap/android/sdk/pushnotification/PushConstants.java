@@ -1,35 +1,8 @@
 package com.clevertap.android.sdk.pushnotification;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.StringDef;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
 public interface PushConstants {
-
-    @StringDef({FCM_DELIVERY_TYPE})
-    @Retention(RetentionPolicy.SOURCE)
-    @interface DeliveryType {
-
-    }
-
-    @StringDef({CT_FIREBASE_PROVIDER_CLASS})
-    @Retention(RetentionPolicy.SOURCE)
-    @interface CTPushProviderClass {
-
-    }
-
-    @StringDef({FIREBASE_SDK_CLASS})
-    @Retention(RetentionPolicy.SOURCE)
-    @interface PushMessagingClass {
-
-    }
-
-    @StringDef({FCM_PROPERTY_REG_ID})
-    @Retention(RetentionPolicy.SOURCE)
-    @interface RegKeyType {
-
-    }
 
     enum PushType {
         FCM(FCM_DELIVERY_TYPE, FCM_PROPERTY_REG_ID, CT_FIREBASE_PROVIDER_CLASS, FIREBASE_SDK_CLASS);
@@ -43,10 +16,10 @@ public interface PushConstants {
         private final String type;
 
         PushType(
-                @DeliveryType String type,
-                @RegKeyType String prefKey,
-                @CTPushProviderClass String className,
-                @PushMessagingClass String messagingSDKClassName
+                String type,
+                String prefKey,
+                String className,
+                String messagingSDKClassName
         ) {
             this.type = type;
             this.tokenPrefKey = prefKey;
@@ -62,8 +35,7 @@ public interface PushConstants {
             return messagingSDKClassName;
         }
 
-        public @RegKeyType
-        String getTokenPrefKey() {
+        public String getTokenPrefKey() {
             return tokenPrefKey;
         }
 
@@ -73,7 +45,7 @@ public interface PushConstants {
 
         @NonNull
         @Override
-        public @DeliveryType String toString() {
+        public String toString() {
             return " [PushType:" + name() + "] ";
         }
     }
