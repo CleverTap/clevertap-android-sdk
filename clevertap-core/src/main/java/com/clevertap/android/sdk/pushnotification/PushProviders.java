@@ -69,8 +69,6 @@ public class PushProviders implements CTPushProviderListener {
 
     private final ArrayList<PushType> allEnabledPushTypes = new ArrayList<>();
 
-    private final ArrayList<PushType> allDisabledPushTypes = new ArrayList<>();
-
     private final ArrayList<CTPushProvider> availableCTPushProviders = new ArrayList<>();
 
     private final ArrayList<PushType> customEnabledPushTypes = new ArrayList<>();
@@ -551,7 +549,7 @@ public class PushProviders implements CTPushProviderListener {
         List<CTPushProvider> providers = new ArrayList<>();
 
         for (PushType pushType : allEnabledPushTypes) {
-            CTPushProvider pushProvider = getCTPushProviderFromPushType(pushType, true);
+            CTPushProvider pushProvider = getCTPushProviderFromPushType(pushType);
 
             if (pushProvider == null) {
                 continue;
@@ -569,23 +567,14 @@ public class PushProviders implements CTPushProviderListener {
      * and to prevent multiple instance of same CTPushProvider not moving this to {@link PushType}
      */
     @Nullable
-    private CTPushProvider getCTPushProviderFromPushType(final PushType pushType, final boolean isInit) {
+    private CTPushProvider getCTPushProviderFromPushType(final PushType pushType) {
         String className = pushType.getCtProviderClassName();
         CTPushProvider pushProvider = null;
         try {
             Class<?> providerClass = Class.forName(className);
+            Constructor<?> constructor = providerClass.getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
+            pushProvider = (CTPushProvider) constructor.newInstance(this, context, config);
 
-            if (isInit) {
-                Constructor<?> constructor = providerClass
-                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
-                pushProvider = (CTPushProvider) constructor.newInstance(this, context, config);
-
-            } else {
-                Constructor<?> constructor = providerClass
-                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class,
-                                Boolean.class);
-                pushProvider = (CTPushProvider) constructor.newInstance(this, context, config, false);
-            }
             config.log(PushConstants.LOG_TAG, "Found provider:" + className);
         } catch (InstantiationException e) {
             config.log(PushConstants.LOG_TAG, "Unable to create provider InstantiationException" + className);
