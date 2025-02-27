@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.pushnotification;
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
-import static com.clevertap.android.sdk.pushnotification.PushType.FCM;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -639,15 +638,17 @@ public class PushProviders implements CTPushProviderListener {
     //Session
 
     private void checkFirebaseAdded() {
-        PushType pushType = FCM;
-        String className = pushType.getMessagingSDKClassName();
-        try {
-            Class.forName(className);
-            allEnabledPushTypes.add(pushType);
-            config.log(PushConstants.LOG_TAG, "SDK Class Available :" + className);
-        } catch (Exception e) {
-            config.log(PushConstants.LOG_TAG,
-                    "SDK class Not available " + className + " Exception:" + e.getClass().getName());
+        ArrayList<PushType> allowedPushTypes = config.getPushTypes();
+        for (PushType pushType : allowedPushTypes) {
+            String className = pushType.getMessagingSDKClassName();
+            try {
+                Class.forName(className);
+                allEnabledPushTypes.add(pushType);
+                config.log(PushConstants.LOG_TAG, "SDK Class Available :" + className);
+            } catch (Exception e) {
+                config.log(PushConstants.LOG_TAG,
+                        "SDK class Not available " + className + " Exception:" + e.getClass().getName());
+            }
         }
     }
 

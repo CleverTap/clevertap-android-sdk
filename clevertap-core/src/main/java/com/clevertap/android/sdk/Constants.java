@@ -221,6 +221,7 @@ public interface Constants {
     String KEY_PACKAGE_NAME = "packageName";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
+    String KEY_PUSH_TYPES = "allowedPushTypes";
     String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_DEDUPE = "wzrk_dd";

@@ -2,6 +2,9 @@ package com.clevertap.android.sdk.pushnotification;
 
 import androidx.annotation.NonNull;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class PushType {
 
     public static PushType FCM = new PushType(
@@ -60,5 +63,34 @@ public class PushType {
     @Override
     public String toString() {
         return " [PushType:" + name() + "] ";
+    }
+
+    // Method to convert PushType to JSONObject
+    public JSONObject toJSONObject() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("ctProviderClassName", ctProviderClassName);
+            jsonObject.put("messagingSDKClassName", messagingSDKClassName);
+            jsonObject.put("tokenPrefKey", tokenPrefKey);
+            jsonObject.put("type", type);
+            jsonObject.put("logName", logName);
+        } catch (JSONException e) {
+            return null;
+        }
+        return jsonObject;
+    }
+
+    // Static method to convert JSONObject to PushType
+    public static PushType fromJSONObject(JSONObject jsonObject) {
+        try {
+            String ctProviderClassName = jsonObject.getString("ctProviderClassName");
+            String messagingSDKClassName = jsonObject.getString("messagingSDKClassName");
+            String tokenPrefKey = jsonObject.getString("tokenPrefKey");
+            String type = jsonObject.getString("type");
+            String logName = jsonObject.getString("logName");
+            return new PushType(type, tokenPrefKey, ctProviderClassName, messagingSDKClassName, logName);
+        } catch (JSONException e) {
+            return null;
+        }
     }
 }

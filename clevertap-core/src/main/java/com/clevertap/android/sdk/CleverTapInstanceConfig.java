@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAll;
+import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getDefaultPushTypes;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.toArray;
 
 import android.content.Context;
@@ -17,7 +17,10 @@ import androidx.annotation.VisibleForTesting;
 import com.clevertap.android.sdk.Constants.IdentityType;
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.login.LoginConstants;
+import com.clevertap.android.sdk.pushnotification.PushType;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -45,7 +48,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private String proxyDomain;
     private String spikyProxyDomain;
     private String customHandshakeDomain;
-    @NonNull private ArrayList<String> allowedPushTypes = getAll();
+    @NonNull private final ArrayList<PushType> pushTypes = getDefaultPushTypes();
     private boolean analyticsOnly;
     private boolean backgroundSync;
     private boolean beta;
@@ -250,8 +253,18 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (configJsonObject.has(Constants.KEY_IDENTITY_TYPES)) {
                 this.identityKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
             }
-            if(configJsonObject.has(Constants.KEY_ENCRYPTION_LEVEL)){
+            if (configJsonObject.has(Constants.KEY_ENCRYPTION_LEVEL)){
                 this.encryptionLevel = configJsonObject.getInt(Constants.KEY_ENCRYPTION_LEVEL);
+            }
+            if (configJsonObject.has(Constants.KEY_PUSH_TYPES)) {
+                JSONArray pushTypesArray = configJsonObject.getJSONArray(Constants.KEY_PUSH_TYPES);
+                for (int i = 0; i < pushTypesArray.length(); i++) {
+                    JSONObject pushTypeJo = pushTypesArray.getJSONObject(i);
+                    PushType pushType = PushType.fromJSONObject(pushTypeJo);
+                    if (pushType != null) {
+                        addPushType(pushType);
+                    }
+                }
             }
         } catch (Throwable t) {
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
@@ -280,10 +293,20 @@ public class CleverTapInstanceConfig implements Parcelable {
         packageName = in.readString();
         logger = new Logger(debugLevel);
         beta = in.readByte() != 0x00;
-        allowedPushTypes = new ArrayList<>();
-        in.readList(allowedPushTypes, String.class.getClassLoader());
         identityKeys = in.createStringArray();
         encryptionLevel = in.readInt();
+        try {
+            JSONArray allowedTypesJsonArray = new JSONArray(in.readString());
+            for (int i = 0; i < allowedTypesJsonArray.length(); i++) {
+                PushType pushType = PushType.fromJSONObject(allowedTypesJsonArray.getJSONObject(i));
+                if (pushType != null) {
+                    addPushType(pushType);
+                }
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
@@ -311,8 +334,14 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     @NonNull
-    public ArrayList<String> getAllowedPushTypes() {
-        return allowedPushTypes;
+    public ArrayList<PushType> getPushTypes() {
+        return pushTypes;
+    }
+
+    public void addPushType(@NonNull PushType allowedPushType) {
+        if (!pushTypes.contains(allowedPushType)) {
+            this.pushTypes.add(allowedPushType);
+        }
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -439,9 +468,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeString(fcmSenderId);
         dest.writeString(packageName);
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
-        dest.writeList(allowedPushTypes);
         dest.writeStringArray(identityKeys);
         dest.writeInt(encryptionLevel);
+        String allowTypesString = getPushTypesArray().toString();
+        dest.writeString(allowTypesString);
     }
 
     public boolean getEnableCustomCleverTapId() {
@@ -521,11 +551,23 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_PACKAGE_NAME, getPackageName());
             configJsonObject.put(Constants.KEY_BETA, isBeta());
             configJsonObject.put(Constants.KEY_ENCRYPTION_LEVEL , getEncryptionLevel());
+            JSONArray pushTypesArray = getPushTypesArray();
+            configJsonObject.put(Constants.KEY_PUSH_TYPES, pushTypesArray);
+
             return configJsonObject.toString();
         } catch (Throwable e) {
             Logger.v("Unable to convert config to JSON : ", e.getCause());
             return null;
         }
+    }
+
+    @NonNull
+    private JSONArray getPushTypesArray() {
+        JSONArray pushTypesArray = new JSONArray();
+        for (PushType pushType : getPushTypes()) {
+            pushTypesArray.put(pushType.toJSONObject());
+        }
+        return pushTypesArray;
     }
 
     private String getDefaultSuffix(@NonNull String tag) {
