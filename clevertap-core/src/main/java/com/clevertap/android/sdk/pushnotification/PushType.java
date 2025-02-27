@@ -2,8 +2,15 @@ package com.clevertap.android.sdk.pushnotification;
 
 import androidx.annotation.NonNull;
 
-public enum PushType {
-    FCM(PushConstants.FCM_DELIVERY_TYPE, PushConstants.FCM_PROPERTY_REG_ID, PushConstants.CT_FIREBASE_PROVIDER_CLASS, PushConstants.FIREBASE_SDK_CLASS);
+public class PushType {
+
+    public static PushType FCM = new PushType(
+            PushConstants.FCM_DELIVERY_TYPE,
+            PushConstants.FCM_PROPERTY_REG_ID,
+            PushConstants.CT_FIREBASE_PROVIDER_CLASS,
+            PushConstants.FIREBASE_SDK_CLASS,
+            PushConstants.FCM_PUSH_TYPE_LOG_NAME
+    );
 
     private final String ctProviderClassName;
 
@@ -13,16 +20,20 @@ public enum PushType {
 
     private final String type;
 
+    private final String logName;
+
     PushType(
             String type,
             String prefKey,
             String className,
-            String messagingSDKClassName
+            String messagingSDKClassName,
+            String logName
     ) {
         this.type = type;
         this.tokenPrefKey = prefKey;
         this.ctProviderClassName = className;
         this.messagingSDKClassName = messagingSDKClassName;
+        this.logName = logName;
     }
 
     public String getCtProviderClassName() {
@@ -39,6 +50,10 @@ public enum PushType {
 
     public String getType() {
         return type;
+    }
+
+    public String name() {
+        return logName;
     }
 
     @NonNull
