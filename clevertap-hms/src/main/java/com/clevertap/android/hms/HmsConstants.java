@@ -1,6 +1,6 @@
 package com.clevertap.android.hms;
 
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushType;
 
 interface HmsConstants {
 

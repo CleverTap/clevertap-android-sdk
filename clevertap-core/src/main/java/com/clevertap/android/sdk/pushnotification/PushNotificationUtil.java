@@ -6,7 +6,7 @@ import static com.clevertap.android.sdk.Constants.WZRK_PUSH_ID;
 import android.os.Bundle;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+
 import java.util.ArrayList;
 
 @RestrictTo(Scope.LIBRARY_GROUP)

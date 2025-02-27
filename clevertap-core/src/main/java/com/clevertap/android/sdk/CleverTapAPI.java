@@ -6,7 +6,7 @@ import static com.clevertap.android.sdk.Utils.getSCDomain;
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
+import static com.clevertap.android.sdk.pushnotification.PushType.FCM;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -66,7 +66,7 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
