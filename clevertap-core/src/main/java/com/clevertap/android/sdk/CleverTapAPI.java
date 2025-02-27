@@ -2360,20 +2360,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Sends the Baidu registration ID to CleverTap.
-     *
-     * @param regId    The Baidu registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    public void pushBaiduRegistrationId(String regId, boolean register) {
-        coreState.getPushProviders().handleToken(regId, PushType.BPS, register);
-    }
-
-    /**
      * Push Charged event, which describes a purchase made.
      *
      * @param chargeDetails A {@link HashMap}, with keys as strings, and values as {@link String},
@@ -2516,20 +2502,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public Future<?> pushGeofenceEnteredEvent(JSONObject geofenceProperties) {
         return coreState.getAnalyticsManager()
                 .raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME, geofenceProperties);
-    }
-
-    /**
-     * Sends the Huawei registration ID to CleverTap.
-     *
-     * @param regId    The Huawei registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    public void pushHuaweiRegistrationId(String regId, boolean register) {
-        coreState.getPushProviders().handleToken(regId, PushType.HPS, register);
     }
 
     /**
@@ -3089,20 +3061,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                     .validate(context, coreState.getDeviceInfo(), coreState.getPushProviders());
             return null;
         });
-    }
-
-    /**
-     * Sends the ADM registration ID to CleverTap.
-     *
-     * @param token    The ADM registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    private void pushAmazonRegistrationId(String token, boolean register) {
-        coreState.getPushProviders().handleToken(token, PushType.ADM, register);
     }
 
     static void onActivityCreated(Activity activity) {
