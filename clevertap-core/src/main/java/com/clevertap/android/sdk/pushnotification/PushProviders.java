@@ -740,13 +740,6 @@ public class PushProviders implements CTPushProviderListener {
                     "Provider: %s version %s does not match the SDK version %s. Make sure all CleverTap dependencies are the same version.");
             return false;
         }
-        if (provider.getPushType() == PushType.FCM) {
-            if (provider.getPlatform() != PushConstants.ANDROID_PLATFORM) {
-                config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() +
-                        " delivery is only available for Android platforms." + provider.getPushType());
-                return false;
-            }
-        }
 
         return true;
     }

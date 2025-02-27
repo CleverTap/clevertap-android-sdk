@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.pushnotification;
 
-import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringDef;
 import java.lang.annotation.Retention;
@@ -29,12 +28,6 @@ public interface PushConstants {
     @StringDef({FCM_PROPERTY_REG_ID})
     @Retention(RetentionPolicy.SOURCE)
     @interface RegKeyType {
-
-    }
-
-    @IntDef({ANDROID_PLATFORM})
-    @Retention(RetentionPolicy.SOURCE)
-    @interface Platform {
 
     }
 
@@ -80,8 +73,7 @@ public interface PushConstants {
 
         @NonNull
         @Override
-        public @DeliveryType
-        String toString() {
+        public @DeliveryType String toString() {
             return " [PushType:" + name() + "] ";
         }
     }
@@ -96,8 +88,4 @@ public interface PushConstants {
     String CT_FIREBASE_PROVIDER_CLASS = "com.clevertap.android.sdk.pushnotification.fcm.FcmPushProvider";
     String FIREBASE_SDK_CLASS = "com.google.firebase.messaging.FirebaseMessagingService";
     String FCM_PROPERTY_REG_ID = "fcm_token";
-    /**
-     * Android platform type. Only GCM transport will be allowed.
-     */
-    int ANDROID_PLATFORM = 1;
 }
