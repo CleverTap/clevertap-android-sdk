@@ -28,9 +28,9 @@ public class PushNotificationUtil {
      *
      * @return list
      */
-    public static ArrayList<String> getAll() {
-        ArrayList<String> list = new ArrayList<>();
-        list.add(FCM.name());
+    public static ArrayList<PushType> getDefaultPushTypes() {
+        ArrayList<PushType> list = new ArrayList<>();
+        list.add(FCM);
         return list;
     }
 
