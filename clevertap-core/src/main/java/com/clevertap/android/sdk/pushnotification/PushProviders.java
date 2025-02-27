@@ -60,6 +60,8 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
 
+    private static final String TAG = "PushProviders";
+
     private static final int DEFAULT_FLEX_INTERVAL = 5;
     private static final int PING_FREQUENCY_VALUE = 240;
     private static final String PF_JOB_ID = "pfjobid";
@@ -71,7 +73,7 @@ public class PushProviders implements CTPushProviderListener {
 
     private final ArrayList<CTPushProvider> availableCTPushProviders = new ArrayList<>();
 
-    private final ArrayList<PushType> customEnabledPushTypes = new ArrayList<>();
+    private final ArrayList<PushType> nonEnabledPushTypes = new ArrayList<>();
 
     private final AnalyticsManager analyticsManager;
 
@@ -398,7 +400,7 @@ public class PushProviders implements CTPushProviderListener {
         if (frequency != getPingFrequency(context)) {
             setPingFrequency(context, frequency);
             if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
-                Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+                Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
                 task.execute("createOrResetWorker", new Callable<Void>() {
                     @Override
                     public Void call() {
@@ -598,7 +600,9 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
-    private void findCTPushProviders(List<CTPushProvider> providers) {
+    private void findAvailableCTPushProviders() {
+        List<CTPushProvider> providers = createProviders();
+
         if (providers.isEmpty()) {
             config.log(PushConstants.LOG_TAG,
                     "No push providers found!. Make sure to install at least one push provider");
@@ -625,10 +629,10 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
-    private void findCustomEnabledPushTypes() {
-        customEnabledPushTypes.addAll(allEnabledPushTypes);
+    private void findNonEnabledPushTypes() {
+        nonEnabledPushTypes.addAll(allEnabledPushTypes);
         for (final CTPushProvider pushProvider : availableCTPushProviders) {
-            customEnabledPushTypes.remove(pushProvider.getPushType());
+            nonEnabledPushTypes.remove(pushProvider.getPushType());
         }
     }
 
@@ -663,12 +667,11 @@ public class PushProviders implements CTPushProviderListener {
      */
     private void init() {
         checkFirebaseAdded();
-        List<CTPushProvider> providers = createProviders();
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
 
-        task.addOnSuccessListener(unused -> findCustomEnabledPushTypes());
-        task.execute("asyncFindCTPushProviders", () -> {
-            findCTPushProviders(providers);
+        task.execute("asyncFindAvailableCTPushProviders", () -> {
+            findAvailableCTPushProviders();
+            findNonEnabledPushTypes();
             return null;
         });
 
@@ -676,7 +679,7 @@ public class PushProviders implements CTPushProviderListener {
 
     private void initPushAmp() {
 
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
         task.execute("createOrResetWorker", new Callable<Void>() {
             @Override
             public Void call() {
@@ -765,21 +768,21 @@ public class PushProviders implements CTPushProviderListener {
      * Fetches latest tokens from various providers and send to Clevertap's server
      */
     private void refreshAllTokens() {
-        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
         task.execute("PushProviders#refreshAllTokens", new Callable<Void>() {
             @Override
             public Void call() {
                 // refresh tokens of Push Providers
-                refreshCTProviderTokens();
+                refreshAvailableCTProviderTokens();
 
                 // refresh tokens of custom Providers
-                refreshCustomProviderTokens();
+                refreshNonEnabledProviderTokens();
                 return null;
             }
         });
     }
 
-    private void refreshCTProviderTokens() {
+    private void refreshAvailableCTProviderTokens() {
         for (final CTPushProvider pushProvider : availableCTPushProviders) {
             try {
                 pushProvider.requestToken();
@@ -790,8 +793,8 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
-    private void refreshCustomProviderTokens() {
-        for (PushType pushType : customEnabledPushTypes) {
+    private void refreshNonEnabledProviderTokens() {
+        for (PushType pushType : nonEnabledPushTypes) {
             try {
                 pushDeviceTokenEvent(getCachedToken(pushType), true, pushType);
             } catch (Throwable t) {
