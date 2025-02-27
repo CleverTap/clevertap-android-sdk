@@ -1,7 +1,6 @@
 package com.clevertap.android.hms;
 
 import static com.clevertap.android.hms.HmsConstants.MIN_CT_ANDROID_SDK_VERSION;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS;
 
 import android.annotation.SuppressLint;
@@ -30,11 +29,6 @@ public class HmsPushProvider implements CTPushProvider {
             CleverTapInstanceConfig config) {
         this.ctPushListener = ctPushListener;
         this.hmsSdkHandler = new HmsSdkHandler(context, config);
-    }
-
-    @Override
-    public int getPlatform() {
-        return ANDROID_PLATFORM;
     }
 
     @NonNull

@@ -1,10 +1,6 @@
 package com.clevertap.android.sdk.pushnotification.fcm
 
-import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.DeviceInfo
-import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
-import com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import org.junit.*
@@ -28,11 +24,6 @@ class FcmPushProviderTest : BaseTestCase() {
         provider = FcmPushProvider(ctPushProviderListener, application, cleverTapInstanceConfig)
         sdkHandler = mock(FcmSdkHandlerImpl::class.java)
         provider.setHandler(sdkHandler)
-    }
-
-    @Test
-    fun testGetPlatform() {
-        Assert.assertEquals(ANDROID_PLATFORM, provider.platform)
     }
 
     @Test
