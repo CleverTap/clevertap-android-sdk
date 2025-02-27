@@ -22,7 +22,7 @@ public class PushType {
 
     private final String logName;
 
-    PushType(
+    public PushType(
             String type,
             String prefKey,
             String className,
