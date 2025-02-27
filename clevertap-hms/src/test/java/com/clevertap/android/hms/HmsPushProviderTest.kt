@@ -2,7 +2,7 @@ package com.clevertap.android.hms
 
 import com.clevertap.android.hms.HmsConstants.MIN_CT_ANDROID_SDK_VERSION
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS
+import com.clevertap.android.sdk.pushnotification.PushType.HPS
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import org.junit.*

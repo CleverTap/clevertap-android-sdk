@@ -7,7 +7,7 @@ import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
+import com.clevertap.android.sdk.pushnotification.PushType;
 
 /**
  * Clevertap's Firebase Plugin Ref: {@link CTPushProvider}
@@ -25,7 +25,7 @@ public class FcmPushProvider implements CTPushProvider {
 
     @NonNull
     @Override
-    public PushConstants.PushType getPushType() {
+    public PushType getPushType() {
         return handler.getPushType();
     }
 

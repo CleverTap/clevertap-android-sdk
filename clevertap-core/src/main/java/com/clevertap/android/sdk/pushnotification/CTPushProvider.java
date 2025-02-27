@@ -10,10 +10,10 @@ public interface CTPushProvider {
     /**
      * Returns the delivery type.
      *
-     * @return The push delivery type Ref{@link com.clevertap.android.sdk.pushnotification.PushConstants.PushType}.
+     * @return The push delivery type Ref{@link PushType}.
      */
     @NonNull
-    PushConstants.PushType getPushType();
+    PushType getPushType();
 
     /**
      * If the underlying push provider is currently available.

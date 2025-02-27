@@ -12,7 +12,7 @@ import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.INotificationParser;
 import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushType;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.google.firebase.messaging.RemoteMessage;
 

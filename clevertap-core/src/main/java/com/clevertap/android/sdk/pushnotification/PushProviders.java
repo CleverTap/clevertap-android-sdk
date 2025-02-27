@@ -38,7 +38,6 @@ import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpWorker;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -101,12 +100,14 @@ public class PushProviders implements CTPushProviderListener {
      * @return A PushProviders class with the loaded providers.
      */
     @NonNull
-    public static PushProviders load(Context context,
-                                     CleverTapInstanceConfig config,
-                                     BaseDatabaseManager baseDatabaseManager,
-                                     ValidationResultStack validationResultStack,
-                                     AnalyticsManager analyticsManager, ControllerManager controllerManager,
-                                     CTWorkManager ctWorkManager) {
+    public static PushProviders load(
+            Context context,
+            CleverTapInstanceConfig config,
+            BaseDatabaseManager baseDatabaseManager,
+            ValidationResultStack validationResultStack,
+            AnalyticsManager analyticsManager, ControllerManager controllerManager,
+            CTWorkManager ctWorkManager
+    ) {
         PushProviders providers = new PushProviders(context, config, baseDatabaseManager, validationResultStack,
                 analyticsManager,ctWorkManager);
         providers.init();
