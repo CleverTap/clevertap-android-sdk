@@ -65,7 +65,9 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
     public boolean onNewToken(Context context, final String token) {
         boolean isSuccess = false;
         try {
-            PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, HPS.getType());
+            PushNotificationHandler
+                    .getPushNotificationHandler()
+                    .onNewToken(context, token, HPS);
             Logger.d(LOG_TAG, HMS_LOG_TAG + "onNewToken: " + token);
             isSuccess = true;
         } catch (Throwable throwable) {

@@ -85,10 +85,8 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
     }
 
     @Override
-    public boolean onNewToken(final Context applicationContext, final String token, final String pushType) {
-        if (pushType.equals(FCM.getType())) {
-            CleverTapAPI.tokenRefresh(applicationContext, token, FCM);
-        }
+    public boolean onNewToken(final Context applicationContext, final String token, final PushType pushType) {
+        CleverTapAPI.tokenRefresh(applicationContext, token, pushType);
         return true;
     }
 }
