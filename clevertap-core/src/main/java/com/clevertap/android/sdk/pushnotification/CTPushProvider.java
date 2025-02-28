@@ -8,20 +8,12 @@ import androidx.annotation.NonNull;
 public interface CTPushProvider {
 
     /**
-     * Returns the platform type. Value must be either {@link PushConstants#ANDROID_PLATFORM}.
-     *
-     * @return The platform type.
-     */
-    @PushConstants.Platform
-    int getPlatform();
-
-    /**
      * Returns the delivery type.
      *
-     * @return The push delivery type Ref{@link com.clevertap.android.sdk.pushnotification.PushConstants.PushType}.
+     * @return The push delivery type Ref{@link PushType}.
      */
     @NonNull
-    PushConstants.PushType getPushType();
+    PushType getPushType();
 
     /**
      * If the underlying push provider is currently available.
@@ -48,5 +40,4 @@ public interface CTPushProvider {
      * Requests the push registration token.
      */
     void requestToken();
-
 }

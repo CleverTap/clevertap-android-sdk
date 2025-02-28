@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.pushnotification.fcm;
 
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
+import static com.clevertap.android.sdk.pushnotification.PushType.FCM;
 import static com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayServicesAvailable;
 import static com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayStoreAvailable;
 
@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushType;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
