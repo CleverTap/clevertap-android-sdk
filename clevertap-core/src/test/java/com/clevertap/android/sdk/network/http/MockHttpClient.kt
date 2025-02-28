@@ -18,7 +18,7 @@ class MockHttpClient(
             request = request,
             code = responseCode,
             headers = responseHeaders,
-            bodyStream = responseBody?.byteInputStream(Charsets.UTF_8)
-        ) {}
+            body = responseBody
+        )
     }
 }
