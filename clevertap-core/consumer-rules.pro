@@ -15,4 +15,4 @@
 }
 -dontwarn com.clevertap.android.sdk.**
 -keepattributes Exceptions,InnerClasses,Signature,Deprecated,
-                SourceFile,LineNumberTable,*Annotation*,EnclosingMetod
+                SourceFile,LineNumberTable,*Annotation*,EnclosingMethod
