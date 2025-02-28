@@ -17,7 +17,7 @@ import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushType;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import java.util.ArrayList;
 
@@ -86,17 +86,6 @@ public final class ManifestValidator {
                     // use class name string directly here to avoid class not found issues on class import
                     validateServiceInManifest((Application) context.getApplicationContext(),
                             "com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService");
-                } catch (Exception e) {
-                    Logger.v("Receiver/Service issue : " + e.toString());
-
-                } catch (Error error) {
-                    Logger.v("FATAL : " + error.getMessage());
-                }
-            }else if(pushType == PushType.HPS){
-                try {
-                    // use class name string directly here to avoid class not found issues on class import
-                    validateServiceInManifest((Application) context.getApplicationContext(),
-                            "com.clevertap.android.hms.CTHmsMessageService");
                 } catch (Exception e) {
                     Logger.v("Receiver/Service issue : " + e.toString());
 
