@@ -92,17 +92,6 @@ public final class ManifestValidator {
                 } catch (Error error) {
                     Logger.v("FATAL : " + error.getMessage());
                 }
-            }else if(pushType == PushType.HPS){
-                try {
-                    // use class name string directly here to avoid class not found issues on class import
-                    validateServiceInManifest((Application) context.getApplicationContext(),
-                            "com.clevertap.android.hms.CTHmsMessageService");
-                } catch (Exception e) {
-                    Logger.v("Receiver/Service issue : " + e.toString());
-
-                } catch (Error error) {
-                    Logger.v("FATAL : " + error.getMessage());
-                }
             }
         }
 

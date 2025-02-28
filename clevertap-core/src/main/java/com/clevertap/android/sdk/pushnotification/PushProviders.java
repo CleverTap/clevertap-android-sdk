@@ -35,7 +35,6 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
@@ -58,10 +57,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-/**
- * Single point of contact to load & support all types of Notification messaging services viz. FCM, HMS etc.
- */
 
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
@@ -255,15 +250,6 @@ public class PushProviders implements CTPushProviderListener {
         switch (pushType) {
             case FCM:
                 handleToken(token, PushType.FCM, true);
-                break;
-            case HPS:
-                handleToken(token, PushType.HPS, true);
-                break;
-            case BPS:
-                handleToken(token, PushType.BPS, true);
-                break;
-            case ADM:
-                handleToken(token, PushType.ADM, true);
                 break;
         }
     }
@@ -754,24 +740,12 @@ public class PushProviders implements CTPushProviderListener {
                     "Provider: %s version %s does not match the SDK version %s. Make sure all CleverTap dependencies are the same version.");
             return false;
         }
-        switch (provider.getPushType()) {
-            case FCM:
-            case HPS:
-            case BPS:
-                if (provider.getPlatform() != PushConstants.ANDROID_PLATFORM) {
-                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() +
-                            " delivery is only available for Android platforms." + provider.getPushType());
-                    return false;
-                }
-                break;
-            case ADM:
-                if (provider.getPlatform() != PushConstants.AMAZON_PLATFORM) {
-                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " +
-                            provider.getClass() +
-                            " ADM delivery is only available for Amazon platforms." + provider.getPushType());
-                    return false;
-                }
-                break;
+        if (provider.getPushType() == PushType.FCM) {
+            if (provider.getPlatform() != PushConstants.ANDROID_PLATFORM) {
+                config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() +
+                        " delivery is only available for Android platforms." + provider.getPushType());
+                return false;
+            }
         }
 
         return true;
