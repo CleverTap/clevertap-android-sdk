@@ -11,7 +11,7 @@ public interface INotificationParser<T> {
 
     /**
      * Parses notification message to Bundle
-     * @param message notification message received from cloud messaging provider like firebase,huawei etc.
+     * @param message notification message received from cloud messaging provider like firebase etc.
      * @return {@link Bundle} object
      */
     Bundle toBundle(@NonNull T message);
