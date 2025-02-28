@@ -167,23 +167,6 @@ public interface Constants {
     String VIDEO_THUMBNAIL = "ct_video_1";
     String AUDIO_THUMBNAIL = "ct_audio";
     String IMAGE_PLACEHOLDER = "ct_image";
-    //Keys used by the SDK
-    String KEY_ACCOUNT_ID = "accountId";
-    String KEY_ACCOUNT_TOKEN = "accountToken";
-    String KEY_ACCOUNT_REGION = "accountRegion";
-    String KEY_PROXY_DOMAIN = "proxyDomain";
-    String KEY_SPIKY_PROXY_DOMAIN = "spikyProxyDomain";
-    String KEY_CUSTOM_HANDSHAKE_DOMAIN = "customHandshakeDomain";
-    String KEY_ANALYTICS_ONLY = "analyticsOnly";
-    String KEY_DEFAULT_INSTANCE = "isDefaultInstance";
-    String KEY_USE_GOOGLE_AD_ID = "useGoogleAdId";
-    String KEY_DISABLE_APP_LAUNCHED = "disableAppLaunchedEvent";
-    String KEY_PERSONALIZATION = "personalization";
-    String KEY_DEBUG_LEVEL = "debugLevel";
-    String KEY_CREATED_POST_APP_LAUNCH = "createdPostAppLaunch";
-    String KEY_SSL_PINNING = "sslPinning";
-    String KEY_BACKGROUND_SYNC = "backgroundSync";
-    String KEY_FCM_SENDER_ID = "fcmSenderId";
     String KEY_CONFIG = "config";
     String KEY_C2A = "wzrk_c2a";
     String KEY_EFC = "efc";
@@ -217,12 +200,6 @@ public interface Constants {
     String KEY_URL = "url";
     String KEY_BUTTONS = "buttons";
     String KEY_CUSTOM_HTML = "custom-html";
-    String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
-    String KEY_BETA = "beta";
-    String KEY_PACKAGE_NAME = "packageName";
-    String KEY_IDENTITY_TYPES = "identityTypes";
-    String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
-    String KEY_PUSH_TYPES = "allowedPushTypes";
     String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_DEDUPE = "wzrk_dd";

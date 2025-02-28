@@ -193,73 +193,73 @@ public class CleverTapInstanceConfig implements Parcelable {
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
         try {
             JSONObject configJsonObject = new JSONObject(jsonString);
-            if (configJsonObject.has(Constants.KEY_ACCOUNT_ID)) {
-                this.accountId = configJsonObject.getString(Constants.KEY_ACCOUNT_ID);
+            if (configJsonObject.has(KEY_ACCOUNT_ID)) {
+                this.accountId = configJsonObject.getString(KEY_ACCOUNT_ID);
             }
-            if (configJsonObject.has(Constants.KEY_ACCOUNT_TOKEN)) {
-                this.accountToken = configJsonObject.getString(Constants.KEY_ACCOUNT_TOKEN);
+            if (configJsonObject.has(KEY_ACCOUNT_TOKEN)) {
+                this.accountToken = configJsonObject.getString(KEY_ACCOUNT_TOKEN);
             }
-            if (configJsonObject.has(Constants.KEY_PROXY_DOMAIN)) {
-                this.proxyDomain = configJsonObject.getString(Constants.KEY_PROXY_DOMAIN);
+            if (configJsonObject.has(KEY_PROXY_DOMAIN)) {
+                this.proxyDomain = configJsonObject.getString(KEY_PROXY_DOMAIN);
             }
-            if (configJsonObject.has(Constants.KEY_SPIKY_PROXY_DOMAIN)) {
-                this.spikyProxyDomain = configJsonObject.getString(Constants.KEY_SPIKY_PROXY_DOMAIN);
+            if (configJsonObject.has(KEY_SPIKY_PROXY_DOMAIN)) {
+                this.spikyProxyDomain = configJsonObject.getString(KEY_SPIKY_PROXY_DOMAIN);
             }
-            if (configJsonObject.has(Constants.KEY_CUSTOM_HANDSHAKE_DOMAIN)) {
-                this.customHandshakeDomain = configJsonObject.optString(Constants.KEY_CUSTOM_HANDSHAKE_DOMAIN, null);
+            if (configJsonObject.has(KEY_CUSTOM_HANDSHAKE_DOMAIN)) {
+                this.customHandshakeDomain = configJsonObject.optString(KEY_CUSTOM_HANDSHAKE_DOMAIN, null);
             }
-            if (configJsonObject.has(Constants.KEY_ACCOUNT_REGION)) {
-                this.accountRegion = configJsonObject.getString(Constants.KEY_ACCOUNT_REGION);
+            if (configJsonObject.has(KEY_ACCOUNT_REGION)) {
+                this.accountRegion = configJsonObject.getString(KEY_ACCOUNT_REGION);
             }
-            if (configJsonObject.has(Constants.KEY_ANALYTICS_ONLY)) {
-                this.analyticsOnly = configJsonObject.getBoolean(Constants.KEY_ANALYTICS_ONLY);
+            if (configJsonObject.has(KEY_ANALYTICS_ONLY)) {
+                this.analyticsOnly = configJsonObject.getBoolean(KEY_ANALYTICS_ONLY);
             }
-            if (configJsonObject.has(Constants.KEY_DEFAULT_INSTANCE)) {
-                this.isDefaultInstance = configJsonObject.getBoolean(Constants.KEY_DEFAULT_INSTANCE);
+            if (configJsonObject.has(KEY_DEFAULT_INSTANCE)) {
+                this.isDefaultInstance = configJsonObject.getBoolean(KEY_DEFAULT_INSTANCE);
             }
-            if (configJsonObject.has(Constants.KEY_USE_GOOGLE_AD_ID)) {
-                this.useGoogleAdId = configJsonObject.getBoolean(Constants.KEY_USE_GOOGLE_AD_ID);
+            if (configJsonObject.has(KEY_USE_GOOGLE_AD_ID)) {
+                this.useGoogleAdId = configJsonObject.getBoolean(KEY_USE_GOOGLE_AD_ID);
             }
-            if (configJsonObject.has(Constants.KEY_DISABLE_APP_LAUNCHED)) {
-                this.disableAppLaunchedEvent = configJsonObject.getBoolean(Constants.KEY_DISABLE_APP_LAUNCHED);
+            if (configJsonObject.has(KEY_DISABLE_APP_LAUNCHED)) {
+                this.disableAppLaunchedEvent = configJsonObject.getBoolean(KEY_DISABLE_APP_LAUNCHED);
             }
-            if (configJsonObject.has(Constants.KEY_PERSONALIZATION)) {
-                this.personalization = configJsonObject.getBoolean(Constants.KEY_PERSONALIZATION);
+            if (configJsonObject.has(KEY_PERSONALIZATION)) {
+                this.personalization = configJsonObject.getBoolean(KEY_PERSONALIZATION);
             }
-            if (configJsonObject.has(Constants.KEY_DEBUG_LEVEL)) {
-                this.debugLevel = configJsonObject.getInt(Constants.KEY_DEBUG_LEVEL);
+            if (configJsonObject.has(KEY_DEBUG_LEVEL)) {
+                this.debugLevel = configJsonObject.getInt(KEY_DEBUG_LEVEL);
             }
             this.logger = new Logger(this.debugLevel);
 
-            if (configJsonObject.has(Constants.KEY_PACKAGE_NAME)) {
-                this.packageName = configJsonObject.getString(Constants.KEY_PACKAGE_NAME);
+            if (configJsonObject.has(KEY_PACKAGE_NAME)) {
+                this.packageName = configJsonObject.getString(KEY_PACKAGE_NAME);
             }
-            if (configJsonObject.has(Constants.KEY_CREATED_POST_APP_LAUNCH)) {
-                this.createdPostAppLaunch = configJsonObject.getBoolean(Constants.KEY_CREATED_POST_APP_LAUNCH);
+            if (configJsonObject.has(KEY_CREATED_POST_APP_LAUNCH)) {
+                this.createdPostAppLaunch = configJsonObject.getBoolean(KEY_CREATED_POST_APP_LAUNCH);
             }
-            if (configJsonObject.has(Constants.KEY_SSL_PINNING)) {
-                this.sslPinning = configJsonObject.getBoolean(Constants.KEY_SSL_PINNING);
+            if (configJsonObject.has(KEY_SSL_PINNING)) {
+                this.sslPinning = configJsonObject.getBoolean(KEY_SSL_PINNING);
             }
-            if (configJsonObject.has(Constants.KEY_BACKGROUND_SYNC)) {
-                this.backgroundSync = configJsonObject.getBoolean(Constants.KEY_BACKGROUND_SYNC);
+            if (configJsonObject.has(KEY_BACKGROUND_SYNC)) {
+                this.backgroundSync = configJsonObject.getBoolean(KEY_BACKGROUND_SYNC);
             }
-            if (configJsonObject.has(Constants.KEY_ENABLE_CUSTOM_CT_ID)) {
-                this.enableCustomCleverTapId = configJsonObject.getBoolean(Constants.KEY_ENABLE_CUSTOM_CT_ID);
+            if (configJsonObject.has(KEY_ENABLE_CUSTOM_CT_ID)) {
+                this.enableCustomCleverTapId = configJsonObject.getBoolean(KEY_ENABLE_CUSTOM_CT_ID);
             }
-            if (configJsonObject.has(Constants.KEY_FCM_SENDER_ID)) {
-                this.fcmSenderId = configJsonObject.getString(Constants.KEY_FCM_SENDER_ID);
+            if (configJsonObject.has(KEY_FCM_SENDER_ID)) {
+                this.fcmSenderId = configJsonObject.getString(KEY_FCM_SENDER_ID);
             }
-            if (configJsonObject.has(Constants.KEY_BETA)) {
-                this.beta = configJsonObject.getBoolean(Constants.KEY_BETA);
+            if (configJsonObject.has(KEY_BETA)) {
+                this.beta = configJsonObject.getBoolean(KEY_BETA);
             }
-            if (configJsonObject.has(Constants.KEY_IDENTITY_TYPES)) {
-                this.identityKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
+            if (configJsonObject.has(KEY_IDENTITY_TYPES)) {
+                this.identityKeys = (String[]) toArray(configJsonObject.getJSONArray(KEY_IDENTITY_TYPES));
             }
-            if (configJsonObject.has(Constants.KEY_ENCRYPTION_LEVEL)){
-                this.encryptionLevel = configJsonObject.getInt(Constants.KEY_ENCRYPTION_LEVEL);
+            if (configJsonObject.has(KEY_ENCRYPTION_LEVEL)){
+                this.encryptionLevel = configJsonObject.getInt(KEY_ENCRYPTION_LEVEL);
             }
-            if (configJsonObject.has(Constants.KEY_PUSH_TYPES)) {
-                JSONArray pushTypesArray = configJsonObject.getJSONArray(Constants.KEY_PUSH_TYPES);
+            if (configJsonObject.has(KEY_PUSH_TYPES)) {
+                JSONArray pushTypesArray = configJsonObject.getJSONArray(KEY_PUSH_TYPES);
                 for (int i = 0; i < pushTypesArray.length(); i++) {
                     JSONObject pushTypeJo = pushTypesArray.getJSONObject(i);
                     PushType pushType = PushType.fromJSONObject(pushTypeJo);
@@ -530,31 +530,55 @@ public class CleverTapInstanceConfig implements Parcelable {
         return encryptionLevel;
     }
 
+    //Keys used by the SDK
+    private static final String KEY_ACCOUNT_ID = "accountId";
+    private static final String KEY_ACCOUNT_TOKEN = "accountToken";
+    private static final String KEY_ACCOUNT_REGION = "accountRegion";
+    private static final String KEY_PROXY_DOMAIN = "proxyDomain";
+    private static final String KEY_SPIKY_PROXY_DOMAIN = "spikyProxyDomain";
+    private static final String KEY_CUSTOM_HANDSHAKE_DOMAIN = "customHandshakeDomain";
+    private static final String KEY_FCM_SENDER_ID = "fcmSenderId";
+    private static final String KEY_ANALYTICS_ONLY = "analyticsOnly";
+    private static final String KEY_DEFAULT_INSTANCE = "isDefaultInstance";
+    private static final String KEY_USE_GOOGLE_AD_ID = "useGoogleAdId";
+    private static final String KEY_DISABLE_APP_LAUNCHED = "disableAppLaunchedEvent";
+    private static final String KEY_PERSONALIZATION = "personalization";
+    private static final String KEY_DEBUG_LEVEL = "debugLevel";
+    private static final String KEY_CREATED_POST_APP_LAUNCH = "createdPostAppLaunch";
+    private static final String KEY_SSL_PINNING = "sslPinning";
+    private static final String KEY_BACKGROUND_SYNC = "backgroundSync";
+    private static final String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
+    private static final String KEY_BETA = "beta";
+    private static final String KEY_IDENTITY_TYPES = "identityTypes";
+    private static final String KEY_PACKAGE_NAME = "packageName";
+    public static final String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
+    private static final String KEY_PUSH_TYPES = "allowedPushTypes";
+
     String toJSONString() {
         JSONObject configJsonObject = new JSONObject();
         try {
-            configJsonObject.put(Constants.KEY_ACCOUNT_ID, getAccountId());
-            configJsonObject.put(Constants.KEY_ACCOUNT_TOKEN, getAccountToken());
-            configJsonObject.put(Constants.KEY_ACCOUNT_REGION, getAccountRegion());
-            configJsonObject.put(Constants.KEY_PROXY_DOMAIN, getProxyDomain());
-            configJsonObject.put(Constants.KEY_SPIKY_PROXY_DOMAIN, getSpikyProxyDomain());
-            configJsonObject.put(Constants.KEY_CUSTOM_HANDSHAKE_DOMAIN, getCustomHandshakeDomain());
-            configJsonObject.put(Constants.KEY_FCM_SENDER_ID, getFcmSenderId());
-            configJsonObject.put(Constants.KEY_ANALYTICS_ONLY, isAnalyticsOnly());
-            configJsonObject.put(Constants.KEY_DEFAULT_INSTANCE, isDefaultInstance());
-            configJsonObject.put(Constants.KEY_USE_GOOGLE_AD_ID, isUseGoogleAdId());
-            configJsonObject.put(Constants.KEY_DISABLE_APP_LAUNCHED, isDisableAppLaunchedEvent());
-            configJsonObject.put(Constants.KEY_PERSONALIZATION, isPersonalizationEnabled());
-            configJsonObject.put(Constants.KEY_DEBUG_LEVEL, getDebugLevel());
-            configJsonObject.put(Constants.KEY_CREATED_POST_APP_LAUNCH, isCreatedPostAppLaunch());
-            configJsonObject.put(Constants.KEY_SSL_PINNING, isSslPinningEnabled());
-            configJsonObject.put(Constants.KEY_BACKGROUND_SYNC, isBackgroundSync());
-            configJsonObject.put(Constants.KEY_ENABLE_CUSTOM_CT_ID, getEnableCustomCleverTapId());
-            configJsonObject.put(Constants.KEY_PACKAGE_NAME, getPackageName());
-            configJsonObject.put(Constants.KEY_BETA, isBeta());
-            configJsonObject.put(Constants.KEY_ENCRYPTION_LEVEL , getEncryptionLevel());
+            configJsonObject.put(KEY_ACCOUNT_ID, getAccountId());
+            configJsonObject.put(KEY_ACCOUNT_TOKEN, getAccountToken());
+            configJsonObject.put(KEY_ACCOUNT_REGION, getAccountRegion());
+            configJsonObject.put(KEY_PROXY_DOMAIN, getProxyDomain());
+            configJsonObject.put(KEY_SPIKY_PROXY_DOMAIN, getSpikyProxyDomain());
+            configJsonObject.put(KEY_CUSTOM_HANDSHAKE_DOMAIN, getCustomHandshakeDomain());
+            configJsonObject.put(KEY_FCM_SENDER_ID, getFcmSenderId());
+            configJsonObject.put(KEY_ANALYTICS_ONLY, isAnalyticsOnly());
+            configJsonObject.put(KEY_DEFAULT_INSTANCE, isDefaultInstance());
+            configJsonObject.put(KEY_USE_GOOGLE_AD_ID, isUseGoogleAdId());
+            configJsonObject.put(KEY_DISABLE_APP_LAUNCHED, isDisableAppLaunchedEvent());
+            configJsonObject.put(KEY_PERSONALIZATION, isPersonalizationEnabled());
+            configJsonObject.put(KEY_DEBUG_LEVEL, getDebugLevel());
+            configJsonObject.put(KEY_CREATED_POST_APP_LAUNCH, isCreatedPostAppLaunch());
+            configJsonObject.put(KEY_SSL_PINNING, isSslPinningEnabled());
+            configJsonObject.put(KEY_BACKGROUND_SYNC, isBackgroundSync());
+            configJsonObject.put(KEY_ENABLE_CUSTOM_CT_ID, getEnableCustomCleverTapId());
+            configJsonObject.put(KEY_PACKAGE_NAME, getPackageName());
+            configJsonObject.put(KEY_BETA, isBeta());
+            configJsonObject.put(KEY_ENCRYPTION_LEVEL , getEncryptionLevel());
             JSONArray pushTypesArray = getPushTypesArray();
-            configJsonObject.put(Constants.KEY_PUSH_TYPES, pushTypesArray);
+            configJsonObject.put(KEY_PUSH_TYPES, pushTypesArray);
 
             return configJsonObject.toString();
         } catch (Throwable e) {
