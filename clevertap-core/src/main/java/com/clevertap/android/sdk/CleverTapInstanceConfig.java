@@ -148,6 +148,9 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.beta = config.beta;
         this.identityKeys = config.identityKeys;
         this.encryptionLevel = config.encryptionLevel;
+        for (PushType pushType: config.pushTypes) {
+            addPushType(pushType);
+        }
     }
 
     private CleverTapInstanceConfig(
