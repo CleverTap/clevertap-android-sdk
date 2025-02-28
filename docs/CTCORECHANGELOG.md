@@ -1,5 +1,10 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.1.3 (February 28, 2025)
+* Removes support for HMS, Baidu and Amazon push providers.
+> ⚠️ **NOTE**
+Don't upgrade to this version if using the HMS, Baidu or Amazon push providers. In the future, these push providers will be injected rather than reflected
+
 ### Version 7.1.2 (January 29, 2025)
 This release uses JDK17 to compile to support unity.
 

@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.pushnotification;
 
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAccountIdFromNotificationBundle;
 
 import android.content.Context;
@@ -50,8 +49,11 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
     }
 
     @Override
-    public synchronized boolean onMessageReceived(final Context applicationContext, final Bundle message,
-            final String pushType) {
+    public synchronized boolean onMessageReceived(
+            final Context applicationContext,
+            final Bundle message,
+            final String pushType
+    ) {
         message.putLong(Constants.OMR_INVOKE_TIME_IN_MILLIS,System.currentTimeMillis());
         CleverTapAPI cleverTapAPI = CleverTapAPI
                 .getGlobalInstance(applicationContext, getAccountIdFromNotificationBundle(message));
@@ -86,8 +88,6 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
     public boolean onNewToken(final Context applicationContext, final String token, final String pushType) {
         if (pushType.equals(FCM.getType())) {
             CleverTapAPI.tokenRefresh(applicationContext, token, FCM);
-        } else if (pushType.equals(HPS.getType())) {
-            CleverTapAPI.tokenRefresh(applicationContext, token, HPS);
         }
         return true;
     }
