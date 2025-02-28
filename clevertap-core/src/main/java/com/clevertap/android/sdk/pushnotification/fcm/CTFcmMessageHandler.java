@@ -69,8 +69,9 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
     public boolean onNewToken(final Context applicationContext, final String token) {
         boolean isSuccess = false;
         try {
-            PushNotificationHandler.getPushNotificationHandler().onNewToken(applicationContext, token, PushType.FCM
-                    .getType());
+            PushNotificationHandler
+                    .getPushNotificationHandler()
+                    .onNewToken(applicationContext, token, PushType.FCM);
 
             Logger.d(LOG_TAG, FCM_LOG_TAG + "New token received from FCM - " + token);
             isSuccess = true;
