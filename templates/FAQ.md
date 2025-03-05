@@ -8,12 +8,17 @@
 
    Yes. Please check [location permissions section](https://support.google.com/googleplay/android-developer/answer/9888170?hl=en) and [background location access policy](https://support.google.com/googleplay/android-developer/answer/9799150?hl=en)
    
-3. What is the update frequency for location pings to Server? Any triggers for update of geo-fence ?
+3. Why does the Geofence SDK require the `ACCESS_BACKGROUND_LOCATION` permission?
+
+   SDK relies Google's geofencing service(`com.google.android.gms:play-services-location`) to monitor geofences. This service requires the `ACCESS_BACKGROUND_LOCATION` [permission for setup](https://developer.android.com/develop/sensors-and-location/location/geofencing#RequestGeofences).
+   For more details on requesting background location permission, refer to [this guide](https://developer.android.com/develop/sensors-and-location/location/permissions/background)
+
+4. What is the update frequency for location pings to Server? Any triggers for update of geo-fence ?
 
    SDK pings server for update of geo-fence whenever Location is updated by OS and below condition is satisfied:<br>
    <i>When the interval between last ping and current ping is greater than `30 minutes` and displacement is greater than `200 meters`.  **Note** that `30 minutes` and `200 meters` are fixed values and can not be changed by APPs.</i>
-   
-4. When the location is updated by OS ?
+
+5. When the location is updated by OS ?
    
    Location updates depends on below `CTGeofenceSettings` parameters:<br>
    * [LocationFetchMode](Settings.md#locationfetchmode-)
@@ -23,16 +28,16 @@
    * [SmallestDisplacement in meters](Settings.md#smallestdisplacement-in-meters)
    * [EnableBackgroundLocationUpdates](Settings.md#enablebackgroundlocationupdates)
    
-5. Why are Geofence event callbacks not being called by the SDK?
+6. Why are Geofence event callbacks not being called by the SDK?
 
    SDK uses google's geofencing service to monitor geofences, that may not raise events in some situations as described [here](https://developer.android.com/training/location/geofencing#Troubleshooting) 
-   
-6. Why does the app not receive Push Notifications even though Geofence events are raised correctly?
+
+7. Why does the app not receive Push Notifications even though Geofence events are raised correctly?
 
    * First ensure that your CleverTap push notifications integration is working properly as described in [this guide](https://developer.clevertap.com/docs/android#section-push-notifications).<br>
    * For Android 6.0 or higher due to [Doze-Standby](https://developer.android.com/training/monitoring-device-state/doze-standby) and For Android 9.0 or higher due to [App standby buckets](https://developer.android.com/topic/performance/appstandby) network connectivity for apps gets deferred by some time as described [here in Network Column](https://developer.android.com/topic/performance/power/power-details) which prevents SDK to connect to CleverTap servers for raising notifications.
 
-7. Why does the build fail for an app when minifying is enabled for gradle wrapper 8.0+ and android gradle plugin 8.0.0+?
+8. Why does the build fail for an app when minifying is enabled for gradle wrapper 8.0+ and android gradle plugin 8.0.0+?
 
    * This occurs due to change in behaviour in the AGP`
      When R8 traces the program it will try to handle all the classes, methods and fields that it finds in the part of the program it considers live. Earlier during this tracing, it threw a warning which allowed building the apk. But these are now converted into errors. Details [here](https://developer.android.com/build/releases/past-releases/agp-8-0-0-release-notes)
