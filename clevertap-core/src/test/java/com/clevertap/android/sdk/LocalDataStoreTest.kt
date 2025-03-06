@@ -1,19 +1,32 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
+import com.clevertap.android.sdk.cryption.CryptFactory
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.cryption.CryptRepository
+import com.clevertap.android.sdk.cryption.EncryptionLevel
+import com.clevertap.android.sdk.db.BaseDatabaseManager
+import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
+import com.clevertap.android.sdk.usereventlogs.UserEventLog
+import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
+import com.clevertap.android.sdk.usereventlogs.UserEventLogDAOImpl
+import com.clevertap.android.sdk.usereventlogs.UserEventLogTestData
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.*
-import org.mockito.kotlin.*
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.*
+import org.junit.Test
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
-@RunWith(RobolectricTestRunner::class)
 class LocalDataStoreTest : BaseTestCase() {
+    private lateinit var userEventLogDaoMock: UserEventLogDAO
+    private lateinit var baseDatabaseManager: BaseDatabaseManager
     private lateinit var defConfig: CleverTapInstanceConfig
     private lateinit var config: CleverTapInstanceConfig
 
@@ -22,17 +35,45 @@ class LocalDataStoreTest : BaseTestCase() {
     private lateinit var localDataStoreWithConfigSpy: LocalDataStore
     private lateinit var cryptHandler : CryptHandler
     private lateinit var deviceInfo : DeviceInfo
+    private lateinit var dbAdapter: DBAdapter
+    val eventName = UserEventLogTestData.EventNames.TEST_EVENT
+    private val normalizedEventName = UserEventLogTestData.EventNames.eventNameToNormalizedMap[eventName]!!
+    private val eventNames = UserEventLogTestData.EventNames.eventNames
+    private val setOfActualAndNormalizedEventNamePair = UserEventLogTestData.EventNames.setOfActualAndNormalizedEventNamePair
+
 
     override fun setUp() {
         super.setUp()
         val metaData = CoreMetaData()
         defConfig = CleverTapInstanceConfig.createDefaultInstance(appCtx, "id", "token", "region")
-        cryptHandler = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, "id")
+        cryptHandler = CryptHandler(
+            EncryptionLevel.NONE,
+            "accountId",
+            Mockito.mock(CryptRepository::class.java),
+            Mockito.mock(CryptFactory::class.java),
+        )
         deviceInfo = MockDeviceInfo(appCtx, defConfig, "id", metaData)
-        localDataStoreWithDefConfig = LocalDataStore(appCtx, defConfig, cryptHandler, deviceInfo)
+        baseDatabaseManager = Mockito.mock(DBManager::class.java)
+        dbAdapter = Mockito.mock(DBAdapter::class.java)
+        userEventLogDaoMock = Mockito.mock(UserEventLogDAOImpl::class.java)
+        localDataStoreWithDefConfig = LocalDataStore(
+            appCtx,
+            defConfig,
+            cryptHandler,
+            deviceInfo,
+            baseDatabaseManager
+        )
         config = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
-        localDataStoreWithConfig = LocalDataStore(appCtx, config, cryptHandler, deviceInfo)
+        localDataStoreWithConfig = LocalDataStore(
+            appCtx,
+            config,
+            cryptHandler,
+            deviceInfo,
+            baseDatabaseManager
+        )
         localDataStoreWithConfigSpy = Mockito.spy(localDataStoreWithConfig)
+        Mockito.`when`(baseDatabaseManager.loadDBAdapter(appCtx)).thenReturn(dbAdapter)
+        Mockito.`when`(dbAdapter.userEventLogDAO()).thenReturn(userEventLogDaoMock)
     }
 
     @Test
@@ -91,10 +132,9 @@ class LocalDataStoreTest : BaseTestCase() {
     fun test_getEventHistory_when_FunctionIsCalled_should_ReturnAMapOfEventNameAndDetails() {
         // if context is null,exception happens and null is returnd
         assertNull(localDataStoreWithDefConfig.getEventHistory(null))
-        var results: Map<String, EventDetail> = mutableMapOf()
 
         //if default config is used, events are stored in local_events pref file
-        results = localDataStoreWithDefConfig.getEventHistory(appCtx)
+        var results: Map<String, EventDetail> = localDataStoreWithDefConfig.getEventHistory(appCtx)
         assertTrue { results.isEmpty() }
         assertNull(results["event"])
 
@@ -271,5 +311,323 @@ class LocalDataStoreTest : BaseTestCase() {
         assertEquals(true, localDataStoreWithConfig.getProfileProperty("key2"))
         assertNull(localDataStoreWithConfig.getProfileProperty("key3"))
         assertEquals(2, localDataStoreWithConfig.getProfileProperty("key4"))
+    }
+
+    @Test
+    fun `test persistUserEventLog when event name is null returns false`() {
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(null)
+
+        // Then
+        assertFalse(result)
+        Mockito.verify(dbAdapter, Mockito.never()).userEventLogDAO()
+        Mockito.verify(userEventLogDaoMock, Mockito.never()).eventExistsByDeviceIdAndNormalizedEventName(anyString(), anyString())
+    }
+
+    @Test
+    fun `test persistUserEventLog when event exists updates event successfully`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(true)
+        Mockito.`when`(userEventLogDaoMock.updateEventByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(true)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertTrue(result)
+        Mockito.verify(userEventLogDaoMock).eventExistsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+        Mockito.verify(userEventLogDaoMock).updateEventByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+        Mockito.verify(userEventLogDaoMock, Mockito.never()).insertEvent(anyString(), anyString(), anyString())
+    }
+
+    @Test
+    fun `test persistUserEventLog when event exists but update fails returns false`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(true)
+        Mockito.`when`(userEventLogDaoMock.updateEventByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(false)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test persistUserEventLog when event does not exist inserts successfully`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(false)
+        Mockito.`when`(userEventLogDaoMock.insertEvent(deviceInfo.deviceID, eventName, normalizedEventName))
+            .thenReturn(1L)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertTrue(result)
+        Mockito.verify(userEventLogDaoMock).eventExistsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+        Mockito.verify(userEventLogDaoMock).insertEvent(deviceInfo.deviceID, eventName, normalizedEventName)
+        Mockito.verify(userEventLogDaoMock, Mockito.never()).updateEventByDeviceIdAndNormalizedEventName(anyString(), anyString())
+    }
+
+    @Test
+    fun `test persistUserEventLog when event does not exist and insert fails returns false`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(false)
+        Mockito.`when`(userEventLogDaoMock.insertEvent(deviceInfo.deviceID, eventName, normalizedEventName))
+            .thenReturn(-1L)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test persistUserEventLog when exception occurs returns false`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.eventExistsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenThrow(RuntimeException("DB Error"))
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLog(eventName)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test persistUserEventLogsInBulk success`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.upsertEventsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, setOfActualAndNormalizedEventNamePair))
+            .thenReturn(true)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLogsInBulk(eventNames)
+
+        // Then
+        assertTrue(result)
+        Mockito.verify(userEventLogDaoMock).upsertEventsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, setOfActualAndNormalizedEventNamePair)
+    }
+
+    @Test
+    fun `test persistUserEventLogsInBulk when operation fails returns false`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.upsertEventsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, setOfActualAndNormalizedEventNamePair))
+            .thenReturn(false)
+
+        // When
+        val result = localDataStoreWithConfig.persistUserEventLogsInBulk(eventNames)
+
+        // Then
+        assertFalse(result)
+        Mockito.verify(userEventLogDaoMock).upsertEventsByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, setOfActualAndNormalizedEventNamePair)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime when count is 1 returns true`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(1)
+
+        // When
+        val result = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertTrue(result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime when count is greater than 1 returns false`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(2)
+
+        // When
+        val result = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime caches result for subsequent calls`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(2)
+
+        // When
+        val firstCall = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+        val secondCall = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(firstCall)
+        assertFalse(secondCall)
+        // Should only call readEventCountByDeviceID once as result is cached
+        Mockito.verify(userEventLogDaoMock, Mockito.times(1))
+            .readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime when count is 0 returns false`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(0)
+
+        // When
+        val result = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime when count is -1 returns false`() {
+        // Given
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(-1)
+
+        // When
+        val result = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+    }
+
+    @Test
+    fun `test isUserEventLogFirstTime behavior with changing event counts`() {
+        // Given
+
+        // First call setup - count 0
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(0)
+
+        // When - First call
+        val firstCallResult = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(firstCallResult)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+
+        // Given - Second call setup - count 1
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(1)
+
+        // When - Second call
+        val secondCallResult = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertTrue(secondCallResult)
+        Mockito.verify(userEventLogDaoMock, Mockito.times(2))
+            .readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+
+        // Given - Third call setup - count 2
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(2)
+
+        // When - Third call
+        val thirdCallResult = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(thirdCallResult)
+        Mockito.verify(userEventLogDaoMock, Mockito.times(3))
+            .readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+
+        // When - Fourth call (should use cached result)
+        val fourthCallResult = localDataStoreWithConfig.isUserEventLogFirstTime(eventName)
+
+        // Then
+        assertFalse(fourthCallResult)
+        // Should not make additional DB call as result is now cached
+        Mockito.verify(userEventLogDaoMock, Mockito.times(3))
+            .readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+    }
+
+    @Test
+    fun `test cleanUpExtraEvents success`() {
+        // Given
+        val threshold = 5
+        val numberOfRowsToCleanup = 2
+        Mockito.`when`(userEventLogDaoMock.cleanUpExtraEvents(threshold, numberOfRowsToCleanup))
+            .thenReturn(true)
+
+        // When
+        val result = localDataStoreWithConfig.cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
+
+        // Then
+        assertTrue(result)
+        Mockito.verify(userEventLogDaoMock).cleanUpExtraEvents(threshold, numberOfRowsToCleanup)
+    }
+
+    @Test
+    fun `test readUserEventLog success`() {
+        // Given
+        val userEventLog = UserEventLogTestData.EventNames.sampleUserEventLogsForSameDeviceId[0]
+        Mockito.`when`(userEventLogDaoMock.readEventByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(userEventLog)
+
+        // When
+        val result = localDataStoreWithConfig.readUserEventLog(eventName)
+
+        // Then
+        assertNotNull(result)
+        assertEquals(userEventLog, result)
+        Mockito.verify(userEventLogDaoMock).readEventByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+    }
+
+    @Test
+    fun `test readUserEventLogCount returns correct count when event exists`() {
+        // Given
+        val expectedCount = 5
+        Mockito.`when`(userEventLogDaoMock.readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName))
+            .thenReturn(expectedCount)
+
+        // When
+        val result = localDataStoreWithConfig.readUserEventLogCount(eventName)
+
+        // Then
+        assertEquals(expectedCount, result)
+        Mockito.verify(userEventLogDaoMock).readEventCountByDeviceIdAndNormalizedEventName(deviceInfo.deviceID, normalizedEventName)
+    }
+
+    @Test
+    fun `test readUserEventLogs returns correct event list for device`() {
+        // Given
+        val expectedLogs = UserEventLogTestData.EventNames.sampleUserEventLogsForSameDeviceId
+        Mockito.`when`(userEventLogDaoMock.allEventsByDeviceID(deviceInfo.deviceID))
+            .thenReturn(expectedLogs)
+
+        // When
+        val result = localDataStoreWithConfig.readUserEventLogs()
+
+        // Then
+        assertEquals(expectedLogs, result)
+        Mockito.verify(userEventLogDaoMock).allEventsByDeviceID(deviceInfo.deviceID)
+    }
+
+    @Test
+    fun `test readEventLogsForAllUsers returns correct event list`() {
+        // Given
+        val expectedLogs = UserEventLogTestData.EventNames.sampleUserEventLogsForMixedDeviceId
+        Mockito.`when`(userEventLogDaoMock.allEvents())
+            .thenReturn(expectedLogs)
+
+        // When
+        val result = localDataStoreWithConfig.readEventLogsForAllUsers()
+
+        // Then
+        assertEquals(expectedLogs, result)
+        Mockito.verify(userEventLogDaoMock).allEvents()
     }
 }

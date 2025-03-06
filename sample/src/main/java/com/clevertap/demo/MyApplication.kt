@@ -36,17 +36,43 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
         companion object {
             private const val TAG = "MyApplication"
+
+            var ctInstance: CleverTapAPI? = null
         }
 
     override fun onCreate() {
         ANRWatchDog().start()
         setupStrictMode()
-        cleverTapPreAppCreated()
+
+        val preOnCreateTime = measureTimeMillis {
+            cleverTapPreAppCreated() // setup pre 'super.onCreate()'
+        }
+        Log.i(TAG, "clevertap setup pre application onCreate took = $preOnCreateTime milliseconds")
+
         super.onCreate()
-        ctPostAppCreated()
+
+        val postOnCreateTime = measureTimeMillis {
+            cleverTapPostAppCreated() // setup post 'super.onCreate()'
+        }
+        Log.i(TAG, "clevertap instance creation took = $postOnCreateTime milliseconds")
     }
 
-    private fun ctPostAppCreated() {
+    private fun cleverTapPreAppCreated() {
+        CleverTapAPI.setDebugLevel(VERBOSE)
+        //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
+        //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
+        TemplateRenderer.debugLevel = 3;
+        CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
+
+        // this is for clevertap to start sending events => app launched => hence done in app create
+        val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
+        Log.i(TAG, "Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds")
+
+        // this is for the setup for canceling notifications
+        registerActivityLifecycleCallbacks(this)
+    }
+
+    private fun cleverTapPostAppCreated() {
         ProviderInstaller.installIfNeededAsync(this, object : ProviderInstallListener {
             override fun onProviderInstalled() {}
             override fun onProviderInstallFailed(i: Int, intent: Intent?) {
@@ -54,8 +80,10 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             }
         })
 
-        val ctInstance: CleverTapAPI = buildCtInstance(useDefaultInstance = true) // to make readable
-        ctInstance.apply {
+        ctInstance = buildCtInstance(useDefaultInstance = true)
+
+        // attach necessary/needed listeners
+        ctInstance?.apply {
             syncListener = object : SyncListener {
                 override fun profileDataUpdated(updates: JSONObject?) {//no op
                 }
@@ -83,11 +111,6 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
             // FileVarsData.defineFileVars(cleverTapAPI = this) // uncomment to define file vars before app launch
         }
-
-        /*println(
-            "CleverTapAttribution Identifier from Application class= " +
-                    "${defaultInstance?.cleverTapAttributionIdentifier}"
-        )*/
 
         createNotificationChannels()
     }
@@ -147,19 +170,20 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         }
     }
 
-    private fun cleverTapPreAppCreated() {
-        CleverTapAPI.setDebugLevel(VERBOSE)
-        //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
-        //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
-        TemplateRenderer.debugLevel = 3;
-        CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
-
-        val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
-        println("Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds")
-
-        registerActivityLifecycleCallbacks(this)
-    }
-
+    /**
+     * Configures strict mode policies for both thread and VM operations to detect potential performance
+     * and correctness issues during app development.
+     *
+     * - For thread policy, it detects all possible thread-related issues such as network operations or
+     *   disk I/O on the main thread. It logs the violations for debugging purposes.
+     *
+     * - For VM policy, it monitors potential memory-related issues such as leaks or misuse of API calls.
+     *   Violations are logged, helping developers find and fix memory management problems.
+     *
+     * This method is typically used during the development phase to catch bugs early. The `penaltyLog()`
+     * method ensures that violations are logged without crashing the app, but more aggressive actions
+     * like crashing can be enabled by using `penaltyDeath()` if desired.
+     */
     private fun setupStrictMode(enable: Boolean = false) {
         if (enable) {
             StrictMode.setThreadPolicy(
@@ -180,7 +204,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
-        Log.i("MyApplication", "onNotificationClickedPayloadReceived = $payload")
+        Log.i(TAG, "onNotificationClickedPayloadReceived = $payload")
     }
 
     override fun attachBaseContext(base: Context?) {
@@ -224,13 +248,13 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     override fun onInboxButtonClick(payload: HashMap<String, String>?) {
-        Log.i("MyApplication", "InboxButtonClick with payload: $payload")
+        Log.i(TAG, "InboxButtonClick with payload: $payload")
         //dismissAppInbox()
     }
 
     override fun onInboxItemClicked(message: CTInboxMessage?, contentPageIndex: Int, buttonIndex: Int) {
         Log.i(
-            "MyApplication",
+            TAG,
             "InboxItemClicked at $contentPageIndex page-index with button-index: $buttonIndex"
         )
 
@@ -247,7 +271,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                     "copy" -> {
                         //this type copies the associated text to the clipboard
                         val copiedText = buttonObject.optJSONObject("copyText")?.optString("text")
-                        Log.i("MyApplication", "copied text to Clipboard: $copiedText")
+                        Log.i(TAG, "copied text to Clipboard: $copiedText")
                         //dismissAppInbox()
                     }
                     "url" -> {
@@ -255,19 +279,19 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                         val firedDeepLinkUrl =
                             buttonObject.optJSONObject("url")?.optJSONObject("android")
                                 ?.optString("text")
-                        Log.i("MyApplication", "fired deeplink url: $firedDeepLinkUrl")
+                        Log.i(TAG, "fired deeplink url: $firedDeepLinkUrl")
                         //dismissAppInbox()
                     }
                     "kv" -> {
                         //this type contains the custom key-value pairs
                         val kvPair = buttonObject.optJSONObject("kv")
-                        Log.i("MyApplication", "custom key-value pair: $kvPair")
+                        Log.i(TAG, "custom key-value pair: $kvPair")
                         //dismissAppInbox()
                     }
                     "rfp" -> {
                         //this type triggers the hard prompt of the notification permission
                         val rfpData = buttonObject.optString("text")
-                        Log.i("MyApplication", "notification permission data: $rfpData")
+                        Log.i(TAG, "notification permission data: $rfpData")
                     }
                     else -> {
                         //do nothing here
@@ -276,7 +300,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             }
         } else {
             //Item's body is clicked
-            Log.i("MyApplication", "type/template of App Inbox item: ${message?.type}")
+            Log.i(TAG, "type/template of App Inbox item: ${message?.type}")
             //dismissAppInbox()
         }
     }

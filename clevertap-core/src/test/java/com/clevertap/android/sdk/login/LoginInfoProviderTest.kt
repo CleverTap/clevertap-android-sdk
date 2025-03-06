@@ -1,393 +1,224 @@
 package com.clevertap.android.sdk.login
 
-import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
 import org.json.JSONObject
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mockito
-import org.mockito.Mockito.atLeastOnce
-import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
-@RunWith(RobolectricTestRunner::class)
-class LoginInfoProviderTest: BaseTestCase() {
+class LoginInfoProviderTest : BaseTestCase() {
 
     private lateinit var defConfig: CleverTapInstanceConfig
     private lateinit var deviceInfo: DeviceInfo
     private lateinit var coreMetaData: CoreMetaData
     private lateinit var cryptHandler: CryptHandler
-
     private lateinit var loginInfoProvider: LoginInfoProvider
-    private lateinit var loginInfoProviderSpy: LoginInfoProvider
 
     override fun setUp() {
         super.setUp()
         coreMetaData = CoreMetaData()
         defConfig = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
-        deviceInfo = Mockito.mock(DeviceInfo::class.java)
-        cryptHandler = Mockito.mock(CryptHandler::class.java)
-        loginInfoProvider = LoginInfoProvider(appCtx, defConfig, deviceInfo, cryptHandler)
-        loginInfoProviderSpy = Mockito.spy(loginInfoProvider)
-    }
-
-    @Test
-    fun test_cacheGUIDForIdentifier_when_all_keys_are_correct_all_values_are_saved() {
-        val guid = "__1234567"
-        val key = "Email"
-        val identifier = "abc@gmail.com"
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn("dummy_encrypted")
-
-        loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
-
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-
-        assertEquals(
-            "{\"Email_dummy_encrypted\":\"__1234567\"}",
-            sharedPreferences.getString("cachedGUIDsKey:id", "")
+        deviceInfo = mockk(relaxed = true)
+        cryptHandler = mockk(relaxed = true)
+        loginInfoProvider = spyk(
+            LoginInfoProvider(
+                appCtx,
+                defConfig,
+                cryptHandler
+            )
         )
     }
 
     @Test
-    fun test_cacheGUIDForIdentifier_when_key_is_empty_value_is_saved_without_key() {
+    fun `cacheGUIDForIdentifier saves all values when all keys are correct`() {
+        val guid = "__789"
+        val key = "Email"
+        val identifier = "abc@gmail.com"
+        val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
+
+        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+
+        loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
+
+        verify { loginInfoProvider.setCachedGUIDsAndLength("dummy_encrypted", 2) }
+    }
+
+    @Test
+    fun `cacheGUIDForIdentifier saves value without key when key is empty`() {
         val guid = "__1234567"
         val key = ""
         val identifier = "abc@gmail.com"
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn("dummy_encrypted")
+        val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
+
+        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-        assertEquals(
-            "{\"_dummy_encrypted\":\"__1234567\"}",
-            sharedPreferences.getString("cachedGUIDsKey:id", "")
-        )
+        verify { loginInfoProvider.setCachedGUIDsAndLength("dummy_encrypted", 2) }
     }
 
     @Test
-    fun test_cacheGUIDForIdentifier_when_identifier_is_empty_value_is_saved() {
+    fun `cacheGUIDForIdentifier saves value when identifier is empty`() {
         val guid = "__1234567"
         val key = "Email"
         val identifier = ""
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn("dummy_encrypted")
+        val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
+
+        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-        assertEquals(
-            "{\"Email_dummy_encrypted\":\"__1234567\"}",
-            sharedPreferences.getString("cachedGUIDsKey:id", "")
-        )
+        verify { loginInfoProvider.setCachedGUIDsAndLength("dummy_encrypted", 2) }
     }
 
     @Test
-    fun test_cacheGUIDForIdentifier_when_guid_is_empty_value_is_saved_without_guid() {
+    fun `cacheGUIDForIdentifier does not save value when GUID is empty`() {
         val guid = ""
         val key = "Email"
         val identifier = "abc@gmail.com"
+        val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn("dummy_encrypted")
+        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-
-        assertEquals(
-            "{\"Email_dummy_encrypted\":\"\"}",
-            sharedPreferences.getString("cachedGUIDsKey:id", "")
-        )
+        verify(exactly = 0) { loginInfoProvider.setCachedGUIDsAndLength("dummy_encrypted", 2) }
     }
 
     @Test
-    fun test_cacheGUIDForIdentifier_when_all_keys_are_correct_but_encryption_fails_should_save_plain_identifier() {
+    fun `cacheGUIDForIdentifier saves plain text when encryption fails`() {
         val guid = "__1234567"
         val key = "email"
         val identifier = "abc@gmail.com"
+        val cryptedKey = "${key}_$identifier"
+        val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
+        val finalGuids = JSONObject().apply {
+            put("Phone_id1", "__1234567")
+            put(cryptedKey, guid)
+        }
 
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn(null)
+        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns null
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-        verify(cryptHandler, atLeastOnce()).encryptionFlagStatus
-        assertEquals(
-            "{\"email_abc@gmail.com\":\"__1234567\"}",
-            sharedPreferences.getString("cachedGUIDsKey:id", "")
-        )
+        verify { cryptHandler.updateMigrationFailureCount(false) }
+        verify { loginInfoProvider.setCachedGUIDsAndLength(finalGuids.toString(), 2) }
     }
 
     @Test
-    fun test_getGUIDForIdentifier_when_guid_is_already_cached() {
+    fun `getGUIDForIdentifier returns GUID when already cached`() {
         val guid = "__1234567"
         val key = "email"
         val identifier = "abc@gmail.com"
+        val cryptedKey = "${key}_$identifier"
+        val initialGuids = JSONObject().apply {
+            put("Phone_id1", "__789")
+            put(cryptedKey, guid)
+        }
 
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn("dummy_encrypted")
+        every { cryptHandler.encrypt(identifier, key) } returns "dummy_encrypted"
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
-        loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
         val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, identifier)
 
         assertEquals(guid, actualGuid)
     }
 
     @Test
-    fun test_getGUIDForIdentifier_when_guid_for_identifier_or_encryptedIdentifier_is_not_present_in_cache() {
+    fun `getGUIDForIdentifier returns null when GUID is not cached`() {
+        val guid = "__1234567"
         val key = "email"
         val identifier = "abc@gmail.com"
+        val cryptedKey = "${key}_$identifier"
+        val initialGuids = JSONObject().apply { put(cryptedKey, guid) }
 
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn("dummy_encrypted")
+        every { cryptHandler.encrypt(identifier, key) } returns "dummy_encrypted"
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
-        val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, identifier)
+        val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, "not_cached@gmail.com")
 
         assertNull(actualGuid)
     }
 
     @Test
-    fun test_getGUIDForIdentifier_when_encryption_fails_and_guid_is_not_present_for_plain_identifier_either() {
-        val key = "email"
-        val identifier = "abc@gmail.com"
-
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn(null)
-
-        val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, identifier)
-
-        assertNull(actualGuid)
-    }
-
-    @Test
-    fun test_getGUIDForIdentifier_when_encryption_fails_but_guid_is_present_for_plain_identifier() {
-        val guid = "__1234567"
-        val key = "email"
-        val identifier = "abc@gmail.com"
-
-        // Replicate a situation when encryption level is 1 but migration was unsuccessful and hence one of the identifier is un-encrypted
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn(identifier)
-        loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
-
-        // Encryption fails
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn(null)
-
-        val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, identifier)
-
-        assertEquals(guid, actualGuid)
-    }
-
-    @Test
-    fun test_getGUIDForIdentifier_when_encryption_passes_but_guid_is_present_for_plain_identifier() {
-        val guid = "__1234567"
-        val key = "email"
-        val identifier = "abc@gmail.com"
-
-        // Replicate a situation when encryption level is 1 but migration was unsuccessful and hence one of the identifier is un-encrypted
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn(identifier)
-        loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
-
-        // Encryption fails
-        Mockito.`when`(cryptHandler.encrypt(identifier, key))
-            .thenReturn("dummy_encrypted")
-
-        val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, identifier)
-
-        assertEquals(guid, actualGuid)
-    }
-
-    @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_email_and_identity_remove_provided_key() {
+    fun `removeValueFromCachedGUIDForIdentifier removes value by key`() {
         val guid = "__1234567"
         val key = "Email"
+        val initialGuids = JSONObject().apply {
+            put("Email_donjoe2862@gmail.com", "__1234567")
+            put("Identity_00002", "__1234567")
+        }
+        val resultGuids = JSONObject().apply { put("Identity_00002", "__1234567") }
 
-        val jsonObj = JSONObject()
-        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
-        jsonObj.put("Identity_00002","__1234567")
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
-            jsonObj)
+        loginInfoProvider.removeValueFromCachedGUIDForIdentifier(guid, key)
 
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-        //Assert
-        assertEquals("{\"Identity_00002\":\"__1234567\"}",
-            sharedPreferences.getString("cachedGUIDsKey:id",""))
+        verify { loginInfoProvider.setCachedGUIDsAndLength(resultGuids.toString(), 1) }
     }
 
     @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_email_removes_cached_shared_prefs_key() {
-        val guid = "__1234567"
-        val key = "Email"
+    fun `deviceIsMultiUser returns true when multiple guids in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 2)
 
-        val jsonObj = JSONObject()
-        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
-
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
-            jsonObj)
-
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-        //Assert
-        assertEquals("",
-            sharedPreferences.getString("cachedGUIDsKey:id",""))
+        assertTrue { loginInfoProvider.deviceIsMultiUser() }
     }
 
     @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_lowercase_email_removes_cached_shared_prefs_key() {
-        val guid = "__1234567"
-        val key = "email"
+    fun `deviceIsMultiUser returns false when single guid in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 1)
 
-        val jsonObj = JSONObject()
-        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
-
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
-            jsonObj)
-
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-        //Assert
-        assertEquals("",
-            sharedPreferences.getString("cachedGUIDsKey:id",""))
+        assertFalse{ loginInfoProvider.deviceIsMultiUser() }
     }
 
     @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_lowercase_email_removes_cached_shared_prefs_lowercase_key() {
-        val guid = "__1234567"
-        val key = "Email"
+    fun `isLegacyProfileLoggedIn returns false when guid in the prefs and non-empty identiy keys`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 1)
 
-        val jsonObj = JSONObject()
-        jsonObj.put("email_donjoe2862@gmail.com","__1234567")
+        every { loginInfoProvider.cachedIdentityKeysForAccount } returns "dummy"
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
-            jsonObj)
-
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-        //Assert
-        assertEquals("",
-            sharedPreferences.getString("cachedGUIDsKey:id",""))
+        assertFalse{ loginInfoProvider.isLegacyProfileLoggedIn() }
     }
 
     @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_lowercase_email_and_identity_removes_cached_shared_prefs_lowercase_key(){
-        val guid = "__1234567"
-        val key = "Email"
+    fun `isLegacyProfileLoggedIn returns true when guid in the prefs but empty identity keys`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 1)
 
-        val jsonObj = JSONObject()
-        jsonObj.put("email_donjoe2862@gmail.com","__1234567")
-        jsonObj.put("identity_00002","__1234567")
+        every { loginInfoProvider.cachedIdentityKeysForAccount } returns ""
 
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
-            jsonObj)
-
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-        //Assert
-        assertEquals("{\"identity_00002\":\"__1234567\"}",
-            sharedPreferences.getString("cachedGUIDsKey:id",""))
+        assertTrue{ loginInfoProvider.isLegacyProfileLoggedIn() }
     }
 
     @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_Email_and_lowercase_identity_removes_cached_shared_prefs_key(){
-        val guid = "__1234567"
-        val key = "Email"
+    fun `isLegacyProfileLoggedIn returns false when no guids in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 0)
 
-        val jsonObj = JSONObject()
-        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
-        jsonObj.put("identity_00002","__1234567")
-
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
-            jsonObj)
-
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
-
-        //Assert
-        assertEquals("{\"identity_00002\":\"__1234567\"}",
-            sharedPreferences.getString("cachedGUIDsKey:id",""))
+        assertFalse { loginInfoProvider.isLegacyProfileLoggedIn() }
     }
 
     @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_random_key_and_Identity_removes_cached_shared_prefs_key(){
-        val guid = "__1234567"
-        val key = "abcxyz"
+    fun `isAnonymousDevice returns true when no guids in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 0)
 
-        val jsonObj = JSONObject()
-        jsonObj.put("Identity_00002","__1234567")
-        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
-
-        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
-            jsonObj)
-
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-
-        //Assert
-        assertEquals("{\"Identity_00002\":\"__1234567\",\"Email_donjoe2862@gmail.com\":\"__1234567\"}",
-            jsonObj.toString())
+        assertTrue { loginInfoProvider.isAnonymousDevice() }
     }
 
     @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_key_is_null_and_guid_has_value_should_do_nothing(){
-        val guid = "__1234567"
-        val key = null
+    fun `isAnonymousDevice returns false when guids in the prefs`() {
+        loginInfoProvider.setCachedGUIDsAndLength("abc", 1)
 
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-
-        //Assert
-        Mockito.verify(loginInfoProviderSpy,Mockito.never()).cachedGUIDs
-    }
-
-    @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_key_has_value_and_guid_is_null_should_do_nothing(){
-        val guid = null
-        val key = "Email"
-
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-
-        //Assert
-        Mockito.verify(loginInfoProviderSpy,Mockito.never()).cachedGUIDs
-    }
-
-    @Test
-    fun test_removeValueFromCachedGUIDForIdentifier_key_is_null_and_guid_is_null_should_do_nothing(){
-        val guid = null
-        val key = null
-
-        //Act
-        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-
-        //Assert
-        Mockito.verify(loginInfoProviderSpy,Mockito.never()).cachedGUIDs
+        assertFalse{ loginInfoProvider.isAnonymousDevice() }
     }
 }

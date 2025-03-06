@@ -1,5 +1,9 @@
 ## CleverTap Geofence SDK CHANGE LOG
 
+### Version 1.4.0 (January 7, 2025)
+* Adds support for Android 15, making it compliant with Android 15 requirements. Details [here](https://developer.android.com/about/versions/15/summary)
+* Updates Minimum Android SDK version to API 21 (Android 5.0)
+
 ### Version 1.3.0 (February 21, 2024)
 * Supports Android 14, made it compliant with Android 14 requirements. Details [here](https://developer.android.com/about/versions/14/summary)
 * Upgrades AGP to 8.2.2 for building the SDK and adds related consumer proguard rules

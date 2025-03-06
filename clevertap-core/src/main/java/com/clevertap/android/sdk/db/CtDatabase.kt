@@ -28,7 +28,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
 
     companion object {
 
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
         private const val DB_LIMIT = 20 * 1024 * 1024 //20mb
     }
 
@@ -41,6 +41,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
     override fun onCreate(db: SQLiteDatabase) {
         logger.verbose("Creating CleverTap DB")
         executeStatement(db, CREATE_EVENTS_TABLE)
+        executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)
         executeStatement(db, CREATE_PROFILE_EVENTS_TABLE)
         executeStatement(db, CREATE_USER_PROFILES_TABLE)
         executeStatement(db, CREATE_INBOX_MESSAGES_TABLE)
@@ -86,6 +87,10 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
                 // For DB Version 4, just migrate userProfiles table
                 migrateUserProfilesTable(db)
             }
+        }
+
+        if (oldVersion < 5) {
+            executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates [1,2,3,4] to 5
         }
     }
 
@@ -190,14 +195,15 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
     }
 }
 
-enum class Table(val tableName: String) {
+ enum class Table(val tableName: String) {
     EVENTS("events"),
     PROFILE_EVENTS("profileEvents"),
     USER_PROFILES("userProfiles"),
     INBOX_MESSAGES("inboxMessages"),
     PUSH_NOTIFICATIONS("pushNotifications"),
     UNINSTALL_TS("uninstallTimestamp"),
-    PUSH_NOTIFICATION_VIEWED("notificationViewed")
+    PUSH_NOTIFICATION_VIEWED("notificationViewed"),
+    USER_EVENT_LOGS_TABLE("userEventLogs")
 }
 
 object Column {
@@ -212,6 +218,11 @@ object Column {
     const val CAMPAIGN = "campaignId"
     const val WZRKPARAMS = "wzrkParams"
     const val DEVICE_ID = "deviceID"
+    const val EVENT_NAME = "eventName"
+    const val NORMALIZED_EVENT_NAME = "normalizedEventName"
+    const val FIRST_TS = "firstTs"
+    const val LAST_TS = "lastTs"
+    const val COUNT = "count"
 }
 
 private val CREATE_EVENTS_TABLE = """
@@ -219,6 +230,18 @@ private val CREATE_EVENTS_TABLE = """
         ${Column.ID} INTEGER PRIMARY KEY AUTOINCREMENT,
         ${Column.DATA} STRING NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL
+    );
+"""
+
+private val CREATE_USER_EVENT_LOGS_TABLE = """
+    CREATE TABLE ${Table.USER_EVENT_LOGS_TABLE.tableName} (
+        ${Column.DEVICE_ID} STRING NOT NULL,
+        ${Column.EVENT_NAME} STRING NOT NULL,
+        ${Column.NORMALIZED_EVENT_NAME} STRING NOT NULL,
+        ${Column.FIRST_TS} INTEGER NOT NULL,
+        ${Column.LAST_TS} INTEGER NOT NULL,
+        ${Column.COUNT} INTEGER NOT NULL,
+        PRIMARY KEY (${Column.DEVICE_ID}, ${Column.NORMALIZED_EVENT_NAME})
     );
 """
 

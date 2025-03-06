@@ -1,23 +1,26 @@
 package com.clevertap.android.sdk.variables
 
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.inapp.data.CtCacheType.FILES
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
+import com.clevertap.android.sdk.task.CTExecutorFactory
+import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.variables.VariableDefinitions.NullDefaultValue
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.junit.*
-import org.junit.Assert.*
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD
 import org.junit.runner.*
-import org.mockito.kotlin.*
+import org.mockito.kotlin.notNull
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
-@Ignore("this is flaky on server, ran it locally")
 class VarCacheTest : BaseTestCase() {
 
     private lateinit var varCache: VarCache
@@ -30,6 +33,9 @@ class VarCacheTest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
+        mockkStatic(CTExecutorFactory::class)
+        every { CTExecutorFactory.executors(any()) } returns MockCTExecutors()
+
         fileResourcesRepoImpl = mockk(relaxed = true)
         fileResourceProvider = mockk(relaxed = true)
 
@@ -38,6 +44,17 @@ class VarCacheTest : BaseTestCase() {
         )
         ctVariables = CTVariables(varCache)
         parser = Parser(ctVariables)
+    }
+
+    @After
+    fun cleanUp() {
+        //clear all varCache stored info
+        val varCacheKey = StorageHelper.storageKeyWithSuffix(
+            cleverTapInstanceConfig,
+            Constants.CACHED_VARIABLES_KEY
+        )
+        StorageHelper.removeImmediate(application, varCacheKey)
+        unmockkStatic(CTExecutorFactory::class)
     }
 
     @Test
@@ -348,6 +365,8 @@ class VarCacheTest : BaseTestCase() {
 
         assertEquals(2, var1.value())
         verify { StorageHelper.getString(application, "variablesKey:" + cleverTapInstanceConfig.accountId, "{}") }
+
+        unmockkStatic(StorageHelper::class)
     }
 
     @Test
@@ -362,6 +381,8 @@ class VarCacheTest : BaseTestCase() {
 
         assertEquals("http://example.com/file", var1.stringValue)
         verify { fileResourcesRepoImpl.preloadFilesAndCache(listOf(Pair("http://example.com/file", FILES)), any()) }
+
+        unmockkStatic(StorageHelper::class)
     }
 
     @Test
@@ -377,9 +398,10 @@ class VarCacheTest : BaseTestCase() {
         assertEquals(2, var1.value())
         verify { StorageHelper.getString(application, "variablesKey:" + cleverTapInstanceConfig.accountId, "{}") }
         verify { globalCallbackRunnable.run() }
+
+        unmockkStatic(StorageHelper::class)
     }
 
-    @Ignore("this is flaky")
     @Test
     fun `test clearUserContent`() {
         Var.define("var1", 1, ctVariables)
@@ -389,11 +411,15 @@ class VarCacheTest : BaseTestCase() {
         varCache.clearUserContent()
 
         verify { StorageHelper.putString(application, "variablesKey:" + cleverTapInstanceConfig.accountId, "{}") }
+
+        unmockkStatic(StorageHelper::class)
     }
 
     @Test
     fun `test fileVarUpdated when file is cached`() {
-        val var1 : Var<String> = Var.define("var1", null, "file", ctVariables)
+        // set initial value which will be considered as the "new" value when
+        // fileVarUpdated is triggered
+        val var1 : Var<String> = Var.define("var1", "value", "file", ctVariables)
         val handler1: VariableCallback<String> = mockk(relaxed = true)
         var1.addFileReadyHandler(handler1)
 
@@ -407,7 +433,9 @@ class VarCacheTest : BaseTestCase() {
 
     @Test
     fun `test fileVarUpdated when file is not cached`() {
-        val var1 : Var<String> = Var.define("var1", null, "file", ctVariables)
+        // set initial value which will be considered as the "new" value when
+        // fileVarUpdated is triggered
+        val var1: Var<String> = Var.define("var1", "value", "file", ctVariables)
         val handler1: VariableCallback<String> = mockk(relaxed = true)
         var1.addFileReadyHandler(handler1)
 
@@ -418,5 +446,44 @@ class VarCacheTest : BaseTestCase() {
         verify(exactly = 0) { handler1.setVariable(var1) }
         verify(exactly = 0) { handler1.run() }
         verify { fileResourcesRepoImpl.preloadFilesAndCache(any(), any()) }
+    }
+
+    @Test
+    fun `test fileVarUpdated when url becomes null`() {
+        val var1: Var<String> = Var.define("var1", null, "file", ctVariables)
+        val handler: VariableCallback<String> = mockk(relaxed = true)
+        every { fileResourceProvider.isFileCached(any()) } returns true
+        var1.addFileReadyHandler(handler)
+
+        // update var1 to a value
+        val fileUrl = "http://example.com/file2"
+        ctVariables.setHasVarsRequestCompleted(true)
+        varCache.updateDiffsAndTriggerHandlers(
+            mapOf(
+                "var1" to fileUrl,
+            ), {}
+        )
+
+        verify {
+            handler.setVariable(match {
+                it.rawFileValue() == fileUrl
+            })
+        }
+        verify(exactly = 1) { handler.run() }
+
+        // update var1 to null
+        ctVariables.setHasVarsRequestCompleted(true)
+        varCache.updateDiffsAndTriggerHandlers(
+            mapOf(
+                "var1" to null,
+            ), {}
+        )
+
+        verify {
+            handler.setVariable(match { fileVar ->
+                fileVar.rawFileValue() == null
+            })
+        }
+        verify(exactly = 2) { handler.run() }
     }
 }

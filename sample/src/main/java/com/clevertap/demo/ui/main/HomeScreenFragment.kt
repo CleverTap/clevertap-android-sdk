@@ -18,21 +18,25 @@ import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.clevertap.android.geofence.CTGeofenceAPI
 import com.clevertap.android.geofence.CTGeofenceSettings
 import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.demo.BuildConfig
 import com.clevertap.demo.HomeScreenActivity
+import com.clevertap.demo.MyApplication
 import com.clevertap.demo.R
 import com.clevertap.demo.ViewModelFactory
 import com.clevertap.demo.WebViewActivity
 import com.clevertap.demo.action
 import com.clevertap.demo.snack
 import org.json.JSONObject
+
 
 private const val TAG = "HomeScreenFragment"
 private const val PERMISSIONS_REQUEST_CODE = 34
@@ -45,7 +49,7 @@ data class HomeScreenFragmentBinding(
 class HomeScreenFragment : Fragment() {
 
     private val viewModel by viewModels<HomeScreenViewModel> {
-        ViewModelFactory((activity as? HomeScreenActivity)?.cleverTapDefaultInstance)
+        ViewModelFactory(MyApplication.ctInstance)
     }
 
     companion object {
@@ -65,17 +69,18 @@ class HomeScreenFragment : Fragment() {
         )
 
         listItemBinding.expandableListView.isNestedScrollingEnabled = true
+        applySystemBarsInsets(listItemBinding.expandableListView)
 
         return view
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         setupListAdapter()
         val cleverTapInstance = (activity as? HomeScreenActivity)?.cleverTapDefaultInstance
         val context = activity?.applicationContext!!
 
-        viewModel.clickCommand.observe(viewLifecycleOwner, Observer<String> { commandPosition ->
+        viewModel.clickCommand.observe(viewLifecycleOwner) { commandPosition ->
             when (commandPosition) {
                 "6-0" -> startActivity(Intent(activity, WebViewActivity::class.java))
                 "7-0" -> { // init Geofence API
@@ -86,6 +91,7 @@ class HomeScreenFragment : Fragment() {
                         else -> initCTGeofenceApi(cleverTapInstance)
                     }
                 }
+
                 "7-1" -> { // trigger location
                     try {
                         CTGeofenceAPI.getInstance(context).triggerLocation()
@@ -96,9 +102,10 @@ class HomeScreenFragment : Fragment() {
                         initCTGeofenceApi(cleverTapInstance!!)
                     }
                 }
+
                 "7-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
             }
-        })
+        }
     }
 
     private fun setupListAdapter() {
@@ -218,6 +225,15 @@ class HomeScreenFragment : Fragment() {
                 }
 
             }
+        }
+    }
+
+    private fun applySystemBarsInsets(view: ExpandableListView) {
+        view.clipToPadding = false
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v: View, insets: WindowInsetsCompat ->
+            val bars: Insets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, 0, bars.right, bars.bottom)
+            WindowInsetsCompat.CONSUMED
         }
     }
 }

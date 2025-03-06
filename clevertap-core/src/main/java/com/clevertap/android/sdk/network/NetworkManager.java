@@ -394,8 +394,7 @@ public class NetworkManager {
 
             // Add ct_pi (identities)
             header.put("ct_pi", IdentityRepoFactory
-                    .getRepo(this.context, config, deviceInfo,
-                            validationResultStack).getIdentitySet().toString());
+                    .getRepo(this.context, config, validationResultStack).getIdentitySet().toString());
 
             // Add ddnd (Do Not Disturb)
             header.put("ddnd",

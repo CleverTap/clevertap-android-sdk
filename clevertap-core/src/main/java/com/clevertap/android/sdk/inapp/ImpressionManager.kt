@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
  * @property clock           An optional Clock implementation for handling time-related operations.
  * @property locale          An optional Locale specifying the locale to use for date and time calculations.
  */
-class ImpressionManager @JvmOverloads constructor(
+internal class ImpressionManager @JvmOverloads constructor(
     private val storeRegistry: StoreRegistry,
     private val clock: Clock = Clock.SYSTEM,
     private val locale: Locale = Locale.getDefault(),

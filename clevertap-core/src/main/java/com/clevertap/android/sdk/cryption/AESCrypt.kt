@@ -14,30 +14,25 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * This class implements the AES Cryption algorithm
  */
-class AESCrypt : Crypt() {
+class AESCrypt(accountID: String) : Crypt() {
     /**
      * This method returns the key-password to be used for encryption/decryption
      *
-     * @param accountID : accountId of the current instance
      * @return key-password
      */
-    private fun generateKeyPassword(accountID: String): String {
-        return APP_ID_KEY_PREFIX + accountID + APP_ID_KEY_SUFFIX
-    }
+    private val keyPassword: String = APP_ID_KEY_PREFIX + accountID + APP_ID_KEY_SUFFIX
 
     /**
      * This method is used internally to encrypt the plain text
      *
      * @param plainText - plainText to be encrypted
-     * @param accountID - accountID used for password generation
      * @return encrypted text
      */
-    override fun encryptInternal(plainText: String, accountID: String): String? {
-
+    override fun encryptInternal(plainText: String): String? {
         return performCryptOperation(
-            Cipher.ENCRYPT_MODE, generateKeyPassword(accountID), plainText.toByteArray(
-                StandardCharsets.UTF_8
-            )
+            mode = Cipher.ENCRYPT_MODE,
+            password = keyPassword,
+            text = plainText.toByteArray(StandardCharsets.UTF_8)
         )?.let { encryptedBytes ->
             encryptedBytes.contentToString()
         }
@@ -48,12 +43,15 @@ class AESCrypt : Crypt() {
      * This method is used internally to decrypt the cipher text
      *
      * @param cipherText - cipherText to be decrypted
-     * @param accountID - accountID used for password generation
      * @return decrypted text
      */
-    override fun decryptInternal(cipherText: String, accountID: String): String? {
+    override fun decryptInternal(cipherText: String): String? {
         return parseCipherText(cipherText)?.let { bytes ->
-            performCryptOperation(Cipher.DECRYPT_MODE, generateKeyPassword(accountID), bytes)
+            performCryptOperation(
+                mode = Cipher.DECRYPT_MODE,
+                password = keyPassword,
+                text = bytes
+            )
         }?.let { decryptedBytes ->
             String(decryptedBytes, StandardCharsets.UTF_8)
         }
@@ -65,7 +63,7 @@ class AESCrypt : Crypt() {
      * @param cipherText - cipher text to be parsed
      * @return Parsed string in the form of a byte array
      */
-    override fun parseCipherText(cipherText: String): ByteArray? {
+    private fun parseCipherText(cipherText: String): ByteArray? {
         return try {
             // Removes the enclosing brackets, trims any leading or trailing whitespace, and then splits the resulting string based on commas
             val byteStrings =
