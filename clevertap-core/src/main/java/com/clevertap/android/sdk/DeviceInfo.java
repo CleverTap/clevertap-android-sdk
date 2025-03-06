@@ -109,8 +109,8 @@ public class DeviceInfo {
 
             WindowSize result = getWindowSizeData();
 
-            width = result.doubleWidth;
-            height = result.doubleHeight;
+            width = result.width;
+            height = result.height;
             dpi = result.localDpi;
 
 
@@ -316,13 +316,13 @@ public class DeviceInfo {
      */
     private static class WindowSize {
         public final int localDpi;
-        public final double doubleWidth;
-        public final double doubleHeight;
+        public final double width;
+        public final double height;
 
-        public WindowSize(int localDpi, double doubleWidth, double doubleHeight) {
+        public WindowSize(int localDpi, double width, double height) {
             this.localDpi = localDpi;
-            this.doubleWidth = doubleWidth;
-            this.doubleHeight = doubleHeight;
+            this.width = width;
+            this.height = height;
         }
     }
 
