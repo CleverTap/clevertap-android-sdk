@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import static android.content.Context.USAGE_STATS_SERVICE;
+import static android.view.Display.DEFAULT_DISPLAY;
 import static com.clevertap.android.sdk.inapp.InAppController.LOCAL_INAPP_COUNT;
 
 import android.Manifest;
@@ -14,12 +15,14 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Insets;
+import android.hardware.display.DisplayManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.WindowMetrics;
@@ -324,19 +327,27 @@ public class DeviceInfo {
     }
 
     private WindowManager getWindowManager() {
-        WindowManager wm;
+        if (context == null) {
+            return null;
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             try {
-                wm = (WindowManager) context
-                        .createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION, null)
-                        .getSystemService(Context.WINDOW_SERVICE);
+                DisplayManager displayManager = context.getSystemService(DisplayManager.class);
+                if (displayManager != null) {
+                    Display primaryDisplay = displayManager.getDisplay(DEFAULT_DISPLAY);
+                    if (primaryDisplay != null) {
+                        Context windowContext = context.createDisplayContext(primaryDisplay)
+                                .createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION, null);
+                        return windowContext.getSystemService(WindowManager.class);
+                    }
+                }
             } catch (UnsupportedOperationException e) {
-                wm = null;
+                getConfigLogger().verbose("WindowManagerHelper", "Window context creation failed: " + e.getMessage());
             }
-        } else {
-            wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         }
-        return wm;
+
+        return (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
 
     /**
