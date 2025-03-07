@@ -57,16 +57,13 @@
         <!-- Add meta data for CleverTap Account Id and Account Token and Region-->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="YOUR ACCT ID" />
+            android:value="67Z-RRK-696Z" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="YOUR ACCT TOKEN" />
+            android:value="322-1a6" />
         <meta-data
             android:name="CLEVERTAP_REGION"
-            android:value="YOUR ACCT REGION"/>
-        <meta-data
-            android:name="CLEVERTAP_HANDSHAKE_DOMAIN"
-            android:value="YOUR HANDSHAKE DOMAIN"/>
+            android:value="sk1-staging-30"/>
         <!--<meta-data
             android:name="CLEVERTAP_PROXY_DOMAIN"
             android:value="analytics.sdktesting.xyz"/>-->
@@ -106,11 +103,11 @@
         <!-- Builds push provider for clevertap other than firebase, add csv string 5 values, please refer docs to integrate different push providers in clevertap -->
         <meta-data
             android:name="CLEVERTAP_PROVIDER_1"
-            android:value="hps, hps_token, com.clevertap.android.hms.HmsPushProvider, com.huawei.hms.push.HmsMessageService, HPS" />
+            android:value="hps, hps_token,com.clevertap.android.hms.HmsPushProvider,com.huawei.hms.push.HmsMessageService,HPS" />
         <!-- Builds push provider for clevertap other than firebase, add csv string with 5 values, please refer docs to integrate different push providers in clevertap -->
         <meta-data
             android:name="CLEVERTAP_PROVIDER_2"
-            android:value="bps, bps_token, com.clevertap.android.bps.BaiduPushProvider, com.baidu.android.pushservice.PushMessageReceiver, BPS" />
+            android:value="bps,bps_token,com.clevertap.android.bps.BaiduPushProvider,com.baidu.android.pushservice.PushMessageReceiver,BPS" />
 
         <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
         <service
