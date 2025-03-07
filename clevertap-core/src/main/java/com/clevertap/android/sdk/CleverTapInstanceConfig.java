@@ -205,6 +205,30 @@ public class CleverTapInstanceConfig implements Parcelable {
         } else {
             this.encryptionLevel = 0;
         }
+        buildPushProvidersFromManifest(manifest);
+    }
+
+    private void buildPushProvidersFromManifest(ManifestInfo manifest) {
+        try {
+            String provider1 = manifest.getProvider1();
+            if (provider1 != null) {
+                String[] splits = provider1.split(",");
+                if (splits != null && splits.length == 5) {
+                    PushType pushType = new PushType(splits[0], splits[1], splits[2], splits[3], splits[4]);
+                    addPushType(pushType);
+                }
+            }
+            String provider2 = manifest.getProvider2();
+            if (provider2 != null) {
+                String[] splits = provider2.split(",");
+                if (splits != null && splits.length == 5) {
+                    PushType pushType = new PushType(splits[0], splits[1], splits[2], splits[3], splits[4]);
+                    addPushType(pushType);
+                }
+            }
+        } catch (Exception e) {
+            Logger.v("There was some problem in loading push providers from manifest");
+        }
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {

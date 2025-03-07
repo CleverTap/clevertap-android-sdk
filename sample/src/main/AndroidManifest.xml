@@ -103,6 +103,15 @@
             android:name="CLEVERTAP_ENCRYPTION_LEVEL"
             android:value="1" /> <!-- Add meta and set to 1 enable encryption of PII data -->
 
+        <!-- Builds push provider for clevertap other than firebase, add csv string 5 values, please refer docs to integrate different push providers in clevertap -->
+        <meta-data
+            android:name="CLEVERTAP_PROVIDER_1"
+            android:value="1" />
+        <!-- Builds push provider for clevertap other than firebase, add csv string with 5 values, please refer docs to integrate different push providers in clevertap -->
+        <meta-data
+            android:name="CLEVERTAP_PROVIDER_1"
+            android:value="1" />
+
         <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
         <service
             android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
