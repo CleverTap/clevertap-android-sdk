@@ -3778,4 +3778,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             impl.cleanupAllResources(CtCacheType.FILES);
         }
     }
+
+    /**
+     * Sends the Baidu registration ID to CleverTap.
+     *
+     * @param token    The Baidu registration ID
+     * @param pushType Push Provider type for which the token is registered
+     * @param register Boolean indicating whether to register
+     *                 or not for receiving push messages from CleverTap.
+     *                 Set this to true to receive push messages from CleverTap,
+     *                 and false to not receive any messages from CleverTap.
+     */
+    @SuppressWarnings("unused")
+    public void pushRegistrationToken(String token, PushType pushType, boolean register) {
+        coreState.getPushProviders().handleToken(token, pushType, register);
+    }
 }
