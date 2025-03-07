@@ -210,7 +210,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private void buildPushProvidersFromManifest(ManifestInfo manifest) {
         try {
-            String provider1 = manifest.getProvider1();
+            String provider1 = manifest.getVendorOneProvider();
             if (provider1 != null) {
                 String[] splits = provider1.split(",");
                 if (splits != null && splits.length == 5) {
@@ -218,7 +218,7 @@ public class CleverTapInstanceConfig implements Parcelable {
                     addPushType(pushType);
                 }
             }
-            String provider2 = manifest.getProvider2();
+            String provider2 = manifest.getVendorTwoProvider();
             if (provider2 != null) {
                 String[] splits = provider2.split(",");
                 if (splits != null && splits.length == 5) {

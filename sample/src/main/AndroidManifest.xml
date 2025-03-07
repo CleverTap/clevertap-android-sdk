@@ -106,11 +106,11 @@
         <!-- Builds push provider for clevertap other than firebase, add csv string 5 values, please refer docs to integrate different push providers in clevertap -->
         <meta-data
             android:name="CLEVERTAP_PROVIDER_1"
-            android:value="1" />
+            android:value="hps, hps_token, com.clevertap.android.hms.HmsPushProvider, com.huawei.hms.push.HmsMessageService, HPS" />
         <!-- Builds push provider for clevertap other than firebase, add csv string with 5 values, please refer docs to integrate different push providers in clevertap -->
         <meta-data
-            android:name="CLEVERTAP_PROVIDER_1"
-            android:value="1" />
+            android:name="CLEVERTAP_PROVIDER_2"
+            android:value="bps, bps_token, com.clevertap.android.bps.BaiduPushProvider, com.baidu.android.pushservice.PushMessageReceiver, BPS" />
 
         <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
         <service

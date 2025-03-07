@@ -64,7 +64,7 @@ class ActivityLifecycleCallbackTest : BaseTestCase() {
         mockStatic(CleverTapAPI::class.java).use {
             val mockActivity = mock(Activity::class.java)
             value.onActivityCreated(mockActivity, Bundle())
-            it.verify { CleverTapAPI.onActivityCreated(mockActivity) }
+            it.verify { CleverTapAPI.onActivityCreated(mockActivity, null, null) }
             value.onActivityResumed(mockActivity)
             it.verify { CleverTapAPI.onActivityResumed(mockActivity) }
         }
@@ -81,9 +81,9 @@ class ActivityLifecycleCallbackTest : BaseTestCase() {
         mockStatic(CleverTapAPI::class.java).use {
             val mockActivity = mock(Activity::class.java)
             value.onActivityCreated(mockActivity, Bundle())
-            it.verify { CleverTapAPI.onActivityCreated(mockActivity,"1234567890") }
+            it.verify { CleverTapAPI.onActivityCreated(mockActivity,"1234567890", null) }
             value.onActivityResumed(mockActivity)
-            it.verify { CleverTapAPI.onActivityResumed(mockActivity,"1234567890") }
+            it.verify { CleverTapAPI.onActivityResumed(mockActivity,"1234567890", null) }
         }
     }
 
