@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.pushnotification.fcm;
 
 import androidx.annotation.RestrictTo;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushType;
 
 /**
  * Bridge interface to communicate with Firebase SDK

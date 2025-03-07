@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM
+import com.clevertap.android.sdk.pushnotification.PushType.FCM
 import com.clevertap.android.sdk.pushnotification.fcm.TestFcmConstants.Companion.FCM_TOKEN
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
