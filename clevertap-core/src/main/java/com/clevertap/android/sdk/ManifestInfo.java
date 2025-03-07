@@ -341,11 +341,12 @@ public class ManifestInfo {
         }
     }
 
-    public String getProvider1() {
+
+    public String getVendorOneProvider() {
         return provider1;
     }
 
-    public String getProvider2() {
+    public String getVendorTwoProvider() {
         return provider2;
     }
 }
