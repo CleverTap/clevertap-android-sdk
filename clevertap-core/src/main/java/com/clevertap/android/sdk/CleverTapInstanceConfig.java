@@ -65,6 +65,23 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean useGoogleAdId;
     private int encryptionLevel;
 
+    /**
+     * Creates a CleverTapInstanceConfig with meta data from manifest file
+     * @param context Application context
+     * @return CleverTapInstanceConfig
+     */
+    @SuppressWarnings("unused")
+    public static CleverTapInstanceConfig getDefaultInstance(Context context) {
+        ManifestInfo info = ManifestInfo.getInstance(context);
+        return CleverTapInstanceConfig.createInstanceWithManifest(
+                info,
+                info.getAccountId(),
+                info.getAcountToken(),
+                info.getAccountRegion(),
+                true
+        );
+    }
+
     @SuppressWarnings("unused")
     public static CleverTapInstanceConfig createInstance(
             Context context,

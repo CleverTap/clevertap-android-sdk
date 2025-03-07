@@ -3206,9 +3206,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             Logger.i("Account Region not specified in the AndroidManifest - using default region");
         }
 
-        // todo lp pass manifest info here
+        // todo : pass manifest info here
         CleverTapInstanceConfig defaultInstanceConfig = CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
 
+        // todo : check if these re-assignments are needed, already added in manifest parsing
         if (proxyDomain != null && !proxyDomain.trim().isEmpty()) {
             defaultInstanceConfig.setProxyDomain(proxyDomain);
         }
