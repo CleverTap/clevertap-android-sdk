@@ -125,6 +125,12 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         handshakeDomain: String? = null
     ): CleverTapAPI {
         val ctInstance = if (useDefaultInstance) {
+            
+            // Different ways of creating default instance
+            // Type 1
+            val defaultConfig = CleverTapInstanceConfig.getDefaultInstance(this)
+            CleverTapAPI.instanceWithConfig(this, defaultConfig)
+            // Type 2
             CleverTapAPI.getDefaultInstance(this)!!
         } else {
             val config = CleverTapInstanceConfig.createInstance(
