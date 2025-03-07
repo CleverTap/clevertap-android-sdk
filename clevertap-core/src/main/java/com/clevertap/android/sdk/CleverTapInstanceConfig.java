@@ -632,7 +632,10 @@ public class CleverTapInstanceConfig implements Parcelable {
     private JSONArray getPushTypesArray() {
         JSONArray pushTypesArray = new JSONArray();
         for (PushType pushType : getPushTypes()) {
-            pushTypesArray.put(pushType.toJSONObject());
+            // fcm is always loaded by default.
+            if (pushType != PushType.FCM) {
+                pushTypesArray.put(pushType.toJSONObject());
+            }
         }
         return pushTypesArray;
     }
