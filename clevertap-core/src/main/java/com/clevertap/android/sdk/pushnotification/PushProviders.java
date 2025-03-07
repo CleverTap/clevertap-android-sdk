@@ -637,7 +637,7 @@ public class PushProviders implements CTPushProviderListener {
 
     //Session
 
-    private void checkFirebaseAdded() {
+    private void configurePushTypes() {
         ArrayList<PushType> allowedPushTypes = config.getPushTypes();
         for (PushType pushType : allowedPushTypes) {
             String className = pushType.getMessagingSDKClassName();
@@ -667,7 +667,7 @@ public class PushProviders implements CTPushProviderListener {
      * Loads all the plugins that are currently supported by the device.
      */
     private void init() {
-        checkFirebaseAdded();
+        configurePushTypes();
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
 
         task.execute("asyncFindAvailableCTPushProviders", () -> {
