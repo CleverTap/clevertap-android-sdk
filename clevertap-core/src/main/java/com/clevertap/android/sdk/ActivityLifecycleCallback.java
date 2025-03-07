@@ -78,7 +78,7 @@ public final class ActivityLifecycleCallback {
     }
 
     public static void register(Application application, @Nullable final List<PushType> pushTypes) {
-        ActivityLifecycleCallback.register(application, null, null);
+        ActivityLifecycleCallback.register(application, null, pushTypes);
     }
 
     public static void register(
