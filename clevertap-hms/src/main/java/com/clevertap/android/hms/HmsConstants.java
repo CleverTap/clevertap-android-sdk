@@ -13,8 +13,7 @@ public class HmsConstants {
             HMS_DELIVERY_TYPE,
             HPS_PROPERTY_REG_ID,
             CT_HUAWEI_PROVIDER_CLASS,
-            HUAWEI_SDK_CLASS,
-            HMS_LOG_TAG
+            HUAWEI_SDK_CLASS
     );
     public static final String HCM_SCOPE = "HCM";
     public static final String APP_ID_KEY = "client/app_id";

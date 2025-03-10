@@ -14,13 +14,11 @@ public interface PushConstants {
     String CT_FIREBASE_PROVIDER_CLASS = "com.clevertap.android.sdk.pushnotification.fcm.FcmPushProvider";
     String FIREBASE_SDK_CLASS = "com.google.firebase.messaging.FirebaseMessagingService";
     String FCM_PROPERTY_REG_ID = "fcm_token";
-    String FCM_PUSH_TYPE_LOG_NAME = "FCM";
 
     PushType FCM = new PushType(
             FCM_DELIVERY_TYPE,
             FCM_PROPERTY_REG_ID,
             CT_FIREBASE_PROVIDER_CLASS,
-            FIREBASE_SDK_CLASS,
-            FCM_PUSH_TYPE_LOG_NAME
+            FIREBASE_SDK_CLASS
     );
 }
