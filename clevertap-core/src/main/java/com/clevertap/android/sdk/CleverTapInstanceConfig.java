@@ -347,7 +347,7 @@ public class CleverTapInstanceConfig implements Parcelable {
                 }
             }
         } catch (JSONException e) {
-            throw new RuntimeException(e);
+            Logger.v("Error in loading push providers from parcel, using firebase");
         }
 
     }
