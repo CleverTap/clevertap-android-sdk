@@ -782,8 +782,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("WeakerAccess")
     public static CleverTapAPI getDefaultInstance(
             Context context,
-            String cleverTapID,
-            List<PushType> pushTypes
+            String cleverTapID
     ) {
         // For Google Play Store/Android Studio tracking
         sdkVersion = BuildConfig.SDK_VERSION_STRING;
@@ -791,7 +790,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (defaultConfig != null) {
             return instanceWithConfig(context, defaultConfig, cleverTapID);
         } else {
-            defaultConfig = getDefaultConfig(context, pushTypes);
+            defaultConfig = getDefaultConfig(context);
             if (defaultConfig != null) {
                 return instanceWithConfig(context, defaultConfig, cleverTapID);
             }
@@ -808,20 +807,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("WeakerAccess")
     public static @Nullable
     CleverTapAPI getDefaultInstance(Context context) {
-        return getDefaultInstance(context, null, null);
-    }
-
-    /**
-     * Returns the default shared instance of the CleverTap SDK, appends the given push types to
-     * the providers for CleverTap push.
-     *
-     * @param context Application context
-     * @return The {@link CleverTapAPI} object
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static @Nullable
-    CleverTapAPI getDefaultInstance(Context context, List<PushType> pushTypes) {
-        return getDefaultInstance(context, null, pushTypes);
+        return getDefaultInstance(context, null);
     }
 
     private static CleverTapAPI fromAccountId(final Context context, final String _accountId) {
@@ -928,8 +914,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return The {@link CleverTapAPI} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public static CleverTapAPI instanceWithConfig(Context context, @NonNull CleverTapInstanceConfig config,
-            String cleverTapID) {
+    public static CleverTapAPI instanceWithConfig(
+            Context context,
+            @NonNull CleverTapInstanceConfig config,
+            String cleverTapID
+    ) {
         //noinspection ConstantValue
         if (config == null) {
             Logger.v("CleverTapInstanceConfig cannot be null");
@@ -999,17 +988,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings("WeakerAccess")
     public static void onActivityResumed(Activity activity) {
-        onActivityResumed(activity, null, null);
+        onActivityResumed(activity, null);
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static void onActivityResumed(Activity activity, String cleverTapID, List<PushType> pushTypes) {
+    public static void onActivityResumed(Activity activity, String cleverTapID) {
         if (instances == null) {
             CleverTapAPI.createInstanceIfAvailable(
                     activity.getApplicationContext(),
                     null,
-                    cleverTapID,
-                    pushTypes
+                    cleverTapID
             );
         }
 
@@ -3087,14 +3075,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     static void onActivityCreated(Activity activity) {
-        onActivityCreated(activity, null, null);
+        onActivityCreated(activity, null);
     }
 
     // static lifecycle callbacks
-    static void onActivityCreated(Activity activity, String cleverTapID, List<PushType> pushTypes) {
+    static void onActivityCreated(Activity activity, String cleverTapID) {
         // make sure we have at least the default instance created here.
         if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null, cleverTapID, pushTypes);
+            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null, cleverTapID);
         }
 
         if (instances == null) {
@@ -3159,20 +3147,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     private static CleverTapAPI createInstanceIfAvailable(Context context, String _accountId) {
-        return createInstanceIfAvailable(context, _accountId, null, null);
+        return createInstanceIfAvailable(context, _accountId, null);
     }
 
     private static @Nullable
     CleverTapAPI createInstanceIfAvailable(
             Context context,
             String _accountId,
-            String cleverTapID,
-            List<PushType> pushTypes
+            String cleverTapID
     ) {
         try {
             if (_accountId == null) {
                 try {
-                    return CleverTapAPI.getDefaultInstance(context, cleverTapID, pushTypes);
+                    return CleverTapAPI.getDefaultInstance(context, cleverTapID);
                 } catch (Throwable t) {
                     Logger.v("Error creating shared Instance: ", t.getCause());
                     return null;
@@ -3218,10 +3205,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param context The Android context
      * @return The {@link CleverTapInstanceConfig} object
      */
-    private static CleverTapInstanceConfig getDefaultConfig(
-            Context context,
-            @Nullable List<PushType> pushTypes
-    ) {
+    private static CleverTapInstanceConfig getDefaultConfig(Context context) {
         ManifestInfo manifest = ManifestInfo.getInstance(context);
         String accountId = manifest.getAccountId();
         String accountToken = manifest.getAccountToken();
@@ -3239,12 +3223,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
         // todo : pass manifest info here
         CleverTapInstanceConfig defaultInstanceConfig = CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
-
-        if (pushTypes != null) {
-            for (PushType pushType : pushTypes) {
-                defaultInstanceConfig.addPushType(pushType);
-            }
-        }
 
         // todo : check if these re-assignments are needed, already added in manifest parsing
         if (proxyDomain != null && !proxyDomain.trim().isEmpty()) {
