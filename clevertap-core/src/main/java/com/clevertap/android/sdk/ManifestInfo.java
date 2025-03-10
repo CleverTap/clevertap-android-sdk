@@ -190,7 +190,9 @@ public class ManifestInfo {
             String intentServiceName,
             String devDefaultPushChannelId,
             String[] profileKeys,
-            int encryptionLevel
+            int encryptionLevel,
+            String provider1,
+            String provider2
     ) {
 
         // assign these if they did not happen in change creds
@@ -227,8 +229,8 @@ public class ManifestInfo {
         this.devDefaultPushChannelId = devDefaultPushChannelId;
         this.profileKeys = profileKeys;
         this.encryptionLevel = encryptionLevel;
-        this.provider1 = null;
-        this.provider2 = null;
+        this.provider1 = provider1;
+        this.provider2 = provider2;
     }
 
     public String getAccountId() {
