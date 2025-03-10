@@ -1,7 +1,7 @@
 package com.clevertap.android.hms;
 
 import static com.clevertap.android.hms.HmsConstants.HMS_LOG_TAG;
-import static com.clevertap.android.hms.HmsProvider.HPS;
+import static com.clevertap.android.hms.HmsConstants.HPS;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 
 import android.content.Context;
