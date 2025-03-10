@@ -66,7 +66,7 @@ class ActivityLifecycleCallbackTest : BaseTestCase() {
             value.onActivityCreated(mockActivity, Bundle())
             it.verify { CleverTapAPI.onActivityCreated(mockActivity, null, null) }
             value.onActivityResumed(mockActivity)
-            it.verify { CleverTapAPI.onActivityResumed(mockActivity) }
+            it.verify { CleverTapAPI.onActivityResumed(mockActivity, null, null) }
         }
     }
 
