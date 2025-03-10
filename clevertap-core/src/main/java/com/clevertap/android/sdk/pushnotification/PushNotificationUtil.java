@@ -2,11 +2,12 @@ package com.clevertap.android.sdk.pushnotification;
 
 import static com.clevertap.android.sdk.Constants.WZRK_ACCT_ID_KEY;
 import static com.clevertap.android.sdk.Constants.WZRK_PUSH_ID;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM;
 
 import android.os.Bundle;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+
 import java.util.ArrayList;
 
 @RestrictTo(Scope.LIBRARY_GROUP)
@@ -27,23 +28,10 @@ public class PushNotificationUtil {
      *
      * @return list
      */
-    public static ArrayList<String> getAll() {
-        ArrayList<String> list = new ArrayList<>();
-        for (PushType pushType : PushType.values()) {
-            list.add(pushType.name());
-        }
+    public static ArrayList<PushType> getDefaultPushTypes() {
+        ArrayList<PushType> list = new ArrayList<>();
+        list.add(FCM);
         return list;
-    }
-
-    public static PushType[] getPushTypes(ArrayList<String> types) {
-        PushType[] pushTypes = new PushType[0];
-        if (types != null && !types.isEmpty()) {
-            pushTypes = new PushType[types.size()];
-            for (int i = 0; i < types.size(); i++) {
-                pushTypes[i] = PushType.valueOf(types.get(i));
-            }
-        }
-        return pushTypes;
     }
 
     private PushNotificationUtil() {

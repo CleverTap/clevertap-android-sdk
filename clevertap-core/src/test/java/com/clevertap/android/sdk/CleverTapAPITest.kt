@@ -247,7 +247,7 @@ class CleverTapAPITest : BaseTestCase() {
             // Assert
             with(manifestInfo) {
                 assertNotEquals(expectedAccountId, accountId)
-                assertNotEquals(expectedToken, acountToken)
+                assertNotEquals(expectedToken, accountToken)
                 assertNotEquals(expectedRegion, accountRegion)
             }
         }
@@ -269,7 +269,7 @@ class CleverTapAPITest : BaseTestCase() {
             val manifestInfo = ManifestInfo.getInstance(application)
             with(manifestInfo) {
                 assertEquals(expectedAccountId, accountId)
-                assertEquals(expectedToken, acountToken)
+                assertEquals(expectedToken, accountToken)
                 assertEquals(expectedRegion, accountRegion)
             }
         }

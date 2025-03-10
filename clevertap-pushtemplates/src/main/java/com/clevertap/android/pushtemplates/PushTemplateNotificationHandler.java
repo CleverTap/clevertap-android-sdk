@@ -7,6 +7,8 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
+import com.clevertap.android.sdk.pushnotification.PushType;
+
 import java.util.Objects;
 
 public class PushTemplateNotificationHandler implements ActionButtonClickHandler {
@@ -49,7 +51,7 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
     }
 
     @Override
-    public boolean onNewToken(final Context applicationContext, final String token, final String pushType) {
+    public boolean onNewToken(final Context applicationContext, final String token, final PushType pushType) {
         return true;
     }
 
