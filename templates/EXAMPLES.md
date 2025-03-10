@@ -823,3 +823,48 @@ eventHistory?.forEach { (eventName, log) ->
     // Process event details
 } ?: println("Events not performed")
 ```
+
+### Push registration tokens to Clevertap
+
+Push FCM device token to CleverTap
+```kotlin
+override fun onNewToken(token: String) {
+    super.onNewToken(token)
+    cleverTapAPI.pushFcmRegistrationId(token, true)
+}
+```
+
+Push Huawei registration token to CleverTap
+```kotlin
+override fun onNewToken(token: String?, bundle: Bundle?) {
+    super.onNewToken(token, bundle)
+    if (token != null) {
+        cleverTapAPI.pushRegistrationToken(token, HmsConstants.HPS, true)
+    }
+}
+```
+
+Push Baidu registration token to CleverTap
+```kotlin
+companion object {
+    private val BAIDU_PUSH_TYPE = PushType(
+        "bps",
+        "bps_token",
+        "com.clevertap.android.bps.BaiduPushProvider",
+        "com.baidu.android.pushservice.PushMessageReceiver"
+    )
+}
+
+override fun onBind(context:Context, errorCode:Int, appid:String,
+           userId:String, channelId:String, requestId:String) {
+    //..
+    if (channelId != null) {
+        cleverTapAPI.pushRegistrationToken(channelId, BAIDU_PUSH_TYPE, true)
+    }
+}
+```
+Also additionally add this to proguard/any similar tool
+```properties
+-dontwarn com.baidu.**
+```
+Enable baidu scan in `AndroidManifest.xml`
