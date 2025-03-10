@@ -15,20 +15,16 @@ public class PushType {
 
     private final String type;
 
-    private final String logName;
-
     public PushType(
             String type,
             String prefKey,
             String className,
-            String messagingSDKClassName,
-            String logName
+            String messagingSDKClassName
     ) {
         this.type = type;
         this.tokenPrefKey = prefKey;
         this.ctProviderClassName = className;
         this.messagingSDKClassName = messagingSDKClassName;
-        this.logName = logName;
     }
 
     public String getCtProviderClassName() {
@@ -50,7 +46,7 @@ public class PushType {
     @NonNull
     @Override
     public String toString() {
-        return " [PushType:" + logName + "] ";
+        return " [PushType:" + type + "] ";
     }
 
     // Method to convert PushType to JSONObject
@@ -61,7 +57,6 @@ public class PushType {
             jsonObject.put("messagingSDKClassName", messagingSDKClassName);
             jsonObject.put("tokenPrefKey", tokenPrefKey);
             jsonObject.put("type", type);
-            jsonObject.put("logName", logName);
         } catch (JSONException e) {
             return null;
         }
@@ -75,8 +70,7 @@ public class PushType {
             String messagingSDKClassName = jsonObject.getString("messagingSDKClassName");
             String tokenPrefKey = jsonObject.getString("tokenPrefKey");
             String type = jsonObject.getString("type");
-            String logName = jsonObject.getString("logName");
-            return new PushType(type, tokenPrefKey, ctProviderClassName, messagingSDKClassName, logName);
+            return new PushType(type, tokenPrefKey, ctProviderClassName, messagingSDKClassName);
         } catch (JSONException e) {
             return null;
         }

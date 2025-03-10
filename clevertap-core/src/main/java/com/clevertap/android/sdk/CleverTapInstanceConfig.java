@@ -214,16 +214,16 @@ public class CleverTapInstanceConfig implements Parcelable {
             String provider1 = manifest.getVendorOneProvider();
             if (provider1 != null) {
                 String[] splits = provider1.split(",");
-                if (splits != null && splits.length == 5) {
-                    PushType pushType = new PushType(splits[0], splits[1], splits[2], splits[3], splits[4]);
+                if (splits != null && splits.length == 4) {
+                    PushType pushType = new PushType(splits[0], splits[1], splits[2], splits[3]);
                     addPushType(pushType);
                 }
             }
             String provider2 = manifest.getVendorTwoProvider();
             if (provider2 != null) {
                 String[] splits = provider2.split(",");
-                if (splits != null && splits.length == 5) {
-                    PushType pushType = new PushType(splits[0], splits[1], splits[2], splits[3], splits[4]);
+                if (splits != null && splits.length == 4) {
+                    PushType pushType = new PushType(splits[0], splits[1], splits[2], splits[3]);
                     addPushType(pushType);
                 }
             }
