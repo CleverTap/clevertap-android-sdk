@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hps_manifest_entry">hps,hps_token,com.clevertap.android.hms.HmsPushProvider,com.huawei.hms.push.HmsMessageService,HPS</string>
+</resources>
