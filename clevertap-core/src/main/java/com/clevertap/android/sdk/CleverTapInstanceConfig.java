@@ -215,7 +215,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (provider1 != null) {
                 String[] splits = provider1.split(",");
                 if (splits != null && splits.length == 4) {
-                    PushType pushType = new PushType(splits[0], splits[1], splits[2], splits[3]);
+                    PushType pushType = new PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim());
                     addPushType(pushType);
                 }
             }
@@ -223,7 +223,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (provider2 != null) {
                 String[] splits = provider2.split(",");
                 if (splits != null && splits.length == 4) {
-                    PushType pushType = new PushType(splits[0], splits[1], splits[2], splits[3]);
+                    PushType pushType = new PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim());
                     addPushType(pushType);
                 }
             }

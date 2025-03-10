@@ -5,14 +5,20 @@ import androidx.annotation.NonNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 public class PushType {
 
+    @NonNull
     private final String ctProviderClassName;
 
+    @NonNull
     private final String messagingSDKClassName;
 
+    @NonNull
     private final String tokenPrefKey;
 
+    @NonNull
     private final String type;
 
     public PushType(
@@ -27,18 +33,22 @@ public class PushType {
         this.messagingSDKClassName = messagingSDKClassName;
     }
 
+    @NonNull
     public String getCtProviderClassName() {
         return ctProviderClassName;
     }
 
+    @NonNull
     public String getMessagingSDKClassName() {
         return messagingSDKClassName;
     }
 
+    @NonNull
     public String getTokenPrefKey() {
         return tokenPrefKey;
     }
 
+    @NonNull
     public String getType() {
         return type;
     }
@@ -65,6 +75,9 @@ public class PushType {
 
     // Static method to convert JSONObject to PushType
     public static PushType fromJSONObject(JSONObject jsonObject) {
+        if (jsonObject == null) {
+            return null;
+        }
         try {
             String ctProviderClassName = jsonObject.getString("ctProviderClassName");
             String messagingSDKClassName = jsonObject.getString("messagingSDKClassName");
@@ -74,5 +87,18 @@ public class PushType {
         } catch (JSONException e) {
             return null;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PushType)) return false;
+        PushType pushType = (PushType) o;
+        return Objects.equals(ctProviderClassName, pushType.ctProviderClassName) && Objects.equals(messagingSDKClassName, pushType.messagingSDKClassName) && Objects.equals(tokenPrefKey, pushType.tokenPrefKey) && Objects.equals(type, pushType.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(ctProviderClassName, messagingSDKClassName, tokenPrefKey, type);
     }
 }

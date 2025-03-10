@@ -26,7 +26,9 @@ class CleverTapFixtures {
             "serviceName",
             "push-channel-id",
             emptyArray<String>(),
-            0
+            0,
+            "hps,hps_token,com.clevertap.android.hms.HmsPushProvider,com.huawei.hms.push.HmsMessageService",
+            null
         )
 
         fun provideCleverTapInstanceConfig(): CleverTapInstanceConfig =
