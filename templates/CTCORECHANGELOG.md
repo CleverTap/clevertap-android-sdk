@@ -1,5 +1,15 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 7.2.3 (March 10, 2025)
+
+#### Breaking API Changes
+*   **Huawei Push Integration - Updated Setup Required:** The integration process for Huawei Push has been significantly updated. If you have previously integrated the CleverTap Huawei Push SDK, you **must** follow the new steps outlined [here](https://developer.clevertap.com/docs/clevertap-huawei-push-integration) to ensure continued functionality.
+*   **Baidu Push Integration - Updated Setup Required:** The integration process for Baidu Push has been updated. If you are using Baidu Push Integration, please follow the revised instructions [here](https://developer.clevertap.com/docs/baidu-push-notifications) to maintain proper functionality.
+
+#### Bug Fixes
+* Fixes an issue in CleverTapAPI.getCleverTapID method where the listener can be possibly null and garbage collected resulting in a NPE.
+* Fixes an issue where device font size affect InApps text size causing it to not fix in the container.
+
 ### Version 7.2.2 (January 21, 2025)
 
 This hotfix release addresses a critical issue from `v7.1.0` onwards:
