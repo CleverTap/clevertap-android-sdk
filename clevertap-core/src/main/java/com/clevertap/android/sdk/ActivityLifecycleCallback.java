@@ -38,11 +38,7 @@ public final class ActivityLifecycleCallback {
 
         @Override
         public void onActivityResumed(@NonNull Activity activity) {
-            if (cleverTapId != null) {
-                CleverTapAPI.onActivityResumed(activity, cleverTapId, pushTypes);
-            } else {
-                CleverTapAPI.onActivityResumed(activity);
-            }
+            CleverTapAPI.onActivityResumed(activity, cleverTapId, pushTypes);
         }
 
         @Override
