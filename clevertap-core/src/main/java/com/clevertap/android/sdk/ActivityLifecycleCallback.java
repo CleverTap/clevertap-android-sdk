@@ -5,11 +5,6 @@ import android.app.Application;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.clevertap.android.sdk.pushnotification.PushType;
-
-import java.util.List;
 
 /**
  * Class for handling activity lifecycle events
@@ -59,7 +54,7 @@ public final class ActivityLifecycleCallback {
      * @param application App's Application object
      */
     public static void register(Application application) {
-        register(application, null, null);
+        register(application, null);
     }
 
     /**
@@ -69,29 +64,6 @@ public final class ActivityLifecycleCallback {
      * @param cleverTapID Custom CleverTap ID
      */
     public static void register(Application application, final String cleverTapID) {
-        if (application == null) {
-            Logger.i("Application instance is null/system API is too old");
-            return;
-        }
-
-        if (registered) {
-            Logger.v("Lifecycle callbacks have already been registered");
-            return;
-        }
-
-        ActivityLifecycleCallback.cleverTapId = cleverTapID;
-        ActivityLifecycleCallback.registered = true;
-
-        application.unregisterActivityLifecycleCallbacks(lifecycleCallbacks);
-        application.registerActivityLifecycleCallbacks(lifecycleCallbacks);
-        Logger.i("Activity Lifecycle Callback successfully registered");
-    }
-
-    public static void register(
-            android.app.Application application,
-            final String cleverTapID,
-            final List<PushType> pushTypes
-    ) {
         if (application == null) {
             Logger.i("Application instance is null/system API is too old");
             return;
