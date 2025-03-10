@@ -3780,9 +3780,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Sends the Baidu registration ID to CleverTap.
+     * Sends push registration token for the given push type
      *
-     * @param token    The Baidu registration ID
+     * @param token    The token
      * @param pushType Push Provider type for which the token is registered
      * @param register Boolean indicating whether to register
      *                 or not for receiving push messages from CleverTap.
