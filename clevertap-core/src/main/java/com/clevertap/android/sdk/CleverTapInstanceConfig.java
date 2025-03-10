@@ -16,6 +16,7 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants.IdentityType;
 import com.clevertap.android.sdk.cryption.EncryptionLevel;
 import com.clevertap.android.sdk.login.LoginConstants;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushType;
 
 import org.json.JSONArray;
@@ -633,7 +634,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         JSONArray pushTypesArray = new JSONArray();
         for (PushType pushType : getPushTypes()) {
             // fcm is always loaded by default.
-            if (pushType != PushType.FCM) {
+            if (pushType != PushConstants.FCM) {
                 pushTypesArray.put(pushType.toJSONObject());
             }
         }

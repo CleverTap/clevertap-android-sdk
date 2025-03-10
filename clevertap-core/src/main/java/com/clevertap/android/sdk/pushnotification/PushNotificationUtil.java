@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.pushnotification;
 
 import static com.clevertap.android.sdk.Constants.WZRK_ACCT_ID_KEY;
 import static com.clevertap.android.sdk.Constants.WZRK_PUSH_ID;
-import static com.clevertap.android.sdk.pushnotification.PushType.FCM;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM;
 
 import android.os.Bundle;
 import androidx.annotation.RestrictTo;

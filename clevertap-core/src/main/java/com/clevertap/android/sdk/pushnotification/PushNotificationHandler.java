@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.pushnotification;
 
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushType.FCM;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAccountIdFromNotificationBundle;
 
 import android.content.Context;

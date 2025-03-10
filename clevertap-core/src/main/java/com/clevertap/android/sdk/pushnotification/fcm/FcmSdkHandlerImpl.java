@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.pushnotification.fcm;
 
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushType.FCM;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM;
 import static com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayServicesAvailable;
 import static com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayStoreAvailable;
 

@@ -6,7 +6,7 @@ import static com.clevertap.android.sdk.Utils.getSCDomain;
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushType.FCM;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -66,6 +66,7 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -731,7 +732,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.d("Instance is Analytics Only not processing device token");
                 continue;
             }
-            instance.getCoreState().getPushProviders().doTokenRefresh(token, PushType.FCM);
+            instance.getCoreState().getPushProviders().doTokenRefresh(token, PushConstants.FCM);
         }
     }
 
@@ -2474,7 +2475,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
-        coreState.getPushProviders().handleToken(fcmId, PushType.FCM, register);
+        coreState.getPushProviders().handleToken(fcmId, PushConstants.FCM, register);
     }
 
     /**
