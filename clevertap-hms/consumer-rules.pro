@@ -1,3 +1,4 @@
 -keep class com.huawei.**{*;}
 -keep class com.hianalytics.android.**{*;}
 -dontwarn com.huawei.**
+-keep class com.clevertap.android.hms.HmsPushProvider{*;}

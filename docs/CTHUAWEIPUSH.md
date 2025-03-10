@@ -59,3 +59,22 @@ implementation "com.huawei.hms:push:6.11.0.300"
 apply plugin: 'com.huawei.agconnect'
 
 ```
+
+* Add the following to your `AndroidManifest.xml` file of the application
+
+```xml
+<meta-data
+    android:name="CLEVERTAP_PROVIDER_1"
+    android:value="@string/hps_manifest_entry" />
+```
+* Note: If you are using CleverTapAPI.instanceWithConfig for initialisation, make sure it is done in Application class before any activity is created.
+
+* If you are using Custom `HmsMessageService` class then inside the onNewToken method, pass the token to CleverTap using the following code
+
+```kotlin
+override fun onNewToken(token: String?, bundle: Bundle?) {
+    super.onNewToken(token, bundle)
+    if (token != null) {
+        cleverTapAPIInstance.pushRegistrationToken(token, HmsConstants.HPS, true)
+    }
+}
