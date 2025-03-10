@@ -103,14 +103,14 @@
             android:name="CLEVERTAP_ENCRYPTION_LEVEL"
             android:value="1" /> <!-- Add meta and set to 1 enable encryption of PII data -->
 
-        <!-- Builds push provider for clevertap other than firebase, add csv string 5 values, please refer docs to integrate different push providers in clevertap -->
+        <!-- Builds push provider for clevertap other than firebase, add csv string 4 values, please refer docs to integrate different push providers in clevertap -->
         <meta-data
             android:name="CLEVERTAP_PROVIDER_1"
             android:value="@string/hps_manifest_entry" />
-        <!-- Builds push provider for clevertap other than firebase, add csv string with 5 values, please refer docs to integrate different push providers in clevertap -->
+        <!-- Builds push provider for clevertap other than firebase, add csv string with 4 values, please refer docs to integrate different push providers in clevertap -->
         <meta-data
             android:name="CLEVERTAP_PROVIDER_2"
-            android:value="bps,bps_token,com.clevertap.android.bps.BaiduPushProvider,com.baidu.android.pushservice.PushMessageReceiver,BPS" />
+            android:value="bps,bps_token,com.clevertap.android.bps.BaiduPushProvider,com.baidu.android.pushservice.PushMessageReceiver" />
 
         <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
         <service
