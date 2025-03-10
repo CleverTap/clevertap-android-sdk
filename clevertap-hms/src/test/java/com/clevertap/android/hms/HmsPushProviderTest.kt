@@ -1,7 +1,7 @@
 package com.clevertap.android.hms
 
 import com.clevertap.android.hms.HmsConstants.MIN_CT_ANDROID_SDK_VERSION
-import com.clevertap.android.hms.HmsProvider.HPS
+import com.clevertap.android.hms.HmsConstants.HPS
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
@@ -34,7 +34,9 @@ class HmsPushProviderTest : BaseTestCase() {
     fun testRequestToken() {
         pushProvider.requestToken()
         verify(sdkHandler, times(1)).onNewToken()
-        verify(ctPushProviderListener, times(1)).onNewToken(or(isNull(), anyString()), eq(HPS))
+        verify(ctPushProviderListener, times(1)).onNewToken(or(isNull(), anyString()), eq(
+            HPS
+        ))
     }
 
     @Test
@@ -51,7 +53,9 @@ class HmsPushProviderTest : BaseTestCase() {
 
     @Test
     fun testGetPushType() {
-        Assert.assertEquals(pushProvider.pushType, HPS)
+        Assert.assertEquals(pushProvider.pushType,
+            HPS
+        )
     }
 
     @Test

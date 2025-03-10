@@ -11,7 +11,7 @@ import android.os.StrictMode
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
-import com.clevertap.android.hms.HmsProvider
+import com.clevertap.android.hms.HmsConstants
 import com.clevertap.android.pushtemplates.PushTemplateNotificationHandler
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.ActivityLifecycleCallback
@@ -142,7 +142,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 customHandshakeDomain = handshakeDomain
 
                 // enable push types other than FCM
-                addPushType(HmsProvider.HPS)
+                addPushType(HmsConstants.HPS)
             }
             CleverTapAPI.instanceWithConfig(this, config)
         }

@@ -2,7 +2,7 @@ package com.clevertap.android.hms
 
 import android.content.Context
 import android.os.Bundle
-import com.clevertap.android.hms.HmsProvider.HPS
+import com.clevertap.android.hms.HmsConstants.HPS
 import com.clevertap.android.hms.HmsTestConstants.Companion.HMS_TOKEN
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
@@ -79,7 +79,9 @@ class HmsMessageHandlerTest : BaseTestCase() {
     @Test
     fun testOnNewToken_Failure() {
         mockStatic(CleverTapAPI::class.java).use {
-            `when`(CleverTapAPI.tokenRefresh(any(Context::class.java), eq(HMS_TOKEN), eq(HPS)))
+            `when`(CleverTapAPI.tokenRefresh(any(Context::class.java), eq(HMS_TOKEN), eq(
+                HPS
+            )))
                 .thenThrow(RuntimeException("Something Went Wrong"))
             Assert.assertFalse(mHandlerCT.onNewToken(application, HMS_TOKEN))
         }

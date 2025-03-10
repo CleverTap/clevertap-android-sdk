@@ -1,7 +1,7 @@
 package com.clevertap.android.hms;
 
 import static com.clevertap.android.hms.HmsConstants.MIN_CT_ANDROID_SDK_VERSION;
-import static com.clevertap.android.hms.HmsProvider.HPS;
+import static com.clevertap.android.hms.HmsConstants.HPS;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
