@@ -3223,7 +3223,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     ) {
         ManifestInfo manifest = ManifestInfo.getInstance(context);
         String accountId = manifest.getAccountId();
-        String accountToken = manifest.getAcountToken();
+        String accountToken = manifest.getAccountToken();
         String accountRegion = manifest.getAccountRegion();
         String proxyDomain = manifest.getProxyDomain();
         String spikyProxyDomain = manifest.getSpikeyProxyDomain();
