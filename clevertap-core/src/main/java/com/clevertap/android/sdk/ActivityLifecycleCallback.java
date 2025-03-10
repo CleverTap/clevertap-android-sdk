@@ -19,12 +19,11 @@ public final class ActivityLifecycleCallback {
 
     public static boolean registered = false;
     private static String cleverTapId = null;
-    private static List<PushType> pushTypes = null;
     private static final Application.ActivityLifecycleCallbacks lifecycleCallbacks = new Application.ActivityLifecycleCallbacks() {
 
         @Override
         public void onActivityCreated(@NonNull Activity activity, Bundle bundle) {
-            CleverTapAPI.onActivityCreated(activity, cleverTapId, pushTypes);
+            CleverTapAPI.onActivityCreated(activity, cleverTapId);
         }
 
         @Override
@@ -38,7 +37,7 @@ public final class ActivityLifecycleCallback {
 
         @Override
         public void onActivityResumed(@NonNull Activity activity) {
-            CleverTapAPI.onActivityResumed(activity, cleverTapId, pushTypes);
+            CleverTapAPI.onActivityResumed(activity, cleverTapId);
         }
 
         @Override
@@ -70,11 +69,22 @@ public final class ActivityLifecycleCallback {
      * @param cleverTapID Custom CleverTap ID
      */
     public static void register(Application application, final String cleverTapID) {
-        ActivityLifecycleCallback.register(application, cleverTapID, null);
-    }
+        if (application == null) {
+            Logger.i("Application instance is null/system API is too old");
+            return;
+        }
 
-    public static void register(Application application, @Nullable final List<PushType> pushTypes) {
-        ActivityLifecycleCallback.register(application, null, pushTypes);
+        if (registered) {
+            Logger.v("Lifecycle callbacks have already been registered");
+            return;
+        }
+
+        ActivityLifecycleCallback.cleverTapId = cleverTapID;
+        ActivityLifecycleCallback.registered = true;
+
+        application.unregisterActivityLifecycleCallbacks(lifecycleCallbacks);
+        application.registerActivityLifecycleCallbacks(lifecycleCallbacks);
+        Logger.i("Activity Lifecycle Callback successfully registered");
     }
 
     public static void register(
@@ -93,7 +103,6 @@ public final class ActivityLifecycleCallback {
         }
 
         ActivityLifecycleCallback.cleverTapId = cleverTapID;
-        ActivityLifecycleCallback.pushTypes = pushTypes;
         ActivityLifecycleCallback.registered = true;
 
         application.unregisterActivityLifecycleCallbacks(lifecycleCallbacks);
