@@ -12,7 +12,7 @@ import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.INotificationParser;
 import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
-import com.clevertap.android.sdk.pushnotification.PushType;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -56,7 +56,7 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
             messageBundle = new FcmNotificationBundleManipulation(messageBundle).addPriority(message).build();
 
             isSuccess = PushNotificationHandler.getPushNotificationHandler()
-                    .onMessageReceived(context, messageBundle, PushType.FCM.toString());
+                    .onMessageReceived(context, messageBundle, PushConstants.FCM.toString());
         }
 
         return isSuccess;
@@ -71,7 +71,7 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
         try {
             PushNotificationHandler
                     .getPushNotificationHandler()
-                    .onNewToken(applicationContext, token, PushType.FCM);
+                    .onNewToken(applicationContext, token, PushConstants.FCM);
 
             Logger.d(LOG_TAG, FCM_LOG_TAG + "New token received from FCM - " + token);
             isSuccess = true;

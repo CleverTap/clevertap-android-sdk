@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushType;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ public final class ManifestValidator {
         }
 
         for (PushType pushType : enabledPushTypes) {
-            if (pushType == PushType.FCM) {
+            if (pushType == PushConstants.FCM) {
                 try {
                     // use class name string directly here to avoid class not found issues on class import
                     validateServiceInManifest((Application) context.getApplicationContext(),
