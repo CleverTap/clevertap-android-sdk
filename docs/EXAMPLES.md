@@ -844,6 +844,14 @@ override fun onNewToken(token: String?, bundle: Bundle?) {
 }
 ```
 
+### Baidu Setup and send channelId to CleverTap
+
+Enable baidu Push type in `AndroidManifest.xml`
+```xml
+<meta-data
+    android:name="CLEVERTAP_PROVIDER_2"
+    android:value="bps,bps_token,com.clevertap.android.bps.BaiduPushProvider,com.baidu.android.pushservice.PushMessageReceiver" />
+```
 Push Baidu registration token to CleverTap
 ```kotlin
 companion object {
@@ -867,4 +875,3 @@ Also additionally add this to proguard/any similar tool
 ```properties
 -dontwarn com.baidu.**
 ```
-Enable baidu scan in `AndroidManifest.xml`
