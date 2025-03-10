@@ -11,6 +11,7 @@ import android.os.StrictMode
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
+import com.clevertap.android.hms.HmsConstants
 import com.clevertap.android.pushtemplates.PushTemplateNotificationHandler
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.ActivityLifecycleCallback
@@ -124,6 +125,12 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         handshakeDomain: String? = null
     ): CleverTapAPI {
         val ctInstance = if (useDefaultInstance) {
+            
+            // Different ways of creating default instance
+            // Type 1
+            val defaultConfig = CleverTapInstanceConfig.getDefaultInstance(this)
+            CleverTapAPI.instanceWithConfig(this, defaultConfig)
+            // Type 2
             CleverTapAPI.getDefaultInstance(this)!!
         } else {
             val config = CleverTapInstanceConfig.createInstance(
@@ -132,9 +139,10 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 "YOUR CLEVERTAP TOKEN",
                 "YOUR CLEVERTAP REGION",
             ).apply {
-                handshakeDomain?.let { handshakeDomain ->
-                    customHandshakeDomain = handshakeDomain
-                }
+                customHandshakeDomain = handshakeDomain
+
+                // enable push types other than FCM
+                addPushType(HmsConstants.HPS)
             }
             CleverTapAPI.instanceWithConfig(this, config)
         }

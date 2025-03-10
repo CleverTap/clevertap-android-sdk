@@ -6,7 +6,7 @@ import static com.clevertap.android.sdk.Utils.getSCDomain;
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -66,7 +66,8 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
+import com.clevertap.android.sdk.pushnotification.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
@@ -731,7 +732,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.d("Instance is Analytics Only not processing device token");
                 continue;
             }
-            instance.getCoreState().getPushProviders().doTokenRefresh(token, PushType.FCM);
+            instance.getCoreState().getPushProviders().doTokenRefresh(token, PushConstants.FCM);
         }
     }
 
@@ -779,7 +780,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return The {@link CleverTapAPI} object
      */
     @SuppressWarnings("WeakerAccess")
-    public static CleverTapAPI getDefaultInstance(Context context, String cleverTapID) {
+    public static CleverTapAPI getDefaultInstance(
+            Context context,
+            String cleverTapID
+    ) {
         // For Google Play Store/Android Studio tracking
         sdkVersion = BuildConfig.SDK_VERSION_STRING;
 
@@ -910,8 +914,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return The {@link CleverTapAPI} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public static CleverTapAPI instanceWithConfig(Context context, @NonNull CleverTapInstanceConfig config,
-            String cleverTapID) {
+    public static CleverTapAPI instanceWithConfig(
+            Context context,
+            @NonNull CleverTapInstanceConfig config,
+            String cleverTapID
+    ) {
         //noinspection ConstantValue
         if (config == null) {
             Logger.v("CleverTapInstanceConfig cannot be null");
@@ -987,7 +994,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("WeakerAccess")
     public static void onActivityResumed(Activity activity, String cleverTapID) {
         if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null, cleverTapID);
+            CleverTapAPI.createInstanceIfAvailable(
+                    activity.getApplicationContext(),
+                    null,
+                    cleverTapID
+            );
         }
 
         CoreMetaData.setAppForeground(true);
@@ -2360,20 +2371,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Sends the Baidu registration ID to CleverTap.
-     *
-     * @param regId    The Baidu registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    public void pushBaiduRegistrationId(String regId, boolean register) {
-        coreState.getPushProviders().handleToken(regId, PushType.BPS, register);
-    }
-
-    /**
      * Push Charged event, which describes a purchase made.
      *
      * @param chargeDetails A {@link HashMap}, with keys as strings, and values as {@link String},
@@ -2466,7 +2463,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
-        coreState.getPushProviders().handleToken(fcmId, PushType.FCM, register);
+        coreState.getPushProviders().handleToken(fcmId, PushConstants.FCM, register);
     }
 
     /**
@@ -2516,20 +2513,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public Future<?> pushGeofenceEnteredEvent(JSONObject geofenceProperties) {
         return coreState.getAnalyticsManager()
                 .raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME, geofenceProperties);
-    }
-
-    /**
-     * Sends the Huawei registration ID to CleverTap.
-     *
-     * @param regId    The Huawei registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    public void pushHuaweiRegistrationId(String regId, boolean register) {
-        coreState.getPushProviders().handleToken(regId, PushType.HPS, register);
     }
 
     /**
@@ -3091,20 +3074,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         });
     }
 
-    /**
-     * Sends the ADM registration ID to CleverTap.
-     *
-     * @param token    The ADM registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    private void pushAmazonRegistrationId(String token, boolean register) {
-        coreState.getPushProviders().handleToken(token, PushType.ADM, register);
-    }
-
     static void onActivityCreated(Activity activity) {
         onActivityCreated(activity, null);
     }
@@ -3182,7 +3151,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     private static @Nullable
-    CleverTapAPI createInstanceIfAvailable(Context context, String _accountId, String cleverTapID) {
+    CleverTapAPI createInstanceIfAvailable(
+            Context context,
+            String _accountId,
+            String cleverTapID
+    ) {
         try {
             if (_accountId == null) {
                 try {
@@ -3235,7 +3208,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private static CleverTapInstanceConfig getDefaultConfig(Context context) {
         ManifestInfo manifest = ManifestInfo.getInstance(context);
         String accountId = manifest.getAccountId();
-        String accountToken = manifest.getAcountToken();
+        String accountToken = manifest.getAccountToken();
         String accountRegion = manifest.getAccountRegion();
         String proxyDomain = manifest.getProxyDomain();
         String spikyProxyDomain = manifest.getSpikeyProxyDomain();
@@ -3248,9 +3221,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             Logger.i("Account Region not specified in the AndroidManifest - using default region");
         }
 
-        // todo lp pass manifest info here
+        // todo : pass manifest info here
         CleverTapInstanceConfig defaultInstanceConfig = CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
 
+        // todo : check if these re-assignments are needed, already added in manifest parsing
         if (proxyDomain != null && !proxyDomain.trim().isEmpty()) {
             defaultInstanceConfig.setProxyDomain(proxyDomain);
         }
@@ -3782,5 +3756,20 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         } else {
             impl.cleanupAllResources(CtCacheType.FILES);
         }
+    }
+
+    /**
+     * Sends push registration token for the given push type
+     *
+     * @param token    The token
+     * @param pushType Push Provider type for which the token is registered
+     * @param register Boolean indicating whether to register
+     *                 or not for receiving push messages from CleverTap.
+     *                 Set this to true to receive push messages from CleverTap,
+     *                 and false to not receive any messages from CleverTap.
+     */
+    @SuppressWarnings("unused")
+    public void pushRegistrationToken(String token, PushType pushType, boolean register) {
+        coreState.getPushProviders().handleToken(token, pushType, register);
     }
 }

@@ -1,8 +1,7 @@
 package com.clevertap.android.hms;
 
 import static com.clevertap.android.hms.HmsConstants.MIN_CT_ANDROID_SDK_VERSION;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS;
+import static com.clevertap.android.hms.HmsConstants.HPS;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -11,7 +10,7 @@ import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
+import com.clevertap.android.sdk.pushnotification.PushType;
 
 /**
  * Clevertap's Huawei Plugin Ref: {@link CTPushProvider}
@@ -32,14 +31,9 @@ public class HmsPushProvider implements CTPushProvider {
         this.hmsSdkHandler = new HmsSdkHandler(context, config);
     }
 
-    @Override
-    public int getPlatform() {
-        return ANDROID_PLATFORM;
-    }
-
     @NonNull
     @Override
-    public PushConstants.PushType getPushType() {
+    public PushType getPushType() {
         return HPS;
     }
 

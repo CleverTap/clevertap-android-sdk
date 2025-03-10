@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.cryption
 
 import android.content.Context
-import com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_LEVEL
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.MIGRATION_FAILURE_COUNT_KEY
@@ -24,7 +24,7 @@ class CryptRepository(
     override fun storedEncryptionLevel() =
         StorageHelper.getInt(
             context,
-            StorageHelper.storageKeyWithSuffix(accountId, KEY_ENCRYPTION_LEVEL),
+            StorageHelper.storageKeyWithSuffix(accountId, CleverTapInstanceConfig.KEY_ENCRYPTION_LEVEL),
             UNKNOWN_LEVEL
         )
 
@@ -37,7 +37,7 @@ class CryptRepository(
     override fun updateEncryptionLevel(configEncryptionLevel: Int) {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(accountId, KEY_ENCRYPTION_LEVEL),
+            StorageHelper.storageKeyWithSuffix(accountId, CleverTapInstanceConfig.KEY_ENCRYPTION_LEVEL),
             configEncryptionLevel
         )
     }
@@ -56,7 +56,7 @@ class CryptRepository(
 
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(accountId, CryptMigrator.MIGRATION_FAILURE_COUNT_KEY),
+            StorageHelper.storageKeyWithSuffix(accountId, MIGRATION_FAILURE_COUNT_KEY),
             migrationFailureCount
         )
     }
