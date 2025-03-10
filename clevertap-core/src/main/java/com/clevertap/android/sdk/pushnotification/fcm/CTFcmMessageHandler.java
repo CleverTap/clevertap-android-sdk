@@ -56,7 +56,7 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
             messageBundle = new FcmNotificationBundleManipulation(messageBundle).addPriority(message).build();
 
             isSuccess = PushNotificationHandler.getPushNotificationHandler()
-                    .onMessageReceived(context, messageBundle, PushConstants.FCM.toString());
+                    .onMessageReceived(context, messageBundle, PushConstants.FCM_PUSH_TYPE);
         }
 
         return isSuccess;

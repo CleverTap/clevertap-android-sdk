@@ -65,7 +65,7 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
                     // render push template
                     CleverTapAPI.getNotificationHandler().onMessageReceived(applicationContext, message, pushType);
-                } else if(isForSignedCall(message) && CleverTapAPI.getSignedCallNotificationHandler() != null){
+                } else if (isForSignedCall(message) && CleverTapAPI.getSignedCallNotificationHandler() != null) {
                     // handle voip push payload
                     CleverTapAPI.getSignedCallNotificationHandler().onMessageReceived(applicationContext, message, pushType);
                 } else {
