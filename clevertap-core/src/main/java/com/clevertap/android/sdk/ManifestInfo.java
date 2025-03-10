@@ -271,7 +271,7 @@ public class ManifestInfo {
         return accountRegion;
     }
 
-    String getAcountToken() {
+    String getAccountToken() {
         return accountToken;
     }
 

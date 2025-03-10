@@ -76,7 +76,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return CleverTapInstanceConfig.createInstanceWithManifest(
                 info,
                 info.getAccountId(),
-                info.getAcountToken(),
+                info.getAccountToken(),
                 info.getAccountRegion(),
                 true
         );
