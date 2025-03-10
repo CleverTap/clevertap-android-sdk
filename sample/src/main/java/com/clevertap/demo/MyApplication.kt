@@ -24,6 +24,7 @@ import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
+import com.clevertap.android.sdk.pushnotification.PushType
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
@@ -39,6 +40,13 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             private const val TAG = "MyApplication"
 
             var ctInstance: CleverTapAPI? = null
+
+            private val BAIDU_PUSH_TYPE = PushType(
+                "bps",
+                "bps_token",
+                "com.clevertap.android.bps.BaiduPushProvider",
+                "com.baidu.android.pushservice.PushMessageReceiver"
+            )
         }
 
     override fun onCreate() {
