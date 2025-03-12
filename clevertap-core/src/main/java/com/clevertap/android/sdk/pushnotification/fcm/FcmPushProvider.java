@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.pushnotification.fcm;
 
-import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
@@ -9,7 +7,7 @@ import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
+import com.clevertap.android.sdk.pushnotification.PushType;
 
 /**
  * Clevertap's Firebase Plugin Ref: {@link CTPushProvider}
@@ -25,14 +23,9 @@ public class FcmPushProvider implements CTPushProvider {
         handler = new FcmSdkHandlerImpl(ctPushListener, context, config);
     }
 
-    @Override
-    public int getPlatform() {
-        return ANDROID_PLATFORM;
-    }
-
     @NonNull
     @Override
-    public PushConstants.PushType getPushType() {
+    public PushType getPushType() {
         return handler.getPushType();
     }
 
