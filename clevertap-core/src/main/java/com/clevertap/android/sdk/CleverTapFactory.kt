@@ -14,10 +14,12 @@ import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.events.EventQueueManager
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.inapp.ImpressionManager
+import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.InAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager.Companion.createInstance
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
@@ -60,7 +62,9 @@ internal object CleverTapFactory {
 
         val coreState = CoreState()
 
-        val templatesManager = createInstance(cleverTapInstanceConfig)
+        val inAppActionHandler = InAppActionHandler(cleverTapInstanceConfig.logger)
+        val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler, context)
+        val templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig, systemTemplates)
         coreState.templatesManager = templatesManager
 
         // create storeRegistry, preferences for features
@@ -357,7 +361,8 @@ internal object CleverTapFactory {
             evaluationManager,
             fileResourceProvider,
             templatesManager,
-            storeRegistry
+            storeRegistry,
+            inAppActionHandler
         )
 
         coreState.inAppController = inAppController

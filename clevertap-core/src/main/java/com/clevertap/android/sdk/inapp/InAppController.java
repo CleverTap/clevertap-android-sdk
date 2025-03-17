@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 
@@ -73,7 +72,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import kotlin.Pair;
@@ -229,6 +227,8 @@ public class InAppController implements InAppListener,
 
     public final Function0<Unit> onAppLaunchEventSent;
 
+    private final InAppActionHandler inAppActionHandler;
+
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
 
     public final static String IS_HARD_PERMISSION_REQUEST = "isHardPermissionRequest";
@@ -252,7 +252,8 @@ public class InAppController implements InAppListener,
             final EvaluationManager evaluationManager,
             FileResourceProvider resourceProvider,
             TemplatesManager templatesManager,
-            final StoreRegistry storeRegistry) {
+            final StoreRegistry storeRegistry,
+            final InAppActionHandler inAppActionHandler) {
         this.context = context;
         this.config = config;
         this.logger = this.config.getLogger();
@@ -278,6 +279,7 @@ public class InAppController implements InAppListener,
             }
             return null;
         };
+        this.inAppActionHandler = inAppActionHandler;
     }
 
 
@@ -425,7 +427,7 @@ public class InAppController implements InAppListener,
             case OPEN_URL:
                 String actionUrl = action.getActionUrl();
                 if (actionUrl != null) {
-                    openUrl(actionUrl, activityContext);
+                    inAppActionHandler.openUrl(actionUrl, activityContext != null ? activityContext : context);
                 } else {
                     logger.debug("Cannot trigger open url action without url value");
                 }
@@ -1061,37 +1063,6 @@ public class InAppController implements InAppListener,
             }
         } else {
             logger.debug("Cannot present template without name.");
-        }
-    }
-
-    private void openUrl(String url, @Nullable Context launchContext) {
-        try {
-            Uri uri = Uri.parse(url.replace("\n", "").replace("\r", ""));
-            Set<String> queryParamSet = uri.getQueryParameterNames();
-            Bundle queryBundle = new Bundle();
-            if (queryParamSet != null && !queryParamSet.isEmpty()) {
-                for (String queryName : queryParamSet) {
-                    queryBundle.putString(queryName, uri.getQueryParameter(queryName));
-                }
-            }
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            if (!queryBundle.isEmpty()) {
-                intent.putExtras(queryBundle);
-            }
-
-            if (launchContext == null) {
-                launchContext = context;
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            }
-
-            Utils.setPackageNameFromResolveInfoList(launchContext, intent);
-            launchContext.startActivity(intent);
-        } catch (Exception e) {
-            if (url.startsWith(Constants.WZRK_URL_SCHEMA)) {
-                // Ignore logging CT scheme actions
-                return;
-            }
-            logger.debug("No activity found to open url: " + url);
         }
     }
 
