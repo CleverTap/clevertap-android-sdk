@@ -22,18 +22,30 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
         }
 
         @JvmStatic
-        fun createInstance(ctInstanceConfig: CleverTapInstanceConfig): TemplatesManager {
+        fun createInstance(
+            ctInstanceConfig: CleverTapInstanceConfig,
+            systemTemplates: Set<CustomTemplate>
+        ): TemplatesManager {
             val templates = mutableSetOf<CustomTemplate>()
 
             for (producer in templateProducers) {
                 for (producedTemplate in producer.defineTemplates(ctInstanceConfig)) {
+
+                    if (producedTemplate.isSystemDefined) {
+                        throw CustomTemplateException("Cannot define system template with a name \"${producedTemplate.name}\".")
+                    }
+                    if (systemTemplates.contains(producedTemplate)) {
+                        throw CustomTemplateException("CustomTemplate with a name \"${producedTemplate.name}\" is a system template.")
+                    }
                     if (templates.contains(producedTemplate)) {
-                        throw CustomTemplateException("CustomTemplate with a name \"${producedTemplate.name}\" is already registered")
+                        throw CustomTemplateException("CustomTemplate with a name \"${producedTemplate.name}\" is already registered.")
                     }
 
                     templates.add(producedTemplate)
                 }
             }
+
+            templates.addAll(systemTemplates)
 
             return TemplatesManager(templates, ctInstanceConfig.logger)
         }
@@ -48,7 +60,7 @@ internal class TemplatesManager(templates: Collection<CustomTemplate>, private v
 
     fun isTemplateRegistered(templateName: String): Boolean = customTemplates.contains(templateName)
 
-    fun getAllRegisteredTemplates() = customTemplates.values
+    fun getAllRegisteredTemplates() = customTemplates.values.filter { !it.isSystemDefined }
 
     fun getTemplate(templateName: String): CustomTemplate? = customTemplates[templateName]
 
