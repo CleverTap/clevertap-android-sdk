@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.pushnotification;
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
-import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -35,11 +34,9 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpWorker;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -59,12 +56,10 @@ import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-/**
- * Single point of contact to load & support all types of Notification messaging services viz. FCM, HMS etc.
- */
-
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
+
+    private static final String TAG = "PushProviders";
 
     private static final int DEFAULT_FLEX_INTERVAL = 5;
     private static final int PING_FREQUENCY_VALUE = 240;
@@ -75,11 +70,9 @@ public class PushProviders implements CTPushProviderListener {
 
     private final ArrayList<PushType> allEnabledPushTypes = new ArrayList<>();
 
-    private final ArrayList<PushType> allDisabledPushTypes = new ArrayList<>();
-
     private final ArrayList<CTPushProvider> availableCTPushProviders = new ArrayList<>();
 
-    private final ArrayList<PushType> customEnabledPushTypes = new ArrayList<>();
+    private final ArrayList<PushType> nonEnabledPushTypes = new ArrayList<>();
 
     private final AnalyticsManager analyticsManager;
 
@@ -106,12 +99,14 @@ public class PushProviders implements CTPushProviderListener {
      * @return A PushProviders class with the loaded providers.
      */
     @NonNull
-    public static PushProviders load(Context context,
-                                     CleverTapInstanceConfig config,
-                                     BaseDatabaseManager baseDatabaseManager,
-                                     ValidationResultStack validationResultStack,
-                                     AnalyticsManager analyticsManager, ControllerManager controllerManager,
-                                     CTWorkManager ctWorkManager) {
+    public static PushProviders load(
+            Context context,
+            CleverTapInstanceConfig config,
+            BaseDatabaseManager baseDatabaseManager,
+            ValidationResultStack validationResultStack,
+            AnalyticsManager analyticsManager, ControllerManager controllerManager,
+            CTWorkManager ctWorkManager
+    ) {
         PushProviders providers = new PushProviders(context, config, baseDatabaseManager, validationResultStack,
                 analyticsManager,ctWorkManager);
         providers.init();
@@ -231,7 +226,7 @@ public class PushProviders implements CTPushProviderListener {
                     if (alreadyHaveToken(token, pushType)) {
                         return null;
                     }
-                    @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
+                    String key = pushType.getTokenPrefKey();
                     if (TextUtils.isEmpty(key)) {
                         return null;
                     }
@@ -252,20 +247,7 @@ public class PushProviders implements CTPushProviderListener {
         if (TextUtils.isEmpty(token) || pushType == null) {
             return;
         }
-        switch (pushType) {
-            case FCM:
-                handleToken(token, PushType.FCM, true);
-                break;
-            case HPS:
-                handleToken(token, PushType.HPS, true);
-                break;
-            case BPS:
-                handleToken(token, PushType.BPS, true);
-                break;
-            case ADM:
-                handleToken(token, PushType.ADM, true);
-                break;
-        }
+        handleToken(token, pushType, true);
     }
 
     /**
@@ -297,7 +279,7 @@ public class PushProviders implements CTPushProviderListener {
      */
     public String getCachedToken(PushType pushType) {
         if (pushType != null) {
-            @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
+            String key = pushType.getTokenPrefKey();
             if (!TextUtils.isEmpty(key)) {
                 String cachedToken = StorageHelper.getStringFromPrefs(context, config, key, null);
                 config.log(PushConstants.LOG_TAG, pushType + "getting Cached Token - " + cachedToken);
@@ -417,7 +399,7 @@ public class PushProviders implements CTPushProviderListener {
         if (frequency != getPingFrequency(context)) {
             setPingFrequency(context, frequency);
             if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
-                Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+                Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
                 task.execute("createOrResetWorker", new Callable<Void>() {
                     @Override
                     public Void call() {
@@ -568,7 +550,7 @@ public class PushProviders implements CTPushProviderListener {
         List<CTPushProvider> providers = new ArrayList<>();
 
         for (PushType pushType : allEnabledPushTypes) {
-            CTPushProvider pushProvider = getCTPushProviderFromPushType(pushType, true);
+            CTPushProvider pushProvider = getCTPushProviderFromPushType(pushType);
 
             if (pushProvider == null) {
                 continue;
@@ -586,23 +568,14 @@ public class PushProviders implements CTPushProviderListener {
      * and to prevent multiple instance of same CTPushProvider not moving this to {@link PushType}
      */
     @Nullable
-    private CTPushProvider getCTPushProviderFromPushType(final PushType pushType, final boolean isInit) {
+    private CTPushProvider getCTPushProviderFromPushType(final PushType pushType) {
         String className = pushType.getCtProviderClassName();
         CTPushProvider pushProvider = null;
         try {
             Class<?> providerClass = Class.forName(className);
+            Constructor<?> constructor = providerClass.getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
+            pushProvider = (CTPushProvider) constructor.newInstance(this, context, config);
 
-            if (isInit) {
-                Constructor<?> constructor = providerClass
-                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
-                pushProvider = (CTPushProvider) constructor.newInstance(this, context, config);
-
-            } else {
-                Constructor<?> constructor = providerClass
-                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class,
-                                Boolean.class);
-                pushProvider = (CTPushProvider) constructor.newInstance(this, context, config, false);
-            }
             config.log(PushConstants.LOG_TAG, "Found provider:" + className);
         } catch (InstantiationException e) {
             config.log(PushConstants.LOG_TAG, "Unable to create provider InstantiationException" + className);
@@ -626,7 +599,9 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
-    private void findCTPushProviders(List<CTPushProvider> providers) {
+    private void findAvailableCTPushProviders() {
+        List<CTPushProvider> providers = createProviders();
+
         if (providers.isEmpty()) {
             config.log(PushConstants.LOG_TAG,
                     "No push providers found!. Make sure to install at least one push provider");
@@ -653,30 +628,23 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
-    private void findCustomEnabledPushTypes() {
-        customEnabledPushTypes.addAll(allEnabledPushTypes);
+    private void findNonEnabledPushTypes() {
+        nonEnabledPushTypes.addAll(allEnabledPushTypes);
         for (final CTPushProvider pushProvider : availableCTPushProviders) {
-            customEnabledPushTypes.remove(pushProvider.getPushType());
+            nonEnabledPushTypes.remove(pushProvider.getPushType());
         }
     }
 
     //Session
 
-    private void findEnabledPushTypes() {
-        for (PushType pushType : getPushTypes(config.getAllowedPushTypes())) {
+    private void configurePushTypes() {
+        ArrayList<PushType> allowedPushTypes = config.getPushTypes();
+        for (PushType pushType : allowedPushTypes) {
             String className = pushType.getMessagingSDKClassName();
             try {
                 Class.forName(className);
                 allEnabledPushTypes.add(pushType);
                 config.log(PushConstants.LOG_TAG, "SDK Class Available :" + className);
-
-                /*if (pushType.getRunningDevices() == PushConstants.NO_DEVICES) {
-                    allEnabledPushTypes.remove(pushType);
-                    allDisabledPushTypes.add(pushType);
-                    config.log(PushConstants.LOG_TAG,
-                            "disabling " + pushType + " due to flag set as PushConstants.NO_DEVICES");
-                }*/
-
             } catch (Exception e) {
                 config.log(PushConstants.LOG_TAG,
                         "SDK class Not available " + className + " Exception:" + e.getClass().getName());
@@ -684,22 +652,27 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
+    /**
+     * Adds new push provider similar to FCM
+     */
+    public void addPushService(PushType pushType) {
+        allEnabledPushTypes.add(pushType);
+    }
+
     private int getPingFrequency(Context context) {
-        return StorageHelper.getInt(context, PING_FREQUENCY,
-                PING_FREQUENCY_VALUE);
+        return StorageHelper.getInt(context, PING_FREQUENCY, PING_FREQUENCY_VALUE);
     }
 
     /**
      * Loads all the plugins that are currently supported by the device.
      */
     private void init() {
-        findEnabledPushTypes();
-        List<CTPushProvider> providers = createProviders();
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        configurePushTypes();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
 
-        task.addOnSuccessListener(unused -> findCustomEnabledPushTypes());
-        task.execute("asyncFindCTPushProviders", () -> {
-            findCTPushProviders(providers);
+        task.execute("asyncFindAvailableCTPushProviders", () -> {
+            findAvailableCTPushProviders();
+            findNonEnabledPushTypes();
             return null;
         });
 
@@ -707,7 +680,7 @@ public class PushProviders implements CTPushProviderListener {
 
     private void initPushAmp() {
 
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
         task.execute("createOrResetWorker", new Callable<Void>() {
             @Override
             public Void call() {
@@ -754,25 +727,6 @@ public class PushProviders implements CTPushProviderListener {
                     "Provider: %s version %s does not match the SDK version %s. Make sure all CleverTap dependencies are the same version.");
             return false;
         }
-        switch (provider.getPushType()) {
-            case FCM:
-            case HPS:
-            case BPS:
-                if (provider.getPlatform() != PushConstants.ANDROID_PLATFORM) {
-                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() +
-                            " delivery is only available for Android platforms." + provider.getPushType());
-                    return false;
-                }
-                break;
-            case ADM:
-                if (provider.getPlatform() != PushConstants.AMAZON_PLATFORM) {
-                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " +
-                            provider.getClass() +
-                            " ADM delivery is only available for Amazon platforms." + provider.getPushType());
-                    return false;
-                }
-                break;
-        }
 
         return true;
     }
@@ -815,21 +769,21 @@ public class PushProviders implements CTPushProviderListener {
      * Fetches latest tokens from various providers and send to Clevertap's server
      */
     private void refreshAllTokens() {
-        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
         task.execute("PushProviders#refreshAllTokens", new Callable<Void>() {
             @Override
             public Void call() {
                 // refresh tokens of Push Providers
-                refreshCTProviderTokens();
+                refreshAvailableCTProviderTokens();
 
                 // refresh tokens of custom Providers
-                refreshCustomProviderTokens();
+                refreshNonEnabledProviderTokens();
                 return null;
             }
         });
     }
 
-    private void refreshCTProviderTokens() {
+    private void refreshAvailableCTProviderTokens() {
         for (final CTPushProvider pushProvider : availableCTPushProviders) {
             try {
                 pushProvider.requestToken();
@@ -840,8 +794,8 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
-    private void refreshCustomProviderTokens() {
-        for (PushType pushType : customEnabledPushTypes) {
+    private void refreshNonEnabledProviderTokens() {
+        for (PushType pushType : nonEnabledPushTypes) {
             try {
                 pushDeviceTokenEvent(getCachedToken(pushType), true, pushType);
             } catch (Throwable t) {

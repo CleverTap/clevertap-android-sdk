@@ -102,10 +102,6 @@ public class InAppFCManager {
         init(deviceId);
     }
 
-    public void didDismiss(CTInAppNotification inapp) {
-        // NO-OP
-    }
-
     public void didShow(final Context context, CTInAppNotification inapp) {
         final String id = getInAppID(inapp);
         if (id == null) {
