@@ -70,6 +70,8 @@ class UrlConnectionHttpClient(
         } catch (e: Exception) {
             connection?.disconnect()
             throw e
+        } finally {
+            TrafficStats.clearThreadStatsTag()
         }
     }
 

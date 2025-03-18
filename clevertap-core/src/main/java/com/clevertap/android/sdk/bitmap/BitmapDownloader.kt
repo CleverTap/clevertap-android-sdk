@@ -65,6 +65,7 @@ class BitmapDownloader(
         } finally {
             try {
                 connection.disconnect()
+                TrafficStats.clearThreadStatsTag()
             } catch (t: Throwable) {
                 Logger.v("Couldn't close connection!", t)
             }
