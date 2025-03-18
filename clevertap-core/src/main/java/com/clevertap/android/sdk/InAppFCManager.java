@@ -112,7 +112,7 @@ public class InAppFCManager {
             return;
         }
 
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
         task.execute("recordInAppImpressionsAndCounts", () -> {
             impressionManager.recordImpression(id);
 

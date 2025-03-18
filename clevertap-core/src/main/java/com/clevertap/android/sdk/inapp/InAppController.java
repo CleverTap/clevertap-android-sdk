@@ -679,25 +679,6 @@ public class InAppController implements InAppListener,
             return;
         }
 
-        if (controllerManager.getInAppFCManager() != null) {
-
-            final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
-                final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
-                return !evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
-            };
-
-            if (!controllerManager.getInAppFCManager().canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {
-                logger.verbose(config.getAccountId(),
-                        "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
-                showInAppNotificationIfAny();
-                return;
-            }
-        } else {
-            logger.verbose(config.getAccountId(),
-                    "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
-            return;
-        }
-
         final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
 
         final boolean goFromListener;
@@ -723,7 +704,7 @@ public class InAppController implements InAppListener,
             showInAppNotificationIfAny();
             return;
         }
-        showInApp(context, inAppNotification, config, this);
+        checkLimitsBeforeShowing(context, inAppNotification, config, this);
         incrementLocalInAppCountInPersistentStore(context, inAppNotification);
     }
 
@@ -771,7 +752,7 @@ public class InAppController implements InAppListener,
         }
     }
 
-    private static void checkPendingNotifications(
+    private void checkPendingNotifications(
             @NonNull final Context context,
             final CleverTapInstanceConfig config,
             final InAppController inAppController
@@ -781,13 +762,7 @@ public class InAppController implements InAppListener,
             try {
                 final CTInAppNotification notification = pendingNotifications.get(0);
                 pendingNotifications.remove(0);
-                MainLooperHandler mainHandler = new MainLooperHandler();
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        showInApp(context, notification, config, inAppController);
-                    }
-                });
+                checkLimitsBeforeShowing(context, notification, config, inAppController);
             } catch (Throwable t) {
                 // no-op
             }
@@ -795,7 +770,7 @@ public class InAppController implements InAppListener,
     }
 
     //InApp
-    private static void inAppDidDismiss(
+    private void inAppDidDismiss(
             @NonNull Context context,
             CleverTapInstanceConfig config,
             CTInAppNotification inAppNotification,
@@ -824,8 +799,42 @@ public class InAppController implements InAppListener,
         }
     }
 
+    private void checkLimitsBeforeShowing(
+            @NonNull Context context,
+            final CTInAppNotification inAppNotification,
+            CleverTapInstanceConfig config,
+            InAppController inAppController) {
+        Task<Boolean> task = CTExecutorFactory.executors(config).ioTask();
+        task.addOnSuccessListener(canShow -> {
+            if(canShow) {
+                showInApp(context, inAppNotification, config, inAppController);
+            } else {
+                showNotificationIfAvailable();
+            }
+        });
+        task.execute("checkLimitsBeforeDisplaying", () -> {
+            if (controllerManager.getInAppFCManager() != null) {
+                final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
+                    final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
+                    return !evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
+                };
+
+                if (!controllerManager.getInAppFCManager().canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {
+                    logger.verbose(config.getAccountId(),
+                            "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
+                    return false;
+                }
+            } else {
+                logger.verbose(config.getAccountId(),
+                        "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
+                return false;
+            }
+            return true;
+        });
+    }
+
     //InApp
-    private static void showInApp(
+    private void showInApp(
             @NonNull Context context,
             final CTInAppNotification inAppNotification,
             CleverTapInstanceConfig config,
