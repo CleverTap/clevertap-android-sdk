@@ -41,6 +41,7 @@ class UrlConnectionHttpClient(
         var connection: HttpsURLConnection? = null
 
         try {
+            TrafficStats.setThreadStatsTag(NETWORK_TAG_HTTP_REQUESTS)
             connection = openHttpsURLConnection(request)
 
             logger.debug(logTag, "Sending request to: ${request.url}")
@@ -76,7 +77,6 @@ class UrlConnectionHttpClient(
     }
 
     private fun openHttpsURLConnection(request: Request): HttpsURLConnection {
-        TrafficStats.setThreadStatsTag(NETWORK_TAG_HTTP_REQUESTS)
         val url = URL(request.url.toString())
         val connection = (url.openConnection() as HttpsURLConnection).apply {
             connectTimeout = CONNECT_TIMEOUT
