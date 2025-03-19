@@ -60,7 +60,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             if (config != null) {
                 logger = config.getLogger();
             }
-            provider = new FileResourceProvider(context, logger);
+            provider = FileResourceProvider.getInstance(context, logger);
             currentOrientation = getResources().getConfiguration().orientation;
             generateListener();
             /*Initialize the below listener only when in app has InAppNotification activity as their host activity

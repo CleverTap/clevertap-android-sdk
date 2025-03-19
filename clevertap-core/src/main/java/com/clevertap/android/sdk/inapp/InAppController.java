@@ -132,7 +132,7 @@ public class InAppController implements InAppListener,
                 int index = 0;
                 while (index < fileUrls.size()) {
                     String url = fileUrls.get(index);
-                    byte[] bytes = resourceProvider.fetchFile(url);
+                    byte[] bytes = FileResourceProvider.getInstance(context,logger).fetchFile(url);
 
                     if (bytes != null && bytes.length > 0) {
                         FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url, CtCacheType.FILES), storePair);
@@ -146,14 +146,14 @@ public class InAppController implements InAppListener,
             } else {
                 for (CTInAppNotificationMedia media : inApp.getMediaList()) {
                     if (media.isGIF()) {
-                        byte[] bytes = resourceProvider.fetchInAppGifV1(media.getMediaUrl());
+                        byte[] bytes = FileResourceProvider.getInstance(context,logger).fetchInAppGifV1(media.getMediaUrl());
                         if (bytes == null || bytes.length == 0) {
                             inApp.setError("Error processing GIF");
                             break;
                         }
                     } else if (media.isImage()) {
 
-                        Bitmap bitmap = resourceProvider.fetchInAppImageV1(media.getMediaUrl());
+                        Bitmap bitmap = FileResourceProvider.getInstance(context,logger).fetchInAppImageV1(media.getMediaUrl());
                         if (bitmap == null) {
                             inApp.setError("Error processing image as bitmap was NULL");
                         }
@@ -221,8 +221,6 @@ public class InAppController implements InAppListener,
 
     private final Logger logger;
 
-    private final FileResourceProvider resourceProvider;
-
     private final MainLooperHandler mainLooperHandler;
 
     private final InAppQueue inAppQueue;
@@ -250,7 +248,6 @@ public class InAppController implements InAppListener,
             final DeviceInfo deviceInfo,
             InAppQueue inAppQueue,
             final EvaluationManager evaluationManager,
-            FileResourceProvider resourceProvider,
             TemplatesManager templatesManager,
             final StoreRegistry storeRegistry) {
         this.context = context;
@@ -263,7 +260,6 @@ public class InAppController implements InAppListener,
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
         this.deviceInfo = deviceInfo;
-        this.resourceProvider = resourceProvider;
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
         this.templatesManager = templatesManager;
@@ -463,7 +459,6 @@ public class InAppController implements InAppListener,
     public void inAppNotificationDidDismiss(
             @NonNull final CTInAppNotification inAppNotification,
             @Nullable final Bundle formData) {
-        inAppNotification.didDismiss(resourceProvider);
 
         if (controllerManager.getInAppFCManager() != null) {
             String templateName = inAppNotification.getCustomTemplateData() != null
@@ -1010,7 +1005,7 @@ public class InAppController implements InAppListener,
     }
 
     private void presentTemplate(final CTInAppNotification inAppNotification) {
-        templatesManager.presentTemplate(inAppNotification, this,resourceProvider);
+        templatesManager.presentTemplate(inAppNotification, this, FileResourceProvider.getInstance(context,logger));
     }
 
     private JSONArray filterNonRegisteredCustomTemplates(JSONArray inAppNotifications) {

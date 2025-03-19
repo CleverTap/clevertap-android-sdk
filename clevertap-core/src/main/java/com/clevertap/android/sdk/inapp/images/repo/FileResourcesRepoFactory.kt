@@ -42,10 +42,7 @@ internal class FileResourcesRepoFactory {
             val fileStore = storeRegistry.filesStore
             val legacyInAppStore = storeRegistry.legacyInAppStore
 
-            val fileResourceProvider = FileResourceProvider(
-                context = context,
-                logger = logger
-            )
+            val fileResourceProvider = FileResourceProvider.getInstance(context, logger)
 
             val cleanupStrategy: FileCleanupStrategy
             val preloadStrategy: FilePreloaderStrategy

@@ -32,48 +32,37 @@ import kotlin.jvm.functions.Function0;
  * @author Ansh Sachdeva.
  */
 public class VarCache {
-    private static void log(String msg){
-        Logger.d("variables", msg);
-    }
-
-    private static void log(String msg,Throwable t){
-        Logger.d("variables", msg, t);
-    }
-
     private final Map<String, Object> valuesFromClient = new HashMap<>();
-
     private final Map<String, Var<?>> vars = new ConcurrentHashMap<>();
-
     private final Map<String, String> defaultKinds = new HashMap<>();
-
-    private Runnable globalCallbacksRunnable = null;
-
-    private Map<String, Object> diffs = new HashMap<>();
-
-    public Object merged = null;
-
-    // README: Do not forget reset the value of new fields in the reset() method.
-
     private final Context variablesCtx;
-
     private final FileResourcesRepoImpl fileResourcesRepoImpl;
     private final CleverTapInstanceConfig instanceConfig;
+    public Object merged = null;
+    private Runnable globalCallbacksRunnable = null;
 
-    private final FileResourceProvider fileResourceProvider;
+    // README: Do not forget reset the value of new fields in the reset() method.
+    private Map<String, Object> diffs = new HashMap<>();
 
     public VarCache(
             CleverTapInstanceConfig config,
             Context ctx,
-            FileResourcesRepoImpl fileResourcesRepoImpl,
-            FileResourceProvider fileResourceProvider
+            FileResourcesRepoImpl fileResourcesRepoImpl
     ) {
         this.variablesCtx = ctx;
         this.instanceConfig = config;
         this.fileResourcesRepoImpl = fileResourcesRepoImpl;
-        this.fileResourceProvider = fileResourceProvider;
     }
 
-    private void storeDataInCache(@NonNull String data){
+    private static void log(String msg) {
+        Logger.d("variables", msg);
+    }
+
+    private static void log(String msg, Throwable t) {
+        Logger.d("variables", msg, t);
+    }
+
+    private void storeDataInCache(@NonNull String data) {
         log("storeDataInCache() called with: data = [" + data + "]");
         String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
         try {
@@ -83,11 +72,11 @@ public class VarCache {
         }
     }
 
-    private String loadDataFromCache(){
+    private String loadDataFromCache() {
         String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
-        String cache =  StorageHelper.getString(variablesCtx,cacheKey, "{}");
+        String cache = StorageHelper.getString(variablesCtx, cacheKey, "{}");
         log("VarCache loaded cache data:\n" + cache);
-        return  cache;
+        return cache;
     }
 
     /**
@@ -134,7 +123,7 @@ public class VarCache {
     }
 
     public synchronized void registerVariable(@NonNull Var<?> var) {
-        log( "registerVariable() called with: var = [" + var + "]");
+        log("registerVariable() called with: var = [" + var + "]");
         vars.put(var.name(), var);
 
         Object defaultValue = var.defaultValue();
@@ -142,12 +131,12 @@ public class VarCache {
             defaultValue = CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(defaultValue));
         }
         CTVariableUtils.updateValuesAndKinds(
-            var.name(),
-            var.nameComponents(),
-            defaultValue,
-            var.kind(),
-            valuesFromClient,
-            defaultKinds
+                var.name(),
+                var.nameComponents(),
+                defaultValue,
+                var.kind(),
+                valuesFromClient,
+                defaultKinds
         );
 
         mergeVariable(var);
@@ -196,7 +185,7 @@ public class VarCache {
             startFilesDownload(clientRegisteredVars, func);
 
         } catch (Exception e) {
-            log("Could not load variable diffs.\n" ,e);
+            log("Could not load variable diffs.\n", e);
         }
     }
 
@@ -234,7 +223,9 @@ public class VarCache {
         storeDataInCache(variablesCipher);
     }
 
-    /** @noinspection unchecked*/
+    /**
+     * @noinspection unchecked
+     */
     private void applyVariableDiffs(
             Map<String, Object> diffs,
             HashMap<String, Var<?>> clientRegisteredVars
@@ -243,7 +234,7 @@ public class VarCache {
         if (diffs != null) {
             this.diffs = diffs;
             merged = CTVariableUtils.mergeHelper(valuesFromClient, this.diffs);
-            log("applyVariableDiffs: updated value of merged=["+merged+"]" );
+            log("applyVariableDiffs: updated value of merged=[" + merged + "]");
 
             for (Map.Entry<String, Var<?>> entry : clientRegisteredVars.entrySet()) {
                 String name = entry.getKey();
@@ -285,7 +276,8 @@ public class VarCache {
                 String url = var.rawFileValue();
 
                 if (url != null) {
-                    boolean isFileCached = fileResourceProvider.isFileCached(url);
+                    boolean isFileCached = FileResourceProvider.getInstance(variablesCtx, instanceConfig.getLogger())
+                            .isFileCached(url);
                     if (!isFileCached) {
                         urls.add(new Pair<>(url, CtCacheType.FILES));
                         added.append(name).append(" : ").append(url);
@@ -321,8 +313,8 @@ public class VarCache {
         }
     }
 
-    public JSONObject getDefineVarsData(){
-        return CTVariableUtils.getFlatVarsJson(valuesFromClient,defaultKinds);
+    public JSONObject getDefineVarsData() {
+        return CTVariableUtils.getFlatVarsJson(valuesFromClient, defaultKinds);
     }
 
     public synchronized void clearUserContent() {
@@ -357,24 +349,27 @@ public class VarCache {
     }
 
     public String filePathFromDisk(String url) {
-        return fileResourceProvider.cachedFilePath(url);
+        return FileResourceProvider.getInstance(variablesCtx, instanceConfig.getLogger()).cachedFilePath(url);
     }
 
     public void fileVarUpdated(Var<String> fileVar) {
         String url = fileVar.rawFileValue();
-        if (url == null || fileResourceProvider.isFileCached(url)) {
-            // if the new url is null or if it is present in the cache - trigger FileReady directly
-            fileVar.triggerFileIsReady();
-        } else {
-            List<Pair<String, CtCacheType>> list = new ArrayList<>();
-            list.add(new Pair<>(url, CtCacheType.FILES));
-            fileResourcesRepoImpl.preloadFilesAndCache(
-                    list,
-                    downloadAllBlock -> {
-                        fileVar.triggerFileIsReady();
-                        return Unit.INSTANCE;
-                    }
-            );
-        }
+        Task<Boolean> task = CTExecutorFactory.executors(instanceConfig).ioTask();
+        task.addOnSuccessListener(isCached -> {
+            if (isCached) {
+                fileVar.triggerFileIsReady();
+            } else {
+                List<Pair<String, CtCacheType>> list = new ArrayList<>();
+                list.add(new Pair<>(url, CtCacheType.FILES));
+                fileResourcesRepoImpl.preloadFilesAndCache(
+                        list,
+                        downloadAllBlock -> {
+                            fileVar.triggerFileIsReady();
+                            return Unit.INSTANCE;
+                        }
+                );
+            }
+        });
+        task.execute("isFileCached", () -> url == null || FileResourceProvider.getInstance(variablesCtx, instanceConfig.getLogger()).isFileCached(url));
     }
 }
