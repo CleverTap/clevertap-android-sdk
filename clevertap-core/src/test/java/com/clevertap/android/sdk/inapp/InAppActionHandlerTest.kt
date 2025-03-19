@@ -2,8 +2,8 @@ package com.clevertap.android.sdk.inapp
 
 import android.content.Context
 import android.content.Intent
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.shared.test.BaseTestCase
 import com.google.android.play.core.review.testing.FakeReviewManager
 import io.mockk.every
@@ -22,7 +22,7 @@ class InAppActionHandlerTest : BaseTestCase() {
     fun init() {
         inAppActionHandler = InAppActionHandler(
             application,
-            mockk<Logger>(relaxed = true),
+            getMockCtConfig(),
             playStoreReviewManagerProvider = { FakeReviewManager(it) })
     }
 
@@ -72,7 +72,7 @@ class InAppActionHandlerTest : BaseTestCase() {
         val mockContext = mockk<Context>(relaxed = true)
         val inAppActionHandler = InAppActionHandler(
             mockContext,
-            logger = mockk(relaxed = true)
+            getMockCtConfig()
         )
 
         assertTrue(inAppActionHandler.openUrl(url))
@@ -98,6 +98,12 @@ class InAppActionHandlerTest : BaseTestCase() {
     @Test
     fun `isPlayStoreReviewLibraryAvailable should return true when review library is included`() {
         assertTrue(inAppActionHandler.isPlayStoreReviewLibraryAvailable())
+    }
+
+    private fun getMockCtConfig(): CleverTapInstanceConfig {
+        val mockCtConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
+        every { mockCtConfig.logger } returns mockk(relaxed = true)
+        return mockCtConfig
     }
 
 }
