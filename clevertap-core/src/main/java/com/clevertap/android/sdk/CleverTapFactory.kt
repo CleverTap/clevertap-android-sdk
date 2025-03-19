@@ -62,8 +62,8 @@ internal object CleverTapFactory {
 
         val coreState = CoreState()
 
-        val inAppActionHandler = InAppActionHandler(cleverTapInstanceConfig.logger)
-        val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler, context)
+        val inAppActionHandler = InAppActionHandler(context, cleverTapInstanceConfig.logger)
+        val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
         val templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig, systemTemplates)
         coreState.templatesManager = templatesManager
 
