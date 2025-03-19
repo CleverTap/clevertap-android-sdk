@@ -10,7 +10,8 @@ internal object SystemTemplates {
     ): Set<CustomTemplate> {
         return setOfNotNull(
             OpenUrlTemplate.createTemplate(systemActionHandler),
-            PlayStoreAppRatingTemplate.createTemplate(systemActionHandler)
+            PlayStoreAppRatingTemplate.createTemplate(systemActionHandler),
+            PushPermissionTemplate.createTemplate(systemActionHandler)
         )
     }
 }

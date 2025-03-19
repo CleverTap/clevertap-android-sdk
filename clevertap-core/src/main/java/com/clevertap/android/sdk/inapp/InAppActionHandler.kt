@@ -4,20 +4,24 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.core.app.NotificationManagerCompat
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.InAppNotificationActivity
 import com.clevertap.android.sdk.Utils
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
 
 internal class InAppActionHandler(
     private val context: Context,
-    private val logger: Logger,
+    private val ctConfig: CleverTapInstanceConfig,
     private val playStoreReviewManagerProvider: (Context) -> ReviewManager = {
         ReviewManagerFactory.create(it)
     }
 ) {
+
+    private val logger = ctConfig.logger
 
     fun openUrl(url: String, launchContext: Context? = null): Boolean {
         try {
@@ -96,5 +100,22 @@ internal class InAppActionHandler(
                 onError(task.exception)
             }
         }
+    }
+
+    fun arePushNotificationsEnabled(): Boolean {
+        return NotificationManagerCompat.from(context).areNotificationsEnabled()
+    }
+
+    fun launchPushPermissionPrompt(fallbackToSettings: Boolean): Boolean {
+        val currentActivity = CoreMetaData.getCurrentActivity()
+        if (currentActivity == null) {
+            return false
+        }
+        if (currentActivity is InAppNotificationActivity) {
+            currentActivity.showHardPermissionPrompt(fallbackToSettings)
+        } else {
+            InAppController.startPrompt(currentActivity, ctConfig, fallbackToSettings)
+        }
+        return true
     }
 }
