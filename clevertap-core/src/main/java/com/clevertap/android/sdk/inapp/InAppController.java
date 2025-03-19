@@ -427,7 +427,7 @@ public class InAppController implements InAppListener,
             case OPEN_URL:
                 String actionUrl = action.getActionUrl();
                 if (actionUrl != null) {
-                    inAppActionHandler.openUrl(actionUrl, activityContext != null ? activityContext : context);
+                    inAppActionHandler.openUrl(actionUrl, activityContext);
                 } else {
                     logger.debug("Cannot trigger open url action without url value");
                 }
