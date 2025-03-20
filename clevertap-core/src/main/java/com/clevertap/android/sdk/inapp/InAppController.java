@@ -699,6 +699,13 @@ public class InAppController implements InAppListener,
             return;
         }
 
+        if (inAppNotification.isRequestForPushPermission() && inAppActionHandler.arePushNotificationsEnabled()) {
+            logger.verbose(config.getAccountId(),
+                    "Not showing push permission request, permission is already granted");
+            showInAppNotificationIfAny();
+            return;
+        }
+
         final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
 
         final boolean goFromListener;
