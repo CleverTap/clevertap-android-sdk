@@ -8,12 +8,14 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
+import com.clevertap.android.sdk.inapp.customtemplates.system.PushPermissionTemplate;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 
 import org.json.JSONArray;
@@ -120,6 +122,8 @@ public class CTInAppNotification implements Parcelable {
 
     private boolean fallBackToNotificationSettings = false;
 
+    private boolean isRequestForPushPermission = false;
+
     private CustomTemplateInAppData customTemplateData;
 
     CTInAppNotification() {
@@ -175,6 +179,7 @@ public class CTInAppNotification implements Parcelable {
             _landscapeImageCacheKey = in.readString();
             timeToLive = in.readLong();
             customTemplateData = in.readParcelable(CustomTemplateInAppData.class.getClassLoader());
+            isRequestForPushPermission = in.readByte() != 0x00;
 
         } catch (JSONException e) {
             // no-op
@@ -269,6 +274,7 @@ public class CTInAppNotification implements Parcelable {
         dest.writeString(_landscapeImageCacheKey);
         dest.writeLong(timeToLive);
         dest.writeParcelable(customTemplateData, flags);
+        dest.writeByte((byte) (isRequestForPushPermission ? 0x01 : 0x00));
     }
 
     void didDismiss(FileResourceProvider resourceProvider) {
@@ -434,6 +440,7 @@ public class CTInAppNotification implements Parcelable {
 
     void setCustomTemplateData(CustomTemplateInAppData inAppData) {
         customTemplateData = inAppData;
+        isRequestForPushPermission = isRequestForPushPermission || isCustomTemplateRfp(customTemplateData);
         customTemplateData.writeFieldsToJson(jsonDescription);
     }
 
@@ -472,6 +479,10 @@ public class CTInAppNotification implements Parcelable {
 
     public boolean hasStreamMedia() {
         return !getMediaList().isEmpty() && getMediaList().get(0).isMediaStreamable();
+    }
+
+    public boolean isRequestForPushPermission() {
+        return isRequestForPushPermission;
     }
 
     private void configureWithJson(JSONObject jsonObject) {
@@ -535,6 +546,7 @@ public class CTInAppNotification implements Parcelable {
                     mediaList.add(landscapeMedia);
                 }
             }
+
             JSONArray buttonArray = jsonObject.has(Constants.KEY_BUTTONS) ? jsonObject.getJSONArray(
                     Constants.KEY_BUTTONS) : null;
             if (buttonArray != null) {
@@ -544,10 +556,16 @@ public class CTInAppNotification implements Parcelable {
                     if (inAppNotificationButton != null && inAppNotificationButton.getError() == null) {
                         this.buttons.add(inAppNotificationButton);
                         this.buttonCount++;
+                        CTInAppAction action = inAppNotificationButton.getAction();
+                        if (action != null && (InAppActionType.REQUEST_FOR_PERMISSIONS == action.getType()
+                                || isCustomTemplateRfp(action.getCustomTemplateInAppData()))) {
+                            isRequestForPushPermission = true;
+                        }
                     }
                 }
             }
             customTemplateData = CustomTemplateInAppData.createFromJson(jsonObject);
+            isRequestForPushPermission = isRequestForPushPermission || isCustomTemplateRfp(customTemplateData);
 
             switch (this.inAppType) {
                 case CTInAppTypeFooter:
@@ -751,5 +769,10 @@ public class CTInAppNotification implements Parcelable {
             }
         }
         return b;
+    }
+
+    private boolean isCustomTemplateRfp(@Nullable CustomTemplateInAppData customTemplateInAppData) {
+        return customTemplateInAppData != null
+                && PushPermissionTemplate.NAME.equals(customTemplateInAppData.getTemplateName());
     }
 }
