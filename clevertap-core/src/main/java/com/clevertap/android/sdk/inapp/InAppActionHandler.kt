@@ -4,11 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.core.app.NotificationManagerCompat
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.InAppNotificationActivity
+import com.clevertap.android.sdk.PushPermissionHandler
+import com.clevertap.android.sdk.PushPermissionResponseListener
 import com.clevertap.android.sdk.Utils
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
@@ -20,6 +21,9 @@ internal class InAppActionHandler(
         ReviewManagerFactory.create(it)
     }
 ) {
+    fun interface PushPrimerLauncher {
+        fun showPushPrimer()
+    }
 
     private val logger = ctConfig.logger
 
@@ -103,7 +107,7 @@ internal class InAppActionHandler(
     }
 
     fun arePushNotificationsEnabled(): Boolean {
-        return NotificationManagerCompat.from(context).areNotificationsEnabled()
+        return PushPermissionHandler.isPushPermissionGranted(context)
     }
 
     fun launchPushPermissionPrompt(fallbackToSettings: Boolean): Boolean {
@@ -112,10 +116,34 @@ internal class InAppActionHandler(
             return false
         }
         if (currentActivity is InAppNotificationActivity) {
-            currentActivity.showHardPermissionPrompt(fallbackToSettings)
+            currentActivity.showPushPermissionPrompt(fallbackToSettings)
         } else {
-            InAppController.startPrompt(currentActivity, ctConfig, fallbackToSettings)
+            InAppNotificationActivity.launchForPushPermissionPrompt(
+                currentActivity,
+                ctConfig,
+                fallbackToSettings
+            )
         }
         return true
+    }
+
+    fun launchPushPermissionPrimer(
+        fallbackToSettings: Boolean,
+        primerLauncher: PushPrimerLauncher,
+        ctListeners: List<PushPermissionResponseListener?>?
+    ) {
+        val pushPermissionHandler = PushPermissionHandler(ctConfig, ctListeners)
+        pushPermissionHandler.requestPermission(
+            context,
+            fallbackToSettings,
+            object : PushPermissionHandler.PushPermissionFlowCallback {
+                override fun onRequestPermission() {
+                    primerLauncher.showPushPrimer()
+                }
+
+                override fun onShowFallback() {
+                    primerLauncher.showPushPrimer()
+                }
+            })
     }
 }

@@ -440,7 +440,6 @@ public class CTInAppNotification implements Parcelable {
 
     void setCustomTemplateData(CustomTemplateInAppData inAppData) {
         customTemplateData = inAppData;
-        isRequestForPushPermission = isRequestForPushPermission || isCustomTemplateRfp(customTemplateData);
         customTemplateData.writeFieldsToJson(jsonDescription);
     }
 
@@ -556,16 +555,11 @@ public class CTInAppNotification implements Parcelable {
                     if (inAppNotificationButton != null && inAppNotificationButton.getError() == null) {
                         this.buttons.add(inAppNotificationButton);
                         this.buttonCount++;
-                        CTInAppAction action = inAppNotificationButton.getAction();
-                        if (action != null && (InAppActionType.REQUEST_FOR_PERMISSIONS == action.getType()
-                                || isCustomTemplateRfp(action.getCustomTemplateInAppData()))) {
-                            isRequestForPushPermission = true;
-                        }
                     }
                 }
             }
+            isRequestForPushPermission = jsonObject.optBoolean(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, false);
             customTemplateData = CustomTemplateInAppData.createFromJson(jsonObject);
-            isRequestForPushPermission = isRequestForPushPermission || isCustomTemplateRfp(customTemplateData);
 
             switch (this.inAppType) {
                 case CTInAppTypeFooter:
@@ -769,10 +763,5 @@ public class CTInAppNotification implements Parcelable {
             }
         }
         return b;
-    }
-
-    private boolean isCustomTemplateRfp(@Nullable CustomTemplateInAppData customTemplateInAppData) {
-        return customTemplateInAppData != null
-                && PushPermissionTemplate.NAME.equals(customTemplateInAppData.getTemplateName());
     }
 }
