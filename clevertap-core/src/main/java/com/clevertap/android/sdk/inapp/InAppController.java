@@ -1,13 +1,9 @@
 package com.clevertap.android.sdk.inapp;
 
-import static com.clevertap.android.sdk.PushPermissionManager.ANDROID_PERMISSION_STRING;
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
@@ -15,18 +11,14 @@ import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
-import com.clevertap.android.sdk.CTPreferenceCache;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
@@ -36,7 +28,6 @@ import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
@@ -71,7 +62,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 
 import kotlin.Pair;
@@ -81,8 +71,7 @@ import kotlin.jvm.functions.Function2;
 
 // inapp db handle // glovbal dn
 @RestrictTo(Scope.LIBRARY_GROUP)
-public class InAppController implements InAppListener,
-        InAppNotificationActivity.PushPermissionResultCallback {
+public class InAppController implements InAppListener {
 
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
@@ -235,10 +224,6 @@ public class InAppController implements InAppListener,
 
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
 
-    public final static String DISPLAY_HARD_PERMISSION_BUNDLE_KEY = "displayHardPermissionDialog";
-
-    public final static String SHOW_FALLBACK_SETTINGS_BUNDLE_KEY = "shouldShowFallbackSettings";
-
     public InAppController(
             Context context,
             CleverTapInstanceConfig config,
@@ -299,88 +284,29 @@ public class InAppController implements InAppListener,
         }
     }
 
-    @RequiresApi(api = 33)
-    public void promptPushPrimer(JSONObject jsonObject){
-        int permissionStatus = ContextCompat.checkSelfPermission(context,
-                Manifest.permission.POST_NOTIFICATIONS);
-
-        if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            //Checks whether permission request is asked for the first time.
-            boolean isFirstTimeRequest = CTPreferenceCache.getInstance(context, config).isFirstTimeRequest();
-
-            Activity currentActivity = CoreMetaData.getCurrentActivity();
-            if (currentActivity == null) {
-                Logger.d("CurrentActivity reference is null. SDK can't process the promptPushPrimer(jsonObject) method! Ensure the following things:\n" +
-                        "1. Calling ActivityLifecycleCallback.register(this) in your custom application class before super.onCreate().\n" +
-                        "   Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n" +
-                        "2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, not onCreate().");
-                return;
-            }
-            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                    currentActivity,
-                    ANDROID_PERMISSION_STRING);
-
-            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
-                if (!jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false)) {
-                    Logger.v("Notification permission is denied. Please grant notification permission access" +
-                            " in your app's settings to send notifications");
-                    notifyPushPermissionResult(false);
-                } else {
-                    showSoftOrHardPrompt(jsonObject);
-                }
-                return;
-            }
-            showSoftOrHardPrompt(jsonObject);
-        } else {
-            notifyPushPermissionResult(true);
-        }
-    }
-
-    @RequiresApi(api = 33)
-    public void promptPermission(boolean showFallbackSettings) {
-        JSONObject object = new JSONObject();
+    public void promptPushPrimer(final JSONObject jsonObject) {
         try {
-            object.put(FALLBACK_TO_NOTIFICATION_SETTINGS, showFallbackSettings);
-            object.put(IS_HARD_PERMISSION_REQUEST, true);
+            jsonObject.put(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, true);
         } catch (JSONException e) {
-            e.printStackTrace();
+            // should not happen, nothing to do
         }
-        promptPushPrimer(object);
-    }
-
-    /**
-     * Shows either push primer or directly calls hard permission dialog flow based on whether
-     * `isFromPromptPermission` is true.
-     * @param jsonObject InApp object
-     */
-    private void showSoftOrHardPrompt(final JSONObject jsonObject) {
+        boolean fallbackToSettings = jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false);
         if (jsonObject.optBoolean(IS_HARD_PERMISSION_REQUEST, false)) {
-            startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    config, jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false));
+            inAppActionHandler.launchPushPermissionPrompt(fallbackToSettings);
         } else {
-            prepareNotificationForDisplay(jsonObject);
+            inAppActionHandler.launchPushPermissionPrimer(
+                    fallbackToSettings,
+                    () -> prepareNotificationForDisplay(jsonObject),
+                    callbackManager.getPushPermissionResponseListenerList());
         }
     }
 
-    public static void startPrompt(Activity activity, CleverTapInstanceConfig config,
-                                   boolean showFallbackSettings){
-        if (!activity.getClass().equals(InAppNotificationActivity.class)) {
-            Intent intent = new Intent(activity, InAppNotificationActivity.class);
-            Bundle configBundle = new Bundle();
-            configBundle.putParcelable("config", config);
-            intent.putExtra("configBundle", configBundle);
-            intent.putExtra(Constants.INAPP_KEY, currentlyDisplayingInApp);
-            intent.putExtra(DISPLAY_HARD_PERMISSION_BUNDLE_KEY, true);
-            intent.putExtra(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY, showFallbackSettings);
-            activity.startActivity(intent);
-        }
+    public void promptPermission(boolean showFallbackSettings) {
+        inAppActionHandler.launchPushPermissionPrompt(showFallbackSettings);
     }
 
-    @RequiresApi(api = 33)
-    public boolean isPushPermissionGranted(){
-        int permissionStatus = ContextCompat.checkSelfPermission(context,
-                Manifest.permission.POST_NOTIFICATIONS);
-        return permissionStatus == PackageManager.PERMISSION_GRANTED;
+    public boolean isPushPermissionGranted() {
+        return inAppActionHandler.arePushNotificationsEnabled();
     }
 
     public void discardInApps() {
@@ -551,25 +477,6 @@ public class InAppController implements InAppListener,
             presentTemplate(inAppNotification);
         } else {
             displayNotification(inAppNotification);
-        }
-    }
-
-    @Override
-    public void onPushPermissionAccept() {
-        notifyPushPermissionResult(true);
-    }
-
-    @Override
-    public void onPushPermissionDeny() {
-        notifyPushPermissionResult(false);
-    }
-
-    //iterates over the PushPermissionResponseListenerList to notify the result
-    public void notifyPushPermissionResult(boolean result) {
-        for (final PushPermissionResponseListener listener: callbackManager.getPushPermissionResponseListenerList()) {
-            if (listener != null){
-                listener.onPushPermissionResponse(result);
-            }
         }
     }
 
@@ -891,11 +798,6 @@ public class InAppController implements InAppListener,
             case CTInAppTypeHalfInterstitialImageOnly:
             case CTInAppTypeCoverImageOnly:
 
-                Intent intent = new Intent(context, InAppNotificationActivity.class);
-                intent.putExtra(Constants.INAPP_KEY, inAppNotification);
-                Bundle configBundle = new Bundle();
-                configBundle.putParcelable("config", config);
-                intent.putExtra("configBundle", configBundle);
                 try {
                     Activity currentActivity = CoreMetaData.getCurrentActivity();
                     if (currentActivity == null) {
@@ -903,7 +805,7 @@ public class InAppController implements InAppListener,
                     }
                     config.getLogger().verbose(config.getAccountId(),
                             "calling InAppActivity for notification: " + inAppNotification.getJsonDescription());
-                    currentActivity.startActivity(intent);
+                    InAppNotificationActivity.launchForInAppNotification(currentActivity, inAppNotification, config);
                     Logger.d("Displaying In-App: " + inAppNotification.getJsonDescription());
 
                 } catch (Throwable t) {
