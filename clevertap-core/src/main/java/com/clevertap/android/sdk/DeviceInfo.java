@@ -313,7 +313,8 @@ public class DeviceInfo {
     }
 
     /**
-     * Placeholder for data
+     * A simple class representing the size of a window.
+     * It stores the local DPI (dots per inch) along with the window's width and height.
      */
     private static class WindowSize {
         public final int localDpi;
