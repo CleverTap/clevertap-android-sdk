@@ -129,6 +129,7 @@ public class DeviceInfo {
             WindowManager wm = getWindowManager();
 
             if (wm == null) {
+                Logger.v("WindowManager is null, returning zero dimension for width/height");
                 return new WindowSize(0, 0, 0);
             }
 
@@ -343,7 +344,7 @@ public class DeviceInfo {
                     }
                 }
             } catch (UnsupportedOperationException e) {
-                getConfigLogger().verbose("WindowManagerHelper", "Window context creation failed: " + e.getMessage());
+                Logger.v("Window context creation failed: " + e.getMessage());
             }
         }
 
