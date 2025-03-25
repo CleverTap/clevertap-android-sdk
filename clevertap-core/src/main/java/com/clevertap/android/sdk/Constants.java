@@ -70,6 +70,7 @@ public interface Constants {
     String INAPP_X_DP = "xdp";
     String INAPP_Y_DP = "ydp";
     String INAPP_POSITION = "pos";
+    String INAPP_ASPECT_RATIO = "aspectRatio";
     char INAPP_POSITION_TOP = 't';
     char INAPP_POSITION_RIGHT = 'r';
     char INAPP_POSITION_BOTTOM = 'b';
