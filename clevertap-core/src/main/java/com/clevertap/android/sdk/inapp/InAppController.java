@@ -119,6 +119,7 @@ public class InAppController implements InAppListener,
                     storeRegistry.getInAppAssetsStore());
 
             String templateName = null;
+            FileResourceProvider fileResourceProvider = FileResourceProvider.getInstance(context,logger);
             if (CTInAppType.CTInAppTypeCustomCodeTemplate.equals(inApp.getInAppType())) {
                 final CustomTemplateInAppData customTemplateData = inApp.getCustomTemplateData();
                 final List<String> fileUrls;
@@ -132,7 +133,7 @@ public class InAppController implements InAppListener,
                 int index = 0;
                 while (index < fileUrls.size()) {
                     String url = fileUrls.get(index);
-                    byte[] bytes = FileResourceProvider.getInstance(context,logger).fetchFile(url);
+                    byte[] bytes = fileResourceProvider.fetchFile(url);
 
                     if (bytes != null && bytes.length > 0) {
                         FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url, CtCacheType.FILES), storePair);
@@ -146,14 +147,14 @@ public class InAppController implements InAppListener,
             } else {
                 for (CTInAppNotificationMedia media : inApp.getMediaList()) {
                     if (media.isGIF()) {
-                        byte[] bytes = FileResourceProvider.getInstance(context,logger).fetchInAppGifV1(media.getMediaUrl());
+                        byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
                         if (bytes == null || bytes.length == 0) {
                             inApp.setError("Error processing GIF");
                             break;
                         }
                     } else if (media.isImage()) {
 
-                        Bitmap bitmap = FileResourceProvider.getInstance(context,logger).fetchInAppImageV1(media.getMediaUrl());
+                        Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
                         if (bitmap == null) {
                             inApp.setError("Error processing image as bitmap was NULL");
                         }

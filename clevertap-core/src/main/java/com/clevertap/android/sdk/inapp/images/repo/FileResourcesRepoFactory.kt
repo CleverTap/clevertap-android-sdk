@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.inapp.images.repo
 
 import android.content.Context
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyCoroutine
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyExecutors
@@ -42,25 +41,25 @@ internal class FileResourcesRepoFactory {
             val fileStore = storeRegistry.filesStore
             val legacyInAppStore = storeRegistry.legacyInAppStore
 
-            val fileResourceProvider = FileResourceProvider.getInstance(context, logger)
-
             val cleanupStrategy: FileCleanupStrategy
             val preloadStrategy: FilePreloaderStrategy
 
             if (USE_COROUTINES) {
                 cleanupStrategy = FileCleanupStrategyCoroutine(
-                    fileResourceProvider = fileResourceProvider
+                    context = context,
+                    logger = logger
                 )
                 preloadStrategy = FilePreloaderCoroutine(
-                    fileResourceProvider = fileResourceProvider,
+                    context = context,
                     logger = logger
                 )
             } else {
                 cleanupStrategy = FileCleanupStrategyExecutors(
-                    fileResourceProvider = fileResourceProvider
+                    context = context,
+                    logger = logger
                 )
                 preloadStrategy = FilePreloaderExecutors(
-                    fileResourceProvider = fileResourceProvider,
+                    context = context,
                     logger = logger
                 )
             }

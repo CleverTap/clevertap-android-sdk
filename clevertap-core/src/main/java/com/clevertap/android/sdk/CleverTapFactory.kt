@@ -95,7 +95,7 @@ internal object CleverTapFactory {
         coreState.config = config
 
         val fileResourceProviderInit = CTExecutorFactory.executors(config).ioTask<Void?>()
-        fileResourceProviderInit.execute("initFileResourceProvide") {
+        fileResourceProviderInit.execute("initFileResourceProvider") {
             FileResourceProvider.getInstance(context, config.logger)
             null
         }

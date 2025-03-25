@@ -123,7 +123,7 @@ public class VarCache {
     }
 
     public synchronized void registerVariable(@NonNull Var<?> var) {
-        log("registerVariable() called with: var = [" + var + "]");
+        log("registerVariable() called with: var = [" + var.name() + "]");
         vars.put(var.name(), var);
 
         Object defaultValue = var.defaultValue();

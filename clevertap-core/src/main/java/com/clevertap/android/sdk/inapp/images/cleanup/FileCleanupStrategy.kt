@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.images.cleanup
 
-import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import android.content.Context
+import com.clevertap.android.sdk.ILogger
 /**
  * A strategy for cleaning up file assets.
  *
@@ -8,7 +9,9 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
  */
 internal interface FileCleanupStrategy{
 
-    val fileResourceProvider: FileResourceProvider
+    val context: Context
+    val logger: ILogger
+
     /**
      * Clears file assets associated with the given URLs.
      *
