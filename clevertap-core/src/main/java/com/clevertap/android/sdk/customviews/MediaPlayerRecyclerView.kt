@@ -186,12 +186,12 @@ class MediaPlayerRecyclerView : RecyclerView {
 
     private fun initialize() {
         handle.initExoplayer(
-            context = context.applicationContext,
+            context = context,
             buffering = ::bufferingStarted,
             playerReady = ::playerReady
         )
         handle.initPlayerView(
-            context = context.applicationContext,
+            context = context,
             artworkAsset = ::artworkAsset
         )
         recyclerViewListeners()
