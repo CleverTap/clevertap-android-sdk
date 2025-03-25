@@ -749,7 +749,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 FileVarsData.printFileVariables(cleverTapAPI!!, tag = TAG)
             }
             "14-5" -> {
-                Log.i(TAG, "onChildClick: 14-4")
+                Log.i(TAG, "onChildClick: 14-5")
                 cleverTapAPI?.clearFileResources(false)
             }
             "15-0" -> {
