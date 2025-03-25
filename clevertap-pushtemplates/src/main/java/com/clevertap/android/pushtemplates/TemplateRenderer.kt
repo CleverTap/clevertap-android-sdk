@@ -1,6 +1,5 @@
 package com.clevertap.android.pushtemplates
 
-import android.app.ActivityOptions
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ContentResolver
@@ -165,7 +164,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 if (ValidatorFactory.getValidator(TemplateType.ZERO_BEZEL, this)?.validate() == true)
                     return ZeroBezelStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
-            TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
                     val timerEnd = getTimerEnd()
                     if (timerEnd != null) {
@@ -179,7 +178,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     }
                 }
             } else {
-                PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Nougat, reverting to basic template")
+                PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")
                 if (ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true) {
                     return BasicStyle(this).builderFromStyle(context, extras, notificationId, nb)
                 }
