@@ -57,13 +57,13 @@
         <!-- Add meta data for CleverTap Account Id and Account Token and Region-->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="67Z-RRK-696Z" />
+            android:value="YOUR ACCT ID" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="322-1a6" />
+            android:value="YOUR ACCT TOKEN" />
         <meta-data
             android:name="CLEVERTAP_REGION"
-            android:value="sk1-staging-30" />
+            android:value="YOUR ACCT REGION"/>
         <meta-data
             android:name="CLEVERTAP_HANDSHAKE_DOMAIN"
             android:value="YOUR HANDSHAKE DOMAIN"/>
