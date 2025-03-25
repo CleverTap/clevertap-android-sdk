@@ -463,7 +463,6 @@ public class InAppController implements InAppListener,
     public void inAppNotificationDidDismiss(
             @NonNull final CTInAppNotification inAppNotification,
             @Nullable final Bundle formData) {
-        inAppNotification.didDismiss(resourceProvider);
 
         if (controllerManager.getInAppFCManager() != null) {
             String templateName = inAppNotification.getCustomTemplateData() != null

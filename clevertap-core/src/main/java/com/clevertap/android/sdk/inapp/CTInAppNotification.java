@@ -66,6 +66,8 @@ public class CTInAppNotification implements Parcelable {
 
     private int heightPercentage;
 
+    private double aspectRatio = -1;
+
     private boolean hideCloseButton;
 
     private String html;
@@ -175,6 +177,7 @@ public class CTInAppNotification implements Parcelable {
             _landscapeImageCacheKey = in.readString();
             timeToLive = in.readLong();
             customTemplateData = in.readParcelable(CustomTemplateInAppData.class.getClassLoader());
+            aspectRatio = in.readDouble();
 
         } catch (JSONException e) {
             // no-op
@@ -269,9 +272,7 @@ public class CTInAppNotification implements Parcelable {
         dest.writeString(_landscapeImageCacheKey);
         dest.writeLong(timeToLive);
         dest.writeParcelable(customTemplateData, flags);
-    }
-
-    void didDismiss(FileResourceProvider resourceProvider) {
+        dest.writeDouble(aspectRatio);
     }
 
     String getBackgroundColor() {
@@ -585,10 +586,7 @@ public class CTInAppNotification implements Parcelable {
 
                 this.html = data.getString(Constants.INAPP_HTML_TAG);
                 this.customInAppUrl = data.has(Constants.KEY_URL) ? data.getString(Constants.KEY_URL) : "";
-                this.customExtras = data.has(Constants.KEY_KV) ? data.getJSONObject(Constants.KEY_KV) : null;
-                if (this.customExtras == null) {
-                    this.customExtras = new JSONObject();
-                }
+                this.customExtras = data.has(Constants.KEY_KV) ? data.getJSONObject(Constants.KEY_KV) : new JSONObject();
 
                 JSONObject displayParams = jsonObject.getJSONObject(Constants.INAPP_WINDOW);
                 if (displayParams != null) {
@@ -600,10 +598,16 @@ public class CTInAppNotification implements Parcelable {
                     this.height = displayParams.has(Constants.INAPP_Y_DP) ? displayParams.getInt(Constants.INAPP_Y_DP) : 0;
                     this.heightPercentage = displayParams.has(Constants.INAPP_Y_PERCENT) ? displayParams.getInt(Constants.INAPP_Y_PERCENT) : 0;
                     this.maxPerSession = displayParams.has(Constants.INAPP_MAX_DISPLAY_COUNT) ? displayParams.getInt(Constants.INAPP_MAX_DISPLAY_COUNT) : -1;
+                    this.aspectRatio = displayParams.has(Constants.INAPP_ASPECT_RATIO) ? displayParams.getDouble(Constants.INAPP_ASPECT_RATIO) : -1;
                 }
 
                 if (this.html != null) {
-                    if (this.position == 't' && this.widthPercentage == 100 && this.heightPercentage <= 30) {
+
+                    if (this.position == 't' && this.aspectRatio != -1) {
+                        this.inAppType = CTInAppType.CTInAppTypeHeaderHTML;
+                    } else if (this.position == 'b' && this.aspectRatio != -1) {
+                        this.inAppType = CTInAppType.CTInAppTypeFooterHTML;
+                    } else if (this.position == 't' && this.widthPercentage == 100 && this.heightPercentage <= 30) {
                         this.inAppType = CTInAppType.CTInAppTypeHeaderHTML;
                     } else if (this.position == 'b' && this.widthPercentage == 100 && this.heightPercentage <= 30) {
                         this.inAppType = CTInAppType.CTInAppTypeFooterHTML;
