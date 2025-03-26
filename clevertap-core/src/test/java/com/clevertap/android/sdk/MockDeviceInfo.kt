@@ -60,10 +60,6 @@ class MockDeviceInfo(
         return 4.27
     }
 
-    override fun getHeightPixels(): Int {
-        return 1920
-    }
-
     override fun getLibrary(): String {
         return "Android"
     }
@@ -98,10 +94,6 @@ class MockDeviceInfo(
 
     override fun getWidth(): Double {
         return 2.57
-    }
-
-    override fun getWidthPixels(): Int {
-        return 1024
     }
 
     override fun isBluetoothEnabled(): Boolean {
