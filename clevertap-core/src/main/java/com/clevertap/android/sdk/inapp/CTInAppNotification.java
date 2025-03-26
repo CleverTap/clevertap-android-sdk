@@ -39,8 +39,6 @@ public class CTInAppNotification implements Parcelable {
         }
     };
 
-    private String _landscapeImageCacheKey;
-
     private JSONObject actionExtras;
 
     private String backgroundColor;
@@ -173,7 +171,6 @@ public class CTInAppNotification implements Parcelable {
             isLocalInApp = in.readByte() != 0x00;
             fallBackToNotificationSettings = in.readByte() != 0x00;
             landscapeImageUrl = in.readString();
-            _landscapeImageCacheKey = in.readString();
             timeToLive = in.readLong();
             customTemplateData = in.readParcelable(CustomTemplateInAppData.class.getClassLoader());
             aspectRatio = in.readDouble();
@@ -268,7 +265,6 @@ public class CTInAppNotification implements Parcelable {
         dest.writeByte((byte) (isLocalInApp ? 0x01 : 0x00));
         dest.writeByte((byte) (fallBackToNotificationSettings ? 0x01 : 0x00));
         dest.writeString(landscapeImageUrl);
-        dest.writeString(_landscapeImageCacheKey);
         dest.writeLong(timeToLive);
         dest.writeParcelable(customTemplateData, flags);
         dest.writeDouble(aspectRatio);
