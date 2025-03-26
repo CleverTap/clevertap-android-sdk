@@ -19,6 +19,8 @@ import androidx.annotation.RequiresApi;
 @SuppressLint("ViewConstructor")
 class CTInAppWebView extends WebView {
 
+    private static final double DEFAULT_ASPECT_RATIO = -1;
+
     final Point dim = new Point();
     private final Context context;
 
@@ -30,14 +32,35 @@ class CTInAppWebView extends WebView {
 
     private final int widthPercentage;
 
+    private final double aspectRatio;
+
     @SuppressLint("ResourceType")
-    public CTInAppWebView(Context context, int widthDp, int heightDp, int widthPercentage, int heightPercentage) {
+    public CTInAppWebView(
+            Context context,
+            int widthDp,
+            int heightDp,
+            int widthPercentage,
+            int heightPercentage
+    ) {
+        this(context, widthDp, heightDp, widthPercentage, heightPercentage, DEFAULT_ASPECT_RATIO);
+    }
+
+    @SuppressLint("ResourceType")
+    public CTInAppWebView(
+            Context context,
+            int widthDp,
+            int heightDp,
+            int widthPercentage,
+            int heightPercentage,
+            double aspectRatio
+    ) {
         super(context);
         this.context = context;
         this.widthDp = widthDp;
         this.heightDp = heightDp;
         this.widthPercentage = widthPercentage;
         this.heightPercentage = heightPercentage;
+        this.aspectRatio = aspectRatio;
         setHorizontalScrollBarEnabled(false);
         setVerticalScrollBarEnabled(false);
         setHorizontalFadingEdgeEnabled(false);
@@ -63,8 +86,26 @@ class CTInAppWebView extends WebView {
     }
 
     void updateDimension() {
-        dim.x = calculateWidth();
-        dim.y = calculateHeight();
+
+        int width;
+        int height;
+
+        if (widthDp > 0) {
+            width = dpToPx(widthDp);
+        } else {
+            width = calculatePercentageWidth();
+        }
+
+        if (heightDp > 0) {
+            height = dpToPx(heightDp);
+        } else if (aspectRatio != -1) {
+            height = (int) (width / aspectRatio);
+        } else {
+            height = calculatePercentageHeight();
+        }
+
+        dim.x = width;
+        dim.y = height;
     }
 
     @Px

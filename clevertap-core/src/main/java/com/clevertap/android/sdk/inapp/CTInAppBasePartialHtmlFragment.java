@@ -135,9 +135,14 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
         try {
             inAppView = getView(inflater, container);
             layout = getLayout(inAppView);
-            webView = new CTInAppWebView(this.context, inAppNotification.getWidth(),
-                    inAppNotification.getHeight(), inAppNotification.getWidthPercentage(),
-                    inAppNotification.getHeightPercentage());
+            webView = new CTInAppWebView(
+                    this.context,
+                    inAppNotification.getWidth(),
+                    inAppNotification.getHeight(),
+                    inAppNotification.getWidthPercentage(),
+                    inAppNotification.getHeightPercentage(),
+                    inAppNotification.getAspectRatio()
+            );
             InAppWebViewClient webViewClient = new InAppWebViewClient();
             webView.setWebViewClient(webViewClient);
             webView.setOnTouchListener(CTInAppBasePartialHtmlFragment.this);
