@@ -108,14 +108,18 @@ public class InAppFCManager {
             return;
         }
 
-        impressionManager.recordImpression(id);
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.execute("recordInAppImpressionsAndCounts", () -> {
+            impressionManager.recordImpression(id);
 
-        incrementInAppCountsInPersistentStore(id);
+            incrementInAppCountsInPersistentStore(id);
 
-        int shownToday = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0);
-        StorageHelper
-                .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
-                        ++shownToday);
+            int shownToday = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0);
+            StorageHelper
+                    .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
+                            ++shownToday);
+            return null;
+        });
     }
 
     public int getShownTodayCount() {
