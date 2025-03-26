@@ -271,8 +271,6 @@ public class CTInAppNotification implements Parcelable {
         dest.writeParcelable(customTemplateData, flags);
     }
 
-    void didDismiss(FileResourceProvider resourceProvider) {
-    }
 
     String getBackgroundColor() {
         return backgroundColor;

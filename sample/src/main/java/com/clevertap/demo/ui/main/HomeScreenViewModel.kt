@@ -748,6 +748,10 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 Log.i(TAG, "onChildClick: 14-4")
                 FileVarsData.printFileVariables(cleverTapAPI!!, tag = TAG)
             }
+            "14-5" -> {
+                Log.i(TAG, "onChildClick: 14-5")
+                cleverTapAPI?.clearFileResources(false)
+            }
             "15-0" -> {
                 cleverTapAPI?.locale = "en_IN"
             }

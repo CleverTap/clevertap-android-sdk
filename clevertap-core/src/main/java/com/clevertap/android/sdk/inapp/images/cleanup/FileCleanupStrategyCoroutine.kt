@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp.images.cleanup
 
+import android.content.Context
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import com.clevertap.android.sdk.utils.DispatcherProvider
@@ -15,11 +17,13 @@ import kotlinx.coroutines.launch
  * This strategy clears file assets associated with provided URLs concurrently, leveraging coroutines for efficient
  * and non-blocking execution.
  *
- * @param fileResourceProvider The provider for accessing and managing file resources.
+ * @param context The context for accessing and managing file resources.
+ * @param logger The logger
  * @param dispatchers The dispatcher provider for managing coroutine execution contexts (defaults to [CtDefaultDispatchers]).
  */
 internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
-    override val fileResourceProvider: FileResourceProvider,
+    override val context: Context,
+    override val logger: ILogger,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers()
 ) : FileCleanupStrategy {
 
@@ -39,7 +43,7 @@ internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
             val asyncTasks = mutableListOf<Deferred<Unit>>()
             for (url in urls) {
                 val deferred: Deferred<Unit> = async {
-                    fileResourceProvider.deleteData(url)
+                    FileResourceProvider.getInstance(context, logger).deleteData(url)
                     successBlock.invoke(url)
                 }
                 asyncTasks.add(deferred)

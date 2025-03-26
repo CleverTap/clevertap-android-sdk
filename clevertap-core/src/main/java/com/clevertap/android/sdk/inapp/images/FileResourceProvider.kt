@@ -62,6 +62,24 @@ internal class FileResourceProvider(
         private const val IMAGE_DIRECTORY_NAME = "CleverTap.Images."
         private const val GIF_DIRECTORY_NAME = "CleverTap.Gif."
         private const val ALL_FILE_TYPES_DIRECTORY_NAME = "CleverTap.Files."
+
+        @Volatile
+        private var instance: FileResourceProvider? = null
+
+        @JvmStatic
+        fun getInstance(context: Context, logger: ILogger? = null): FileResourceProvider {
+            return instance ?: synchronized(this) {
+                instance ?: FileResourceProvider(
+                    images = context.getDir(IMAGE_DIRECTORY_NAME, Context.MODE_PRIVATE),
+                    gifs = context.getDir(GIF_DIRECTORY_NAME, Context.MODE_PRIVATE),
+                    allFileTypesDir = context.getDir(
+                        ALL_FILE_TYPES_DIRECTORY_NAME,
+                        Context.MODE_PRIVATE
+                    ),
+                    logger = logger
+                ).also { instance = it }
+            }
+        }
     }
 
     private fun <T> saveData(

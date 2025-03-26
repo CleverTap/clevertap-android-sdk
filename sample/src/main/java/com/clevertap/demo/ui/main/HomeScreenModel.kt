@@ -106,7 +106,8 @@ object HomeScreenModel {
                 "Define file Variables with multiple listeners \n adds file variables with fileReady() listeners",
                 "Global listeners & Define file Variables \n Adds listeners first and then registers the variables",
                 "Multiple Global listeners & Define file Variables \n Adds listeners first and then registers the variables",
-                "PrintFileVariables"
+                "PrintFileVariables",
+                "Clear All File Resources"
                 //"Add onceVariablesChangedAndNoDownloadsPending \n first time after app launch for first time",
             ),
             "LOCALE" to listOf("Set Locale"),
