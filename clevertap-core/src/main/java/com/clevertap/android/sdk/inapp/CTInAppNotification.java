@@ -14,7 +14,6 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
-import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 
 import org.json.JSONArray;
 import org.json.JSONException;
