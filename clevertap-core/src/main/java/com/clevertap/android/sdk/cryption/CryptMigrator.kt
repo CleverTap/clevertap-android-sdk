@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.cryption
 
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
-import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
+import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.Constants.piiDBKeys
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
@@ -22,6 +22,7 @@ internal data class CryptMigrator(
 
     companion object {
         const val MIGRATION_FAILURE_COUNT_KEY = "encryptionMigrationFailureCount"
+        const val SS_IN_APP_MIGRATED= "ssInAppMigrated"
         const val UNKNOWN_LEVEL = -1
         const val MIGRATION_NOT_NEEDED = 0
         const val MIGRATION_NEEDED = 1
@@ -47,13 +48,16 @@ internal data class CryptMigrator(
      */
     fun migrateEncryption() {
         val storedEncryptionLevel = cryptRepository.storedEncryptionLevel()
-
         val storedFailureCount = cryptRepository.migrationFailureCount()
+        val isSSInAppDataMigrated = !cryptRepository.isSSInAppDataMigrated()
 
-        val migrationFailureCount = when {
-            // Encryption level changed and upgrade to v2 already complete
-            storedEncryptionLevel != configEncryptionLevel && storedFailureCount != -1 -> MIGRATION_NEEDED
-            else -> storedFailureCount
+        val isMigrationNeeded = isSSInAppDataMigrated ||
+                (storedEncryptionLevel != configEncryptionLevel && storedFailureCount != -1)
+
+        val migrationFailureCount = if (isMigrationNeeded) {
+            MIGRATION_NEEDED
+        } else {
+            storedFailureCount
         }
 
         cryptRepository.updateEncryptionLevel(configEncryptionLevel)
@@ -70,7 +74,7 @@ internal data class CryptMigrator(
         logger.verbose(
             logPrefix,
             "Starting migration from encryption level $storedEncryptionLevel to $configEncryptionLevel " +
-                    "with migrationFailureCount $migrationFailureCount"
+                    "with migrationFailureCount $migrationFailureCount and isSSInAppDataMigrated $isSSInAppDataMigrated"
         )
         val migrationSuccess = handleAllMigrations(
             configEncryptionLevel == EncryptionLevel.MEDIUM.intValue(),
@@ -221,7 +225,7 @@ internal data class CryptMigrator(
             migrationSuccessful = migrationSuccessful && result.migrationSuccessful
             result.data
         }
-        val keysToProcess = listOf(PREFS_INAPP_KEY_CS, PREFS_INAPP_KEY_SS)
+        val keysToProcess = listOf(PREFS_INAPP_KEY_CS, INAPP_KEY)
 
         dataMigrationRepository.inAppDataFiles(keysToProcess, migrateCode)
 

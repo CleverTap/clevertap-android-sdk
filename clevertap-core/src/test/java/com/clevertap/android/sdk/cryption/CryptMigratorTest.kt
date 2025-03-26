@@ -50,9 +50,10 @@ class CryptMigratorTest {
     }
 
     @Test
-    fun `migrateEncryption should not migrate when stored and configured encryption levels match and no migration failure`() {
+    fun `migrateEncryption should not migrate when stored and configured encryption levels match, no migration failure and SSInApp data migrated`() {
         every { cryptRepository.storedEncryptionLevel() } returns EncryptionLevel.MEDIUM.intValue()
         every { cryptRepository.migrationFailureCount() } returns CryptMigrator.MIGRATION_NOT_NEEDED
+        every { cryptRepository.isSSInAppDataMigrated() } returns true
 
         cryptMigratorMedium.migrateEncryption()
 
@@ -75,7 +76,22 @@ class CryptMigratorTest {
     }
 
     @Test
-    fun `migrateEncryption should migrate when levels are the same and no migration failure`() {
+    fun `migrateEncryption should migrate when SSInAppData is not migrated`() {
+        every { cryptRepository.storedEncryptionLevel() } returns EncryptionLevel.MEDIUM.intValue()
+        every { cryptRepository.migrationFailureCount() } returns CryptMigrator.MIGRATION_NOT_NEEDED
+        every { cryptRepository.isSSInAppDataMigrated() } returns false
+
+        mockkObject(CryptHandler)
+        every { CryptHandler.isTextAESGCMEncrypted(any()) } returns false
+        every { CryptHandler.isTextAESEncrypted(any()) } returns true
+
+        cryptMigratorMedium.migrateEncryption()
+
+        verify { cryptRepository.updateMigrationFailureCount(true) }
+    }
+
+    @Test
+    fun `migrateEncryption should migrate when levels are the same and migration failure`() {
         every { cryptRepository.storedEncryptionLevel() } returns EncryptionLevel.MEDIUM.intValue()
         every { cryptRepository.migrationFailureCount() } returns 2
 
@@ -85,7 +101,6 @@ class CryptMigratorTest {
 
         cryptMigratorMedium.migrateEncryption()
 
-        verify { cryptRepository.updateEncryptionLevel(EncryptionLevel.MEDIUM.intValue()) }
         verify { cryptRepository.updateMigrationFailureCount(true) }
     }
 
@@ -215,6 +230,7 @@ class CryptMigratorTest {
         val encryptedText = "encrypted_data"
 
         every { cryptRepository.storedEncryptionLevel() } returns EncryptionLevel.MEDIUM.intValue()
+        every { cryptRepository.isSSInAppDataMigrated() } returns true
         every { cryptRepository.migrationFailureCount() } returns CryptMigrator.MIGRATION_FIRST_UPGRADE
 
         every { dataMigrationRepository.cachedGuidJsonObject() } returns encryptedJson
@@ -239,6 +255,7 @@ class CryptMigratorTest {
         }
 
         every { cryptRepository.storedEncryptionLevel() } returns EncryptionLevel.MEDIUM.intValue()
+        every { cryptRepository.isSSInAppDataMigrated() } returns true
         every { cryptRepository.migrationFailureCount() } returns CryptMigrator.MIGRATION_FIRST_UPGRADE
 
         every { dataMigrationRepository.cachedGuidJsonObject() } returns encryptedJson
@@ -268,6 +285,7 @@ class CryptMigratorTest {
         }
 
         every { cryptRepository.storedEncryptionLevel() } returns EncryptionLevel.MEDIUM.intValue()
+        every { cryptRepository.isSSInAppDataMigrated() } returns true
         every { cryptRepository.migrationFailureCount() } returns CryptMigrator.MIGRATION_FIRST_UPGRADE
 
         every { dataMigrationRepository.cachedGuidJsonObject() } returns encryptedJson
