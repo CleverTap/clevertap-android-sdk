@@ -109,22 +109,6 @@ class CTInAppWebView extends WebView {
     }
 
     @Px
-    private int calculateWidth() {
-        if (widthDp > 0) {
-            return dpToPx(widthDp);
-        }
-        return calculatePercentageWidth();
-    }
-
-    @Px
-    private int calculateHeight() {
-        if (heightDp > 0) {
-            return dpToPx(heightDp);
-        }
-        return calculatePercentageHeight();
-    }
-
-    @Px
     private int dpToPx(int dp) {
         return (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
