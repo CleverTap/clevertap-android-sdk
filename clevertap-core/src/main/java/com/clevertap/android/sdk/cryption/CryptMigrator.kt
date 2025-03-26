@@ -49,9 +49,9 @@ internal data class CryptMigrator(
     fun migrateEncryption() {
         val storedEncryptionLevel = cryptRepository.storedEncryptionLevel()
         val storedFailureCount = cryptRepository.migrationFailureCount()
-        val isSSInAppDataMigrated = !cryptRepository.isSSInAppDataMigrated()
+        val isSSInAppDataMigrated = cryptRepository.isSSInAppDataMigrated()
 
-        val isMigrationNeeded = isSSInAppDataMigrated ||
+        val isMigrationNeeded = !isSSInAppDataMigrated ||
                 (storedEncryptionLevel != configEncryptionLevel && storedFailureCount != -1)
 
         val migrationFailureCount = if (isMigrationNeeded) {
