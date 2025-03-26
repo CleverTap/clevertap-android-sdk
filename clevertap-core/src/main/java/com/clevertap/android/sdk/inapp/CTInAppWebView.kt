@@ -108,7 +108,7 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
     @Px
     private fun calculateWidthWithWindowMetrics(): Int {
         val windowManager =
-            context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
                 ?: return calculateWidthWithDisplayMetrics()
 
         val metrics = windowManager.currentWindowMetrics
@@ -125,7 +125,7 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
     @Px
     private fun calculateHeightWithWindowMetrics(): Int {
         val windowManager =
-            context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
                 ?: return calculateHeightWithDisplayMetrics()
 
         val metrics = windowManager.currentWindowMetrics
