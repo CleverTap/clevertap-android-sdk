@@ -318,6 +318,10 @@ public class CTInAppNotification implements Parcelable {
         return heightPercentage;
     }
 
+    double getAspectRatio() {
+        return aspectRatio;
+    }
+
     String getHtml() {
         return html;
     }
@@ -620,7 +624,7 @@ public class CTInAppNotification implements Parcelable {
         }
     }
 
-    private static long defaultTtl() {
+    static long defaultTtl() {
         return (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS) / 1000;
     }
 
