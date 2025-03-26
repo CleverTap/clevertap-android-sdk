@@ -1,5 +1,8 @@
 package com.clevertap.android.sdk.inapp
 
+import io.mockk.every
+import io.mockk.mockk
+import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -131,16 +134,15 @@ class CTInAppNotificationTest {
     @Test
     fun `initWithJSON invalidJson should set error`() {
         // Arrange
-        val jsonString = "invalid json"
-        try {
-            val jsonObject = JSONObject(jsonString)
-        } catch (e: Exception) {
-            // Act
-            val notification = CTInAppNotification().initWithJSON(JSONObject(), true)
-            // Assert
-            assertNotNull(notification)
-            assertNotNull(notification.error)
-        }
+        val inAppNotification = mockk<JSONObject>()
+        every { inAppNotification.has(any()) } throws JSONException("some exception")
+        every { inAppNotification.get(any()) } throws JSONException("some exception")
+
+        // Act
+        val notification = CTInAppNotification().initWithJSON(inAppNotification, true)
+        // Assert
+        assertNotNull(notification)
+        assertNotNull(notification.error)
     }
 
     @Test
