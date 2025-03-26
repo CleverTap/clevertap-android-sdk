@@ -7,7 +7,7 @@ import com.clevertap.android.sdk.isNotNullAndBlank
 
 internal object OpenUrlTemplate {
 
-    private const val NAME = "Open Url"
+    private const val NAME = "ctsystem_openurl"
     private const val URL_ARG = "Android"
 
     fun createTemplate(systemActionHandler: InAppActionHandler): CustomTemplate {

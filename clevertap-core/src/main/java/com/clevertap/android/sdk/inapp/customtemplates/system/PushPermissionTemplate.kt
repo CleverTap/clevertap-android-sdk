@@ -5,7 +5,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.inapp.customtemplates.function
 
 internal object PushPermissionTemplate {
-    private const val NAME = "Push Permission"
+    private const val NAME = "ctsystem_pushpermission"
     private const val FALLBACK_TO_SETTINGS_ARG = "fbSettings"
 
     fun createTemplate(systemActionHandler: InAppActionHandler): CustomTemplate {
