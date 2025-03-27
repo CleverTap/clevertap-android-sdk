@@ -350,7 +350,7 @@ class InAppStoreTest {
         every { cryptHandler.decrypt(ssEncryptedInApps) } returns ssDecryptedInApps
 
         // Act
-        val result = inAppStore.readClientSideInApps()
+        val result = inAppStore.readServerSideInApps()
 
         // Assert
         assertEquals(JSONArray(), result)
