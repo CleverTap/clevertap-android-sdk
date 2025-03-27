@@ -51,13 +51,9 @@ internal data class CryptMigrator(
         val storedFailureCount = cryptRepository.migrationFailureCount()
         val isSSInAppDataMigrated = cryptRepository.isSSInAppDataMigrated()
 
-        if (!isSSInAppDataMigrated) {
-            val success = migrateInAppData()
-            cryptRepository.updateIsSSInAppDataMigrated(success)
-        }
-
         val migrationFailureCount = when {
             // Encryption level changed and upgrade to v2 already complete
+            !isSSInAppDataMigrated -> MIGRATION_NEEDED
             storedEncryptionLevel != configEncryptionLevel && storedFailureCount != -1 -> MIGRATION_NEEDED
             else -> storedFailureCount
         }
@@ -82,6 +78,8 @@ internal data class CryptMigrator(
             configEncryptionLevel == EncryptionLevel.MEDIUM.intValue(),
             migrationFailureCount == -1
         )
+
+        cryptRepository.updateIsSSInAppDataMigrated(migrationSuccess)
         cryptRepository.updateMigrationFailureCount(migrationSuccess)
     }
 
