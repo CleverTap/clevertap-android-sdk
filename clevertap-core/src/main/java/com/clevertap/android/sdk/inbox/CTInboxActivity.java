@@ -88,8 +88,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 setListener(cleverTapAPI);
                 pushPermissionHandler = new PushPermissionHandler(
                         config,
-                        cleverTapAPI.getCoreState().getCallbackManager().getPushPermissionResponseListenerList(),
-                        null);
+                        cleverTapAPI.getCoreState().getCallbackManager().getPushPermissionResponseListenerList());
             }
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {

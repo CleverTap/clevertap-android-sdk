@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -9,7 +10,6 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.InAppNotificationActivity
 import com.clevertap.android.sdk.PushPermissionHandler
-import com.clevertap.android.sdk.PushPermissionResponseListener
 import com.clevertap.android.sdk.Utils
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
@@ -17,12 +17,14 @@ import com.google.android.play.core.review.ReviewManagerFactory
 internal class InAppActionHandler(
     private val context: Context,
     private val ctConfig: CleverTapInstanceConfig,
+    private val pushPermissionHandler: PushPermissionHandler,
     private val playStoreReviewManagerProvider: (Context) -> ReviewManager = {
         ReviewManagerFactory.create(it)
     }
 ) {
-    fun interface PushPrimerLauncher {
-        fun showPushPrimer()
+
+    fun interface PushPermissionPromptPresenter {
+        fun showPrompt(activity: Activity)
     }
 
     private val logger = ctConfig.logger
@@ -45,7 +47,7 @@ internal class InAppActionHandler(
             val context = if (launchContext != null) {
                 launchContext
             } else {
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 this.context
             }
 
@@ -107,42 +109,46 @@ internal class InAppActionHandler(
     }
 
     fun arePushNotificationsEnabled(): Boolean {
-        return PushPermissionHandler.isPushPermissionGranted(context)
+        return pushPermissionHandler.isPushPermissionGranted(context)
     }
 
     fun launchPushPermissionPrompt(fallbackToSettings: Boolean): Boolean {
-        val currentActivity = CoreMetaData.getCurrentActivity()
-        if (currentActivity == null) {
-            return false
+        return launchPushPermissionPrompt(
+            fallbackToSettings
+        ) { activity ->
+            if (activity is InAppNotificationActivity) {
+                activity.showPushPermissionPrompt(fallbackToSettings)
+            } else {
+                InAppNotificationActivity.launchForPushPermissionPrompt(
+                    activity,
+                    ctConfig,
+                    fallbackToSettings
+                )
+            }
         }
-        if (currentActivity is InAppNotificationActivity) {
-            currentActivity.showPushPermissionPrompt(fallbackToSettings)
-        } else {
-            InAppNotificationActivity.launchForPushPermissionPrompt(
-                currentActivity,
-                ctConfig,
-                fallbackToSettings
-            )
-        }
-        return true
     }
 
-    fun launchPushPermissionPrimer(
+    fun launchPushPermissionPrompt(
         fallbackToSettings: Boolean,
-        primerLauncher: PushPrimerLauncher,
-        ctListeners: List<PushPermissionResponseListener?>?
-    ) {
-        val pushPermissionHandler = PushPermissionHandler(ctConfig, ctListeners)
-        pushPermissionHandler.requestPermission(
-            context,
-            fallbackToSettings,
-            object : PushPermissionHandler.PushPermissionFlowCallback {
-                override fun onRequestPermission() {
-                    primerLauncher.showPushPrimer()
-                }
+        presenter: PushPermissionPromptPresenter
+    ): Boolean {
+        val currentActivity = CoreMetaData.getCurrentActivity()
+        if (currentActivity == null) {
+            logger.debug(
+                "CurrentActivity reference is null. SDK can't prompt the user with Notification Permission! Ensure the following things:\n" +
+                        "1. Calling ActivityLifecycleCallback.register(this) in your custom application class before super.onCreate().\n" +
+                        "   Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n" +
+                        "2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, not onCreate()."
+            )
+            return false
+        }
 
-                override fun onShowFallback() {
-                    primerLauncher.showPushPrimer()
+        return pushPermissionHandler.requestPermission(
+            currentActivity,
+            fallbackToSettings,
+            object : PushPermissionHandler.PushPermissionRequestCallback {
+                override fun onRequestPermission() {
+                    presenter.showPrompt(currentActivity)
                 }
             })
     }

@@ -62,11 +62,6 @@ internal object CleverTapFactory {
 
         val coreState = CoreState()
 
-        val inAppActionHandler = InAppActionHandler(context, cleverTapInstanceConfig)
-        val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
-        val templatesManager = TemplatesManager.createInstance(cleverTapInstanceConfig, systemTemplates)
-        coreState.templatesManager = templatesManager
-
         // create storeRegistry, preferences for features
         val storeProvider = getInstance()
         val accountId = cleverTapInstanceConfig.accountId
@@ -176,6 +171,16 @@ internal object CleverTapFactory {
         val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
 
         coreState.impressionManager = impressionManager
+
+        val inAppActionHandler = InAppActionHandler(
+            context,
+            cleverTapInstanceConfig,
+            PushPermissionHandler(config, callbackManager.pushPermissionResponseListenerList)
+        )
+        val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
+        val templatesManager =
+            TemplatesManager.createInstance(cleverTapInstanceConfig, systemTemplates)
+        coreState.templatesManager = templatesManager
 
         val evaluationManager = EvaluationManager(
             triggersMatcher = triggersMatcher,

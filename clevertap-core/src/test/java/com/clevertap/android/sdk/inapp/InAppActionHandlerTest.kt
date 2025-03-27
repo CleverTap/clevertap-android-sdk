@@ -23,6 +23,7 @@ class InAppActionHandlerTest : BaseTestCase() {
         inAppActionHandler = InAppActionHandler(
             application,
             getMockCtConfig(),
+            pushPermissionHandler = mockk(relaxed = true),
             playStoreReviewManagerProvider = { FakeReviewManager(it) })
     }
 
@@ -72,7 +73,8 @@ class InAppActionHandlerTest : BaseTestCase() {
         val mockContext = mockk<Context>(relaxed = true)
         val inAppActionHandler = InAppActionHandler(
             mockContext,
-            getMockCtConfig()
+            getMockCtConfig(),
+            pushPermissionHandler = mockk()
         )
 
         assertTrue(inAppActionHandler.openUrl(url))
