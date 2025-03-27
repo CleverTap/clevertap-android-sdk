@@ -22,7 +22,7 @@ internal data class CryptMigrator(
 
     companion object {
         const val MIGRATION_FAILURE_COUNT_KEY = "encryptionMigrationFailureCount"
-        const val SS_IN_APP_MIGRATED= "ssInAppMigrated"
+        const val SS_IN_APP_MIGRATED = "ssInAppMigrated"
         const val UNKNOWN_LEVEL = -1
         const val MIGRATION_NOT_NEEDED = 0
         const val MIGRATION_NEEDED = 1
