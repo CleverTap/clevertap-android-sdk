@@ -25,6 +25,8 @@ import java.util.Iterator;
 @RestrictTo(Scope.LIBRARY)
 public class CTInAppNotification implements Parcelable {
 
+    public static final double HTML_DEFAULT_ASPECT_RATIO = -1;
+
     @SuppressWarnings("unused")
     public static final Parcelable.Creator<CTInAppNotification> CREATOR
             = new Parcelable.Creator<CTInAppNotification>() {
@@ -603,7 +605,10 @@ public class CTInAppNotification implements Parcelable {
                     this.height = displayParams.optInt(Constants.INAPP_Y_DP, 0);
                     this.heightPercentage = displayParams.optInt(Constants.INAPP_Y_PERCENT, 0);
                     this.maxPerSession = displayParams.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, -1);
-                    this.aspectRatio = displayParams.optDouble(Constants.INAPP_ASPECT_RATIO, -1);
+                    this.aspectRatio = displayParams.optDouble(Constants.INAPP_ASPECT_RATIO, HTML_DEFAULT_ASPECT_RATIO);
+                    if (aspectRatio <= 0.0f) {
+                        this.aspectRatio = HTML_DEFAULT_ASPECT_RATIO;
+                    }
                 }
 
                 if (this.html != null) {
