@@ -239,6 +239,17 @@ class CTInAppNotificationTest {
     }
 
     @Test
+    fun `initWithJSON checks invalid aspect ratio and defaults it to -1`() {
+
+        // Arrange data which is invalid json from BE with aspect ratio 0.0
+        val jo = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_INVALID_ASPECT_RATIO)
+        val notification = CTInAppNotification().initWithJSON(jo, true)
+
+        // assert it is set as default -1.0
+        assertEquals(CTInAppNotification.HTML_DEFAULT_ASPECT_RATIO, notification.aspectRatio, Double.MIN_VALUE)
+    }
+
+    @Test
     fun checkTimeForParcelize() {
         val timeInMillisHalfInter = measureTimeMillis { parcelizeCheck(JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL)) }
         System.out.println("Time taken to parcelize half inter = $timeInMillisHalfInter")

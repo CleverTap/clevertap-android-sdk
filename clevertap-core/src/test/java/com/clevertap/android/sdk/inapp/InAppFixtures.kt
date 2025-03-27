@@ -313,6 +313,42 @@ object InAppFixtures {
         }
     """.trimIndent()
 
+    val TYPE_ADVANCED_BUILDER_INVALID_ASPECT_RATIO = """
+        {
+          "type": "custom-html",
+          "w": {
+            "dk": false,
+            "sc": false,
+            "pos": "b",
+            "xp": 100,
+            "yp": 100,
+            "aspectRatio": 0.0
+          },
+          "isJsEnabled": true,
+          "is_native": true,
+          "ti": 1742969683,
+          "wzrk_id": "1742969683_20250326",
+          "wzrk_pivot": "wzrk_default",
+          "priority": 1,
+          "whenTriggers": [
+            {
+              "eventName": "event"
+            }
+          ],
+          "frequencyLimits": [
+            
+          ],
+          "excludeGlobalFCaps": -1,
+          "occurrenceLimits": [
+            
+          ],
+          "wzrk_ttl": 1743142761,
+          "d": {
+            "html": "some-html-block"
+          }
+        }
+    """.trimIndent()
+
     val TYPE_ADVANCED_BUILDER_COVER = """
         {
           "type": "custom-html",

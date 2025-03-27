@@ -69,7 +69,7 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
 
         val height = if (heightDp > 0) {
             dpToPx(heightDp)
-        } else if (aspectRatio != -1.0) {
+        } else if (aspectRatio != -1.0 && aspectRatio > 0.0f) {
             (width / aspectRatio).toInt()
         } else {
             calculatePercentageHeight()
