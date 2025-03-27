@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.cryption.CryptMigrator.Companion.UNKNOWN_LEVEL
 interface ICryptRepository {
     fun storedEncryptionLevel(): Int
     fun isSSInAppDataMigrated(): Boolean
+    fun updateIsSSInAppDataMigrated(migrated: Boolean)
     fun migrationFailureCount(): Int
     fun updateEncryptionLevel(configEncryptionLevel: Int)
     fun updateMigrationFailureCount(migrationSuccessful: Boolean)
@@ -27,7 +28,16 @@ class CryptRepository(
         StorageHelper.getBoolean(
             context,
             StorageHelper.storageKeyWithSuffix(accountId, SS_IN_APP_MIGRATED),
-            false)
+            false
+        )
+
+    override fun updateIsSSInAppDataMigrated(migrated: Boolean) {
+        StorageHelper.putBoolean(
+            context,
+            StorageHelper.storageKeyWithSuffix(accountId, SS_IN_APP_MIGRATED),
+            migrated
+        )
+    }
 
     override fun storedEncryptionLevel() =
         StorageHelper.getInt(

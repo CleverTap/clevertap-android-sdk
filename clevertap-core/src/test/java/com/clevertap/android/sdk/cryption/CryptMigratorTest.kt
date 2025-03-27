@@ -87,7 +87,7 @@ class CryptMigratorTest {
 
         cryptMigratorMedium.migrateEncryption()
 
-        verify { cryptRepository.updateMigrationFailureCount(true) }
+        verify { cryptRepository.updateIsSSInAppDataMigrated(true) }
     }
 
     @Test
