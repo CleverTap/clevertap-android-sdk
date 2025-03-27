@@ -294,10 +294,9 @@ public class InAppController implements InAppListener {
         if (jsonObject.optBoolean(IS_HARD_PERMISSION_REQUEST, false)) {
             inAppActionHandler.launchPushPermissionPrompt(fallbackToSettings);
         } else {
-            inAppActionHandler.launchPushPermissionPrimer(
+            inAppActionHandler.launchPushPermissionPrompt(
                     fallbackToSettings,
-                    () -> prepareNotificationForDisplay(jsonObject),
-                    callbackManager.getPushPermissionResponseListenerList());
+                    (Activity) -> prepareNotificationForDisplay(jsonObject));
         }
     }
 

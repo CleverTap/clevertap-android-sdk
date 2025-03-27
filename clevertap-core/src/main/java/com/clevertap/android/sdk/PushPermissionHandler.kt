@@ -9,80 +9,38 @@ import com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE
 import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings
 import java.lang.ref.WeakReference
 
-internal class PushPermissionHandler(
+internal class PushPermissionHandler @JvmOverloads constructor(
     private val config: CleverTapInstanceConfig,
     private val ctListeners: List<PushPermissionResponseListener?>?,
-    callback: PushPermissionResultCallback? = null
+    callback: PushPermissionResultCallback? = null,
+    private val cacheProvider: (Context) -> CTPreferenceCache = defaultCacheProvider(config),
+    private val systemPermissionInterface: SystemPushPermissionInterface = defaultSystemInterface()
 ) {
 
     interface PushPermissionResultCallback {
         fun onPushPermissionResult(isGranted: Boolean)
     }
 
-    interface PushPermissionFlowCallback {
+    interface PushPermissionRequestCallback {
         fun onRequestPermission()
-        fun onShowFallback()
     }
 
     companion object {
         internal const val ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS"
 
-        fun isPushPermissionGranted(context: Context): Boolean {
-            return ContextCompat.checkSelfPermission(context, ANDROID_PERMISSION_STRING) ==
-                    PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    private val pushPermissionCallback = WeakReference(callback)
-    private var isFromNotificationSettingsActivity: Boolean = false
-
-    fun requestPermission(
-        context: Context,
-        fallbackEnabled: Boolean,
-        flowCallback: PushPermissionFlowCallback
-    ) {
-        if (isPushPermissionGranted(context)) {
-            notifyListeners(isPermissionGranted = true)
-            return
-        }
-
-        val isFirstTimeRequest =
-            CTPreferenceCache.getInstance(context, config).isFirstTimeRequest()
-
-        val currentActivity = CoreMetaData.getCurrentActivity()
-        if (currentActivity == null) {
-            config.logger.debug(
-                "CurrentActivity reference is null. SDK can't prompt the user with Notification Permission! Ensure the following things:\n" +
-                        "1. Calling ActivityLifecycleCallback.register(this) in your custom application class before super.onCreate().\n" +
-                        "   Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n" +
-                        "2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, not onCreate()."
-            )
-            return
-        }
-        val shouldShowRequestPermissionRationale =
-            ActivityCompat.shouldShowRequestPermissionRationale(
-                currentActivity,
-                ANDROID_PERMISSION_STRING
-            )
-
-        if (!isFirstTimeRequest && shouldShowRequestPermissionRationale) {
-            if (fallbackEnabled) {
-                flowCallback.onShowFallback()
-            } else {
-                notifyListeners(isPermissionGranted = false)
+        private fun defaultCacheProvider(config: CleverTapInstanceConfig) =
+            { context: Context ->
+                CTPreferenceCache.getInstance(context, config)
             }
-            return
-        }
 
-        flowCallback.onRequestPermission()
-    }
+        private fun defaultSystemInterface(): SystemPushPermissionInterface =
+            object : SystemPushPermissionInterface {
+                override fun isPushPermissionGranted(context: Context): Boolean {
+                    return ContextCompat.checkSelfPermission(context, ANDROID_PERMISSION_STRING) ==
+                            PackageManager.PERMISSION_GRANTED
+                }
 
-    fun requestPermission(activity: Activity, fallbackToSettings: Boolean) {
-        requestPermission(
-            activity,
-            fallbackToSettings,
-            object : PushPermissionFlowCallback {
-                override fun onRequestPermission() {
+                override fun requestPushPermission(activity: Activity) {
                     ActivityCompat.requestPermissions(
                         activity,
                         arrayOf(ANDROID_PERMISSION_STRING),
@@ -90,8 +48,74 @@ internal class PushPermissionHandler(
                     )
                 }
 
-                override fun onShowFallback() {
-                    showFallbackAlertDialog(activity)
+                override fun navigateToNotificationSettings(activity: Activity) {
+                    Utils.navigateToAndroidSettingsForNotifications(activity)
+                }
+
+                override fun shouldShowRequestPermissionRationale(activity: Activity): Boolean {
+                    return ActivityCompat.shouldShowRequestPermissionRationale(
+                        activity,
+                        ANDROID_PERMISSION_STRING
+                    )
+                }
+            }
+    }
+
+    private val pushPermissionCallback = WeakReference(callback)
+    private var isFromNotificationSettingsActivity: Boolean = false
+
+    fun isPushPermissionGranted(context: Context): Boolean {
+        return systemPermissionInterface.isPushPermissionGranted(context)
+    }
+
+    /**
+     * Attempt to request a push permission. Checks if the permission is already given and does not
+     * initiate the flow in this case. When the result of the permission check is known without
+     * initiation of the permission flow - notifies the attached [ctListeners] and the
+     * [PushPermissionResultCallback].
+     *
+     * @return Whether the permission flow was initiated.
+     */
+    fun requestPermission(
+        activity: Activity,
+        fallbackToSettings: Boolean,
+        requestCallback: PushPermissionRequestCallback
+    ): Boolean {
+        if (isPushPermissionGranted(activity)) {
+            notifyListeners(isPermissionGranted = true)
+            return false
+        }
+
+        val isFirstTimeRequest = cacheProvider(activity).isFirstTimeRequest()
+        val showRationale = systemPermissionInterface.shouldShowRequestPermissionRationale(activity)
+
+        if (!isFirstTimeRequest && showRationale) {
+            if (fallbackToSettings) {
+                showFallbackAlertDialog(activity)
+                return true
+            } else {
+                notifyListeners(isPermissionGranted = false)
+                return false
+            }
+        }
+
+        requestCallback.onRequestPermission()
+        return true
+    }
+
+    /**
+     * Request a permission from an [Activity]. Starts the permission flow and notifies the [ctListeners]
+     * and the [PushPermissionResultCallback] when the flow completes. This method should only be
+     * called from an [Activity].[onActivityResume] and [onRequestPermissionsResult] must also
+     * be called within the corresponding [Activity] methods.
+     */
+    fun requestPermission(activity: Activity, fallbackToSettings: Boolean) {
+        requestPermission(
+            activity,
+            fallbackToSettings,
+            object : PushPermissionRequestCallback {
+                override fun onRequestPermission() {
+                    systemPermissionInterface.requestPushPermission(activity)
                 }
             })
     }
@@ -100,7 +124,7 @@ internal class PushPermissionHandler(
     fun showFallbackAlertDialog(activity: Activity) {
         AlertDialogPromptForSettings.show(activity,
             onAccept = {
-                Utils.navigateToAndroidSettingsForNotifications(activity)
+                systemPermissionInterface.navigateToNotificationSettings(activity)
                 isFromNotificationSettingsActivity = true
             },
             onDecline = {
@@ -122,8 +146,9 @@ internal class PushPermissionHandler(
         permissions: Array<String>,
         grantResults: IntArray
     ) {
-        CTPreferenceCache.getInstance(activity, config).setFirstTimeRequest(false)
-        CTPreferenceCache.updateCacheToDisk(activity, config)
+        val ctCache = cacheProvider(activity)
+        ctCache.setFirstTimeRequest(false)
+        ctCache.updateCacheToDisk(activity, config)
 
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             val isGranted = PackageManager.PERMISSION_GRANTED == grantResults.firstOrNull()
@@ -138,5 +163,12 @@ internal class PushPermissionHandler(
                 listener?.onPushPermissionResponse(isPermissionGranted)
             }
         }
+    }
+
+    interface SystemPushPermissionInterface {
+        fun isPushPermissionGranted(context: Context): Boolean
+        fun requestPushPermission(activity: Activity)
+        fun navigateToNotificationSettings(activity: Activity)
+        fun shouldShowRequestPermissionRationale(activity: Activity): Boolean
     }
 }

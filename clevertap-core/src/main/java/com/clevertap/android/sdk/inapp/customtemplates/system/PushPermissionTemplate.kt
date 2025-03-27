@@ -19,8 +19,8 @@ internal object PushPermissionTemplate {
                     return@presenter
                 }
 
-                val fallbackToSettings = templateContext.getBoolean(FALLBACK_TO_SETTINGS_ARG)
-                if (systemActionHandler.launchPushPermissionPrompt(fallbackToSettings == true)) {
+                val fbSettings = templateContext.getBoolean(FALLBACK_TO_SETTINGS_ARG) == true
+                if (systemActionHandler.launchPushPermissionPrompt(fbSettings)) {
                     templateContext.setPresented()
                 }
                 templateContext.setDismissed()
