@@ -601,21 +601,26 @@ public class CTInAppNotification implements Parcelable {
                 }
 
                 if (this.html != null) {
-
-                    if (this.position == 't' && this.aspectRatio != -1) {
-                        this.inAppType = CTInAppType.CTInAppTypeHeaderHTML;
-                    } else if (this.position == 'b' && this.aspectRatio != -1) {
-                        this.inAppType = CTInAppType.CTInAppTypeFooterHTML;
-                    } else if (this.position == 't' && this.widthPercentage == 100 && this.heightPercentage <= 30) {
-                        this.inAppType = CTInAppType.CTInAppTypeHeaderHTML;
-                    } else if (this.position == 'b' && this.widthPercentage == 100 && this.heightPercentage <= 30) {
-                        this.inAppType = CTInAppType.CTInAppTypeFooterHTML;
-                    } else if (this.position == 'c' && this.widthPercentage == 90 && this.heightPercentage == 85) {
-                        this.inAppType = CTInAppType.CTInAppTypeInterstitialHTML;
-                    } else if (this.position == 'c' && this.widthPercentage == 100 && this.heightPercentage == 100) {
-                        this.inAppType = CTInAppType.CTInAppTypeCoverHTML;
-                    } else if (this.position == 'c' && this.widthPercentage == 90 && this.heightPercentage == 50) {
-                        this.inAppType = CTInAppType.CTInAppTypeHalfInterstitialHTML;
+                    switch (this.position) {
+                        case 't':
+                            if (this.aspectRatio != -1 || (this.widthPercentage == 100 && this.heightPercentage <= 30)) {
+                                this.inAppType = CTInAppType.CTInAppTypeHeaderHTML;
+                            }
+                            break;
+                        case 'b':
+                            if (this.aspectRatio != -1 || (this.widthPercentage == 100 && this.heightPercentage <= 30)) {
+                                this.inAppType = CTInAppType.CTInAppTypeFooterHTML;
+                            }
+                            break;
+                        case 'c':
+                            if (this.widthPercentage == 90 && this.heightPercentage == 85) {
+                                this.inAppType = CTInAppType.CTInAppTypeInterstitialHTML;
+                            } else if (this.widthPercentage == 100 && this.heightPercentage == 100) {
+                                this.inAppType = CTInAppType.CTInAppTypeCoverHTML;
+                            } else if (this.widthPercentage == 90 && this.heightPercentage == 50) {
+                                this.inAppType = CTInAppType.CTInAppTypeHalfInterstitialHTML;
+                            }
+                            break;
                     }
                 }
             }
