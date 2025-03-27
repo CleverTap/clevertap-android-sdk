@@ -2,11 +2,11 @@
 ### Version 7.3.1 (March 27, 2025)
 
 #### Bug Fixes
-* Fixes an issue where legacy (ServerSide) InApps were not displayed after an app upgrade
+* Fixes an issue where InApps were not displayed after an app upgrade
 
 ### Version 7.3.0 (March 11, 2025)
 > ‼️ **NOTE**
-Please update to 7.3.1 or above if using legacy (ServerSide) InApps
+Please update to 7.3.1 or above if using InApps
 
 #### Breaking API Changes
 *   **Huawei Push Integration - Updated Setup Required:** The integration process for Huawei Push has been significantly updated. If you have previously integrated the CleverTap Huawei Push SDK, you **must** follow the new steps outlined [here](https://developer.clevertap.com/docs/clevertap-huawei-push-integration) to ensure continued functionality.
@@ -19,7 +19,7 @@ Please update to 7.3.1 or above if using legacy (ServerSide) InApps
 
 ### Version 7.2.2 (January 21, 2025)
 > ‼️ **NOTE**
-Please update to 7.3.1 or above if using legacy (ServerSide) InApps
+Please update to 7.3.1 or above if using InApps
 
 This hotfix release addresses a critical issue from `v7.1.0` onwards:
 
