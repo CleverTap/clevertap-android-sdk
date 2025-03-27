@@ -40,7 +40,7 @@ internal data class CryptMigrator(
      *      encryption level and migration failures are not recorded, migration is required.
      *   3. **Existing Failures**: If there are recorded migration failures, the process attempts to
      *      continue from where it left off.
-     *   4. **SSInApp Key FIx**: v7.3.0- had incorrect migration for SSInApps, hence migration is required
+     *   4. **SSInApp Key Fix**: v7.3.0- had incorrect migration for SSInApps, hence migration is required.
      *
      * - Updates:
      *   - Updates the stored encryption level to the current configuration.
