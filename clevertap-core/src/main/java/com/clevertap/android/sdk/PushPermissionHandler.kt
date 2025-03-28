@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE
-import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings
 import java.lang.ref.WeakReference
 
 internal class PushPermissionHandler @JvmOverloads constructor(
@@ -91,7 +90,8 @@ internal class PushPermissionHandler @JvmOverloads constructor(
 
         if (!isFirstTimeRequest && showRationale) {
             if (fallbackToSettings) {
-                showFallbackAlertDialog(activity)
+                isFromNotificationSettingsActivity = true
+                systemPermissionInterface.navigateToNotificationSettings(activity)
                 return true
             } else {
                 notifyListeners(isPermissionGranted = false)
@@ -117,18 +117,6 @@ internal class PushPermissionHandler @JvmOverloads constructor(
                 override fun onRequestPermission() {
                     systemPermissionInterface.requestPushPermission(activity)
                 }
-            })
-    }
-
-
-    fun showFallbackAlertDialog(activity: Activity) {
-        AlertDialogPromptForSettings.show(activity,
-            onAccept = {
-                systemPermissionInterface.navigateToNotificationSettings(activity)
-                isFromNotificationSettingsActivity = true
-            },
-            onDecline = {
-                notifyListeners(false)
             })
     }
 
