@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.function
 
 internal object PlayStoreAppRatingTemplate {
 
-    private const val NAME = "App Rating"
+    private const val NAME = "ctsystem_apprating"
 
     fun createTemplate(systemActionHandler: InAppActionHandler): CustomTemplate? {
         if (!systemActionHandler.isPlayStoreReviewLibraryAvailable()) {
