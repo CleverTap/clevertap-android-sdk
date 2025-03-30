@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.network.http
 
+import android.net.TrafficStats
 import com.clevertap.android.sdk.Logger
 import java.io.BufferedInputStream
 import java.io.InputStream
@@ -22,6 +23,7 @@ class UrlConnectionHttpClient(
     companion object {
         const val READ_TIMEOUT = 10000
         const val CONNECT_TIMEOUT = 10000
+        const val NETWORK_TAG_HTTP_REQUESTS = 17
     }
 
     private val socketFactory: SSLSocketFactory? by lazy {
@@ -39,6 +41,7 @@ class UrlConnectionHttpClient(
         var connection: HttpsURLConnection? = null
 
         try {
+            TrafficStats.setThreadStatsTag(NETWORK_TAG_HTTP_REQUESTS)
             connection = openHttpsURLConnection(request)
 
             logger.debug(logTag, "Sending request to: ${request.url}")
@@ -68,6 +71,8 @@ class UrlConnectionHttpClient(
         } catch (e: Exception) {
             connection?.disconnect()
             throw e
+        } finally {
+            TrafficStats.clearThreadStatsTag()
         }
     }
 

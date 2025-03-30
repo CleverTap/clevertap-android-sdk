@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import static android.content.Context.USAGE_STATS_SERVICE;
+import static android.view.Display.DEFAULT_DISPLAY;
 import static com.clevertap.android.sdk.inapp.InAppController.LOCAL_INAPP_COUNT;
 
 import android.Manifest;
@@ -14,16 +15,19 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Insets;
+import android.hardware.display.DisplayManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.WindowMetrics;
 import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -68,8 +72,6 @@ public class DeviceInfo {
 
         private final double height;
 
-        private final int heightPixels;
-
         private final String manufacturer;
 
         private final String model;
@@ -86,9 +88,7 @@ public class DeviceInfo {
 
         private final double width;
 
-        private final int widthPixels;
-
-        private String appBucket;
+        private final String appBucket;
 
         private int localInAppCount;
 
@@ -106,16 +106,73 @@ public class DeviceInfo {
             bluetoothVersion = getBluetoothVersion();
             countryCode = getCountryCode();
             sdkVersion = getSdkVersion();
-            height = getHeight();
-            heightPixels = getHeightPixels();
-            width = getWidth();
-            widthPixels = getWidthPixels();
-            dpi = getDPI();
+
+            WindowSize result = getWindowSizeData();
+
+            width = result.width;
+            height = result.height;
+            dpi = result.localDpi;
+
+
             localInAppCount = getLocalInAppCountFromPreference();
             locale = getDeviceLocale();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 appBucket = getAppBucket();
+            } else {
+                appBucket = null;
             }
+        }
+
+        @NonNull
+        private WindowSize getWindowSizeData() {
+
+            WindowManager wm = getWindowManager();
+
+            if (wm == null) {
+                Logger.v("WindowManager is null, returning zero dimension for width/height");
+                return new WindowSize(0, 0, 0);
+            }
+
+            int localWidth;
+            int localHeight;
+            float localXDpi;
+            float localYDpi;
+            int localDpi;
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
+                Configuration configuration = context.getResources().getConfiguration();
+                Insets insets = windowMetrics.getWindowInsets()
+                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
+
+                localWidth = windowMetrics.getBounds().width() -
+                        insets.right - insets.left;
+                localHeight = windowMetrics.getBounds().height() -
+                        insets.top - insets.bottom;
+
+                localXDpi = configuration.densityDpi;
+                localYDpi = configuration.densityDpi;
+                localDpi = configuration.densityDpi;
+
+            } else {
+                DisplayMetrics dm = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(dm);
+
+                localWidth = dm.widthPixels;
+                localHeight = dm.heightPixels;
+                localXDpi = dm.xdpi;
+                localYDpi = dm.ydpi;
+                localDpi = dm.densityDpi;
+            }
+
+            // legacy code -> conversion to double is copied
+            double doubleWidth = localWidth / localXDpi;
+            double doubleHeight = localHeight / localYDpi;
+            return new WindowSize(
+                    localDpi,
+                    toTwoPlaces(doubleWidth),
+                    toTwoPlaces(doubleHeight)
+            );
         }
 
         private String getBluetoothVersion() {
@@ -164,75 +221,6 @@ public class DeviceInfo {
                 return "";
             }
             return "";
-        }
-
-        private int getDPI() {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            if (wm == null) {
-                return 0;
-            }
-            //Returns the dpi using Device Configuration API for API30 above
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Configuration configuration = context.getResources().getConfiguration();
-                return configuration.densityDpi;
-            } else {
-                DisplayMetrics dm = new DisplayMetrics();
-                wm.getDefaultDisplay().getMetrics(dm);
-                return dm.densityDpi;
-            }
-        }
-
-        private double getHeight() {
-            int height;
-            float dpi;
-
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            if (wm == null) {
-                return 0.0;
-            }
-
-            //Returns height using WindowMetrics API for API30 above
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
-                Configuration configuration = context.getResources().getConfiguration();
-                Insets insets = windowMetrics.getWindowInsets()
-                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
-
-                height = windowMetrics.getBounds().height() -
-                        insets.top - insets.bottom;
-
-                dpi = configuration.densityDpi;
-
-            } else {
-                DisplayMetrics dm = new DisplayMetrics();
-                wm.getDefaultDisplay().getMetrics(dm);
-
-                height = dm.heightPixels;
-                dpi = dm.ydpi;
-            }
-            // Calculate the width in inches
-            double rHeight = height / dpi;
-            return toTwoPlaces(rHeight);
-        }
-
-        private int getHeightPixels() {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            if (wm == null) {
-                return 0;
-            }
-            //Returns height in pixels using WindowMetrics API for API30 above
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
-                Insets insets = windowMetrics.getWindowInsets()
-                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
-                int heightInPixel = windowMetrics.getBounds().height() -
-                        insets.top - insets.bottom;
-                return heightInPixel;
-            } else {
-                DisplayMetrics dm = new DisplayMetrics();
-                wm.getDefaultDisplay().getMetrics(dm);
-                return dm.heightPixels;
-            }
         }
 
         private String getManufacturer() {
@@ -304,59 +292,6 @@ public class DeviceInfo {
             return null;
         }
 
-        private double getWidth() {
-            int width;
-            float dpi;
-
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            if (wm == null) {
-                return 0.0;
-            }
-
-            //Returns width using WindowMetrics API for API30 above
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
-                Configuration configuration = context.getResources().getConfiguration();
-                Insets insets = windowMetrics.getWindowInsets()
-                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
-                width = windowMetrics.getBounds().width() -
-                        insets.right - insets.left;
-
-                dpi = configuration.densityDpi;
-
-            } else {
-                DisplayMetrics dm = new DisplayMetrics();
-                wm.getDefaultDisplay().getMetrics(dm);
-
-                width = dm.widthPixels;
-                dpi = dm.xdpi;
-            }
-            // Calculate the width in inches
-            double rWidth = width / dpi;
-            return toTwoPlaces(rWidth);
-
-        }
-
-        private int getWidthPixels() {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            if (wm == null) {
-                return 0;
-            }
-            //Returns width in pixels using WindowMetrics API for API30 above
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
-                Insets insets = windowMetrics.getWindowInsets()
-                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
-                int widthInPixel = windowMetrics.getBounds().width() -
-                        insets.right - insets.left;
-                return widthInPixel;
-            } else {
-                DisplayMetrics dm = new DisplayMetrics();
-                wm.getDefaultDisplay().getMetrics(dm);
-                return dm.widthPixels;
-            }
-        }
-
         private String getDeviceLocale() {
             String language = Locale.getDefault().getLanguage();
             if ("".equals(language)) {
@@ -375,6 +310,46 @@ public class DeviceInfo {
             result = result / 100;
             return result;
         }
+    }
+
+    /**
+     * A simple class representing the size of a window.
+     * It stores the local DPI (dots per inch) along with the window's width and height.
+     */
+    private static class WindowSize {
+        public final int localDpi;
+        public final double width;
+        public final double height;
+
+        public WindowSize(int localDpi, double width, double height) {
+            this.localDpi = localDpi;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    private WindowManager getWindowManager() {
+        if (context == null) {
+            return null;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                DisplayManager displayManager = context.getSystemService(DisplayManager.class);
+                if (displayManager != null) {
+                    Display primaryDisplay = displayManager.getDisplay(DEFAULT_DISPLAY);
+                    if (primaryDisplay != null) {
+                        Context windowContext = context.createDisplayContext(primaryDisplay)
+                                .createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION, null);
+                        return windowContext.getSystemService(WindowManager.class);
+                    }
+                }
+            } catch (UnsupportedOperationException e) {
+                Logger.v("Window context creation failed: " + e.getMessage());
+            }
+        }
+
+        return (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
 
     /**
@@ -745,14 +720,6 @@ public class DeviceInfo {
 
     String getAttributionID() {
         return getDeviceID();
-    }
-
-    int getHeightPixels() {
-        return getDeviceCachedInfo().heightPixels;
-    }
-
-    int getWidthPixels() {
-        return getDeviceCachedInfo().widthPixels;
     }
 
     @WorkerThread

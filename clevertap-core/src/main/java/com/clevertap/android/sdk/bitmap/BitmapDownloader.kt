@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.bitmap
 
+import android.net.TrafficStats
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.network.DownloadedBitmap
@@ -14,6 +15,9 @@ class BitmapDownloader(
     private val bitmapInputStreamReader: IBitmapInputStreamReader,
     private val sizeConstrainedPair: Pair<Boolean, Int> = Pair(false, 0)
 ) {
+    companion object {
+        const val NETWORK_TAG_DOWNLOAD_REQUESTS = 21
+    }
 
     private var downloadStartTimeInMilliseconds: Long = 0
     private lateinit var connection: HttpURLConnection
@@ -25,6 +29,7 @@ class BitmapDownloader(
         this.srcUrl = srcUrl
         downloadStartTimeInMilliseconds = Utils.getNowInMillis()
         try {
+            TrafficStats.setThreadStatsTag(NETWORK_TAG_DOWNLOAD_REQUESTS)
             connection = URL(srcUrl).run { createConnection(this) }
             connection.run {
                 connect()
@@ -60,6 +65,7 @@ class BitmapDownloader(
         } finally {
             try {
                 connection.disconnect()
+                TrafficStats.clearThreadStatsTag()
             } catch (t: Throwable) {
                 Logger.v("Couldn't close connection!", t)
             }

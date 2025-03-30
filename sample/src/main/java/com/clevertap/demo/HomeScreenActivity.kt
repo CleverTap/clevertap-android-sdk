@@ -12,6 +12,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commitNow
+import androidx.lifecycle.lifecycleScope
 import com.clevertap.android.sdk.*
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
@@ -25,6 +26,9 @@ import net.khirr.android.privacypolicy.PrivacyPolicyDialog.OnClickListener
 
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.google.android.gms.common.wrappers.InstantApps.isInstantApp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 import org.json.JSONObject
 import java.util.HashMap
@@ -52,50 +56,62 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         fakeNotification(send = false)
         cleverTapListeners()
 
-        val isReadPolicy: Boolean
-        val email: String?
-
-        val sharedPref = getPreferences(Context.MODE_PRIVATE).apply {
-            isReadPolicy = getBoolean("isReadPolicy", false)
-            email = getString("email", null)
+        checkFirstTimePreferences { isReadPolicy, email ->
+            if (!isReadPolicy) {
+                showPrivacyPolicyDialog()
+            } else if (email == null) {
+                EmailDialogFragment().show(supportFragmentManager, "Email")
+            }
         }
+    }
 
-        if (!isReadPolicy) {
-            val dialog = PrivacyPolicyDialog(
-                this,
-                "https://clevertap.com/terms-service/",
-                "https://clevertap.com/privacy-policy/"
-            )
-            dialog.apply {
-                addPoliceLine(resources.getString(R.string.policy_line_1));
-                addPoliceLine(resources.getString(R.string.policy_line_2));
-                addPoliceLine(resources.getString(R.string.policy_line_3));
-                addPoliceLine(resources.getString(R.string.policy_line_4));
-                addPoliceLine(resources.getString(R.string.policy_line_5));
-                addPoliceLine(resources.getString(R.string.policy_line_6));
-                addPoliceLine(resources.getString(R.string.policy_line_7));
-                onClickListener = object : OnClickListener {
-                    override fun onAccept(isFirstTime: Boolean) {
-                        showLocationPermissionPolicyDialog {
-                            with(sharedPref!!.edit()) {
+    private fun checkFirstTimePreferences(callback: (Boolean, String?) -> Unit) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val sharedPref = getPreferences(Context.MODE_PRIVATE)
+            val isReadPolicy = sharedPref.getBoolean("isReadPolicy", false)
+            val email = sharedPref.getString("email", null)
+
+            withContext(Dispatchers.Main) {
+                callback(isReadPolicy, email)
+            }
+        }
+    }
+
+    private fun showPrivacyPolicyDialog() {
+        val dialog = PrivacyPolicyDialog(
+            this,
+            "https://clevertap.com/terms-service/",
+            "https://clevertap.com/privacy-policy/"
+        ).apply {
+            addPoliceLine(resources.getString(R.string.policy_line_1))
+            addPoliceLine(resources.getString(R.string.policy_line_2))
+            addPoliceLine(resources.getString(R.string.policy_line_3))
+            addPoliceLine(resources.getString(R.string.policy_line_4))
+            addPoliceLine(resources.getString(R.string.policy_line_5))
+            addPoliceLine(resources.getString(R.string.policy_line_6))
+            addPoliceLine(resources.getString(R.string.policy_line_7))
+
+            onClickListener = object : OnClickListener {
+                override fun onAccept(isFirstTime: Boolean) {
+                    showLocationPermissionPolicyDialog {
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            getPreferences(Context.MODE_PRIVATE).edit().apply {
                                 putBoolean("isReadPolicy", true)
                                 apply()
+                            }
+                            withContext(Dispatchers.Main) {
                                 EmailDialogFragment().show(supportFragmentManager, "Email")
                             }
                         }
                     }
-
-                    override fun onCancel() {
-                        finish()
-                    }
                 }
-                show()
-            }
-        } else {
-            if (email == null) {
-                EmailDialogFragment().show(supportFragmentManager, "Email")
+
+                override fun onCancel() {
+                    finish()
+                }
             }
         }
+        dialog.show()
     }
 
     private fun fakeNotification(send: Boolean = false) {
