@@ -3,21 +3,24 @@ package com.clevertap.android.sdk.inapp.customtemplates.system
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.inapp.customtemplates.function
-import com.clevertap.android.sdk.isNotNullAndBlank
 
-internal object OpenUrlTemplate {
-
-    private const val NAME = "ctsystem_openurl"
-    private const val URL_ARG = "Android"
+internal object PushPermissionTemplate {
+    private const val NAME = "ctsystem_pushpermission"
+    private const val FALLBACK_TO_SETTINGS_ARG = "fbSettings"
 
     fun createTemplate(systemActionHandler: InAppActionHandler): CustomTemplate {
         return function(isVisual = true) {
             isSystemDefined = true
             name(NAME)
-            stringArgument(URL_ARG, "")
+            booleanArgument(FALLBACK_TO_SETTINGS_ARG, false)
             presenter { templateContext ->
-                val url = templateContext.getString(URL_ARG)
-                if (url.isNotNullAndBlank() && systemActionHandler.openUrl(url)) {
+                if (systemActionHandler.arePushNotificationsEnabled()) {
+                    templateContext.setDismissed()
+                    return@presenter
+                }
+
+                val fbSettings = templateContext.getBoolean(FALLBACK_TO_SETTINGS_ARG) == true
+                if (systemActionHandler.launchPushPermissionPrompt(fbSettings)) {
                     templateContext.setPresented()
                 }
                 templateContext.setDismissed()
