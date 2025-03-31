@@ -4,19 +4,29 @@ import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext
 import com.clevertap.android.sdk.inapp.customtemplates.FunctionPresenter
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatePresenter
-import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.Test
 import kotlin.test.assertTrue
 
-class SystemTemplatesTest : BaseTestCase() {
+class SystemTemplatesTest {
 
     @Test
     fun `system functions should always call context setDismissed()`() {
         val mockInAppActionHandler = mockk<InAppActionHandler>(relaxed = true)
-        val systemTemplates =
-            SystemTemplates.getSystemTemplates(mockInAppActionHandler, application)
+        val onComplete = slot<() -> Unit>()
+        every {
+            mockInAppActionHandler.launchPlayStoreReviewFlow(
+                capture(onComplete),
+                any()
+            )
+        } answers {
+            onComplete.captured()
+        }
+
+        val systemTemplates = SystemTemplates.getSystemTemplates(mockInAppActionHandler)
         assertTrue(systemTemplates.isNotEmpty())
         for (template in systemTemplates) {
             when (template.presenter) {
