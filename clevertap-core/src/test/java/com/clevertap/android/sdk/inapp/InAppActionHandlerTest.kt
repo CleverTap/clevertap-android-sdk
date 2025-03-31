@@ -5,7 +5,6 @@ import android.content.Intent
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
-import com.google.android.play.core.review.testing.FakeReviewManager
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -23,8 +22,8 @@ class InAppActionHandlerTest : BaseTestCase() {
         inAppActionHandler = InAppActionHandler(
             application,
             getMockCtConfig(),
-            pushPermissionHandler = mockk(relaxed = true),
-            playStoreReviewManagerProvider = { FakeReviewManager(it) })
+            pushPermissionHandler = mockk(relaxed = true)
+        )
     }
 
     @Test
@@ -98,8 +97,19 @@ class InAppActionHandlerTest : BaseTestCase() {
     }
 
     @Test
-    fun `isPlayStoreReviewLibraryAvailable should return true when review library is included`() {
-        assertTrue(inAppActionHandler.isPlayStoreReviewLibraryAvailable())
+    fun `isPlayStoreReviewLibraryAvailable should return false when the review library is not included`() {
+        assertFalse(inAppActionHandler.isPlayStoreReviewLibraryAvailable())
+    }
+
+    @Test
+    fun `launchPlayStoreReviewFlow should call onError when the review library is not included`() {
+        val onCompleteMock = mockk<() -> Unit>()
+        val onErrorMock = mockk<(Exception?) -> Unit>(relaxed = true)
+
+        inAppActionHandler.launchPlayStoreReviewFlow(onCompleteMock, onErrorMock)
+        verify {
+            onErrorMock.invoke(any())
+        }
     }
 
     private fun getMockCtConfig(): CleverTapInstanceConfig {
