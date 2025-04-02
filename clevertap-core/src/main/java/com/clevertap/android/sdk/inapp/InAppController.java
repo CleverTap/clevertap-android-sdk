@@ -466,7 +466,6 @@ public class InAppController implements InAppListener,
         inAppNotification.didDismiss(resourceProvider);
 
         if (controllerManager.getInAppFCManager() != null) {
-            controllerManager.getInAppFCManager().didDismiss(inAppNotification);
             String templateName = inAppNotification.getCustomTemplateData() != null
                     ? inAppNotification.getCustomTemplateData().getTemplateName() : "";
             logger.verbose(config.getAccountId(),
@@ -966,8 +965,11 @@ public class InAppController implements InAppListener,
     }
 
     @WorkerThread
-    public void onQueueChargedEvent(Map<String, Object> chargeDetails,
-            List<Map<String, Object>> items, Location userLocation) {
+    public void onQueueChargedEvent(
+            Map<String, Object> chargeDetails,
+            List<Map<String, Object>> items,
+            Location userLocation
+    ) {
         final Map<String, Object> appFieldsWithChargedEventProperties = JsonUtil.mapFromJson(
                 deviceInfo.getAppLaunchedFields());
         appFieldsWithChargedEventProperties.putAll(chargeDetails);
@@ -979,8 +981,10 @@ public class InAppController implements InAppListener,
     }
 
     @WorkerThread
-    public void onQueueProfileEvent(final Map<String, Map<String, Object>> userAttributeChangedProperties,
-            Location location) {
+    public void onQueueProfileEvent(
+            final Map<String, Map<String, Object>> userAttributeChangedProperties,
+            Location location
+    ) {
         final Map<String, Object> appFields = JsonUtil.mapFromJson(
                 deviceInfo.getAppLaunchedFields());
         final JSONArray clientSideInAppsToDisplay = evaluationManager.evaluateOnUserAttributeChange(
@@ -990,9 +994,10 @@ public class InAppController implements InAppListener,
         }
     }
 
-    public void onAppLaunchServerSideInAppsResponse(@NonNull JSONArray appLaunchServerSideInApps,
-            Location userLocation)
-            throws JSONException {
+    public void onAppLaunchServerSideInAppsResponse(
+            @NonNull JSONArray appLaunchServerSideInApps,
+            Location userLocation
+    ) throws JSONException {
         final Map<String, Object> appLaunchedProperties = JsonUtil.mapFromJson(
                 deviceInfo.getAppLaunchedFields());
         List<JSONObject> appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps);

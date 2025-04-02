@@ -1,4 +1,98 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 7.3.1 (March 27, 2025)
+
+#### Bug Fixes
+* Fixes an issue where InApps were not displayed after an app upgrade
+
+### Version 7.3.0 (March 11, 2025)
+> ‼️ **NOTE**
+Please update to 7.3.1 or above if using InApps
+
+#### Breaking API Changes
+*   **Huawei Push Integration - Updated Setup Required:** The integration process for Huawei Push has been significantly updated. If you have previously integrated the CleverTap Huawei Push SDK, you **must** follow the new steps outlined [here](https://developer.clevertap.com/docs/clevertap-huawei-push-integration) to ensure continued functionality.
+*   **Baidu Push Integration - Updated Setup Required:** The integration process for Baidu Push has been updated. If you are using Baidu Push Integration, please follow the revised instructions [here](https://developer.clevertap.com/docs/baidu-push-notifications) to maintain proper functionality.
+*   **Removes Provider-Specific Push Registration:** The `pushBaiduRegistrationId()` and `pushHuaweiRegistrationId()` methods have been removed from `CleverTapAPI`. This change unifies push registration under a single method. You **must** now use the `pushRegistrationToken()` method, providing the correct `PushType` constant to identify the push provider (Huawei or Baidu). See the updated integration guides for Huawei and Baidu for the correct usage.
+
+#### Bug Fixes
+* Fixes an issue in CleverTapAPI.getCleverTapID method where the listener can be possibly null resulting in a NPE.
+* Fixes an issue where device font size affect InApps text size causing it to not fit correctly in the container.
+
+### Version 7.2.2 (January 21, 2025)
+> ‼️ **NOTE**
+Please update to 7.3.1 or above if using InApps
+
+This hotfix release addresses a critical issue from `v7.1.0` onwards:
+
+#### Bug Fixes
+* Fixes an issue where `Notification Clicked` event was not being raised.
+* Fixes an issue where InApp was not shown in a certain flow after clicking a notification.
+
+
+### Version 7.2.1 (January 16, 2025)
+> ‼️ **NOTE**
+A critical issue was identified in 7.2.1, please update to 7.2.2 and above
+
+#### Bug Fixes
+* Fixes `ClassCastException` from `Integer` to `Long` for server side in-apps delivery. A bug occurs when the network is turned off, and the following steps are performed:
+  * send event <event_name_1> (triggers campaign <campaign_id_1>)
+  * stop the app
+  * turn network on and then restart the app.
+
+### Version 7.2.0 (January 7, 2025)
+> ‼️ **NOTE**
+A critical issue was identified in 7.2.0, please update to 7.2.2 and above
+
+#### New Features
+
+* Adds support for Android 15, making it compliant with Android 15 requirements. Details [here](https://developer.android.com/about/versions/15/summary)
+* Upgrades the algorithm used for [encryption of PII data](EXAMPLES.md#encryption-of-pii-data-), making it compliant with [OWASP](https://mas.owasp.org/MASTG/0x04g-Testing-Cryptography/). Uses AndroidKeyStore for securely backing up encryption key on api levels 23+.
+* Updates Minimum Android SDK version to API 21 (Android 5.0)
+
+> ⚠️ **NOTE**
+After upgrading the SDK to v7.2.0+, don't downgrade in subsequent app releases. If you encounter any issues, please contact the CleverTap support team for assistance.
+
+### Version 7.1.2 (January 29, 2025)
+#### Bug Fixes
+* Avoids an R8 related issue by compiling with `JDK17` to support `Unity`, `ReactNative`, `Cordova` and `Flutter` hybrid SDKs of `CleverTap`
+* Fixes an issue where `Notification Clicked` event was not being raised.
+* Fixes an issue where InApp was not shown in a certain flow after clicking a notification.
+
+### Version 7.1.0 (December 24, 2024)
+> ‼️ **NOTE**
+A critical issue has been identified in version 7.1.0. Please update to version 7.2.2 or above. This update should not introduce any build errors in most cases. However, if you encounter any issues during the update, consider updating to version 7.1.2 instead.
+
+#### New Features
+
+* Adds support for triggering InApps based on first-time event filtering in multiple triggers. Now you can create campaign triggers that combine recurring and first-time events. For example: Trigger a campaign when "Charged" occurs (every time) OR "App Launched" occurs (first time only).
+* Adds new user-level event log tracking system to store and manage user event history. New APIs include:
+  * `getUserEventLog()`: Get details about a specific event
+  * `getUserEventLogCount()`: Get count of times an event occurred
+  * `getUserLastVisitTs()`: Get timestamp of user's last app visit
+  * `getUserAppLaunchCount()`: Get total number of times user has launched the app
+  * `getUserEventLogHistory()`: Get full event history for current user
+* Adds support to hide large icon in android notification by sending wzrk_hide_large_icon key in notification payload.
+    
+#### API Changes
+
+* **Deprecated:**  The old event tracking APIs tracked events at the device level rather than the user level, making it difficult to maintain accurate user-specific event histories, especially in multi-user scenarios. The following methods have been deprecated in favor of new user-specific event tracking APIs that provide more accurate, user-level analytics. These deprecated methods will be removed in future versions with prior notice:
+  * `getDetails()`: Use `getUserEventLog()` instead for user-specific event details
+  * `getCount()`: Use `getUserEventLogCount()` instead for user-specific event counts
+  * `getFirstTime()`: Use `getUserEventLog()` instead for user-specific first occurrence timestamp
+  * `getLastTime()`: Use `getUserEventLog()` instead for user-specific last occurrence timestamp
+  * `getPreviousVisitTime()`: Use `getUserLastVisitTs()` instead for user-specific last visit timestamp
+  * `getTotalVisits()`: Use `getUserAppLaunchCount()` instead for user-specific app launch count
+  * `getHistory()`: Use `getUserEventLogHistory()` instead for user-specific event history
+
+#### Bug Fixes
+* Fixes [#671](https://github.com/CleverTap/clevertap-android-sdk/issues/671) - an `AbstractMethodError` in the AppInbox feature when using audio/video.
+* Fixes issues when File type variable changes from validValue -> null
+
+
+### Version 7.0.3 (November 29, 2024)
+
+#### New Features
+* Changes campaign triggering evaluation of event names, event properties, and profile properties to ignore letter case and whitespace.
+* Adds support for previewing in-apps created through the new dashboard advanced builder.
 
 ### Version 7.0.2 (October 10, 2024)
 

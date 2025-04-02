@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM
+import com.clevertap.android.sdk.pushnotification.PushConstants.FCM
 import com.clevertap.android.sdk.pushnotification.fcm.TestFcmConstants.Companion.FCM_TOKEN
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
@@ -68,7 +68,9 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
     @Test
     fun testOnNewToken_Failure() {
         Mockito.mockStatic(CleverTapAPI::class.java).use {
-            Mockito.`when`(CleverTapAPI.tokenRefresh(any(Context::class.java), eq(FCM_TOKEN), FCM))
+            Mockito.`when`(CleverTapAPI.tokenRefresh(any(Context::class.java), eq(FCM_TOKEN),
+                FCM
+            ))
                 .thenThrow(RuntimeException("Something Went Wrong"))
             Assert.assertFalse(mHandlerCT.onNewToken(application, FCM_TOKEN))
         }

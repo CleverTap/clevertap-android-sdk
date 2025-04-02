@@ -10,10 +10,16 @@ import android.content.SharedPreferences
 import android.location.Location
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import android.view.View
+import android.view.ViewGroup.MarginLayoutParams
 import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import org.json.JSONArray
@@ -307,3 +313,40 @@ fun String?.isNotNullAndBlank() : Boolean {
     contract { returns(true) implies (this@isNotNullAndBlank != null) }
     return isNullOrBlank().not()
 }
+
+/**
+ * Adjusts the margins of the view based on the system bar insets (such as the status bar, navigation bar,
+ * or display cutout) using the provided margin adjustment logic.
+ *
+ * This function sets a listener on the view to handle window insets and invokes the provided `marginAdjuster`
+ * block to allow custom margin adjustments. The `marginAdjuster` lambda receives the system bar insets and
+ * the view's margin layout parameters, allowing the caller to modify the margins as needed.
+ *
+ * @param marginAdjuster A lambda function that takes two parameters:
+ *  - `bars`: The insets for system bars and display cutouts, representing the space occupied by UI elements
+ *     such as the status bar or navigation bar.
+ *  - `mlp`: The `MarginLayoutParams` of the view, which can be modified to adjust the margins based on the insets.
+ *
+ * Example usage:
+ * ```
+ * view.applyInsetsWithMarginAdjustment { insets, layoutParams ->
+ *     layoutParams.leftMargin = insets.left
+ *     layoutParams.rightMargin = insets.right
+ *     layoutParams.topMargin = insets.top
+ *     layoutParams.bottomMargin = insets.bottom
+ * }
+ * ```
+ */
+fun View.applyInsetsWithMarginAdjustment(marginAdjuster : (insets:Insets, mlp:MarginLayoutParams) -> Unit) {
+    ViewCompat.setOnApplyWindowInsetsListener(this
+    ) { v, insets ->
+        val bars: Insets = insets.getInsets(
+            WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+        )
+        v.updateLayoutParams<MarginLayoutParams> {
+            marginAdjuster(bars,this)
+        }
+        WindowInsetsCompat.CONSUMED
+    }
+}
+

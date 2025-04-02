@@ -24,26 +24,6 @@ public interface Constants {
     @NonNull
     String TYPE_PHONE = "Phone";
 
-
-    String LABEL_ACCOUNT_ID = "CLEVERTAP_ACCOUNT_ID";
-    String LABEL_TOKEN = "CLEVERTAP_TOKEN";
-    String LABEL_NOTIFICATION_ICON = "CLEVERTAP_NOTIFICATION_ICON";
-    String LABEL_INAPP_EXCLUDE = "CLEVERTAP_INAPP_EXCLUDE";
-    String LABEL_REGION = "CLEVERTAP_REGION";
-    String LABEL_PROXY_DOMAIN = "CLEVERTAP_PROXY_DOMAIN";
-    String LABEL_SPIKY_PROXY_DOMAIN = "CLEVERTAP_SPIKY_PROXY_DOMAIN";
-    String LABEL_CLEVERTAP_HANDSHAKE_DOMAIN = "CLEVERTAP_HANDSHAKE_DOMAIN";
-    String LABEL_DISABLE_APP_LAUNCH = "CLEVERTAP_DISABLE_APP_LAUNCHED";
-    String LABEL_SSL_PINNING = "CLEVERTAP_SSL_PINNING";
-    String LABEL_BACKGROUND_SYNC = "CLEVERTAP_BACKGROUND_SYNC";
-    String LABEL_CUSTOM_ID = "CLEVERTAP_USE_CUSTOM_ID";
-    String LABEL_USE_GOOGLE_AD_ID = "CLEVERTAP_USE_GOOGLE_AD_ID";
-    String LABEL_FCM_SENDER_ID = "FCM_SENDER_ID";
-    String LABEL_PACKAGE_NAME = "CLEVERTAP_APP_PACKAGE";
-    String LABEL_BETA = "CLEVERTAP_BETA";
-    String LABEL_INTENT_SERVICE = "CLEVERTAP_INTENT_SERVICE";
-    String LABEL_ENCRYPTION_LEVEL = "CLEVERTAP_ENCRYPTION_LEVEL";
-    String LABEL_DEFAULT_CHANNEL_ID = "CLEVERTAP_DEFAULT_CHANNEL_ID";
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_ID = "fcm_fallback_notification_channel";
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Misc";
     String CLEVERTAP_OPTOUT = "ct_optout";
@@ -77,6 +57,7 @@ public interface Constants {
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
     String INAPP_IMAGE_INTERSTITIAL_TYPE = "image-interstitial";
+    String INAPP_ADVANCED_BUILDER_TYPE = "advanced-builder";
     String INAPP_IMAGE_INTERSTITIAL_CONFIG = "imageInterstitialConfig";
     String INAPP_HTML_SPLIT = "\"##Vars##\"";
     String INAPP_IMAGE_INTERSTITIAL_HTML_NAME = "image_interstitial.html";
@@ -154,6 +135,7 @@ public interface Constants {
     String KEY_I = "comms_i";
     String KEY_J = "comms_j";
     String CACHED_GUIDS_KEY = "cachedGUIDsKey";
+    String CACHED_GUIDS_LENGTH_KEY = "cachedGUIDsLengthKey";
     String CACHED_VARIABLES_KEY = "variablesKey";
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";
@@ -185,23 +167,6 @@ public interface Constants {
     String VIDEO_THUMBNAIL = "ct_video_1";
     String AUDIO_THUMBNAIL = "ct_audio";
     String IMAGE_PLACEHOLDER = "ct_image";
-    //Keys used by the SDK
-    String KEY_ACCOUNT_ID = "accountId";
-    String KEY_ACCOUNT_TOKEN = "accountToken";
-    String KEY_ACCOUNT_REGION = "accountRegion";
-    String KEY_PROXY_DOMAIN = "proxyDomain";
-    String KEY_SPIKY_PROXY_DOMAIN = "spikyProxyDomain";
-    String KEY_CUSTOM_HANDSHAKE_DOMAIN = "customHandshakeDomain";
-    String KEY_ANALYTICS_ONLY = "analyticsOnly";
-    String KEY_DEFAULT_INSTANCE = "isDefaultInstance";
-    String KEY_USE_GOOGLE_AD_ID = "useGoogleAdId";
-    String KEY_DISABLE_APP_LAUNCHED = "disableAppLaunchedEvent";
-    String KEY_PERSONALIZATION = "personalization";
-    String KEY_DEBUG_LEVEL = "debugLevel";
-    String KEY_CREATED_POST_APP_LAUNCH = "createdPostAppLaunch";
-    String KEY_SSL_PINNING = "sslPinning";
-    String KEY_BACKGROUND_SYNC = "backgroundSync";
-    String KEY_FCM_SENDER_ID = "fcmSenderId";
     String KEY_CONFIG = "config";
     String KEY_C2A = "wzrk_c2a";
     String KEY_EFC = "efc";
@@ -224,12 +189,6 @@ public interface Constants {
     String KEY_TEXT = "text";
     String KEY_KEY = "key";
     String KEY_VALUE = "value";
-    String KEY_EVENT_NAME = "eventName";
-    String KEY_EVENT_PROPERTIES = "eventProperties";
-    String KEY_ITEM_PROPERTIES = "itemProperties";
-    String KEY_GEO_RADIUS_PROPERTIES = "geoRadius";
-    String KEY_PROFILE_ATTR_NAME = "profileAttrName";
-    String KEY_PROPERTY_VALUE = "propertyValue";
     String KEY_COLOR = "color";
     String KEY_MESSAGE = "message";
     String KEY_HIDE_CLOSE = "close";
@@ -241,18 +200,15 @@ public interface Constants {
     String KEY_URL = "url";
     String KEY_BUTTONS = "buttons";
     String KEY_CUSTOM_HTML = "custom-html";
-    String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
-    String KEY_BETA = "beta";
-    String KEY_PACKAGE_NAME = "packageName";
-    String KEY_IDENTITY_TYPES = "identityTypes";
-    String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
     String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
     String WZRK_PUSH_ID = "wzrk_pid";
+    String WZRK_DEDUPE = "wzrk_dd";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
     String EXTRAS_FROM = "extras_from";
     String NOTIF_MSG = "nm";
     String NOTIF_TITLE = "nt";
     String NOTIF_ICON = "ico";
+    String NOTIF_HIDE_APP_LARGE_ICON = "wzrk_hide_large_icon";
     String WZRK_ACTIONS = "wzrk_acts";
     String WZRK_BIG_PICTURE = "wzrk_bp";
     String WZRK_MSG_SUMMARY = "wzrk_nms";
@@ -271,8 +227,6 @@ public interface Constants {
     String INAPP_SUPPRESSED = "suppressed";
     String INAPP_SS_EVAL_META = "inapps_eval";
     String INAPP_SUPPRESSED_META = "inapps_suppressed";
-    String INAPP_OPERATOR = "operator";
-    String INAPP_PROPERTYNAME = "propertyName";
     String INAPP_WHEN_TRIGGERS = "whenTriggers";
     String INAPP_WHEN_LIMITS = "whenLimit";
     String INAPP_FC_LIMITS = "frequencyLimits";
@@ -349,6 +303,12 @@ public interface Constants {
 
     String CRYPTION_SALT = "W1ZRCl3>";
     String CRYPTION_IV = "__CL3>3Rt#P__1V_";
+
+    String AES_PREFIX = "[";
+    String AES_SUFFIX = "]";
+
+    String AES_GCM_PREFIX = "<ct<";
+    String AES_GCM_SUFFIX = ">ct>";
 
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
@@ -446,4 +406,5 @@ public interface Constants {
 
    String FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME = "CTFlushPushImpressionsOneTime";
 
+    String URL_PARAM_DL_SEPARATOR = "__dl__";
 }

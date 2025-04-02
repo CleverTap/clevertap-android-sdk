@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import android.location.Location
+import androidx.annotation.WorkerThread
 import androidx.annotation.VisibleForTesting
+import com.clevertap.android.sdk.LocalDataStore
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.isValid
@@ -13,7 +15,7 @@ import com.clevertap.android.sdk.isValid
  *
  * @constructor Creates an instance of the `TriggersMatcher` class.
  */
-class TriggersMatcher {
+class TriggersMatcher(private val localDataStore: LocalDataStore) {
 
     /**
      * Matches a standard event against a set of trigger conditions.
@@ -24,11 +26,9 @@ class TriggersMatcher {
      * within that event are met, the function returns `true`.
      *
      * @param whenTriggers A list of event triggers with conditions to match against the event.
-     * @param eventName The name of the event to be matched.
-     * @param eventProperties A map of event properties where keys are property names and
-     *        values are property values.
-     * @return `true` if any event matches, and all conditions
-     * within that event are met, `false` otherwise.
+     * @param event The [EventAdapter] having event to be matched
+     * @return `true` if any event matches, and all condition within that event are met,
+     * `false` otherwise.
      */
     fun matchEvent(
         whenTriggers: List<TriggerAdapter>,
@@ -51,11 +51,16 @@ class TriggersMatcher {
     @VisibleForTesting
     internal fun match(trigger: TriggerAdapter, event: EventAdapter): Boolean {
         // Evaluate further if either the eventNames match or the profileAttrName's match. Make sure both profileAttrName's are not null and equal
-        if (event.eventName != trigger.eventName && (event.profileAttrName == null || !event.profileAttrName.equals(trigger.profileAttrName, true))) {
+        if (!Utils.areNamesNormalizedEqual(event.eventName, trigger.eventName)
+            && (event.profileAttrName == null || !Utils.areNamesNormalizedEqual(event.profileAttrName, trigger.profileAttrName))) {
             return false
         }
 
         if (!matchPropertyConditions(trigger, event)) {
+            return false
+        }
+
+        if (!matchFirstTimeOnly(trigger)) {
             return false
         }
 
@@ -70,30 +75,45 @@ class TriggersMatcher {
         return true
     }
 
-    private fun matchPropertyConditions(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+    @WorkerThread
+    private fun matchFirstTimeOnly(trigger: TriggerAdapter): Boolean {
+        if (!trigger.firstTimeOnly) {
+            return true
+        }
+        val keyToCheckFirstTime: String = trigger.profileAttrName ?: trigger.eventName
+        return localDataStore.isUserEventLogFirstTime(keyToCheckFirstTime)
+    }
+
+    private fun matchPropertyConditions(
+        triggerAdapter: TriggerAdapter,
+        event: EventAdapter
+    ): Boolean {
         // Property conditions are AND-ed
-        return (0 until trigger.propertyCount)
-            .mapNotNull { trigger.propertyAtIndex(it) }
+        return (0 until triggerAdapter.propertyCount)
+            .mapNotNull { triggerAdapter.propertyAtIndex(it) }
             .all {
                 evaluate(
-                    it.op,
-                    it.value,
-                    event.getPropertyValue(it.propertyName)
+                    op = it.op,
+                    expected = it.value,
+                    actual = event.getPropertyValue(it.propertyName)
                 )
             }
     }
 
-    private fun matchChargedItemConditions(trigger: TriggerAdapter, event: EventAdapter): Boolean {
+    private fun matchChargedItemConditions(
+        trigger: TriggerAdapter,
+        event: EventAdapter
+    ): Boolean {
         // (chargedEvent only) Property conditions for items are AND-ed
         return (0 until trigger.itemsCount)
             .mapNotNull { trigger.itemAtIndex(it) }
             .all { condition ->
                 event.getItemValue(condition.propertyName)
-                    .any {
+                    .any { item ->
                         evaluate(
-                            condition.op,
-                            condition.value,
-                            it
+                            op = condition.op,
+                            expected = condition.value,
+                            actual = item
                         )
                     }
             }

@@ -79,7 +79,7 @@ public class VarCache {
         try {
             StorageHelper.putString(variablesCtx, cacheKey, data);
         } catch (Throwable t) {
-            t.printStackTrace();
+            log("storeDataInCache failed", t);
         }
     }
 
@@ -310,7 +310,7 @@ public class VarCache {
                 downloadAllBlock -> {
                     // triggers global files callbacks to client
                     func.invoke();
-                    return null;
+                    return Unit.INSTANCE;
                 }
         );
     }
@@ -362,8 +362,8 @@ public class VarCache {
 
     public void fileVarUpdated(Var<String> fileVar) {
         String url = fileVar.rawFileValue();
-        if (fileResourceProvider.isFileCached(url)) {
-            // if present in cache
+        if (url == null || fileResourceProvider.isFileCached(url)) {
+            // if the new url is null or if it is present in the cache - trigger FileReady directly
             fileVar.triggerFileIsReady();
         } else {
             List<Pair<String, CtCacheType>> list = new ArrayList<>();
@@ -372,7 +372,7 @@ public class VarCache {
                     list,
                     downloadAllBlock -> {
                         fileVar.triggerFileIsReady();
-                        return null;
+                        return Unit.INSTANCE;
                     }
             );
         }

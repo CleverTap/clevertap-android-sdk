@@ -1,45 +1,45 @@
 [versions]
 # Project
-android_compileSdk = "34"
-android_gradle_plugin = "8.2.2"
-android_minSdk = "19"
-kotlin_plugin = "1.7.20"
+android_compileSdk = "35"
+android_gradle_plugin = "8.6.0"
+android_minSdk = "21"
+kotlin_plugin = "2.0.10"
 sonarqube_plugin = "3.3"
 android_buildTools = "34.0.0"
-detekt_gradle_plugin = "1.20.0-RC1"
-firebase_gradle_crashlytics = "2.8.1"
+detekt_gradle_plugin = "1.23.3"
+firebase_gradle_crashlytics = "3.0.2"
 
 # AndroidX
-annotation = "1.2.0"
-appcompat = "1.6.0-rc01"
-concurrent_futures = "1.1.0"
-constraint_layout = "2.0.1"
-coordinator_layout = "1.1.0"
-core = "1.9.0"
-core_ktx = "1.9.0"
-fragment = "1.3.6"
-recyclerview = "1.2.1"
+annotation = "1.8.2"
+appcompat = "1.7.0"
+concurrent_futures = "1.2.0"
+constraint_layout = "2.1.4"
+coordinator_layout = "1.2.0"
+core = "1.13.0"
+core_ktx = "1.13.0"
+fragment = "1.5.4"
+recyclerview = "1.3.2"
 viewpager = "1.0.0"
-work_runtime = "2.7.1"
+work_runtime = "2.9.1"
 
 #UI
-material = "1.4.0"
+material = "1.12.0"
 
 #Test
-espresso_core = "3.3.0"
-test_ext_junit = "1.1.3"
-test_core = "1.4.0"
-test_rules = "1.5.0"
-test_runner = "1.5.2"
-work_testing = "2.7.1"
+espresso_core = "3.6.1"
+test_ext_junit = "1.2.1"
+test_core = "1.6.1"
+test_rules = "1.6.1"
+test_runner = "1.6.2"
+work_testing = "2.9.1"
 truth = "1.1.3"
-junit = "4.13"
+junit = "4.13.2"
 awaitility = "4.1.0"
-kotlin_stdlib_jdk7 = "1.7.20" #check with kotlin_gradle_plugin
+kotlin_stdlib_jdk7 = "1.9.20" #check with kotlin_gradle_plugin
 kotlin_test = "1.7.20" #check with kotlin_gradle_plugin
-junit_jupiter_api = "5.7.2"
-junit_jupiter_engine = "5.7.2"
-junit_platform_runner = "1.7.2"
+junit_jupiter_api = "5.8.2"
+junit_jupiter_engine = "5.8.2"
+junit_platform_runner = "1.8.2"
 mockito_kotlin = "3.2.0"
 mockito_core = "5.9.0"
 opentest4j = "1.2.0"
@@ -47,18 +47,18 @@ robolectric = "4.9"
 jsonassert = "1.5.0"
 xmlpull = "1.1.3.1"
 mockk = "1.13.5"
-uiautomator = "2.3.0-alpha03"
+uiautomator = "2.3.0"
 coroutines_test = "1.7.3"
 
 #Install Referrer
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "7.0.1"
+clevertap_android_sdk = "7.3.1"
 clevertap_rendermax_sdk = "1.0.3"
-clevertap_geofence_sdk = "1.3.0"
-clevertap_hms_sdk = "1.3.4"
-clevertap_push_templates_sdk = "1.2.4"
+clevertap_geofence_sdk = "1.4.0"
+clevertap_hms_sdk = "1.5.0"
+clevertap_push_templates_sdk = "1.4.0"
 
 # Glide
 glide = "4.12.0"
@@ -69,23 +69,23 @@ exoplayer_hls = "2.19.1"
 exoplayer_ui = "2.19.1"
 
 # Media3
-media3 = "1.1.1"
+media3 = "1.4.0"
 
 #Play Services
-play_services_ads = "22.3.0"
-play_services_location = "21.0.0"
+play_services_ads = "23.6.0"
+play_services_location = "21.3.0"
 
 #Gson
-gson = "2.8.6"
+gson = "2.10.1"
 
 #FCM
-firebase_messaging = "23.0.6"
+firebase_messaging = "24.0.0"
 
 #GMS
-google_services = "4.4.0"
+google_services = "4.4.2"
 
 #HMS Push Plugin/Lib
-agcp = "1.9.1.300"
+agcp = "1.9.1.301"
 push = "6.11.0.300"
 
 #Catch Exception
@@ -194,3 +194,4 @@ media3 = ["media3_exoplayer", "media3_hls", "media3_ui"]
 
 [plugins]
 sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin_plugin" }

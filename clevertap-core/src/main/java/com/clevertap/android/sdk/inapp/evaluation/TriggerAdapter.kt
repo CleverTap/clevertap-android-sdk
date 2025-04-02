@@ -77,29 +77,31 @@ class TriggerAdapter(triggerJSON: JSONObject) {
     /**
      * The name of the event associated with the trigger conditions.
      */
-    val eventName: String = triggerJSON.optString(Constants.KEY_EVENT_NAME, "")
+    val eventName: String = triggerJSON.optString(KEY_EVENT_NAME, "")
 
     /**
      * The JSONArray containing event property trigger conditions.
      */
-    val properties: JSONArray? = triggerJSON.optJSONArray(Constants.KEY_EVENT_PROPERTIES)
+    val properties: JSONArray? = triggerJSON.optJSONArray(KEY_EVENT_PROPERTIES)
 
     /**
      * The JSONArray containing item property trigger conditions.Used for Charged event.
      */
-    val items: JSONArray? = triggerJSON.optJSONArray(Constants.KEY_ITEM_PROPERTIES)
+    val items: JSONArray? = triggerJSON.optJSONArray(KEY_ITEM_PROPERTIES)
 
     /**
      * The JSONArray containing Geographic radius trigger conditions.
      * Used for location-based trigger conditions within a specified geographical radius.
      */
-    val geoRadiusArray: JSONArray? = triggerJSON.optJSONArray(Constants.KEY_GEO_RADIUS_PROPERTIES)
+    val geoRadiusArray: JSONArray? = triggerJSON.optJSONArray(KEY_GEO_RADIUS_PROPERTIES)
 
     /**
      * The string associated with the attribute name for changes in the user-profile
      * Used for user attribute changes trigger conditions
      */
-    val profileAttrName: String? = triggerJSON.optString(Constants.KEY_PROFILE_ATTR_NAME, null)
+    val profileAttrName: String? = triggerJSON.optString(KEY_PROFILE_ATTR_NAME, null)
+
+    val firstTimeOnly: Boolean = triggerJSON.optBoolean(KEY_FIRST_TIME_ONLY, false)
 
     /**
      * Get the count of event property trigger conditions.
@@ -119,6 +121,18 @@ class TriggerAdapter(triggerJSON: JSONObject) {
     val geoRadiusCount: Int
         get() = geoRadiusArray?.length() ?: 0
 
+    internal companion object {
+        const val KEY_FIRST_TIME_ONLY = "firstTimeOnly"
+        const val KEY_EVENT_NAME = "eventName"
+        const val KEY_EVENT_PROPERTIES = "eventProperties"
+        const val KEY_ITEM_PROPERTIES = "itemProperties"
+        const val KEY_GEO_RADIUS_PROPERTIES = "geoRadius"
+        const val KEY_PROFILE_ATTR_NAME = "profileAttrName"
+        const val KEY_PROPERTY_VALUE = "propertyValue"
+        const val INAPP_OPERATOR = "operator"
+        const val INAPP_PROPERTYNAME = "propertyName"
+    }
+
     /**
      * Internal function to create a TriggerCondition from a JSON property object.
      *
@@ -127,12 +141,12 @@ class TriggerAdapter(triggerJSON: JSONObject) {
      */
     @VisibleForTesting
     fun triggerConditionFromJSON(property: JSONObject): TriggerCondition {
-        val value = TriggerValue(property.opt(Constants.KEY_PROPERTY_VALUE))
+        val value = TriggerValue(property.opt(KEY_PROPERTY_VALUE))
 
-        val operator = property.optTriggerOperator(Constants.INAPP_OPERATOR)
+        val operator = property.optTriggerOperator(INAPP_OPERATOR)
 
         return TriggerCondition(
-            property.optString(Constants.INAPP_PROPERTYNAME, ""),
+            property.optString(INAPP_PROPERTYNAME, ""),
             operator,
             value
         )

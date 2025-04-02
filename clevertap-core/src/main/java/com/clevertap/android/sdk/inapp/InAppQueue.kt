@@ -21,7 +21,7 @@ import org.json.JSONObject
  *
  * @constructor Creates an InAppQueue with the given configuration and store registry.
  */
-class InAppQueue(
+internal class InAppQueue(
     private val config: CleverTapInstanceConfig,
     private val storeRegistry: StoreRegistry
 ) {

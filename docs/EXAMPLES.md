@@ -202,10 +202,10 @@ CleverTapAPI.changeCredentials(
 Add the following dependencies in your app's `build.gradle`
 
 ```groovy
-implementation "androidx.appcompat:appcompat:1.6.0-rc01"//MANDATORY for App Inbox
-implementation "androidx.recyclerview:recyclerview:1.2.1"//MANDATORY for App Inbox
+implementation "androidx.appcompat:appcompat:1.7.0"//MANDATORY for App Inbox
+implementation "androidx.recyclerview:recyclerview:1.3.2"//MANDATORY for App Inbox
 implementation "androidx.viewpager:viewpager:1.0.0"//MANDATORY for App Inbox
-implementation "com.google.android.material:material:1.4.0"//MANDATORY for App Inbox
+implementation "com.google.android.material:material:1.12.0"//MANDATORY for App Inbox
 implementation "com.github.bumptech.glide:glide:4.12.0"//MANDATORY for App Inbox
 
 //Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
@@ -219,9 +219,9 @@ Clevertap supports `AndroidX Media3` from `v7.0.0+` to replace the deprecated `E
 
 |         Old Dependency | New Dependency      |
 |-----------------------:|:--------------------|
-|     `com.google.android.exoplayer:exoplayer:2.19.1` | `androidx.media3:media3-exoplayer:1.1.1`     |
-| `com.google.android.exoplayer:exoplayer-hls:2.19.1` | `androidx.media3:media3-exoplayer-hls:1.1.1` |
-|  `com.google.android.exoplayer:exoplayer-ui:2.19.1` | `androidx.media3:media3-ui:1.1.1`  |
+|     `com.google.android.exoplayer:exoplayer:2.19.1` | `androidx.media3:media3-exoplayer:1.4.0`     |
+| `com.google.android.exoplayer:exoplayer-hls:2.19.1` | `androidx.media3:media3-exoplayer-hls:1.4.0` |
+|  `com.google.android.exoplayer:exoplayer-ui:2.19.1` | `androidx.media3:media3-ui:1.4.0`  |
 
 #### Initializing the Inbox
 
@@ -747,4 +747,131 @@ val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
 
 clevertapAdditionalInstanceConfig.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
 val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext ,clevertapAdditionalInstanceConfig)
+```
+
+### User event logging APIs
+Get user event details
+
+Java
+```java
+UserEventLog eventLog = clevertap.getUserEventLog("Product Viewed");
+if (eventLog != null) {
+    String eventName = eventLog.getEventName();
+    long firstTime = eventLog.getFirstTs();
+    long lastTime = eventLog.getLastTs();
+    int count = eventLog.getCountOfEvents();
+    String deviceId = eventLog.getDeviceID();
+} else {
+    System.out.println("Event not performed");
+}
+```
+Kotlin
+```kotlin
+clevertap.getUserEventLog("Product Viewed")?.let { eventLog ->
+    val eventName = eventLog.eventName
+    val firstTime = eventLog.firstTs
+    val lastTime = eventLog.lastTs 
+    val count = eventLog.countOfEvents
+    val deviceId = eventLog.deviceID
+} ?: println("Event not performed")
+```
+Get count of event occurrences
+
+Java
+```java
+int eventCount = clevertap.getUserEventLogCount("Product Viewed");
+```
+Kotlin
+```kotlin
+val eventCount = clevertap.getUserEventLogCount("Product Viewed")
+```
+Get user's last app visit timestamp
+
+Java
+```java
+long lastVisitTs = clevertap.getUserLastVisitTs();
+```
+Kotlin
+```kotlin
+val lastVisitTs = clevertap.userLastVisitTs
+```
+Get total number of app launches by user
+
+Java
+```java
+int appLaunchCount = clevertap.getUserAppLaunchCount();
+```
+Kotlin
+```kotlin
+val appLaunchCount = cleverTapAPI?.userAppLaunchCount
+```
+Get full event history for user
+
+Java
+```java
+Map<String, UserEventLog> eventHistory = clevertap.getUserEventLogHistory();
+for (Map.Entry<String, UserEventLog> entry : eventHistory.entrySet()) {
+String eventName = entry.getKey();
+UserEventLog log = entry.getValue();
+// Process event details
+}
+```
+Kotlin
+```kotlin
+val eventHistory = clevertap.userEventLogHistory
+eventHistory?.forEach { (eventName, log) ->
+    // Process event details
+} ?: println("Events not performed")
+```
+
+### Push registration tokens to Clevertap
+
+Push FCM device token to CleverTap
+```kotlin
+override fun onNewToken(token: String) {
+    super.onNewToken(token)
+    cleverTapAPI.pushFcmRegistrationId(token, true)
+}
+```
+
+Push Huawei registration token to CleverTap
+```kotlin
+override fun onNewToken(token: String?, bundle: Bundle?) {
+    super.onNewToken(token, bundle)
+    if (token != null) {
+        cleverTapAPI.pushRegistrationToken(token, HmsConstants.HPS, true)
+    }
+}
+```
+
+### Baidu Setup and send channelId to CleverTap
+
+Enable baidu Push type in `AndroidManifest.xml`
+```xml
+<meta-data
+    android:name="CLEVERTAP_PROVIDER_2"
+    android:value="bps,bps_token,com.clevertap.android.bps.BaiduPushProvider,com.baidu.android.pushservice.PushMessageReceiver" />
+```
+Push Baidu registration token to CleverTap
+```kotlin
+companion object {
+    private val BAIDU_PUSH_TYPE = PushType(
+        "bps",
+        "bps_token",
+        "com.clevertap.android.bps.BaiduPushProvider",
+        "com.baidu.android.pushservice.PushMessageReceiver"
+    )
+}
+
+override fun onBind(context:Context, errorCode:Int, appid:String,
+           userId:String, channelId:String, requestId:String) {
+    //..
+    if (channelId != null) {
+        cleverTapAPI.pushRegistrationToken(channelId, BAIDU_PUSH_TYPE, true)
+    }
+}
+```
+Also additionally add this to proguard/any similar tool
+```properties
+-dontwarn com.baidu.**
 ```

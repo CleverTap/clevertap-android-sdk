@@ -28,6 +28,7 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
@@ -119,8 +120,7 @@ public class DeviceInfo {
 
         private String getBluetoothVersion() {
             String bluetoothVersion = "none";
-            if (android.os.Build.VERSION.SDK_INT >= 18 &&
-                    context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
                 bluetoothVersion = "ble";
             } else if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
                 bluetoothVersion = "classic";
@@ -548,7 +548,7 @@ public class DeviceInfo {
         try {
             boolean deviceIsMultiUser = false;
             if (getGoogleAdID() != null) {
-                deviceIsMultiUser = new LoginInfoProvider(context, config, this).deviceIsMultiUser();
+                deviceIsMultiUser = new LoginInfoProvider(context, config).deviceIsMultiUser();
             }
             return CTJsonConverter.from(this, mCoreMetaData, enableNetworkInfoReporting,
                     deviceIsMultiUser);
@@ -844,9 +844,9 @@ public class DeviceInfo {
             } catch (Throwable t) {
                 if (t.getCause() != null) {
                     getConfigLogger().verbose(config.getAccountId(),
-                            "Failed to get Advertising ID: " + t.toString() + t.getCause().toString());
+                            "Failed to get Advertising ID: " + t + t.getCause().toString());
                 } else {
-                    getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString());
+                    getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t);
                 }
             }
             if (advertisingID != null && advertisingID.trim().length() > 2) {

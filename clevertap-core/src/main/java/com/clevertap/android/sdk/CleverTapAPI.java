@@ -6,7 +6,7 @@ import static com.clevertap.android.sdk.Utils.getSCDomain;
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -66,10 +66,12 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
+import com.clevertap.android.sdk.pushnotification.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
@@ -83,6 +85,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -728,7 +732,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.d("Instance is Analytics Only not processing device token");
                 continue;
             }
-            instance.getCoreState().getPushProviders().doTokenRefresh(token, PushType.FCM);
+            instance.getCoreState().getPushProviders().doTokenRefresh(token, PushConstants.FCM);
         }
     }
 
@@ -776,7 +780,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return The {@link CleverTapAPI} object
      */
     @SuppressWarnings("WeakerAccess")
-    public static CleverTapAPI getDefaultInstance(Context context, String cleverTapID) {
+    public static CleverTapAPI getDefaultInstance(
+            Context context,
+            String cleverTapID
+    ) {
         // For Google Play Store/Android Studio tracking
         sdkVersion = BuildConfig.SDK_VERSION_STRING;
 
@@ -907,8 +914,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return The {@link CleverTapAPI} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public static CleverTapAPI instanceWithConfig(Context context, @NonNull CleverTapInstanceConfig config,
-            String cleverTapID) {
+    public static CleverTapAPI instanceWithConfig(
+            Context context,
+            @NonNull CleverTapInstanceConfig config,
+            String cleverTapID
+    ) {
         //noinspection ConstantValue
         if (config == null) {
             Logger.v("CleverTapInstanceConfig cannot be null");
@@ -984,7 +994,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("WeakerAccess")
     public static void onActivityResumed(Activity activity, String cleverTapID) {
         if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null, cleverTapID);
+            CleverTapAPI.createInstanceIfAvailable(
+                    activity.getApplicationContext(),
+                    null,
+                    cleverTapID
+            );
         }
 
         CoreMetaData.setAppForeground(true);
@@ -1223,8 +1237,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
 
-        CoreState coreState = CleverTapFactory
-                .getCoreState(context, config, cleverTapID);
+        CoreState coreState = CleverTapFactory.getCoreState(context, config, cleverTapID);
         setCoreState(coreState);
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "CoreState is set");
 
@@ -1244,6 +1257,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("setStatesAsync", () -> {
             CleverTapAPI.this.coreState.getSessionManager().setLastVisitTime();
+            CleverTapAPI.this.coreState.getSessionManager().setUserLastVisitTs();
             CleverTapAPI.this.coreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
             CleverTapAPI.this.coreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
             return null;
@@ -1608,8 +1622,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event for which you want to get the total count
      * @return Total count in int
+     *
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogCount(String)} instead.
+     * getUserEventLogCount() provides user-specific event counts.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getCount(String event) {
         EventDetail eventDetail = coreState.getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
@@ -1620,16 +1638,66 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Retrieves the count of logged events for a specific event name associated with the current
+     * user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * This operation involves a database query and should be called from a background thread.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * // Call from background thread <br>
+     * int itemSelectedCount = getUserEventLogCount("item_selected")
+     * </code>
+     *
+     * @param eventName Name of the event to get the count for (e.g., "navigation_clicked", "item_selected")
+     * @return The number of times the specified event has occurred for current user, or -1 if there was an error
+     */
+    @WorkerThread
+    public int getUserEventLogCount(String eventName) {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
+        return coreState.getLocalDataStore().readUserEventLogCount(eventName);
+    }
+
+    /**
      * Returns an EventDetail object for the particular event passed. EventDetail consists of event name, count, first
      * time
      * and last time timestamp of the event.
      *
      * @param event The event name for which you want the Event details
      * @return The {@link EventDetail} object
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLog(String)} instead.
+     * getUserEventLog() provides user-specific event log.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public EventDetail getDetails(String event) {
         return coreState.getLocalDataStore().getEventDetail(event);
+    }
+
+    /**
+     * Retrieves user-specific event log associated with the current user/
+     * {@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * This operation involves a database query and should be called from a background thread.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * // Call from background thread <br>
+     * UserEventLog log = getUserEventLog("navigation_clicked") <br>
+     * long firstOccurrence = log.firstTs
+     * </code>
+     *
+     * @param eventName Name of the event to get the log for (e.g., "navigation_clicked", "item_selected")
+     * @return {@link UserEventLog} or null if the event log does not exist or there was an error
+     */
+    @WorkerThread
+    public UserEventLog getUserEventLog(String eventName) {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return null;
+        }
+        return coreState.getLocalDataStore().readUserEventLog(eventName);
     }
 
     /**
@@ -1728,8 +1796,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event name for which you want the first time timestamp
      * @return The timestamp in int
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLog(String)} instead.
+     * It provides user-specific event log with first occurrence timestamp.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getFirstTime(String event) {
         EventDetail eventDetail = coreState.getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
@@ -1766,10 +1837,39 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns a Map of event names and corresponding event details of all the events raised
      *
      * @return A Map of Event Name and its corresponding EventDetail object
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLogHistory()} instead.
+     * getUserEventLogHistory() provides user-specific event logs.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public Map<String, EventDetail> getHistory() {
         return coreState.getLocalDataStore().getEventHistory(context);
+    }
+
+    /**
+     * Retrieves history of all event logs associated with the current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID} in the ascending order of lastTs.
+     * This operation involves a database query and should be called from a background thread.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * // Call from background thread <br>
+     * Map&lt;String, UserEventLog&gt; history = getUserEventLogHistory()
+     * </code>
+     *
+     * @return Map of event name to {@link UserEventLog} for all events by current user, or empty map if there was an error
+     */
+    @WorkerThread
+    public Map<String, UserEventLog> getUserEventLogHistory() {
+        Map<String, UserEventLog> history = new LinkedHashMap<>();
+        if (!getConfig().isPersonalizationEnabled()) {
+            return history;
+        }
+        List<UserEventLog> logs = coreState.getLocalDataStore().readUserEventLogs();
+        for (UserEventLog log : logs) {
+            history.put(log.getEventName(), log);
+        }
+        return history;
     }
 
     /**
@@ -1883,8 +1983,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param event The event name for which you want the last time timestamp
      * @return The timestamp in int
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserEventLog(String)} instead.
+     * It provides user-specific event log with last occurrence timestamp.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getLastTime(String event) {
         EventDetail eventDetail = coreState.getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
@@ -1922,10 +2025,31 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the timestamp of the previous visit
      *
      * @return Timestamp of previous visit in int
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserLastVisitTs()} instead.
+     * getUserLastVisitTs() provides user-specific last visit timestamp.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getPreviousVisitTime() {
         return coreState.getSessionManager().getLastVisitTime();
+    }
+
+    /**
+     * Retrieves timestamp of last visit by current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * long lastVisitTs = getUserLastVisitTs()
+     * </code>
+     *
+     * @return Timestamp of last visit by current user, or -1 if there was an error
+     */
+    public long getUserLastVisitTs() {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
+        return coreState.getSessionManager().getUserLastVisitTs();
     }
 
     /**
@@ -2002,8 +2126,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns the total number of times the app has been launched
      *
      * @return Total number of app launches in int
+     * @deprecated since <code>v7.1.0</code>. Use {@link #getUserAppLaunchCount()} instead.
+     * getUserAppLaunchCount() provides user-specific app launch count.
      */
     @SuppressWarnings({"unused"})
+    @Deprecated(since = "7.1.0")
     public int getTotalVisits() {
         EventDetail ed = coreState.getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
         if (ed != null) {
@@ -2011,6 +2138,27 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         return 0;
+    }
+
+    /**
+     * Retrieves number of times app launched by current user/{@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener) CleverTap ID}.
+     * This operation involves a database query and should be called from a background thread.
+     * <br>
+     * Example usage:
+     * <br>
+     * <code>
+     * // Call from background thread <br>
+     * int launchCount = getUserAppLaunchCount()
+     * </code>
+     *
+     * @return Number of times app launched by current user, or -1 if there was an error
+     */
+    @WorkerThread
+    public int getUserAppLaunchCount() {
+        if (!getConfig().isPersonalizationEnabled()) {
+            return -1;
+        }
+        return coreState.getLocalDataStore().readUserEventLogCount(Constants.APP_LAUNCHED_EVENT);
     }
 
     /**
@@ -2219,21 +2367,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfig().getLogger().debug(getAccountId(),
                     "Product config is not supported with analytics only configuration");
         }
-        return coreState.getCtProductConfigController();
-    }
-
-    /**
-     * Sends the Baidu registration ID to CleverTap.
-     *
-     * @param regId    The Baidu registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    public void pushBaiduRegistrationId(String regId, boolean register) {
-        coreState.getPushProviders().handleToken(regId, PushType.BPS, register);
+        return coreState.getCtProductConfigController(context);
     }
 
     /**
@@ -2329,7 +2463,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
-        coreState.getPushProviders().handleToken(fcmId, PushType.FCM, register);
+        coreState.getPushProviders().handleToken(fcmId, PushConstants.FCM, register);
     }
 
     /**
@@ -2379,20 +2513,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public Future<?> pushGeofenceEnteredEvent(JSONObject geofenceProperties) {
         return coreState.getAnalyticsManager()
                 .raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME, geofenceProperties);
-    }
-
-    /**
-     * Sends the Huawei registration ID to CleverTap.
-     *
-     * @param regId    The Huawei registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    public void pushHuaweiRegistrationId(String regId, boolean register) {
-        coreState.getPushProviders().handleToken(regId, PushType.HPS, register);
     }
 
     /**
@@ -2954,20 +3074,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         });
     }
 
-    /**
-     * Sends the ADM registration ID to CleverTap.
-     *
-     * @param token    The ADM registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("unused")
-    private void pushAmazonRegistrationId(String token, boolean register) {
-        coreState.getPushProviders().handleToken(token, PushType.ADM, register);
-    }
-
     static void onActivityCreated(Activity activity) {
         onActivityCreated(activity, null);
     }
@@ -3045,7 +3151,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     private static @Nullable
-    CleverTapAPI createInstanceIfAvailable(Context context, String _accountId, String cleverTapID) {
+    CleverTapAPI createInstanceIfAvailable(
+            Context context,
+            String _accountId,
+            String cleverTapID
+    ) {
         try {
             if (_accountId == null) {
                 try {
@@ -3098,21 +3208,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private static CleverTapInstanceConfig getDefaultConfig(Context context) {
         ManifestInfo manifest = ManifestInfo.getInstance(context);
         String accountId = manifest.getAccountId();
-        String accountToken = manifest.getAcountToken();
+        String accountToken = manifest.getAccountToken();
         String accountRegion = manifest.getAccountRegion();
         String proxyDomain = manifest.getProxyDomain();
         String spikyProxyDomain = manifest.getSpikeyProxyDomain();
         String handshakeDomain = manifest.getHandshakeDomain();
         if (accountId == null || accountToken == null) {
-            Logger.i(
-                    "Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
+            Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
             return null;
         }
         if (accountRegion == null) {
             Logger.i("Account Region not specified in the AndroidManifest - using default region");
         }
+
+        // todo : pass manifest info here
         CleverTapInstanceConfig defaultInstanceConfig = CleverTapInstanceConfig.createDefaultInstance(context, accountId, accountToken, accountRegion);
 
+        // todo : check if these re-assignments are needed, already added in manifest parsing
         if (proxyDomain != null && !proxyDomain.trim().isEmpty()) {
             defaultInstanceConfig.setProxyDomain(proxyDomain);
         }
@@ -3644,5 +3756,20 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         } else {
             impl.cleanupAllResources(CtCacheType.FILES);
         }
+    }
+
+    /**
+     * Sends push registration token for the given push type
+     *
+     * @param token    The token
+     * @param pushType Push Provider type for which the token is registered
+     * @param register Boolean indicating whether to register
+     *                 or not for receiving push messages from CleverTap.
+     *                 Set this to true to receive push messages from CleverTap,
+     *                 and false to not receive any messages from CleverTap.
+     */
+    @SuppressWarnings("unused")
+    public void pushRegistrationToken(String token, PushType pushType, boolean register) {
+        coreState.getPushProviders().handleToken(token, pushType, register);
     }
 }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Add Permissions needed for CleverTap -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -15,7 +16,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        >
+        <property
+            android:name="android.adservices.AD_SERVICES_CONFIG"
+            android:resource="@xml/gma_ad_services_config"
+            tools:replace="android:resource" />
         <activity
             android:name=".HomeScreenActivity"
             android:exported="true"
@@ -97,6 +103,15 @@
             android:name="CLEVERTAP_ENCRYPTION_LEVEL"
             android:value="1" /> <!-- Add meta and set to 1 enable encryption of PII data -->
 
+        <!-- Builds push provider for clevertap other than firebase, add csv string 4 values, please refer docs to integrate different push providers in clevertap -->
+        <meta-data
+            android:name="CLEVERTAP_PROVIDER_1"
+            android:value="@string/clevertap_hps_manifest_entry" />
+        <!-- Builds push provider for clevertap other than firebase, add csv string with 4 values, please refer docs to integrate different push providers in clevertap -->
+        <meta-data
+            android:name="CLEVERTAP_PROVIDER_2"
+            android:value="bps,bps_token,com.clevertap.android.bps.BaiduPushProvider,com.baidu.android.pushservice.PushMessageReceiver" />
+
         <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
         <service
             android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
@@ -122,7 +137,8 @@
         <activity
             android:name=".WebViewActivity"
             android:exported="true"
-            android:label="WebView">
+            android:label="WebView"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 

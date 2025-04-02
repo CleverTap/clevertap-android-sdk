@@ -46,7 +46,7 @@ class Media3Handle: InboxVideoPlayerHandle {
             .build()
             .apply {
                 volume = 0f // start off muted
-                addListener(object : Player.Listener {
+                addListener(object : Media3PlayerListener() {
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         when (playbackState) {
                             Player.STATE_BUFFERING -> {

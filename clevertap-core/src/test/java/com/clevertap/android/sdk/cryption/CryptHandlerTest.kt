@@ -1,143 +1,254 @@
 package com.clevertap.android.sdk.cryption
 
-import com.clevertap.android.shared.test.BaseTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.clevertap.android.sdk.Constants
+import io.mockk.MockKAnnotations
+import io.mockk.confirmVerified
 import io.mockk.every
-import io.mockk.mockkObject
+import io.mockk.impl.annotations.MockK
+import io.mockk.verify
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
+class CryptHandlerTest {
 
-class CryptHandlerTest : BaseTestCase() {
-    private lateinit var accountID: String
-    private lateinit var cryptHandlerNone: CryptHandler
-    private lateinit var cryptHandlerMedium: CryptHandler
+    @MockK(relaxed = true)
+    private lateinit var repository: CryptRepository
+
+    @MockK
+    private lateinit var cryptFactory: CryptFactory
+
+    @MockK
+    private lateinit var crypt: Crypt
+
+    private lateinit var cryptHandler: CryptHandler
 
     @Before
-    override fun setUp() {
-
-        super.setUp()
-        mockkObject(CryptFactory.Companion)
-        every { CryptFactory.getCrypt(CryptHandler.EncryptionAlgorithm.AES) } answers { MockAESCrypt() }
-
-        accountID = "test_account_id"
-        cryptHandlerNone = CryptHandler(0, CryptHandler.EncryptionAlgorithm.AES, accountID)
-        cryptHandlerMedium = CryptHandler(1, CryptHandler.EncryptionAlgorithm.AES, accountID)
+    fun setUp() {
+        MockKAnnotations.init(this)
+        cryptHandler = CryptHandler(
+            encryptionLevel = EncryptionLevel.MEDIUM,
+            accountID = "testAccountId",
+            repository = repository,
+            cryptFactory = cryptFactory
+        )
+        every { cryptFactory.getCryptInstance(any()) } returns crypt
     }
 
-
-    @Test
-    fun `testEncryptAndDecrypt when encryptionLevelIsNone`() {
-        val plainText = "dummy_decrypted"
-        val key = "dummy_key"
-
-        val encryptedText = cryptHandlerNone.encrypt(plainText, key)
-        val decryptedText = cryptHandlerNone.decrypt(encryptedText!!, key)
-
-        assertEquals(plainText, decryptedText)
+    @After
+    fun teardown() {
+        confirmVerified(repository, cryptFactory, crypt)
     }
 
     @Test
-    fun `testEncryptAndDecrypt when encryptionLevelIsMedium and key is valid`() {
-        val plainText = "dummy_decrypted"
-        val key = "cgk"
+    fun encrypt_mediumEncryptionLevel_validKey() {
+        val plainText = "testPlainText"
+        val key = Constants.KEY_ENCRYPTION_EMAIL
+        val encryptedText = "encryptedText"
 
-        val encryptedText = cryptHandlerMedium.encrypt(plainText, key)
-        val decryptedText = cryptHandlerMedium.decrypt(encryptedText!!, key)
+        every { crypt.encryptInternal(plainText) } returns encryptedText
 
-        assertEquals(plainText, decryptedText)
+        val result = cryptHandler.encrypt(plainText, key)
+
+        assertEquals(encryptedText, result)
+        verify { crypt.encryptInternal(plainText) } // Verify encryptInternal call
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) } // Verify getCryptInstance call
     }
 
     @Test
-    fun `testEncryptAndDecrypt when encryptionLevelIsMedium and key is invalid`() {
-        val plainText = "dummy_decrypted"
-        val key = "dummy_key"
+    fun encrypt_mediumEncryptionLevel_invalidKey() {
+        val plainText = "testPlainText"
+        val key = "invalidKey"
 
-        val encryptedText = cryptHandlerMedium.encrypt(plainText, key)
-        val decryptedText = cryptHandlerMedium.decrypt(encryptedText!!, key)
+        val result = cryptHandler.encrypt(plainText, key)
 
-        assertEquals(plainText, decryptedText)
-    }
-
-
-
-    @Test
-    fun `test Encrypt should return plaintext irrespective of the key when encryptionLevelIsNone `() {
-        val plainText = "dummy_decrypted"
-        var key = "dummy_key"
-
-        var encryptedText = cryptHandlerNone.encrypt(plainText, key)
-        assertEquals(encryptedText, plainText)
-
-        key = "cgk"
-        encryptedText = cryptHandlerNone.encrypt(plainText, key)
-        assertEquals(encryptedText, plainText)
+        assertEquals(plainText, result)
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
     }
 
     @Test
-    fun `test Encrypt should only encrypt for required keys when encryptionLevelIsMedium `() {
-        val plainText = "dummy_decrypted"
-        val key = "dummy_key"
-        val reqKeys =
-            arrayListOf("cgk", "encryptionmigration", "Email", "Phone", "Identity", "Name")
+    fun encrypt_noneEncryptionLevel() {
+        val plainText = "testPlainText"
+        val key = Constants.KEY_ENCRYPTION_EMAIL
+        val cryptHandler = CryptHandler(
+            encryptionLevel = EncryptionLevel.NONE,
+            accountID = "testAccountId",
+            repository = repository,
+            cryptFactory = cryptFactory
+        )
 
-        var actualEncryptedText = cryptHandlerMedium.encrypt(plainText, key)
-        assertEquals(plainText, actualEncryptedText)
+        val result = cryptHandler.encrypt(plainText, key)
 
-        val expectedEncryptedText = "[1,2,3]"
-        for (mediumKey in reqKeys) {
-            actualEncryptedText = cryptHandlerMedium.encrypt(plainText, mediumKey)
-            assertEquals(expectedEncryptedText, actualEncryptedText)
-        }
+        assertEquals(plainText, result)
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+
     }
 
     @Test
-    fun `test Encrypt should return the sameText if already encrypted`() {
-        val plainText =
-            "[93, 125, -83, 116, -22, 82, -53, -67, 88, -87, -44, -32, 55, 86, 120, -53]"
-        val key = "cgk"
+    fun decrypt_mediumEncryptionLevel_validKey() {
+        val cipherText = "${Constants.AES_GCM_PREFIX}encryptedText${Constants.AES_GCM_SUFFIX}"
+        val key = Constants.KEY_ENCRYPTION_EMAIL
+        val decryptedText = "decryptedText"
 
-        val actualEncryptedText = cryptHandlerMedium.encrypt(plainText, key)
-        assertEquals(plainText, actualEncryptedText)
-    }
+        every { crypt.decryptInternal(cipherText) } returns decryptedText
 
+        val result = cryptHandler.decrypt(cipherText, key)
 
-    @Test
-    fun `test Decrypt should decrypt for any key if cipher text is valid `() {
-        val cipherText =
-            "[93, 125, -83, 116, -22, 82, -53, -67, 88, -87, -44, -32, 55, 86, 120, -53]"
-        val expectedDecryptedText = "dummy_decrypted"
-        val key = "any_key"
-
-        val decryptedText = cryptHandlerNone.decrypt(cipherText, key)
-        assertEquals(expectedDecryptedText, decryptedText)
+        assertEquals(decryptedText, result)
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+        verify { crypt.decryptInternal(cipherText) }
     }
 
     @Test
-    fun `test Decrypt should decrypt only for required keys when encryptionLevelIsMedium`() {
-        val cipherText =
-            "[93, 125, -83, 116, -22, 82, -53, -67, 88, -87, -44, -32, 55, 86, 120, -53]"
-        val expectedDecryptedText = "dummy_decrypted"
-        val dummyKey = "dummy_key"
-        val reqKeys =
-            arrayListOf("cgk", "encryptionmigration", "Email", "Phone", "Identity", "Name")
+    fun decrypt_mediumEncryptionLevel_invalidKey() {
+        val cipherText = "encryptedText"
+        val key = "invalidKey"
 
-        var decryptedText = cryptHandlerMedium.decrypt(cipherText, dummyKey)
-        assertEquals(cipherText, decryptedText)
+        val result = cryptHandler.decrypt(cipherText, key)
 
-        for (mediumKey in reqKeys) {
-            decryptedText = cryptHandlerMedium.decrypt(cipherText, mediumKey)
-            assertEquals(expectedDecryptedText, decryptedText)
-        }
+        assertEquals(cipherText, result)
     }
 
     @Test
-    fun `test Decrypt should return sameText if already decrypted`() {
-        val cipherText = "dummy_decrypted"
-        val dummyKey = "cgk"
+    fun decrypt_noneEncryptionLevel() {
+        val cipherText = "${Constants.AES_GCM_PREFIX}encryptedText${Constants.AES_GCM_SUFFIX}"
+        val key = Constants.KEY_ENCRYPTION_EMAIL
+        val decryptedText = "decryptedText"
+        val cryptHandler = CryptHandler(
+            encryptionLevel = EncryptionLevel.NONE,
+            accountID = "testAccountId",
+            repository = repository,
+            cryptFactory = cryptFactory
+        )
 
-        val decryptedText = cryptHandlerMedium.decrypt(cipherText, dummyKey)
-        assertEquals(cipherText, decryptedText)
+        every { crypt.decryptInternal(cipherText) } returns decryptedText
+
+        val result = cryptHandler.decrypt(cipherText, key)
+
+        assertEquals(decryptedText, result)
+
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+        verify { crypt.decryptInternal(cipherText) }
+    }
+
+    @Test
+    fun isTextEncrypted_encryptedText() {
+        val encryptedText = "${Constants.AES_PREFIX}testEncryptedText${Constants.AES_SUFFIX}"
+
+        assertTrue(CryptHandler.isTextEncrypted(encryptedText))
+    }
+
+    @Test
+    fun isTextEncrypted_plainText() {
+        val plainText = "testPlainText"
+
+        assertFalse(CryptHandler.isTextEncrypted(plainText))
+    }
+
+    @Test
+    fun encrypt_withoutChecks() {
+        val plainText = "testPlainText"
+        val encryptedText = "encryptedText"
+
+        every { crypt.encryptInternal(plainText) } returns encryptedText
+
+        val result = cryptHandler.encrypt(plainText)
+
+        assertEquals(encryptedText, result)
+
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+        verify { crypt.encryptInternal(plainText) }
+    }
+
+    @Test
+    fun decrypt_withoutChecks() {
+        val cipherText = "encryptedText"
+        val decryptedText = "decryptedText"
+
+        every { crypt.decryptInternal(cipherText) } returns decryptedText
+
+        val result = cryptHandler.decrypt(cipherText)
+
+        assertEquals(decryptedText, result)
+        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
+        verify { crypt.decryptInternal(cipherText) }
+    }
+
+    @Test
+    fun updateMigrationFailureCount() {
+        val migrationSuccessful = true
+
+        cryptHandler.updateMigrationFailureCount(migrationSuccessful)
+
+        verify { repository.updateMigrationFailureCount(migrationSuccessful) }
+    }
+
+    @Test
+    fun encrypt_alreadyEncryptedText() {
+        val encryptedText = "${Constants.AES_PREFIX}testEncryptedText${Constants.AES_SUFFIX}"
+        val key = Constants.KEY_ENCRYPTION_EMAIL
+
+        val result = cryptHandler.encrypt(encryptedText, key)
+
+        assertEquals(encryptedText, result) // Should return the same encrypted text
+    }
+
+    @Test
+    fun decrypt_notEncryptedText() {
+        val plainText = "testPlainText"
+        val key = Constants.KEY_ENCRYPTION_EMAIL
+
+        val result = cryptHandler.decrypt(plainText, key)
+
+        assertEquals(plainText, result) // Should return the same plain text
+    }
+
+    @Test
+    fun isTextAESEncrypted_validAESEncryptedText() {
+        val aesEncryptedText = "${Constants.AES_PREFIX}testEncryptedText${Constants.AES_SUFFIX}"
+
+        assertTrue(CryptHandler.isTextAESEncrypted(aesEncryptedText))
+    }
+
+    @Test
+    fun isTextAESEncrypted_invalidAESEncryptedText_missingPrefix() {
+        val invalidAesEncryptedText = "testEncryptedText${Constants.AES_SUFFIX}"
+
+        assertFalse(CryptHandler.isTextAESEncrypted(invalidAesEncryptedText))
+    }
+
+    @Test
+    fun isTextAESEncrypted_invalidAESEncryptedText_missingSuffix() {
+        val invalidAesEncryptedText = "${Constants.AES_PREFIX}testEncryptedText"
+
+        assertFalse(CryptHandler.isTextAESEncrypted(invalidAesEncryptedText))
+    }
+
+    @Test
+    fun isTextAESGCMEncrypted_validAESGCMEncryptedText() {
+        val aesGcmEncryptedText = "${Constants.AES_GCM_PREFIX}testEncryptedText${Constants.AES_GCM_SUFFIX}"
+
+        assertTrue(CryptHandler.isTextAESGCMEncrypted(aesGcmEncryptedText))
+    }
+
+    @Test
+    fun isTextAESGCMEncrypted_invalidAESGCMEncryptedText_missingPrefix() {
+        val invalidAesGcmEncryptedText = "testEncryptedText${Constants.AES_GCM_SUFFIX}"
+
+        assertFalse(CryptHandler.isTextAESGCMEncrypted(invalidAesGcmEncryptedText))
+    }
+
+    @Test
+    fun isTextAESGCMEncrypted_invalidAESGCMEncryptedText_missingSuffix() {
+        val invalidAesGcmEncryptedText = "${Constants.AES_GCM_PREFIX}testEncryptedText"
+
+        assertFalse(CryptHandler.isTextAESGCMEncrypted(invalidAesGcmEncryptedText))
     }
 
 }

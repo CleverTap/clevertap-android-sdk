@@ -133,8 +133,6 @@ afterEvaluate {
                 artifactId artifact
                 version version
 
-                artifact sourcesJar
-
                 pom {
                     name = artifact
                     description = libraryDescription
