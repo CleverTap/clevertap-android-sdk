@@ -9,13 +9,15 @@
     android:paddingRight="@dimen/padding_horizontal"
     android:paddingBottom="@dimen/padding_micro">
 
-<!--    <include-->
-<!--        android:id="@+id/metadata"-->
-<!--        layout="@layout/metadata" />-->
+    <include
+        android:id="@+id/metadata"
+        layout="@layout/metadata" />
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/metadata"
+        android:layout_alignStart="@+id/metadata"
         android:id="@+id/rel_lyt">
 
         <TextView
