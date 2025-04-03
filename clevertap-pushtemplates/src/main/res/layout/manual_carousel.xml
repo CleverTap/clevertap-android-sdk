@@ -27,11 +27,10 @@
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:layout_marginRight="3dp"
+                android:layout_marginEnd="3dp"
                 android:layout_weight="6"
                 android:inAnimation="@anim/fade_in"
-                android:outAnimation="@anim/fade_out"
-                android:layout_marginEnd="3dp" />
+                android:outAnimation="@anim/fade_out" />
 
             <ViewFlipper
                 android:id="@+id/carousel_image"
@@ -49,11 +48,10 @@
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:layout_marginLeft="3dp"
+                android:layout_marginStart="3dp"
                 android:layout_weight="6"
                 android:inAnimation="@anim/fade_in"
-                android:outAnimation="@anim/fade_out"
-                android:layout_marginStart="3dp" />
+                android:outAnimation="@anim/fade_out" />
         </LinearLayout>
 
         <ImageView
