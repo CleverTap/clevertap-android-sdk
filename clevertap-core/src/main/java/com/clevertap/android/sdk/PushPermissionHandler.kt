@@ -131,7 +131,6 @@ internal class PushPermissionHandler @JvmOverloads constructor(
     fun onRequestPermissionsResult(
         activity: Activity,
         requestCode: Int,
-        permissions: Array<String>,
         grantResults: IntArray
     ) {
         val ctCache = cacheProvider(activity)

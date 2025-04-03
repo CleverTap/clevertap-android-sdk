@@ -31,7 +31,7 @@ internal class InAppActionHandler(
             val uri = Uri.parse(url.replace("\n", "").replace("\r", ""))
             val queryParamSet = uri.getQueryParameterNames()
             val queryBundle = Bundle()
-            if (queryParamSet != null && !queryParamSet.isEmpty()) {
+            if (!queryParamSet.isNullOrEmpty()) {
                 for (queryName in queryParamSet) {
                     queryBundle.putString(queryName, uri.getQueryParameter(queryName))
                 }
