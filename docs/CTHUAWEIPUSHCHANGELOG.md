@@ -1,5 +1,11 @@
 ## CleverTap Huawei Push SDK CHANGE LOG
 
+### Version 1.5.0 (March 11, 2025)
+
+#### Breaking API Changes
+*   **Huawei Push Integration - Updated Setup Required:** The integration process for Huawei Push has been significantly updated. If you have previously integrated the CleverTap Huawei Push SDK, you **must** follow the new steps outlined [here](https://developer.clevertap.com/docs/clevertap-huawei-push-integration) to ensure continued functionality.
+*   **Pluggable Huawei Push Integration:** Huawei Push can now be integrated as a pluggable component, allowing for more flexibility and avoiding initialization with reflection pre-emptively in the core SDK.
+
 ### Version 1.4.0 (January 7, 2025)
 * Adds support for Android 15, making it compliant with Android 15 requirements. Details [here](https://developer.android.com/about/versions/15/summary)
 * Updates Minimum Android SDK version to API 21 (Android 5.0)

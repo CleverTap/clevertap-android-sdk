@@ -82,6 +82,21 @@ class InAppStoreTest {
     }
 
     @Test
+    fun `readClientSideInApps returns empty JSONArray when decryption fails`() {
+        // Arrange
+        val csInAppsEncrypted = "encryptedString"
+        val csInAppsDecrypted = null
+        every { ctPreference.readString(Constants.PREFS_INAPP_KEY_CS, any()) } returns csInAppsEncrypted
+        every { cryptHandler.decrypt(csInAppsEncrypted) } returns csInAppsDecrypted
+
+        // Act
+        val result = inAppStore.readClientSideInApps()
+
+        // Assert
+        assertEquals(JSONArray(), result)
+    }
+
+    @Test
     fun `storeServerSideInAppsMetaData writes JSONArray to ctPreference`() {
         // Arrange
         val serverSideInAppsMetaData = JSONArray("[{\"id\":5},{\"id\":6}]")
@@ -318,6 +333,21 @@ class InAppStoreTest {
         // Arrange
         val ssEncryptedInApps = ""
         every { ctPreference.readString(Constants.INAPP_KEY, any()) } returns ssEncryptedInApps
+
+        // Act
+        val result = inAppStore.readServerSideInApps()
+
+        // Assert
+        assertEquals(JSONArray(), result)
+    }
+
+    @Test
+    fun `readServerSideInApps returns empty JSONArray when decryption fails`() {
+        // Arrange
+        val ssEncryptedInApps = "encryptedString"
+        val ssDecryptedInApps = null
+        every { ctPreference.readString(Constants.INAPP_KEY, any()) } returns ssEncryptedInApps
+        every { cryptHandler.decrypt(ssEncryptedInApps) } returns ssDecryptedInApps
 
         // Act
         val result = inAppStore.readServerSideInApps()

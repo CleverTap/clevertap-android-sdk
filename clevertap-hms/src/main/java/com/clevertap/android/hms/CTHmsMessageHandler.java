@@ -1,8 +1,8 @@
 package com.clevertap.android.hms;
 
 import static com.clevertap.android.hms.HmsConstants.HMS_LOG_TAG;
+import static com.clevertap.android.hms.HmsConstants.HPS;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -13,7 +13,6 @@ import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.INotificationParser;
 import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.clevertap.android.sdk.pushnotification.fcm.IFcmMessageHandler;
 import com.huawei.hms.push.RemoteMessage;
@@ -50,7 +49,7 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
         if (messageBundle != null) {
             try {
                 isSuccess = PushNotificationHandler
-                        .getPushNotificationHandler().onMessageReceived(context, messageBundle, HPS.toString());
+                        .getPushNotificationHandler().onMessageReceived(context, messageBundle, HPS.getType());
             } catch (Throwable e) {
                 e.printStackTrace();
                 Logger.d(LOG_TAG, HMS_LOG_TAG + "Error Creating Notification", e);
@@ -66,8 +65,9 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
     public boolean onNewToken(Context context, final String token) {
         boolean isSuccess = false;
         try {
-            PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, PushType.HPS
-                    .getType());
+            PushNotificationHandler
+                    .getPushNotificationHandler()
+                    .onNewToken(context, token, HPS);
             Logger.d(LOG_TAG, HMS_LOG_TAG + "onNewToken: " + token);
             isSuccess = true;
         } catch (Throwable throwable) {

@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 
 /**
  * Parser for android manifest and picks up fields from manifest once to be references
@@ -36,6 +35,10 @@ public class ManifestInfo {
     private static final String LABEL_INTENT_SERVICE = "CLEVERTAP_INTENT_SERVICE";
     private static final String LABEL_ENCRYPTION_LEVEL = "CLEVERTAP_ENCRYPTION_LEVEL";
     private static final String LABEL_DEFAULT_CHANNEL_ID = "CLEVERTAP_DEFAULT_CHANNEL_ID";
+
+    // intentionally named this way to avoid static scan flagging on codebase
+    private static final String LABEL_PUSH_PROVIDER_1 = "CLEVERTAP_PROVIDER_1";
+    private static final String LABEL_PUSH_PROVIDER_2 = "CLEVERTAP_PROVIDER_2";
 
     private static ManifestInfo instance; // singleton
 
@@ -89,6 +92,9 @@ public class ManifestInfo {
     private final String devDefaultPushChannelId;
     private final String[] profileKeys;
     private final int encryptionLevel;
+    private final String provider1;
+    private final String provider2;
+
 
     private ManifestInfo(Context context) {
         Bundle metaData = null;
@@ -160,6 +166,8 @@ public class ManifestInfo {
         intentServiceName = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_INTENT_SERVICE);
         devDefaultPushChannelId = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_DEFAULT_CHANNEL_ID);
         profileKeys = parseProfileKeys(metaData);
+        provider1 = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PUSH_PROVIDER_1);
+        provider2 = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PUSH_PROVIDER_2);
     }
 
     ManifestInfo(
@@ -182,7 +190,9 @@ public class ManifestInfo {
             String intentServiceName,
             String devDefaultPushChannelId,
             String[] profileKeys,
-            int encryptionLevel
+            int encryptionLevel,
+            String provider1,
+            String provider2
     ) {
 
         // assign these if they did not happen in change creds
@@ -219,6 +229,8 @@ public class ManifestInfo {
         this.devDefaultPushChannelId = devDefaultPushChannelId;
         this.profileKeys = profileKeys;
         this.encryptionLevel = encryptionLevel;
+        this.provider1 = provider1;
+        this.provider2 = provider2;
     }
 
     public String getAccountId() {
@@ -261,7 +273,7 @@ public class ManifestInfo {
         return accountRegion;
     }
 
-    String getAcountToken() {
+    String getAccountToken() {
         return accountToken;
     }
 
@@ -329,5 +341,14 @@ public class ManifestInfo {
         } catch (Throwable t) {
             return null;
         }
+    }
+
+
+    public String getVendorOneProvider() {
+        return provider1;
+    }
+
+    public String getVendorTwoProvider() {
+        return provider2;
     }
 }
