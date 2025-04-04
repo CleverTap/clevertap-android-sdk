@@ -2,7 +2,6 @@
 <resources>
     <style name="PushTitle" parent="android:Widget.TextView">
         <item name="android:textColor">@android:color/black</item>
-        <item name="android:textStyle">bold</item>
         <item name="android:textSize">@dimen/title_font_size</item>
         <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>
