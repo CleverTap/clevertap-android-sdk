@@ -618,6 +618,7 @@ public class CTInAppNotification implements Parcelable {
             this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject
                     .getLong(Constants.WZRK_TIME_TO_LIVE)
                     : (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS) / 1000;
+            isRequestForPushPermission = jsonObject.optBoolean(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, false);
 
             JSONObject data = jsonObject.has(Constants.INAPP_DATA_TAG) ? jsonObject
                     .getJSONObject(Constants.INAPP_DATA_TAG) : null;
