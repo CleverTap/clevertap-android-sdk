@@ -51,6 +51,9 @@ dependencies {
     implementation(libs.installreferrer)
     implementation(libs.androidx.work.runtime)
 
+    // App rating system template
+    compileOnly(libs.play.review)
+
     // Unit testing dependencies
     testImplementation(project(":test_shared"))
     testImplementation(libs.test.robolectric)

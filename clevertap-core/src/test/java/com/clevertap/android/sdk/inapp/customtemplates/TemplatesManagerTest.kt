@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.createCtInAppNotification
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
+import com.clevertap.android.sdk.inapp.customtemplates.system.OpenUrlTemplate
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import io.mockk.*
 import org.json.JSONObject
@@ -21,6 +22,18 @@ class TemplatesManagerTest {
 
     private val mockTemplatePresenter = mockk<TemplatePresenter>()
     private val mockFunctionPresenter = mockk<FunctionPresenter>()
+    private val systemTemplates = setOf(
+        template {
+            isSystemDefined = true
+            name(SYSTEM_TEMPLATE_NAME)
+            presenter(mockTemplatePresenter)
+        },
+        function(isVisual = true) {
+            isSystemDefined = true
+            name(SYSTEM_FUNCTION_NAME)
+            presenter(mockFunctionPresenter)
+        }
+    )
 
     @After
     fun cleanUp() {
@@ -57,7 +70,7 @@ class TemplatesManagerTest {
         val ctConfig1 = getMockedCtInstanceConfig("account1", "token1")
         val ctConfig2 = getMockedCtInstanceConfig("account2", "token2")
 
-        val templatesManager = TemplatesManager.createInstance(ctConfig1)
+        val templatesManager = createTemplatesManager(ctConfig1)
 
         assertTrue(templatesManager.isTemplateRegistered(templateName1))
         assertTrue(templatesManager.isTemplateRegistered(templateName2))
@@ -65,13 +78,22 @@ class TemplatesManagerTest {
 
         assertFalse(templatesManager.isTemplateRegistered("non-registered"))
 
-        val templatesManagerNewConfig = TemplatesManager.createInstance(ctConfig2)
+        val templatesManagerNewConfig = createTemplatesManager(ctConfig2)
 
         assertTrue(templatesManagerNewConfig.isTemplateRegistered(templateName1))
         assertTrue(templatesManagerNewConfig.isTemplateRegistered(templateName2))
         assertTrue(templatesManagerNewConfig.isTemplateRegistered(functionName1))
 
         assertFalse(templatesManagerNewConfig.isTemplateRegistered("non-registered"))
+    }
+
+    @Test
+    fun `system templates should always be registered`() {
+        val ctConfig = getMockedCtInstanceConfig("account", "token")
+        val templatesManager = createTemplatesManager(ctConfig)
+        for (systemTemplate in systemTemplates) {
+            assertTrue(templatesManager.isTemplateRegistered(systemTemplate.name))
+        }
     }
 
     @Test
@@ -96,9 +118,45 @@ class TemplatesManagerTest {
             )
         }
         assertThrows<CustomTemplateException> {
-            TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+            createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         }
     }
+
+    @Test
+    fun `createInstance() should throw when a template with system defined name is registered`() {
+        TemplatesManager.register {
+            templatesSet(
+                template {
+                    name(SYSTEM_TEMPLATE_NAME)
+                    presenter(mockTemplatePresenter)
+                }
+            )
+        }
+
+        assertThrows<CustomTemplateException> {
+            createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
+        }
+    }
+
+    @Test
+    fun `createInstance() should throw when a system template is registered from the public api`() {
+        TemplatesManager.register {
+            templatesSet(
+                template {
+                    // possible because isSystemDefined has internal visibility, but it could also
+                    // be accessed through java code outside of the library module
+                    isSystemDefined = true
+                    name("Custom system template")
+                    presenter(mockTemplatePresenter)
+                }
+            )
+        }
+
+        assertThrows<CustomTemplateException> {
+            createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
+        }
+    }
+
 
     @Test
     fun `getTemplate should return registered templates by name`() {
@@ -117,7 +175,7 @@ class TemplatesManagerTest {
             )
         }
 
-        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
 
         assertEquals(SIMPLE_FUNCTION_NAME, templatesManager.getTemplate(SIMPLE_FUNCTION_NAME)?.name)
         assertEquals(SIMPLE_TEMPLATE_NAME, templatesManager.getTemplate(SIMPLE_TEMPLATE_NAME)?.name)
@@ -146,7 +204,7 @@ class TemplatesManagerTest {
 
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
         val mockFileResourceProvider = mockk<FileResourceProvider>(relaxed = true)
-        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
 
         templatesManager.presentTemplate(
             notification = createCtInAppNotification(simpleFunctionNotificationJson),
@@ -179,7 +237,7 @@ class TemplatesManagerTest {
 
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
         val mockFileResourceProvider = mockk<FileResourceProvider>(relaxed = true)
-        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
 
         templatesManager.presentTemplate(createCtInAppNotification(simpleTemplateNotificationJson), mockInAppListener,mockFileResourceProvider)
 
@@ -208,7 +266,7 @@ class TemplatesManagerTest {
 
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
         val mockFileResourceProvider = mockk<FileResourceProvider>(relaxed = true)
-        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         functionPresenter.templatesManager = templatesManager
 
         templatesManager.presentTemplate(createCtInAppNotification(simpleFunctionNotificationJson), mockInAppListener,mockFileResourceProvider)
@@ -231,7 +289,7 @@ class TemplatesManagerTest {
             )
         }
 
-        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         assertNull(templatesManager.getActiveContextForTemplate(SIMPLE_TEMPLATE_NAME))
         assertNull(templatesManager.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME))
     }
@@ -252,10 +310,10 @@ class TemplatesManagerTest {
 
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
         val mockFileResourceProvider = mockk<FileResourceProvider>(relaxed = true)
-        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         val notification = createCtInAppNotification(simpleTemplateNotificationJson)
 
-        templatesManager.presentTemplate(notification, mockInAppListener,mockFileResourceProvider)
+        templatesManager.presentTemplate(notification, mockInAppListener, mockFileResourceProvider)
         templatesManager.closeTemplate(notification)
         verify { templatePresenter.onClose(any()) }
     }
@@ -273,7 +331,7 @@ class TemplatesManagerTest {
                 }
             )
         }
-        val templatesManager = TemplatesManager.createInstance(getMockedCtInstanceConfig("account", "token"))
+        val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
 
         // not registered template
         templatesManager.closeTemplate(createCtInAppNotification(simpleFunctionNotificationJson))
@@ -285,12 +343,35 @@ class TemplatesManagerTest {
         verify { templatePresenter wasNot called }
     }
 
+    @Test
+    fun `getAllRegisteredTemplates should return only non-system templates`() {
+        var templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
+        assertEquals(0, templatesManager.getAllRegisteredTemplates().size)
+
+        TemplatesManager.register {
+            templatesSet(
+                template {
+                    name(SIMPLE_TEMPLATE_NAME)
+                    presenter(mockTemplatePresenter)
+                    stringArgument("string", "Default")
+                }
+            )
+        }
+
+        templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
+        assertEquals(1, templatesManager.getAllRegisteredTemplates().size)
+    }
+
     private fun getMockedCtInstanceConfig(account: String, token: String): CleverTapInstanceConfig {
         return mockk<CleverTapInstanceConfig>().apply {
             every { accountId } returns account
             every { accountToken } returns token
             every { logger } returns mockk<Logger>(relaxed = true)
         }
+    }
+
+    private fun createTemplatesManager(ctConfig: CleverTapInstanceConfig): TemplatesManager {
+        return TemplatesManager.createInstance(ctConfig, systemTemplates)
     }
 
     private val simpleTemplateNotificationJson = JSONObject(
@@ -321,5 +402,7 @@ class TemplatesManagerTest {
 
         private const val SIMPLE_FUNCTION_NAME = "function"
         private const val SIMPLE_TEMPLATE_NAME = "template"
+        private const val SYSTEM_TEMPLATE_NAME = "system-template"
+        private const val SYSTEM_FUNCTION_NAME = "system-function"
     }
 }

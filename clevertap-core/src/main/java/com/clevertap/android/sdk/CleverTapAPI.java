@@ -902,7 +902,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param config  The {@link CleverTapInstanceConfig} object
      * @return The {@link CleverTapAPI} object
      */
-    public static CleverTapAPI instanceWithConfig(Context context, CleverTapInstanceConfig config) {
+    public static CleverTapAPI instanceWithConfig(Context context, @NonNull CleverTapInstanceConfig config) {
         return instanceWithConfig(context, config, null);
     }
 
@@ -1197,26 +1197,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Checks whether notification permission is granted or denied for Android 13 and above devices.
      * @return boolean Returns true/false based on whether permission is granted or denied.
      */
-    @SuppressLint("NewApi")
-    public boolean isPushPermissionGranted(){
-        if (isPackageAndOsTargetsAbove(context, 32)) {
-            return coreState.getInAppController().isPushPermissionGranted();
-        } else {
-            return false;
-        }
+    public boolean isPushPermissionGranted() {
+        return coreState.getInAppController().isPushPermissionGranted();
     }
 
     /**
      * Calls the push primer flow for Android 13 and above devices.
      * @param jsonObject JSONObject - Accepts jsonObject created by {@link CTLocalInApp} object
      */
-    @SuppressLint("NewApi")
     public void promptPushPrimer(JSONObject jsonObject) {
-        if (isPackageAndOsTargetsAbove(context, 32)) {
-            coreState.getInAppController().promptPushPrimer(jsonObject);
-        } else {
-            Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
-        }
+        coreState.getInAppController().promptPushPrimer(jsonObject);
     }
 
     /**
@@ -1224,13 +1214,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param showFallbackSettings - boolean - If `showFallbackSettings` is true then we show a alert
      *                             dialog which routes to app's notification settings page.
      */
-    @SuppressLint("NewApi")
-    public void promptForPushPermission(boolean showFallbackSettings){
-        if (isPackageAndOsTargetsAbove(context, 32)) {
-            coreState.getInAppController().promptPermission(showFallbackSettings);
-        } else {
-            Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
-        }
+    public void promptForPushPermission(boolean showFallbackSettings) {
+        coreState.getInAppController().promptPermission(showFallbackSettings);
     }
 
     // Initialize

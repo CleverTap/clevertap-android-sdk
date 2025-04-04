@@ -74,6 +74,7 @@ media3 = "1.4.0"
 #Play Services
 play_services_ads = "23.6.0"
 play_services_location = "21.3.0"
+play_review = "2.0.2"
 
 #Gson
 gson = "2.10.1"
@@ -171,6 +172,7 @@ media3_ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
 #Play Services
 play_services_ads = { module = "com.google.android.gms:play-services-ads", version.ref = "play_services_ads" }
 play_services_location = { module = "com.google.android.gms:play-services-location", version.ref = "play_services_location" }
+play_review = { module = "com.google.android.play:review", version.ref = "play_review" }
 
 #Gson
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
