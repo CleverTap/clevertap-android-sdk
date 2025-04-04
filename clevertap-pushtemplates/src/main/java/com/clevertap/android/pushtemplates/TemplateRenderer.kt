@@ -1,6 +1,5 @@
 package com.clevertap.android.pushtemplates
 
-import android.app.ActivityOptions
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ContentResolver
@@ -13,7 +12,6 @@ import android.os.*
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
@@ -25,6 +23,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.interfaces.AudibleNotification
+import com.clevertap.android.sdk.pushnotification.ActionButton
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
@@ -76,6 +75,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     private var pt_cancel_notif_id: String? = null
     private var pt_cancel_notif_ids: ArrayList<Int>? = null
     var actions: JSONArray? = null
+    var actionButtons = emptyList<ActionButton>()
     internal var pt_subtitle: String? = null
     private var pID: String? = null
     internal var pt_flip_interval = 0
@@ -109,15 +109,16 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     }
 
     override fun renderNotification(
-        extras: Bundle, context: Context, nb: NotificationCompat.Builder,
+        extras: Bundle, context: Context, nb: Builder,
         config: CleverTapInstanceConfig,
         notificationId: Int
-    ): NotificationCompat.Builder? {
+    ): Builder? {
         if (pt_id == null) {
             PTLog.verbose("Template ID not provided. Cannot create the notification")
             return null
         }
         this.notificationId = notificationId
+        this.actionButtons = getActionButtons(context, extras, notificationId, actions)
         when (templateType) {
             TemplateType.BASIC ->
                 if (ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true)
@@ -165,7 +166,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 if (ValidatorFactory.getValidator(TemplateType.ZERO_BEZEL, this)?.validate() == true)
                     return ZeroBezelStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
-            TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            TemplateType.TIMER -> if (VERSION.SDK_INT >= VERSION_CODES.N) {
                 if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
                     val timerEnd = getTimerEnd()
                     if (timerEnd != null) {
@@ -313,9 +314,8 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         }
     }
 
-    override fun getActionButtonIconKey(): String {
-        return PTConstants.PT_NOTIF_ICON
-    }
+    override val actionButtonIconKey: String
+        get() = Constants.NOTIF_ICON
 
     override fun getCollapseKey(extras: Bundle): Any? {
         return pt_collapse_key
@@ -334,7 +334,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     var s = o
                     if (s == "true") {
                         soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    } else if (!s.isEmpty()) {
+                    } else if (s.isNotEmpty()) {
                         if (s.contains(".mp3") || s.contains(".ogg") || s.contains(".wav")) {
                             s = s.substring(0, s.length - 4)
                         }
@@ -362,7 +362,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
             templateType = TemplateType.fromString(pt_id)
             var newExtras: Bundle? = null
             try {
-                if (pt_json != null && pt_json.isNotEmpty()) {
+                if (!pt_json.isNullOrEmpty()) {
                     newExtras = Utils.fromJson(JSONObject(pt_json))
                 }
             } catch (e: JSONException) {
@@ -449,12 +449,13 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         }
     }
 
-    override fun setActionButtons(
+    override fun getActionButtons(
         context: Context,
         extras: Bundle,
         notificationId: Int,
-        nb: Builder, actions: JSONArray?
-    ): Builder {
+        actions: JSONArray?
+    ): List<ActionButton> {
+        val actionButtons = mutableListOf<ActionButton>()
         val intentServiceName = ManifestInfo.getInstance(context).intentServiceName
         var clazz: Class<*>? = null
         if (intentServiceName != null) {
@@ -489,7 +490,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         continue
                     }
                     var icon = 0
-                    if (!ico.isEmpty()) {
+                    if (ico.isNotEmpty()) {
                         try {
                             icon = context.resources.getIdentifier(ico, "drawable", context.packageName)
                         } catch (t: Throwable) {
@@ -569,13 +570,13 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                             actionLaunchIntent!!, flagsActionLaunchPendingIntent, null
                         )
                     }
-                    nb.addAction(icon, label, actionIntent)
+                    actionButtons.add(ActionButton(label, icon, actionIntent))
                 } catch (t: Throwable) {
                     Logger.d("error adding notification action : " + t.localizedMessage)
                 }
             }
         } // Uncommon - END
-        return nb
+        return actionButtons
     }
 
     companion object {

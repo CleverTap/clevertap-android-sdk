@@ -14,7 +14,7 @@ import com.clevertap.android.pushtemplates.content.INPUT_BOX_CONTENT_PENDING_INT
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_REPLY_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
-class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+class InputBoxStyle(private var renderer: TemplateRenderer) : StyleWithActionButtons(renderer) {
 
     override fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,
@@ -74,7 +74,6 @@ class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
         if (renderer.pt_dismiss_on_click != null && renderer.pt_dismiss_on_click!!.isNotEmpty()) {
             extras.putString(PTConstants.PT_DISMISS_ON_CLICK, renderer.pt_dismiss_on_click)
         }
-        renderer.setActionButtons(context, extras, notificationId, inputBoxNotificationBuilder, renderer.actions)
         return inputBoxNotificationBuilder
     }
 

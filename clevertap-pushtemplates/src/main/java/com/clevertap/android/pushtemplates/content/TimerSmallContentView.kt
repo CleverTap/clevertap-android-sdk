@@ -14,7 +14,7 @@ open class TimerSmallContentView(
     renderer: TemplateRenderer,
     layoutId: Int = R.layout.timer_collapsed
 ) :
-    ContentView(context, layoutId, renderer) {
+    ActionButtonsContentView(context, layoutId, renderer) {
 
     init {
         setCustomContentViewBasicKeys()
@@ -41,7 +41,7 @@ open class TimerSmallContentView(
     }
 
     internal fun setCustomContentViewChronometerBackgroundColour(pt_bg: String?) {
-        if (pt_bg != null && pt_bg.isNotEmpty()) {
+        if (!pt_bg.isNullOrEmpty()) {
             remoteView.setInt(
                 R.id.chronometer,
                 "setBackgroundColor",
@@ -54,13 +54,13 @@ open class TimerSmallContentView(
         pt_chrono_title_clr: String?,
         pt_title_clr: String?
     ) {
-        if (pt_chrono_title_clr != null && pt_chrono_title_clr.isNotEmpty()) {
+        if (!pt_chrono_title_clr.isNullOrEmpty()) {
             remoteView.setTextColor(
                 R.id.chronometer,
                 Utils.getColour(pt_chrono_title_clr, PTConstants.PT_COLOUR_BLACK)
             )
         } else {
-            if (pt_title_clr != null && pt_title_clr.isNotEmpty()) {
+            if (!pt_title_clr.isNullOrEmpty()) {
                 remoteView.setTextColor(
                     R.id.chronometer,
                     Utils.getColour(pt_title_clr, PTConstants.PT_COLOUR_BLACK)

@@ -12,9 +12,12 @@ import com.clevertap.android.pushtemplates.content.ZeroBezelBigContentView
 import com.clevertap.android.pushtemplates.content.ZeroBezelMixedSmallContentView
 import com.clevertap.android.pushtemplates.content.ZeroBezelTextOnlySmallContentView
 
-class ZeroBezelStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+class ZeroBezelStyle(private var renderer: TemplateRenderer) : StyleWithActionButtons(renderer) {
 
-    override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeSmallContentRemoteView(
+        context: Context,
+        renderer: TemplateRenderer
+    ): RemoteViews {
         val textOnlySmallView = renderer.pt_small_view != null &&
                 renderer.pt_small_view == PTConstants.TEXT_ONLY
         return if (textOnlySmallView) {
@@ -24,7 +27,10 @@ class ZeroBezelStyle(private var renderer: TemplateRenderer) : Style(renderer) {
         }
     }
 
-    override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeBigContentRemoteView(
+        context: Context,
+        renderer: TemplateRenderer
+    ): RemoteViews {
         return ZeroBezelBigContentView(context, renderer).remoteView
     }
 

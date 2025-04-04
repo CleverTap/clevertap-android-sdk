@@ -12,7 +12,8 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
 open class ContentView(
-    internal var context: Context, layoutId: Int,
+    internal var context: Context,
+    layoutId: Int,
     internal var renderer: TemplateRenderer
 ) {
 
@@ -65,7 +66,7 @@ open class ContentView(
     }
 
     fun setCustomContentViewTitle(pt_title: String?) {
-        if (pt_title != null && pt_title.isNotEmpty()) {
+        if (!pt_title.isNullOrEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(
                     R.id.title,
@@ -78,7 +79,7 @@ open class ContentView(
     }
 
     fun setCustomContentViewMessage(pt_msg: String?) {
-        if (pt_msg != null && pt_msg.isNotEmpty()) {
+        if (!pt_msg.isNullOrEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(
                     R.id.msg,
@@ -91,7 +92,7 @@ open class ContentView(
     }
 
     fun setCustomContentViewCollapsedBackgroundColour(pt_bg: String?) {
-        if (pt_bg != null && pt_bg.isNotEmpty()) {
+        if (!pt_bg.isNullOrEmpty()) {
             remoteView.setInt(
                 R.id.content_view_small,
                 "setBackgroundColor",
@@ -101,7 +102,7 @@ open class ContentView(
     }
 
     fun setCustomContentViewTitleColour(pt_title_clr: String?) {
-        if (pt_title_clr != null && pt_title_clr.isNotEmpty()) {
+        if (!pt_title_clr.isNullOrEmpty()) {
             remoteView.setTextColor(
                 R.id.title,
                 Utils.getColour(pt_title_clr, PTConstants.PT_COLOUR_BLACK)
@@ -110,7 +111,7 @@ open class ContentView(
     }
 
     fun setCustomContentViewMessageColour(pt_msg_clr: String?) {
-        if (pt_msg_clr != null && pt_msg_clr.isNotEmpty()) {
+        if (!pt_msg_clr.isNullOrEmpty()) {
             remoteView.setTextColor(
                 R.id.msg,
                 Utils.getColour(pt_msg_clr, PTConstants.PT_COLOUR_BLACK)
@@ -127,7 +128,7 @@ open class ContentView(
     }
 
     fun setCustomContentViewLargeIcon(pt_large_icon: String?) {
-        if (pt_large_icon != null && pt_large_icon.isNotEmpty()) {
+        if (!pt_large_icon.isNullOrEmpty()) {
             Utils.loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView,context)
         } else {
             remoteView.setViewVisibility(R.id.large_icon, View.GONE)
@@ -135,7 +136,7 @@ open class ContentView(
     }
 
     fun setCustomContentViewExpandedBackgroundColour(pt_bg: String?) {
-        if (pt_bg != null && pt_bg.isNotEmpty()) {
+        if (!pt_bg.isNullOrEmpty()) {
             remoteView.setInt(
                 R.id.content_view_big,
                 "setBackgroundColor",
