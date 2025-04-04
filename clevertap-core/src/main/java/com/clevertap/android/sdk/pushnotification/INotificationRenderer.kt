@@ -1,165 +1,150 @@
-package com.clevertap.android.sdk.pushnotification;
+package com.clevertap.android.sdk.pushnotification
 
-import android.app.ActivityOptions;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
-import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationCompat.Builder;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.Utils;
-import java.util.Random;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import androidx.core.app.NotificationCompat
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ManifestInfo
+import com.clevertap.android.sdk.Utils
+import org.json.JSONArray
+import java.util.Random
 
-public interface INotificationRenderer {
+interface INotificationRenderer {
+    fun getCollapseKey(extras: Bundle): Any?
 
-    @Nullable Object getCollapseKey(final Bundle extras);
+    fun getMessage(extras: Bundle): String?
 
-    @Nullable String getMessage(Bundle extras);
+    fun getTitle(extras: Bundle, context: Context): String?
 
-    @Nullable String getTitle(Bundle extras, final Context context);
+    fun renderNotification(
+        extras: Bundle, context: Context,
+        nb: NotificationCompat.Builder, config: CleverTapInstanceConfig, notificationId: Int
+    ): NotificationCompat.Builder?
 
-    @Nullable NotificationCompat.Builder renderNotification(final Bundle extras, final Context context,
-            final Builder nb, final CleverTapInstanceConfig config, final int notificationId);
+    fun setSmallIcon(smallIcon: Int, context: Context)
 
-    void setSmallIcon(int smallIcon, final Context context);
+    val actionButtonIconKey: String
 
-    String getActionButtonIconKey();
-
-    default NotificationCompat.Builder setActionButtons(
-            Context context,
-            Bundle extras,
-            int notificationId,
-            NotificationCompat.Builder nb, JSONArray actions
-    ) {
-
-        String intentServiceName = ManifestInfo.getInstance(context).getIntentServiceName();
-        Class clazz = null;
+    fun getActionButtons(
+        context: Context,
+        extras: Bundle,
+        notificationId: Int,
+        actions: JSONArray?
+    ): List<ActionButton> {
+        val actionButtons = mutableListOf<ActionButton>()
+        val intentServiceName = ManifestInfo.getInstance(context).intentServiceName
+        var clazz: Class<*>? = null
         if (intentServiceName != null) {
             try {
-                clazz = Class.forName(intentServiceName);
-            } catch (ClassNotFoundException e) {
+                clazz = Class.forName(intentServiceName)
+            } catch (e: ClassNotFoundException) {
                 try {
-                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
-                } catch (ClassNotFoundException ex) {
-                    Logger.d("No Intent Service found");
+                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+                } catch (ex: ClassNotFoundException) {
+                    Logger.d("No Intent Service found")
                 }
             }
         } else {
             try {
-                clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
-            } catch (ClassNotFoundException ex) {
-                Logger.d("No Intent Service found");
+                clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+            } catch (ex: ClassNotFoundException) {
+                Logger.d("No Intent Service found")
             }
         }
-
-        boolean isCTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz);
-
+        val isCTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz)
         if (actions != null && actions.length() > 0) {
-            for (int i = 0; i < actions.length(); i++) {
+            for (i in 0 until actions.length()) {
                 try {
-                    JSONObject action = actions.getJSONObject(i);
-                    String label = action.optString("l");
-                    String dl = action.optString("dl");
-                    String ico = action.optString(getActionButtonIconKey());
-                    String id = action.optString("id");
-                    boolean autoCancel = action.optBoolean("ac", true);
+                    val action = actions.getJSONObject(i)
+                    val label = action.optString("l")
+                    val dl = action.optString("dl")
+                    val ico = action.optString(actionButtonIconKey)
+                    val id = action.optString("id")
+                    val autoCancel = action.optBoolean("ac", true)
                     if (label.isEmpty() || id.isEmpty()) {
-                        Logger.d("not adding push notification action: action label or id missing");
-                        continue;
+                        Logger.d("not adding push notification action: action label or id missing")
+                        continue
                     }
-                    int icon = 0;
-                    if (!ico.isEmpty()) {
+                    var icon = 0
+                    if (ico.isNotEmpty()) {
                         try {
-                            icon = context.getResources().getIdentifier(ico, "drawable", context.getPackageName());
-                        } catch (Throwable t) {
-                           Logger.d("unable to add notification action icon: " + t.getLocalizedMessage());
+                            icon = context.resources.getIdentifier(ico, "drawable", context.packageName)
+                        } catch (t: Throwable) {
+                            Logger.d("unable to add notification action icon: " + t.localizedMessage)
                         }
                     }
+                    val sendToCTIntentService = (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && autoCancel
+                            && isCTIntentServiceAvailable)
 
-                    boolean sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
-                            && isCTIntentServiceAvailable);
 
-                    String dismissOnClick = extras.getString("pt_dismiss_on_click");
-                    /**
-                     * Send to CTIntentService in case (OS >= S) and notif is for Push templates with remind action
-                     */
-                    if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
-                            && id.contains("remind") && dismissOnClick!=null &&
-                            dismissOnClick.equalsIgnoreCase("true") && autoCancel &&
-                            isCTIntentServiceAvailable) {
-                        sendToCTIntentService = true;
-                    }
-
-                    /**
-                     * Send to CTIntentService in case (OS >= S) and notif is for Push templates with pt_dismiss_on_click
-                     * true
-                     */
-                    if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
-                            && dismissOnClick!=null && dismissOnClick.equalsIgnoreCase("true")
-                            && autoCancel && isCTIntentServiceAvailable) {
-                        sendToCTIntentService = true;
-                    }
-
-                    Intent actionLaunchIntent;
+                    var actionLaunchIntent: Intent?
                     if (sendToCTIntentService) {
-                        actionLaunchIntent = new Intent(CTNotificationIntentService.MAIN_ACTION);
-                        actionLaunchIntent.setPackage(context.getPackageName());
-                        actionLaunchIntent.putExtra(Constants.KEY_CT_TYPE, CTNotificationIntentService.TYPE_BUTTON_CLICK);
-                        if (!dl.isEmpty()) {
-                            actionLaunchIntent.putExtra("dl", dl);
+                        actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
+                        actionLaunchIntent.setPackage(context.packageName)
+                        actionLaunchIntent.putExtra(
+                            Constants.KEY_CT_TYPE,
+                            CTNotificationIntentService.TYPE_BUTTON_CLICK
+                        )
+                        if (dl.isNotEmpty()) {
+                            actionLaunchIntent.putExtra("dl", dl)
                         }
                     } else {
-                        if (!dl.isEmpty()) {
-                            actionLaunchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
-                            Utils.setPackageNameFromResolveInfoList(context, actionLaunchIntent);
+                        if (dl.isNotEmpty()) {
+                            actionLaunchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                            Utils.setPackageNameFromResolveInfoList(
+                                context,
+                                actionLaunchIntent
+                            )
                         } else {
-                            actionLaunchIntent = context.getPackageManager()
-                                    .getLaunchIntentForPackage(context.getPackageName());
+                            actionLaunchIntent = context.packageManager
+                                .getLaunchIntentForPackage(context.packageName)
                         }
                     }
-
                     if (actionLaunchIntent != null) {
-                        actionLaunchIntent.putExtras(extras);
-                        actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS);
-                        actionLaunchIntent.putExtra("actionId", id);
-                        actionLaunchIntent.putExtra("autoCancel", autoCancel);
-                        actionLaunchIntent.putExtra("wzrk_c2a", id);
-                        actionLaunchIntent.putExtra("notificationId", notificationId);
-
-                        actionLaunchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        actionLaunchIntent.putExtras(extras)
+                        actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS)
+                        actionLaunchIntent.putExtra("actionId", id)
+                        actionLaunchIntent.putExtra("autoCancel", autoCancel)
+                        actionLaunchIntent.putExtra("wzrk_c2a", id)
+                        actionLaunchIntent.putExtra("notificationId", notificationId)
+                        actionLaunchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     }
-
-                    PendingIntent actionIntent;
-                    int requestCode = new Random().nextInt();
-                    int flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                        flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+                    var actionIntent: PendingIntent?
+                    val requestCode = Random().nextInt()
+                    var flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        flagsActionLaunchPendingIntent =
+                            flagsActionLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
                     }
-                    if (sendToCTIntentService) {
-                        actionIntent = PendingIntent.getService(context, requestCode,
-                                actionLaunchIntent, flagsActionLaunchPendingIntent);
+                    actionIntent = if (sendToCTIntentService) {
+                        PendingIntent.getService(
+                            context, requestCode,
+                            actionLaunchIntent!!, flagsActionLaunchPendingIntent
+                        )
                     } else {
-                        actionIntent = PendingIntent.getActivity(context, requestCode,
-                                actionLaunchIntent, flagsActionLaunchPendingIntent, null);
+                        PendingIntent.getActivity(
+                            context, requestCode,
+                            actionLaunchIntent!!, flagsActionLaunchPendingIntent, null
+                        )
                     }
-                    nb.addAction(icon, label, actionIntent);
-
-                } catch (Throwable t) {
-                    Logger.d("error adding notification action : " + t.getLocalizedMessage());
+                    actionButtons.add(ActionButton(label, icon, actionIntent))
+                } catch (t: Throwable) {
+                    Logger.d("error adding notification action : " + t.localizedMessage)
                 }
             }
-        }// Uncommon - END
+        } // Uncommon - END
+        return actionButtons
+    }
 
-        return nb;
+    fun attachActionButtons(nb: NotificationCompat.Builder, actionButtons: List<ActionButton>) {
+        actionButtons.forEach { button ->
+            nb.addAction(button.icon, button.label, button.pendingIntent)
+        }
     }
 }

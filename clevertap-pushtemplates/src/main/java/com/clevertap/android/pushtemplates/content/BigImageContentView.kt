@@ -1,25 +1,17 @@
 package com.clevertap.android.pushtemplates.content
 
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.os.Build
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.text.Html
 import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-
 open class BigImageContentView(
-    context: Context,
-    renderer: TemplateRenderer,
-    layoutId: Int = R.layout.image_only_big
-) :
-    ContentView(context, layoutId, renderer) {
+    context: Context, renderer: TemplateRenderer, layoutId: Int = R.layout.image_only_big
+) : ActionButtonsContentView(context, layoutId, renderer) {
 
     init {
         setCustomContentViewBasicKeys()
@@ -35,11 +27,10 @@ open class BigImageContentView(
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
-        if (pt_msg_summary != null && pt_msg_summary.isNotEmpty()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (!pt_msg_summary.isNullOrEmpty()) {
+            if (VERSION.SDK_INT >= VERSION_CODES.N) {
                 remoteView.setTextViewText(
-                    R.id.msg,
-                    Html.fromHtml(pt_msg_summary, Html.FROM_HTML_MODE_LEGACY)
+                    R.id.msg, Html.fromHtml(pt_msg_summary, Html.FROM_HTML_MODE_LEGACY)
                 )
             } else {
                 remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg_summary))
@@ -48,8 +39,8 @@ open class BigImageContentView(
     }
 
     private fun setCustomContentViewBigImage(pt_big_img: String?) {
-        if (pt_big_img != null && pt_big_img.isNotEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView,context)
+        if (!pt_big_img.isNullOrEmpty()) {
+            Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView, context)
             if (Utils.getFallback()) {
                 remoteView.setViewVisibility(R.id.big_image, View.GONE)
             }
