@@ -264,7 +264,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             @NonNull String[] permissions,
             @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        pushPermissionHandler.onRequestPermissionsResult(this, requestCode, permissions, grantResults);
+        pushPermissionHandler.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
     @Override

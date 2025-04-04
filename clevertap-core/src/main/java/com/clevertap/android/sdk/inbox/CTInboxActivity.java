@@ -204,7 +204,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
             @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        pushPermissionHandler.onRequestPermissionsResult(this, requestCode, permissions, grantResults);
+        pushPermissionHandler.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
     @Override
