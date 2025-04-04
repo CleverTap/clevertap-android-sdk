@@ -678,31 +678,6 @@ public class InAppController implements InAppListener,
             return;
         }
 
-        final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
-
-        final boolean goFromListener;
-
-        if (listener != null) {
-            final HashMap<String, Object> kvs;
-
-            if (inAppNotification.getCustomExtras() != null) {
-                kvs = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
-            } else {
-                kvs = new HashMap<>();
-            }
-
-            goFromListener = listener.beforeShow(kvs);
-        } else {
-            goFromListener = true;
-        }
-
-        if (!goFromListener) {
-            logger.verbose(config.getAccountId(),
-                    "Application has decided to not show this in-app notification: " + inAppNotification
-                            .getCampaignId());
-            showInAppNotificationIfAny();
-            return;
-        }
         checkLimitsBeforeShowing(context, inAppNotification, config, this);
         incrementLocalInAppCountInPersistentStore(context, inAppNotification);
     }
@@ -832,6 +807,27 @@ public class InAppController implements InAppListener,
         });
     }
 
+    private boolean checkBeforeShowApprovalBeforeDisplay(final CTInAppNotification inAppNotification) {
+        final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
+
+        final boolean goFromListener;
+
+        if (listener != null) {
+            final HashMap<String, Object> kvs;
+
+            if (inAppNotification.getCustomExtras() != null) {
+                kvs = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
+            } else {
+                kvs = new HashMap<>();
+            }
+
+            goFromListener = listener.beforeShow(kvs);
+        } else {
+            goFromListener = true;
+        }
+
+        return goFromListener;
+    }
     //InApp
     private void showInApp(
             @NonNull Context context,
@@ -839,6 +835,15 @@ public class InAppController implements InAppListener,
             CleverTapInstanceConfig config,
             InAppController inAppController
     ) {
+
+        boolean goFromListener = checkBeforeShowApprovalBeforeDisplay(inAppNotification);
+        if (!goFromListener) {
+            logger.verbose(config.getAccountId(),
+                    "Application has decided to not show this in-app notification: " + inAppNotification
+                            .getCampaignId());
+            showInAppNotificationIfAny();
+            return;
+        }
 
         Logger.v(config.getAccountId(), "Attempting to show next In-App");
 
