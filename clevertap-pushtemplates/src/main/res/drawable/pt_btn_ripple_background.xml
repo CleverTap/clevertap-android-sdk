@@ -3,5 +3,5 @@
     <item
         android:state_pressed="true"
         android:state_enabled="true"
-        android:drawable="@drawable/ripple_circuler_shape"/>
+        android:drawable="@drawable/pt_ripple_circular_shape"/>
 </selector>
