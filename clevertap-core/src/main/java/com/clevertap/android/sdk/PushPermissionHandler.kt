@@ -92,19 +92,19 @@ internal class PushPermissionHandler @JvmOverloads constructor(
         val isFirstTimeRequest = cacheProvider(activity).isFirstTimeRequest()
         val showRationale = systemPermissionInterface.shouldShowRequestPermissionRationale(activity)
 
-        if (!isFirstTimeRequest && showRationale) {
-            if (fallbackToSettings) {
-                isFromNotificationSettingsActivity = true
-                systemPermissionInterface.navigateToNotificationSettings(activity)
-                return true
-            } else {
-                notifyListeners(isPermissionGranted = false)
-                return false
-            }
+        if (isFirstTimeRequest || showRationale) {
+            requestCallback.onRequestPermission()
+            return true
         }
 
-        requestCallback.onRequestPermission()
-        return true
+        if (fallbackToSettings) {
+            isFromNotificationSettingsActivity = true
+            systemPermissionInterface.navigateToNotificationSettings(activity)
+            return true
+        } else {
+            notifyListeners(isPermissionGranted = false)
+            return false
+        }
     }
 
     /**
