@@ -73,6 +73,10 @@ internal class InAppActionHandler(
         return pushPermissionHandler.isPushPermissionGranted(context)
     }
 
+    fun notifyPushPermissionListeners() {
+        pushPermissionHandler.notifyPushPermissionListeners(context)
+    }
+
     fun launchPushPermissionPrompt(fallbackToSettings: Boolean): Boolean {
         return launchPushPermissionPrompt(
             fallbackToSettings

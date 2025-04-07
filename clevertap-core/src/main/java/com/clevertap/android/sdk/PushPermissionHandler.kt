@@ -67,6 +67,10 @@ internal class PushPermissionHandler @JvmOverloads constructor(
         return systemPermissionInterface.isPushPermissionGranted(context)
     }
 
+    fun notifyPushPermissionListeners(context: Context) {
+        notifyListeners(isPushPermissionGranted(context))
+    }
+
     /**
      * Attempt to request a push permission. Checks if the permission is already given and does not
      * initiate the flow in this case. When the result of the permission check is known without

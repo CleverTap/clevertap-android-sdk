@@ -14,13 +14,17 @@ internal object PushPermissionTemplate {
             name(NAME)
             booleanArgument(FALLBACK_TO_SETTINGS_ARG, false)
             presenter { templateContext ->
-                if (systemActionHandler.arePushNotificationsEnabled()) {
+                val fbSettings = templateContext.getBoolean(FALLBACK_TO_SETTINGS_ARG) == true
+                val areNotificationsEnabled = systemActionHandler.arePushNotificationsEnabled()
+                if (areNotificationsEnabled || !fbSettings) {
+                    // if the notifications are already enabled OR they are not enabled and there is
+                    // no fallback - directly dismiss the template
+                    systemActionHandler.notifyPushPermissionListeners()
                     templateContext.setDismissed()
                     return@presenter
                 }
 
-                val fbSettings = templateContext.getBoolean(FALLBACK_TO_SETTINGS_ARG) == true
-                if (systemActionHandler.launchPushPermissionPrompt(fbSettings)) {
+                if (systemActionHandler.launchPushPermissionPrompt(fallbackToSettings = true)) {
                     templateContext.setPresented()
                 }
                 templateContext.setDismissed()
