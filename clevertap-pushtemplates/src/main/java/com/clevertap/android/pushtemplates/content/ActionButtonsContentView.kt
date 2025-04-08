@@ -22,10 +22,10 @@ internal open class ActionButtonsContentView(context: Context, layoutId: Int, re
 
         var visibleButtonCount = 0
         actionButtons.take(2).forEach { button ->
-            val buttonId = when (visibleButtonCount) {
-                0 -> R.id.action0
-                1 -> R.id.action1
-                else -> return@forEach // Unreachable
+            val buttonId = if (visibleButtonCount == 0) {
+                R.id.action0
+            } else {
+                R.id.action1
             }
             if (button.label.isEmpty()) {
                 Logger.d("not adding push notification action: action label or id missing")
