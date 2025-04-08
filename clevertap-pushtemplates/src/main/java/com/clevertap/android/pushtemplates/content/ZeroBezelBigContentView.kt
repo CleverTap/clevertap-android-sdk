@@ -7,6 +7,7 @@ import android.view.View
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
+import com.clevertap.android.sdk.isNotNullAndEmpty
 
 internal class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer) :
     ActionButtonsContentView(context, R.layout.zero_bezel, renderer) {
@@ -24,7 +25,7 @@ internal class ZeroBezelBigContentView(context: Context, renderer: TemplateRende
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
-        if (!pt_msg_summary.isNullOrEmpty()) {
+        if (pt_msg_summary.isNotNullAndEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(
                     R.id.msg,
@@ -37,7 +38,7 @@ internal class ZeroBezelBigContentView(context: Context, renderer: TemplateRende
     }
 
     private fun setCustomContentViewBigImage(pt_big_img: String?) {
-        if (!pt_big_img.isNullOrEmpty()) {
+        if (pt_big_img.isNotNullAndEmpty()) {
             Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView, context)
             if (Utils.getFallback()) {
                 remoteView.setViewVisibility(R.id.big_image, View.GONE)

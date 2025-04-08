@@ -314,6 +314,12 @@ fun String?.isNotNullAndBlank() : Boolean {
     return isNullOrBlank().not()
 }
 
+@OptIn(ExperimentalContracts::class)
+fun String?.isNotNullAndEmpty() : Boolean {
+    contract { returns(true) implies (this@isNotNullAndEmpty != null) }
+    return isNullOrEmpty().not()
+}
+
 /**
  * Adjusts the margins of the view based on the system bar insets (such as the status bar, navigation bar,
  * or display cutout) using the provided margin adjustment logic.

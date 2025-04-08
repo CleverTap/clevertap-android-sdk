@@ -7,6 +7,7 @@ import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
+import com.clevertap.android.sdk.isNotNullAndEmpty
 
 internal open class TimerSmallContentView(
     context: Context,
@@ -40,8 +41,8 @@ internal open class TimerSmallContentView(
         setCustomContentViewSmallIcon()
     }
 
-    internal fun setCustomContentViewChronometerBackgroundColour(pt_bg: String?) {
-        if (!pt_bg.isNullOrEmpty()) {
+    private fun setCustomContentViewChronometerBackgroundColour(pt_bg: String?) {
+        if (pt_bg.isNotNullAndEmpty()) {
             remoteView.setInt(
                 R.id.chronometer,
                 "setBackgroundColor",
@@ -50,17 +51,17 @@ internal open class TimerSmallContentView(
         }
     }
 
-    internal fun setCustomContentViewChronometerTitleColour(
+    private fun setCustomContentViewChronometerTitleColour(
         pt_chrono_title_clr: String?,
         pt_title_clr: String?
     ) {
-        if (!pt_chrono_title_clr.isNullOrEmpty()) {
+        if (pt_chrono_title_clr.isNotNullAndEmpty()) {
             remoteView.setTextColor(
                 R.id.chronometer,
                 Utils.getColour(pt_chrono_title_clr, PTConstants.PT_COLOUR_BLACK)
             )
         } else {
-            if (!pt_title_clr.isNullOrEmpty()) {
+            if (pt_title_clr.isNotNullAndEmpty()) {
                 remoteView.setTextColor(
                     R.id.chronometer,
                     Utils.getColour(pt_title_clr, PTConstants.PT_COLOUR_BLACK)

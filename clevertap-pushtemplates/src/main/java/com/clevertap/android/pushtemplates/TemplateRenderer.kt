@@ -23,6 +23,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.interfaces.AudibleNotification
+import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.pushnotification.ActionButton
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
@@ -362,7 +363,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
             templateType = TemplateType.fromString(pt_id)
             var newExtras: Bundle? = null
             try {
-                if (!pt_json.isNullOrEmpty()) {
+                if (pt_json.isNotNullAndEmpty()) {
                     newExtras = Utils.fromJson(JSONObject(pt_json))
                 }
             } catch (e: JSONException) {
