@@ -14,7 +14,7 @@ import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
 
-open class ProductDisplayLinearBigContentView(
+internal open class ProductDisplayLinearBigContentView(
     context: Context,
     renderer: TemplateRenderer, extras: Bundle, layoutId: Int = R.layout.product_display_linear_expanded
 ) :

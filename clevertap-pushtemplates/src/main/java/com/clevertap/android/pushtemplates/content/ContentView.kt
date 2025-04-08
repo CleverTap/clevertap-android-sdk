@@ -11,7 +11,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-open class ContentView(
+internal open class ContentView(
     internal var context: Context,
     layoutId: Int,
     internal var renderer: TemplateRenderer

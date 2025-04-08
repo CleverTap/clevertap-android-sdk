@@ -20,7 +20,7 @@
         android:ellipsize="end"
         android:gravity="start|center_vertical"
         style="@style/TextAppearance.Compat.Notification"
-        android:background="@drawable/button_background"
+        android:background="@drawable/pt_button_background"
         android:clickable="true"
         android:focusable="true"
         tools:text="StartStartStart" />
@@ -37,7 +37,7 @@
         android:ellipsize="end"
         android:gravity="start|center_vertical"
         style="@style/TextAppearance.Compat.Notification"
-        android:background="@drawable/button_background"
+        android:background="@drawable/pt_button_background"
         android:clickable="true"
         android:focusable="true"
         tools:text="StartStartStart" />

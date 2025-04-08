@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.content.BigImageContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.SmallContentView
 
-class BasicStyle(private var renderer: TemplateRenderer) : StyleWithActionButtons(renderer) {
+internal class BasicStyle(private var renderer: TemplateRenderer) : StyleWithActionButtons(renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return SmallContentView(context, renderer).remoteView

@@ -16,7 +16,7 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory.getPendi
 import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
 
-class ManualCarouselContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
+internal class ManualCarouselContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
     BigImageContentView(context, renderer, R.layout.manual_carousel) {
 
     init {

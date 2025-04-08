@@ -8,7 +8,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-open class TimerSmallContentView(
+internal open class TimerSmallContentView(
     context: Context,
     timer_end: Int?,
     renderer: TemplateRenderer,

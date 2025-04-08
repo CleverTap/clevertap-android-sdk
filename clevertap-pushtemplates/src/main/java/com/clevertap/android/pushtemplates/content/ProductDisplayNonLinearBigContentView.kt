@@ -7,7 +7,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class ProductDisplayNonLinearBigContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
+internal class ProductDisplayNonLinearBigContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
     ProductDisplayLinearBigContentView(context, renderer, extras, R.layout.product_display_template) {
 
     init {

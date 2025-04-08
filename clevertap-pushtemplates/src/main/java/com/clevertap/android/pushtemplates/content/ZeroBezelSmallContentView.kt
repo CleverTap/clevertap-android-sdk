@@ -3,7 +3,7 @@ package com.clevertap.android.pushtemplates.content
 import android.content.Context
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
-open class ZeroBezelSmallContentView(context: Context, layoutId: Int, renderer: TemplateRenderer) :
+internal open class ZeroBezelSmallContentView(context: Context, layoutId: Int, renderer: TemplateRenderer) :
     ContentView(context, layoutId, renderer) {
 
     init {

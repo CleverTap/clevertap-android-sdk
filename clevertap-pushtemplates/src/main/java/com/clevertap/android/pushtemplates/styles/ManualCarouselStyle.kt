@@ -12,7 +12,7 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.SmallContentView
 import com.clevertap.android.sdk.Constants
 
-class ManualCarouselStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
+internal class ManualCarouselStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return SmallContentView(context, renderer).remoteView

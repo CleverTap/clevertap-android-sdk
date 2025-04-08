@@ -9,7 +9,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class AutoCarouselContentView(context: Context, renderer: TemplateRenderer) :
+internal class AutoCarouselContentView(context: Context, renderer: TemplateRenderer) :
     BigImageContentView(context, renderer, R.layout.auto_carousel) {
 
     init {

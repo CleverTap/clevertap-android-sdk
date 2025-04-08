@@ -9,7 +9,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-open class BigImageContentView(
+internal open class BigImageContentView(
     context: Context, renderer: TemplateRenderer, layoutId: Int = R.layout.image_only_big
 ) : ActionButtonsContentView(context, layoutId, renderer) {
 

@@ -14,7 +14,7 @@ import com.clevertap.android.pushtemplates.content.INPUT_BOX_CONTENT_PENDING_INT
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_REPLY_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
-class InputBoxStyle(private var renderer: TemplateRenderer) : StyleWithActionButtons(renderer) {
+internal class InputBoxStyle(private var renderer: TemplateRenderer) : StyleWithActionButtons(renderer) {
 
     override fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,

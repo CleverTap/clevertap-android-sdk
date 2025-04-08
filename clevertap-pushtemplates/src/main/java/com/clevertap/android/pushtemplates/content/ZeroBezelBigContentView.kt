@@ -8,7 +8,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer) :
+internal class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer) :
     ActionButtonsContentView(context, R.layout.zero_bezel, renderer) {
 
     init {

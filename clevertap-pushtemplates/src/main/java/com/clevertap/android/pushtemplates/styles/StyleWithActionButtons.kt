@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
-abstract class StyleWithActionButtons(private var renderer: TemplateRenderer) : Style(renderer) {
+internal abstract class StyleWithActionButtons(private var renderer: TemplateRenderer) : Style(renderer) {
     override fun builderFromStyle(
         context: Context,
         extras: Bundle,

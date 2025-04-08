@@ -11,7 +11,7 @@ import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 
-class FiveIconBigContentView constructor(
+internal class FiveIconBigContentView constructor(
     context: Context,
     renderer: TemplateRenderer,
     extras: Bundle

@@ -10,7 +10,7 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
-abstract class Style(private var renderer: TemplateRenderer) {
+internal abstract class Style(private var renderer: TemplateRenderer) {
 
     protected open fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,

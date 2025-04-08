@@ -19,8 +19,7 @@ import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory.nullBitmapWithStatus
 import org.json.JSONArray
 
-@RestrictTo(RestrictTo.Scope.LIBRARY)
-class CoreNotificationRenderer : INotificationRenderer, AudibleNotification {
+internal class CoreNotificationRenderer : INotificationRenderer, AudibleNotification {
     private var notifMessage: String? = null
 
     private var notifTitle: String? = null

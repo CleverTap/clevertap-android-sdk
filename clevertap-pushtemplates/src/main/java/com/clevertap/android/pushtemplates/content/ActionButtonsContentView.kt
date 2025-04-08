@@ -8,7 +8,7 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.pushnotification.ActionButton
 
-open class ActionButtonsContentView(context: Context, layoutId: Int, renderer: TemplateRenderer) :
+internal open class ActionButtonsContentView(context: Context, layoutId: Int, renderer: TemplateRenderer) :
     ContentView(context, layoutId, renderer) {
     init {
         setActionButtons(renderer.actionButtons)
@@ -21,11 +21,11 @@ open class ActionButtonsContentView(context: Context, layoutId: Int, renderer: T
         }
 
         var visibleButtonCount = 0
-        actionButtons.forEach { button ->
+        actionButtons.take(2).forEach { button ->
             val buttonId = when (visibleButtonCount) {
                 0 -> R.id.action0
                 1 -> R.id.action1
-                else -> return@forEach // Skip if we already have 2 buttons
+                else -> return@forEach // Unreachable
             }
             if (button.label.isEmpty()) {
                 Logger.d("not adding push notification action: action label or id missing")

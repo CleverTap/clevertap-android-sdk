@@ -12,7 +12,7 @@ import com.clevertap.android.pushtemplates.content.ZeroBezelBigContentView
 import com.clevertap.android.pushtemplates.content.ZeroBezelMixedSmallContentView
 import com.clevertap.android.pushtemplates.content.ZeroBezelTextOnlySmallContentView
 
-class ZeroBezelStyle(private var renderer: TemplateRenderer) : StyleWithActionButtons(renderer) {
+internal class ZeroBezelStyle(private var renderer: TemplateRenderer) : StyleWithActionButtons(renderer) {
 
     override fun makeSmallContentRemoteView(
         context: Context,

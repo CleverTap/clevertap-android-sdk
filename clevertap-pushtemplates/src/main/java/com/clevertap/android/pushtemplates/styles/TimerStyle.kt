@@ -12,7 +12,7 @@ import com.clevertap.android.pushtemplates.content.TIMER_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.TimerBigContentView
 import com.clevertap.android.pushtemplates.content.TimerSmallContentView
 
-class TimerStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : StyleWithActionButtons(renderer) {
+internal class TimerStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : StyleWithActionButtons(renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
         return if (getTimerEnd() == null)
