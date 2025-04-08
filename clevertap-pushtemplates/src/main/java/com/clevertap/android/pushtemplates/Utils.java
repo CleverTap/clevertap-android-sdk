@@ -279,7 +279,7 @@ public class Utils {
         return Integer.parseInt(val != null ? val : "-1");
     }
 
-    public static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent) {
+    static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent) {
         List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent, 0);
         String appPackageName = context.getPackageName();
         for (ResolveInfo resolveInfo : resolveInfoList) {
