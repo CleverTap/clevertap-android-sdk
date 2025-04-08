@@ -25,6 +25,7 @@ android {
 }
 
 dependencies {
+    testImplementation project(':clevertap-core')
     compileOnly project(':clevertap-core')
     compileOnly (libs.android.material)
 
@@ -32,6 +33,9 @@ dependencies {
     implementation (libs.androidx.appcompat)
 
     testImplementation (libs.test.junit)
+    testImplementation project(':clevertap-core')
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.robolectric)
 
     androidTestImplementation (libs.test.ext.junit)
     androidTestImplementation (libs.test.espresso.core)
