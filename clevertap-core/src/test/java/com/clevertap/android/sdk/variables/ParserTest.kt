@@ -6,12 +6,9 @@ import com.clevertap.android.sdk.variables.VariableDefinitions.TestVarsJI
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.Field
 
-@RunWith(RobolectricTestRunner::class)
 class ParserTest:BaseTestCase() {
 
     private lateinit var parser: Parser
@@ -32,8 +29,7 @@ class ParserTest:BaseTestCase() {
         varCache = VarCache(
             cleverTapInstanceConfig,
             appCtx,
-            fileResourcesRepoImpl,
-            fileResourceProvider
+            fileResourcesRepoImpl
         )
 
         ctv = CTVariables(varCache)

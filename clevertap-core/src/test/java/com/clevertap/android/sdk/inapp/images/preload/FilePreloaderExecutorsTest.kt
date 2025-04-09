@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.images.preload
 
+import android.content.Context
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.inapp.data.CtCacheType
@@ -7,7 +8,9 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.task.MockCTExecutors
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.verify
+import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -22,11 +25,20 @@ class FilePreloaderExecutorsTest {
 
     private val logger = TestLogger()
 
+    private val context = mockk<Context>()
+
     private val filePreloader = FilePreloaderExecutors(
-        fileResourceProvider = mFileResourceProvider,
+        context = context,
         logger = logger,
         executor = executors
     )
+
+    @Before
+    fun setUp() {
+        // Mock the singleton getInstance method
+        mockkObject(FileResourceProvider.Companion)
+        every { FileResourceProvider.getInstance(any(), any()) } returns mFileResourceProvider
+    }
 
     @Test
     fun `preload image fetches images from all urls`() {
