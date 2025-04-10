@@ -786,7 +786,7 @@ public class InAppController implements InAppListener,
                 showNotificationIfAvailable();
             }
         });
-        task.execute("checkLimitsBeforeDisplaying", () -> {
+        task.execute("checkLimitsBeforeShowing", () -> {
             if (controllerManager.getInAppFCManager() != null) {
                 final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
                     final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
