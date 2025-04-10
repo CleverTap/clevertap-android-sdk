@@ -65,7 +65,7 @@ public class CTWebInterface {
             Logger.d("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
-            if (inAppBaseFragment != null && inAppBaseFragment.get() == null) {
+            if (inAppBaseFragment != null && inAppBaseFragment.get() != null) {
                 inAppBaseFragment.get().didDismiss(null);
             }
         }
