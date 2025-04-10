@@ -25,19 +25,6 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
 
     private static final String JAVASCRIPT_INTERFACE_NAME = "CleverTap";
 
-    private class InAppWebViewClient extends WebViewClient {
-
-        InAppWebViewClient() {
-            super();
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            openActionUrl(url);
-            return true;
-        }
-    }
-
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
         private final int SWIPE_MIN_DISTANCE = 120;
@@ -167,7 +154,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
                     inAppNotification.getHeightPercentage(),
                     inAppNotification.getAspectRatio()
             );
-            InAppWebViewClient webViewClient = new InAppWebViewClient();
+            InAppWebViewClient webViewClient = new InAppWebViewClient(this);
             webView.setWebViewClient(webViewClient);
             webView.setOnTouchListener(CTInAppBasePartialHtmlFragment.this);
             webView.setOnLongClickListener(CTInAppBasePartialHtmlFragment.this);

@@ -5,9 +5,9 @@ import android.webkit.WebViewClient;
 
 class InAppWebViewClient extends WebViewClient {
 
-    private final CTInAppBaseFullHtmlFragment ctInAppBaseFullHtmlFragment;
+    private final CTInAppBaseFragment ctInAppBaseFullHtmlFragment;
 
-    InAppWebViewClient(CTInAppBaseFullHtmlFragment ctInAppBaseFullHtmlFragment) {
+    InAppWebViewClient(CTInAppBaseFragment ctInAppBaseFullHtmlFragment) {
         super();
         this.ctInAppBaseFullHtmlFragment = ctInAppBaseFullHtmlFragment;
     }
