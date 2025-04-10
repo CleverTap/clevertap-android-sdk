@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
@@ -24,19 +23,6 @@ import com.clevertap.android.sdk.customviews.CloseImageView;
 public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragment {
 
     private static final String JAVASCRIPT_INTERFACE_NAME = "CleverTap";
-
-    private class InAppWebViewClient extends WebViewClient {
-
-        InAppWebViewClient() {
-            super();
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            openActionUrl(url);
-            return true;
-        }
-    }
 
     protected CTInAppWebView webView;
 
@@ -103,7 +89,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             webView = new CTInAppWebView(this.context, inAppNotification.getWidth(),
                     inAppNotification.getHeight(), inAppNotification.getWidthPercentage(),
                     inAppNotification.getHeightPercentage());
-            InAppWebViewClient webViewClient = new InAppWebViewClient();
+            InAppWebViewClient webViewClient = new InAppWebViewClient(this);
             webView.setWebViewClient(webViewClient);
 
             if (inAppNotification.isJsEnabled()) {
