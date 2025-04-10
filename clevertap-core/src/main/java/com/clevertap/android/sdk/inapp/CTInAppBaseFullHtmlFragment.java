@@ -23,6 +23,8 @@ import com.clevertap.android.sdk.customviews.CloseImageView;
 
 public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragment {
 
+    private static final String JAVASCRIPT_INTERFACE_NAME = "CleverTap";
+
     private class InAppWebViewClient extends WebViewClient {
 
         InAppWebViewClient() {
@@ -36,7 +38,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
         }
     }
 
-    CTInAppWebView webView;
+    protected CTInAppWebView webView;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -53,6 +55,12 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             Bundle savedInstanceState) {
         return displayHTMLView(inflater, container);
+    }
+
+    @Override
+    public void onDestroyView() {
+        cleanupWebView();
+        super.onDestroyView();
     }
 
     @Override
@@ -104,9 +112,10 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                 webView.getSettings().setAllowContentAccess(false);
                 webView.getSettings().setAllowFileAccess(false);
                 webView.getSettings().setAllowFileAccessFromFileURLs(false);
-                webView.addJavascriptInterface(
-                        new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(), config),
-                                this), "CleverTap");
+
+                CleverTapAPI instance = CleverTapAPI.instanceWithConfig(getActivity(), config);
+                CTWebInterface ctWebInterface = new CTWebInterface(instance, this);
+                webView.addJavascriptInterface(ctWebInterface, JAVASCRIPT_INTERFACE_NAME);
             }
 
             if (isDarkenEnabled()) {
@@ -194,5 +203,22 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
         }
     }
 
-
+    private void cleanupWebView() {
+        try {
+            if (webView != null) {
+                webView.removeAllViews();
+                webView.destroyDrawingCache();
+                webView.loadUrl("about:blank");
+                if (inAppNotification.isJsEnabled()) {
+                    webView.removeJavascriptInterface(JAVASCRIPT_INTERFACE_NAME);
+                }
+                webView.clearHistory();
+                webView.destroy();
+                webView = null;
+            }
+        } catch (Exception e) {
+            config.getLogger().verbose("cleanupWebView -> there was some crash in cleanup", e);
+            //no-op; we are anyway destroying everything. This is just for safety.
+        }
+    }
 }

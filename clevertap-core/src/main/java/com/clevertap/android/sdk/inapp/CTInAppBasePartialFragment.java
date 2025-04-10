@@ -29,7 +29,7 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     @Override
     void cleanup() {
         if (!Utils.isActivityDead(getActivity()) && !isCleanedUp.get()) {
-            final FragmentManager fragmentManager = getFragmentManager();
+            final FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
             FragmentTransaction transaction;
             if (fragmentManager != null) {
                 transaction = fragmentManager.beginTransaction();
