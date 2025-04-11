@@ -20,7 +20,7 @@ public class CTWebInterface {
 
     private final WeakReference<CleverTapAPI> weakReference;
 
-    private CTInAppBaseFragment inAppBaseFragment;
+    private WeakReference<CTInAppBaseFragment> inAppBaseFragment;
 
     public CTWebInterface(CleverTapAPI instance) {
         this.weakReference = new WeakReference<>(instance);
@@ -36,7 +36,7 @@ public class CTWebInterface {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public CTWebInterface(CleverTapAPI instance, CTInAppBaseFragment inAppBaseFragment) {
         this.weakReference = new WeakReference<>(instance);
-        this.inAppBaseFragment = inAppBaseFragment;
+        this.inAppBaseFragment = new WeakReference<>(inAppBaseFragment);
     }
 
     /**
@@ -65,8 +65,8 @@ public class CTWebInterface {
             Logger.d("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
-            if (inAppBaseFragment != null) {
-                inAppBaseFragment.didDismiss(null);
+            if (inAppBaseFragment != null && inAppBaseFragment.get() != null) {
+                inAppBaseFragment.get().didDismiss(null);
             }
         }
     }
@@ -403,7 +403,7 @@ public class CTWebInterface {
             return;
         }
 
-        if (inAppBaseFragment == null) {
+        if (inAppBaseFragment == null || inAppBaseFragment.get() == null) {
             Logger.d("CTWebInterface Fragment is null");
             return;
         }
@@ -425,7 +425,8 @@ public class CTWebInterface {
                 actionData.putString("button_id", buttonId);
             }
 
-            inAppBaseFragment.triggerAction(action, callToAction, actionData);
+            CTInAppBaseFragment ctInAppBaseFragment = inAppBaseFragment.get();
+            ctInAppBaseFragment.triggerAction(action, callToAction, actionData);
         } catch (JSONException je) {
             Logger.d("CTWebInterface invalid action JSON: " + actionJson);
         }
