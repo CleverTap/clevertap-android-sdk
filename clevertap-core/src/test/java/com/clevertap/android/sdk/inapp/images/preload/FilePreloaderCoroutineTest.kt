@@ -23,9 +23,6 @@ import kotlin.test.assertEquals
 
 class FilePreloaderCoroutineTest {
 
-    //@get:Rule
-    //val mainDispatcherRule = MainDispatcherRule()
-
     private val mockBitmap = mockk<Bitmap>()
     private val byteArray = ByteArray(10) { pos ->
         pos.toByte()
@@ -37,7 +34,7 @@ class FilePreloaderCoroutineTest {
     private val dispatchers = TestDispatchers(testScheduler)
 
     private val filePreloaderCoroutine = FilePreloaderCoroutine(
-        fileResourceProvider = mFileResourceProvider,
+        { mFileResourceProvider },
         logger = logger,
         dispatchers = dispatchers
     )
@@ -46,7 +43,7 @@ class FilePreloaderCoroutineTest {
     fun `preload image fetches images from all urls`() = testScheduler.run {
 
         val urls = mutableListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k").map { Pair(it,
-            CtCacheType.IMAGE) }
+                                                                                                   CtCacheType.IMAGE) }
         val successUrls = mutableListOf<String>()
 
         urls.forEach{
@@ -214,7 +211,7 @@ class FilePreloaderCoroutineTest {
 
         // Prepare data - setup, Given :
         val filePreloaderCoroutineWithTimeout = FilePreloaderCoroutine(
-            fileResourceProvider = mFileResourceProvider,
+            { mFileResourceProvider },
             logger = logger,
             dispatchers = dispatchers,
             timeoutForPreload = 100 // 100ms

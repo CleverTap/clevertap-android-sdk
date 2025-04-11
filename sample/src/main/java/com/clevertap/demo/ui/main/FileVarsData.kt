@@ -67,7 +67,7 @@ object FileVarsData {
                 list.add(variable)
                 builder.append(variable.name())
                 builder.append(" : ")
-                builder.append(variable.value())
+//                builder.append(variable.value())
                 builder.appendLine()
             }
         }
@@ -104,7 +104,7 @@ object FileVarsData {
             if (variable != null) {
                 builder.append(variable.name())
                 builder.append(" : ")
-                builder.append(variable.value())
+//                builder.append(variable.value())
                 builder.appendLine()
             }
         }
