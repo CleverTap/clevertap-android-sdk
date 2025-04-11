@@ -556,15 +556,15 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "11-0" -> {
-                cleverTapAPI?.pushEvent("Footer InApp")
+                cleverTapAPI?.suspendInAppNotifications()
             }
 
             "11-1" -> {
-                cleverTapAPI?.pushEvent("Footer InApp without image")
+                cleverTapAPI?.discardInAppNotifications()
             }
 
             "11-2" -> {
-                cleverTapAPI?.pushEvent("Header")
+                cleverTapAPI?.resumeInAppNotifications()
             }
 
             "12-0" -> {
