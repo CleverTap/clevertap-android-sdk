@@ -86,7 +86,7 @@ object HomeScreenModel {
                 "Hard permission dialog with fallbackToSettings - false",
                 "Hard permission dialog with fallbackToSettings - true"
             ),
-            "INAPP" to listOf("Footer InApp", "Footer InApp without image", "Header"),
+            "INAPP" to listOf("Suspend", "Discard", "Resume"),
             "CS INAPP" to listOf("Fetch CS InApps", "Clear all CS InApp Resources", "Clear expired only InAPP Resources"),
             "VARIABLES" to listOf(
                 "Define Variable",
