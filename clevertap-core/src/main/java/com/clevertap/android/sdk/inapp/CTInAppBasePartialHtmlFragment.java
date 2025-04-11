@@ -18,13 +18,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.CTWebInterface;
 import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.utils.UriHelper;
-import java.net.URLDecoder;
 
 public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialFragment
         implements View.OnTouchListener, View.OnLongClickListener {
+
+    private static final String CTA_SWIPE_DISMISS = "swipe-dismiss";
 
     private class InAppWebViewClient extends WebViewClient {
 
@@ -76,7 +75,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
             animSet.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationEnd(Animation animation) {
-                    triggerAction(CTInAppAction.createCloseAction(), "swipe-dismiss", null);
+                    triggerAction(CTInAppAction.createCloseAction(), CTA_SWIPE_DISMISS, null);
                     didDismiss(null);
                 }
 
