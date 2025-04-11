@@ -15,20 +15,10 @@ class FileCleanupStrategyExecutorsTest {
 
     private val mFileResourceProvider = mockk<FileResourceProvider>(relaxed = true)
     private val executors = MockCTExecutors()
-    private val context = mockk<Context>()
-    private val logger = mockk<ILogger>(relaxed = true)
     private val cleanupStrategy = FileCleanupStrategyExecutors(
-        context = context,
-        logger = logger,
+        { mFileResourceProvider },
         executor = executors
     )
-
-    @Before
-    fun setUp() {
-        // Mock the singleton getInstance method
-        mockkObject(FileResourceProvider.Companion)
-        every { FileResourceProvider.getInstance(any(), any()) } returns mFileResourceProvider
-    }
 
     @Test
     fun `cleanup deletes all resources`() {

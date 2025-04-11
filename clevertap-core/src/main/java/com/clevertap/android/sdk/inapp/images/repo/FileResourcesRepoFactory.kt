@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.images.repo
 
 import android.content.Context
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategy
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyCoroutine
 import com.clevertap.android.sdk.inapp.images.cleanup.FileCleanupStrategyExecutors
@@ -46,20 +47,18 @@ internal class FileResourcesRepoFactory {
 
             if (USE_COROUTINES) {
                 cleanupStrategy = FileCleanupStrategyCoroutine(
-                    context = context,
-                    logger = logger
+                    { FileResourceProvider.getInstance(context, logger) },
                 )
                 preloadStrategy = FilePreloaderCoroutine(
-                    context = context,
+                    { FileResourceProvider.getInstance(context, logger) },
                     logger = logger
                 )
             } else {
                 cleanupStrategy = FileCleanupStrategyExecutors(
-                    context = context,
-                    logger = logger
+                    { FileResourceProvider.getInstance(context, logger) },
                 )
                 preloadStrategy = FilePreloaderExecutors(
-                    context = context,
+                    { FileResourceProvider.getInstance(context, logger) },
                     logger = logger
                 )
             }

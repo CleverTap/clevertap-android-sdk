@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp.images.preload
 
-import android.content.Context
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
@@ -11,7 +10,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 
 internal class FilePreloaderExecutors @JvmOverloads constructor(
-    override val context: Context,
+    override val fileResourceProvider: () -> FileResourceProvider,
     override val logger: ILogger? = null,
     private val executor: CTExecutors = CTExecutorFactory.executorResourceDownloader(),
     override val config: FilePreloadConfig = FilePreloadConfig.default(),
@@ -34,11 +33,10 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         ) { urlMeta: Pair<String, CtCacheType> ->
 
             val url = urlMeta.first
-            val fileResourceProvider = FileResourceProvider.getInstance(context, logger)
             when (urlMeta.second) {
-                CtCacheType.IMAGE -> fileResourceProvider.fetchInAppImageV1(url)
-                CtCacheType.GIF -> fileResourceProvider.fetchInAppGifV1(url)
-                CtCacheType.FILES -> fileResourceProvider.fetchFile(url)
+                CtCacheType.IMAGE -> fileResourceProvider().fetchInAppImageV1(url)
+                CtCacheType.GIF -> fileResourceProvider().fetchInAppGifV1(url)
+                CtCacheType.FILES -> fileResourceProvider().fetchFile(url)
             }
         }
     }

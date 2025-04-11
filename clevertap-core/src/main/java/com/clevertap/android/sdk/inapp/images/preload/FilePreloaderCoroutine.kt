@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp.images.preload
 
-import android.content.Context
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
@@ -20,7 +19,7 @@ import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class FilePreloaderCoroutine @JvmOverloads constructor(
-    override val context: Context,
+    override val fileResourceProvider: () -> FileResourceProvider,
     override val logger: ILogger? = null,
     dispatchers: DispatcherProvider = CtDefaultDispatchers(),
     override val config: FilePreloadConfig = FilePreloadConfig.default(),
@@ -50,11 +49,10 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
 
             val url = urlMeta.first
 
-            val fileResourceProvider = FileResourceProvider.getInstance(context, logger)
             when (urlMeta.second) {
-                CtCacheType.IMAGE -> fileResourceProvider.fetchInAppImageV1(url)
-                CtCacheType.GIF -> fileResourceProvider.fetchInAppGifV1(url)
-                CtCacheType.FILES -> fileResourceProvider.fetchFile(url)
+                CtCacheType.IMAGE -> fileResourceProvider().fetchInAppImageV1(url)
+                CtCacheType.GIF -> fileResourceProvider().fetchInAppGifV1(url)
+                CtCacheType.FILES -> fileResourceProvider().fetchFile(url)
             }
         }
     }

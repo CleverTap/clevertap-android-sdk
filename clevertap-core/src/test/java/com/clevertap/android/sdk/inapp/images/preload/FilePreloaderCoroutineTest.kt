@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.inapp.images.preload
 
 import TestDispatchers
-import android.content.Context
 import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.inapp.data.CtCacheType
@@ -9,7 +8,6 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,7 +16,6 @@ import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import org.junit.Before
 import org.junit.Test
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
@@ -33,23 +30,14 @@ class FilePreloaderCoroutineTest {
     private val mFileResourceProvider = mockk<FileResourceProvider>()
     private val logger = TestLogger()
 
-    private val context = mockk<Context>()
-
     private val testScheduler = TestCoroutineScheduler()
     private val dispatchers = TestDispatchers(testScheduler)
 
     private val filePreloaderCoroutine = FilePreloaderCoroutine(
-        context = context,
+        { mFileResourceProvider },
         logger = logger,
         dispatchers = dispatchers
     )
-
-    @Before
-    fun setUp() {
-        // Mock the singleton getInstance method
-        mockkObject(FileResourceProvider.Companion)
-        every { FileResourceProvider.getInstance(any(), any()) } returns mFileResourceProvider
-    }
 
     @Test
     fun `preload image fetches images from all urls`() = testScheduler.run {
@@ -223,7 +211,7 @@ class FilePreloaderCoroutineTest {
 
         // Prepare data - setup, Given :
         val filePreloaderCoroutineWithTimeout = FilePreloaderCoroutine(
-            context = context,
+            { mFileResourceProvider },
             logger = logger,
             dispatchers = dispatchers,
             timeoutForPreload = 100 // 100ms

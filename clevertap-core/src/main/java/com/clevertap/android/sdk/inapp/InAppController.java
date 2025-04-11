@@ -119,7 +119,7 @@ public class InAppController implements InAppListener,
                     storeRegistry.getInAppAssetsStore());
 
             String templateName = null;
-            FileResourceProvider fileResourceProvider = FileResourceProvider.getInstance(context,logger);
+            FileResourceProvider fileResourceProvider = FileResourceProvider.getInstance(context, logger);
             if (CTInAppType.CTInAppTypeCustomCodeTemplate.equals(inApp.getInAppType())) {
                 final CustomTemplateInAppData customTemplateData = inApp.getCustomTemplateData();
                 final List<String> fileUrls;
@@ -1020,7 +1020,7 @@ public class InAppController implements InAppListener,
     }
 
     private void presentTemplate(final CTInAppNotification inAppNotification) {
-        templatesManager.presentTemplate(inAppNotification, this, FileResourceProvider.getInstance(context,logger));
+        templatesManager.presentTemplate(inAppNotification, this, FileResourceProvider.getInstance(context, logger));
     }
 
     private JSONArray filterNonRegisteredCustomTemplates(JSONArray inAppNotifications) {

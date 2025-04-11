@@ -17,13 +17,11 @@ import kotlinx.coroutines.launch
  * This strategy clears file assets associated with provided URLs concurrently, leveraging coroutines for efficient
  * and non-blocking execution.
  *
- * @param context The context for accessing and managing file resources.
- * @param logger The logger
+ * @param fileResourceProvider  The provider function for accessing and managing file resources.
  * @param dispatchers The dispatcher provider for managing coroutine execution contexts (defaults to [CtDefaultDispatchers]).
  */
 internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
-    override val context: Context,
-    override val logger: ILogger,
+    override val fileResourceProvider: () -> FileResourceProvider,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers()
 ) : FileCleanupStrategy {
 
@@ -39,11 +37,10 @@ internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
         successBlock: (url: String) -> Unit
     ) {
         val job = CoroutineScope(dispatchers.io()).launch {
-
             val asyncTasks = mutableListOf<Deferred<Unit>>()
             for (url in urls) {
                 val deferred: Deferred<Unit> = async {
-                    FileResourceProvider.getInstance(context, logger).deleteData(url)
+                    fileResourceProvider().deleteData(url)
                     successBlock.invoke(url)
                 }
                 asyncTasks.add(deferred)

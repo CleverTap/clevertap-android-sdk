@@ -1,12 +1,12 @@
 package com.clevertap.android.sdk.inapp.images.preload
 
-import android.content.Context
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.data.CtCacheType
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 
 internal interface FilePreloaderStrategy {
 
-    val context: Context
+    val fileResourceProvider: () -> FileResourceProvider
 
     val logger: ILogger?
 
