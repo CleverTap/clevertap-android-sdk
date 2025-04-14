@@ -12,8 +12,6 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.CTWebInterface;
@@ -23,6 +21,7 @@ import com.clevertap.android.sdk.Logger;
 public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialFragment
         implements View.OnTouchListener, View.OnLongClickListener {
 
+    private static final String CTA_SWIPE_DISMISS = "swipe-dismiss";
     private static final String JAVASCRIPT_INTERFACE_NAME = "CleverTap";
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -33,18 +32,20 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                // Right to left
-                return remove(e1, e2, false);
-            } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                // Left to right
-                return remove(e1, e2, true);
+            if (e1 != null && e2 != null) {
+                if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    // Right to left
+                    return remove(false);
+                } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    // Left to right
+                    return remove(true);
+                }
             }
             return false;
         }
 
         @SuppressWarnings("UnusedParameters")
-        private boolean remove(MotionEvent e1, MotionEvent e2, boolean ltr) {
+        private boolean remove(boolean ltr) {
             AnimationSet animSet = new AnimationSet(true);
             TranslateAnimation anim;
             if (ltr) {
@@ -60,6 +61,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
             animSet.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationEnd(Animation animation) {
+                    triggerAction(CTInAppAction.createCloseAction(), CTA_SWIPE_DISMISS, null);
                     didDismiss(null);
                 }
 
