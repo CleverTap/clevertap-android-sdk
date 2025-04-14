@@ -24,19 +24,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
         implements View.OnTouchListener, View.OnLongClickListener {
 
     private static final String CTA_SWIPE_DISMISS = "swipe-dismiss";
-
-    private class InAppWebViewClient extends WebViewClient {
-
-        InAppWebViewClient() {
-            super();
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            openActionUrl(url);
-            return true;
-        }
-    }
+    private static final String JAVASCRIPT_INTERFACE_NAME = "CleverTap";
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
@@ -104,6 +92,31 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
     }
 
     @Override
+    public void onDestroyView() {
+        cleanupWebView();
+        super.onDestroyView();
+    }
+
+    private void cleanupWebView() {
+        try {
+            if (webView != null) {
+                webView.removeAllViews();
+                webView.destroyDrawingCache();
+                webView.loadUrl("about:blank");
+                if (inAppNotification.isJsEnabled()) {
+                    webView.removeJavascriptInterface(JAVASCRIPT_INTERFACE_NAME);
+                }
+                webView.clearHistory();
+                webView.destroy();
+                webView = null;
+            }
+        } catch (Exception e) {
+            config.getLogger().verbose("cleanupWebView -> there was some crash in cleanup", e);
+            //no-op; we are anyway destroying everything. This is just for safety.
+        }
+    }
+
+    @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         reDrawInApp();
@@ -145,7 +158,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
                     inAppNotification.getHeightPercentage(),
                     inAppNotification.getAspectRatio()
             );
-            InAppWebViewClient webViewClient = new InAppWebViewClient();
+            InAppWebViewClient webViewClient = new InAppWebViewClient(this);
             webView.setWebViewClient(webViewClient);
             webView.setOnTouchListener(CTInAppBasePartialHtmlFragment.this);
             webView.setOnLongClickListener(CTInAppBasePartialHtmlFragment.this);
@@ -156,9 +169,10 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
                 webView.getSettings().setAllowContentAccess(false);
                 webView.getSettings().setAllowFileAccess(false);
                 webView.getSettings().setAllowFileAccessFromFileURLs(false);
-                webView.addJavascriptInterface(
-                        new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(), config),
-                                this), "CleverTap");
+
+                CleverTapAPI instance = CleverTapAPI.instanceWithConfig(getActivity(), config);
+                CTWebInterface ctWebInterface = new CTWebInterface(instance, this);
+                webView.addJavascriptInterface(ctWebInterface, JAVASCRIPT_INTERFACE_NAME);
             }
 
             if (layout != null) {
