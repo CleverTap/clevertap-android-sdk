@@ -65,7 +65,7 @@ public class CTInAppNotification implements Parcelable {
 
     private int heightPercentage;
 
-    private double aspectRatio = -1;
+    private double aspectRatio = HTML_DEFAULT_ASPECT_RATIO;
 
     private boolean hideCloseButton;
 
