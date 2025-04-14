@@ -49,10 +49,6 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
         id = 188293
     }
 
-    override fun performClick(): Boolean {
-        return super.performClick()
-    }
-
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         updateDimension()
