@@ -45,20 +45,22 @@ internal class FileResourcesRepoFactory {
             val cleanupStrategy: FileCleanupStrategy
             val preloadStrategy: FilePreloaderStrategy
 
+            val fileResourceProviderLambda = { FileResourceProvider.getInstance(context, logger) }
+
             if (USE_COROUTINES) {
                 cleanupStrategy = FileCleanupStrategyCoroutine(
-                    { FileResourceProvider.getInstance(context, logger) },
+                    fileResourceProviderLambda,
                 )
                 preloadStrategy = FilePreloaderCoroutine(
-                    { FileResourceProvider.getInstance(context, logger) },
+                    fileResourceProviderLambda,
                     logger = logger
                 )
             } else {
                 cleanupStrategy = FileCleanupStrategyExecutors(
-                    { FileResourceProvider.getInstance(context, logger) },
+                    fileResourceProviderLambda,
                 )
                 preloadStrategy = FilePreloaderExecutors(
-                    { FileResourceProvider.getInstance(context, logger) },
+                    fileResourceProviderLambda,
                     logger = logger
                 )
             }
