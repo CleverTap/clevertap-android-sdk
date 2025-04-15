@@ -148,7 +148,11 @@ internal class InAppStore(
         clientSideInApps = if (csInAppsEncrypted.isNullOrBlank()) {
             JSONArray()
         } else {
-            JSONArray(cryptHandler.decrypt(csInAppsEncrypted))
+            try {
+                JSONArray(cryptHandler.decrypt(csInAppsEncrypted))
+            } catch (e: Exception) {
+                JSONArray()
+            }
         }
         return clientSideInApps as JSONArray
     }
@@ -229,7 +233,11 @@ internal class InAppStore(
         serverSideInApps = if (ssEncryptedInApps.isNullOrBlank()) {
             JSONArray()
         } else {
-            JSONArray(cryptHandler.decrypt(ssEncryptedInApps))
+            try {
+                JSONArray(cryptHandler.decrypt(ssEncryptedInApps))
+            } catch (e: Exception) {
+                JSONArray()
+            }
         }
 
         return serverSideInApps as JSONArray
