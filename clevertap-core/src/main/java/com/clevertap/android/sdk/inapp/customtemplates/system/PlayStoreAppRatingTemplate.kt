@@ -17,7 +17,10 @@ internal object PlayStoreAppRatingTemplate {
             name(NAME)
             presenter { templateContext ->
                 systemActionHandler.launchPlayStoreReviewFlow(
-                    onCompleted = { templateContext.setDismissed() },
+                    onCompleted = {
+                        templateContext.setPresented()
+                        templateContext.setDismissed()
+                    },
                     onError = { templateContext.setDismissed() }
                 )
             }
