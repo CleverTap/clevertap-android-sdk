@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignBottom="@+id/big_image"
-        android:background="@drawable/scrim"/>
+        android:background="@drawable/pt_scrim"/>
 
     <RelativeLayout
         android:id="@+id/rel_lyt"
@@ -41,7 +41,6 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/metadata"
             android:layout_alignStart="@id/metadata"
-            android:layout_alignLeft="@id/metadata"
             android:layout_marginTop="@dimen/metadata_title_margin_vertical"
             tools:text="title"
             android:textAppearance="@style/PushTitle"
@@ -53,7 +52,6 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/title"
             android:layout_alignStart="@id/title"
-            android:layout_alignLeft="@id/title"
             tools:text="message"
             android:textAppearance="@style/PushMessageMultiLine"
             android:textColor="@color/white"/>

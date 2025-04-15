@@ -26,8 +26,8 @@
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
                 android:layout_weight="6"
-                android:inAnimation="@anim/fade_in"
-                android:outAnimation="@anim/fade_out" />
+                android:inAnimation="@anim/pt_fade_in"
+                android:outAnimation="@anim/pt_fade_out" />
 
             <ViewFlipper
                 android:id="@+id/carousel_image"
@@ -36,8 +36,8 @@
                 android:layout_weight="3"
                 android:layout_marginLeft="-4dp"
                 android:layout_marginRight="-4dp"
-                android:inAnimation="@anim/fade_in"
-                android:outAnimation="@anim/fade_out" />
+                android:inAnimation="@anim/pt_fade_in"
+                android:outAnimation="@anim/pt_fade_out" />
 
             <ViewFlipper
                 android:id="@+id/carousel_image_right"
@@ -47,19 +47,19 @@
                 android:layout_marginBottom="10dp"
                 android:layout_marginStart="3dp"
                 android:layout_weight="6"
-                android:inAnimation="@anim/fade_in"
-                android:outAnimation="@anim/fade_out" />
+                android:inAnimation="@anim/pt_fade_in"
+                android:outAnimation="@anim/pt_fade_out" />
         </LinearLayout>
 
         <ImageView
             android:id="@+id/leftArrowPos0"
             style="@style/ManualCarouselArrowRev"
-            android:background="@drawable/btn_ripple_background" />
+            android:background="@drawable/pt_btn_ripple_background" />
 
         <ImageView
             android:id="@+id/rightArrowPos0"
             style="@style/ManualCarouselArrowFwd"
-            android:background="@drawable/btn_ripple_background" />
+            android:background="@drawable/pt_btn_ripple_background" />
     </RelativeLayout>
 
 
