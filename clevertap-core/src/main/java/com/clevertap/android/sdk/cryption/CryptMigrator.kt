@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.cryption
 
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
-import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
+import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.Constants.piiDBKeys
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
@@ -22,6 +22,7 @@ internal data class CryptMigrator(
 
     companion object {
         const val MIGRATION_FAILURE_COUNT_KEY = "encryptionMigrationFailureCount"
+        const val SS_IN_APP_MIGRATED = "ssInAppMigrated"
         const val UNKNOWN_LEVEL = -1
         const val MIGRATION_NOT_NEEDED = 0
         const val MIGRATION_NEEDED = 1
@@ -39,6 +40,7 @@ internal data class CryptMigrator(
      *      encryption level and migration failures are not recorded, migration is required.
      *   3. **Existing Failures**: If there are recorded migration failures, the process attempts to
      *      continue from where it left off.
+     *   4. **SSInApp Key Fix**: v7.3.0- had incorrect migration for SSInApps, hence migration is required.
      *
      * - Updates:
      *   - Updates the stored encryption level to the current configuration.
@@ -47,12 +49,12 @@ internal data class CryptMigrator(
      */
     fun migrateEncryption() {
         val storedEncryptionLevel = cryptRepository.storedEncryptionLevel()
-
         val storedFailureCount = cryptRepository.migrationFailureCount()
+        val isSSInAppDataMigrated = cryptRepository.isSSInAppDataMigrated()
 
         val migrationFailureCount = when {
-            // Encryption level changed and upgrade to v2 already complete
-            storedEncryptionLevel != configEncryptionLevel && storedFailureCount != -1 -> MIGRATION_NEEDED
+            !isSSInAppDataMigrated -> MIGRATION_NEEDED // Migration incorrect for for SS InApps
+            storedEncryptionLevel != configEncryptionLevel && storedFailureCount != -1 -> MIGRATION_NEEDED // Encryption level changed and upgrade to v2 already complete
             else -> storedFailureCount
         }
 
@@ -70,12 +72,14 @@ internal data class CryptMigrator(
         logger.verbose(
             logPrefix,
             "Starting migration from encryption level $storedEncryptionLevel to $configEncryptionLevel " +
-                    "with migrationFailureCount $migrationFailureCount"
+                    "with migrationFailureCount $migrationFailureCount and isSSInAppDataMigrated $isSSInAppDataMigrated"
         )
         val migrationSuccess = handleAllMigrations(
             configEncryptionLevel == EncryptionLevel.MEDIUM.intValue(),
             migrationFailureCount == -1
         )
+
+        cryptRepository.updateIsSSInAppDataMigrated(migrationSuccess)
         cryptRepository.updateMigrationFailureCount(migrationSuccess)
     }
 
@@ -221,7 +225,7 @@ internal data class CryptMigrator(
             migrationSuccessful = migrationSuccessful && result.migrationSuccessful
             result.data
         }
-        val keysToProcess = listOf(PREFS_INAPP_KEY_CS, PREFS_INAPP_KEY_SS)
+        val keysToProcess = listOf(PREFS_INAPP_KEY_CS, INAPP_KEY)
 
         dataMigrationRepository.inAppDataFiles(keysToProcess, migrateCode)
 

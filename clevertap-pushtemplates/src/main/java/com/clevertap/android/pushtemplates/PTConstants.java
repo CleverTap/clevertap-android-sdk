@@ -74,6 +74,8 @@ public class PTConstants {
 
     public static final String PT_TIMER_THRESHOLD = "pt_timer_threshold";
 
+    public static final String PT_RENDER_TERMINAL = "pt_render_terminal";
+
     public static final String PT_INPUT_LABEL = "pt_input_label";
 
     public static final String PT_INPUT_KEY = "pt_input_reply";

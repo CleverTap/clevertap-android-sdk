@@ -16,8 +16,8 @@
             android:layout_width="match_parent"
             android:layout_height="140dp"
             android:layout_weight="4.5"
-            android:inAnimation="@anim/fade_in"
-            android:outAnimation="@anim/fade_out" />
+            android:inAnimation="@anim/pt_fade_in"
+            android:outAnimation="@anim/pt_fade_out" />
 
         <LinearLayout
             android:id="@+id/buy_price"
