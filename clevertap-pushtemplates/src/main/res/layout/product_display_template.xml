@@ -22,8 +22,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.5"
-            android:inAnimation="@anim/fade_in"
-            android:outAnimation="@anim/fade_out"/>
+            android:inAnimation="@anim/pt_fade_in"
+            android:outAnimation="@anim/pt_fade_out"/>
 
         <LinearLayout
             android:layout_width="0dp"

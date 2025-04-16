@@ -15,8 +15,8 @@
         android:layout_weight="1"
         android:minHeight="196dp"
         android:autoStart="true"
-        android:inAnimation="@anim/slide_in_right"
-        android:outAnimation="@anim/slide_out_left">
+        android:inAnimation="@anim/pt_slide_in_right"
+        android:outAnimation="@anim/pt_slide_out_left">
     </ViewFlipper>
 
     <include
