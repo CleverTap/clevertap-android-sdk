@@ -166,7 +166,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 if (ValidatorFactory.getValidator(TemplateType.ZERO_BEZEL, this)?.validate() == true)
                     return ZeroBezelStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
-            TemplateType.TIMER -> if (VERSION.SDK_INT >= VERSION_CODES.N) {
+            TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 ValidatorFactory.getValidator(TemplateType.TIMER, this)
                     ?.takeIf { it.validate() }
                     ?.let {
@@ -181,7 +181,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     }
             }
             else {
-                PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Nougat, reverting to basic template")
+                PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")
                 if (ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true) {
                     return BasicStyle(this).builderFromStyle(context, extras, notificationId, nb)
                 }
