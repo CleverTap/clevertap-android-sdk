@@ -94,10 +94,9 @@ internal object CleverTapFactory {
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
         coreState.config = config
 
-        val fileResourceProviderInit = CTExecutorFactory.executors(config).ioTask<Void?>()
+        val fileResourceProviderInit = CTExecutorFactory.executors(config).ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
             FileResourceProvider.getInstance(context, config.logger)
-            null
         }
 
         val baseDatabaseManager = DBManager(config, ctLockManager)
