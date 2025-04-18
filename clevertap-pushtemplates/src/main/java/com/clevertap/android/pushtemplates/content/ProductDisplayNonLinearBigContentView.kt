@@ -6,6 +6,7 @@ import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
+import com.clevertap.android.sdk.isNotNullAndEmpty
 
 internal class ProductDisplayNonLinearBigContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
     ProductDisplayLinearBigContentView(context, renderer, extras, R.layout.product_display_template) {
@@ -18,8 +19,10 @@ internal class ProductDisplayNonLinearBigContentView(context: Context, renderer:
     }
 
     private fun setCustomContentViewElementColour(rId: Int, colour: String?) {
-        if (colour != null && colour.isNotEmpty()) {
-            remoteView.setTextColor(rId, Utils.getColour(colour, PTConstants.PT_COLOUR_BLACK))
+        colour?.takeIf { it.isNotEmpty() }?.let {
+            Utils.getColourOrNull(it)?.let { color ->
+                remoteView.setTextColor(rId, color)
+            }
         }
     }
 }

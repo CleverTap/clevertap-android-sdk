@@ -56,6 +56,8 @@ public class PTConstants {
 
     public static final String PT_TITLE_COLOR = "pt_title_clr";
 
+    public static final String PT_DARK_MODE_SUFFIX = "_dark";
+
     public static final String PT_MSG_COLOR = "pt_msg_clr";
 
     public static final String PT_BG = "pt_bg";

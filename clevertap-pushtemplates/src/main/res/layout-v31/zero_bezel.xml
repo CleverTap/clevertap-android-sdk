@@ -4,6 +4,7 @@
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
     android:orientation="vertical">
 
     <ImageView
@@ -38,6 +39,7 @@
             tools:text="title"
             android:textAppearance="@style/PushTitle"
             android:textColor="@color/white" />
+<!--        todo check this colour-->
 
         <TextView
             android:id="@+id/msg"

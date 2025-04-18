@@ -42,12 +42,14 @@ internal open class TimerSmallContentView(
     }
 
     private fun setCustomContentViewChronometerBackgroundColour(pt_bg: String?) {
-        if (pt_bg.isNotNullAndEmpty()) {
-            remoteView.setInt(
-                R.id.chronometer,
-                "setBackgroundColor",
-                Utils.getColour(pt_bg, PTConstants.PT_COLOUR_WHITE)
-            )
+        pt_bg?.takeIf { it.isNotEmpty() }?.let {
+            Utils.getColourOrNull(it)?.let { color ->
+                remoteView.setInt(
+                    R.id.chronometer,
+                    "setBackgroundColor",
+                    color
+                )
+            }
         }
     }
 
@@ -55,17 +57,21 @@ internal open class TimerSmallContentView(
         pt_chrono_title_clr: String?,
         pt_title_clr: String?
     ) {
-        if (pt_chrono_title_clr.isNotNullAndEmpty()) {
-            remoteView.setTextColor(
-                R.id.chronometer,
-                Utils.getColour(pt_chrono_title_clr, PTConstants.PT_COLOUR_BLACK)
-            )
-        } else {
-            if (pt_title_clr.isNotNullAndEmpty()) {
+        pt_chrono_title_clr?.takeIf { it.isNotEmpty() }?.let {
+            Utils.getColourOrNull(it)?.let { color ->
                 remoteView.setTextColor(
                     R.id.chronometer,
-                    Utils.getColour(pt_title_clr, PTConstants.PT_COLOUR_BLACK)
+                    color
                 )
+            }
+        } ?: run {
+            pt_title_clr?.takeIf { it.isNotEmpty() }?.let {
+                Utils.getColourOrNull(it)?.let { color ->
+                    remoteView.setTextColor(
+                        R.id.chronometer,
+                        color
+                    )
+                }
             }
         }
     }

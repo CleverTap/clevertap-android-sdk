@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_view_small"
+    android:background="@android:color/transparent"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -33,7 +34,7 @@
             tools:text="title"
             android:textAppearance="@style/PushTitle"
             android:textColor="@color/white" />
-
+        <!--        todo check this colour-->
         <TextView
             android:id="@+id/msg"
             android:layout_width="match_parent"

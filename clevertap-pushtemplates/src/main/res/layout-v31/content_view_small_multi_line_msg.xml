@@ -4,6 +4,7 @@
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
     android:layout_marginTop="@dimen/padding_micro"
     android:layout_marginRight="@dimen/padding_micro"
     android:layout_marginLeft="@dimen/padding_micro">

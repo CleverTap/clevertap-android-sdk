@@ -7,7 +7,8 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:paddingHorizontal="16dp"
-    android:background="@color/white">
+    android:background="@color/buttonBackground">
+<!--    Todo maybe this colour can be transparent?-->
 
     <TextView
         android:id="@+id/action0"

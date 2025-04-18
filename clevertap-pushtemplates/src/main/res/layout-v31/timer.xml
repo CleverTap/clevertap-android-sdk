@@ -4,7 +4,7 @@
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="@android:color/transparent"
     android:orientation="vertical">
 
     <RelativeLayout
@@ -24,6 +24,7 @@
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="@color/titleColor"
                 android:layout_marginTop="@dimen/metadata_title_margin_vertical"
                 tools:text="title"
                 android:textAppearance="@style/PushTitle" />
@@ -43,6 +44,8 @@
             android:id="@+id/chronometer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:textColor="@color/titleColor"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:textAlignment="center"

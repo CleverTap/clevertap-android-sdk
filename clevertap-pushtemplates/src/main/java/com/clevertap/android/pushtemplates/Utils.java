@@ -2,6 +2,8 @@ package com.clevertap.android.pushtemplates;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 
+import static com.clevertap.android.pushtemplates.PTConstants.PT_DARK_MODE_SUFFIX;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -194,6 +196,17 @@ public class Utils {
             }
         }
         return stList;
+    }
+
+    static String getDarkModeAdaptiveColor(Bundle extras, boolean isDarkMode, String key) {
+        String colorDark = extras.getString(key + PT_DARK_MODE_SUFFIX);
+        String color = extras.getString(key);
+
+        if (isDarkMode && colorDark != null) {
+            return colorDark;
+        } else {
+            return color;
+        }
     }
 
     public static void loadImageBitmapIntoRemoteView(int imageViewID, Bitmap image,
@@ -592,16 +605,28 @@ public class Utils {
         return false;
     }
 
-    public static Bitmap setBitMapColour(Context context, int resourceID, String clr)
-            throws NullPointerException {
-        if (clr != null && !clr.isEmpty()) {
-            int color = getColour(clr, PTConstants.PT_COLOUR_GREY);
-
-            Drawable mDrawable = Objects.requireNonNull(ContextCompat.getDrawable(context, resourceID)).mutate();
-            mDrawable.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
-            return Utils.drawableToBitmap(mDrawable);
+    public static Bitmap setBitMapColour(Context context, int resourceID, String clr) {
+        if (clr == null || clr.isEmpty()) {
+            return null;
         }
-        return null;
+
+        Integer color = getColourOrNull(clr);
+        if (color == null) {
+            return null;
+        }
+
+        try {
+            Drawable mDrawable = ContextCompat.getDrawable(context, resourceID);
+            if (mDrawable == null) {
+                return null;
+            }
+
+            mDrawable = mDrawable.mutate();
+            mDrawable.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+            return drawableToBitmap(mDrawable);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static int getColour(String clr, String default_clr) {
@@ -610,6 +635,15 @@ public class Utils {
         } catch (Exception e) {
             PTLog.debug("Can not parse colour value: " + clr + " Switching to default colour: " + default_clr);
             return Color.parseColor(default_clr);
+        }
+    }
+
+    public static Integer getColourOrNull(String clr) {
+        try {
+            return Color.parseColor(clr);
+        } catch (Exception e) {
+            PTLog.debug("Can not parse colour value: " + clr);
+            return null;
         }
     }
 

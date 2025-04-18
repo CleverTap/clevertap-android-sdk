@@ -46,12 +46,14 @@
 
         <TextView
             android:id="@+id/title"
+            android:textColor="@color/titleColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="Notification Sample App"/>
 
         <TextView
             android:id="@+id/msg_summary"
+            android:textColor="@color/messageColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="Expand me to see a detailed message!"/>
@@ -74,6 +76,7 @@
             android:adjustViewBounds="true"
             android:src="@android:drawable/btn_star"/>
 
+        <!--        todo check this colour-->
         <TextView
             android:id="@+id/msg"
             android:layout_width="match_parent"

@@ -158,27 +158,25 @@ internal open class ProductDisplayLinearBigContentView(
     }
 
     private fun setCustomContentViewButtonColour(resourceID: Int, pt_product_display_action_clr: String?) {
-        if (pt_product_display_action_clr != null && pt_product_display_action_clr.isNotEmpty()) {
-            remoteView.setInt(
-                resourceID,
-                "setBackgroundColor",
-                Utils.getColour(
-                    pt_product_display_action_clr,
-                    PTConstants.PT_PRODUCT_DISPLAY_ACTION_CLR_DEFAULTS
+        pt_product_display_action_clr?.takeIf { it.isNotEmpty() }?.let {
+            Utils.getColourOrNull(it)?.let { color ->
+                remoteView.setInt(
+                    resourceID,
+                    "setBackgroundColor",
+                    color
                 )
-            )
+            }
         }
     }
 
-    internal fun setCustomContentViewButtonText(resourceID: Int, pt_product_display_action_text_clr: String?) {
-        if (pt_product_display_action_text_clr != null && pt_product_display_action_text_clr.isNotEmpty()) {
-            remoteView.setTextColor(
-                resourceID,
-                Utils.getColour(
-                    pt_product_display_action_text_clr,
-                    PTConstants.PT_PRODUCT_DISPLAY_ACTION_TEXT_CLR_DEFAULT
+    private fun setCustomContentViewButtonText(resourceID: Int, pt_product_display_action_text_clr: String?) {
+        pt_product_display_action_text_clr?.takeIf { it.isNotEmpty() }?.let {
+            Utils.getColourOrNull(it)?.let { color ->
+                remoteView.setTextColor(
+                    resourceID,
+                    color
                 )
-            )
+            }
         }
     }
 }

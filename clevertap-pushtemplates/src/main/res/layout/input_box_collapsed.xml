@@ -46,6 +46,7 @@
 
         <TextView
             android:id="@+id/title"
+            android:textColor="@color/titleColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="Notification Sample App"/>
@@ -53,6 +54,7 @@
 
         <TextView
             android:id="@+id/msg_summary"
+            android:textColor="@color/messageColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="Expand me to see a detailed message!"/>
