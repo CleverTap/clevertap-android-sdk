@@ -1,24 +1,15 @@
-package com.clevertap.android.sdk.inapp;
+package com.clevertap.android.sdk.inapp
 
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import com.clevertap.android.sdk.Logger
+import java.lang.ref.WeakReference
 
-import java.lang.ref.WeakReference;
+internal class InAppWebViewClient(fragment: CTInAppBaseFragment) : WebViewClient() {
+    private val fragmentWr = WeakReference(fragment)
 
-class InAppWebViewClient extends WebViewClient {
-
-    private final WeakReference<CTInAppBaseFragment> fragmentWr;
-
-    InAppWebViewClient(CTInAppBaseFragment ctInAppBaseFullHtmlFragment) {
-        super();
-        this.fragmentWr = new WeakReference<>(ctInAppBaseFullHtmlFragment);
-    }
-
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        if (fragmentWr != null && fragmentWr.get() != null) {
-            fragmentWr.get().openActionUrl(url);
-        }
-        return true;
+    override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+        fragmentWr.get()?.openActionUrl(url) ?: Logger.v("Android view is gone, not opening url")
+        return true
     }
 }
