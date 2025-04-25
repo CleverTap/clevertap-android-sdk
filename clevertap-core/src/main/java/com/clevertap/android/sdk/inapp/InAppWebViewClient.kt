@@ -12,4 +12,12 @@ internal class InAppWebViewClient(fragment: CTInAppBaseFragment) : WebViewClient
         fragmentWr.get()?.openActionUrl(url) ?: Logger.v("Android view is gone, not opening url")
         return true
     }
+
+    @TargetApi(Build.VERSION_CODES.N)
+    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+        request.url?.toString()?.let { url ->
+            fragmentWr.get()?.openActionUrl(url) ?: Logger.v("Android view is gone, not opening url")
+        }
+        return true
+    }
 }
