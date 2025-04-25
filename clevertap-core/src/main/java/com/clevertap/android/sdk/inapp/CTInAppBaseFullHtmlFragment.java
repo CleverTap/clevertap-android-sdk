@@ -22,8 +22,6 @@ import com.clevertap.android.sdk.customviews.CloseImageView;
 
 public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragment {
 
-    private static final String JAVASCRIPT_INTERFACE_NAME = "CleverTap";
-
     protected CTInAppWebView webView;
 
     @Override
@@ -74,7 +72,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
         return closeIvLp;
     }
 
-    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
+    @SuppressLint({"SetJavaScriptEnabled"})
     private View displayHTMLView(LayoutInflater inflater, ViewGroup container) {
         View inAppView;
         try {
@@ -93,15 +91,9 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             webView.setWebViewClient(webViewClient);
 
             if (inAppNotification.isJsEnabled()) {
-                webView.getSettings().setJavaScriptEnabled(true);
-                webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
-                webView.getSettings().setAllowContentAccess(false);
-                webView.getSettings().setAllowFileAccess(false);
-                webView.getSettings().setAllowFileAccessFromFileURLs(false);
-
                 CleverTapAPI instance = CleverTapAPI.instanceWithConfig(getActivity(), config);
                 CTWebInterface ctWebInterface = new CTWebInterface(instance, this);
-                webView.addJavascriptInterface(ctWebInterface, JAVASCRIPT_INTERFACE_NAME);
+                webView.setJavaScriptInterface(ctWebInterface);
             }
 
             if (isDarkenEnabled()) {
@@ -192,14 +184,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     private void cleanupWebView() {
         try {
             if (webView != null) {
-                webView.removeAllViews();
-                webView.destroyDrawingCache();
-                webView.loadUrl("about:blank");
-                if (inAppNotification.isJsEnabled()) {
-                    webView.removeJavascriptInterface(JAVASCRIPT_INTERFACE_NAME);
-                }
-                webView.clearHistory();
-                webView.destroy();
+                webView.cleanup(inAppNotification.isJsEnabled());
                 webView = null;
             }
         } catch (Exception e) {

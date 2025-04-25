@@ -10,6 +10,7 @@ import android.view.WindowManager
 import android.webkit.WebView
 import androidx.annotation.Px
 import androidx.annotation.RequiresApi
+import com.clevertap.android.sdk.CTWebInterface
 
 @SuppressLint("ViewConstructor")
 internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
@@ -22,6 +23,7 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
 ) : WebView(context) {
 
     companion object {
+        private const val JAVASCRIPT_INTERFACE_NAME: String = "CleverTap"
         private const val DEFAULT_ASPECT_RATIO = -1.0
     }
 
@@ -144,5 +146,32 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
     private fun calculateHeightWithDisplayMetrics(): Int {
         val metrics = resources.displayMetrics
         return (metrics.heightPixels * heightPercentage / 100f).toInt()
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    fun setJavaScriptInterface(webInterface: CTWebInterface) {
+        getSettings().apply {
+            javaScriptEnabled = true
+            javaScriptCanOpenWindowsAutomatically = false
+            allowContentAccess = false
+            allowFileAccess = false
+            allowFileAccessFromFileURLs = false
+        }
+
+        addJavascriptInterface(
+            webInterface,
+            JAVASCRIPT_INTERFACE_NAME
+        )
+    }
+
+    fun cleanup(isJsEnabled: Boolean) {
+        removeAllViews()
+        destroyDrawingCache()
+        loadUrl("about:blank")
+        if (isJsEnabled) {
+            removeJavascriptInterface(JAVASCRIPT_INTERFACE_NAME)
+        }
+        clearHistory()
+        destroy()
     }
 }
