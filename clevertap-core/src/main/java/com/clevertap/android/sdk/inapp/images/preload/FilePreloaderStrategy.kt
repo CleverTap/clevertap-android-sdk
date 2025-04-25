@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 
 internal interface FilePreloaderStrategy {
 
-    val fileResourceProvider: FileResourceProvider
+    val fileResourceProvider: () -> FileResourceProvider
 
     val logger: ILogger?
 

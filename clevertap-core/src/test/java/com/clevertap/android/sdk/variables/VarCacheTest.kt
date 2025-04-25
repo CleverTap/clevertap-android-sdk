@@ -12,15 +12,10 @@ import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.junit.*
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD
 import org.junit.runner.*
-import org.mockito.kotlin.notNull
-import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-@RunWith(RobolectricTestRunner::class)
 class VarCacheTest : BaseTestCase() {
 
     private lateinit var varCache: VarCache
@@ -39,8 +34,11 @@ class VarCacheTest : BaseTestCase() {
         fileResourcesRepoImpl = mockk(relaxed = true)
         fileResourceProvider = mockk(relaxed = true)
 
+        mockkObject(FileResourceProvider.Companion)
+        every { FileResourceProvider.getInstance(any(), any()) } returns fileResourceProvider
+
         varCache = VarCache(
-            cleverTapInstanceConfig, application, fileResourcesRepoImpl, fileResourceProvider
+            cleverTapInstanceConfig, application, fileResourcesRepoImpl
         )
         ctVariables = CTVariables(varCache)
         parser = Parser(ctVariables)
@@ -50,7 +48,7 @@ class VarCacheTest : BaseTestCase() {
     fun cleanUp() {
         //clear all varCache stored info
         val varCacheKey = StorageHelper.storageKeyWithSuffix(
-            cleverTapInstanceConfig,
+            cleverTapInstanceConfig.accountId,
             Constants.CACHED_VARIABLES_KEY
         )
         StorageHelper.removeImmediate(application, varCacheKey)

@@ -277,8 +277,6 @@ public class CTInAppNotification implements Parcelable {
         dest.writeByte((byte) (isRequestForPushPermission ? 0x01 : 0x00));
     }
 
-    void didDismiss(FileResourceProvider resourceProvider) {
-    }
 
     String getBackgroundColor() {
         return backgroundColor;

@@ -940,8 +940,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 }
                 return null;
             });
-        } else if (instance.isErrorDeviceId() && instance.getConfig().getEnableCustomCleverTapId() && Utils
-                .validateCTID(cleverTapID)) {
+        } else if (instance.getConfig().getEnableCustomCleverTapId() && Utils
+                .validateCTID(cleverTapID) && instance.isErrorDeviceId()) {
             instance.coreState.getLoginController().asyncProfileSwitchUser(null, null, cleverTapID);
         }
         Logger.v(config.getAccountId() + ":async_deviceID", "CleverTapAPI instance = " + instance);
@@ -3695,6 +3695,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param expiredOnly to clear only assets which will not be needed further for inapps
      */
+    @WorkerThread
     public void clearInAppResources(boolean expiredOnly) {
 
         Logger logger = getConfigLogger();
@@ -3723,6 +3724,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                    templates, app functions and variables etc.
      * @noinspection unused
      */
+    @WorkerThread
     public void clearFileResources(boolean expiredOnly) {
 
         Logger logger = getConfigLogger();

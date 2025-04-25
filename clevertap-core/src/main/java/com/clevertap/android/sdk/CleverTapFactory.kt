@@ -93,6 +93,11 @@ internal object CleverTapFactory {
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
         coreState.config = config
 
+        val fileResourceProviderInit = CTExecutorFactory.executors(config).ioTask<Unit>()
+        fileResourceProviderInit.execute("initFileResourceProvider") {
+            FileResourceProvider.getInstance(context, config.logger)
+        }
+
         val baseDatabaseManager = DBManager(config, ctLockManager)
         coreState.databaseManager = baseDatabaseManager
 
@@ -244,16 +249,11 @@ internal object CleverTapFactory {
             logger = config.logger,
             storeRegistry = storeRegistry
         )
-        val fileResourceProvider = FileResourceProvider(
-            context = context,
-            logger = config.logger
-        )
 
         val varCache = VarCache(
             config,
             context,
-            impl,
-            fileResourceProvider
+            impl
         )
         coreState.varCache = varCache
 
@@ -364,7 +364,6 @@ internal object CleverTapFactory {
             deviceInfo,
             InAppQueue(config, storeRegistry),
             evaluationManager,
-            fileResourceProvider,
             templatesManager,
             storeRegistry,
             inAppActionHandler

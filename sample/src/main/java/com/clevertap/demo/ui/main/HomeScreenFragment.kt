@@ -115,7 +115,7 @@ class HomeScreenFragment : Fragment() {
     }
 
     private fun initCTGeofenceApi(cleverTapInstance: CleverTapAPI) {
-        val context = activity?.applicationContext!!
+        val context = requireContext()
 
         CTGeofenceAPI.getInstance(context).apply {
             init(

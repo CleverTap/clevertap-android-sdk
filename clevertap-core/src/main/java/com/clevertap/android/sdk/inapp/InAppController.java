@@ -106,6 +106,7 @@ public class InAppController implements InAppListener {
                     storeRegistry.getInAppAssetsStore());
 
             String templateName = null;
+            FileResourceProvider fileResourceProvider = FileResourceProvider.getInstance(context, logger);
             if (CTInAppType.CTInAppTypeCustomCodeTemplate.equals(inApp.getInAppType())) {
                 final CustomTemplateInAppData customTemplateData = inApp.getCustomTemplateData();
                 final List<String> fileUrls;
@@ -119,7 +120,7 @@ public class InAppController implements InAppListener {
                 int index = 0;
                 while (index < fileUrls.size()) {
                     String url = fileUrls.get(index);
-                    byte[] bytes = resourceProvider.fetchFile(url);
+                    byte[] bytes = fileResourceProvider.fetchFile(url);
 
                     if (bytes != null && bytes.length > 0) {
                         FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url, CtCacheType.FILES), storePair);
@@ -133,14 +134,14 @@ public class InAppController implements InAppListener {
             } else {
                 for (CTInAppNotificationMedia media : inApp.getMediaList()) {
                     if (media.isGIF()) {
-                        byte[] bytes = resourceProvider.fetchInAppGifV1(media.getMediaUrl());
+                        byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
                         if (bytes == null || bytes.length == 0) {
                             inApp.setError("Error processing GIF");
                             break;
                         }
                     } else if (media.isImage()) {
 
-                        Bitmap bitmap = resourceProvider.fetchInAppImageV1(media.getMediaUrl());
+                        Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
                         if (bitmap == null) {
                             inApp.setError("Error processing image as bitmap was NULL");
                         }
@@ -208,8 +209,6 @@ public class InAppController implements InAppListener {
 
     private final Logger logger;
 
-    private final FileResourceProvider resourceProvider;
-
     private final MainLooperHandler mainLooperHandler;
 
     private final InAppQueue inAppQueue;
@@ -235,7 +234,6 @@ public class InAppController implements InAppListener {
             final DeviceInfo deviceInfo,
             InAppQueue inAppQueue,
             final EvaluationManager evaluationManager,
-            FileResourceProvider resourceProvider,
             TemplatesManager templatesManager,
             final StoreRegistry storeRegistry,
             final InAppActionHandler inAppActionHandler) {
@@ -249,7 +247,6 @@ public class InAppController implements InAppListener {
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
         this.deviceInfo = deviceInfo;
-        this.resourceProvider = resourceProvider;
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
         this.templatesManager = templatesManager;
@@ -390,7 +387,6 @@ public class InAppController implements InAppListener {
     public void inAppNotificationDidDismiss(
             @NonNull final CTInAppNotification inAppNotification,
             @Nullable final Bundle formData) {
-        inAppNotification.didDismiss(resourceProvider);
 
         if (controllerManager.getInAppFCManager() != null) {
             String templateName = inAppNotification.getCustomTemplateData() != null
@@ -586,25 +582,6 @@ public class InAppController implements InAppListener {
             return;
         }
 
-        if (controllerManager.getInAppFCManager() != null) {
-
-            final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
-                final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
-                return !evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
-            };
-
-            if (!controllerManager.getInAppFCManager().canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {
-                logger.verbose(config.getAccountId(),
-                        "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
-                showInAppNotificationIfAny();
-                return;
-            }
-        } else {
-            logger.verbose(config.getAccountId(),
-                    "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
-            return;
-        }
-
         if (inAppNotification.isRequestForPushPermission() && inAppActionHandler.arePushNotificationsEnabled()) {
             logger.verbose(config.getAccountId(),
                     "Not showing push permission request, permission is already granted");
@@ -613,32 +590,7 @@ public class InAppController implements InAppListener {
             return;
         }
 
-        final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
-
-        final boolean goFromListener;
-
-        if (listener != null) {
-            final HashMap<String, Object> kvs;
-
-            if (inAppNotification.getCustomExtras() != null) {
-                kvs = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
-            } else {
-                kvs = new HashMap<>();
-            }
-
-            goFromListener = listener.beforeShow(kvs);
-        } else {
-            goFromListener = true;
-        }
-
-        if (!goFromListener) {
-            logger.verbose(config.getAccountId(),
-                    "Application has decided to not show this in-app notification: " + inAppNotification
-                            .getCampaignId());
-            showInAppNotificationIfAny();
-            return;
-        }
-        showInApp(context, inAppNotification, config, this);
+        checkLimitsBeforeShowing(context, inAppNotification, config, this);
         incrementLocalInAppCountInPersistentStore(context, inAppNotification);
     }
 
@@ -686,7 +638,7 @@ public class InAppController implements InAppListener {
         }
     }
 
-    private static void checkPendingNotifications(
+    private void checkPendingNotifications(
             @NonNull final Context context,
             final CleverTapInstanceConfig config,
             final InAppController inAppController
@@ -696,13 +648,7 @@ public class InAppController implements InAppListener {
             try {
                 final CTInAppNotification notification = pendingNotifications.get(0);
                 pendingNotifications.remove(0);
-                MainLooperHandler mainHandler = new MainLooperHandler();
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        showInApp(context, notification, config, inAppController);
-                    }
-                });
+                checkLimitsBeforeShowing(context, notification, config, inAppController);
             } catch (Throwable t) {
                 // no-op
             }
@@ -710,7 +656,7 @@ public class InAppController implements InAppListener {
     }
 
     //InApp
-    private static void inAppDidDismiss(
+    private void inAppDidDismiss(
             @NonNull Context context,
             CleverTapInstanceConfig config,
             CTInAppNotification inAppNotification,
@@ -739,13 +685,77 @@ public class InAppController implements InAppListener {
         }
     }
 
+    private void checkLimitsBeforeShowing(
+            @NonNull Context context,
+            final CTInAppNotification inAppNotification,
+            CleverTapInstanceConfig config,
+            InAppController inAppController) {
+        Task<Boolean> task = CTExecutorFactory.executors(config).ioTask();
+        task.addOnSuccessListener(canShow -> {
+            if(canShow) {
+                showInApp(context, inAppNotification, config, inAppController);
+            } else {
+                showNotificationIfAvailable();
+            }
+        });
+        task.execute("checkLimitsBeforeShowing", () -> {
+            if (controllerManager.getInAppFCManager() != null) {
+                final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
+                    final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
+                    return !evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
+                };
+
+                if (!controllerManager.getInAppFCManager().canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {
+                    logger.verbose(config.getAccountId(),
+                            "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
+                    return false;
+                }
+            } else {
+                logger.verbose(config.getAccountId(),
+                        "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
+                return false;
+            }
+            return true;
+        });
+    }
+
+    private boolean checkBeforeShowApprovalBeforeDisplay(final CTInAppNotification inAppNotification) {
+        final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
+
+        final boolean goFromListener;
+
+        if (listener != null) {
+            final HashMap<String, Object> kvs;
+
+            if (inAppNotification.getCustomExtras() != null) {
+                kvs = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
+            } else {
+                kvs = new HashMap<>();
+            }
+
+            goFromListener = listener.beforeShow(kvs);
+        } else {
+            goFromListener = true;
+        }
+
+        return goFromListener;
+    }
     //InApp
-    private static void showInApp(
+    private void showInApp(
             @NonNull Context context,
             final CTInAppNotification inAppNotification,
             CleverTapInstanceConfig config,
             InAppController inAppController
     ) {
+
+        boolean goFromListener = checkBeforeShowApprovalBeforeDisplay(inAppNotification);
+        if (!goFromListener) {
+            logger.verbose(config.getAccountId(),
+                    "Application has decided to not show this in-app notification: " + inAppNotification
+                            .getCampaignId());
+            showInAppNotificationIfAny();
+            return;
+        }
 
         Logger.v(config.getAccountId(), "Attempting to show next In-App");
 
@@ -921,7 +931,7 @@ public class InAppController implements InAppListener {
     }
 
     private void presentTemplate(final CTInAppNotification inAppNotification) {
-        templatesManager.presentTemplate(inAppNotification, this,resourceProvider);
+        templatesManager.presentTemplate(inAppNotification, this, FileResourceProvider.getInstance(context, logger));
     }
 
     private JSONArray filterNonRegisteredCustomTemplates(JSONArray inAppNotifications) {
