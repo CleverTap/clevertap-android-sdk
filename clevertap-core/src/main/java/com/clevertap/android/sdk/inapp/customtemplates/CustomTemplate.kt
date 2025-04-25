@@ -31,7 +31,8 @@ class CustomTemplate private constructor(
     val isVisual: Boolean,
 
     internal val args: List<TemplateArgument>,
-    internal val type: CustomTemplateType
+    internal val type: CustomTemplateType,
+    internal val isSystemDefined: Boolean = false
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -125,6 +126,8 @@ class CustomTemplate private constructor(
     ) {
 
         protected abstract val thisRef: T
+
+        internal var isSystemDefined = false
 
         private var templateName: String? = null
         private val argsNames = mutableSetOf<String>()
@@ -248,7 +251,7 @@ class CustomTemplate private constructor(
             val presenter = this.presenter ?: throw CustomTemplateException("CustomTemplate must have a presenter")
             val name = templateName ?: throw CustomTemplateException("CustomTemplate must have a name")
 
-            return CustomTemplate(name, presenter, isVisual, getOrderedArgs(), type)
+            return CustomTemplate(name, presenter, isVisual, getOrderedArgs(), type, isSystemDefined)
         }
 
         internal fun addArgument(name: String, type: TemplateArgumentType, defaultValue: Any?) {
