@@ -11,13 +11,22 @@ class CTPreferenceCache {
         firstTimeRequest = fTR
     }
 
+    fun updateCacheToDisk(context: Context, config: CleverTapInstanceConfig) {
+        CTExecutorFactory.executors(config).ioTask<Void>().execute("updateCacheToDisk") {
+            StorageHelper.putBooleanImmediate(
+                context, InAppController.IS_FIRST_TIME_PERMISSION_REQUEST,
+                firstTimeRequest
+            )
+            null
+        }
+    }
+
     companion object {
 
         @Volatile
         private var INSTANCE: CTPreferenceCache? = null
 
-        @JvmField
-        var firstTimeRequest = true
+        private var firstTimeRequest = true
 
         @JvmStatic
         fun getInstance(context: Context, config: CleverTapInstanceConfig): CTPreferenceCache =
@@ -34,17 +43,6 @@ class CTPreferenceCache {
                 null
             }
             return CTPreferenceCache()
-        }
-
-        @JvmStatic
-        fun updateCacheToDisk(context: Context, config: CleverTapInstanceConfig) {
-            CTExecutorFactory.executors(config).ioTask<Void>().execute("updateCacheToDisk") {
-                StorageHelper.putBooleanImmediate(
-                    context, InAppController.IS_FIRST_TIME_PERMISSION_REQUEST,
-                    firstTimeRequest
-                )
-                null
-            }
         }
     }
 }

@@ -19,9 +19,9 @@ import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class FilePreloaderCoroutine @JvmOverloads constructor(
-    override val fileResourceProvider: FileResourceProvider,
+    override val fileResourceProvider: () -> FileResourceProvider,
     override val logger: ILogger? = null,
-    private val dispatchers: DispatcherProvider = CtDefaultDispatchers(),
+    dispatchers: DispatcherProvider = CtDefaultDispatchers(),
     override val config: FilePreloadConfig = FilePreloadConfig.default(),
     override val timeoutForPreload: Long = 5.minutes.inWholeMilliseconds
 ) : FilePreloaderStrategy {
@@ -50,9 +50,9 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
             val url = urlMeta.first
 
             when (urlMeta.second) {
-                CtCacheType.IMAGE -> fileResourceProvider.fetchInAppImageV1(url)
-                CtCacheType.GIF -> fileResourceProvider.fetchInAppGifV1(url)
-                CtCacheType.FILES -> fileResourceProvider.fetchFile(url)
+                CtCacheType.IMAGE -> fileResourceProvider().fetchInAppImageV1(url)
+                CtCacheType.GIF -> fileResourceProvider().fetchInAppGifV1(url)
+                CtCacheType.FILES -> fileResourceProvider().fetchFile(url)
             }
         }
     }

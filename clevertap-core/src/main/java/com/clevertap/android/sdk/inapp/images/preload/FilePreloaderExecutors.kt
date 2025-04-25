@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 
 internal class FilePreloaderExecutors @JvmOverloads constructor(
-    override val fileResourceProvider: FileResourceProvider,
+    override val fileResourceProvider: () -> FileResourceProvider,
     override val logger: ILogger? = null,
     private val executor: CTExecutors = CTExecutorFactory.executorResourceDownloader(),
     override val config: FilePreloadConfig = FilePreloadConfig.default(),
@@ -33,11 +33,10 @@ internal class FilePreloaderExecutors @JvmOverloads constructor(
         ) { urlMeta: Pair<String, CtCacheType> ->
 
             val url = urlMeta.first
-
             when (urlMeta.second) {
-                CtCacheType.IMAGE -> fileResourceProvider.fetchInAppImageV1(url)
-                CtCacheType.GIF -> fileResourceProvider.fetchInAppGifV1(url)
-                CtCacheType.FILES -> fileResourceProvider.fetchFile(url)
+                CtCacheType.IMAGE -> fileResourceProvider().fetchInAppImageV1(url)
+                CtCacheType.GIF -> fileResourceProvider().fetchInAppGifV1(url)
+                CtCacheType.FILES -> fileResourceProvider().fetchFile(url)
             }
         }
     }

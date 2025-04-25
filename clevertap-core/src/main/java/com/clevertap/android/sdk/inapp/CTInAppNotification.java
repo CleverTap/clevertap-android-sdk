@@ -8,12 +8,15 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData;
+import com.clevertap.android.sdk.inapp.customtemplates.system.PushPermissionTemplate;
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -121,6 +124,8 @@ public class CTInAppNotification implements Parcelable {
 
     private boolean fallBackToNotificationSettings = false;
 
+    private boolean isRequestForPushPermission = false;
+
     private CustomTemplateInAppData customTemplateData;
 
     CTInAppNotification() {
@@ -176,6 +181,7 @@ public class CTInAppNotification implements Parcelable {
             timeToLive = in.readLong();
             customTemplateData = in.readParcelable(CustomTemplateInAppData.class.getClassLoader());
             aspectRatio = in.readDouble();
+            isRequestForPushPermission = in.readByte() != 0x00;
 
         } catch (JSONException e) {
             // no-op
@@ -270,6 +276,7 @@ public class CTInAppNotification implements Parcelable {
         dest.writeLong(timeToLive);
         dest.writeParcelable(customTemplateData, flags);
         dest.writeDouble(aspectRatio);
+        dest.writeByte((byte) (isRequestForPushPermission ? 0x01 : 0x00));
     }
 
     String getBackgroundColor() {
@@ -476,6 +483,10 @@ public class CTInAppNotification implements Parcelable {
         return !getMediaList().isEmpty() && getMediaList().get(0).isMediaStreamable();
     }
 
+    public boolean isRequestForPushPermission() {
+        return isRequestForPushPermission;
+    }
+
     private void configureWithJson(JSONObject jsonObject) {
         try {
             this.id = jsonObject.optString(Constants.INAPP_ID_IN_PAYLOAD, "");
@@ -535,6 +546,7 @@ public class CTInAppNotification implements Parcelable {
                     }
                 }
             }
+            isRequestForPushPermission = jsonObject.optBoolean(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, false);
             customTemplateData = CustomTemplateInAppData.createFromJson(jsonObject);
 
             switch (this.inAppType) {
@@ -588,6 +600,7 @@ public class CTInAppNotification implements Parcelable {
             this.totalDailyCount = jsonObject.optInt(Constants.KEY_TDC, -1);
             this.jsEnabled = jsonObject.optBoolean(Constants.INAPP_JS_ENABLED, false);
             this.timeToLive = jsonObject.optLong(Constants.WZRK_TIME_TO_LIVE, defaultTtl());
+            isRequestForPushPermission = jsonObject.optBoolean(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, false);
 
             JSONObject data = jsonObject.optJSONObject(Constants.INAPP_DATA_TAG);
             if (data != null) {

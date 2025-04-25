@@ -23,7 +23,7 @@ class FilePreloaderExecutorsTest {
     private val logger = TestLogger()
 
     private val filePreloader = FilePreloaderExecutors(
-        fileResourceProvider = mFileResourceProvider,
+        { mFileResourceProvider },
         logger = logger,
         executor = executors
     )

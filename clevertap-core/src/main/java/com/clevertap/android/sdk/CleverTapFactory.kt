@@ -14,10 +14,12 @@ import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.events.EventQueueManager
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.inapp.ImpressionManager
+import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.InAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager.Companion.createInstance
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
@@ -60,9 +62,6 @@ internal object CleverTapFactory {
 
         val coreState = CoreState()
 
-        val templatesManager = createInstance(cleverTapInstanceConfig)
-        coreState.templatesManager = templatesManager
-
         // create storeRegistry, preferences for features
         val storeProvider = getInstance()
         val accountId = cleverTapInstanceConfig.accountId
@@ -93,6 +92,11 @@ internal object CleverTapFactory {
 
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
         coreState.config = config
+
+        val fileResourceProviderInit = CTExecutorFactory.executors(config).ioTask<Unit>()
+        fileResourceProviderInit.execute("initFileResourceProvider") {
+            FileResourceProvider.getInstance(context, config.logger)
+        }
 
         val baseDatabaseManager = DBManager(config, ctLockManager)
         coreState.databaseManager = baseDatabaseManager
@@ -173,6 +177,16 @@ internal object CleverTapFactory {
 
         coreState.impressionManager = impressionManager
 
+        val inAppActionHandler = InAppActionHandler(
+            context,
+            cleverTapInstanceConfig,
+            PushPermissionHandler(config, callbackManager.pushPermissionResponseListenerList)
+        )
+        val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
+        val templatesManager =
+            TemplatesManager.createInstance(cleverTapInstanceConfig, systemTemplates)
+        coreState.templatesManager = templatesManager
+
         val evaluationManager = EvaluationManager(
             triggersMatcher = triggersMatcher,
             triggersManager = triggersManager,
@@ -235,16 +249,11 @@ internal object CleverTapFactory {
             logger = config.logger,
             storeRegistry = storeRegistry
         )
-        val fileResourceProvider = FileResourceProvider(
-            context = context,
-            logger = config.logger
-        )
 
         val varCache = VarCache(
             config,
             context,
-            impl,
-            fileResourceProvider
+            impl
         )
         coreState.varCache = varCache
 
@@ -355,9 +364,9 @@ internal object CleverTapFactory {
             deviceInfo,
             InAppQueue(config, storeRegistry),
             evaluationManager,
-            fileResourceProvider,
             templatesManager,
-            storeRegistry
+            storeRegistry,
+            inAppActionHandler
         )
 
         coreState.inAppController = inAppController
