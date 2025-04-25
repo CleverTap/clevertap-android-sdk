@@ -14,10 +14,12 @@ import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.events.EventQueueManager
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.inapp.ImpressionManager
+import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.InAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager.Companion.createInstance
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
@@ -59,9 +61,6 @@ internal object CleverTapFactory {
         }
 
         val coreState = CoreState()
-
-        val templatesManager = createInstance(cleverTapInstanceConfig)
-        coreState.templatesManager = templatesManager
 
         // create storeRegistry, preferences for features
         val storeProvider = getInstance()
@@ -177,6 +176,16 @@ internal object CleverTapFactory {
         val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
 
         coreState.impressionManager = impressionManager
+
+        val inAppActionHandler = InAppActionHandler(
+            context,
+            cleverTapInstanceConfig,
+            PushPermissionHandler(config, callbackManager.pushPermissionResponseListenerList)
+        )
+        val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
+        val templatesManager =
+            TemplatesManager.createInstance(cleverTapInstanceConfig, systemTemplates)
+        coreState.templatesManager = templatesManager
 
         val evaluationManager = EvaluationManager(
             triggersMatcher = triggersMatcher,
@@ -356,7 +365,8 @@ internal object CleverTapFactory {
             InAppQueue(config, storeRegistry),
             evaluationManager,
             templatesManager,
-            storeRegistry
+            storeRegistry,
+            inAppActionHandler
         )
 
         coreState.inAppController = inAppController
