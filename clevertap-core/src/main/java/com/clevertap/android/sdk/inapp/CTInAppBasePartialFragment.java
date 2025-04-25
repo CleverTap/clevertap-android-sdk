@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp;
 
+import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import com.clevertap.android.sdk.CleverTapAPI;
@@ -28,8 +29,9 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
 
     @Override
     void cleanup() {
-        if (!Utils.isActivityDead(getActivity()) && !isCleanedUp.get()) {
-            final FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        FragmentActivity activity = getActivity();
+        if (!Utils.isActivityDead(activity) && !isCleanedUp.get()) {
+            final FragmentManager fragmentManager = activity.getSupportFragmentManager();
             FragmentTransaction transaction;
             if (fragmentManager != null) {
                 transaction = fragmentManager.beginTransaction();
