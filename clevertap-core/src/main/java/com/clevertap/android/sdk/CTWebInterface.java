@@ -18,13 +18,13 @@ import org.json.JSONObject;
 @SuppressWarnings("WeakerAccess")
 public class CTWebInterface {
 
-    private final WeakReference<CleverTapAPI> weakReference;
+    private WeakReference<CleverTapAPI> cleverTapWr = new WeakReference<>(null);
 
-    private CTInAppBaseFragment inAppBaseFragment;
+    private WeakReference<CTInAppBaseFragment> fragmentWr = new WeakReference<>(null);
 
     public CTWebInterface(CleverTapAPI instance) {
-        this.weakReference = new WeakReference<>(instance);
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        this.cleverTapWr = new WeakReference<>(instance);
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI != null) {
             CoreState coreState = cleverTapAPI.getCoreState();
             if (coreState != null) {
@@ -35,8 +35,8 @@ public class CTWebInterface {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public CTWebInterface(CleverTapAPI instance, CTInAppBaseFragment inAppBaseFragment) {
-        this.weakReference = new WeakReference<>(instance);
-        this.inAppBaseFragment = inAppBaseFragment;
+        this.cleverTapWr = new WeakReference<>(instance);
+        this.fragmentWr = new WeakReference<>(inAppBaseFragment);
     }
 
     /**
@@ -45,7 +45,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void promptPushPermission(boolean shouldShowFallbackSettings) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -60,13 +60,14 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void dismissInAppNotification() {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
-            if (inAppBaseFragment != null) {
-                inAppBaseFragment.didDismiss(null);
+            CTInAppBaseFragment fragment = fragmentWr.get();
+            if (fragment != null) {
+                fragment.didDismiss(null);
             }
         }
     }
@@ -79,7 +80,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void addMultiValueForKey(String key, String value) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -96,7 +97,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void incrementValue(String key, double value) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -113,7 +114,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void decrementValue(String key, double value) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -129,7 +130,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void addMultiValuesForKey(String key, String values) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -164,7 +165,7 @@ public class CTWebInterface {
     @JavascriptInterface
     @SuppressWarnings({"JavaDoc"})
     public void pushChargedEvent(String chargeDetails, String items) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -203,7 +204,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void pushEvent(String eventName) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -219,7 +220,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void pushEvent(String eventName, String eventActions) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -243,7 +244,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void pushProfile(String profile) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -268,7 +269,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void removeMultiValueForKey(String key, String value) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -292,7 +293,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void removeMultiValuesForKey(String key, String values) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -320,7 +321,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void removeValueForKey(String key) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -340,7 +341,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void setMultiValueForKey(String key, String values) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -369,7 +370,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void onUserLogin(String profile) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
@@ -397,13 +398,14 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     public void triggerInAppAction(String actionJson, String callToAction, String buttonId) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
+        CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI == null) {
             Logger.d("CTWebInterface CleverTap Instance is null.");
             return;
         }
 
-        if (inAppBaseFragment == null) {
+        CTInAppBaseFragment fragment = fragmentWr.get();
+        if (fragment == null) {
             Logger.d("CTWebInterface Fragment is null");
             return;
         }
@@ -425,7 +427,7 @@ public class CTWebInterface {
                 actionData.putString("button_id", buttonId);
             }
 
-            inAppBaseFragment.triggerAction(action, callToAction, actionData);
+            fragment.triggerAction(action, callToAction, actionData);
         } catch (JSONException je) {
             Logger.d("CTWebInterface invalid action JSON: " + actionJson);
         }

@@ -28,6 +28,8 @@ import java.util.Iterator;
 @RestrictTo(Scope.LIBRARY)
 public class CTInAppNotification implements Parcelable {
 
+    public static final double HTML_DEFAULT_ASPECT_RATIO = -1;
+
     @SuppressWarnings("unused")
     public static final Parcelable.Creator<CTInAppNotification> CREATOR
             = new Parcelable.Creator<CTInAppNotification>() {
@@ -41,8 +43,6 @@ public class CTInAppNotification implements Parcelable {
             return new CTInAppNotification[size];
         }
     };
-
-    private String _landscapeImageCacheKey;
 
     private JSONObject actionExtras;
 
@@ -67,6 +67,8 @@ public class CTInAppNotification implements Parcelable {
     private int height;
 
     private int heightPercentage;
+
+    private double aspectRatio = HTML_DEFAULT_ASPECT_RATIO;
 
     private boolean hideCloseButton;
 
@@ -176,9 +178,9 @@ public class CTInAppNotification implements Parcelable {
             isLocalInApp = in.readByte() != 0x00;
             fallBackToNotificationSettings = in.readByte() != 0x00;
             landscapeImageUrl = in.readString();
-            _landscapeImageCacheKey = in.readString();
             timeToLive = in.readLong();
             customTemplateData = in.readParcelable(CustomTemplateInAppData.class.getClassLoader());
+            aspectRatio = in.readDouble();
             isRequestForPushPermission = in.readByte() != 0x00;
 
         } catch (JSONException e) {
@@ -271,12 +273,11 @@ public class CTInAppNotification implements Parcelable {
         dest.writeByte((byte) (isLocalInApp ? 0x01 : 0x00));
         dest.writeByte((byte) (fallBackToNotificationSettings ? 0x01 : 0x00));
         dest.writeString(landscapeImageUrl);
-        dest.writeString(_landscapeImageCacheKey);
         dest.writeLong(timeToLive);
         dest.writeParcelable(customTemplateData, flags);
+        dest.writeDouble(aspectRatio);
         dest.writeByte((byte) (isRequestForPushPermission ? 0x01 : 0x00));
     }
-
 
     String getBackgroundColor() {
         return backgroundColor;
@@ -324,6 +325,10 @@ public class CTInAppNotification implements Parcelable {
 
     int getHeightPercentage() {
         return heightPercentage;
+    }
+
+    double getAspectRatio() {
+        return aspectRatio;
     }
 
     String getHtml() {
@@ -484,73 +489,58 @@ public class CTInAppNotification implements Parcelable {
 
     private void configureWithJson(JSONObject jsonObject) {
         try {
-            this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject.getString(
-                    Constants.INAPP_ID_IN_PAYLOAD) : "";
-            this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(
-                    Constants.NOTIFICATION_ID_TAG) : "";
+            this.id = jsonObject.optString(Constants.INAPP_ID_IN_PAYLOAD, "");
+            this.campaignId = jsonObject.optString(Constants.NOTIFICATION_ID_TAG, "");
             this.type = jsonObject.getString(Constants.KEY_TYPE);// won't be null based on initWithJSON()
-            this.isLocalInApp = jsonObject.has(IS_LOCAL_INAPP) && jsonObject.getBoolean(IS_LOCAL_INAPP);
-            this.fallBackToNotificationSettings = jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS)
-                    && jsonObject.getBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS);
-            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1
-                    || jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
-            this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
-            this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
-            this.maxPerSession = jsonObject.has(Constants.INAPP_MAX_DISPLAY_COUNT) ? jsonObject.getInt(
-                    Constants.INAPP_MAX_DISPLAY_COUNT) : -1;
+            this.isLocalInApp = jsonObject.optBoolean(IS_LOCAL_INAPP, false);
+            this.fallBackToNotificationSettings = jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false);
+            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 || jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
+            this.totalLifetimeCount = jsonObject.optInt(Constants.KEY_TLC, -1);
+            this.totalDailyCount = jsonObject.optInt(Constants.KEY_TDC, -1);
+            this.maxPerSession = jsonObject.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, -1);
             this.inAppType = CTInAppType.fromString(this.type);
-            this.isTablet = jsonObject.has(Constants.KEY_IS_TABLET) && jsonObject.getBoolean(Constants.KEY_IS_TABLET);
-            this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG)
-                    : Constants.WHITE;
-            this.isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(
-                    Constants.KEY_PORTRAIT);
-            this.isLandscape = jsonObject.has(Constants.KEY_LANDSCAPE) && jsonObject.getBoolean(
-                    Constants.KEY_LANDSCAPE);
-            this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject.getLong(
-                    Constants.WZRK_TIME_TO_LIVE) : System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
-            JSONObject titleObject = jsonObject.has(Constants.KEY_TITLE) ? jsonObject.getJSONObject(
-                    Constants.KEY_TITLE) : null;
+            this.isTablet = jsonObject.optBoolean(Constants.KEY_IS_TABLET, false);
+            this.backgroundColor = jsonObject.optString(Constants.KEY_BG, Constants.WHITE);
+            this.isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(Constants.KEY_PORTRAIT);
+            this.isLandscape = jsonObject.optBoolean(Constants.KEY_LANDSCAPE, false);
+            this.timeToLive = jsonObject.optLong(Constants.WZRK_TIME_TO_LIVE, defaultTtl());
+
+            JSONObject titleObject = jsonObject.optJSONObject(Constants.KEY_TITLE);
             if (titleObject != null) {
-                this.title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
-                this.titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR)
-                        : Constants.BLACK;
+                this.title = titleObject.optString(Constants.KEY_TEXT, "");
+                this.titleColor = titleObject.optString(Constants.KEY_COLOR, Constants.BLACK);
             }
-            JSONObject msgObject = jsonObject.has(Constants.KEY_MESSAGE) ? jsonObject.getJSONObject(
-                    Constants.KEY_MESSAGE) : null;
+
+            JSONObject msgObject = jsonObject.optJSONObject(Constants.KEY_MESSAGE);
             if (msgObject != null) {
-                this.message = msgObject.has(Constants.KEY_TEXT) ? msgObject.getString(Constants.KEY_TEXT) : "";
-                this.messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR)
-                        : Constants.BLACK;
+                this.message = msgObject.optString(Constants.KEY_TEXT, "");
+                this.messageColor = msgObject.optString(Constants.KEY_COLOR, Constants.BLACK);
             }
-            this.hideCloseButton = jsonObject.has(Constants.KEY_HIDE_CLOSE) && jsonObject.getBoolean(
-                    Constants.KEY_HIDE_CLOSE);
-            JSONObject media = jsonObject.has(Constants.KEY_MEDIA) ? jsonObject.getJSONObject(Constants.KEY_MEDIA)
-                    : null;
+
+            this.hideCloseButton = jsonObject.optBoolean(Constants.KEY_HIDE_CLOSE, false);
+
+            JSONObject media = jsonObject.optJSONObject(Constants.KEY_MEDIA);
             if (media != null) {
-                CTInAppNotificationMedia portraitMedia = new CTInAppNotificationMedia()
-                        .initWithJSON(media, Configuration.ORIENTATION_PORTRAIT);
+                CTInAppNotificationMedia portraitMedia = new CTInAppNotificationMedia().initWithJSON(media, Configuration.ORIENTATION_PORTRAIT);
                 if (portraitMedia != null) {
                     mediaList.add(portraitMedia);
                 }
             }
 
-            JSONObject media_landscape = jsonObject.has(Constants.KEY_MEDIA_LANDSCAPE) ? jsonObject.getJSONObject(
-                    Constants.KEY_MEDIA_LANDSCAPE) : null;
-            if (media_landscape != null) {
-                CTInAppNotificationMedia landscapeMedia = new CTInAppNotificationMedia().initWithJSON(media_landscape,
-                        Configuration.ORIENTATION_LANDSCAPE);
+            JSONObject mediaLandscape = jsonObject.optJSONObject(Constants.KEY_MEDIA_LANDSCAPE);
+            if (mediaLandscape != null) {
+                CTInAppNotificationMedia landscapeMedia = new CTInAppNotificationMedia().initWithJSON(mediaLandscape, Configuration.ORIENTATION_LANDSCAPE);
                 if (landscapeMedia != null) {
                     mediaList.add(landscapeMedia);
                 }
             }
 
-            JSONArray buttonArray = jsonObject.has(Constants.KEY_BUTTONS) ? jsonObject.getJSONArray(
-                    Constants.KEY_BUTTONS) : null;
+            JSONArray buttonArray = jsonObject.optJSONArray(Constants.KEY_BUTTONS);
             if (buttonArray != null) {
                 for (int i = 0; i < buttonArray.length(); i++) {
-                    CTInAppNotificationButton inAppNotificationButton = new CTInAppNotificationButton().initWithJSON(
-                            buttonArray.getJSONObject(i));
-                    if (inAppNotificationButton != null && inAppNotificationButton.getError() == null) {
+                    JSONObject buttonJson = buttonArray.getJSONObject(i);
+                    CTInAppNotificationButton inAppNotificationButton = new CTInAppNotificationButton().initWithJSON(buttonJson);
+                    if (inAppNotificationButton.getError() == null) {
                         this.buttons.add(inAppNotificationButton);
                         this.buttonCount++;
                     }
@@ -576,9 +566,9 @@ public class CTInAppNotification implements Parcelable {
                 case CTInAppTypeInterstitialImageOnly:
                     if (!this.mediaList.isEmpty()) {
                         for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
-                            if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo() || !inAppMedia
-                                    .isImage()) {
+                            if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo() || !inAppMedia.isImage()) {
                                 this.error = "Wrong media type for template";
+                                break; // Exit the loop early if an error is found
                             }
                         }
                     } else {
@@ -603,67 +593,68 @@ public class CTInAppNotification implements Parcelable {
             return;
         }
         try {
-            this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject
-                    .getString(Constants.INAPP_ID_IN_PAYLOAD) : "";
-            this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject
-                    .getString(Constants.NOTIFICATION_ID_TAG) : "";
-            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 ||
-                    jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
-            this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
-            this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
-            this.jsEnabled = jsonObject.has(Constants.INAPP_JS_ENABLED) && jsonObject
-                    .getBoolean(Constants.INAPP_JS_ENABLED);
-            this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject
-                    .getLong(Constants.WZRK_TIME_TO_LIVE)
-                    : (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS) / 1000;
+            this.id = jsonObject.optString(Constants.INAPP_ID_IN_PAYLOAD, "");
+            this.campaignId = jsonObject.optString(Constants.NOTIFICATION_ID_TAG, "");
+            this.excludeFromCaps = jsonObject.optInt(Constants.KEY_EFC, -1) == 1 || jsonObject.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
+            this.totalLifetimeCount = jsonObject.optInt(Constants.KEY_TLC, -1);
+            this.totalDailyCount = jsonObject.optInt(Constants.KEY_TDC, -1);
+            this.jsEnabled = jsonObject.optBoolean(Constants.INAPP_JS_ENABLED, false);
+            this.timeToLive = jsonObject.optLong(Constants.WZRK_TIME_TO_LIVE, defaultTtl());
             isRequestForPushPermission = jsonObject.optBoolean(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, false);
 
-            JSONObject data = jsonObject.has(Constants.INAPP_DATA_TAG) ? jsonObject
-                    .getJSONObject(Constants.INAPP_DATA_TAG) : null;
+            JSONObject data = jsonObject.optJSONObject(Constants.INAPP_DATA_TAG);
             if (data != null) {
                 this.html = data.getString(Constants.INAPP_HTML_TAG);
+                this.customInAppUrl = data.optString(Constants.KEY_URL, "");
+                this.customExtras = data.optJSONObject(Constants.KEY_KV) != null ? data.getJSONObject(Constants.KEY_KV) : new JSONObject();
 
-                this.customInAppUrl = data.has(Constants.KEY_URL) ? data.getString(Constants.KEY_URL) : "";
-
-                this.customExtras = data.has(Constants.KEY_KV) ? data.getJSONObject(Constants.KEY_KV) : null;
-                if (this.customExtras == null) {
-                    this.customExtras = new JSONObject();
-                }
-
-                JSONObject displayParams = jsonObject.getJSONObject(Constants.INAPP_WINDOW);
+                JSONObject displayParams = jsonObject.optJSONObject(Constants.INAPP_WINDOW);
                 if (displayParams != null) {
                     this.darkenScreen = displayParams.getBoolean(Constants.INAPP_NOTIF_DARKEN_SCREEN);
                     this.showClose = displayParams.getBoolean(Constants.INAPP_NOTIF_SHOW_CLOSE);
                     this.position = displayParams.getString(Constants.INAPP_POSITION).charAt(0);
-                    this.width = displayParams.has(Constants.INAPP_X_DP) ? displayParams.getInt(Constants.INAPP_X_DP)
-                            : 0;
-                    this.widthPercentage = displayParams.has(Constants.INAPP_X_PERCENT) ? displayParams
-                            .getInt(Constants.INAPP_X_PERCENT) : 0;
-                    this.height = displayParams.has(Constants.INAPP_Y_DP) ? displayParams.getInt(Constants.INAPP_Y_DP)
-                            : 0;
-                    this.heightPercentage = displayParams.has(Constants.INAPP_Y_PERCENT) ? displayParams
-                            .getInt(Constants.INAPP_Y_PERCENT) : 0;
-                    this.maxPerSession = displayParams.has(Constants.INAPP_MAX_DISPLAY_COUNT) ? displayParams
-                            .getInt(Constants.INAPP_MAX_DISPLAY_COUNT) : -1;
+                    this.width = displayParams.optInt(Constants.INAPP_X_DP, 0);
+                    this.widthPercentage = displayParams.optInt(Constants.INAPP_X_PERCENT, 0);
+                    this.height = displayParams.optInt(Constants.INAPP_Y_DP, 0);
+                    this.heightPercentage = displayParams.optInt(Constants.INAPP_Y_PERCENT, 0);
+                    this.maxPerSession = displayParams.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, -1);
+                    this.aspectRatio = displayParams.optDouble(Constants.INAPP_ASPECT_RATIO, HTML_DEFAULT_ASPECT_RATIO);
+                    if (aspectRatio <= 0.0f) {
+                        this.aspectRatio = HTML_DEFAULT_ASPECT_RATIO;
+                    }
                 }
 
                 if (this.html != null) {
-                    if (this.position == 't' && this.widthPercentage == 100 && this.heightPercentage <= 30) {
-                        this.inAppType = CTInAppType.CTInAppTypeHeaderHTML;
-                    } else if (this.position == 'b' && this.widthPercentage == 100 && this.heightPercentage <= 30) {
-                        this.inAppType = CTInAppType.CTInAppTypeFooterHTML;
-                    } else if (this.position == 'c' && this.widthPercentage == 90 && this.heightPercentage == 85) {
-                        this.inAppType = CTInAppType.CTInAppTypeInterstitialHTML;
-                    } else if (this.position == 'c' && this.widthPercentage == 100 && this.heightPercentage == 100) {
-                        this.inAppType = CTInAppType.CTInAppTypeCoverHTML;
-                    } else if (this.position == 'c' && this.widthPercentage == 90 && this.heightPercentage == 50) {
-                        this.inAppType = CTInAppType.CTInAppTypeHalfInterstitialHTML;
+                    switch (this.position) {
+                        case 't':
+                            if (this.aspectRatio != -1 || (this.widthPercentage == 100 && this.heightPercentage <= 30)) {
+                                this.inAppType = CTInAppType.CTInAppTypeHeaderHTML;
+                            }
+                            break;
+                        case 'b':
+                            if (this.aspectRatio != -1 || (this.widthPercentage == 100 && this.heightPercentage <= 30)) {
+                                this.inAppType = CTInAppType.CTInAppTypeFooterHTML;
+                            }
+                            break;
+                        case 'c':
+                            if (this.widthPercentage == 90 && this.heightPercentage == 85) {
+                                this.inAppType = CTInAppType.CTInAppTypeInterstitialHTML;
+                            } else if (this.widthPercentage == 100 && this.heightPercentage == 100) {
+                                this.inAppType = CTInAppType.CTInAppTypeCoverHTML;
+                            } else if (this.widthPercentage == 90 && this.heightPercentage == 50) {
+                                this.inAppType = CTInAppType.CTInAppTypeHalfInterstitialHTML;
+                            }
+                            break;
                     }
                 }
             }
         } catch (JSONException e) {
             this.error = "Invalid JSON";
         }
+    }
+
+    static long defaultTtl() {
+        return (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS) / 1000;
     }
 
     private boolean validateNotifBundle(Bundle notif) {
