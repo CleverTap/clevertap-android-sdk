@@ -344,7 +344,7 @@ public class DeviceInfo {
                         return windowContext.getSystemService(WindowManager.class);
                     }
                 }
-            } catch (UnsupportedOperationException e) {
+            } catch (Exception e) {
                 Logger.v("Window context creation failed: " + e.getMessage());
             }
         }
