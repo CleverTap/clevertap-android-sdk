@@ -65,6 +65,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean sslPinning;
     private boolean useGoogleAdId;
     private int encryptionLevel;
+    private final boolean encryptionInTransit;
 
     /**
      * Creates a CleverTapInstanceConfig with meta data from manifest file
@@ -168,6 +169,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         for (PushType pushType: config.pushTypes) {
             addPushType(pushType);
         }
+        this.encryptionInTransit = config.encryptionInTransit;
     }
 
     private CleverTapInstanceConfig(
@@ -207,6 +209,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             this.encryptionLevel = 0;
         }
         buildPushProvidersFromManifest(manifest);
+        this.encryptionInTransit = manifest.isEncryptionInTransitEnabled();
     }
 
     private void buildPushProvidersFromManifest(ManifestInfo manifest) {
@@ -310,6 +313,12 @@ public class CleverTapInstanceConfig implements Parcelable {
                     }
                 }
             }
+            if (configJsonObject.has(KEY_ENCRYPTION_IN_TRANSIT)) { // You'll need a KEY_ENCRYPTION_IN_TRANSIT constant
+                this.encryptionInTransit = configJsonObject.getBoolean(KEY_ENCRYPTION_IN_TRANSIT);
+            } else {
+                // Encryption is disabled by default.
+                this.encryptionInTransit = false;
+            }
         } catch (Throwable t) {
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
             throw (t);
@@ -339,6 +348,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         beta = in.readByte() != 0x00;
         identityKeys = in.createStringArray();
         encryptionLevel = in.readInt();
+        encryptionInTransit = in.readByte() != 0x00;
         try {
             JSONArray allowedTypesJsonArray = new JSONArray(in.readString());
             for (int i = 0; i < allowedTypesJsonArray.length(); i++) {
@@ -514,6 +524,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
         dest.writeStringArray(identityKeys);
         dest.writeInt(encryptionLevel);
+        dest.writeByte((byte) (encryptionInTransit ? 0x01 : 0x00));
         String allowTypesString = getPushTypesArray().toString();
         dest.writeString(allowTypesString);
     }
@@ -572,6 +583,11 @@ public class CleverTapInstanceConfig implements Parcelable {
         return encryptionLevel;
     }
 
+    public boolean isEncryptionInTransitEnabled() {
+        return encryptionInTransit;
+    }
+
+
     //Keys used by the SDK
     private static final String KEY_ACCOUNT_ID = "accountId";
     private static final String KEY_ACCOUNT_TOKEN = "accountToken";
@@ -595,7 +611,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private static final String KEY_PACKAGE_NAME = "packageName";
     public static final String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
     private static final String KEY_PUSH_TYPES = "allowedPushTypes";
-
+    private static final String KEY_ENCRYPTION_IN_TRANSIT = "encryptionInTransit";
     String toJSONString() {
         JSONObject configJsonObject = new JSONObject();
         try {
@@ -619,6 +635,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(KEY_PACKAGE_NAME, getPackageName());
             configJsonObject.put(KEY_BETA, isBeta());
             configJsonObject.put(KEY_ENCRYPTION_LEVEL , getEncryptionLevel());
+            configJsonObject.put(KEY_ENCRYPTION_IN_TRANSIT , encryptionInTransit);
             JSONArray pushTypesArray = getPushTypesArray();
             configJsonObject.put(KEY_PUSH_TYPES, pushTypesArray);
 
