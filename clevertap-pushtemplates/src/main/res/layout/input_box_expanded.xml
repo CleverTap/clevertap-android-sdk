@@ -76,7 +76,6 @@
             android:adjustViewBounds="true"
             android:src="@android:drawable/btn_star"/>
 
-        <!--        todo check this colour-->
         <TextView
             android:id="@+id/msg"
             android:layout_width="match_parent"
