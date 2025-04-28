@@ -28,7 +28,8 @@ class CleverTapFixtures {
             emptyArray<String>(),
             0,
             "hps,hps_token,com.clevertap.android.hms.HmsPushProvider,com.huawei.hms.push.HmsMessageService",
-            null
+            null,
+            false
         )
 
         fun provideCleverTapInstanceConfig(): CleverTapInstanceConfig =
