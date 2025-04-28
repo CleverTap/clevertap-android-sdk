@@ -293,7 +293,7 @@ public class InAppController implements InAppListener {
         } else {
             inAppActionHandler.launchPushPermissionPrompt(
                     fallbackToSettings,
-                    (Activity) -> prepareNotificationForDisplay(jsonObject));
+                    activity -> prepareNotificationForDisplay(jsonObject));
         }
     }
 

@@ -192,19 +192,25 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     @Override
     protected void onResume() {
         super.onResume();
-        pushPermissionHandler.onActivityResume(this);
+        if (pushPermissionHandler != null) {
+            pushPermissionHandler.onActivityResume(this);
+        }
     }
 
     @Override
     public void didClickForHardPermissionWithFallbackSettings(boolean fallbackToSettings) {
-        pushPermissionHandler.requestPermission(this, fallbackToSettings);
+        if (pushPermissionHandler != null) {
+            pushPermissionHandler.requestPermission(this, fallbackToSettings);
+        }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
             @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        pushPermissionHandler.onRequestPermissionsResult(this, requestCode, grantResults);
+        if (pushPermissionHandler != null) {
+            pushPermissionHandler.onRequestPermissionsResult(this, requestCode, grantResults);
+        }
     }
 
     @Override

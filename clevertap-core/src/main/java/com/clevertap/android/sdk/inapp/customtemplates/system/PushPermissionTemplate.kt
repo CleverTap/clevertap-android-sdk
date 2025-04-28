@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.function
 
 internal object PushPermissionTemplate {
     private const val NAME = "ctsystem_pushpermission"
+    // Indicates whether to fallback to system settings when permission is denied
     private const val FALLBACK_TO_SETTINGS_ARG = "fbSettings"
 
     fun createTemplate(systemActionHandler: InAppActionHandler): CustomTemplate {

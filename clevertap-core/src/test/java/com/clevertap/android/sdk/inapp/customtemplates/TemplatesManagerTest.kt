@@ -6,13 +6,15 @@ import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.createCtInAppNotification
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
-import com.clevertap.android.sdk.inapp.customtemplates.system.OpenUrlTemplate
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
-import io.mockk.*
+import io.mockk.called
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.json.JSONObject
-import org.junit.*
+import org.junit.After
+import org.junit.Assert.assertThrows
 import org.junit.Test
-import org.junit.jupiter.api.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -117,7 +119,7 @@ class TemplatesManagerTest {
                 }
             )
         }
-        assertThrows<CustomTemplateException> {
+        assertThrows(CustomTemplateException::class.java) {
             createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         }
     }
@@ -133,7 +135,7 @@ class TemplatesManagerTest {
             )
         }
 
-        assertThrows<CustomTemplateException> {
+        assertThrows(CustomTemplateException::class.java) {
             createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         }
     }
@@ -152,7 +154,7 @@ class TemplatesManagerTest {
             )
         }
 
-        assertThrows<CustomTemplateException> {
+        assertThrows(CustomTemplateException::class.java) {
             createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         }
     }
@@ -371,7 +373,7 @@ class TemplatesManagerTest {
     }
 
     private fun createTemplatesManager(ctConfig: CleverTapInstanceConfig): TemplatesManager {
-        return TemplatesManager.createInstance(ctConfig, systemTemplates)
+        return TemplatesManager.createInstance(ctConfig, HashSet(systemTemplates))
     }
 
     private val simpleTemplateNotificationJson = JSONObject(
