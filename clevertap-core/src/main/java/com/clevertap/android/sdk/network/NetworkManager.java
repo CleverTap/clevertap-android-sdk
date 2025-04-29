@@ -648,6 +648,11 @@ public class NetworkManager {
     @NonNull
     private Response sendQueueApi(EventGroup eventGroup, SendQueueRequestBody body) {
         Response response = ctApiWrapper.getCtApi().sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
+        if (config.isEncryptionInTransitEnabled()) {
+
+        } else {
+            response = ctApiWrapper.getCtApi().sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
+        }
         return response;
     }
 

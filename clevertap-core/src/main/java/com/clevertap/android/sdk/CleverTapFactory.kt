@@ -3,6 +3,7 @@ package com.clevertap.android.sdk
 import android.content.Context
 import com.clevertap.android.sdk.CTPreferenceCache.Companion.getInstance
 import com.clevertap.android.sdk.StoreProvider.Companion.getInstance
+import com.clevertap.android.sdk.cryption.CTKeyGenerator
 import com.clevertap.android.sdk.cryption.CryptFactory
 import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.cryption.CryptMigrator
@@ -105,9 +106,10 @@ internal object CleverTapFactory {
             context = context,
             accountId = config.accountId
         )
+        val ctKeyGenerator = CTKeyGenerator(cryptRepository = repository)
         val cryptFactory = CryptFactory(
-            context = context,
-            accountId = config.accountId
+            accountId = config.accountId,
+            ctKeyGenerator = ctKeyGenerator
         )
         val cryptHandler = CryptHandler(
             encryptionLevel = fromInt(value = config.encryptionLevel),
