@@ -32,6 +32,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
 import com.clevertap.android.sdk.inapp.evaluation.EventType;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
+import com.clevertap.android.sdk.network.api.CtApi;
 import com.clevertap.android.sdk.network.api.CtApiWrapper;
 import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody;
 import com.clevertap.android.sdk.network.api.EncryptedSendQueueRequestBody;
@@ -524,7 +525,7 @@ public class NetworkManager {
      */
     @WorkerThread
     private boolean processIncomingHeaders(final Context context, Response response) {
-        final String muteCommand = response.getHeaderValue(Constants.HEADER_MUTE);
+        final String muteCommand = response.getHeaderValue(CtApi.HEADER_MUTE);
         if (muteCommand != null && muteCommand.trim().length() > 0) {
             if (muteCommand.equals("true")) {
                 setMuted(context, true);
@@ -534,13 +535,13 @@ public class NetworkManager {
             }
         }
 
-        final String domainName = response.getHeaderValue(Constants.HEADER_DOMAIN_NAME);
+        final String domainName = response.getHeaderValue(CtApi.HEADER_DOMAIN_NAME);
         Logger.v("Getting domain from header - " + domainName);
         if (domainName == null || domainName.trim().length() == 0) {
             return true;
         }
 
-        final String spikyDomainName = response.getHeaderValue(Constants.SPIKY_HEADER_DOMAIN_NAME);
+        final String spikyDomainName = response.getHeaderValue(CtApi.SPIKY_HEADER_DOMAIN_NAME);
         Logger.v("Getting spiky domain from header - " + spikyDomainName);
 
         setMuted(context, false);
@@ -743,7 +744,7 @@ public class NetworkManager {
             return false;
         }
 
-        String newDomain = response.getHeaderValue(Constants.HEADER_DOMAIN_NAME);
+        String newDomain = response.getHeaderValue(CtApi.HEADER_DOMAIN_NAME);
 
         if (newDomain != null && !newDomain.trim().isEmpty() && hasDomainChanged(newDomain)) {
             setDomain(context, newDomain);

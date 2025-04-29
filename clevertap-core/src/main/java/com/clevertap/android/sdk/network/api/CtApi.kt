@@ -28,19 +28,36 @@ internal class CtApi(
         const val DEFAULT_CONTENT_TYPE = "application/json; charset=utf-8"
         const val DEFAULT_QUERY_PARAM_OS = "Android"
 
+        // Request Headers
         const val HEADER_CUSTOM_HANDSHAKE = "X-CleverTap-Handshake-Domain"
+        const val HEADER_CONTENT_TYPE = "Content-Type"
+        const val HEADER_ACCOUNT_ID = "X-CleverTap-Account-ID"
+        const val HEADER_ACCOUNT_TOKEN = "X-CleverTap-Token"
+        const val HEADER_ENCRYPTION_ENABLED = "X-CleverTap-Encryption-Enabled"
+
+        // Response Headers
+        const val HEADER_MUTE: String = "X-WZRK-MUTE"
+        const val HEADER_DOMAIN_NAME: String = "X-WZRK-RD"
+        const val SPIKY_HEADER_DOMAIN_NAME: String = "X-WZRK-SPIKY-RD"
+
+        // Query Parameter Keys
+        const val QUERY_PARAM_OS_KEY = "os"
+        const val QUERY_PARAM_T_KEY = "t"
+        const val QUERY_PARAM_Z_KEY = "z"
     }
 
     private val defaultHeaders: Map<String, String> = mapOf(
-        "Content-Type" to DEFAULT_CONTENT_TYPE,
-        "X-CleverTap-Account-ID" to accountId,
-        "X-CleverTap-Token" to accountToken
+        HEADER_CONTENT_TYPE to DEFAULT_CONTENT_TYPE,
+        HEADER_ACCOUNT_ID to accountId,
+        HEADER_ACCOUNT_TOKEN to accountToken
     )
     private val defaultQueryParams: Map<String, String> = mapOf(
-        "os" to DEFAULT_QUERY_PARAM_OS,
-        "t" to sdkVersion,
-        "z" to accountId
+        QUERY_PARAM_OS_KEY to DEFAULT_QUERY_PARAM_OS,
+        QUERY_PARAM_T_KEY to sdkVersion,
+        QUERY_PARAM_Z_KEY to accountId
     )
+    private val encryptionHeader = HEADER_ENCRYPTION_ENABLED to "true"
+
     private val spikyRegionSuffix = "-spiky"
     var currentRequestTimestampSeconds = 0
         private set
@@ -48,13 +65,18 @@ internal class CtApi(
     fun sendQueue(
         isViewedEvent: Boolean,
         body: String,
-        isEncrypted: Boolean
+        isEncrypted: Boolean = false
     ): Response =
         httpClient.execute(
             createRequest(
                 baseUrl = getActualDomain(isViewedEvent = isViewedEvent) ?: defaultDomain,
                 relativeUrl = "a1",
-                body = body
+                body = body,
+                headers = if (isEncrypted) {
+                    defaultHeaders.plus(encryptionHeader)
+                } else {
+                    defaultHeaders
+                }
             )
         )
 

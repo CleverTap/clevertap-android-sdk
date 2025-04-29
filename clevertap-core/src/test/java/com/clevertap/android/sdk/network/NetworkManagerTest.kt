@@ -42,6 +42,7 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var ctApi: CtApi
     private lateinit var mockHttpClient: MockHttpClient
     @Mock private lateinit var ctApiWrapper : CtApiWrapper
+    @Mock private lateinit var encryptionManager: NetworkEncryptionManager
 
     @Before
     fun setUpNetworkManager() {
@@ -186,7 +187,8 @@ class NetworkManagerTest : BaseTestCase() {
             lockManager,
             Validator(),
             inAppResponse,
-            ctApiWrapper
+            ctApiWrapper,
+            encryptionManager
         )
     }
 
