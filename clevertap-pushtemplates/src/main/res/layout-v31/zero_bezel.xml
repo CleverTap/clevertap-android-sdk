@@ -37,9 +37,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/metadata_title_margin_vertical"
             tools:text="title"
-            android:textAppearance="@style/PushTitle"
-            android:textColor="@color/white" />
-<!--        todo check this colour-->
+            android:textAppearance="@style/PushTitle" />
 
         <TextView
             android:id="@+id/msg"
@@ -48,8 +46,7 @@
             android:layout_below="@+id/title"
             android:layout_alignStart="@id/title"
             tools:text="message"
-            android:textAppearance="@style/PushMessageMultiLine"
-            android:textColor="@color/white" />
+            android:textAppearance="@style/PushMessageMultiLine"/>
 
     </RelativeLayout>
 

@@ -32,9 +32,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             tools:text="title"
-            android:textAppearance="@style/PushTitle"
-            android:textColor="@color/white" />
-        <!--        todo check this colour-->
+            android:textAppearance="@style/PushTitle" />
         <TextView
             android:id="@+id/msg"
             android:layout_width="match_parent"
@@ -44,8 +42,7 @@
             android:ellipsize="end"
             android:maxLines="2"
             tools:text="message message message"
-            android:textAppearance="@style/PushMessage"
-            android:textColor="@color/white" />
+            android:textAppearance="@style/PushMessage" />
 
     </RelativeLayout>
 </RelativeLayout>

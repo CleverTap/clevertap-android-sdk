@@ -31,7 +31,6 @@
             android:layout_weight="0.5"
             android:orientation="vertical">
 
-<!--            todo check colors here-->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
