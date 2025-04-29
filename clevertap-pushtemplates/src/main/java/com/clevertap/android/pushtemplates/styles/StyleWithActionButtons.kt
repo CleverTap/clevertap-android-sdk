@@ -17,7 +17,7 @@ internal abstract class StyleWithActionButtons(private var renderer: TemplateRen
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || this is InputBoxStyle) {
             // Make sure the notification in collapsed state doesn't take up action buttons
             // InputBox Template use Android CTAs for all API levels
-            renderer.attachActionButtons(builder, renderer.actionButtons)
+            renderer.setActionButtons(context, extras, notificationId, builder, renderer.actions)
         }
         return builder
     }

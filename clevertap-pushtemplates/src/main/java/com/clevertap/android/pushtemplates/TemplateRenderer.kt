@@ -24,8 +24,6 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.interfaces.AudibleNotification
-import com.clevertap.android.sdk.isNotNullAndEmpty
-import com.clevertap.android.sdk.pushnotification.ActionButton
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
@@ -318,8 +316,9 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         }
     }
 
-    override val actionButtonIconKey: String
-        get() = Constants.NOTIF_ICON
+    override fun getActionButtonIconKey(): String {
+        return PT_NOTIF_ICON
+    }
 
     override fun getCollapseKey(extras: Bundle): Any? {
         return pt_collapse_key
@@ -456,7 +455,20 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         }
     }
 
-    override fun getActionButtons(
+    override fun setActionButtons(
+        context: Context?,
+        extras: Bundle?,
+        notificationId: Int,
+        nb: Builder,
+        actions: JSONArray?
+    ): Builder {
+        actionButtons.forEach { button ->
+            nb.addAction(button.icon, button.label, button.pendingIntent)
+        }
+        return nb
+    }
+
+    private fun getActionButtons(
         context: Context,
         extras: Bundle,
         notificationId: Int,

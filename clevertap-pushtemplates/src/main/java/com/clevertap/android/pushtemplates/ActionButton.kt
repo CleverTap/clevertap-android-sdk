@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.pushnotification
+package com.clevertap.android.pushtemplates
 
 import android.app.PendingIntent
 
