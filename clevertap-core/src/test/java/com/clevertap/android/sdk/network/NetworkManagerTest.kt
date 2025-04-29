@@ -63,7 +63,7 @@ class NetworkManagerTest : BaseTestCase() {
     @Test
     fun test_initHandshake_muteHeadersTrue_neverCallSuccessCallback() {
         val callback = Mockito.mock(Runnable::class.java)
-        mockHttpClient.responseHeaders = mapOf(Constants.HEADER_MUTE to listOf("true"))
+        mockHttpClient.responseHeaders = mapOf(CtApi.HEADER_MUTE to listOf("true"))
         networkManager.initHandshake(REGULAR, callback)
         Mockito.verify(callback, Mockito.never()).run()
     }
@@ -71,7 +71,7 @@ class NetworkManagerTest : BaseTestCase() {
     @Test
     fun test_initHandshake_muteHeadersFalse_callSuccessCallback() {
         val callback = Mockito.mock(Runnable::class.java)
-        mockHttpClient.responseHeaders = mapOf(Constants.HEADER_MUTE to listOf("false"))
+        mockHttpClient.responseHeaders = mapOf(CtApi.HEADER_MUTE to listOf("false"))
         networkManager.initHandshake(REGULAR, callback)
         Mockito.verify(callback).run()
     }
@@ -84,8 +84,8 @@ class NetworkManagerTest : BaseTestCase() {
         // we only use changed domain when region is not configured
         ctApi.region = null
         mockHttpClient.responseHeaders = mapOf(
-            Constants.HEADER_DOMAIN_NAME to listOf(domain),
-            Constants.SPIKY_HEADER_DOMAIN_NAME to listOf(spikyDomain)
+            CtApi.HEADER_DOMAIN_NAME to listOf(domain),
+            CtApi.SPIKY_HEADER_DOMAIN_NAME to listOf(spikyDomain)
         )
         networkManager.initHandshake(REGULAR, callback)
 
