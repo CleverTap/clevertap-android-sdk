@@ -3,10 +3,10 @@ import android.content.Context
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.view.View
+import com.clevertap.android.pushtemplates.ActionButton
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.pushnotification.ActionButton
 
 internal open class ActionButtonsContentView(context: Context, layoutId: Int, renderer: TemplateRenderer) :
     ContentView(context, layoutId, renderer) {

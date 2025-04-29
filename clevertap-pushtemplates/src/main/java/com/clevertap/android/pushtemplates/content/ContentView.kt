@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
-import com.clevertap.android.sdk.isNotNullAndEmpty
+import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
 internal open class ContentView(
     internal var context: Context,

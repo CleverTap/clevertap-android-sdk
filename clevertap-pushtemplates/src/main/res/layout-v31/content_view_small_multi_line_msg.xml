@@ -16,11 +16,13 @@
 
         <TextView
             android:id="@+id/title"
+            android:textColor="@color/lightBlack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/metadata_title_margin_horizontal"
             android:layout_alignParentStart="true"
             android:layout_toStartOf="@+id/large_icon"
+            android:layout_marginBottom="6dp"
             tools:text="title"
             android:maxLines="1"
             android:ellipsize="end"
@@ -34,9 +36,11 @@
             android:layout_alignStart="@id/title"
             android:layout_alignParentStart="true"
             android:layout_toStartOf="@+id/large_icon"
+            android:layout_marginBottom="8dp"
             android:maxLines="3"
             android:ellipsize="end"
             tools:text="message message"
+            android:lineSpacingExtra="3sp"
             android:textAppearance="@style/PushMessageMultiLine"/>
 
 
