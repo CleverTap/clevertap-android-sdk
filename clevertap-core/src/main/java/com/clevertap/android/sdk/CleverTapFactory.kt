@@ -292,19 +292,19 @@ internal object CleverTapFactory {
             aesgcm = cryptFactory.getAesGcmCrypt()
         )
         val networkManager = NetworkManager(
-            context,
-            config,
-            deviceInfo,
-            coreMetaData,
-            validationResultStack,
-            controllerManager,
-            baseDatabaseManager,
-            callbackManager,
-            ctLockManager,
-            validator,
-            inAppResponse,
-            ctApiWrapper,
-            encryptionManager
+            context = context,
+            config = config,
+            deviceInfo = deviceInfo,
+            coreMetaData = coreMetaData,
+            validationResultStack = validationResultStack,
+            controllerManager = controllerManager,
+            databaseManager = baseDatabaseManager,
+            callbackManager = callbackManager,
+            ctLockManager = ctLockManager,
+            validator = validator,
+            inAppResponse = inAppResponse,
+            ctApiWrapper = ctApiWrapper,
+            encryptionManager = encryptionManager
         )
         coreState.networkManager = networkManager
 
