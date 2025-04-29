@@ -641,8 +641,14 @@ public class NetworkManager {
         if (eventGroup == EventGroup.VARIABLES) {
             return ctApiWrapper.getCtApi().defineVars(body);
         } else {
-            return ctApiWrapper.getCtApi().sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
+            return sendQueueApi(eventGroup, body);
         }
+    }
+
+    @NonNull
+    private Response sendQueueApi(EventGroup eventGroup, SendQueueRequestBody body) {
+        Response response = ctApiWrapper.getCtApi().sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
+        return response;
     }
 
     private boolean handleVariablesResponse(@NonNull Response response) {
