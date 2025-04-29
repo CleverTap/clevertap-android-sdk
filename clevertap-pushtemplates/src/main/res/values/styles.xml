@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="PushTitle" parent="android:Widget.TextView">
-        <item name="android:textColor">@color/titleColor/item>
+        <item name="android:textColor">@color/titleColor</item>
         <item name="android:textSize">@dimen/title_font_size</item>
         <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>
