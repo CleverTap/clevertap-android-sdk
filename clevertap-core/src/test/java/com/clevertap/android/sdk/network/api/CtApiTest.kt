@@ -30,7 +30,7 @@ class CtApiTest {
             "X-CleverTap-Token" to CtApiTestProvider.ACCOUNT_TOKEN
         )
 
-        val sendQueueResponse = ctApi.sendQueue(false, getEmptyQueueBody())
+        val sendQueueResponse = ctApi.sendQueue(false, getEmptyQueueBody().toString(), false)
         assertEquals(expectedHeaders, sendQueueResponse.request.headers)
 
         val handshakeResponse = ctApi.performHandshakeForDomain(false)
@@ -84,7 +84,7 @@ class CtApiTest {
 
     @Test
     fun test_sendQueueAndVariables_updateCurrentRequestTimestamp() {
-        ctApi.sendQueue(true, getEmptyQueueBody())
+        ctApi.sendQueue(true, getEmptyQueueBody().toString(), false)
         val timestamp = ctApi.currentRequestTimestampSeconds
         Thread.sleep(1000)
         ctApi.defineVars(getEmptyQueueBody())
@@ -93,7 +93,7 @@ class CtApiTest {
 
     @Test
     fun test_sendQueue_attachDefaultQueryParams() {
-        val request = ctApi.sendQueue(false, getEmptyQueueBody()).request
+        val request = ctApi.sendQueue(false, getEmptyQueueBody().toString(), false).request
         val urlString = request.url.toString()
         assertContains(urlString, "os=Android")
         assertContains(urlString, "t=${CtApiTestProvider.SDK_VERSION}")

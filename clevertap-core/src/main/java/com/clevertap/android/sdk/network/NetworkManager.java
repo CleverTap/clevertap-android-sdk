@@ -34,6 +34,9 @@ import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.network.api.CtApiWrapper;
 import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody;
+import com.clevertap.android.sdk.network.api.EncryptedSendQueueRequestBody;
+import com.clevertap.android.sdk.network.api.EncryptionResult;
+import com.clevertap.android.sdk.network.api.EncryptionSuccess;
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody;
 import com.clevertap.android.sdk.network.http.Response;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
@@ -78,6 +81,8 @@ public class NetworkManager {
     private final CoreMetaData coreMetaData;
 
     private final CtApiWrapper ctApiWrapper;
+
+    private final NetworkEncryptionManager encryptionManager;
 
     private final BaseDatabaseManager databaseManager;
 
@@ -134,7 +139,8 @@ public class NetworkManager {
             CTLockManager ctLockManager,
             Validator validator,
             InAppResponse inAppResponse,
-            final CtApiWrapper ctApiWrapper
+            final CtApiWrapper ctApiWrapper,
+            final NetworkEncryptionManager encryptionManager
     ) {
         this.context = context;
         this.config = config;
@@ -148,6 +154,7 @@ public class NetworkManager {
         this.controllerManager = controllerManager;
         databaseManager = baseDatabaseManager;
         this.ctApiWrapper = ctApiWrapper;
+        this.encryptionManager = encryptionManager;
 
         cleverTapResponses.add(inAppResponse);
         cleverTapResponses.add(new MetadataResponse(config, deviceInfo, this));
@@ -647,11 +654,36 @@ public class NetworkManager {
 
     @NonNull
     private Response sendQueueApi(EventGroup eventGroup, SendQueueRequestBody body) {
-        Response response = ctApiWrapper.getCtApi().sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
-        if (config.isEncryptionInTransitEnabled()) {
 
+        Response response;
+        if (config.isEncryptionInTransitEnabled()) {
+            EncryptionResult encryptionResult = encryptionManager.encryptResponse(body.toString());
+            String sessionEncryptionKey = encryptionManager.sessionEncryptionKey();
+
+            if (encryptionResult instanceof EncryptionSuccess) {
+                String bodyEnc = new EncryptedSendQueueRequestBody(
+                        ((EncryptionSuccess) encryptionResult).getData(),
+                        sessionEncryptionKey,
+                        ((EncryptionSuccess) encryptionResult).getIv()
+                ).toJsonString();
+                response = ctApiWrapper.getCtApi().sendQueue(
+                        eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+                        bodyEnc,
+                        true
+                );
+            } else {
+                response = ctApiWrapper.getCtApi().sendQueue(
+                        eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+                        body.toString(),
+                        false
+                );
+            }
         } else {
-            response = ctApiWrapper.getCtApi().sendQueue(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED, body);
+            response = ctApiWrapper.getCtApi().sendQueue(
+                    eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+                    body.toString(),
+                    false
+            );
         }
         return response;
     }

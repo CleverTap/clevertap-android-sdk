@@ -25,9 +25,11 @@ internal class NetworkEncryptionManager(
         return sessionKey ?: keyGenerator.generateSecretKey().also { sessionKey = it }
     }
 
-    private fun sessionKeyBytes() : ByteArray? {
+    private fun sessionKeyBytes() : ByteArray {
         return sessionKeyForEncryption().encoded
     }
+
+    fun sessionEncryptionKey() = Base64.encodeToString(sessionKeyBytes(), Base64.NO_WRAP)
 
     /**
      * Returns EncryptionResult which contains encrypted response, iv
