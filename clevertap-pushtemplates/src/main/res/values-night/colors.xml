@@ -4,4 +4,5 @@
     <color name="metaColor">#C9C9C9</color>
     <color name="messageColor">#A0A0A0</color>
     <color name="buttonBackground">#000000</color>
+    <color name="buttonClicked">#121314</color>
 </resources>
