@@ -56,6 +56,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.security.SecureRandom
 import androidx.core.content.edit
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
+import com.clevertap.android.sdk.network.api.EncryptedResponseBody
+import com.clevertap.android.sdk.network.api.EncryptionFailure
 
 internal class NetworkManager(
     private val context: Context,
@@ -560,7 +564,9 @@ internal class NetworkManager(
      * @return True if the queue was sent successfully, false otherwise.
      */
     fun sendQueue(
-        context: Context, eventGroup: EventGroup, queue: JSONArray?,
+        context: Context,
+        eventGroup: EventGroup,
+        queue: JSONArray?,
         caller: String?
     ): Boolean {
         if (queue == null || queue.length() <= 0) {
@@ -573,20 +579,28 @@ internal class NetworkManager(
             return false
         }
 
-        val endpointId = fromEventGroup(eventGroup)
-        val queueHeader = getQueueHeader(context, caller)
+        val endpointId: EndpointId = fromEventGroup(eventGroup)
+        val queueHeader: JSONObject? = getQueueHeader(context, caller)
         applyQueueHeaderListeners(queueHeader, endpointId, queue.optJSONObject(0).has("profile"))
 
-        val body = SendQueueRequestBody(queueHeader, queue)
-        logger.debug(config.accountId, "Send queue contains " + queue.length() + " items: " + body)
-
+        val requestBody = SendQueueRequestBody(queueHeader, queue)
+        logger.debug(config.accountId, "Send queue contains " + queue.length() + " items: " + requestBody)
         try {
-            callApiForEventGroup(eventGroup, body).use { response ->
+            callApiForEventGroup(eventGroup, requestBody).use { response ->
                 networkRetryCount = 0
                 val isProcessed = if (eventGroup == EventGroup.VARIABLES) {
                     handleVariablesResponse(response)
                 } else {
-                    handleSendQueueResponse(response, body, endpointId)
+                    handleSendQueueResponse(
+                        response = response,
+                        isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody),
+                        notifyNetworkHeaderListeners = {
+                            notifyHeaderListeners(
+                                requestBody,
+                                endpointId
+                            )
+                        }
+                    )
                 }
 
                 if (isProcessed) {
@@ -608,6 +622,23 @@ internal class NetworkManager(
                 callbackManager.failureFlushListener.failureFlush(context)
             }
             return false
+        }
+    }
+
+    private fun notifyHeaderListeners(
+        requestBody: SendQueueRequestBody,
+        endpointId: EndpointId
+    ) {
+        if (requestBody.queueHeader != null) {
+            for (listener: NetworkHeadersListener in mNetworkHeadersListeners) {
+                val isProfile: Boolean =
+                    requestBody.queue.optJSONObject(0).has("profile")
+                listener.onSentHeaders(
+                    allHeaders = requestBody.queueHeader,
+                    endpointId = endpointId,
+                    eventType = fromBoolean(isProfile)
+                )
+            }
         }
     }
 
@@ -749,15 +780,16 @@ internal class NetworkManager(
 
     @WorkerThread
     private fun handleSendQueueResponse(
-        response: Response, body: SendQueueRequestBody,
-        endpointId: EndpointId
+        response: Response,
+        isFullResponse: Boolean,
+        notifyNetworkHeaderListeners: () -> Unit
     ): Boolean {
         if (!response.isSuccess()) {
             handleSendQueueResponseError(response)
             return false
         }
 
-        val newDomain = response.getHeaderValue(CtApi.HEADER_DOMAIN_NAME)
+        val newDomain: String? = response.getHeaderValue(HEADER_DOMAIN_NAME)
 
         if (newDomain != null && newDomain.trim { it <= ' ' }.isNotEmpty() && hasDomainChanged(newDomain)) {
             setDomain(context, newDomain)
@@ -768,12 +800,7 @@ internal class NetworkManager(
             return false
         }
 
-        if (body.queueHeader != null) {
-            for (listener in mNetworkHeadersListeners) {
-                val isProfile = body.queue.optJSONObject(0).has("profile")
-                listener.onSentHeaders(body.queueHeader, endpointId, fromBoolean(isProfile))
-            }
-        }
+        notifyNetworkHeaderListeners()
 
         if (!processIncomingHeaders(context, response)) {
             return false
@@ -783,12 +810,35 @@ internal class NetworkManager(
         lastRequestTimestamp = currentRequestTimestamp
         setFirstRequestTimestampIfNeeded(currentRequestTimestamp)
 
-        val bodyString = response.readBody()
-        val bodyJson = bodyString.toJsonOrNull()
+        val isEncryptedResponse = response.getHeaderValue(HEADER_ENCRYPTION_ENABLED).toBoolean()
+        var bodyString: String? = response.readBody()
+        var bodyJson: JSONObject? = bodyString.toJsonOrNull()
+
+        if (isEncryptedResponse && bodyString != null) {
+            val responseBody = EncryptedResponseBody.fromJsonString(bodyString)
+
+            val decryptResponse = encryptionManager.decryptResponse(
+                response = responseBody.encryptedPayload,
+                iv = responseBody.iv
+            )
+            when (decryptResponse) {
+                is EncryptionFailure -> {
+                    return false // todo lp check if this should be considered as nw failure?
+                }
+                is EncryptionSuccess -> {
+                    // reassign before processing responses
+                    bodyString = decryptResponse.data
+                    bodyJson = bodyString.toJsonOrNull()
+                }
+            }
+
+        } else {
+            // no-op, we have assigned body already
+        }
+
         logger.verbose(config.accountId, "Processing response : $bodyJson")
 
-        val isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(body)
-        for (processor in cleverTapResponses) {
+        for (processor: CleverTapResponse in cleverTapResponses) {
             processor.isFullResponse = isFullResponse
             processor.processResponse(bodyJson, bodyString, context)
         }
