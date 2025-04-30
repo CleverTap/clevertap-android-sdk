@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.text.TextUtils
-import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CTLockManager
@@ -56,6 +55,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.security.SecureRandom
+import androidx.core.content.edit
 
 internal class NetworkManager(
     private val context: Context,
@@ -263,7 +263,7 @@ internal class NetworkManager(
     fun setI(context: Context, i: Long) {
         val prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ)
         val editor = prefs.edit()
-        editor.putLong(StorageHelper.storageKeyWithSuffix(config, Constants.KEY_I), i)
+        editor.putLong(StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_I), i)
         StorageHelper.persist(editor)
     }
 
@@ -271,7 +271,7 @@ internal class NetworkManager(
     fun setJ(context: Context, j: Long) {
         val prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ)
         val editor = prefs.edit()
-        editor.putLong(StorageHelper.storageKeyWithSuffix(config, Constants.KEY_J), j)
+        editor.putLong(StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_J), j)
         StorageHelper.persist(editor)
     }
 
@@ -284,7 +284,7 @@ internal class NetworkManager(
         return ctApiWrapper.ctApi.getActualDomain(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)
     }
 
-    val firstRequestTimestamp: Int
+    private val firstRequestTimestamp: Int
         get() = StorageHelper.getIntFromPrefs(
             context,
             config,
@@ -292,7 +292,7 @@ internal class NetworkManager(
             0
         )
 
-    var lastRequestTimestamp: Int
+    private var lastRequestTimestamp: Int
         get() = StorageHelper.getIntFromPrefs(
             context,
             config,
@@ -303,14 +303,14 @@ internal class NetworkManager(
             StorageHelper.putInt(
                 context,
                 StorageHelper.storageKeyWithSuffix(
-                    config,
+                    config.accountId,
                     Constants.KEY_LAST_TS
                 ),
                 ts
             )
         }
 
-    fun hasDomainChanged(newDomain: String): Boolean {
+    private fun hasDomainChanged(newDomain: String): Boolean {
         val oldDomain =
             StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null)
         return newDomain != oldDomain
@@ -521,7 +521,7 @@ internal class NetworkManager(
     @WorkerThread
     private fun processIncomingHeaders(context: Context, response: Response): Boolean {
         val muteCommand = response.getHeaderValue(CtApi.HEADER_MUTE)
-        if (muteCommand != null && muteCommand.trim { it <= ' ' }.length > 0) {
+        if (muteCommand != null && muteCommand.trim { it <= ' ' }.isNotEmpty()) {
             if (muteCommand == "true") {
                 setMuted(context, true)
                 return false
@@ -532,7 +532,7 @@ internal class NetworkManager(
 
         val domainName = response.getHeaderValue(CtApi.HEADER_DOMAIN_NAME)
         Logger.v("Getting domain from header - $domainName")
-        if (domainName == null || domainName.trim { it <= ' ' }.length == 0) {
+        if (domainName == null || domainName.trim { it <= ' ' }.isEmpty()) {
             return true
         }
 
@@ -759,10 +759,7 @@ internal class NetworkManager(
 
         val newDomain = response.getHeaderValue(CtApi.HEADER_DOMAIN_NAME)
 
-        if (newDomain != null && !newDomain.trim { it <= ' ' }.isEmpty() && hasDomainChanged(
-                newDomain
-            )
-        ) {
+        if (newDomain != null && newDomain.trim { it <= ' ' }.isNotEmpty() && hasDomainChanged(newDomain)) {
             setDomain(context, newDomain)
             logger.debug(
                 config.accountId,
@@ -879,7 +876,7 @@ internal class NetworkManager(
         logger.verbose(config.accountId, "Setting domain to $domainName")
         StorageHelper.putString(
             context,
-            StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_DOMAIN_NAME),
             domainName
         )
         ctApiWrapper.ctApi.cachedDomain = domainName
@@ -899,7 +896,7 @@ internal class NetworkManager(
         }
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS),
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_FIRST_TS),
             ts
         )
     }
@@ -909,7 +906,7 @@ internal class NetworkManager(
         logger.verbose(config.accountId, "Setting spiky domain to $spikyDomainName")
         StorageHelper.putString(
             context,
-            StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.SPIKY_KEY_DOMAIN_NAME),
             spikyDomainName
         )
         ctApiWrapper.ctApi.cachedSpikyDomain = spikyDomainName
@@ -930,7 +927,7 @@ internal class NetworkManager(
                 //if not empty, using prefs of new namespace to send ARP
                 //if empty, checking for old prefs
                 val prefs =
-                    if (!StorageHelper.getPreferences(context, nameSpaceKey).all.isEmpty()) {
+                    if (StorageHelper.getPreferences(context, nameSpaceKey).all.isNotEmpty()) {
                         //prefs point to new namespace
                         StorageHelper.getPreferences(context, nameSpaceKey)
                     } else {
@@ -1019,7 +1016,7 @@ internal class NetworkManager(
         }
         logger.verbose(config.accountId, "Completed ARP update for namespace key: $newKey")
         StorageHelper.persist(editor)
-        oldPrefs.edit().clear().apply()
+        oldPrefs.edit { clear() }
         return newPrefs
     }
 
@@ -1029,7 +1026,7 @@ internal class NetworkManager(
             val now = (System.currentTimeMillis() / 1000).toInt()
             StorageHelper.putInt(
                 context,
-                StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MUTED),
+                StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_MUTED),
                 now
             )
             setDomain(context, null)
@@ -1043,7 +1040,7 @@ internal class NetworkManager(
         } else {
             StorageHelper.putInt(
                 context,
-                StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MUTED),
+                StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_MUTED),
                 0
             )
         }
@@ -1054,9 +1051,8 @@ internal class NetworkManager(
         fun isNetworkOnline(context: Context): Boolean {
             try {
                 val cm =
-                    context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                        ?: // lets be optimistic, if we are truly offline we handle the exception
-                        return true
+                    context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                        ?: return true // lets be optimistic, if we are truly offline we handle the exception
                 @SuppressLint("MissingPermission") val netInfo = cm.activeNetworkInfo
                 return netInfo != null && netInfo.isConnected
             } catch (ignore: Exception) {
