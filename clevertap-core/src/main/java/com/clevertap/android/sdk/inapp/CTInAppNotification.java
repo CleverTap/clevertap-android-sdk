@@ -539,10 +539,9 @@ public class CTInAppNotification implements Parcelable {
                     Constants.KEY_BUTTONS) : null;
             if (buttonArray != null) {
                 for (int i = 0; i < buttonArray.length(); i++) {
-                    CTInAppNotificationButton inAppNotificationButton = new CTInAppNotificationButton().initWithJSON(
-                            buttonArray.getJSONObject(i));
-                    if (inAppNotificationButton != null && inAppNotificationButton.getError() == null) {
-                        this.buttons.add(inAppNotificationButton);
+                    JSONObject buttonJson = buttonArray.optJSONObject(1);
+                    if (buttonJson != null) {
+                        this.buttons.add(new CTInAppNotificationButton(buttonJson));
                         this.buttonCount++;
                     }
                 }
