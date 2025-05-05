@@ -1,7 +1,11 @@
 inputs:
   github-token:
     description: 'Github token to post JaCoCo report in a PR comment'
-    required: true
+    required: false
+  baseline-branch:
+    description: 'The branch to compare the JaCoCo report against'
+    required: false
+
 runs:
   using: "composite"
   steps:
@@ -89,22 +93,11 @@ runs:
 
 
    #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
-    - name: Setup Python
-      uses: actions/setup-python@v5.1.1
-      with:
-        python-version: '3.12'
-
-    - name: Publish JaCoCo Report in PR comment
+    - name: Post JaCoCo Report in PR comment
       if: ${{ inputs.github-token != '' }}
-      uses: MoranaApps/jacoco-report@v1.3.0
+      uses: ./.github/mini_flows/test_coverage_report
       with:
-        token: ${{ inputs.github-token }}
-        paths: |
-            **/build/reports/jacoco/**/*.xml
-        min-coverage-overall: 75
-        min-coverage-changed-files: 75
-        title: Code Coverage Release
-        fail-on-threshold: false
-        sensitivity: 'minimal'
-        update-comment: true
-        skip-not-changed: true
+        github-token: ${{ inputs.github-token }}
+        baseline-branch: ${{ inputs.baseline-branch }}
+        comment-title: 'Code Coverage Release'
+        test-release: true

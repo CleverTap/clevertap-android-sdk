@@ -32,6 +32,7 @@ jobs:
         uses: ./.github/mini_flows/test_and_coverage_debug
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          baseline-branch: develop
 
       - name: Build AARs (RELEASE)
         uses: ./.github/mini_flows/build_code_release
