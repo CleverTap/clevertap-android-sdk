@@ -815,12 +815,8 @@ internal class NetworkManager(
         var bodyJson: JSONObject? = bodyString.toJsonOrNull()
 
         if (isEncryptedResponse && bodyString != null) {
-            val responseBody = EncryptedResponseBody.fromJsonString(bodyString)
 
-            val decryptResponse = encryptionManager.decryptResponse(
-                response = responseBody.encryptedPayload,
-                iv = responseBody.iv
-            )
+            val decryptResponse = encryptionManager.decryptResponse(bodyString = bodyString)
             when (decryptResponse) {
                 is EncryptionFailure -> {
                     return false // todo lp check if this should be considered as nw failure?

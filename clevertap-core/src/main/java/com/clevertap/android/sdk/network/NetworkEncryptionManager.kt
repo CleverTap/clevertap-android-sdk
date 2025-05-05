@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.network
 import android.util.Base64
 import com.clevertap.android.sdk.cryption.AESGCMCrypt
 import com.clevertap.android.sdk.cryption.CTKeyGenerator
+import com.clevertap.android.sdk.network.api.EncryptedResponseBody
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 import com.clevertap.android.sdk.network.api.EncryptionResult
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
@@ -57,27 +58,34 @@ internal class NetworkEncryptionManager(
      * Returns EncryptionResult which contains encrypted response, iv
      */
     fun decryptResponse(
-        response: String,
-        iv: String // base64 encoded from BE
+        bodyString: String
     ): EncryptionResult {
 
-        val decodedResponse = Base64.decode(response, Base64.NO_WRAP)
-        val decodedIv = Base64.decode(iv, Base64.NO_WRAP)
-        val result =
-            aesgcm.performCryptOperation(
-                mode = Cipher.DECRYPT_MODE,
-                data = decodedResponse,
-                iv = decodedIv,
-                secretKey = sessionKeyForEncryption()
-            )
+        try {
+            val responseBody = EncryptedResponseBody.fromJsonString(bodyString)
+            val response = responseBody.encryptedPayload
+            val iv = responseBody.iv
 
-        return if (result != null) {
-            EncryptionSuccess(
-                data = String(result.encryptedBytes),
-                iv = String(result.iv)
-            )
-        } else {
-            EncryptionFailure
+            val decodedResponse = Base64.decode(response, Base64.NO_WRAP)
+            val decodedIv = Base64.decode(iv, Base64.NO_WRAP)
+            val result =
+                aesgcm.performCryptOperation(
+                    mode = Cipher.DECRYPT_MODE,
+                    data = decodedResponse,
+                    iv = decodedIv,
+                    secretKey = sessionKeyForEncryption()
+                )
+
+            return if (result != null) {
+                EncryptionSuccess(
+                    data = String(result.encryptedBytes),
+                    iv = String(result.iv)
+                )
+            } else {
+                EncryptionFailure
+            }
+        } catch (e: Exception) {
+            return EncryptionFailure
         }
     }
 
