@@ -1,14 +1,21 @@
+name: 'Test Coverage Comment Report'
+description: 'Action that posts JaCoCo coverage reports as pull request comments'
+
 inputs:
   github-token:
     description: 'Github token to post JaCoCo report in a PR comment'
     required: true
   baseline-branch:
     description: 'The branch to compare the JaCoCo report against'
+    required: false
+    default: ''
   comment-title:
     description: 'The title of the comment with the JaCoCo report'
+    required: false
     default: 'Code Coverage'
   test-release:
     description: 'Run tests and code coverage for release build'
+    required: false
     default: 'false'
 
 runs:
@@ -18,7 +25,7 @@ runs:
     - name: Set variables
       shell: bash
       run: |
-        if [ ${{ inputs.test-release }} == 'true' ]; then
+        if [ "${{ inputs.test-release }}" == 'true' ]; then
           echo "GRADLE_REPORT_TASK=jacocoTestReportRelease" >> $GITHUB_ENV
         else
           echo "GRADLE_REPORT_TASK=jacocoTestReportDebug" >> $GITHUB_ENV

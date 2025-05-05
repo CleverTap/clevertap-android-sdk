@@ -2,9 +2,11 @@ inputs:
   github-token:
     description: 'Github token to post JaCoCo report in a PR comment'
     required: false
+    default: ''
   baseline-branch:
     description: 'The branch to compare the JaCoCo report against'
     required: false
+    default: ''
 
 runs:
   using: "composite"
