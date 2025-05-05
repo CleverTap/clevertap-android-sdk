@@ -1,0 +1,75 @@
+inputs:
+  github-token:
+    description: 'Github token to post JaCoCo report in a PR comment'
+    required: true
+  baseline-branch:
+    description: 'The branch to compare the JaCoCo report against'
+  comment-title:
+    description: 'The title of the comment with the JaCoCo report'
+    default: 'Code Coverage'
+  test-release:
+    description: 'Run tests and code coverage for release build'
+    default: 'false'
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Set variables
+      shell: bash
+      run: |
+        if [ ${{ inputs.test-release }} == 'true' ]; then
+          echo "GRADLE_REPORT_TASK=jacocoTestReportRelease" >> $GITHUB_ENV
+        else
+          echo "GRADLE_REPORT_TASK=jacocoTestReportDebug" >> $GITHUB_ENV
+        fi
+
+    - name: Checkout baseline branch
+      if: ${{ inputs.baseline-branch != '' }}
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.baseline-branch }}
+        path: baseline
+
+    - name: Generate baseline JaCoCo report
+      if: ${{ inputs.baseline-branch != '' }}
+      shell: bash
+      working-directory: ./baseline
+      run: ./gradlew $GRADLE_REPORT_TASK  -Pcoverage='true'
+
+    - name: Set baseline report path
+      if: ${{ inputs.baseline-branch != '' }}
+      shell: bash
+      run: |
+        echo "BASELINE_REPORTS=baseline/clevertap-*/build/reports/jacoco/**/*.xml" >> $GITHUB_ENV
+        pwd
+        echo "Baseline reports"
+        find baseline/clevertap-*/build/reports/jacoco/**/*.xml
+        echo "PR reports"
+        find clevertap-*/build/reports/jacoco/**/*.xml
+        echo "LL"
+        ll
+
+    - name: Setup Python
+      uses: actions/setup-python@v5.1.1
+      with:
+        python-version: '3.12'
+
+    - name: Publish JaCoCo Report in PR comment
+      uses: MoranaApps/jacoco-report@v1.3.0
+      with:
+        token: ${{ inputs.github-token }}
+        paths: clevertap-*/build/reports/jacoco/**/*.xml
+        baseline-paths: ${{ env.BASELINE_REPORTS }}
+        min-coverage-overall: 75
+        min-coverage-changed-files: 75
+        title: ${{ inputs.comment-title }}
+        fail-on-threshold: false
+        sensitivity: 'summary'
+        update-comment: true
+        skip-not-changed: true
+
+    - name: Cleanup baseline directory
+      if: ${{ inputs.baseline-branch != '' }}
+      shell: bash
+      run: rm -rf baseline
