@@ -311,7 +311,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     override fun setSmallIcon(smallIcon: Int, context: Context) {
         this.smallIcon = smallIcon
         try {
-            pt_small_icon = Utils.setBitMapColour(context, smallIcon, pt_small_icon_clr)
+            pt_small_icon = Utils.setBitMapColour(context, smallIcon, pt_small_icon_clr, PT_META_CLR_DEFAULTS)
         } catch (e: NullPointerException) {
             PTLog.debug("NPE while setting small icon color")
         }

@@ -51,7 +51,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("WeakerAccess")
@@ -605,15 +604,8 @@ public class Utils {
         return false;
     }
 
-    public static Bitmap setBitMapColour(Context context, int resourceID, String clr) {
-        if (clr == null || clr.isEmpty()) {
-            return null;
-        }
-
-        Integer color = getColourOrNull(clr);
-        if (color == null) {
-            return null;
-        }
+    public static Bitmap setBitMapColour(Context context, int resourceID, String clr, String defaultClr) {
+        Integer color = getColour(clr, defaultClr);
 
         try {
             Drawable mDrawable = ContextCompat.getDrawable(context, resourceID);

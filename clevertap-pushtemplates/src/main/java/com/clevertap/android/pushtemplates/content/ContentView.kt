@@ -55,7 +55,7 @@ internal open class ContentView(
                 "drawable",
                 context.packageName
             )
-            renderer.pt_dot_sep = Utils.setBitMapColour(context, renderer.pt_dot, renderer.pt_meta_clr)
+            renderer.pt_dot_sep = Utils.setBitMapColour(context, renderer.pt_dot, renderer.pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
         } catch (e: NullPointerException) {
             PTLog.debug("NPE while setting dot sep color")
         }
