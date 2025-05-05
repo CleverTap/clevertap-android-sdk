@@ -10,8 +10,8 @@ data class EncryptedResponseBody(
         fun fromJsonString(json: String) : EncryptedResponseBody {
             val jsonObject = JSONObject(json)
             return EncryptedResponseBody(
-                jsonObject.getString("encryptedPayload"),
-                jsonObject.getString("iv")
+                jsonObject.getString("itp"),
+                jsonObject.getString("itv")
             )
         }
     }
