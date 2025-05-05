@@ -56,9 +56,9 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.security.SecureRandom
 import androidx.core.content.edit
+import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
-import com.clevertap.android.sdk.network.api.EncryptedResponseBody
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 
 internal class NetworkManager(
@@ -524,8 +524,8 @@ internal class NetworkManager(
      */
     @WorkerThread
     private fun processIncomingHeaders(context: Context, response: Response): Boolean {
-        val muteCommand = response.getHeaderValue(CtApi.HEADER_MUTE)
-        if (muteCommand != null && muteCommand.trim { it <= ' ' }.isNotEmpty()) {
+        response.getHeaderValue(CtApi.HEADER_MUTE)?.trim()?.takeIf { it.isNotEmpty() }?.let { muteCommand ->
+            // muteCommand is guaranteed to be non-null and non-empty here
             if (muteCommand == "true") {
                 setMuted(context, true)
                 return false
@@ -536,7 +536,7 @@ internal class NetworkManager(
 
         val domainName = response.getHeaderValue(CtApi.HEADER_DOMAIN_NAME)
         Logger.v("Getting domain from header - $domainName")
-        if (domainName == null || domainName.trim { it <= ' ' }.isEmpty()) {
+        if (domainName.isNullOrBlank()) {
             return true
         }
 
@@ -791,7 +791,7 @@ internal class NetworkManager(
 
         val newDomain: String? = response.getHeaderValue(HEADER_DOMAIN_NAME)
 
-        if (newDomain != null && newDomain.trim { it <= ' ' }.isNotEmpty() && hasDomainChanged(newDomain)) {
+        if (newDomain.isNotNullAndBlank() && hasDomainChanged(newDomain)) {
             setDomain(context, newDomain)
             logger.debug(
                 config.accountId,
