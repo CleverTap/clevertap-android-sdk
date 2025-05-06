@@ -74,9 +74,31 @@ internal class NetworkManager(
     private val ctApiWrapper: CtApiWrapper,
     private val encryptionManager: NetworkEncryptionManager,
     private val ijRepo: IJRepo,
-    private val arpRepo: ArpRepo
+    private val arpRepo: ArpRepo,
+    val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
+        inAppResponse,
+        MetadataResponse(config, deviceInfo, ijRepo),
+        ARPResponse(config, validator, controllerManager, arpRepo),
+        ConsoleResponse(config),
+        InboxResponse(
+            config, ctLockManager,
+            callbackManager,
+            controllerManager
+        ),
+        PushAmpResponse(
+            context,
+            config,
+            databaseManager,
+            callbackManager,
+            controllerManager
+        ),
+        FetchVariablesResponse(config, controllerManager, callbackManager),
+        DisplayUnitResponse(config, callbackManager, controllerManager),
+        FeatureFlagResponse(config, controllerManager),
+        ProductConfigResponse(config, coreMetaData, controllerManager),
+        GeofenceResponse(config, callbackManager)
+    )
 ) {
-    val cleverTapResponses: MutableList<CleverTapResponse> = ArrayList()
 
     private val logger: Logger = config.logger
 
@@ -94,34 +116,6 @@ internal class NetworkManager(
 
     fun removeNetworkHeadersListener(listener: NetworkHeadersListener) {
         mNetworkHeadersListeners.remove(listener)
-    }
-
-    init {
-        cleverTapResponses.add(inAppResponse)
-        cleverTapResponses.add(MetadataResponse(config, deviceInfo, ijRepo))
-        cleverTapResponses.add(ARPResponse(config, validator, controllerManager, arpRepo))
-        cleverTapResponses.add(ConsoleResponse(config))
-        cleverTapResponses.add(
-            InboxResponse(
-                config, ctLockManager,
-                callbackManager,
-                controllerManager
-            )
-        )
-        cleverTapResponses.add(
-            PushAmpResponse(
-                context,
-                config,
-                databaseManager,
-                callbackManager,
-                controllerManager
-            )
-        )
-        cleverTapResponses.add(FetchVariablesResponse(config, controllerManager, callbackManager))
-        cleverTapResponses.add(DisplayUnitResponse(config, callbackManager, controllerManager))
-        cleverTapResponses.add(FeatureFlagResponse(config, controllerManager))
-        cleverTapResponses.add(ProductConfigResponse(config, coreMetaData, controllerManager))
-        cleverTapResponses.add(GeofenceResponse(config, callbackManager))
     }
 
     /**
