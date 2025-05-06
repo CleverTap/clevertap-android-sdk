@@ -10,11 +10,13 @@ import com.clevertap.android.sdk.db.Table.EVENTS
 import com.clevertap.android.sdk.db.Table.PROFILE_EVENTS
 import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup
+import com.clevertap.android.sdk.network.IJRepo
 import org.json.JSONObject
 
 internal class DBManager(
     private val config: CleverTapInstanceConfig,
-    private val ctLockManager: CTLockManager
+    private val ctLockManager: CTLockManager,
+    private val ijRepo: IJRepo
 ) : BaseDatabaseManager {
 
     private companion object {
@@ -120,9 +122,7 @@ internal class DBManager(
 
     //Session
     private fun clearIJ(context: Context) {
-        val editor = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ).edit()
-        editor.clear()
-        StorageHelper.persist(editor)
+        ijRepo.clearIJ(context)
     }
 
     //Session

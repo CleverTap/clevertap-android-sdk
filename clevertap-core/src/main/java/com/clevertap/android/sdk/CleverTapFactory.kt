@@ -97,12 +97,18 @@ internal object CleverTapFactory {
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
         coreState.config = config
 
+        val ijRepo = IJRepo(config = config)
+
         val fileResourceProviderInit = CTExecutorFactory.executors(config).ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
             FileResourceProvider.getInstance(context, config.logger)
         }
 
-        val baseDatabaseManager = DBManager(config, ctLockManager)
+        val baseDatabaseManager = DBManager(
+            config = config,
+            ctLockManager = ctLockManager,
+            ijRepo = ijRepo
+        )
         coreState.databaseManager = baseDatabaseManager
 
         val repository = CryptRepository(
@@ -121,7 +127,7 @@ internal object CleverTapFactory {
             cryptFactory = cryptFactory
         )
         coreState.cryptHandler = cryptHandler
-        val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
+        val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Unit>()
         task.execute("migratingEncryption") {
 
             val dataMigrationRepository = DataMigrationRepository(
@@ -139,7 +145,6 @@ internal object CleverTapFactory {
                 dataMigrationRepository = dataMigrationRepository
             )
             cryptMigrator.migrateEncryption()
-            null
         }
 
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
@@ -200,7 +205,7 @@ internal object CleverTapFactory {
         )
         coreState.evaluationManager = evaluationManager
 
-        val taskInitStores = CTExecutorFactory.executors(config).ioTask<Void?>()
+        val taskInitStores = CTExecutorFactory.executors(config).ioTask<Unit>()
         taskInitStores.execute("initStores") {
             if (coreState.deviceInfo != null && coreState.deviceInfo.getDeviceID() != null) {
                 if (storeRegistry.inAppStore == null) {
@@ -224,7 +229,6 @@ internal object CleverTapFactory {
                     callbackManager.addChangeUserCallback(impStore)
                 }
             }
-            null
         }
 
         //Get device id should be async to avoid strict mode policy.
@@ -293,7 +297,6 @@ internal object CleverTapFactory {
             keyGenerator = ctKeyGenerator,
             aesgcm = cryptFactory.getAesGcmCrypt()
         )
-        val ijRepo = IJRepo(config)
         val arpRepo = ArpRepo(
             accountId = config.accountId,
             logger = config.logger,

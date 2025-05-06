@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.events.EventGroup
+import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
 import org.json.JSONObject
@@ -28,7 +29,7 @@ class DBManagerTest : BaseTestCase() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, "accountId", "accountToken")
         lockManager = CTLockManager()
-        dbManager = DBManager(instanceConfig, lockManager)
+        dbManager = DBManager(instanceConfig, lockManager, IJRepo(config = instanceConfig))
         dbManagerSpy = Mockito.spy(dbManager)
         dbAdapter = DBAdapter(appCtx, instanceConfig)
     }

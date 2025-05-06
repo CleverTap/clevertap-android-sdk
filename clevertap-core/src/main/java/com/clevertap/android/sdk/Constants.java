@@ -127,11 +127,8 @@ public interface Constants {
     String PRIMARY_DOMAIN = "clevertap-prod.com";
     String KEY_DOMAIN_NAME = "comms_dmn";
     String SPIKY_KEY_DOMAIN_NAME = "comms_dmn_spiky";
-    String NAMESPACE_IJ = "IJ";
     String KEY_LAST_TS = "comms_last_ts";
     String KEY_FIRST_TS = "comms_first_ts";
-    String KEY_I = "comms_i";
-    String KEY_J = "comms_j";
     String CACHED_GUIDS_KEY = "cachedGUIDsKey";
     String CACHED_GUIDS_LENGTH_KEY = "cachedGUIDsLengthKey";
     String CACHED_VARIABLES_KEY = "variablesKey";

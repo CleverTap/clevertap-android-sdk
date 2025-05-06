@@ -509,7 +509,7 @@ class NetworkManagerTest : BaseTestCase() {
         val coreState = MockCoreState(cleverTapInstanceConfig)
         val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         val lockManager = CTLockManager()
-        val dbManager = DBManager(cleverTapInstanceConfig, lockManager)
+        val dbManager = DBManager(cleverTapInstanceConfig, lockManager, IJRepo(cleverTapInstanceConfig))
         val controllerManager =
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
         val triggersManager = TriggerManager(appCtx, cleverTapInstanceConfig.accountId, deviceInfo)
