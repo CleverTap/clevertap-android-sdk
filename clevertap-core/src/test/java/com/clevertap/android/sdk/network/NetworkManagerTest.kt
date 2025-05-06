@@ -57,7 +57,7 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var ctApi: CtApi
     private lateinit var mockHttpClient: MockHttpClient
     @Mock private lateinit var ctApiWrapper : CtApiWrapper
-    @Mock private lateinit var networkEncryptionManager: NetworkEncryptionManager
+    private val networkEncryptionManager: NetworkEncryptionManager = mockk(relaxed = true)
 
     @Before
     fun setup() {
@@ -297,7 +297,7 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(result)
 
         // Verify that isFullResponse is set to true for all processors
-        for (processor in mockProcessors) {
+        for (processor in networkManager.cleverTapResponses) {
             assertTrue(processor.isFullResponse)
             verify { processor.processResponse(any(), any(), any()) }
         }
@@ -343,7 +343,7 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(result)
 
         // Verify that isFullResponse is set to true for all processors
-        for (processor in mockProcessors) {
+        for (processor in networkManager.cleverTapResponses) {
             assertTrue(processor.isFullResponse)
             verify { processor.processResponse(any(), any(), any()) }
         }
@@ -390,7 +390,7 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(result)
 
         // Verify that isFullResponse is set to false for all processors
-        for (processor in mockProcessors) {
+        for (processor in networkManager.cleverTapResponses) {
             assertFalse(processor.isFullResponse)
             verify { processor.processResponse(any(), any(), any()) }
         }
@@ -411,8 +411,8 @@ class NetworkManagerTest : BaseTestCase() {
         )
 
         // Setup the encryption manager to handle decryption
-        every { networkEncryptionManager.decryptResponse(any<String>()) } returns 
-            EncryptionSuccess("decrypted data", "iv")
+        every { networkEncryptionManager.decryptResponse(any()) } returns
+            EncryptionSuccess("{}", "iv")
 
         // Create a simple queue with a regular event
         val queue = getSampleJsonArrayOfJsonObjects(1)
@@ -439,8 +439,8 @@ class NetworkManagerTest : BaseTestCase() {
         verify { networkEncryptionManager.decryptResponse(any<String>()) }
 
         // Verify that the decrypted data was passed to all processors
-        for (processor in mockProcessors) {
-            verify { processor.processResponse(any(), eq("decrypted data"), any()) }
+        for (processor in networkManager.cleverTapResponses) {
+            verify { processor.processResponse(any(), eq("{}"), any()) }
         }
     }
 
@@ -457,7 +457,7 @@ class NetworkManagerTest : BaseTestCase() {
         )
 
         // Setup the encryption manager to simulate decryption failure
-        every { networkEncryptionManager.decryptResponse(any<String>()) } returns EncryptionFailure
+        every { networkEncryptionManager.decryptResponse(any()) } returns EncryptionFailure
 
         // Create a simple queue
         val queue = getSampleJsonArrayOfJsonObjects(1)
@@ -492,7 +492,7 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(result)
 
         // Verify decryption was not called
-        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any<String>()) }
+        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any()) }
     }
 
     /**
@@ -517,7 +517,7 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(result)
 
         // Verify decryption was not called
-        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any<String>()) }
+        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any()) }
     }
 
     @Test
