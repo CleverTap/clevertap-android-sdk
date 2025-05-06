@@ -1,4 +1,11 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 7.4.0 (May 7, 2025)
+
+#### New Features
+* todo - System InAppfunctions
+* todo - Header and footer
+* Resolves Strict Mode Violations - [#669](https://github.com/CleverTap/clevertap-android-sdk/issues/669), [#673](https://github.com/CleverTap/clevertap-android-sdk/issues/673), [#674](https://github.com/CleverTap/clevertap-android-sdk/issues/674), [#679](https://github.com/CleverTap/clevertap-android-sdk/issues/679)
+
 ### Version 7.3.1 (March 27, 2025)
 
 #### Bug Fixes
