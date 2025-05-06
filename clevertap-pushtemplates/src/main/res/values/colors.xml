@@ -11,4 +11,5 @@
     <color name="titleColor">#212121</color>
     <color name="messageColor">#191919</color>
     <color name="metaColor">#212121</color>
+    <color name="ratingButtonBackground">#FFFFFF</color>
 </resources>

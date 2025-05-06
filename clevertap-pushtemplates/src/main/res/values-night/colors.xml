@@ -5,4 +5,5 @@
     <color name="messageColor">#A0A0A0</color>
     <color name="buttonBackground">#000000</color>
     <color name="buttonClicked">#121314</color>
+    <color name="ratingButtonBackground">#404040</color>
 </resources>
