@@ -32,8 +32,10 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginController
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.AppLaunchListener
+import com.clevertap.android.sdk.network.ArpRepo
 import com.clevertap.android.sdk.network.CompositeBatchListener
 import com.clevertap.android.sdk.network.FetchInAppListener
+import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.api.CtApiWrapper
@@ -291,6 +293,13 @@ internal object CleverTapFactory {
             keyGenerator = ctKeyGenerator,
             aesgcm = cryptFactory.getAesGcmCrypt()
         )
+        val ijRepo = IJRepo(config)
+        val arpRepo = ArpRepo(
+            accountId = config.accountId,
+            logger = config.logger,
+            deviceInfo = deviceInfo
+        )
+        
         val networkManager = NetworkManager(
             context = context,
             config = config,
@@ -304,7 +313,9 @@ internal object CleverTapFactory {
             validator = validator,
             inAppResponse = inAppResponse,
             ctApiWrapper = ctApiWrapper,
-            encryptionManager = encryptionManager
+            encryptionManager = encryptionManager,
+            ijRepo = ijRepo,
+            arpRepo = arpRepo
         )
         coreState.networkManager = networkManager
 

@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.network
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.text.TextUtils
 import androidx.annotation.WorkerThread
@@ -55,7 +54,6 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.security.SecureRandom
-import androidx.core.content.edit
 import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
@@ -74,7 +72,9 @@ internal class NetworkManager(
     private val validator: Validator,
     inAppResponse: InAppResponse,
     private val ctApiWrapper: CtApiWrapper,
-    private val encryptionManager: NetworkEncryptionManager
+    private val encryptionManager: NetworkEncryptionManager,
+    private val ijRepo: IJRepo,
+    private val arpRepo: ArpRepo
 ) {
     val cleverTapResponses: MutableList<CleverTapResponse> = ArrayList()
 
@@ -98,8 +98,8 @@ internal class NetworkManager(
 
     init {
         cleverTapResponses.add(inAppResponse)
-        cleverTapResponses.add(MetadataResponse(config, deviceInfo, this))
-        cleverTapResponses.add(ARPResponse(config, this, validator, controllerManager))
+        cleverTapResponses.add(MetadataResponse(config, deviceInfo, ijRepo))
+        cleverTapResponses.add(ARPResponse(config, validator, controllerManager, arpRepo))
         cleverTapResponses.add(ConsoleResponse(config))
         cleverTapResponses.add(
             InboxResponse(
@@ -231,18 +231,6 @@ internal class NetworkManager(
             }
         }
 
-    val newNamespaceARPKey: String?
-        //New namespace for ARP Shared Prefs
-        get() {
-            val accountId = config.accountId ?: return null
-
-            logger.verbose(
-                config.accountId,
-                "New ARP Key = ARP:" + accountId + ":" + deviceInfo.deviceID
-            )
-            return "ARP:" + accountId + ":" + deviceInfo.deviceID
-        }
-
     @WorkerThread
     fun initHandshake(eventGroup: EventGroup, handshakeSuccessCallback: Runnable) {
         // Always set this to 0 so that the handshake is not performed during a HTTP failure
@@ -261,22 +249,6 @@ internal class NetworkManager(
             setDomain(context, null)
         }
         return needsHandshake || needHandshakeDueToFailure
-    }
-
-    @SuppressLint("CommitPrefEdits")
-    fun setI(context: Context, i: Long) {
-        val prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ)
-        val editor = prefs.edit()
-        editor.putLong(StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_I), i)
-        StorageHelper.persist(editor)
-    }
-
-    @SuppressLint("CommitPrefEdits")
-    fun setJ(context: Context, j: Long) {
-        val prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ)
-        val editor = prefs.edit()
-        editor.putLong(StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_J), j)
-        StorageHelper.persist(editor)
     }
 
     @get:WorkerThread
@@ -358,12 +330,12 @@ internal class NetworkManager(
             header.put("af", appFields)
 
             // Add _i and _j if available
-            val i = i
+            val i = ijRepo.getI(context)
             if (i > 0) {
                 header.put("_i", i)
             }
 
-            val j = j
+            val j = ijRepo.getJ(context)
             if (j > 0) {
                 header.put("_j", j)
             }
@@ -430,7 +402,7 @@ internal class NetworkManager(
 
             //Add ARP (Additional Request Parameters)
             try {
-                val arp = aRP
+                val arp = arpRepo.getARP(context)
                 if (arp != null && arp.length() > 0) {
                     header.put("arp", arp)
                 }
@@ -733,7 +705,7 @@ internal class NetworkManager(
 
             logger.verbose(config.accountId, "Processing variables response : $bodyJson")
 
-            ARPResponse(config, this, validator, controllerManager)
+            ARPResponse(config, validator, controllerManager, arpRepo)
                 .processResponse(bodyJson, bodyString, this.context)
             return true
         } else {
@@ -956,114 +928,6 @@ internal class NetworkManager(
             spikyDomainName
         )
         ctApiWrapper.ctApi.cachedSpikyDomain = spikyDomainName
-    }
-
-    private val aRP: JSONObject?
-        /**
-         * The ARP is additional request parameters, which must be sent once
-         * received after any HTTP call. This is sort of a proxy for cookies.
-         *
-         * @return A JSON object containing the ARP key/values. Can be null.
-         */
-        get() {
-            try {
-                val nameSpaceKey = newNamespaceARPKey ?: return null
-
-                //checking whether new namespace is empty or not
-                //if not empty, using prefs of new namespace to send ARP
-                //if empty, checking for old prefs
-                val prefs =
-                    if (StorageHelper.getPreferences(context, nameSpaceKey).all.isNotEmpty()) {
-                        //prefs point to new namespace
-                        StorageHelper.getPreferences(context, nameSpaceKey)
-                    } else {
-                        //prefs point to new namespace migrated from old namespace
-                        migrateARPToNewNameSpace(nameSpaceKey, namespaceARPKey)
-                    }
-
-                val all = prefs.all
-                val iter: MutableIterator<Map.Entry<String?, *>> =
-                    all.entries.iterator()
-
-                while (iter.hasNext()) {
-                    val kv = iter.next()
-                    val o = kv.value!!
-                    if (o is Number && o.toInt() == -1) {
-                        iter.remove()
-                    }
-                }
-                val ret = JSONObject(all)
-                logger.verbose(
-                    config.accountId,
-                    "Fetched ARP for namespace key: $nameSpaceKey values: $all"
-                )
-                return ret
-            } catch (e: Exception) {
-                logger.verbose(config.accountId, "Failed to construct ARP object", e)
-                return null
-            }
-        }
-
-    private val i: Long
-        get() = StorageHelper.getLongFromPrefs(
-            context,
-            config,
-            Constants.KEY_I,
-            0,
-            Constants.NAMESPACE_IJ
-        )
-
-    private val j: Long
-        get() = StorageHelper.getLongFromPrefs(
-            context,
-            config,
-            Constants.KEY_J,
-            0,
-            Constants.NAMESPACE_IJ
-        )
-
-    private val namespaceARPKey: String?
-        //Session
-        get() {
-            val accountId = config.accountId ?: return null
-
-            logger.verbose(config.accountId, "Old ARP Key = ARP:$accountId")
-            return "ARP:$accountId"
-        }
-
-    private fun migrateARPToNewNameSpace(newKey: String, oldKey: String?): SharedPreferences {
-        val oldPrefs = StorageHelper.getPreferences(context, oldKey)
-        val newPrefs = StorageHelper.getPreferences(context, newKey)
-        val editor = newPrefs.edit()
-        val all = oldPrefs.all
-
-        for ((key, value) in all) {
-            val o = value!!
-            if (o is Number) {
-                val update = o.toInt()
-                editor.putInt(key, update)
-            } else if (o is String) {
-                if (o.length < 100) {
-                    editor.putString(key, o)
-                } else {
-                    logger.verbose(
-                        config.accountId,
-                        "ARP update for key $key rejected (string value too long)"
-                    )
-                }
-            } else if (o is Boolean) {
-                editor.putBoolean(key, o)
-            } else {
-                logger.verbose(
-                    config.accountId,
-                    "ARP update for key $key rejected (invalid data type)"
-                )
-            }
-        }
-        logger.verbose(config.accountId, "Completed ARP update for namespace key: $newKey")
-        StorageHelper.persist(editor)
-        oldPrefs.edit { clear() }
-        return newPrefs
     }
 
     @WorkerThread

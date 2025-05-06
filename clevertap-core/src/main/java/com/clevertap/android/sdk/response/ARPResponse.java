@@ -1,20 +1,20 @@
 package com.clevertap.android.sdk.response;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.network.ArpRepo;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.validation.Validator;
-import java.util.ArrayList;
-import java.util.Iterator;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class ARPResponse extends CleverTapResponseDecorator {
 
@@ -23,22 +23,20 @@ public class ARPResponse extends CleverTapResponseDecorator {
     private final CleverTapInstanceConfig config;
 
     private final Logger logger;
-
-    private final NetworkManager networkManager;
-
     private final Validator validator;
+    private final ArpRepo arpRepo;
 
     public ARPResponse(
             CleverTapInstanceConfig config,
-            NetworkManager networkManager,
             Validator validator,
-            ControllerManager controllerManager
+            ControllerManager controllerManager,
+            ArpRepo arpRepo
     ) {
         this.config = config;
         ctProductConfigController = controllerManager.getCTProductConfigController();
         logger = this.config.getLogger();
-        this.networkManager = networkManager;
         this.validator = validator;
+        this.arpRepo = arpRepo;
     }
 
     @Override
@@ -58,7 +56,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
                         logger
                                 .verbose("Error handling discarded events response: " + t.getLocalizedMessage());
                     }
-                    handleARPUpdate(context, arp);
+                    arpRepo.handleARPUpdate(context, arp);
                 }
             }
         } catch (Throwable t) {
@@ -66,6 +64,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
         }
     }
 
+    /* This method has been moved to ArpRepo class
     //Saves ARP directly to new namespace
     private void handleARPUpdate(final Context context, final JSONObject arp) {
         if (arp == null || arp.length() == 0) {
@@ -104,7 +103,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
         logger.verbose(config.getAccountId(),
                 "Stored ARP for namespace key: " + nameSpaceKey + " values: " + arp.toString());
         StorageHelper.persist(editor);
-    }
+    }*/
 
     /**
      * Dashboard has a feature where marketers can discard event. We get that list in the ARP response,

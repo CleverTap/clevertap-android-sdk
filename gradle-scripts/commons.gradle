@@ -88,6 +88,9 @@ android {
         unitTests {
             includeAndroidResources = true
             returnDefaultValues = true
+            unitTests.all {
+                jvmArgs "-Xmx4g" // Allocates 4GB for unit tests
+            }
             all {
                 jvmArgs '-noverify'
             }

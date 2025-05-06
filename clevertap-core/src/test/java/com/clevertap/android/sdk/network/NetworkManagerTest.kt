@@ -566,6 +566,12 @@ class NetworkManagerTest : BaseTestCase() {
                 mockk<TemplatesManager>(),
                 metaData
             )
+        val ijRepo = IJRepo(cleverTapInstanceConfig)
+        val arpRepo = ArpRepo(
+            accountId = cleverTapInstanceConfig.accountId,
+            logger = cleverTapInstanceConfig.logger,
+            deviceInfo = deviceInfo
+        )
 
         return NetworkManager(
             appCtx,
@@ -580,7 +586,9 @@ class NetworkManagerTest : BaseTestCase() {
             Validator(),
             inAppResponse,
             ctApiWrapper,
-            networkEncryptionManager
+            networkEncryptionManager,
+            ijRepo,
+            arpRepo
         )
     }
 
