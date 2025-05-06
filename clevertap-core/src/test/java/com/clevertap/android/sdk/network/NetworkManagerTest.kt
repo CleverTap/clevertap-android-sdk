@@ -2,10 +2,12 @@ package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CallbackManager
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.MockCoreState
 import com.clevertap.android.sdk.MockDeviceInfo
+import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
@@ -19,11 +21,15 @@ import com.clevertap.android.sdk.network.api.CtApi.Companion.SPIKY_HEADER_DOMAIN
 import com.clevertap.android.sdk.network.api.CtApiTestProvider
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.MockHttpClient
+import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -39,6 +45,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
+// todo: can verify without manipulation of shared prefs; can improve later.
 class NetworkManagerTest : BaseTestCase() {
 
     private var closeable: AutoCloseable? = null
@@ -135,6 +142,254 @@ class NetworkManagerTest : BaseTestCase() {
         assertFalse(networkManager.sendQueue(appCtx, VARIABLES, getSampleJsonArrayOfJsonObjects(1), null))
         mockHttpClient.responseCode = 500
         assertFalse(networkManager.sendQueue(appCtx, VARIABLES, getSampleJsonArrayOfJsonObjects(1), null))
+    }
+
+    /**
+     * Test that when domain changes in the response, sendQueue returns false
+     */
+    @Test
+    fun test_sendQueue_domainChanges_returnFalse() {
+        // Arrange
+        val newDomain = "new-domain.clevertap.com"
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseHeaders = mapOf(
+            HEADER_DOMAIN_NAME to listOf(newDomain)
+        )
+
+        // Force network manager to recognize domain as changed
+        val originalDomain = networkManager.getDomain(REGULAR)
+        StorageHelper.putString(
+            appCtx,
+            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, Constants.KEY_DOMAIN_NAME),
+            "different-domain.com"
+        )
+
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+
+        // Act
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertFalse(result)
+
+        // Check if domain was updated
+        val updatedDomain = networkManager.getDomain(REGULAR)
+        assert(updatedDomain == newDomain)
+
+        // Reset domain for other tests
+        StorageHelper.putString(
+            appCtx,
+            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, Constants.KEY_DOMAIN_NAME),
+            originalDomain
+        )
+    }
+
+    /**
+     * Test that when processIncomingHeaders returns false (muted), sendQueue returns false
+     */
+    @Test
+    fun test_sendQueue_processingHeadersFails_returnFalse() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseHeaders = mapOf(
+            HEADER_MUTE to listOf("true") // This will cause processIncomingHeaders to return false
+        )
+
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+
+        // Act & Assert
+        assertFalse(networkManager.sendQueue(appCtx, REGULAR, queue, null))
+
+        // Verify we're muted
+        val isMuted = StorageHelper.getIntFromPrefs(
+            appCtx,
+            cleverTapInstanceConfig,
+            Constants.KEY_MUTED,
+            0
+        )
+        assert(isMuted > 0)
+
+        // Reset muted status for other tests
+        StorageHelper.putInt(
+            appCtx,
+            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, Constants.KEY_MUTED),
+            0
+        )
+    }
+
+    /**
+     * Test that when everything is successful, sendQueue returns true
+     */
+    @Test
+    fun test_sendQueue_success_returnTrue() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        mockHttpClient.responseHeaders = emptyMap()
+
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+
+        // Get the current timestamps for verification
+        val initialTimestamp = StorageHelper.getIntFromPrefs(
+            appCtx,
+            cleverTapInstanceConfig,
+            Constants.KEY_LAST_TS,
+            0
+        )
+
+        // Act
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertTrue(result)
+
+        // Verify timestamps were updated
+        val updatedTimestamp = StorageHelper.getIntFromPrefs(
+            appCtx,
+            cleverTapInstanceConfig,
+            Constants.KEY_LAST_TS,
+            0
+        )
+        assert(updatedTimestamp >= initialTimestamp)
+    }
+
+    /**
+     * Test that when body contains app launched event, processors receive full response flag
+     */
+    @Test
+    fun test_sendQueue_withAppLaunchedEvent_processesWithFullResponse() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        mockHttpClient.responseHeaders = emptyMap()
+
+        // Create queue with App Launched event
+        val queue = JSONArray()
+        val header = JSONObject()
+        header.put("type", "meta")
+        queue.put(header)
+
+        val event = JSONObject()
+        event.put("type", "event")
+        event.put("evtName", Constants.APP_LAUNCHED_EVENT)
+        queue.put(event)
+
+        // Create mock response processors to verify isFullResponse flag
+        val originalProcessors = networkManager.cleverTapResponses
+        val mockProcessors = ArrayList<CleverTapResponse>()
+        for (processor in originalProcessors) {
+            val spyProcessor = spyk(processor)
+            mockProcessors.add(spyProcessor)
+        }
+
+        // Replace original processors with spies
+        networkManager.cleverTapResponses.clear()
+        networkManager.cleverTapResponses.addAll(mockProcessors)
+
+        // Act
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertTrue(result)
+
+        // Verify that isFullResponse is set to true for all processors
+        for (processor in mockProcessors) {
+            assertTrue(processor.isFullResponse)
+            verify { processor.processResponse(any(), any(), any()) }
+        }
+    }
+
+    /**
+     * Test that when body contains wzrk_fetch event, processors receive full response flag
+     */
+    @Test
+    fun test_sendQueue_withWzrkFetchEvent_processesWithFullResponse() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        mockHttpClient.responseHeaders = emptyMap()
+
+        // Create queue with wzrk_fetch event
+        val queue = JSONArray()
+        val header = JSONObject()
+        header.put("type", "meta")
+        queue.put(header)
+
+        val event = JSONObject()
+        event.put("type", "event")
+        event.put("evtName", Constants.WZRK_FETCH)
+        queue.put(event)
+
+        // Create mock response processors to verify isFullResponse flag
+        val originalProcessors = networkManager.cleverTapResponses
+        val mockProcessors = ArrayList<CleverTapResponse>()
+        for (processor in originalProcessors) {
+            val spyProcessor = spyk(processor)
+            mockProcessors.add(spyProcessor)
+        }
+
+        // Replace original processors with spies
+        networkManager.cleverTapResponses.clear()
+        networkManager.cleverTapResponses.addAll(mockProcessors)
+
+        // Act
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertTrue(result)
+
+        // Verify that isFullResponse is set to true for all processors
+        for (processor in mockProcessors) {
+            assertTrue(processor.isFullResponse)
+            verify { processor.processResponse(any(), any(), any()) }
+        }
+    }
+
+    /**
+     * Test that when body does not contain app launched or wzrk_fetch events,
+     * processors receive non-full response flag
+     */
+    @Test
+    fun test_sendQueue_withoutSpecialEvents_processesWithNonFullResponse() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        mockHttpClient.responseHeaders = emptyMap()
+
+        // Create queue with regular event
+        val queue = JSONArray()
+        val header = JSONObject()
+        header.put("type", "meta")
+        queue.put(header)
+
+        val event = JSONObject()
+        event.put("type", "event")
+        event.put("evtName", "Regular Event")
+        queue.put(event)
+
+        // Create mock response processors to verify isFullResponse flag
+        val originalProcessors = networkManager.cleverTapResponses
+        val mockProcessors = ArrayList<CleverTapResponse>()
+        for (processor in originalProcessors) {
+            val spyProcessor = spyk(processor)
+            mockProcessors.add(spyProcessor)
+        }
+
+        // Replace original processors with spies
+        networkManager.cleverTapResponses.clear()
+        networkManager.cleverTapResponses.addAll(mockProcessors)
+
+        // Act
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertTrue(result)
+
+        // Verify that isFullResponse is set to false for all processors
+        for (processor in mockProcessors) {
+            assertFalse(processor.isFullResponse)
+            verify { processor.processResponse(any(), any(), any()) }
+        }
     }
 
     @Test

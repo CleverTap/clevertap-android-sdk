@@ -76,7 +76,7 @@ internal class NetworkManager(
     private val ctApiWrapper: CtApiWrapper,
     private val encryptionManager: NetworkEncryptionManager
 ) {
-    private val cleverTapResponses: MutableList<CleverTapResponse> = ArrayList()
+    val cleverTapResponses: MutableList<CleverTapResponse> = ArrayList()
 
     private val logger: Logger = config.logger
 
