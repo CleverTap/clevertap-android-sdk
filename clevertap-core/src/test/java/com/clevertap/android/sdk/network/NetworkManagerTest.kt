@@ -16,10 +16,13 @@ import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_MUTE
 import com.clevertap.android.sdk.network.api.CtApi.Companion.SPIKY_HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApiTestProvider
 import com.clevertap.android.sdk.network.api.CtApiWrapper
+import com.clevertap.android.sdk.network.api.EncryptionFailure
+import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.http.MockHttpClient
 import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.response.InAppResponse
@@ -38,6 +41,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
+import io.mockk.every
 import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
@@ -390,6 +394,130 @@ class NetworkManagerTest : BaseTestCase() {
             assertFalse(processor.isFullResponse)
             verify { processor.processResponse(any(), any(), any()) }
         }
+    }
+
+    /**
+     * Test that when encryption is enabled in the response header, the response gets decrypted
+     * before being passed to response processors
+     */
+    @Test
+    fun test_sendQueue_whenEncryptionEnabledHeaderTrue_decryptsResponse() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        // We'll use a simple JSON string for testing
+        mockHttpClient.responseBody = JSONObject().toString()
+        mockHttpClient.responseHeaders = mapOf(
+            HEADER_ENCRYPTION_ENABLED to listOf("true")
+        )
+
+        // Setup the encryption manager to handle decryption
+        every { networkEncryptionManager.decryptResponse(any<String>()) } returns 
+            EncryptionSuccess("decrypted data", "iv")
+
+        // Create a simple queue with a regular event
+        val queue = getSampleJsonArrayOfJsonObjects(1)
+
+        // Create mock response processors to verify decrypted data is passed
+        val originalProcessors = networkManager.cleverTapResponses
+        val mockProcessors = ArrayList<CleverTapResponse>()
+        for (processor in originalProcessors) {
+            val spyProcessor = spyk(processor)
+            mockProcessors.add(spyProcessor)
+        }
+
+        // Replace original processors with spies
+        networkManager.cleverTapResponses.clear()
+        networkManager.cleverTapResponses.addAll(mockProcessors)
+
+        // Act
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertTrue(result)
+
+        // Verify decryption was called
+        verify { networkEncryptionManager.decryptResponse(any<String>()) }
+
+        // Verify that the decrypted data was passed to all processors
+        for (processor in mockProcessors) {
+            verify { processor.processResponse(any(), eq("decrypted data"), any()) }
+        }
+    }
+
+    /**
+     * Test that when encryption is enabled but decryption fails, sendQueue returns false
+     */
+    @Test
+    fun test_sendQueue_whenEncryptionEnabledButDecryptionFails_returnsFalse() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        mockHttpClient.responseHeaders = mapOf(
+            HEADER_ENCRYPTION_ENABLED to listOf("true")
+        )
+
+        // Setup the encryption manager to simulate decryption failure
+        every { networkEncryptionManager.decryptResponse(any<String>()) } returns EncryptionFailure
+
+        // Create a simple queue
+        val queue = getSampleJsonArrayOfJsonObjects(1)
+
+        // Act
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertFalse(result)
+
+        // Verify decryption was attempted
+        verify { networkEncryptionManager.decryptResponse(any<String>()) }
+    }
+
+    /**
+     * Test that when encryption header is not present, the response is not decrypted
+     */
+    @Test
+    fun test_sendQueue_whenEncryptionEnabledHeaderNotPresent_doesNotDecryptResponse() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        mockHttpClient.responseHeaders = emptyMap()
+
+        // Create a simple queue
+        val queue = getSampleJsonArrayOfJsonObjects(1)
+
+        // Act
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertTrue(result)
+
+        // Verify decryption was not called
+        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any<String>()) }
+    }
+
+    /**
+     * Test that when encryption header is false, the response is not decrypted
+     */
+    @Test
+    fun test_sendQueue_whenEncryptionEnabledHeaderFalse_doesNotDecryptResponse() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        mockHttpClient.responseHeaders = mapOf(
+            HEADER_ENCRYPTION_ENABLED to listOf("false")
+        )
+
+        // Create a simple queue
+        val queue = getSampleJsonArrayOfJsonObjects(1)
+
+        // Act
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertTrue(result)
+
+        // Verify decryption was not called
+        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any<String>()) }
     }
 
     @Test
