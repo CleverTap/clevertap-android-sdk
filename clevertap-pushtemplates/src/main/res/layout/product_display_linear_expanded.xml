@@ -48,9 +48,9 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="@android:color/holo_red_dark"
-                android:textAppearance="@style/PushMessage"
-                android:textColor="@android:color/white" />
+                android:padding="@dimen/custom_btn_padding"
+                android:background="@color/customButtonBackground"
+                android:textAppearance="@style/PushMessage" />
 
         </LinearLayout>
 
