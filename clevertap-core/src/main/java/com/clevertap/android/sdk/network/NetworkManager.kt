@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.Utils
@@ -97,10 +98,9 @@ internal class NetworkManager(
         FeatureFlagResponse(config, controllerManager),
         ProductConfigResponse(config, coreMetaData, controllerManager),
         GeofenceResponse(config, callbackManager)
-    )
+    ),
+    private val logger: ILogger = config.logger
 ) {
-
-    private val logger: Logger = config.logger
 
     private var responseFailureCount = 0
 

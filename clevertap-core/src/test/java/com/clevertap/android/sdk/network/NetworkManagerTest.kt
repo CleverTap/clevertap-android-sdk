@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.MockCoreState
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.StorageHelper
+import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
@@ -129,7 +130,11 @@ class NetworkManagerTest : BaseTestCase() {
     @Test
     fun test_sendQueue_successResponseNullBody_returnFalse() {
         mockHttpClient.responseBody = null
-        assertFalse(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(4), null))
+        mockHttpClient.responseCode = 200
+        assertFalse(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(
+            totalJsonObjects = 4,
+            printGenArray = true
+        ), null))
     }
 
     @Test
@@ -278,18 +283,6 @@ class NetworkManagerTest : BaseTestCase() {
         event.put("evtName", Constants.APP_LAUNCHED_EVENT)
         queue.put(event)
 
-        // Create mock response processors to verify isFullResponse flag
-        val originalProcessors = networkManager.cleverTapResponses
-        val mockProcessors = ArrayList<CleverTapResponse>()
-        for (processor in originalProcessors) {
-            val spyProcessor = spyk(processor)
-            mockProcessors.add(spyProcessor)
-        }
-
-        // Replace original processors with spies
-        networkManager.cleverTapResponses.clear()
-        networkManager.cleverTapResponses.addAll(mockProcessors)
-
         // Act
         val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
@@ -323,18 +316,6 @@ class NetworkManagerTest : BaseTestCase() {
         event.put("type", "event")
         event.put("evtName", Constants.WZRK_FETCH)
         queue.put(event)
-
-        // Create mock response processors to verify isFullResponse flag
-        val originalProcessors = networkManager.cleverTapResponses
-        val mockProcessors = ArrayList<CleverTapResponse>()
-        for (processor in originalProcessors) {
-            val spyProcessor = spyk(processor)
-            mockProcessors.add(spyProcessor)
-        }
-
-        // Replace original processors with spies
-        networkManager.cleverTapResponses.clear()
-        networkManager.cleverTapResponses.addAll(mockProcessors)
 
         // Act
         val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
@@ -371,18 +352,6 @@ class NetworkManagerTest : BaseTestCase() {
         event.put("evtName", "Regular Event")
         queue.put(event)
 
-        // Create mock response processors to verify isFullResponse flag
-        val originalProcessors = networkManager.cleverTapResponses
-        val mockProcessors = ArrayList<CleverTapResponse>()
-        for (processor in originalProcessors) {
-            val spyProcessor = spyk(processor)
-            mockProcessors.add(spyProcessor)
-        }
-
-        // Replace original processors with spies
-        networkManager.cleverTapResponses.clear()
-        networkManager.cleverTapResponses.addAll(mockProcessors)
-
         // Act
         val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
@@ -416,18 +385,6 @@ class NetworkManagerTest : BaseTestCase() {
 
         // Create a simple queue with a regular event
         val queue = getSampleJsonArrayOfJsonObjects(1)
-
-        // Create mock response processors to verify decrypted data is passed
-        val originalProcessors = networkManager.cleverTapResponses
-        val mockProcessors = ArrayList<CleverTapResponse>()
-        for (processor in originalProcessors) {
-            val spyProcessor = spyk(processor)
-            mockProcessors.add(spyProcessor)
-        }
-
-        // Replace original processors with spies
-        networkManager.cleverTapResponses.clear()
-        networkManager.cleverTapResponses.addAll(mockProcessors)
 
         // Act
         val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
@@ -573,22 +530,32 @@ class NetworkManagerTest : BaseTestCase() {
             deviceInfo = deviceInfo
         )
 
+        // Create 10 spy processors for response handling tests
+        val responses = ArrayList<CleverTapResponse>()
+        for (i in 1..10) {
+            val spyProcessor = spyk<CleverTapResponse>()
+            responses.add(spyProcessor)
+        }
+
+        // Pass the mock processors directly to the NetworkManager constructor
         return NetworkManager(
-            appCtx,
-            cleverTapInstanceConfig,
-            deviceInfo,
-            metaData,
-            ValidationResultStack(),
-            controllerManager,
-            dbManager,
-            callbackManager,
-            lockManager,
-            Validator(),
-            inAppResponse,
-            ctApiWrapper,
-            networkEncryptionManager,
-            ijRepo,
-            arpRepo
+            context = appCtx,
+            config = cleverTapInstanceConfig,
+            deviceInfo = deviceInfo,
+            coreMetaData = metaData,
+            validationResultStack = ValidationResultStack(),
+            controllerManager = controllerManager,
+            databaseManager = dbManager,
+            callbackManager = callbackManager,
+            ctLockManager = lockManager,
+            validator = Validator(),
+            inAppResponse = inAppResponse,
+            ctApiWrapper = ctApiWrapper,
+            encryptionManager = networkEncryptionManager,
+            ijRepo = ijRepo,
+            arpRepo = arpRepo,
+            cleverTapResponses = responses,
+            logger = TestLogger()
         )
     }
 
