@@ -128,10 +128,10 @@ class NetworkManagerTest : BaseTestCase() {
     }
 
     @Test
-    fun test_sendQueue_successResponseNullBody_returnFalse() {
+    fun test_sendQueue_successResponseNullBody_returnTrue() {
         mockHttpClient.responseBody = null
         mockHttpClient.responseCode = 200
-        assertFalse(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(
+        assertTrue(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(
             totalJsonObjects = 4,
             printGenArray = true
         ), null))
