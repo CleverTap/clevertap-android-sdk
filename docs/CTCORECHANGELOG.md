@@ -3,7 +3,7 @@
 
 #### New Features
 * Introduces System App Functions (Open Url, App Rating, Push Permission Request - as mentioned [here](SystemInAppFunctions.md)) which can be triggered either as a button action within an in-app message or as a standalone campaign action in CleverTap, enriching client workflows.
-* Adds support for Advanced InApp Builder templates. This feature enables easy creation of visually appealing in-app messages that seamlessly integrate with your app's look and feel. It includes support for various aspect ratios for header and footer type floating banners, triggered via in-app event-based actions.
+* Adds support for Advanced InApp Builder templates. This feature enables easy creation of visually appealing in-app messages that seamlessly integrate with your app's look and feel. It includes support for non-intrusive HTML banners with flexible configuration options, triggered via in-app event-based actions.
 * Resolves the following Strict Mode Violations:
     * `#669` ([#669](https://github.com/CleverTap/clevertap-android-sdk/issues/669)), `#679` ([#679](https://github.com/CleverTap/clevertap-android-sdk/issues/679)): `DiskReadViolation` occurring on SDK initialisation.
     * `#673` ([#673](https://github.com/CleverTap/clevertap-android-sdk/issues/673)): `DiskReadViolation` occurring after an `InApp` message was shown.
