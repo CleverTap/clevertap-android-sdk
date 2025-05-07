@@ -4,7 +4,12 @@
 #### New Features
 * todo - System InAppfunctions
 * todo - Header and footer
-* Resolves Strict Mode Violations - [#669](https://github.com/CleverTap/clevertap-android-sdk/issues/669), [#673](https://github.com/CleverTap/clevertap-android-sdk/issues/673), [#674](https://github.com/CleverTap/clevertap-android-sdk/issues/674), [#679](https://github.com/CleverTap/clevertap-android-sdk/issues/679)
+* Resolves the following Strict Mode Violations 
+  - [#669](https://github.com/CleverTap/clevertap-android-sdk/issues/669), [#679](https://github.com/CleverTap/clevertap-android-sdk/issues/679) - Resolves a `DiskReadViolation` occurring on SDK initialisation.
+  - [#673](https://github.com/CleverTap/clevertap-android-sdk/issues/673) - Resolves a `DiskReadViolation` occurring after an `InApp` message was shown.
+  - [#674](https://github.com/CleverTap/clevertap-android-sdk/issues/674) - Resolves an `IncorrectContextUseViolation` occurring when the SDK was initialised with an application context.
+  - Resolves an `IncorrectContextUseViolation` occurring when an `AppInbox` message consisted of an audio/video message.
+  - Resolves an `UntaggedSocketViolation` occurring on network requests.
 
 ### Version 7.3.1 (March 27, 2025)
 
