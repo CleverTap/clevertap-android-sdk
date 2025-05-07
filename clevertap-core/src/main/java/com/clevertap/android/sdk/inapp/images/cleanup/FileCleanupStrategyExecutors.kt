@@ -8,11 +8,11 @@ import com.clevertap.android.sdk.task.CTExecutors
  *
  * This strategy clears file assets associated with provided URLs by executing deletion tasks on a background thread.
  *
- * @param fileResourceProvider The provider for accessing and managing file resources.
+ * @param { fileResourceProvider } The provider for accessing and managing file resources.
  * @param executor The executor providing a thread pool for asynchronous file deletion (defaults to a resource downloader executor with 8 threads).
  */
 internal class FileCleanupStrategyExecutors @JvmOverloads constructor(
-    override val fileResourceProvider: FileResourceProvider,
+    override val fileResourceProvider: () -> FileResourceProvider,
     private val executor: CTExecutors = CTExecutorFactory.executorResourceDownloader()
 ) : FileCleanupStrategy {
 
@@ -29,7 +29,7 @@ internal class FileCleanupStrategyExecutors @JvmOverloads constructor(
             val task = executor.ioTaskNonUi<Unit>()
 
             task.execute(TAG) {
-                fileResourceProvider.deleteData(url)
+                fileResourceProvider().deleteData(url)
                 successBlock.invoke(url)
             }
         }
