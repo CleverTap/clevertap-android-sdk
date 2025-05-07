@@ -2,14 +2,14 @@
 ### Version 7.4.0 (May 7, 2025)
 
 #### New Features
-* todo - System InAppfunctions
-* todo - Header and footer
-* Resolves the following Strict Mode Violations 
-  - [#669](https://github.com/CleverTap/clevertap-android-sdk/issues/669), [#679](https://github.com/CleverTap/clevertap-android-sdk/issues/679) - Resolves a `DiskReadViolation` occurring on SDK initialisation.
-  - [#673](https://github.com/CleverTap/clevertap-android-sdk/issues/673) - Resolves a `DiskReadViolation` occurring after an `InApp` message was shown.
-  - [#674](https://github.com/CleverTap/clevertap-android-sdk/issues/674) - Resolves an `IncorrectContextUseViolation` occurring when the SDK was initialised with an application context.
-  - Resolves an `IncorrectContextUseViolation` occurring when an `AppInbox` message consisted of an audio/video message.
-  - Resolves an `UntaggedSocketViolation` occurring on network requests.
+* Introduces System App Functions (Open Url, App Rating, Push Permission Request - as mentioned [here](SystemInAppFunctions.md)) which can be triggered either as a button action within an in-app message or as a standalone campaign action in CleverTap, enriching client workflows.
+* Adds support for Advanced InApp Builder templates. This feature enables easy creation of visually appealing in-app messages that seamlessly integrate with your app's look and feel. It includes support for various aspect ratios for header and footer type floating banners, triggered via in-app event-based actions.
+* Resolves the following Strict Mode Violations:
+    * `#669` ([#669](https://github.com/CleverTap/clevertap-android-sdk/issues/669)), `#679` ([#679](https://github.com/CleverTap/clevertap-android-sdk/issues/679)): `DiskReadViolation` occurring on SDK initialisation.
+    * `#673` ([#673](https://github.com/CleverTap/clevertap-android-sdk/issues/673)): `DiskReadViolation` occurring after an `InApp` message was shown.
+    * `#674` ([#674](https://github.com/CleverTap/clevertap-android-sdk/issues/674)): `IncorrectContextUseViolation` occurring when the SDK was initialised with an application context.
+    * `IncorrectContextUseViolation` occurring when an `AppInbox` message consisted of an audio/video message.
+    * `UntaggedSocketViolation` occurring on network requests.
 
 ### Version 7.3.1 (March 27, 2025)
 
