@@ -22,7 +22,6 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
         implements View.OnTouchListener, View.OnLongClickListener {
 
     private static final String CTA_SWIPE_DISMISS = "swipe-dismiss";
-    private static final String JAVASCRIPT_INTERFACE_NAME = "CleverTap";
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
