@@ -82,7 +82,7 @@ object FileVarsData {
     ): Var<String>? {
         return cleverTapAPI.defineFileVariable(name)
             ?.apply {
-                for (count in 0..fileReadyListenerCount) {
+                for (count in 0 until fileReadyListenerCount) {
                     addFileReadyHandler(object : VariableCallback<String>() {
                         override fun onValueChanged(variable: Var<String>?) {
                             Log.i(tag, "${variable?.name()} ready: ${value()} from listener $count")
