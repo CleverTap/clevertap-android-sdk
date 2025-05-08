@@ -10,6 +10,7 @@
 -keep class androidx.media3.ui.PlayerView{*;}
 -keep class com.google.android.gms.ads.identifier.AdvertisingIdClient{*;}
 -keep class com.google.android.gms.common.GooglePlayServicesUtil{*;}
+-keep class com.google.android.play.core.review.ReviewManagerFactory{*;}
 -keepnames class * implements android.os.Parcelable {
     public static final ** CREATOR;
 }

@@ -556,15 +556,15 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "11-0" -> {
-                cleverTapAPI?.pushEvent("Footer InApp")
+                cleverTapAPI?.suspendInAppNotifications()
             }
 
             "11-1" -> {
-                cleverTapAPI?.pushEvent("Footer InApp without image")
+                cleverTapAPI?.discardInAppNotifications()
             }
 
             "11-2" -> {
-                cleverTapAPI?.pushEvent("Header")
+                cleverTapAPI?.resumeInAppNotifications()
             }
 
             "12-0" -> {
@@ -747,6 +747,10 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "14-4" -> {
                 Log.i(TAG, "onChildClick: 14-4")
                 FileVarsData.printFileVariables(cleverTapAPI!!, tag = TAG)
+            }
+            "14-5" -> {
+                Log.i(TAG, "onChildClick: 14-5")
+                cleverTapAPI?.clearFileResources(false)
             }
             "15-0" -> {
                 cleverTapAPI?.locale = "en_IN"

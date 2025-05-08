@@ -24,7 +24,6 @@ private fun Collection<CustomTemplate>.toJSON(): JSONObject {
             for (template in templates) {
                 putObject(template.name) {
                     put("type", template.type.toString())
-                    if (template.args.isNotEmpty()) {
                         putObject("vars") {
                             template.args.forEachIndexed { index, arg ->
                                 putObject(arg.name) {
@@ -36,7 +35,6 @@ private fun Collection<CustomTemplate>.toJSON(): JSONObject {
                                 }
                             }
                         }
-                    }
                 }
             }
         }

@@ -25,7 +25,7 @@ object FileVarsData {
         tag: String = "FileVarsData",
         listenerCount: Int = 1
     ) {
-        for (count in 0..listenerCount) {
+        for (count in 0 until listenerCount) {
             val l1 = object : VariablesChangedCallback() {
                 override fun variablesChanged() {
                     Log.i(
@@ -67,7 +67,7 @@ object FileVarsData {
                 list.add(variable)
                 builder.append(variable.name())
                 builder.append(" : ")
-                builder.append(variable.value())
+//                builder.append(variable.value())
                 builder.appendLine()
             }
         }
@@ -82,10 +82,10 @@ object FileVarsData {
     ): Var<String>? {
         return cleverTapAPI.defineFileVariable(name)
             ?.apply {
-                for (count in 0..fileReadyListenerCount) {
+                for (count in 0 until fileReadyListenerCount) {
                     addFileReadyHandler(object : VariableCallback<String>() {
                         override fun onValueChanged(variable: Var<String>?) {
-                            Log.i(tag, "${variable?.name()} ready: ${value()} from listener $count")
+                            Log.i(tag, "${variable?.name()} ready: from listener $count")
                         }
                     })
                 }
@@ -104,7 +104,7 @@ object FileVarsData {
             if (variable != null) {
                 builder.append(variable.name())
                 builder.append(" : ")
-                builder.append(variable.value())
+//                builder.append(variable.value())
                 builder.appendLine()
             }
         }

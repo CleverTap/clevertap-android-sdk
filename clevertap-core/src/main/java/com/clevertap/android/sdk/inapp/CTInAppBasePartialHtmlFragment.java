@@ -12,32 +12,16 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.CTWebInterface;
 import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.utils.UriHelper;
-import java.net.URLDecoder;
 
 public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialFragment
         implements View.OnTouchListener, View.OnLongClickListener {
 
-    private class InAppWebViewClient extends WebViewClient {
-
-        InAppWebViewClient() {
-            super();
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            openActionUrl(url);
-            return true;
-        }
-    }
+    private static final String CTA_SWIPE_DISMISS = "swipe-dismiss";
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
@@ -47,18 +31,20 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                // Right to left
-                return remove(e1, e2, false);
-            } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                // Left to right
-                return remove(e1, e2, true);
+            if (e1 != null && e2 != null) {
+                if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    // Right to left
+                    return remove(false);
+                } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    // Left to right
+                    return remove(true);
+                }
             }
             return false;
         }
 
         @SuppressWarnings("UnusedParameters")
-        private boolean remove(MotionEvent e1, MotionEvent e2, boolean ltr) {
+        private boolean remove(boolean ltr) {
             AnimationSet animSet = new AnimationSet(true);
             TranslateAnimation anim;
             if (ltr) {
@@ -74,6 +60,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
             animSet.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationEnd(Animation animation) {
+                    triggerAction(CTInAppAction.createCloseAction(), CTA_SWIPE_DISMISS, null);
                     didDismiss(null);
                 }
 
@@ -99,6 +86,24 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             Bundle savedInstanceState) {
         return displayHTMLView(inflater, container);
+    }
+
+    @Override
+    public void onDestroyView() {
+        cleanupWebView();
+        super.onDestroyView();
+    }
+
+    private void cleanupWebView() {
+        try {
+            if (webView != null) {
+                webView.cleanup(inAppNotification.isJsEnabled());
+                webView = null;
+            }
+        } catch (Exception e) {
+            config.getLogger().verbose("cleanupWebView -> there was some crash in cleanup", e);
+            //no-op; we are anyway destroying everything. This is just for safety.
+        }
     }
 
     @Override
@@ -135,23 +140,23 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
         try {
             inAppView = getView(inflater, container);
             layout = getLayout(inAppView);
-            webView = new CTInAppWebView(this.context, inAppNotification.getWidth(),
-                    inAppNotification.getHeight(), inAppNotification.getWidthPercentage(),
-                    inAppNotification.getHeightPercentage());
-            InAppWebViewClient webViewClient = new InAppWebViewClient();
+            webView = new CTInAppWebView(
+                    this.context,
+                    inAppNotification.getWidth(),
+                    inAppNotification.getHeight(),
+                    inAppNotification.getWidthPercentage(),
+                    inAppNotification.getHeightPercentage(),
+                    inAppNotification.getAspectRatio()
+            );
+            InAppWebViewClient webViewClient = new InAppWebViewClient(this);
             webView.setWebViewClient(webViewClient);
             webView.setOnTouchListener(CTInAppBasePartialHtmlFragment.this);
             webView.setOnLongClickListener(CTInAppBasePartialHtmlFragment.this);
 
             if (inAppNotification.isJsEnabled()) {
-                webView.getSettings().setJavaScriptEnabled(true);
-                webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
-                webView.getSettings().setAllowContentAccess(false);
-                webView.getSettings().setAllowFileAccess(false);
-                webView.getSettings().setAllowFileAccessFromFileURLs(false);
-                webView.addJavascriptInterface(
-                        new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(), config),
-                                this), "CleverTap");
+                CleverTapAPI instance = CleverTapAPI.instanceWithConfig(getActivity(), config);
+                CTWebInterface ctWebInterface = new CTWebInterface(instance, this);
+                webView.setJavaScriptInterface(ctWebInterface);
             }
 
             if (layout != null) {
