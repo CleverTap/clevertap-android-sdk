@@ -93,15 +93,17 @@ internal class AESGCMCrypt(
 
             when (mode) {
                 Cipher.ENCRYPT_MODE -> {
-                    cipher.init(mode, secretKey)
+                    // 128-bit authentication tag length
+                    val gcmParameterSpec = GCMParameterSpec(128, iv)
+                    cipher.init(mode, secretKey, gcmParameterSpec)
                     val generatedIv = cipher.iv // Automatically generates 12-byte IV for GCM
                     val encryptedBytes = cipher.doFinal(data)
                     AESGCMCryptResult(generatedIv, encryptedBytes)
                 }
                 Cipher.DECRYPT_MODE -> {
                     if (iv != null) {
-                        val gcmParameterSpec =
-                            GCMParameterSpec(128, iv) // 128-bit authentication tag length
+                        // 128-bit authentication tag length
+                        val gcmParameterSpec = GCMParameterSpec(128, iv)
                         cipher.init(mode, secretKey, gcmParameterSpec)
                         val decryptedBytes = cipher.doFinal(data)
                         AESGCMCryptResult(iv, decryptedBytes)
