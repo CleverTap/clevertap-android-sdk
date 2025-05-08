@@ -1,5 +1,5 @@
 ## CleverTap Android SDK CHANGE LOG
-### Version 7.4.0 (May 7, 2025)
+### Version 7.4.0 (May 8, 2025)
 
 #### New Features
 * Introduces System App Functions (Open Url, App Rating, Push Permission Request - as mentioned [here](SystemInAppFunctions.md)) which can be triggered either as a button action within an in-app message or as a standalone campaign action in CleverTap, enriching client workflows.
