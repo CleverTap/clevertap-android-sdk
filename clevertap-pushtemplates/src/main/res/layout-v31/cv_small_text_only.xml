@@ -5,9 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingLeft="@dimen/padding_horizontal"
-    android:paddingTop="@dimen/padding_vertical"
+    android:paddingTop="@dimen/padding_micro"
     android:paddingRight="@dimen/padding_horizontal"
-    android:paddingBottom="@dimen/padding_vertical">
+    android:paddingBottom="@dimen/padding_micro">
 
     <ImageView
         android:id="@+id/large_icon"
