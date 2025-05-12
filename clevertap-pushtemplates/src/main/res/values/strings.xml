@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">PushTemplates</string>
+    <string name="confirm_btn">Confirm</string>
 </resources>
