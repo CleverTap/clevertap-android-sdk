@@ -670,12 +670,14 @@ internal class NetworkManager(
                     sessionEncryptionKey,
                     encryptionResult.iv
                 ).toJsonString()
+                logger.verbose("Encrypted Request = $bodyEnc")
                 response = ctApiWrapper.ctApi.sendQueue(
                     eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
                     bodyEnc,
                     true
                 )
             } else {
+                logger.verbose("Normal Request cause encryption failed = $body")
                 response = ctApiWrapper.ctApi.sendQueue(
                     eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
                     body.toString(),
@@ -781,6 +783,8 @@ internal class NetworkManager(
         var bodyJson: JSONObject? = bodyString.toJsonOrNull()
 
         if (isEncryptedResponse && bodyString != null) {
+
+            logger.verbose("Encrypted response = $bodyString")
 
             val decryptResponse = encryptionManager.decryptResponse(bodyString = bodyString)
             when (decryptResponse) {
