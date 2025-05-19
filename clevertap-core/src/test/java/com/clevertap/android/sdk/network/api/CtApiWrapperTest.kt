@@ -4,11 +4,11 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.shared.test.BaseTestCase
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 

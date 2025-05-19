@@ -30,12 +30,7 @@ dependencies {
     compileOnly (libs.androidx.work.runtime)
     compileOnly (libs.androidx.concurrent.futures)
 
-    testRuntimeOnly (libs.test.junit.jupiter.engine)
-
     // Unit testing dependencies
-    testImplementation (libs.test.junit.platform.runner)
-    testImplementation (libs.test.junit.jupiter.api)
-
     testImplementation (libs.test.mockito.core)
     testImplementation (libs.test.robolectric)
 

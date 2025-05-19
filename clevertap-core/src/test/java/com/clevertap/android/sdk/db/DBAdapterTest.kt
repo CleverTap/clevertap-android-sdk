@@ -6,7 +6,6 @@ import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
 import org.junit.Test
-import org.junit.jupiter.api.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit

@@ -40,10 +40,6 @@ android {
 
 dependencies {
     api project(':clevertap-core')
-    // Unit ing dependencies
-    api (libs.test.junit.platform.runner)
-    api (libs.test.junit.jupiter.api)
-    api (libs.test.junit.jupiter.engine)
     api (libs.kotlin.stdlib.jdk7)
     api (libs.test.jsonassert)
     api (libs.gson)
