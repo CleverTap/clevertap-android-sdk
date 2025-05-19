@@ -5,16 +5,21 @@ import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
-import com.clevertap.android.sdk.pushnotification.fcm.FcmSdkHandlerImpl
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
 import junit.framework.Assert.assertEquals
 import org.json.JSONObject
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.*
-import org.mockito.Mockito.*
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
@@ -24,8 +29,6 @@ import kotlin.test.assertTrue
 class ActivityLifeCycleManagerTest : BaseTestCase() {
 
     private lateinit var activityLifeCycleManager: ActivityLifeCycleManager
-    private lateinit var analyticsManager: AnalyticsManager
-    private lateinit var handler: FcmSdkHandlerImpl
     private lateinit var listener: CTPushProviderListener
     private lateinit var manifestInfo: ManifestInfo
     private lateinit var coreState: CoreState
@@ -34,9 +37,9 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        coreState = MockCoreState(cleverTapInstanceConfig)
-        listener = mock(CTPushProviderListener::class.java)
-        manifestInfo = mock(ManifestInfo::class.java)
+        coreState = MockCoreStateKotlin(cleverTapInstanceConfig)
+        listener = mockk()
+        manifestInfo = mockk()
         activityLifeCycleManager = ActivityLifeCycleManager(
             appCtx, cleverTapInstanceConfig, coreState.analyticsManager, coreState.coreMetaData,
             coreState.sessionManager, coreState.pushProviders, coreState.callbackManager, coreState.inAppController,
@@ -78,19 +81,18 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
             override fun triggerLocation() {
             }
         }
-        val mockActivity = mock(Activity::class.java)
-        val geofenceCallbackSpy = spy(geofenceCallback)
+        val mockActivity = mockk<Activity>()
+        val geofenceCallbackSpy = spyk(geofenceCallback)
         coreState.coreMetaData.isAppLaunchPushed = true
         coreState.callbackManager.geofenceCallback = geofenceCallbackSpy
-        //`when`(coreState.callbackManager.geofenceCallback).thenReturn(geofenceCallback)
         activityLifeCycleManager.activityResumed(mockActivity)
-        verify(coreState.sessionManager).checkTimeoutSession()
-        verify(coreState.analyticsManager,times(0)).pushAppLaunchedEvent()
-        verify(coreState.analyticsManager,times(0)).fetchFeatureFlags()
-        verify(coreState.pushProviders,times(0)).onTokenRefresh()
-        verify(geofenceCallbackSpy, never()).triggerLocation()
-        verify(coreState.baseEventQueueManager).pushInitialEventsAsync()
-        verify(coreState.inAppController).checkPendingInAppNotifications(mockActivity)
+        verify { coreState.sessionManager.checkTimeoutSession() }
+        verify(exactly = 0) { coreState.analyticsManager.pushAppLaunchedEvent() }
+        verify(exactly = 0) { coreState.analyticsManager.fetchFeatureFlags() }
+        verify(exactly = 0) { coreState.pushProviders.onTokenRefresh() }
+        verify(exactly = 0) { geofenceCallbackSpy.triggerLocation() }
+        verify { coreState.baseEventQueueManager.pushInitialEventsAsync() }
+        verify { coreState.inAppController.checkPendingInAppNotifications(mockActivity) }
     }
 
     @Test
@@ -102,50 +104,48 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
             override fun triggerLocation() {
             }
         }
-        val mockActivity = mock(Activity::class.java)
-        val installReferrerClient = mock(InstallReferrerClient::class.java)
-        val installReferrerClientBuilder = mock(InstallReferrerClient.Builder::class.java)
-        val geofenceCallbackSpy = spy(geofenceCallback)
+        val mockActivity = mockk<Activity>()
+        val installReferrerClient = mockk<InstallReferrerClient>()
+        val installReferrerClientBuilder = mockk<InstallReferrerClient.Builder>()
+        val geofenceCallbackSpy = spyk(geofenceCallback)
         coreState.coreMetaData.isAppLaunchPushed = false
         coreState.coreMetaData.isInstallReferrerDataSent = false
         coreState.coreMetaData.isFirstSession = true
         coreState.coreMetaData.isInstallReferrerDataSent = false
         coreState.callbackManager.geofenceCallback = geofenceCallbackSpy
-        //`when`(coreState.callbackManager.geofenceCallback).thenReturn(geofenceCallback)
 
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
-            mockStatic(InstallReferrerClient::class.java).use {
-                val referrerDetails = mock(ReferrerDetails::class.java)
-                val captor = ArgumentCaptor.forClass(InstallReferrerStateListener::class.java)
-                `when`(InstallReferrerClient.newBuilder(appCtx)).thenReturn(installReferrerClientBuilder)
-                `when`(installReferrerClientBuilder.build()).thenReturn(installReferrerClient)
-                `when`(installReferrerClient.installReferrer).thenReturn(referrerDetails)
-                `when`(referrerDetails.installReferrer).thenReturn("https://play.google.com/com.company")
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
+            mockkStatic(InstallReferrerClient::class) {
+                val referrerDetails = mockk<ReferrerDetails>(relaxed = true)
+                val listenerSlot = slot<InstallReferrerStateListener>()
+                every { InstallReferrerClient.newBuilder(appCtx) } returns installReferrerClientBuilder
+                every { installReferrerClientBuilder.build() } returns installReferrerClient
+                every { installReferrerClient.installReferrer } returns referrerDetails
+                val installReferrer = "https://play.google.com/com.company"
+                every { referrerDetails.installReferrer } returns installReferrer
+
                  activityLifeCycleManager.activityResumed(mockActivity)
 
-                verify(installReferrerClient).startConnection(captor.capture())
-                val installReferrerStateListener : InstallReferrerStateListener = captor.value
+                verify { installReferrerClient.startConnection(capture(listenerSlot)) }
+                val installReferrerStateListener: InstallReferrerStateListener =
+                    listenerSlot.captured
                 installReferrerStateListener.onInstallReferrerSetupFinished(InstallReferrerClient.InstallReferrerResponse.OK)
 
-                verify(installReferrerClient).installReferrer
-                verify(coreState.analyticsManager).pushInstallReferrer("https://play.google.com/com.company")
+                verify { installReferrerClient.installReferrer }
+                verify { coreState.analyticsManager.pushInstallReferrer(installReferrer) }
                 assertTrue(coreState.coreMetaData.isInstallReferrerDataSent)
 
-                verify(coreState.sessionManager).checkTimeoutSession()
-                verify(coreState.analyticsManager).pushAppLaunchedEvent()
-                verify(coreState.analyticsManager).fetchFeatureFlags()
-                verify(coreState.pushProviders).onTokenRefresh()
-                verify(geofenceCallbackSpy).triggerLocation()
-                verify(coreState.baseEventQueueManager).pushInitialEventsAsync()
-                verify(coreState.inAppController).checkPendingInAppNotifications(mockActivity)
+                verify { coreState.sessionManager.checkTimeoutSession() }
+                verify { coreState.analyticsManager.pushAppLaunchedEvent() }
+                verify { coreState.analyticsManager.fetchFeatureFlags() }
+                verify { coreState.pushProviders.onTokenRefresh() }
+                verify { geofenceCallbackSpy.triggerLocation() }
+                verify { coreState.baseEventQueueManager.pushInitialEventsAsync() }
+                verify { coreState.inAppController.checkPendingInAppNotifications(mockActivity) }
             }
-
         }
-
-
-
     }
-
-
 }

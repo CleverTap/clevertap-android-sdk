@@ -2,10 +2,9 @@ package com.clevertap.android.sdk.network.api
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.MockHttpClient
-import org.mockito.*
+import io.mockk.mockk
 
 internal object CtApiTestProvider {
 
@@ -35,7 +34,7 @@ internal object CtApiTestProvider {
             accountId = ACCOUNT_ID,
             accountToken = ACCOUNT_TOKEN,
             sdkVersion = SDK_VERSION,
-            logger = Mockito.mock(Logger::class.java),
+            logger = mockk(relaxed = true),
             logTag = "testCtApi"
         )
     }

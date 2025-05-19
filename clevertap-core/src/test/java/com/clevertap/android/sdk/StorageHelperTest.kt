@@ -6,13 +6,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.clevertap.android.sdk.Constants.CLEVERTAP_STORAGE_TAG
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows
-import org.robolectric.shadows.ShadowSharedPreferences
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -358,16 +356,20 @@ class StorageHelperTest: BaseTestCase() {
 
     @Test
     fun test_persist_when_ABC_should_XYZ() {
-        val mock: SharedPreferences.Editor = Mockito.mock(SharedPreferences.Editor::class.java)
+        val mock: SharedPreferences.Editor = mockk()
         StorageHelper.persist(mock)
-        Mockito.verify(mock).apply()
+        verify {
+            mock.apply()
+        }
     }
 
     @Test
     fun test_persistImmediately_when_ABC_should_XYZ() {
-        val mock: SharedPreferences.Editor = Mockito.mock(SharedPreferences.Editor::class.java)
+        val mock: SharedPreferences.Editor = mockk()
         StorageHelper.persistImmediately(mock)
-        Mockito.verify(mock).commit()
+        verify {
+            mock.commit()
+        }
     }
 
     //=====================================================================================================================================

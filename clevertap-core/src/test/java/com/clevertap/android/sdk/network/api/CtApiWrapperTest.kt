@@ -4,12 +4,12 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.*
+import org.junit.Before
 import org.junit.Test
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
-import org.junit.runner.*
-import org.mockito.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -19,6 +19,7 @@ class CtApiWrapperTest : BaseTestCase() {
     private lateinit var coreMetaData: CoreMetaData
     private lateinit var deviceInfo: DeviceInfo
     private lateinit var guid: String
+
     @Before
     override fun setUp() {
         super.setUp()
@@ -32,6 +33,7 @@ class CtApiWrapperTest : BaseTestCase() {
     fun `test ctApi initialization`() {
         assertNotNull(ctApiWrapper.ctApi)
     }
+
     @Test
     fun `test ctApi when multiple times get is called returns same CtApi instance`() {
         val ctApi1 = ctApiWrapper.ctApi
@@ -44,9 +46,9 @@ class CtApiWrapperTest : BaseTestCase() {
         assertEquals(ctApi1,ctApi3)
         assertEquals(ctApi2,ctApi3)
     }
+
     @Test
     fun `test ctApi when different CtApiWrapper creates unique CtApi instance`() {
-
         val ctApiWrapper1 = CtApiWrapper(application, cleverTapInstanceConfig, deviceInfo)
         val ctApiWrapper2 = CtApiWrapper(application, cleverTapInstanceConfig, deviceInfo)
         val ctApiWrapper3 = CtApiWrapper(application, cleverTapInstanceConfig, deviceInfo)

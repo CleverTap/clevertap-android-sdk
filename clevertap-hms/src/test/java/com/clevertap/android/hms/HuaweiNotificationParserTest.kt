@@ -5,9 +5,10 @@ import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.google.gson.GsonBuilder
 import com.huawei.hms.push.RemoteMessage
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -22,12 +23,12 @@ class HuaweiNotificationParserTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         parser = HmsNotificationParser()
-        message = mock(RemoteMessage::class.java)
+        message = mockk<RemoteMessage>(relaxed = true)
     }
 
     @Test
     fun testToBundle_Message_Invalid_Content_Return_EmptyBundle() {
-        `when`(message.data).thenReturn(null)
+        every { message.data } returns null
         val returnedBundle = parser.toBundle(message)
         Assert.assertNotNull(returnedBundle)
         Assert.assertEquals(0,returnedBundle.keySet().size)
@@ -36,7 +37,7 @@ class HuaweiNotificationParserTest : BaseTestCase() {
     @Test
     fun testToBundle_Message_Outside_CleverTap_Return_AssocBundle() {
         val mockJson= getMockJsonStringOutsideNetwork()
-        `when`(message.data).thenReturn(mockJson)
+        every { message.data } returns mockJson
 
         val returnedBundle = parser.toBundle(message)
         Assert.assertNotNull(returnedBundle)
@@ -48,7 +49,7 @@ class HuaweiNotificationParserTest : BaseTestCase() {
 
     @Test
     fun testToBundle_Message_CleverTap_Message_Return_Not_Null() {
-        `when`(message.data).thenReturn(getMockJsonStringClevertapNetwork())
+        every { message.data } returns getMockJsonStringClevertapNetwork()
         Assert.assertNotNull(parser.toBundle(message))
     }
 

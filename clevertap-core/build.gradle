@@ -59,7 +59,6 @@ dependencies {
     testImplementation(libs.test.robolectric)
     testImplementation(libs.firebase.messaging)
     testImplementation(libs.test.mockk)
-    testImplementation(libs.test.mockito.kotlin)
     testImplementation(libs.test.coroutines)
 
     androidTestImplementation(libs.test.work.testing)

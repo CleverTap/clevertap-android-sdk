@@ -3,27 +3,24 @@ package com.clevertap.android.sdk.task
 import android.os.Handler
 import android.os.Looper
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.*
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class MainThreadExecutorTest : BaseTestCase() {
 
-    @Before
-    override fun setUp() {
-        super.setUp()
-    }
-
     @Test
     fun test_execute() {
-        val handler = Mockito.mock(Handler::class.java)
+        val handler = mockk<Handler>(relaxed = true)
         val executor = MainThreadExecutor()
         executor.mainThreadHandler = handler
         val runnable = Runnable { }
         executor.execute(runnable)
-        Mockito.verify(handler).post(runnable)
+        verify { handler.post(runnable) }
     }
 
     @Test
