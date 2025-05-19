@@ -42,7 +42,6 @@ dependencies {
     api project(':clevertap-core')
     api (libs.kotlin.stdlib.jdk7)
     api (libs.test.jsonassert)
-    api (libs.gson)
     api (libs.test.mockk)
     api (libs.test.robolectric)
 
@@ -60,5 +59,4 @@ dependencies {
     api (libs.test.kotlin.test)
 
     api (libs.test.xmlpull)
-
 }
