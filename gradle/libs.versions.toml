@@ -32,7 +32,6 @@ test_core = "1.6.1"
 test_rules = "1.6.1"
 test_runner = "1.6.2"
 work_testing = "2.9.1"
-truth = "1.1.3"
 junit = "4.13.2"
 awaitility = "4.1.0"
 kotlin_stdlib_jdk7 = "1.9.20" #check with kotlin_gradle_plugin
@@ -120,7 +119,6 @@ test_core = { module = "androidx.test:core", version.ref = "test_core" }
 test_rules = { module = "androidx.test:rules", version.ref = "test_rules" }
 test_runner = { module = "androidx.test:runner", version.ref = "test_runner" }
 test_work_testing = { module = "androidx.work:work-testing", version.ref = "work_testing" }
-test_truth = { module = "com.google.truth:truth", version.ref = "truth" }
 test_junit = { module = "junit:junit", version.ref = "junit" }
 test_awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 test_kotlin_test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin_test" }

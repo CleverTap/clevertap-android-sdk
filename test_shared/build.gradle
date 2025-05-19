@@ -60,7 +60,6 @@ dependencies {
     api (libs.androidx.core.core)
 
     api (libs.test.kotlin.test)
-    api (libs.test.truth)
 
     api (libs.test.xmlpull)
 

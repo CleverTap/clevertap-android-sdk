@@ -39,7 +39,6 @@ dependencies {
     testImplementation (libs.androidx.appcompat)
     testImplementation (libs.firebase.messaging)
 
-    testImplementation (libs.catch.exception)
     testImplementation (project(":clevertap-core"))
 
     testImplementation (libs.installreferrer)
