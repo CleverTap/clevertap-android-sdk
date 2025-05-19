@@ -84,10 +84,6 @@ google_services = "4.4.2"
 agcp = "1.9.1.301"
 push = "6.11.0.300"
 
-#Catch Exception
-catch_exception = "2.0"
-
-
 [libraries]
 # Project
 android_gradle_plugin = { module = "com.android.tools.build:gradle", version.ref = "android_gradle_plugin" }
@@ -175,9 +171,6 @@ google_services = { module = "com.google.gms:google-services", version.ref = "go
 #HMS Push Plugin/Lib
 huawei_agcp_plugin = { module = "com.huawei.agconnect:agcp", version.ref = "agcp" }
 huawei_push = { module = "com.huawei.hms:push", version.ref = "push" }
-
-#Catch Exception
-catch_exception = { module = "eu.codearte.catch-exception:catch-exception", version.ref = "catch_exception" }
 
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]

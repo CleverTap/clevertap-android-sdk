@@ -56,7 +56,6 @@ dependencies {
     api (libs.test.rules)
     api (libs.test.espresso.core)
 
-    api (libs.catch.exception)
     api (libs.androidx.core.core)
 
     api (libs.test.kotlin.test)
