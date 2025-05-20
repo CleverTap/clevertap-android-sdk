@@ -1,67 +1,52 @@
 package com.clevertap.android.geofence
 
 import android.app.PendingIntent
-import android.content.Context
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.Mock
-import org.mockito.MockedStatic
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
 class LocationUpdateTaskTest : BaseTestCase() {
 
-    @Mock
-    lateinit var ctGeofenceAPI: CTGeofenceAPI
-
-    @Mock
-    lateinit var ctLocationAdapter: CTLocationAdapter
-
-    @Mock
-    lateinit var onCompleteListener: CTGeofenceTask.OnCompleteListener
-
-    @Mock
-    lateinit var logger: Logger
-
-    @Mock
-    lateinit var pendingIntent: PendingIntent
-
-    private lateinit var ctGeofenceAPIMockedStatic: MockedStatic<CTGeofenceAPI>
-    private lateinit var fileUtilsMockedStatic: MockedStatic<FileUtils>
-    private lateinit var utilsMockedStatic: MockedStatic<Utils>
-
-    private lateinit var pendingIntentFactoryMockedStatic: MockedStatic<PendingIntentFactory>
+    private lateinit var ctGeofenceAPI: CTGeofenceAPI
+    private lateinit var ctLocationAdapter: CTLocationAdapter
+    private lateinit var onCompleteListener: CTGeofenceTask.OnCompleteListener
+    private lateinit var logger: Logger
+    private lateinit var pendingIntent: PendingIntent
 
     @Before
     override fun setUp() {
-
-        MockitoAnnotations.openMocks(this)
-
-        ctGeofenceAPIMockedStatic = mockStatic(CTGeofenceAPI::class.java)
-        fileUtilsMockedStatic = mockStatic(FileUtils::class.java)
-        utilsMockedStatic = mockStatic(Utils::class.java)
-        pendingIntentFactoryMockedStatic = mockStatic(PendingIntentFactory::class.java)
         super.setUp()
 
-        `when`(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI)
-        `when`(CTGeofenceAPI.getLogger()).thenReturn(logger)
-        `when`(ctGeofenceAPI.ctLocationAdapter).thenReturn(ctLocationAdapter)
+        ctGeofenceAPI = mockk(relaxed = true)
+        ctLocationAdapter = mockk(relaxed = true)
+        onCompleteListener = mockk(relaxed = true)
+        logger = mockk(relaxed = true)
+        pendingIntent = mockk(relaxed = true)
+
+        mockkStatic(CTGeofenceAPI::class)
+        mockkStatic(FileUtils::class)
+        mockkStatic(Utils::class)
+        mockkStatic(PendingIntentFactory::class)
+
+        every { CTGeofenceAPI.getInstance(application) } returns ctGeofenceAPI
+        every { CTGeofenceAPI.getLogger() } returns logger
+        every { ctGeofenceAPI.ctLocationAdapter } returns ctLocationAdapter
     }
 
     @After
-    fun cleanup() {
-        ctGeofenceAPIMockedStatic.close()
-        fileUtilsMockedStatic.close()
-        utilsMockedStatic.close()
-        pendingIntentFactoryMockedStatic.close()
+    override fun cleanUp() {
+        super.cleanUp()
+        unmockkStatic(CTGeofenceAPI::class)
+        unmockkStatic(FileUtils::class)
+        unmockkStatic(Utils::class)
+        unmockkStatic(PendingIntentFactory::class)
     }
 
     @Test
@@ -70,21 +55,17 @@ class LocationUpdateTaskTest : BaseTestCase() {
 
         val ctGeofenceSettings =
             CTGeofenceSettings.Builder().enableBackgroundLocationUpdates(true).build()
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(ctGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns ctGeofenceSettings
 
         val task = LocationUpdateTask(application)
         task.setOnCompleteListener(onCompleteListener)
         task.execute()
 
-        verify(ctLocationAdapter).requestLocationUpdates()
+        verify { ctLocationAdapter.requestLocationUpdates() }
 
-        utilsMockedStatic.verify {
-            Utils.writeSettingsToFile(
-                any(Context::class.java), any(CTGeofenceSettings::class.java)
-            )
-        }
+        verify { Utils.writeSettingsToFile(any(), any()) }
 
-        verify(onCompleteListener).onComplete()
+        verify { onCompleteListener.onComplete() }
     }
 
     @Test
@@ -94,21 +75,14 @@ class LocationUpdateTaskTest : BaseTestCase() {
         val ctGeofenceSettings =
             CTGeofenceSettings.Builder().enableBackgroundLocationUpdates(false).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(ctGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns ctGeofenceSettings
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(ctLocationAdapter, never()).requestLocationUpdates()
-        verify(ctLocationAdapter, never()).removeLocationUpdates(
-            any(PendingIntent::class.java)
-        )
-
-        utilsMockedStatic.verify {
-            Utils.writeSettingsToFile(
-                any(Context::class.java), any(CTGeofenceSettings::class.java)
-            )
-        }
+        verify(exactly = 0) { ctLocationAdapter.requestLocationUpdates() }
+        verify(exactly = 0) { ctLocationAdapter.removeLocationUpdates(any()) }
+        verify { Utils.writeSettingsToFile(any(), any()) }
     }
 
     @Test
@@ -118,37 +92,29 @@ class LocationUpdateTaskTest : BaseTestCase() {
         val ctGeofenceSettings =
             CTGeofenceSettings.Builder().enableBackgroundLocationUpdates(false).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(ctGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns ctGeofenceSettings
 
         // make pending intent non-null
-        `when`(
-            PendingIntentFactory.getPendingIntent(any(Context::class.java), anyInt(), anyInt())
-        ).thenReturn(pendingIntent)
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns pendingIntent
 
         val task = LocationUpdateTask(application)
         task.execute()
 
         // verify that previous update is removed
-        verify(ctLocationAdapter).removeLocationUpdates(any(PendingIntent::class.java))
-        verify(ctLocationAdapter, never()).requestLocationUpdates()
-
-        utilsMockedStatic.verify {
-            Utils.writeSettingsToFile(
-                any(Context::class.java), any(CTGeofenceSettings::class.java)
-            )
-        }
-
+        verify { ctLocationAdapter.removeLocationUpdates(any()) }
+        verify(exactly = 0) { ctLocationAdapter.requestLocationUpdates() }
+        verify { Utils.writeSettingsToFile(any(), any()) }
     }
 
     @Test
     fun testExecuteWhenLocationAdapterIsNull() {
         // when location adapter is null
 
-        `when`(ctGeofenceAPI.ctLocationAdapter).thenReturn(null)
+        every { ctGeofenceAPI.ctLocationAdapter } returns null
         val task = LocationUpdateTask(application)
         task.execute()
 
-        utilsMockedStatic.verifyNoInteractions()
+        verify(exactly = 0) { Utils.writeSettingsToFile(any(), any()) }
     }
 
     @Test
@@ -158,21 +124,21 @@ class LocationUpdateTaskTest : BaseTestCase() {
         val currentGeofenceSettings =
             CTGeofenceSettings.Builder().enableBackgroundLocationUpdates(true).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(currentGeofenceSettings)
-        `when`(
-            PendingIntentFactory.getPendingIntent(any(Context::class.java), anyInt(), anyInt())
-        ).thenReturn(pendingIntent)
+        every { ctGeofenceAPI.geofenceSettings } returns currentGeofenceSettings
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns pendingIntent
 
         val lastGeofenceSettings = CTGeofenceSettings.Builder().build()
 
-        `when`(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings)
+        every { Utils.readSettingsFromFile(application) } returns lastGeofenceSettings
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(logger).verbose(
-            CTGeofenceAPI.GEOFENCE_LOG_TAG, "Dropping duplicate location update request"
-        )
+        verify {
+            logger.verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG, "Dropping duplicate location update request"
+            )
+        }
     }
 
     @Test
@@ -182,21 +148,17 @@ class LocationUpdateTaskTest : BaseTestCase() {
         val currentGeofenceSettings =
             CTGeofenceSettings.Builder().enableBackgroundLocationUpdates(true).build()
 
-        `when`(
-            PendingIntentFactory.getPendingIntent(
-                any(Context::class.java), anyInt(), anyInt()
-            )
-        ).thenReturn(null)
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(currentGeofenceSettings)
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns null
+        every { ctGeofenceAPI.geofenceSettings } returns currentGeofenceSettings
 
         val lastGeofenceSettings = CTGeofenceSettings.Builder().build()
 
-        `when`(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings)
+        every { Utils.readSettingsFromFile(application) } returns lastGeofenceSettings
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(ctLocationAdapter).requestLocationUpdates()
+        verify { ctLocationAdapter.requestLocationUpdates() }
     }
 
     @Test
@@ -208,23 +170,19 @@ class LocationUpdateTaskTest : BaseTestCase() {
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC)
                 .setLocationAccuracy(CTGeofenceSettings.ACCURACY_HIGH).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(currentGeofenceSettings)
-        `when`(
-            PendingIntentFactory.getPendingIntent(
-                any(Context::class.java), anyInt(), anyInt()
-            )
-        ).thenReturn(pendingIntent)
+        every { ctGeofenceAPI.geofenceSettings } returns currentGeofenceSettings
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns pendingIntent
 
         val lastGeofenceSettings =
             CTGeofenceSettings.Builder().setLocationAccuracy(CTGeofenceSettings.ACCURACY_LOW)
                 .build()
 
-        `when`(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings)
+        every { Utils.readSettingsFromFile(application) } returns lastGeofenceSettings
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(ctLocationAdapter).requestLocationUpdates()
+        verify { ctLocationAdapter.requestLocationUpdates() }
     }
 
     @Test
@@ -236,22 +194,17 @@ class LocationUpdateTaskTest : BaseTestCase() {
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC)
                 .setInterval(2000000).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(currentGeofenceSettings)
-        `when`(
-            PendingIntentFactory.getPendingIntent(
-                any(Context::class.java), anyInt(), anyInt()
-            )
-        ).thenReturn(pendingIntent)
+        every { ctGeofenceAPI.geofenceSettings } returns currentGeofenceSettings
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns pendingIntent
 
 
         val lastGeofenceSettings = CTGeofenceSettings.Builder().setInterval(5000000).build()
-
-        `when`(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings)
+        every { Utils.readSettingsFromFile(application) } returns lastGeofenceSettings
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(ctLocationAdapter).requestLocationUpdates()
+        verify { ctLocationAdapter.requestLocationUpdates() }
     }
 
     @Test
@@ -263,21 +216,17 @@ class LocationUpdateTaskTest : BaseTestCase() {
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC)
                 .setFastestInterval(2000000).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(currentGeofenceSettings)
-        `when`(
-            PendingIntentFactory.getPendingIntent(
-                any(Context::class.java), anyInt(), anyInt()
-            )
-        ).thenReturn(pendingIntent)
+        every { ctGeofenceAPI.geofenceSettings } returns currentGeofenceSettings
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns pendingIntent
 
         val lastGeofenceSettings = CTGeofenceSettings.Builder().setFastestInterval(5000000).build()
 
-        `when`(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings)
+        every { Utils.readSettingsFromFile(application) } returns lastGeofenceSettings
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(ctLocationAdapter).requestLocationUpdates()
+        verify { ctLocationAdapter.requestLocationUpdates() }
     }
 
     @Test
@@ -289,22 +238,18 @@ class LocationUpdateTaskTest : BaseTestCase() {
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC)
                 .setSmallestDisplacement(600f).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(currentGeofenceSettings)
-        `when`(
-            PendingIntentFactory.getPendingIntent(
-                any(Context::class.java), anyInt(), anyInt()
-            )
-        ).thenReturn(pendingIntent)
+        every { ctGeofenceAPI.geofenceSettings } returns currentGeofenceSettings
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns pendingIntent
 
         val lastGeofenceSettings =
             CTGeofenceSettings.Builder().setSmallestDisplacement(700f).build()
 
-        `when`(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings)
+        every { Utils.readSettingsFromFile(application) } returns lastGeofenceSettings
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(ctLocationAdapter).requestLocationUpdates()
+        verify { ctLocationAdapter.requestLocationUpdates() }
     }
 
     @Test
@@ -316,21 +261,17 @@ class LocationUpdateTaskTest : BaseTestCase() {
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC)
                 .setInterval(2000000).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(currentGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns currentGeofenceSettings
 
         val lastGeofenceSettings = CTGeofenceSettings.Builder().setInterval(5000000).build()
 
-        `when`(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings)
-        `when`(
-            PendingIntentFactory.getPendingIntent(
-                any(Context::class.java), anyInt(), anyInt()
-            )
-        ).thenReturn(pendingIntent)
+        every { Utils.readSettingsFromFile(application) } returns lastGeofenceSettings
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns pendingIntent
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(ctLocationAdapter).requestLocationUpdates()
+        verify { ctLocationAdapter.requestLocationUpdates() }
     }
 
     @Test
@@ -341,22 +282,18 @@ class LocationUpdateTaskTest : BaseTestCase() {
             CTGeofenceSettings.Builder().enableBackgroundLocationUpdates(true)
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(currentGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns currentGeofenceSettings
 
         val lastGeofenceSettings = CTGeofenceSettings.Builder()
             .setLocationFetchMode(CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC).build()
 
-        `when`(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings)
-        `when`(
-            PendingIntentFactory.getPendingIntent(
-                any(Context::class.java), anyInt(), anyInt()
-            )
-        ).thenReturn(pendingIntent)
+        every { Utils.readSettingsFromFile(application) } returns lastGeofenceSettings
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns pendingIntent
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(ctLocationAdapter).requestLocationUpdates()
+        verify { ctLocationAdapter.requestLocationUpdates() }
     }
 
     @Test
@@ -367,21 +304,17 @@ class LocationUpdateTaskTest : BaseTestCase() {
             CTGeofenceSettings.Builder().enableBackgroundLocationUpdates(true)
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(currentGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns currentGeofenceSettings
 
         val lastGeofenceSettings = CTGeofenceSettings.Builder()
             .setLocationFetchMode(CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC).build()
 
-        `when`(Utils.readSettingsFromFile(application)).thenReturn(lastGeofenceSettings)
-        `when`(
-            PendingIntentFactory.getPendingIntent(
-                any(Context::class.java), anyInt(), anyInt()
-            )
-        ).thenReturn(pendingIntent)
+        every { Utils.readSettingsFromFile(application) } returns lastGeofenceSettings
+        every { PendingIntentFactory.getPendingIntent(any(), any(), any()) } returns pendingIntent
 
         val task = LocationUpdateTask(application)
         task.execute()
 
-        verify(ctLocationAdapter).requestLocationUpdates()
+        verify { ctLocationAdapter.requestLocationUpdates() }
     }
 }

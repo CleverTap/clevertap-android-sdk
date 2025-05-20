@@ -4,44 +4,38 @@ import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Intent
 import com.clevertap.android.geofence.CTGeofenceAPI.GEOFENCE_LOG_TAG
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import io.mockk.verify
+import io.mockk.verifyOrder
 import org.awaitility.Awaitility.await
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.doAnswer
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
 class CTGeofenceBootReceiverTest : BaseTestCase() {
 
-    @Mock
-    lateinit var ctGeofenceAPI: CTGeofenceAPI
-
-    @Mock
-    lateinit var pendingResult: BroadcastReceiver.PendingResult
-
-    @Mock
-    lateinit var logger: Logger
+    private lateinit var ctGeofenceAPI: CTGeofenceAPI
+    private lateinit var pendingResult: BroadcastReceiver.PendingResult
+    private lateinit var logger: Logger
 
     @Before
     override fun setUp() {
-        MockitoAnnotations.openMocks(this)
         super.setUp()
+        ctGeofenceAPI = mockk(relaxed = true)
+        pendingResult = mockk(relaxed = true)
+        logger = mockk(relaxed = true)
     }
 
     @Test
     fun testOnReceiveWhenIntentIstNull() {
         val receiver = CTGeofenceBootReceiver()
-        val spy = Mockito.spy(receiver)
+        val spy = spyk(receiver)
 
         spy.onReceive(application, null)
 
-        verify(spy, never()).goAsync()
+        verify(exactly = 0) { spy.goAsync() }
     }
 
     @Test
@@ -49,38 +43,33 @@ class CTGeofenceBootReceiverTest : BaseTestCase() {
         // when initCTGeofenceApiIfRequired return true
 
         val receiver = CTGeofenceBootReceiver()
-        val spy = Mockito.spy(receiver)
-        `when`(spy.goAsync()).thenReturn(pendingResult)
+        val spy = spyk(receiver)
+        every { spy.goAsync() } returns pendingResult
 
         val isFinished = arrayOf(false)
         val intent = Intent(Intent.ACTION_BOOT_COMPLETED)
 
-        doAnswer { invocation ->
+        every { pendingResult.finish() } answers {
             isFinished[0] = true
-            null
-        }.`when`(pendingResult).finish()
+        }
 
-        mockStatic(Utils::class.java).use { utilsMockedStatic ->
-            utilsMockedStatic.`when`<Boolean> {
-                Utils.hasPermission(
-                    application, Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            }.thenReturn(true)
-            utilsMockedStatic.`when`<Boolean> { Utils.hasBackgroundLocationPermission(application) }
-                .thenReturn(true)
-            utilsMockedStatic.`when`<Boolean> { Utils.initCTGeofenceApiIfRequired(application) }
-                .thenReturn(true)
+        mockkStatic(Utils::class) {
+            every {
+                Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)
+            } returns true
+            every { Utils.hasBackgroundLocationPermission(application) } returns true
+            every { Utils.initCTGeofenceApiIfRequired(application) } returns true
 
-            mockStatic(CTGeofenceAPI::class.java).use { ctGeofenceAPIMockedStatic ->
-                ctGeofenceAPIMockedStatic.`when`<Logger>(CTGeofenceAPI::getLogger)
-                    .thenReturn(logger)
+            mockkStatic(CTGeofenceAPI::class) {
+                every { CTGeofenceAPI.getLogger() } returns logger
 
                 spy.onReceive(application, intent)
                 await().until { isFinished[0] }
-                verify(CTGeofenceAPI.getLogger()).debug(
-                    GEOFENCE_LOG_TAG, "onReceive called after " + "device reboot"
-                )
-                verify(pendingResult).finish()
+
+                verify {
+                    logger.debug(GEOFENCE_LOG_TAG, "onReceive called after device reboot")
+                }
+                verify { pendingResult.finish() }
             }
         }
     }
@@ -89,38 +78,36 @@ class CTGeofenceBootReceiverTest : BaseTestCase() {
     fun testOnReceiveWhenIntentNotNullTC2() {
         // when initCTGeofenceApiIfRequired return false
         val receiver = CTGeofenceBootReceiver()
-        val spy = Mockito.spy(receiver)
-        `when`(spy.goAsync()).thenReturn(pendingResult)
+        val spy = spyk(receiver)
+        every { spy.goAsync() } returns pendingResult
 
         val isFinished = arrayOf(false)
         val intent = Intent(Intent.ACTION_BOOT_COMPLETED)
-        doAnswer { invocation ->
-            isFinished[0] = true
-            null
-        }.`when`(pendingResult).finish()
 
-        mockStatic(Utils::class.java).use { utilsMockedStatic ->
-            utilsMockedStatic.`when`<Boolean> {
+        every { pendingResult.finish() } answers {
+            isFinished[0] = true
+        }
+
+        mockkStatic(Utils::class) {
+            every {
                 Utils.hasPermission(
                     application, Manifest.permission.ACCESS_FINE_LOCATION
                 )
-            }.thenReturn(true)
-            utilsMockedStatic.`when`<Boolean> { Utils.hasBackgroundLocationPermission(application) }
-                .thenReturn(true)
-            utilsMockedStatic.`when`<Boolean> { Utils.initCTGeofenceApiIfRequired(application) }
-                .thenReturn(false)
+            } returns true
+            every { Utils.hasBackgroundLocationPermission(application) } returns true
+            every { Utils.initCTGeofenceApiIfRequired(application) } returns false
 
-            mockStatic(CTGeofenceAPI::class.java).use { ctGeofenceAPIMockedStatic ->
-                ctGeofenceAPIMockedStatic.`when`<Logger>(CTGeofenceAPI::getLogger)
-                    .thenReturn(logger)
+            mockkStatic(CTGeofenceAPI::class) {
+                every { CTGeofenceAPI.getLogger() } returns logger
+
                 spy.onReceive(application, intent)
                 await().until { isFinished[0] }
 
-                verify(CTGeofenceAPI.getLogger()).debug(
-                    GEOFENCE_LOG_TAG, "onReceive called after " + "device reboot"
-                )
-                verifyNoMoreInteractions(CTGeofenceAPI.getLogger())
-                verify(pendingResult).finish()
+                verify {
+                    logger.debug(GEOFENCE_LOG_TAG, "onReceive called after device reboot")
+                }
+
+                verify { pendingResult.finish() }
             }
         }
     }
@@ -129,27 +116,29 @@ class CTGeofenceBootReceiverTest : BaseTestCase() {
     fun testOnReceiveWhenIntentNotNullTC3() {
         // when ACCESS_FINE_LOCATION permission missing
         val receiver = CTGeofenceBootReceiver()
-        val spy = Mockito.spy(receiver)
+        val spy = spyk(receiver)
         val intent = Intent(Intent.ACTION_BOOT_COMPLETED)
 
-        mockStatic(Utils::class.java).use { utilsMockedStatic ->
-            utilsMockedStatic.`when`<Boolean> {
+        mockkStatic(Utils::class) {
+            every {
                 Utils.hasPermission(
                     application, Manifest.permission.ACCESS_FINE_LOCATION
                 )
-            }.thenReturn(false)
-            mockStatic(CTGeofenceAPI::class.java).use { ctGeofenceAPIMockedStatic ->
-                ctGeofenceAPIMockedStatic.`when`<Logger>(CTGeofenceAPI::getLogger)
-                    .thenReturn(logger)
+            } returns false
+
+            mockkStatic(CTGeofenceAPI::class) {
+                every { CTGeofenceAPI.getLogger() } returns logger
+
                 spy.onReceive(application, intent)
-                verify(CTGeofenceAPI.getLogger()).debug(
-                    GEOFENCE_LOG_TAG, "onReceive called after " + "device reboot"
-                )
-                verify(CTGeofenceAPI.getLogger()).debug(
-                    GEOFENCE_LOG_TAG,
-                    "We don't have ACCESS_FINE_LOCATION permission! Not registering " + "geofences and location updates after device reboot"
-                )
-                verify(spy, never()).goAsync()
+
+                verifyOrder {
+                    logger.debug(GEOFENCE_LOG_TAG, "onReceive called after device reboot")
+                    logger.debug(
+                        GEOFENCE_LOG_TAG,
+                        "We don't have ACCESS_FINE_LOCATION permission! Not registering geofences and location updates after device reboot"
+                    )
+                }
+                verify(exactly = 0) { spy.goAsync() }
             }
         }
     }
@@ -158,30 +147,34 @@ class CTGeofenceBootReceiverTest : BaseTestCase() {
     fun testOnReceiveWhenIntentNotNullTC4() {
         // when ACCESS_BACKGROUND_LOCATION permission missing
         val receiver = CTGeofenceBootReceiver()
-        val spy = Mockito.spy(receiver)
+        val spy = spyk(receiver)
         val intent = Intent(Intent.ACTION_BOOT_COMPLETED)
 
-        mockStatic(Utils::class.java).use { utilsMockedStatic ->
-            utilsMockedStatic.`when`<Boolean> {
+        mockkStatic(Utils::class) {
+            every {
                 Utils.hasPermission(
                     application, Manifest.permission.ACCESS_FINE_LOCATION
                 )
-            }.thenReturn(true)
-            utilsMockedStatic.`when`<Boolean> { Utils.hasBackgroundLocationPermission(application) }
-                .thenReturn(false)
-            mockStatic(CTGeofenceAPI::class.java).use { ctGeofenceAPIMockedStatic ->
-                ctGeofenceAPIMockedStatic.`when`<Logger>(CTGeofenceAPI::getLogger)
-                    .thenReturn(logger)
+            } returns true
+            every { Utils.hasBackgroundLocationPermission(application) } returns false
+
+            mockkStatic(CTGeofenceAPI::class) {
+                every { CTGeofenceAPI.getLogger() } returns logger
+
                 spy.onReceive(application, intent)
-                verify(CTGeofenceAPI.getLogger()).debug(
-                    GEOFENCE_LOG_TAG, "onReceive called after " + "device reboot"
-                )
-                verify(CTGeofenceAPI.getLogger()).debug(
-                    GEOFENCE_LOG_TAG,
-                    "We don't have ACCESS_BACKGROUND_LOCATION permission! not registering " + "geofences and location updates after device reboot"
-                )
+
+                verifyOrder {
+                    logger.debug(
+                        GEOFENCE_LOG_TAG, "onReceive called after device reboot"
+                    )
+                    logger.debug(
+                        GEOFENCE_LOG_TAG,
+                        "We don't have ACCESS_BACKGROUND_LOCATION permission! not registering geofences and location updates after device reboot"
+                    )
+                }
+
                 spy.onReceive(application, intent)
-                verify(spy, never()).goAsync()
+                verify(exactly = 0) { spy.goAsync() }
             }
         }
     }

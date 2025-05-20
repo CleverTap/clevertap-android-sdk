@@ -2,39 +2,32 @@ package com.clevertap.android.geofence
 
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
 
 class CTLocationFactoryTest : BaseTestCase() {
 
-    @Mock
-    lateinit var googleApiAvailability: GoogleApiAvailability
+    private lateinit var googleApiAvailability: GoogleApiAvailability
 
     @Before
     override fun setUp() {
-        MockitoAnnotations.openMocks(this)
         super.setUp()
+        googleApiAvailability = mockk(relaxed = true)
     }
 
     @Test
     fun testCreateLocationAdapterTC1() {
         // when all dependencies available
-        Mockito.mockStatic(Utils::class.java).use { utilsMockedStatic ->
-            utilsMockedStatic.`when`<Boolean>(Utils::isFusedLocationApiDependencyAvailable)
-                .thenReturn(true)
+        mockkStatic(Utils::class) {
+            every { Utils.isFusedLocationApiDependencyAvailable() } returns true
 
-            Mockito.mockStatic(
-                GoogleApiAvailability::class.java
-            ).use { googleApiAvailabilityMockedStatic ->
-                googleApiAvailabilityMockedStatic.`when`<GoogleApiAvailability>(
-                    GoogleApiAvailability::getInstance
-                ).thenReturn(googleApiAvailability)
-                Mockito.`when`(googleApiAvailability.isGooglePlayServicesAvailable(application))
-                    .thenReturn(ConnectionResult.SUCCESS)
+            mockkStatic(GoogleApiAvailability::class) {
+                every { GoogleApiAvailability.getInstance() } returns googleApiAvailability
+                every { googleApiAvailability.isGooglePlayServicesAvailable(application) } returns ConnectionResult.SUCCESS
 
                 val locationAdapter = CTLocationFactory.createLocationAdapter(application)
                 Assert.assertNotNull(locationAdapter)
@@ -44,21 +37,14 @@ class CTLocationFactoryTest : BaseTestCase() {
 
     @Test(expected = IllegalStateException::class)
     fun testCreateLocationAdapterTC2() {
-
         // when play service apk not available
-        Mockito.mockStatic(Utils::class.java).use { utilsMockedStatic ->
-            utilsMockedStatic.`when`<Boolean>(Utils::isFusedLocationApiDependencyAvailable)
-                .thenReturn(
-                    true
-                )
-            Mockito.mockStatic(
-                GoogleApiAvailability::class.java
-            ).use { googleApiAvailabilityMockedStatic ->
-                googleApiAvailabilityMockedStatic.`when`<GoogleApiAvailability>(
-                    GoogleApiAvailability::getInstance
-                ).thenReturn(googleApiAvailability)
-                Mockito.`when`(googleApiAvailability.isGooglePlayServicesAvailable(application))
-                    .thenReturn(ConnectionResult.SERVICE_MISSING)
+        mockkStatic(Utils::class) {
+            every { Utils.isFusedLocationApiDependencyAvailable() } returns true
+
+            mockkStatic(GoogleApiAvailability::class) {
+                every { GoogleApiAvailability.getInstance() } returns googleApiAvailability
+                every { googleApiAvailability.isGooglePlayServicesAvailable(application) } returns ConnectionResult.SERVICE_MISSING
+
                 CTLocationFactory.createLocationAdapter(application)
             }
         }
@@ -66,34 +52,25 @@ class CTLocationFactoryTest : BaseTestCase() {
 
     @Test(expected = IllegalStateException::class)
     fun testCreateLocationAdapterTC3() {
-
         // when play service apk is disabled
-        Mockito.mockStatic(Utils::class.java).use { utilsMockedStatic ->
-            utilsMockedStatic.`when`<Boolean>(Utils::isFusedLocationApiDependencyAvailable)
-                .thenReturn(true)
-            Mockito.mockStatic(GoogleApiAvailability::class.java)
-                .use { googleApiAvailabilityMockedStatic ->
-                    googleApiAvailabilityMockedStatic.`when`<GoogleApiAvailability>(
-                        GoogleApiAvailability::getInstance
-                    ).thenReturn(googleApiAvailability)
-                    Mockito.`when`(
-                        googleApiAvailability.isGooglePlayServicesAvailable(
-                            application
-                        )
-                    ).thenReturn(ConnectionResult.SERVICE_DISABLED)
+        mockkStatic(Utils::class) {
+            every { Utils.isFusedLocationApiDependencyAvailable() } returns true
 
-                    CTLocationFactory.createLocationAdapter(application)
-                }
+            mockkStatic(GoogleApiAvailability::class) {
+                every { GoogleApiAvailability.getInstance() } returns googleApiAvailability
+                every { googleApiAvailability.isGooglePlayServicesAvailable(application) } returns ConnectionResult.SERVICE_DISABLED
+
+                CTLocationFactory.createLocationAdapter(application)
+            }
         }
     }
 
     @Test(expected = IllegalStateException::class)
     fun testCreateLocationAdapterTC4() {
-
         // when fused location dependency not available
-        Mockito.mockStatic(Utils::class.java).use { utilsMockedStatic ->
-            utilsMockedStatic.`when`<Boolean>(Utils::isFusedLocationApiDependencyAvailable)
-                .thenReturn(false)
+        mockkStatic(Utils::class) {
+            every { Utils.isFusedLocationApiDependencyAvailable() } returns false
+
             CTLocationFactory.createLocationAdapter(application)
         }
     }

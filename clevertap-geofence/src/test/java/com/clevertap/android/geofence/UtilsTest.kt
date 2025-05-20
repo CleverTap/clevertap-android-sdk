@@ -1,7 +1,6 @@
 package com.clevertap.android.geofence
 
 import android.Manifest
-import android.content.Context
 import android.location.Location
 import android.os.Build
 import com.clevertap.android.geofence.fakes.CTGeofenceSettingsFake.getSettings
@@ -15,54 +14,49 @@ import com.clevertap.android.geofence.fakes.GeofenceJSON.geofenceArray
 import com.clevertap.android.geofence.fakes.GeofenceJSON.lastFromGeofenceArray
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener
 import com.clevertap.android.sdk.CleverTapAPI
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
-import org.hamcrest.beans.SamePropertyValuesAs
-import org.json.JSONObject
+import org.hamcrest.beans.SamePropertyValuesAs.samePropertyValuesAs
 import org.junit.After
 import org.junit.Assert
 import org.junit.Test
 import org.junit.function.ThrowingRunnable
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers
-import org.mockito.Mock
-import org.mockito.MockedStatic
-import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowApplication
 import org.robolectric.util.ReflectionHelpers
 import org.skyscreamer.jsonassert.JSONAssert
 
 class UtilsTest : BaseTestCase() {
-    @Mock
-    lateinit var cleverTapAPI: CleverTapAPI
-
-    @Mock
-    lateinit var ctGeofenceAPI: CTGeofenceAPI
-
-    lateinit var ctGeofenceAPIMockedStatic: MockedStatic<CTGeofenceAPI>
-
-    @Mock
-    lateinit var logger: Logger
-
+    private lateinit var cleverTapAPI: CleverTapAPI
+    private lateinit var ctGeofenceAPI: CTGeofenceAPI
+    private lateinit var logger: Logger
     private lateinit var shadowApplication: ShadowApplication
-
-    @After
-    fun cleanup() {
-        ctGeofenceAPIMockedStatic.close()
-    }
 
     override fun setUp() {
         super.setUp()
-        MockitoAnnotations.openMocks(this)
+
+        cleverTapAPI = mockk(relaxed = true)
+        ctGeofenceAPI = mockk(relaxed = true)
+        logger = mockk(relaxed = true)
 
         shadowApplication = Shadows.shadowOf(application)
-        ctGeofenceAPIMockedStatic = Mockito.mockStatic<CTGeofenceAPI?>(CTGeofenceAPI::class.java)
 
-        Mockito.`when`<CTGeofenceAPI?>(CTGeofenceAPI.getInstance(application))
-            .thenReturn(ctGeofenceAPI)
-        Mockito.`when`<Logger?>(CTGeofenceAPI.getLogger()).thenReturn(logger)
+        mockkStatic(CTGeofenceAPI::class)
+
+        every { CTGeofenceAPI.getInstance(application) } returns ctGeofenceAPI
+        every { CTGeofenceAPI.getLogger() } returns logger
+    }
+
+    @After
+    override fun cleanUp() {
+        super.cleanUp()
+        unmockkStatic(CTGeofenceAPI::class)
     }
 
     @Test
@@ -115,8 +109,6 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun testHasPermission() {
-        val shadowApplication = Shadows.shadowOf(application)
-
         // when permission is null
         val actual = Utils.hasPermission(application, null)
         Assert.assertFalse("hasPermission must return false when permission is null", actual)
@@ -144,20 +136,10 @@ class UtilsTest : BaseTestCase() {
     fun testInitCTGeofenceApiIfRequired() {
         //when cleverTapApi and settings is null
 
-        Mockito.mockStatic<FileUtils>(FileUtils::class.java).use { fileUtilsMockedStatic ->
-            fileUtilsMockedStatic.`when`<Any?>(MockedStatic.Verification {
-                FileUtils.readFromFile(
-                    ArgumentMatchers.any<Context?>(
-                        Context::class.java
-                    ), ArgumentMatchers.anyString()
-                )
-            }).thenReturn("")
-            fileUtilsMockedStatic.`when`<Any?>(MockedStatic.Verification {
-                FileUtils.getCachedFullPath(
-                    ArgumentMatchers.any<Context?>(Context::class.java),
-                    ArgumentMatchers.anyString()
-                )
-            }).thenReturn("")
+        mockkStatic(FileUtils::class) {
+            every { FileUtils.readFromFile(any(), any()) } returns ""
+            every { FileUtils.getCachedFullPath(any(), any()) } returns ""
+            every { ctGeofenceAPI.cleverTapApi } returns null
 
             val actualWhenSettingsAndCTApiIsNull = Utils.initCTGeofenceApiIfRequired(application)
             Assert.assertFalse(
@@ -166,42 +148,32 @@ class UtilsTest : BaseTestCase() {
             )
 
             // when cleverTapApi is null and settings is not null
-            fileUtilsMockedStatic.`when`<Any?>(MockedStatic.Verification {
-                FileUtils.readFromFile(
-                    ArgumentMatchers.any<Context?>(Context::class.java),
-                    ArgumentMatchers.anyString()
-                )
-            }).thenReturn(settingsJsonString)
+            every { FileUtils.readFromFile(any(), any()) } returns settingsJsonString
+
             val actualWhenSettingsNonNullAndCTApiIsNull =
                 Utils.initCTGeofenceApiIfRequired(application)
             Assert.assertFalse(
                 "Must be false when cleverTapApi is null and settings is not null",
                 actualWhenSettingsNonNullAndCTApiIsNull
             )
-            Mockito.mockStatic<CleverTapAPI?>(CleverTapAPI::class.java)
-                .use { clevertapApiMockedStatic ->
-                    clevertapApiMockedStatic.`when`<Any?>(MockedStatic.Verification {
-                        CleverTapAPI.getGlobalInstance(
-                            ArgumentMatchers.any<Context?>(
-                                Context::class.java
-                            ), ArgumentMatchers.anyString()
-                        )
-                    })
-                        .thenReturn(cleverTapAPI)
-                    val actualWhenSettingsNonNullAndCTApiNonNull =
-                        Utils.initCTGeofenceApiIfRequired(application)
-                    Assert.assertTrue(
-                        "Must be true when cleverTapApi is not null and settings is not null",
-                        actualWhenSettingsNonNullAndCTApiNonNull
-                    )
 
-                    // when cleverTapApi is not null
-                    val actualWhenCTApiNonNull = Utils.initCTGeofenceApiIfRequired(application)
-                    Assert.assertTrue(
-                        "Must be true when cleverTapApi is not null",
-                        actualWhenCTApiNonNull
-                    )
-                }
+            mockkStatic(CleverTapAPI::class) {
+                every { CleverTapAPI.getGlobalInstance(any(), any()) } returns cleverTapAPI
+
+                val actualWhenSettingsNonNullAndCTApiNonNull =
+                    Utils.initCTGeofenceApiIfRequired(application)
+                Assert.assertTrue(
+                    "Must be true when cleverTapApi is not null and settings is not null",
+                    actualWhenSettingsNonNullAndCTApiNonNull
+                )
+
+                // when cleverTapApi is not null
+                val actualWhenCTApiNonNull = Utils.initCTGeofenceApiIfRequired(application)
+                Assert.assertTrue(
+                    "Must be true when cleverTapApi is not null",
+                    actualWhenCTApiNonNull
+                )
+            }
         }
     }
 
@@ -234,70 +206,41 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun testNotifyLocationUpdates() {
-        Mockito.mockStatic<com.clevertap.android.sdk.Utils>(
-            com.clevertap.android.sdk.Utils::class.java
-        ).use { coreUtilsMockedStatic ->
-            val locationUpdatesListener =
-                Mockito.mock<CTLocationUpdatesListener?>(CTLocationUpdatesListener::class.java)
-            Mockito.`when`<CTLocationUpdatesListener?>(ctGeofenceAPI.ctLocationUpdatesListener)
-                .thenReturn(locationUpdatesListener)
+        mockkStatic(com.clevertap.android.sdk.Utils::class) {
+            val locationUpdatesListener = mockk<CTLocationUpdatesListener>(relaxed = true)
+            every { ctGeofenceAPI.ctLocationUpdatesListener } returns locationUpdatesListener
 
-            Utils.notifyLocationUpdates(
-                application, Mockito.mock<Location?>(Location::class.java)
-            )
+            val location = mockk<Location>(relaxed = true)
+            Utils.notifyLocationUpdates(application, location)
 
-            val runnableArgumentCaptor =
-                ArgumentCaptor.forClass<Runnable?, Runnable?>(Runnable::class.java)
+            val runnableSlot = slot<Runnable>()
 
-            coreUtilsMockedStatic.verify(
-                MockedStatic.Verification {
-                    com.clevertap.android.sdk.Utils.runOnUiThread(
-                        runnableArgumentCaptor.capture()
-                    )
-                })
-            runnableArgumentCaptor.getValue().run()
-            Mockito.verify<CTLocationUpdatesListener?>(locationUpdatesListener).onLocationUpdates(
-                ArgumentMatchers.any<Location?>(
-                    Location::class.java
-                )
-            )
+            verify {
+                com.clevertap.android.sdk.Utils.runOnUiThread(capture(runnableSlot))
+            }
+
+            runnableSlot.captured.run()
+            verify { locationUpdatesListener.onLocationUpdates(any()) }
         }
     }
 
     @Test
     fun testReadSettingsFromFile() {
-        Mockito.mockStatic<FileUtils?>(FileUtils::class.java).use { fileUtilsMockedStatic ->
-            fileUtilsMockedStatic.`when`<Any?>(MockedStatic.Verification {
-                FileUtils.getCachedFullPath(
-                    ArgumentMatchers.any<Context?>(Context::class.java),
-                    ArgumentMatchers.anyString()
-                )
-            }).thenReturn("")
+        mockkStatic(FileUtils::class) {
+            every { FileUtils.getCachedFullPath(any(), any()) } returns ""
             // when settings in file is not blank
-            fileUtilsMockedStatic.`when`<Any?>(MockedStatic.Verification {
-                FileUtils.readFromFile(
-                    ArgumentMatchers.any<Context?>(Context::class.java),
-                    ArgumentMatchers.anyString()
-                )
-            }).thenReturn(settingsJsonString)
+            every { FileUtils.readFromFile(any(), any()) } returns settingsJsonString
 
             val settingsActualWhenNotEmpty = Utils.readSettingsFromFile(application)
             val settingsExpectedWhenNotEmpty = getSettings(settingsJsonObject)
 
-            MatcherAssert.assertThat<CTGeofenceSettings?>(
+            MatcherAssert.assertThat(
                 settingsActualWhenNotEmpty,
-                SamePropertyValuesAs.samePropertyValuesAs<CTGeofenceSettings?>(
-                    settingsExpectedWhenNotEmpty
-                )
+                samePropertyValuesAs(settingsExpectedWhenNotEmpty)
             )
 
             // when settings in file is blank
-            Mockito.`when`<String?>(
-                FileUtils.readFromFile(
-                    ArgumentMatchers.any<Context?>(Context::class.java),
-                    ArgumentMatchers.anyString()
-                )
-            ).thenReturn("")
+            every { FileUtils.readFromFile(any(), any()) } returns ""
 
             val settingsActualWhenEmpty = Utils.readSettingsFromFile(application)
             Assert.assertNull(settingsActualWhenEmpty)
@@ -335,63 +278,69 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun testWriteSettingsToFileFailure() {
-        Mockito.mockStatic<FileUtils?>(FileUtils::class.java).use { fileUtilsMockedStatic ->
-            Mockito.`when`<String?>(FileUtils.getCachedDirName(application)).thenReturn("")
-            Mockito.`when`<Boolean?>(
-                FileUtils.writeJsonToFile(
-                    ArgumentMatchers.any<Context?>(),
-                    ArgumentMatchers.any<String?>(),
-                    ArgumentMatchers.any<String?>(),
-                    ArgumentMatchers.any<JSONObject?>()
-                )
-            ).thenReturn(false)
+        mockkStatic(FileUtils::class) {
+            every { FileUtils.getCachedDirName(application) } returns ""
+            every { FileUtils.writeJsonToFile(any(), any(), any(), any()) } returns false
+            // Utils.writeSettingsToFile replaces the id in the settings with the one provided by
+            // CTGeofenceAPI. Make them the same so we can check the saved json for equality with the
+            // provided one
+            every { ctGeofenceAPI.accountId } returns settingsJsonObject.getString(
+                CTGeofenceConstants.KEY_ID
+            )
 
-            Utils.writeSettingsToFile(
-                application,
-                getSettings(settingsJsonObject)
-            )
-            fileUtilsMockedStatic.verify(
-                MockedStatic.Verification {
-                    FileUtils.writeJsonToFile(
-                        application, FileUtils.getCachedDirName(application),
-                        CTGeofenceConstants.SETTINGS_FILE_NAME, settingsJsonObject
-                    )
-                })
-            Mockito.verify<Logger?>(logger).debug(
-                CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "Failed to write new settings to file"
-            )
+            Utils.writeSettingsToFile(application, getSettings(settingsJsonObject))
+
+            verify {
+                FileUtils.writeJsonToFile(
+                    application,
+                    FileUtils.getCachedDirName(application),
+                    CTGeofenceConstants.SETTINGS_FILE_NAME,
+                    withArg {
+                        JSONAssert.assertEquals(settingsJsonObject, it, true)
+                    }
+                )
+            }
+
+            verify {
+                logger.debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Failed to write new settings to file"
+                )
+            }
         }
     }
 
     @Test
     fun testWriteSettingsToFileSuccess() {
-        Mockito.mockStatic<FileUtils?>(FileUtils::class.java).use { fileUtilsMockedStatic ->
-            Mockito.`when`<String?>(FileUtils.getCachedDirName(application)).thenReturn("")
-            Mockito.`when`<Boolean?>(
-                FileUtils.writeJsonToFile(
-                    ArgumentMatchers.any<Context?>(),
-                    ArgumentMatchers.any<String?>(),
-                    ArgumentMatchers.any<String?>(),
-                    ArgumentMatchers.any<JSONObject?>()
-                )
-            ).thenReturn(true)
+        mockkStatic(FileUtils::class) {
+            every { FileUtils.getCachedDirName(application) } returns ""
+            every { FileUtils.writeJsonToFile(any(), any(), any(), any()) } returns true
+            // Utils.writeSettingsToFile replaces the id in the settings with the one provided by
+            // CTGeofenceAPI. Make them the same so we can check the saved json for equality with the
+            // provided one
+            every { ctGeofenceAPI.accountId } returns settingsJsonObject.getString(
+                CTGeofenceConstants.KEY_ID
+            )
 
-            Utils.writeSettingsToFile(
-                application,
-                getSettings(settingsJsonObject)
-            )
-            fileUtilsMockedStatic.verify(
-                MockedStatic.Verification {
-                    FileUtils.writeJsonToFile(
-                        application, FileUtils.getCachedDirName(application),
-                        CTGeofenceConstants.SETTINGS_FILE_NAME, settingsJsonObject
-                    )
-                })
-            Mockito.verify<Logger?>(logger).debug(
-                CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "New settings successfully written to file"
-            )
+            Utils.writeSettingsToFile(application, getSettings(settingsJsonObject))
+            val cachedDirName = FileUtils.getCachedDirName(application)
+            verify {
+                FileUtils.writeJsonToFile(
+                    application,
+                    cachedDirName,
+                    CTGeofenceConstants.SETTINGS_FILE_NAME,
+                    withArg {
+                        JSONAssert.assertEquals(settingsJsonObject, it, true)
+                    }
+                )
+            }
+
+            verify {
+                logger.debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "New settings successfully written to file"
+                )
+            }
         }
     }
 }

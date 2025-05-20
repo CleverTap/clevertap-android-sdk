@@ -2,71 +2,69 @@ package com.clevertap.android.geofence
 
 import android.content.BroadcastReceiver
 import android.content.Intent
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import io.mockk.verify
+import io.mockk.verifyOrder
 import org.awaitility.Awaitility.await
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.doAnswer
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
 class CTGeofenceReceiverTest : BaseTestCase() {
 
-    @Mock
-    lateinit var ctGeofenceAPI: CTGeofenceAPI
-
-    @Mock
-    lateinit var pendingResult: BroadcastReceiver.PendingResult
-
-    @Mock
-    lateinit var logger: Logger
+    private lateinit var ctGeofenceAPI: CTGeofenceAPI
+    private lateinit var pendingResult: BroadcastReceiver.PendingResult
+    private lateinit var logger: Logger
 
     @Before
     override fun setUp() {
-        MockitoAnnotations.openMocks(this)
         super.setUp()
+        ctGeofenceAPI = mockk(relaxed = true)
+        pendingResult = mockk(relaxed = true)
+        logger = mockk(relaxed = true)
     }
 
     @Test
     fun testOnReceiveWhenIntentIsNull() {
         val receiver = CTGeofenceReceiver()
-        val spy = Mockito.spy(receiver)
+        val spy = spyk(receiver)
+
         spy.onReceive(application, null)
-        verify(spy, never()).goAsync()
+
+        verify(exactly = 0) { spy.goAsync() }
     }
 
     @Test
     fun testOnReceiveWhenIntentNotNull() {
         val receiver = CTGeofenceReceiver()
-        val spy = Mockito.spy(receiver)
-        `when`(spy.goAsync()).thenReturn(pendingResult)
+        val spy = spyk(receiver)
+        every { spy.goAsync() } returns pendingResult
 
         val isFinished = arrayOf(false)
 
-        doAnswer { invocation ->
+        every { pendingResult.finish() } answers {
             isFinished[0] = true
-            null
-        }.`when`(pendingResult).finish()
+        }
 
-        mockStatic(CTGeofenceAPI::class.java).use { ctGeofenceAPIMockedStatic ->
-            ctGeofenceAPIMockedStatic.`when`<Logger>(CTGeofenceAPI::getLogger).thenReturn(logger)
+        mockkStatic(CTGeofenceAPI::class) {
+            every { CTGeofenceAPI.getLogger() } returns logger
 
             val intent = Intent()
             spy.onReceive(application, intent)
 
             await().until { isFinished[0] }
 
-            verify(CTGeofenceAPI.getLogger()).debug(
-                CTGeofenceAPI.GEOFENCE_LOG_TAG, "Geofence receiver called"
-            )
-            verify(CTGeofenceAPI.getLogger()).debug(
-                CTGeofenceAPI.GEOFENCE_LOG_TAG, "Returning from Geofence receiver"
-            )
-            verify(pendingResult).finish()
+            verifyOrder {
+                logger.debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG, "Geofence receiver called"
+                )
+                logger.debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG, "Returning from Geofence receiver"
+                )
+            }
+            verify { pendingResult.finish() }
         }
     }
 }

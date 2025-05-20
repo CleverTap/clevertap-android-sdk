@@ -3,6 +3,8 @@ package com.clevertap.android.geofence
 import android.app.Application
 import android.os.Bundle
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.runner.RunWith
@@ -17,6 +19,11 @@ abstract class BaseTestCase {
     @Before
     open fun setUp() {
         application = TestApplication.application
+    }
+
+    @After
+    open fun cleanUp() {
+        clearAllMocks()
     }
 
     companion object {

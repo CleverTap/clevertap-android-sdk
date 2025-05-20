@@ -11,48 +11,46 @@ import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener
 import com.clevertap.android.sdk.CleverTapAPI
+import io.mockk.confirmVerified
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.json.JSONObject
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
-import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.Mock
-import org.mockito.MockedStatic
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.never
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import java.util.concurrent.ExecutorService
 
 class CTGeofenceAPITest : BaseTestCase() {
 
-    @Mock
-    lateinit var cleverTapAPI: CleverTapAPI
+    private lateinit var cleverTapAPI: CleverTapAPI
+    private lateinit var executorService: ExecutorService
+    private lateinit var geofenceAdapter: CTGeofenceAdapter
+    private lateinit var locationAdapter: CTLocationAdapter
 
-    @Mock
-    lateinit var executorService: ExecutorService
+    override fun setUp() {
+        super.setUp()
 
-    @Mock
-    lateinit var geofenceAdapter: CTGeofenceAdapter
+        cleverTapAPI = mockk(relaxed = true)
+        executorService = mockk(relaxed = true)
+        geofenceAdapter = mockk(relaxed = true)
+        locationAdapter = mockk(relaxed = true)
 
-    @Mock
-    lateinit var locationAdapter: CTLocationAdapter
+        mockkStatic(CTLocationFactory::class)
+        mockkStatic(CTGeofenceFactory::class)
+        mockkStatic(Utils::class)
 
-    private lateinit var ctGeofenceFactoryMockedStatic: MockedStatic<CTGeofenceFactory>
-    private lateinit var ctLocationFactoryMockedStatic: MockedStatic<CTLocationFactory>
-    private lateinit var utilsMockedStatic: MockedStatic<Utils>
+        every { CTLocationFactory.createLocationAdapter(application) } returns locationAdapter
+        every { CTGeofenceFactory.createGeofenceAdapter(application) } returns geofenceAdapter
+    }
 
-    @After
-    fun cleanup() {
+    override fun cleanUp() {
+        super.cleanUp()
         val instance = CTGeofenceAPI.getInstance(application)
         val field = CTGeofenceAPI::class.java.getDeclaredField("ctGeofenceAPI")
         field.isAccessible = true
@@ -63,41 +61,19 @@ class CTGeofenceAPITest : BaseTestCase() {
         fieldTaskManager.isAccessible = true
         fieldTaskManager.set(taskManagerInstance, null)
 
-        ctLocationFactoryMockedStatic.close()
-        ctGeofenceFactoryMockedStatic.close()
-        utilsMockedStatic.close()
-    }
-
-    @Before
-    override fun setUp() {
-        MockitoAnnotations.openMocks(this)
-        super.setUp()
-
-        ctLocationFactoryMockedStatic = mockStatic(CTLocationFactory::class.java)
-        ctLocationFactoryMockedStatic.`when`<CTLocationAdapter> {
-            CTLocationFactory.createLocationAdapter(
-                application
-            )
-        }.thenReturn(locationAdapter)
-
-        ctGeofenceFactoryMockedStatic = mockStatic(CTGeofenceFactory::class.java)
-        ctGeofenceFactoryMockedStatic.`when`<CTGeofenceAdapter> {
-            CTGeofenceFactory.createGeofenceAdapter(
-                application
-            )
-        }.thenReturn(geofenceAdapter)
-
-        utilsMockedStatic = mockStatic(Utils::class.java)
+        unmockkStatic(CTLocationFactory::class)
+        unmockkStatic(CTGeofenceFactory::class)
+        unmockkStatic(Utils::class)
     }
 
     @Test
     fun testDeactivate() {
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
-        mockStatic(FileUtils::class.java).use { fileUtilsMockedStatic ->
+        mockkStatic(FileUtils::class) {
             ctGeofenceAPI.deactivate()
-            val argumentCaptor = ArgumentCaptor.forClass(Runnable::class.java)
-            verify(executorService).submit(argumentCaptor.capture())
+            val runnableSlot = slot<Runnable>()
+            verify { executorService.submit(capture(runnableSlot)) }
 
             val geofenceMonitoring = PendingIntentFactory.getPendingIntent(
                 application, PendingIntentFactory.PENDING_INTENT_GEOFENCE, FLAG_UPDATE_CURRENT
@@ -106,16 +82,13 @@ class CTGeofenceAPITest : BaseTestCase() {
                 application, PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_UPDATE_CURRENT
             )
 
-            argumentCaptor.getValue().run()
+            runnableSlot.captured.run()
 
-            verify(geofenceAdapter).stopGeofenceMonitoring(geofenceMonitoring)
-            verify(locationAdapter).removeLocationUpdates(locationUpdates)
+            verify { geofenceAdapter.stopGeofenceMonitoring(geofenceMonitoring) }
+            verify { locationAdapter.removeLocationUpdates(locationUpdates) }
 
-            fileUtilsMockedStatic.verify {
-                FileUtils.deleteDirectory(
-                    any(), FileUtils.getCachedDirName(application)
-                )
-            }
+            val cachedDirName = FileUtils.getCachedDirName(application)
+            verify { FileUtils.deleteDirectory(any(), cachedDirName) }
 
             assertFalse(ctGeofenceAPI.isActivated)
         }
@@ -138,141 +111,131 @@ class CTGeofenceAPITest : BaseTestCase() {
     @Test
     fun testHandleGeoFencesTC1() {
         // when location access permission is not granted
-        `when`(
-            Utils.hasPermission(
-                application, Manifest.permission.ACCESS_FINE_LOCATION
-            )
-        ).thenReturn(false)
+        every {
+            Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns false
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.handleGeoFences(GeofenceJSON.geofence)
 
-        verify(executorService, never()).submit(any(Runnable::class.java))
+        verify(exactly = 0) { executorService.submit(any()) }
     }
 
     @Test
     fun testHandleGeoFencesTC2() {
         // when background location permission is not granted
-        `when`(
+        every {
             Utils.hasPermission(
                 application, Manifest.permission.ACCESS_FINE_LOCATION
             )
-        ).thenReturn(true)
-        `when`(Utils.hasBackgroundLocationPermission(application)).thenReturn(false)
+        } returns true
+        every { Utils.hasBackgroundLocationPermission(application) } returns false
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.handleGeoFences(GeofenceJSON.geofence)
 
-        verify(executorService, never()).submit(any(Runnable::class.java))
+        verify(exactly = 0) { executorService.submit(any()) }
     }
 
     @Test
     fun testHandleGeoFencesTC3() {
         // when geofence list is null
-        `when`(
-            Utils.hasPermission(
-                application, Manifest.permission.ACCESS_FINE_LOCATION
-            )
-        ).thenReturn(true)
-        `when`(Utils.hasBackgroundLocationPermission(application)).thenReturn(true)
+        every {
+            Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns true
+        every { Utils.hasBackgroundLocationPermission(application) } returns true
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.handleGeoFences(null)
 
-        verify(executorService, never()).submit(any(Runnable::class.java))
+        verify(exactly = 0) { executorService.submit(any()) }
     }
 
     @Test
     fun testHandleGeoFencesTC4() {
         // when location access permission and background location permission is granted
-        `when`(
-            Utils.hasPermission(
-                application, Manifest.permission.ACCESS_FINE_LOCATION
-            )
-        ).thenReturn(true)
-        `when`(Utils.hasBackgroundLocationPermission(application)).thenReturn(true)
+        every {
+            Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns true
+        every { Utils.hasBackgroundLocationPermission(application) } returns true
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.handleGeoFences(GeofenceJSON.geofence)
 
-        verify(executorService).submit(any(Runnable::class.java))
+        verify { executorService.submit(any()) }
     }
 
     @Test
     fun testInitBackgroundLocationUpdatesTC1() {
         // when location access permission is denied
-        `when`(
+        every {
             Utils.hasPermission(
                 application, Manifest.permission.ACCESS_FINE_LOCATION
             )
-        ).thenReturn(false)
+        } returns false
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.initBackgroundLocationUpdates()
 
-        verify(executorService, never()).submit(any(Runnable::class.java))
+        verify(exactly = 0) { executorService.submit(any()) }
     }
 
     @Test(expected = IllegalStateException::class)
     fun testInitBackgroundLocationUpdatesTC2() {
         // when geofence init is not called
-        `when`(
-            Utils.hasPermission(
-                application, Manifest.permission.ACCESS_FINE_LOCATION
-            )
-        ).thenReturn(true)
+        every {
+            Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns true
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.initBackgroundLocationUpdates()
 
-        verify(executorService, never()).submit(any(Runnable::class.java))
+        verify(exactly = 0) { executorService.submit(any()) }
     }
 
     @Test
     fun testInitBackgroundLocationUpdatesTC3() {
         // when geofence sdk initialized and location access permission is granted
-        `when`(
-            Utils.hasPermission(
-                application, Manifest.permission.ACCESS_FINE_LOCATION
-            )
-        ).thenReturn(true)
+        every {
+            Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns true
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.init(null, cleverTapAPI)
 
-        verify(executorService).submit(any(Runnable::class.java))
+        verify { executorService.submit(any()) }
     }
 
     @Test
     fun testInitTC1() {
         // when location adapter is null
-        ctLocationFactoryMockedStatic.`when`<CTLocationAdapter> {
+        every {
             CTLocationFactory.createLocationAdapter(application)
-        }.thenReturn(null)
+        } returns null
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
 
         ctGeofenceAPI.init(null, cleverTapAPI)
-        verifyNoMoreInteractions(cleverTapAPI)
+        confirmVerified(cleverTapAPI)
     }
 
     @Test
     fun testInitTC2() {
         // when geofence adapter is null
-        ctGeofenceFactoryMockedStatic.`when`<CTGeofenceAdapter> {
+        every {
             CTGeofenceFactory.createGeofenceAdapter(application)
-        }.thenReturn(null)
+        } returns null
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
 
         ctGeofenceAPI.init(null, cleverTapAPI)
-        verifyNoMoreInteractions(cleverTapAPI)
+        confirmVerified(cleverTapAPI)
     }
 
     @Test
@@ -311,7 +274,7 @@ class CTGeofenceAPITest : BaseTestCase() {
         assertEquals(lat, actualLat, 0.0)
         assertEquals(lng, actualLong, 0.0)
 
-        verify(cleverTapAPI).setLocationForGeofences(any(Location::class.java), anyInt())
+        verify { cleverTapAPI.setLocationForGeofences(any(), any()) }
     }
 
     @Test
@@ -351,7 +314,7 @@ class CTGeofenceAPITest : BaseTestCase() {
         assertEquals(lastPingedLat, actualLat, 0.0)
         assertEquals(lastPingedLng, actualLong, 0.0)
 
-        verify(cleverTapAPI, never()).setLocationForGeofences(any(), anyInt())
+        verify(exactly = 0) { cleverTapAPI.setLocationForGeofences(any(), any()) }
     }
 
     @Test
@@ -387,7 +350,7 @@ class CTGeofenceAPITest : BaseTestCase() {
 
         assertEquals(DEFAULT_LATITUDE, actualLat, 0.0)
         assertEquals(DEFAULT_LONGITUDE, actualLong, 0.0)
-        verify(cleverTapAPI, never()).setLocationForGeofences(any(), anyInt())
+        verify(exactly = 0) { cleverTapAPI.setLocationForGeofences(any(), any()) }
     }
 
     @Test
@@ -426,7 +389,7 @@ class CTGeofenceAPITest : BaseTestCase() {
 
         assertEquals(lastPingedLat, actualLat, 0.0)
         assertEquals(lastPingedLng, actualLong, 0.0)
-        verify(cleverTapAPI, never()).setLocationForGeofences(any(), anyInt())
+        verify(exactly = 0) { cleverTapAPI.setLocationForGeofences(any(), any()) }
     }
 
     @Test
@@ -458,43 +421,43 @@ class CTGeofenceAPITest : BaseTestCase() {
     @Test
     fun testTriggerLocationTC1() {
         // when location access permission is denied
-        `when`(
+        every {
             Utils.hasPermission(
                 application, Manifest.permission.ACCESS_FINE_LOCATION
             )
-        ).thenReturn(false)
+        } returns false
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.triggerLocation()
 
-        verify(executorService, never()).submit(any(Runnable::class.java))
+        verify(exactly = 0) { executorService.submit(any()) }
     }
 
     @Test
     fun testTriggerLocationTC2() {
         // when geofence init is not called
-        `when`(
+        every {
             Utils.hasPermission(
                 application, Manifest.permission.ACCESS_FINE_LOCATION
             )
-        ).thenReturn(true)
+        } returns true
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
         ctGeofenceAPI.triggerLocation()
 
-        verify(executorService, never()).submit(any(Runnable::class.java))
+        verify(exactly = 0) { executorService.submit(any()) }
     }
 
     @Test
     fun testTriggerLocationTC3() {
         // when geofence sdk initialized and location access permission is granted
-        `when`(
+        every {
             Utils.hasPermission(
                 application, Manifest.permission.ACCESS_FINE_LOCATION
             )
-        ).thenReturn(true)
+        } returns true
 
         val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
         CTGeofenceTaskManager.getInstance().setExecutorService(executorService)
@@ -502,7 +465,6 @@ class CTGeofenceAPITest : BaseTestCase() {
 
         ctGeofenceAPI.triggerLocation()
 
-        verify(executorService, times(2)).submit(any())
+        verify(exactly = 2) { executorService.submit(any()) }
     }
-
 }

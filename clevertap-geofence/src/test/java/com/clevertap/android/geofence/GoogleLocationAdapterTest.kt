@@ -2,7 +2,6 @@ package com.clevertap.android.geofence
 
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.work.Configuration
@@ -22,69 +21,46 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mock
-import org.mockito.MockedStatic
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import java.util.concurrent.TimeUnit
-
 
 class GoogleLocationAdapterTest : BaseTestCase() {
 
-    @Mock
-    lateinit var cleverTapAPI: CleverTapAPI
-
-    @Mock
-    lateinit var ctGeofenceAPI: CTGeofenceAPI
-
-    @Mock
-    lateinit var ctLocationAdapter: CTLocationAdapter
-
-    @Mock
-    lateinit var providerClient: FusedLocationProviderClient
-
-    @Mock
-    lateinit var logger: Logger
-
-    private lateinit var tasksMockedStatic: MockedStatic<Tasks>
-
-    private lateinit var utilsMockedStatic: MockedStatic<Utils>
-
-    private lateinit var locationServicesMockedStatic: MockedStatic<LocationServices>
-
-    private lateinit var ctGeofenceAPIMockedStatic: MockedStatic<CTGeofenceAPI>
+    private lateinit var cleverTapAPI: CleverTapAPI
+    private lateinit var ctGeofenceAPI: CTGeofenceAPI
+    private lateinit var ctLocationAdapter: CTLocationAdapter
+    private lateinit var providerClient: FusedLocationProviderClient
+    private lateinit var logger: Logger
 
     @Before
     override fun setUp() {
-
-        MockitoAnnotations.openMocks(this)
-
-        ctGeofenceAPIMockedStatic = mockStatic(
-            CTGeofenceAPI::class.java
-        )
-        locationServicesMockedStatic = mockStatic(LocationServices::class.java)
-        utilsMockedStatic = mockStatic(Utils::class.java)
-        tasksMockedStatic = mockStatic(Tasks::class.java)
-
-        `when`(CTGeofenceAPI.getInstance(any(Context::class.java))).thenReturn(ctGeofenceAPI)
-        `when`(CTGeofenceAPI.getLogger()).thenReturn(logger)
-        `when`(ctGeofenceAPI.ctLocationAdapter).thenReturn(ctLocationAdapter)
-        `when`(ctGeofenceAPI.cleverTapApi).thenReturn(cleverTapAPI)
-
         super.setUp()
+
+        cleverTapAPI = mockk(relaxed = true)
+        ctGeofenceAPI = mockk(relaxed = true)
+        ctLocationAdapter = mockk(relaxed = true)
+        providerClient = mockk(relaxed = true)
+        logger = mockk(relaxed = true)
+
+        mockkStatic(CTGeofenceAPI::class)
+        mockkStatic(LocationServices::class)
+        mockkStatic(Utils::class)
+        mockkStatic(Tasks::class)
+
+        every { CTGeofenceAPI.getInstance(any()) } returns ctGeofenceAPI
+        every { CTGeofenceAPI.getLogger() } returns logger
+        every { ctGeofenceAPI.ctLocationAdapter } returns ctLocationAdapter
+        every { ctGeofenceAPI.cleverTapApi } returns cleverTapAPI
 
         val config = Configuration.Builder().setMinimumLoggingLevel(Log.DEBUG)
             .setExecutor(SynchronousExecutor()).build()
@@ -96,11 +72,12 @@ class GoogleLocationAdapterTest : BaseTestCase() {
     }
 
     @After
-    fun cleanup() {
-        ctGeofenceAPIMockedStatic.close()
-        locationServicesMockedStatic.close()
-        utilsMockedStatic.close()
-        tasksMockedStatic.close()
+    override fun cleanUp() {
+        super.cleanUp()
+        unmockkStatic(CTGeofenceAPI::class)
+        unmockkStatic(LocationServices::class)
+        unmockkStatic(Utils::class)
+        unmockkStatic(Tasks::class)
     }
 
     @Test
@@ -111,7 +88,7 @@ class GoogleLocationAdapterTest : BaseTestCase() {
             .setLocationAccuracy(CTGeofenceSettings.ACCURACY_LOW).setSmallestDisplacement(900f)
             .build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(ctGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns ctGeofenceSettings
 
         val locationAdapter = GoogleLocationAdapter(application)
 
@@ -140,13 +117,12 @@ class GoogleLocationAdapterTest : BaseTestCase() {
     @Test
     fun testGetLastLocation() {
         val expectedLocation = GeofenceEventFake.getTriggeredLocation()
-        `when`(LocationServices.getFusedLocationProviderClient(application)).thenReturn(
-            providerClient
-        )
-        val locationTask = mock(Task::class.java) as Task<Location>
-        `when`(Tasks.await(locationTask)).thenReturn(expectedLocation)
+        every { LocationServices.getFusedLocationProviderClient(application) } returns providerClient
 
-        `when`(providerClient.lastLocation).thenReturn(locationTask)
+        val locationTask = mockk<Task<Location>>(relaxed = true)
+        every { Tasks.await(locationTask) } returns expectedLocation
+        every { providerClient.lastLocation } returns locationTask
+
         val locationAdapter = GoogleLocationAdapter(application)
 
         locationAdapter.getLastLocation { location ->
@@ -161,9 +137,7 @@ class GoogleLocationAdapterTest : BaseTestCase() {
     fun testRequestLocationUpdatesTC1() {
         // when backgroundLocationUpdates not enabled
 
-        `when`(LocationServices.getFusedLocationProviderClient(application)).thenReturn(
-            providerClient
-        )
+        every { LocationServices.getFusedLocationProviderClient(application) } returns providerClient
 
         val locationAdapter = GoogleLocationAdapter(application)
 
@@ -172,23 +146,20 @@ class GoogleLocationAdapterTest : BaseTestCase() {
             .enableBackgroundLocationUpdates(false)
             .build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(ctGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns ctGeofenceSettings
 
         locationAdapter.requestLocationUpdates()
-        verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString())
-        verify(providerClient, never()).requestLocationUpdates(
-            any(LocationRequest::class.java), any(PendingIntent::class.java)
-        )
+
+        verify { cleverTapAPI.pushGeoFenceError(any(), any()) }
+        verify(exactly = 0) { providerClient.requestLocationUpdates(any(), any()) }
     }
 
     @Test
     fun testRequestLocationUpdatesTC2() {
         // when backgroundLocationUpdates is enabled and fetch mode is current location
 
-        `when`(LocationServices.getFusedLocationProviderClient(application)).thenReturn(
-            providerClient
-        )
-        `when`(Utils.isConcurrentFuturesDependencyAvailable()).thenReturn(true)
+        every { LocationServices.getFusedLocationProviderClient(application) } returns providerClient
+        every { Utils.isConcurrentFuturesDependencyAvailable() } returns true
 
         val locationAdapter = GoogleLocationAdapter(application)
 
@@ -196,7 +167,7 @@ class GoogleLocationAdapterTest : BaseTestCase() {
             .setLocationFetchMode(CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC)
             .enableBackgroundLocationUpdates(true).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(ctGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns ctGeofenceSettings
 
         // enqueue work to verify later that work is cancelled by method under test
         val workManager = WorkManager.getInstance(application)
@@ -219,25 +190,16 @@ class GoogleLocationAdapterTest : BaseTestCase() {
         // Assert work is cancelled by locationAdapter.requestLocationUpdates()
         assertEquals(WorkInfo.State.CANCELLED, workInfo.state)
 
-        verify(providerClient).requestLocationUpdates(
-            any(
-                LocationRequest::class.java
-            ),
-            any(PendingIntent::class.java)
-        )
-        tasksMockedStatic.verify { Tasks.await(any()) }
-
+        verify { providerClient.requestLocationUpdates(any(), any()) }
+        verify { Tasks.await(any()) }
     }
 
     @Test
     fun testRequestLocationUpdatesTC3() {
-
         // when backgroundLocationUpdates is enabled and fetch mode is last location
 
-        `when`(LocationServices.getFusedLocationProviderClient(application)).thenReturn(
-            providerClient
-        )
-        `when`(Utils.isConcurrentFuturesDependencyAvailable()).thenReturn(true)
+        every { LocationServices.getFusedLocationProviderClient(application) } returns providerClient
+        every { Utils.isConcurrentFuturesDependencyAvailable() } returns true
 
         val locationAdapter = GoogleLocationAdapter(application)
 
@@ -245,7 +207,7 @@ class GoogleLocationAdapterTest : BaseTestCase() {
             .setLocationFetchMode(CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC)
             .enableBackgroundLocationUpdates(true).build()
 
-        `when`(ctGeofenceAPI.geofenceSettings).thenReturn(ctGeofenceSettings)
+        every { ctGeofenceAPI.geofenceSettings } returns ctGeofenceSettings
 
         // simulate current location request exists in OS
         PendingIntentFactory.getPendingIntent(
@@ -264,8 +226,7 @@ class GoogleLocationAdapterTest : BaseTestCase() {
             setOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING).contains(workInfos[0].state)
         )
 
-        verify(providerClient).removeLocationUpdates(any(PendingIntent::class.java))
-
-        tasksMockedStatic.verify { Tasks.await(any()) }
+        verify { providerClient.removeLocationUpdates(any<PendingIntent>()) }
+        verify { Tasks.await(any()) }
     }
 }

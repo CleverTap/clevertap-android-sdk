@@ -1,79 +1,66 @@
 package com.clevertap.android.geofence
 
-import android.content.Context
 import android.location.Location
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import com.clevertap.android.sdk.CleverTapAPI
 import com.google.android.gms.location.LocationResult
+import io.mockk.confirmVerified
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.junit.After
 import org.junit.Test
-import org.mockito.ArgumentMatchers
-import org.mockito.Mock
-import org.mockito.MockedStatic
-import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
 import java.util.concurrent.Future
 
 class PushLocationEventTaskTest : BaseTestCase() {
 
-    @Mock
     private lateinit var cleverTapAPI: CleverTapAPI
-
-    @Mock
     private lateinit var ctGeofenceAPI: CTGeofenceAPI
-
-    @Mock
     private lateinit var onCompleteListener: CTGeofenceTask.OnCompleteListener
-
-    private lateinit var ctGeofenceAPIMockedStatic: MockedStatic<CTGeofenceAPI>
-
     private lateinit var locationResult: LocationResult
-
-    @Mock
     private lateinit var logger: Logger
 
-    private lateinit var utilsMockedStatic: MockedStatic<Utils>
+    override fun setUp() {
+        super.setUp()
 
-    @After
-    fun cleanup() {
-        ctGeofenceAPIMockedStatic.close()
-        utilsMockedStatic.close()
+        cleverTapAPI = mockk(relaxed = true)
+        ctGeofenceAPI = mockk(relaxed = true)
+        onCompleteListener = mockk(relaxed = true)
+        logger = mockk(relaxed = true)
+
+        locationResult = LocationResult.create(listOf(Location("")))
+
+        mockkStatic(CTGeofenceAPI::class)
+        mockkStatic(Utils::class)
+
+        every { CTGeofenceAPI.getInstance(application) } returns ctGeofenceAPI
+        every { CTGeofenceAPI.getLogger() } returns logger
     }
 
-    override fun setUp() {
-        MockitoAnnotations.openMocks(this)
-        super.setUp()
-        locationResult = LocationResult.create(listOf(Location("")))
-        ctGeofenceAPIMockedStatic = Mockito.mockStatic<CTGeofenceAPI>(CTGeofenceAPI::class.java)
-        utilsMockedStatic = Mockito.mockStatic<Utils>(Utils::class.java)
-        Mockito.`when`<CTGeofenceAPI?>(CTGeofenceAPI.getInstance(application))
-            .thenReturn(ctGeofenceAPI)
-        Mockito.`when`<Logger?>(CTGeofenceAPI.getLogger()).thenReturn(logger)
+    @After
+    override fun cleanUp() {
+        super.cleanUp()
+        unmockkStatic(CTGeofenceAPI::class)
+        unmockkStatic(Utils::class)
     }
 
     @Test
     fun testExecuteWhenCleverTapApiIsNull() {
-        Mockito.`when`<Boolean?>(Utils.initCTGeofenceApiIfRequired(application)).thenReturn(false)
+        every { Utils.initCTGeofenceApiIfRequired(application) } returns false
         val task = PushLocationEventTask(application, locationResult)
 
         // when listener null
         task.execute()
-        Mockito.verifyNoMoreInteractions(onCompleteListener)
+        confirmVerified(onCompleteListener)
 
         // when listener not null
         task.setOnCompleteListener(onCompleteListener)
         task.execute()
 
-        utilsMockedStatic.verify(
-            MockedStatic.Verification {
-                Utils.notifyLocationUpdates(
-                    ArgumentMatchers.any(
-                        Context::class.java
-                    ), ArgumentMatchers.any(Location::class.java)
-                )
-            }, Mockito.times(0)
-        )
-        Mockito.verify(onCompleteListener).onComplete()
+        verify(exactly = 0) { Utils.notifyLocationUpdates(any(), any()) }
+        verify { onCompleteListener.onComplete() }
     }
 
     @Test
@@ -82,29 +69,19 @@ class PushLocationEventTaskTest : BaseTestCase() {
 
         // when listener not null
         task.setOnCompleteListener(onCompleteListener)
-        Mockito.`when`<Boolean?>(Utils.initCTGeofenceApiIfRequired(application)).thenReturn(true)
-
-        Mockito.`when`(
-            cleverTapAPI.setLocationForGeofences(
-                ArgumentMatchers.any(
-                    Location::class.java
-                ), ArgumentMatchers.anyInt()
-            )
-        ).thenReturn(null)
+        every { Utils.initCTGeofenceApiIfRequired(application) } returns true
+        every { cleverTapAPI.setLocationForGeofences(any(), any()) } returns null
+        every { ctGeofenceAPI.processTriggeredLocation(any()) } returns null
 
         task.execute()
 
-        utilsMockedStatic.verify(MockedStatic.Verification {
-            Utils.notifyLocationUpdates(
-                ArgumentMatchers.any(
-                    Context::class.java
-                ), ArgumentMatchers.any(Location::class.java)
+        verify { Utils.notifyLocationUpdates(any(), any()) }
+        verify {
+            logger.verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG, "Dropping location ping event to CT server"
             )
-        })
-        Mockito.verify(logger).verbose(
-            CTGeofenceAPI.GEOFENCE_LOG_TAG, "Dropping location ping event to CT server"
-        )
-        Mockito.verify(onCompleteListener).onComplete()
+        }
+        verify { onCompleteListener.onComplete() }
     }
 
     @Test
@@ -112,84 +89,65 @@ class PushLocationEventTaskTest : BaseTestCase() {
         val task = PushLocationEventTask(application, locationResult)
 
         // when listener null
-        Mockito.`when`<Boolean?>(Utils.initCTGeofenceApiIfRequired(application)).thenReturn(true)
-
-        Mockito.`when`(
-            cleverTapAPI.setLocationForGeofences(
-                ArgumentMatchers.any(Location::class.java),
-                ArgumentMatchers.anyInt()
-            )
-        ).thenReturn(null)
+        every { Utils.initCTGeofenceApiIfRequired(application) } returns true
+        every { cleverTapAPI.setLocationForGeofences(any(), any()) } returns null
+        every { ctGeofenceAPI.processTriggeredLocation(any()) } returns null
 
         task.execute()
 
-        utilsMockedStatic.verify(MockedStatic.Verification {
-            Utils.notifyLocationUpdates(
-                ArgumentMatchers.any(
-                    Context::class.java
-                ), ArgumentMatchers.any(Location::class.java)
+        verify { Utils.notifyLocationUpdates(any(), any()) }
+        verify {
+            logger.verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG, "Dropping location ping event to CT server"
             )
-        })
-        Mockito.verify(logger).verbose(
-            CTGeofenceAPI.GEOFENCE_LOG_TAG, "Dropping location ping event to CT server"
-        )
-        Mockito.verifyNoMoreInteractions(onCompleteListener)
+        }
+        verify(exactly = 0) { onCompleteListener.onComplete() }
     }
 
     @Test
     fun testExecuteWhenCleverTapApiNotNullAndFutureNotNullAndListenerNotNull() {
-        val future = Mockito.mock<Future<*>?>(Future::class.java)
+        val future: Future<*> = mockk(relaxed = true)
 
         val task = PushLocationEventTask(application, locationResult)
 
         // when listener not null
         task.setOnCompleteListener(onCompleteListener)
-        Mockito.`when`<Boolean?>(Utils.initCTGeofenceApiIfRequired(application)).thenReturn(true)
+        every { Utils.initCTGeofenceApiIfRequired(application) } returns true
+        every { ctGeofenceAPI.processTriggeredLocation(any()) } returns future
 
-        Mockito.`when`(
-            ctGeofenceAPI.processTriggeredLocation(ArgumentMatchers.any(Location::class.java))
-        ).thenReturn(future)
         task.execute()
 
-        utilsMockedStatic.verify(MockedStatic.Verification {
-            Utils.notifyLocationUpdates(
-                ArgumentMatchers.any(Context::class.java),
-                ArgumentMatchers.any(Location::class.java)
-            )
-        })
-        Mockito.verify(future).get()
+        verify { Utils.notifyLocationUpdates(any(), any()) }
+        verify { future.get() }
 
-        Mockito.verify(logger).verbose(
-            CTGeofenceAPI.GEOFENCE_LOG_TAG, "Calling future for setLocationForGeofences()"
-        )
-        Mockito.verify(onCompleteListener).onComplete()
+        verify {
+            logger.verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG, "Calling future for setLocationForGeofences()"
+            )
+        }
+        verify { onCompleteListener.onComplete() }
     }
 
     @Test
     fun testExecuteWhenCleverTapApiNotNullAndFutureNotNullAndListenerNull() {
-        val future = Mockito.mock(Future::class.java)
+        val future: Future<*> = mockk(relaxed = true)
 
         val task = PushLocationEventTask(application, locationResult)
 
         // when listener null
-        Mockito.`when`<Boolean?>(Utils.initCTGeofenceApiIfRequired(application)).thenReturn(true)
+        every { Utils.initCTGeofenceApiIfRequired(application) } returns true
+        every { ctGeofenceAPI.processTriggeredLocation(any()) } returns future
 
-        Mockito.`when`(
-            ctGeofenceAPI.processTriggeredLocation(ArgumentMatchers.any(Location::class.java))
-        ).thenReturn(future)
         task.execute()
 
-        utilsMockedStatic.verify(MockedStatic.Verification {
-            Utils.notifyLocationUpdates(
-                ArgumentMatchers.any(Context::class.java),
-                ArgumentMatchers.any(Location::class.java)
-            )
-        })
-        Mockito.verify(future).get()
+        verify { Utils.notifyLocationUpdates(any(), any()) }
+        verify { future.get() }
 
-        Mockito.verify(logger).verbose(
-            CTGeofenceAPI.GEOFENCE_LOG_TAG, "Calling future for setLocationForGeofences()"
-        )
-        Mockito.verifyNoMoreInteractions(onCompleteListener)
+        verify {
+            logger.verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG, "Calling future for setLocationForGeofences()"
+            )
+        }
+        verify(exactly = 0) { onCompleteListener.onComplete() }
     }
 }

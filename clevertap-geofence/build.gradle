@@ -25,28 +25,17 @@ android {
 }
 
 dependencies {
-    compileOnly (project(":clevertap-core"))
-    compileOnly (libs.play.services.location)
-    compileOnly (libs.androidx.work.runtime)
-    compileOnly (libs.androidx.concurrent.futures)
+    compileOnly(project(":clevertap-core"))
+    compileOnly(libs.play.services.location)
+    compileOnly(libs.androidx.work.runtime)
+    compileOnly(libs.androidx.concurrent.futures)
 
     // Unit testing dependencies
-    testImplementation (libs.test.mockito.core)
-    testImplementation (libs.test.robolectric)
+    testImplementation(project(":test_shared"))
+    testImplementation(libs.play.services.location)
+    testImplementation(libs.test.work.testing)
+    testImplementation(libs.test.awaitility)
 
-    testImplementation (libs.test.core)
-    testImplementation (libs.test.ext.junit)
-    testImplementation (libs.androidx.appcompat)
-    testImplementation (libs.firebase.messaging)
-
-    testImplementation (project(":clevertap-core"))
-
-    testImplementation (libs.installreferrer)
-    testImplementation (libs.play.services.location)
-    testImplementation (libs.test.jsonassert)
-    testImplementation (libs.test.work.testing)
-    testImplementation (libs.test.awaitility)
-    testImplementation (libs.androidx.concurrent.futures)
-    testImplementation (libs.androidx.core.ktx)
-    testImplementation (libs.kotlin.stdlib.jdk7)
+    // Needed for mocking com.clevertap.android.sdk.Utils in UtilsTest.testNotifyLocationUpdates
+    testImplementation(libs.firebase.messaging)
 }

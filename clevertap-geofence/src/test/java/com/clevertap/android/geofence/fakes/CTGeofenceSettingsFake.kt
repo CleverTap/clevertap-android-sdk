@@ -19,9 +19,9 @@ object CTGeofenceSettingsFake {
             .build()
     }
 
-@JvmStatic
- val settingsJsonObject = JSONObject(
-    """{
+    @JvmStatic
+    val settingsJsonObject = JSONObject(
+        """{
         "last_accuracy": 1,
         "last_fetch_mode": 1,
         "last_bg_location_updates": true,
@@ -33,7 +33,7 @@ object CTGeofenceSettingsFake {
         "id": "4RW-Z6Z-485Z",
         "last_geo_notification_responsiveness": 0
     }"""
- )
+    )
 
     val settingsJsonString: String = settingsJsonObject.toString()
 }

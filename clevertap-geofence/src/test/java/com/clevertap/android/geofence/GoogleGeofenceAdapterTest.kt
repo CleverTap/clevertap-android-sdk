@@ -10,89 +10,67 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import io.mockk.every
+import io.mockk.justRun
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyList
-import org.mockito.Mock
-import org.mockito.MockedStatic
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
 class GoogleGeofenceAdapterTest : BaseTestCase() {
 
-    @Mock
-    lateinit var ctGeofenceAPI: CTGeofenceAPI
-
-    @Mock
-    lateinit var geofencingClient: GeofencingClient
-
-    @Mock
-    lateinit var onSuccessListener: OnSuccessListener<Void>
-
-    @Mock
-    lateinit var pendingIntent: PendingIntent
-
-    @Mock
-    lateinit var task: Task<Void>
-
-    lateinit var ctGeofenceAPIMockedStatic: MockedStatic<CTGeofenceAPI>
-
-    @Mock
-    lateinit var ctGeofenceAdapter: CTGeofenceAdapter
-
-    private lateinit var locationServicesMockedStatic: MockedStatic<LocationServices>
-
-    @Mock
-    lateinit var logger: Logger
-
-    private lateinit var tasksMockedStatic: MockedStatic<Tasks>
-
-    private lateinit var utilsMockedStatic: MockedStatic<Utils>
-
-    @After
-    fun cleanup() {
-        ctGeofenceAPIMockedStatic.close()
-        locationServicesMockedStatic.close()
-        utilsMockedStatic.close()
-        tasksMockedStatic.close()
-    }
+    private lateinit var ctGeofenceAPI: CTGeofenceAPI
+    private lateinit var geofencingClient: GeofencingClient
+    private lateinit var onSuccessListener: OnSuccessListener<Void>
+    private lateinit var pendingIntent: PendingIntent
+    private lateinit var task: Task<Void>
+    private lateinit var ctGeofenceAdapter: CTGeofenceAdapter
+    private lateinit var logger: Logger
 
     @Before
     override fun setUp() {
-        MockitoAnnotations.openMocks(this)
-        ctGeofenceAPIMockedStatic = mockStatic(CTGeofenceAPI::class.java)
-        locationServicesMockedStatic = mockStatic(LocationServices::class.java)
-        utilsMockedStatic = mockStatic(Utils::class.java)
-        tasksMockedStatic = mockStatic(Tasks::class.java)
-
         super.setUp()
 
-        `when`(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI)
-        `when`(CTGeofenceAPI.getLogger()).thenReturn(logger)
-        `when`(LocationServices.getGeofencingClient(application)).thenReturn(geofencingClient)
-        `when`(ctGeofenceAPI.ctGeofenceAdapter).thenReturn(ctGeofenceAdapter)
+        ctGeofenceAPI = mockk(relaxed = true)
+        geofencingClient = mockk(relaxed = true)
+        onSuccessListener = mockk(relaxed = true)
+        pendingIntent = mockk(relaxed = true)
+        task = mockk(relaxed = true)
+        ctGeofenceAdapter = mockk(relaxed = true)
+        logger = mockk(relaxed = true)
 
+        mockkStatic(CTGeofenceAPI::class)
+        mockkStatic(LocationServices::class)
+        mockkStatic(Utils::class)
+        mockkStatic(Tasks::class)
+
+        every { CTGeofenceAPI.getInstance(application) } returns ctGeofenceAPI
+        every { CTGeofenceAPI.getLogger() } returns logger
+        every { LocationServices.getGeofencingClient(application) } returns geofencingClient
+        every { ctGeofenceAPI.ctGeofenceAdapter } returns ctGeofenceAdapter
+    }
+
+    @After
+    override fun cleanUp() {
+        super.cleanUp()
+        unmockkStatic(CTGeofenceAPI::class)
+        unmockkStatic(LocationServices::class)
+        unmockkStatic(Utils::class)
+        unmockkStatic(Tasks::class)
     }
 
     @Test
     fun testAddAllGeofenceTC1() {
-
         // when fence list is null
         val geofenceAdapter = GoogleGeofenceAdapter(application)
         geofenceAdapter.addAllGeofence(null, onSuccessListener)
 
-        verify(geofencingClient, never()).addGeofences(
-            any(
-                GeofencingRequest::class.java
-            ), any(PendingIntent::class.java)
-        )
+        verify(exactly = 0) { geofencingClient.addGeofences(any(), any()) }
     }
 
     @Test
@@ -100,27 +78,23 @@ class GoogleGeofenceAdapterTest : BaseTestCase() {
         // when fence list is empty
         val geofenceAdapter = GoogleGeofenceAdapter(application)
         geofenceAdapter.addAllGeofence(listOf(), onSuccessListener)
-        verify(geofencingClient, never()).addGeofences(
-            any(GeofencingRequest::class.java), any(PendingIntent::class.java)
-        )
+
+        verify(exactly = 0) { geofencingClient.addGeofences(any(), any()) }
     }
 
     @Test
     fun testAddAllGeofenceTC3() {
-
         // when fence list is not empty
 
         val ctGeofences = CTGeofence.from(GeofenceJSON.geofence)
         val geofenceAdapter = GoogleGeofenceAdapter(application)
-        `when`(
-            geofencingClient.addGeofences(
-                any(GeofencingRequest::class.java), any(PendingIntent::class.java)
-            )
-        ).thenReturn(task)
+
+        every { geofencingClient.addGeofences(any(), any()) } returns task
+
         geofenceAdapter.addAllGeofence(ctGeofences, onSuccessListener)
 
-        tasksMockedStatic.verify { Tasks.await(task) }
-        verify(onSuccessListener).onSuccess(null)
+        verify { Tasks.await(task) }
+        verify { onSuccessListener.onSuccess(null) }
     }
 
     @Test
@@ -128,18 +102,22 @@ class GoogleGeofenceAdapterTest : BaseTestCase() {
         val geofenceAdapter = GoogleGeofenceAdapter(application)
         val ctGeofences = CTGeofence.from(GeofenceJSON.geofence)
 
-        geofenceAdapter.addAllGeofence(ctGeofences, onSuccessListener)
-        val geofencingRequestArgumentCaptor = ArgumentCaptor.forClass(
-            GeofencingRequest::class.java
-        )
-        val pendingIntentArgumentCaptor = ArgumentCaptor.forClass(PendingIntent::class.java)
+        every { geofencingClient.addGeofences(any(), any()) } returns task
 
-        verify(geofencingClient).addGeofences(
-            geofencingRequestArgumentCaptor.capture(), pendingIntentArgumentCaptor.capture()
-        )
+        geofenceAdapter.addAllGeofence(ctGeofences, onSuccessListener)
+
+        val geofencingRequestSlot = slot<GeofencingRequest>()
+
+        verify {
+            geofencingClient.addGeofences(
+                capture(geofencingRequestSlot),
+                any()
+            )
+        }
+
         assertEquals(
             GeofencingRequest.INITIAL_TRIGGER_ENTER,
-            geofencingRequestArgumentCaptor.getValue().initialTrigger
+            geofencingRequestSlot.captured.initialTrigger
         )
     }
 
@@ -149,31 +127,31 @@ class GoogleGeofenceAdapterTest : BaseTestCase() {
         val geofenceAdapter = GoogleGeofenceAdapter(application)
         geofenceAdapter.removeAllGeofence(null, onSuccessListener)
 
-        verify(geofencingClient, never()).removeGeofences(anyList())
+        verify(exactly = 0) { geofencingClient.removeGeofences(any<List<String>>()) }
     }
 
-    //
     @Test
     fun testRemoveAllGeofenceTC2() {
         // when fence list is empty
         val geofenceAdapter = GoogleGeofenceAdapter(application)
         geofenceAdapter.removeAllGeofence(listOf(), onSuccessListener)
 
-        verify(geofencingClient, never()).removeGeofences(anyList())
+        verify(exactly = 0) { geofencingClient.removeGeofences(any<List<String>>()) }
     }
 
-    //
     @Test
     fun testRemoveAllGeofenceTC3() {
         // when fence list is not empty
 
         val ctGeofenceIds = listOf("111", "222")
         val geofenceAdapter = GoogleGeofenceAdapter(application)
-        `when`(geofencingClient.removeGeofences(ctGeofenceIds)).thenReturn(task)
+
+        every { geofencingClient.removeGeofences(ctGeofenceIds) } returns task
+
         geofenceAdapter.removeAllGeofence(ctGeofenceIds, onSuccessListener)
 
-        tasksMockedStatic.verify { Tasks.await(task) }
-        verify(onSuccessListener).onSuccess(null)
+        verify { Tasks.await(task) }
+        verify { onSuccessListener.onSuccess(null) }
     }
 
     @Test
@@ -183,20 +161,19 @@ class GoogleGeofenceAdapterTest : BaseTestCase() {
         val geofenceAdapter = GoogleGeofenceAdapter(application)
         geofenceAdapter.stopGeofenceMonitoring(null)
 
-        verify(geofencingClient, never()).removeGeofences(any(PendingIntent::class.java))
+        verify(exactly = 0) { geofencingClient.removeGeofences(any<PendingIntent>()) }
     }
 
     @Test
     fun testStopGeofenceMonitoringTC2() {
         // when pending intent is not null
-
+        justRun { Tasks.await<Any>(any()) }
         val geofenceAdapter = GoogleGeofenceAdapter(application)
-
-        `when`(geofencingClient.removeGeofences(pendingIntent)).thenReturn(task)
+        every { geofencingClient.removeGeofences(pendingIntent) } returns task
 
         geofenceAdapter.stopGeofenceMonitoring(pendingIntent)
 
-        tasksMockedStatic.verify { Tasks.await(task) }
-        verify(pendingIntent).cancel()
+        verify { Tasks.await(task) }
+        verify { pendingIntent.cancel() }
     }
 }
