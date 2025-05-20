@@ -30,12 +30,7 @@ dependencies {
     compileOnly (libs.androidx.work.runtime)
     compileOnly (libs.androidx.concurrent.futures)
 
-    testRuntimeOnly (libs.test.junit.jupiter.engine)
-
     // Unit testing dependencies
-    testImplementation (libs.test.junit.platform.runner)
-    testImplementation (libs.test.junit.jupiter.api)
-
     testImplementation (libs.test.mockito.core)
     testImplementation (libs.test.robolectric)
 
@@ -44,7 +39,6 @@ dependencies {
     testImplementation (libs.androidx.appcompat)
     testImplementation (libs.firebase.messaging)
 
-    testImplementation (libs.catch.exception)
     testImplementation (project(":clevertap-core"))
 
     testImplementation (libs.installreferrer)
@@ -55,9 +49,4 @@ dependencies {
     testImplementation (libs.androidx.concurrent.futures)
     testImplementation (libs.androidx.core.ktx)
     testImplementation (libs.kotlin.stdlib.jdk7)
-
-    // AndroidJUnitRunner and JUnit Rules
-    androidTestImplementation (libs.test.runner)
-    androidTestImplementation (libs.test.rules)
-    androidTestImplementation (libs.test.espresso.core)
 }

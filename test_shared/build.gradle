@@ -9,7 +9,6 @@ android {
     defaultConfig {
         minSdkVersion libs.versions.android.minSdk.get().toInteger()
 
-//        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
         multiDexEnabled true
     }
@@ -39,33 +38,14 @@ android {
 }
 
 dependencies {
-    api project(':clevertap-core')
-    // Unit ing dependencies
-    api (libs.test.junit.platform.runner)
-    api (libs.test.junit.jupiter.api)
-    api (libs.test.junit.jupiter.engine)
-    api (libs.kotlin.stdlib.jdk7)
-    api (libs.test.jsonassert)
-    api (libs.gson)
-    api (libs.test.mockk)
-    api (libs.test.robolectric)
-    api (libs.test.opentest4j)
-
-    api (libs.test.core)
-    api (libs.test.ext.junit)
-
-    api (libs.androidx.fragment)
-    // AndroidJUnitRunner and JUnit Rules
-    api (libs.test.runner)
-    api (libs.test.rules)
-    api (libs.test.espresso.core)
-
-    api (libs.catch.exception)
-    api (libs.androidx.core.core)
-
-    api (libs.test.kotlin.test)
-    api (libs.test.truth)
-
-    api (libs.test.xmlpull)
-
+    api(project(':clevertap-core'))
+    api(libs.kotlin.stdlib.jdk7)
+    api(libs.test.jsonassert)
+    api(libs.test.mockk)
+    api(libs.test.robolectric)
+    api(libs.test.core)
+    api(libs.test.ext.junit)
+    api(libs.androidx.core.core)
+    api(libs.test.kotlin.test)
+    api(libs.test.hamcrest)
 }

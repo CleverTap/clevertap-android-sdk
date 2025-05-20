@@ -4,8 +4,8 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate.FunctionBu
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate.TemplateBuilder
 import io.mockk.*
 import org.junit.Test
-import org.junit.jupiter.api.*
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class CustomTemplateTest {
 
@@ -17,7 +17,7 @@ class CustomTemplateTest {
         template {
             name("template")
             presenter(mockTemplatePresenter)
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 mapArgument("emptyMap", mapOf())
             }
         }
@@ -25,23 +25,23 @@ class CustomTemplateTest {
 
     @Test
     fun `builder should throw if name is not set when build is called`() {
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             TemplateBuilder().presenter(mockTemplatePresenter).build()
         }
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             FunctionBuilder(isVisual = false).presenter(mockFunctionPresenter).build()
         }
     }
 
     @Test
     fun `builder should throw when name is blank or empty`() {
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             template {
                 name("")
                 presenter(mockTemplatePresenter)
             }
         }
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             template {
                 name("  ")
                 presenter(mockTemplatePresenter)
@@ -51,31 +51,24 @@ class CustomTemplateTest {
 
     @Test
     fun `builder should throw when arg name has invalid dots`() {
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             template {
                 name("template")
                 actionArgument(".name")
                 presenter(mockTemplatePresenter)
             }
         }
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             template {
                 name("template")
                 fileArgument("name.")
                 presenter(mockTemplatePresenter)
             }
         }
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             template {
                 name("template")
                 fileArgument("na..me")
-                presenter(mockTemplatePresenter)
-            }
-        }
-        assertDoesNotThrow {
-            template {
-                name("template")
-                intArgument("na.me", 0)
                 presenter(mockTemplatePresenter)
             }
         }
@@ -86,10 +79,10 @@ class CustomTemplateTest {
         template {
             name("template")
             presenter(mockTemplatePresenter)
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 stringArgument("", "")
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 intArgument("  ", 1)
             }
         }
@@ -97,7 +90,7 @@ class CustomTemplateTest {
 
     @Test
     fun `builder should throw when no presenter if provided`() {
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             template {
                 name("template")
             }
@@ -140,7 +133,7 @@ class CustomTemplateTest {
         template {
             name(name)
             presenter(mockTemplatePresenter)
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 name(name)
             }
         }
@@ -151,14 +144,14 @@ class CustomTemplateTest {
         template {
             name("template")
             presenter(mockTemplatePresenter)
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 mapArgument(
                     "map",
                     mapOf("a" to Unit)
                 )
             }
 
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 mapArgument(
                     "map",
                     mapOf(
@@ -169,7 +162,7 @@ class CustomTemplateTest {
                 )
             }
 
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 mapArgument(
                     "map",
                     mapOf("" to "string")
@@ -184,28 +177,28 @@ class CustomTemplateTest {
             name("function")
             presenter(mockFunctionPresenter)
             stringArgument("arg", "default")
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 intArgument("arg", 0)
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 booleanArgument("arg", false)
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 longArgument("arg", 0)
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 shortArgument("arg", 0)
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 byteArgument("arg", 0)
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 floatArgument("arg", 0f)
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 doubleArgument("arg", 0.0)
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 fileArgument("arg")
             }
         }
@@ -214,7 +207,7 @@ class CustomTemplateTest {
             name("template")
             presenter(mockTemplatePresenter)
             actionArgument("arg")
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 mapArgument("arg", mapOf("asd" to 5))
             }
         }
@@ -226,10 +219,10 @@ class CustomTemplateTest {
             name("template")
             presenter(mockTemplatePresenter)
             stringArgument("a.b", "")
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 stringArgument("a", "")
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 stringArgument("a.b", "")
             }
         }
@@ -238,10 +231,10 @@ class CustomTemplateTest {
             name("template")
             presenter(mockTemplatePresenter)
             stringArgument("a.b.c.d", "")
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 stringArgument("a", "")
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 stringArgument("a.b", "")
             }
         }
@@ -251,13 +244,13 @@ class CustomTemplateTest {
             presenter(mockTemplatePresenter)
             stringArgument("a.a.a", "")
             stringArgument("a.a.b", "")
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 stringArgument("a.a.a.d", "")
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 stringArgument("a", "")
             }
-            assertThrows<CustomTemplateException> {
+            assertFailsWith<CustomTemplateException> {
                 stringArgument("a.a", "")
             }
         }
@@ -267,7 +260,20 @@ class CustomTemplateTest {
     fun `builder should merge and sort hierarchical args and maintain order for other args`() {
 
         val expectedOrder = listOf(
-            "b", "c", "d", "e.f.a", "e.f.c", "e.f.d", "e.f.e", "e.g", "e.h", "e.w", "l", "k", "a.m", "a.n"
+            "b",
+            "c",
+            "d",
+            "e.f.a",
+            "e.f.c",
+            "e.f.d",
+            "e.f.e",
+            "e.g",
+            "e.h",
+            "e.w",
+            "l",
+            "k",
+            "a.m",
+            "a.n"
         )
 
         val template = template {
