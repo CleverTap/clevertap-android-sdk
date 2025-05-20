@@ -49,9 +49,4 @@ dependencies {
     testImplementation (libs.androidx.concurrent.futures)
     testImplementation (libs.androidx.core.ktx)
     testImplementation (libs.kotlin.stdlib.jdk7)
-
-    // AndroidJUnitRunner and JUnit Rules
-    androidTestImplementation (libs.test.runner)
-    androidTestImplementation (libs.test.rules)
-    androidTestImplementation (libs.test.espresso.core)
 }

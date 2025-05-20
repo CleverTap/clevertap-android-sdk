@@ -29,8 +29,6 @@ material = "1.12.0"
 espresso_core = "3.6.1"
 test_ext_junit = "1.2.1"
 test_core = "1.6.1"
-test_rules = "1.6.1"
-test_runner = "1.6.2"
 work_testing = "2.9.1"
 junit = "4.13.2"
 awaitility = "4.1.0"
@@ -39,10 +37,10 @@ kotlin_test = "1.7.20" #check with kotlin_gradle_plugin
 mockito_core = "5.9.0"
 robolectric = "4.9"
 jsonassert = "1.5.0"
-xmlpull = "1.1.3.1"
 mockk = "1.14.2"
 uiautomator = "2.3.0"
 coroutines_test = "1.7.3"
+hamcrest = "3.0"
 
 #Install Referrer
 installreferrer = "2.2"
@@ -108,8 +106,6 @@ android_material = { module = "com.google.android.material:material", version.re
 test_espresso_core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso_core" }
 test_ext_junit = { module = "androidx.test.ext:junit", version.ref = "test_ext_junit" }
 test_core = { module = "androidx.test:core", version.ref = "test_core" }
-test_rules = { module = "androidx.test:rules", version.ref = "test_rules" }
-test_runner = { module = "androidx.test:runner", version.ref = "test_runner" }
 test_work_testing = { module = "androidx.work:work-testing", version.ref = "work_testing" }
 test_junit = { module = "junit:junit", version.ref = "junit" }
 test_awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
@@ -117,10 +113,10 @@ test_kotlin_test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = 
 test_mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito_core" }
 test_robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 test_jsonassert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonassert" }
-test_xmlpull = { module = "xmlpull:xmlpull", version.ref = "xmlpull" }
 test_mockk = { module = "io.mockk:mockk", version.ref="mockk"}
 test_uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref="uiautomator"}
 test_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines_test"}
+test_hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 
 #Kotlin Stdlib
 kotlin_stdlib_jdk7 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk7", version.ref = "kotlin_stdlib_jdk7" }

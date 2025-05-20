@@ -56,20 +56,8 @@ dependencies {
 
     // Unit testing dependencies
     testImplementation(project(":test_shared"))
-    testImplementation(libs.test.robolectric)
     testImplementation(libs.firebase.messaging)
-    testImplementation(libs.test.mockk)
     testImplementation(libs.test.coroutines)
-
-    androidTestImplementation(libs.test.work.testing)
-    androidTestImplementation(libs.test.runner)
-    androidTestImplementation(libs.test.rules)
-    // Optional -- UI testing with Espresso
-    androidTestImplementation(libs.test.espresso.core)
-    // Optional -- UI testing with UI Automator
-    androidTestImplementation(libs.test.uiautomator)
-    // Optional -- UI testing with Compose
-    androidTestImplementation(libs.test.ext.junit)
 }
 
 sonarqube {
