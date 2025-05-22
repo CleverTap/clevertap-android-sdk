@@ -138,6 +138,8 @@ public class PTConstants {
 
     public static final String PT_BUY_NOW = "buynow";
 
+    public static final String PT_SCALE_TYPE= "pt_scale_type";
+
     public static final String TEXT_ONLY = "text_only";
 
     public static final String PT_SUBTITLE = "pt_subtitle";

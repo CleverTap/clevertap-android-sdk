@@ -84,6 +84,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     internal var pt_flip_interval = 0
     private var pt_collapse_key: Any? = null
     internal var pt_manual_carousel_type: String? = null
+    internal var pt_scale_type: PTScaleType = PTScaleType.CENTER_CROP
     internal var config: CleverTapInstanceConfig? = null
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
@@ -418,6 +419,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_subtitle = extras.getString(PT_SUBTITLE)
         pt_collapse_key = extras[PT_COLLAPSE_KEY]
         pt_flip_interval = Utils.getFlipInterval(extras)
+        pt_scale_type = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE))
         pID = extras.getString(Constants.WZRK_PUSH_ID)
         pt_manual_carousel_type = extras.getString(PT_MANUAL_CAROUSEL_TYPE)
         if (config != null) {

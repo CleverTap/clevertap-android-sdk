@@ -67,13 +67,8 @@
 
     </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/big_image"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:minHeight="196dp"
-        android:scaleType="centerCrop" />
+    <include layout="@layout/image_view_dynamic"
+        android:id="@+id/big_image_configurable"/>
 
     <include
         android:id="@+id/action_buttons"

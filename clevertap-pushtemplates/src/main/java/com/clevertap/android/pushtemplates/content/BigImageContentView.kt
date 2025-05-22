@@ -5,6 +5,7 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.text.Html
 import android.view.View
+import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
@@ -23,7 +24,7 @@ internal open class BigImageContentView(
         setCustomContentViewMessageColour(renderer.pt_msg_clr)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
         setCustomContentViewSmallIcon()
-        setCustomContentViewBigImage(renderer.pt_big_img)
+        setCustomContentViewBigImage(renderer.pt_big_img, renderer.pt_scale_type)
         setCustomContentViewLargeIcon(renderer.pt_large_icon)
     }
 
@@ -39,14 +40,18 @@ internal open class BigImageContentView(
         }
     }
 
-    private fun setCustomContentViewBigImage(pt_big_img: String?) {
+    private fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType) {
         if (pt_big_img.isNotNullAndEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView, context)
             if (Utils.getFallback()) {
-                remoteView.setViewVisibility(R.id.big_image, View.GONE)
+                return
             }
-        } else {
-            remoteView.setViewVisibility(R.id.big_image, View.GONE)
+
+            val imageViewId = when (scaleType) {
+                PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+                PTScaleType.CENTER_CROP -> R.id.big_image
+            }
+            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context)
+            remoteView.setViewVisibility(imageViewId, View.VISIBLE)
         }
     }
 }

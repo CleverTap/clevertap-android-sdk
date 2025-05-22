@@ -6,17 +6,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <ImageView
-        android:id="@+id/big_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"/>
+    <include layout="@layout/image_view_flipper_dynamic"
+        android:id="@+id/big_image_configurable"/>
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignBottom="@+id/big_image"
-        android:background="@drawable/pt_scrim" />
+        android:layout_alignBottom="@+id/big_image_configurable"
+        android:background="@drawable/pt_scrim"
+        android:contentDescription="@string/notification_image" />
 
     <RelativeLayout
         android:layout_width="match_parent"

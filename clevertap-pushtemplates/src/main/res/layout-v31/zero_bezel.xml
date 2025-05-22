@@ -7,23 +7,14 @@
     android:background="@android:color/transparent"
     android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/big_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop" />
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignBottom="@+id/big_image"
-        android:background="@drawable/pt_scrim" />
+    <include layout="@layout/image_view_flipper_dynamic"
+        android:id="@+id/big_image_configurable"/>
 
     <RelativeLayout
         android:id="@+id/rel_lyt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/big_image"
+        android:layout_alignBottom="@+id/big_image_configurable"
         android:paddingStart="@dimen/padding_horizontal"
         android:paddingLeft="@dimen/padding_horizontal"
         android:paddingTop="@dimen/padding_vertical"
