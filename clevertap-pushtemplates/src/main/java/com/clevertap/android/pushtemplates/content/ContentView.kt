@@ -38,15 +38,11 @@ internal open class ContentView(
             remoteView.setViewVisibility(R.id.sep_subtitle, View.GONE)
         }
 
-        renderer.pt_meta_clr?.takeIf { it.isNotEmpty() }?.let { metaColor ->
-            Utils.getColourOrNull(metaColor)?.let { color ->
-                // Apply the same color to all metadata text elements
-                listOf(R.id.app_name, R.id.timestamp, R.id.subtitle).forEach { id ->
-                    remoteView.setTextColor(id, color)
-                }
-            }
-            setDotSep()
+        listOf(R.id.app_name, R.id.timestamp, R.id.subtitle).forEach { resId ->
+            setCustomTextColour(renderer.pt_meta_clr, resId)
         }
+
+        setDotSep()
     }
 
     private fun setDotSep() {
@@ -88,40 +84,6 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewCollapsedBackgroundColour(pt_bg: String?) {
-        pt_bg?.takeIf { it.isNotEmpty() }?.let {
-            Utils.getColourOrNull(it)?.let { color ->
-                remoteView.setInt(
-                    R.id.content_view_small,
-                    "setBackgroundColor",
-                    color
-                )
-            }
-        }
-    }
-
-    fun setCustomContentViewTitleColour(pt_title_clr: String?) {
-        pt_title_clr?.takeIf { it.isNotEmpty() }?.let {
-            Utils.getColourOrNull(it)?.let { color ->
-                remoteView.setTextColor(
-                    R.id.title,
-                    color
-                )
-            }
-        }
-    }
-
-    fun setCustomContentViewMessageColour(pt_msg_clr: String?) {
-        pt_msg_clr?.takeIf { it.isNotEmpty() }?.let {
-            Utils.getColourOrNull(it)?.let { color ->
-                remoteView.setTextColor(
-                    R.id.msg,
-                    color
-                )
-            }
-        }
-    }
-
     fun setCustomContentViewSmallIcon() {
         if (renderer.pt_small_icon != null) {
             Utils.loadImageBitmapIntoRemoteView(R.id.small_icon, renderer.pt_small_icon, remoteView)
@@ -138,12 +100,23 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewExpandedBackgroundColour(pt_bg: String?) {
+    fun setCustomBackgroundColour(pt_bg: String?, resId: Int) {
         pt_bg?.takeIf { it.isNotEmpty() }?.let {
             Utils.getColourOrNull(it)?.let { color ->
                 remoteView.setInt(
-                    R.id.content_view_big,
+                    resId,
                     "setBackgroundColor",
+                    color
+                )
+            }
+        }
+    }
+
+    fun setCustomTextColour(pt_text_clr: String?, resId: Int) {
+        pt_text_clr?.takeIf { it.isNotEmpty() }?.let {
+            Utils.getColourOrNull(it)?.let { color ->
+                remoteView.setTextColor(
+                    resId,
                     color
                 )
             }

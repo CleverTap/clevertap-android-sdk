@@ -13,9 +13,9 @@ internal open class SmallContentView(
         setCustomContentViewBasicKeys()
         setCustomContentViewTitle(renderer.pt_title)
         setCustomContentViewMessage(renderer.pt_msg)
-        setCustomContentViewCollapsedBackgroundColour(renderer.pt_bg)
-        setCustomContentViewTitleColour(renderer.pt_title_clr)
-        setCustomContentViewMessageColour(renderer.pt_msg_clr)
+        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_small)
+        setCustomTextColour(renderer.pt_title_clr, R.id.title)
+        setCustomTextColour(renderer.pt_msg_clr, R.id.msg)
         setCustomContentViewSmallIcon()
         setCustomContentViewLargeIcon(renderer.pt_large_icon)
     }

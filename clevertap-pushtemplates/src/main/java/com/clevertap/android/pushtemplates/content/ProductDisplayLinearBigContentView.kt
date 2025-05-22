@@ -39,10 +39,14 @@ internal open class ProductDisplayLinearBigContentView(
         setCustomContentViewBasicKeys()
         if (renderer.bigTextList!!.isNotEmpty()) setCustomContentViewText(R.id.product_name, productName)
         if (renderer.priceList!!.isNotEmpty()) setCustomContentViewText(R.id.product_price, productPrice)
-        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
+
+
         setCustomContentViewButtonLabel(R.id.product_action, renderer.pt_product_display_action)
-        setCustomContentViewButtonColour(R.id.product_action, renderer.pt_product_display_action_clr)
-        setCustomContentViewButtonText(R.id.product_action, renderer.pt_product_display_action_text_clr)
+
+        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
+        setCustomBackgroundColour(renderer.pt_product_display_action_clr, R.id.product_action)
+        setCustomTextColour(renderer.pt_product_display_action_text_clr, R.id.product_action)
+
         setImageList(extras, renderer.pt_scale_type)
         remoteView.setDisplayedChild(R.id.carousel_image, currentPosition)
 
@@ -160,29 +164,6 @@ internal open class ProductDisplayLinearBigContentView(
                 )
             } else {
                 remoteView.setTextViewText(resourceID, Html.fromHtml(pt_product_display_action))
-            }
-        }
-    }
-
-    private fun setCustomContentViewButtonColour(resourceID: Int, pt_product_display_action_clr: String?) {
-        pt_product_display_action_clr?.takeIf { it.isNotEmpty() }?.let {
-            Utils.getColourOrNull(it)?.let { color ->
-                remoteView.setInt(
-                    resourceID,
-                    "setBackgroundColor",
-                    color
-                )
-            }
-        }
-    }
-
-    private fun setCustomContentViewButtonText(resourceID: Int, pt_product_display_action_text_clr: String?) {
-        pt_product_display_action_text_clr?.takeIf { it.isNotEmpty() }?.let {
-            Utils.getColourOrNull(it)?.let { color ->
-                remoteView.setTextColor(
-                    resourceID,
-                    color
-                )
             }
         }
     }

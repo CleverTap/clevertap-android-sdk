@@ -23,7 +23,7 @@ internal class FiveIconBigContentView constructor(
         if (renderer.pt_title == null || renderer.pt_title!!.isEmpty()) {
             renderer.pt_title = Utils.getApplicationName(context)
         }
-        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
+        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
         for (imageKey in renderer.imageList!!.indices) {
             if (imageKey == 0) {
                 remoteView.setViewVisibility(R.id.cta1, View.VISIBLE)
