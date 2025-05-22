@@ -12,7 +12,7 @@ internal class TimerBigContentView(context: Context, timer_end: Int?, renderer: 
     TimerSmallContentView(context, timer_end, renderer, R.layout.timer) {
 
     init {
-        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
+        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
         setCustomContentViewBigImage(renderer.pt_big_img)
     }

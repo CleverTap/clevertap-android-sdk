@@ -605,7 +605,7 @@ public class Utils {
     }
 
     public static Bitmap setBitMapColour(Context context, int resourceID, String clr, String defaultClr) {
-        Integer color = getColour(clr, defaultClr);
+        int color = getColour(clr, defaultClr);
 
         try {
             Drawable mDrawable = ContextCompat.getDrawable(context, resourceID);
@@ -630,6 +630,16 @@ public class Utils {
         }
     }
 
+    /**
+     * Safely parses a color string (e.g., "#RRGGBB" or "#AARRGGBB") into an integer color value.
+     * <p>
+     * If the input is null, empty, or an invalid color format, this method returns {@code null} instead of throwing an exception.
+     * </p>
+     *
+     * @param clr the color string to parse (e.g., "#FF0000" for red)
+     * @return the parsed color as an {@link Integer}, or {@code null} if parsing fails
+     */
+    @Nullable
     public static Integer getColourOrNull(String clr) {
         try {
             return Color.parseColor(clr);
