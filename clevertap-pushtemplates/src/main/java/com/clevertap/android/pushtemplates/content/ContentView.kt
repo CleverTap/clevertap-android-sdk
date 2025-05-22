@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
@@ -146,6 +147,21 @@ internal open class ContentView(
                     color
                 )
             }
+        }
+    }
+
+    fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType) {
+        if (pt_big_img.isNotNullAndEmpty()) {
+            if (Utils.getFallback()) {
+                return
+            }
+
+            val imageViewId = when (scaleType) {
+                PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+                PTScaleType.CENTER_CROP -> R.id.big_image
+            }
+            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context)
+            remoteView.setViewVisibility(imageViewId, View.VISIBLE)
         }
     }
 }
