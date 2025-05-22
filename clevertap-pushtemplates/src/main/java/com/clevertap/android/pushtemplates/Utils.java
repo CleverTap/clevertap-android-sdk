@@ -2,6 +2,7 @@ package com.clevertap.android.pushtemplates;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 
+import static com.clevertap.android.pushtemplates.PTConstants.COLOR_KEYS;
 import static com.clevertap.android.pushtemplates.PTConstants.PT_DARK_MODE_SUFFIX;
 
 import android.app.Notification;
@@ -51,6 +52,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("WeakerAccess")
@@ -197,6 +199,31 @@ public class Utils {
         return stList;
     }
 
+    /**
+     * Creates a map of colors for the specified display mode (dark/light)
+     * @param extras The original extras bundle containing all color values
+     * @param isDarkMode Whether to use dark mode colors
+     * @return A map containing appropriate colors for the specified mode
+     */
+    public static Map<String, String> createColorMap(Bundle extras, boolean isDarkMode) {
+        Map<String, String> colorMap = new HashMap<>();
+
+        // Process each color key
+        for (String key : COLOR_KEYS) {
+            String color = getDarkModeAdaptiveColor(extras, isDarkMode, key);
+            colorMap.put(key, color);
+        }
+        
+        return colorMap;
+    }
+
+    /**
+     * Gets color value based on dark mode preference
+     * @param extras The extras bundle containing color values
+     * @param isDarkMode Whether to use dark mode colors
+     * @param key The color key to retrieve
+     * @return The appropriate color for the specified mode
+     */
     static String getDarkModeAdaptiveColor(Bundle extras, boolean isDarkMode, String key) {
         String colorDark = extras.getString(key + PT_DARK_MODE_SUFFIX);
         String color = extras.getString(key);
@@ -207,6 +234,8 @@ public class Utils {
             return color;
         }
     }
+
+
 
     public static void loadImageBitmapIntoRemoteView(int imageViewID, Bitmap image,
             RemoteViews remoteViews) {

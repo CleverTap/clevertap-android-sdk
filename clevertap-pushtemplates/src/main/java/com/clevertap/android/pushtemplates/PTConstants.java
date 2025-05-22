@@ -1,5 +1,7 @@
 package com.clevertap.android.pushtemplates;
 
+import java.util.Set;
+
 @SuppressWarnings("WeakerAccess")
 //Using common keys from core-sdk constants
 public class PTConstants {
@@ -154,21 +156,24 @@ public class PTConstants {
 
     public static final String PT_DOT_SEP = "pt_dot_sep";
 
-    public static final String PT_COLOUR_WHITE = "#FFFFFF";
-
     public static final String PT_COLOUR_GREY = "#A6A6A6";
 
-    public static final String PT_COLOUR_BLACK = "#000000";
-
     public static final String PT_META_CLR_DEFAULTS = PT_COLOUR_GREY;
-
-    public static final String PT_PRODUCT_DISPLAY_ACTION_CLR_DEFAULTS = "#FFBB33";
-
-    public static final String PT_PRODUCT_DISPLAY_ACTION_TEXT_CLR_DEFAULT = PT_COLOUR_WHITE;
 
     public static final int PT_FLIP_INTERVAL_TIME = 4 * ONE_SECOND;
 
     public static final String KEY_CLICKED_STAR = "clickedStar";
 
     public static final String KEY_REQUEST_CODES = "requestCodes";
+
+    public static final Set<String> COLOR_KEYS = Set.of(
+            PT_TITLE_COLOR,
+            PT_MSG_COLOR,
+            PT_BG,
+            PT_META_CLR,
+            PT_SMALL_ICON_COLOUR,
+            PT_CHRONO_TITLE_COLOUR,
+            PT_PRODUCT_DISPLAY_ACTION_COLOUR,
+            PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR);
+
 }

@@ -378,13 +378,15 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
             }
             if (newExtras != null) extras.putAll(newExtras)
         }
+
+        val darkModeAdaptiveColors = Utils.createColorMap(extras, isDarkMode)
         pt_msg = extras.getString(PT_MSG)
         pt_msg_summary = extras.getString(PT_MSG_SUMMARY)
-        pt_msg_clr = Utils.getDarkModeAdaptiveColor(extras, isDarkMode, PT_MSG_COLOR)
+        pt_msg_clr = darkModeAdaptiveColors[PT_MSG_COLOR]
         pt_title = extras.getString(PT_TITLE)
-        pt_title_clr = Utils.getDarkModeAdaptiveColor(extras, isDarkMode, PT_TITLE_COLOR)
-        pt_meta_clr = Utils.getDarkModeAdaptiveColor(extras, isDarkMode, PT_META_CLR)
-        pt_bg = Utils.getDarkModeAdaptiveColor(extras, isDarkMode, PT_BG)
+        pt_title_clr = darkModeAdaptiveColors[PT_TITLE_COLOR]
+        pt_meta_clr = darkModeAdaptiveColors[PT_META_CLR]
+        pt_bg = darkModeAdaptiveColors[PT_BG]
         pt_big_img = extras.getString(PT_BIG_IMG)
         pt_large_icon = extras.getString(PT_NOTIF_ICON)
         pt_small_view = extras.getString(PT_SMALL_VIEW)
@@ -402,16 +404,16 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_input_feedback = extras.getString(PT_INPUT_FEEDBACK)
         pt_input_auto_open = extras.getString(PT_INPUT_AUTO_OPEN)
         pt_dismiss_on_click = extras.getString(PT_DISMISS_ON_CLICK)
-        pt_chrono_title_clr = Utils.getDarkModeAdaptiveColor(extras, isDarkMode, PT_CHRONO_TITLE_COLOUR)
+        pt_chrono_title_clr = darkModeAdaptiveColors[PT_CHRONO_TITLE_COLOUR]
         pt_product_display_action = extras.getString(PT_PRODUCT_DISPLAY_ACTION)
-        pt_product_display_action_clr = Utils.getDarkModeAdaptiveColor(extras, isDarkMode, PT_PRODUCT_DISPLAY_ACTION_COLOUR)
+        pt_product_display_action_clr = darkModeAdaptiveColors[PT_PRODUCT_DISPLAY_ACTION_COLOUR]
         pt_timer_end = Utils.getTimerEnd(extras)
         pt_big_img_alt = extras.getString(PT_BIG_IMG_ALT)
         pt_msg_alt = extras.getString(PT_MSG_ALT)
         pt_title_alt = extras.getString(PT_TITLE_ALT)
         pt_product_display_linear = extras.getString(PT_PRODUCT_DISPLAY_LINEAR)
-        pt_product_display_action_text_clr = Utils.getDarkModeAdaptiveColor(extras, isDarkMode, PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR)
-        pt_small_icon_clr = Utils.getDarkModeAdaptiveColor(extras, isDarkMode, PT_SMALL_ICON_COLOUR)
+        pt_product_display_action_text_clr = darkModeAdaptiveColors[PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR]
+        pt_small_icon_clr = darkModeAdaptiveColors[PT_SMALL_ICON_COLOUR]
         pt_cancel_notif_id = extras.getString(PT_CANCEL_NOTIF_ID)
         pt_cancel_notif_ids = Utils.getNotificationIds(context)
         actions = Utils.getActionKeys(extras)
@@ -450,9 +452,6 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         }
         if (pt_subtitle == null || pt_subtitle!!.isEmpty()) {
             pt_subtitle = extras.getString(Constants.WZRK_SUBTITLE)
-        }
-        if (pt_small_icon_clr == null || pt_small_icon_clr!!.isEmpty()) {
-            pt_small_icon_clr = extras.getString(Constants.WZRK_COLOR)
         }
         if (pt_collapse_key == null) {
             pt_collapse_key = extras[Constants.WZRK_COLLAPSE]
