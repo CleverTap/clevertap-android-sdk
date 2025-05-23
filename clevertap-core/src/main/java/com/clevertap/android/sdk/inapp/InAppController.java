@@ -805,7 +805,7 @@ public class InAppController implements InAppListener {
                 Logger.d(config.getAccountId(),
                         "Current activity is not a FragmentActivity — deferring in-app & launching FragmentHostActivity");
                 if (!pendingNotifications.contains(inAppNotification)) {
-                    pendingNotifications.addFirst(inAppNotification);
+                    pendingNotifications.add(0, inAppNotification);
                 }
                 if (!FragmentHostActivity.isHosting()) {
                     FragmentHostActivity.launch(act);
