@@ -54,8 +54,8 @@ internal class AutoCarouselContentView(context: Context, renderer: TemplateRende
             )
 
             if (!Utils.getFallback()) {
-                remoteView.addView(R.id.view_flipper, tempRemoteView)
                 tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
+                remoteView.addView(R.id.view_flipper, tempRemoteView)
             } else {
                 PTLog.debug("Skipping Image in Auto Carousel.")
             }

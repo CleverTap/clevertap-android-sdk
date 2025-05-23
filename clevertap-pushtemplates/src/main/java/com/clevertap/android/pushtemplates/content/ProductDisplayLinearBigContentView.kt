@@ -40,7 +40,6 @@ internal open class ProductDisplayLinearBigContentView(
         if (renderer.bigTextList!!.isNotEmpty()) setCustomContentViewText(R.id.product_name, productName)
         if (renderer.priceList!!.isNotEmpty()) setCustomContentViewText(R.id.product_price, productPrice)
 
-
         setCustomContentViewButtonLabel(R.id.product_action, renderer.pt_product_display_action)
 
         setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
