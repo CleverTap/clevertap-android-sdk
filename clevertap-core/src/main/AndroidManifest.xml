@@ -15,6 +15,13 @@
             android:configChanges="keyboardHidden"
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
 
+        <activity
+            android:name="com.clevertap.android.sdk.FragmentHostActivity"
+            android:theme="@style/CleverTapFragmentHostTheme"
+            android:noHistory="true"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
         <receiver
             android:name=".pushnotification.CTPushNotificationReceiver"
             android:enabled="true"

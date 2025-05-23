@@ -24,6 +24,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
+import com.clevertap.android.sdk.FragmentHostActivity;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
@@ -792,6 +793,27 @@ public class InAppController implements InAppListener {
             return;
         }
 
+        // if this inAppNotification requires a FragmentActivity and the current
+        // activity isn't one,
+        // - insert this notification at the head of the pendingNotifications queue,
+        // - launch the FragmentHostActivity,
+        // - when the fragment activity has launched it'll trigger checking
+        // pendingNotifications again and we can safely render
+        if (requiresFragmentHost(inAppNotification.getInAppType())) {
+            Activity act = CoreMetaData.getCurrentActivity();
+            if (!(act instanceof FragmentActivity)) {
+                Logger.d(config.getAccountId(),
+                        "Current activity is not a FragmentActivity — deferring in-app & launching FragmentHostActivity");
+                if (!pendingNotifications.contains(inAppNotification)) {
+                    pendingNotifications.addFirst(inAppNotification);
+                }
+                if (!FragmentHostActivity.isHosting()) {
+                    FragmentHostActivity.launch(act);
+                }
+                return;
+            }
+        }
+
         currentlyDisplayingInApp = inAppNotification;
 
         CTInAppBaseFragment inAppFragment = null;
@@ -869,6 +891,19 @@ public class InAppController implements InAppListener {
                 Logger.v(config.getAccountId(), "Fragment not able to render", t);
                 currentlyDisplayingInApp = null;
             }
+        }
+    }
+
+    private static boolean requiresFragmentHost(CTInAppType type) {
+        switch (type) {
+            case CTInAppTypeFooterHTML:
+            case CTInAppTypeHeaderHTML:
+            case CTInAppTypeFooter:
+            case CTInAppTypeHeader:
+                return true;
+
+            default:
+                return false;
         }
     }
 
