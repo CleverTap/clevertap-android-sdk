@@ -34,10 +34,6 @@ public class FragmentHostActivity extends AppCompatActivity {
 
         // try to supress any transitions
         overridePendingTransition(0, 0); 
-    }
-
-    @Override protected void onResume() {
-        super.onResume();
 
         // try to supress any transitions
         getSupportFragmentManager()
@@ -50,6 +46,10 @@ public class FragmentHostActivity extends AppCompatActivity {
                     f.setReturnTransition(null);
                 }
             }, true);
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
     }
     
     @Override protected void onDestroy() {
