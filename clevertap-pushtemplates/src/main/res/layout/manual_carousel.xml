@@ -7,7 +7,9 @@
 
     <include
         android:id="@+id/rel_lyt"
-        layout="@layout/content_view_small_multi_line_msg" />
+        layout="@layout/content_view_small_multi_line_msg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <RelativeLayout
         android:id="@+id/view_flipper"
@@ -65,6 +67,8 @@
 
     <include
         android:id="@+id/action_buttons"
-        layout="@layout/action_buttons" />
+        layout="@layout/action_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

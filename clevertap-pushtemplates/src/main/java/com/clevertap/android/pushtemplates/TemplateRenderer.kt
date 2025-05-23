@@ -472,7 +472,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         return nb
     }
 
-    private fun getActionButtons(
+    internal fun getActionButtons(
         context: Context,
         extras: Bundle,
         notificationId: Int,

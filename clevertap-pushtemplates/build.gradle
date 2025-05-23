@@ -25,7 +25,6 @@ android {
 }
 
 dependencies {
-    testImplementation project(':clevertap-core')
     compileOnly project(':clevertap-core')
     compileOnly (libs.android.material)
 
