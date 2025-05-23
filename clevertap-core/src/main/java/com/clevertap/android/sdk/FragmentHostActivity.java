@@ -9,11 +9,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FragmentHostActivity extends AppCompatActivity {
 
-    private static boolean hosting = false;
-    public static boolean isHosting() { return hosting; }
+    private static final AtomicBoolean hosting = new AtomicBoolean(false);
+
+    public static boolean isHosting() {
+        return hosting.get();
+    }
 
     public static void launch(Activity current) {
         Intent intent = new Intent(current, FragmentHostActivity.class);
@@ -25,8 +29,8 @@ public class FragmentHostActivity extends AppCompatActivity {
     }
 
     @Override protected void onCreate(Bundle b) {
+        hosting.set(true);
         super.onCreate(b);
-        hosting = true;
 
         // try to supress any transitions
         overridePendingTransition(0, 0); 
@@ -50,7 +54,7 @@ public class FragmentHostActivity extends AppCompatActivity {
     
     @Override protected void onDestroy() {
         super.onDestroy();
-        hosting = false;
+        hosting.set(false);
 
         // try to supress any transitions
         overridePendingTransition(0, 0);
