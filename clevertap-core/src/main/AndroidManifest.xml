@@ -20,6 +20,7 @@
             android:theme="@style/CleverTapFragmentHostTheme"
             android:noHistory="true"
             android:launchMode="singleTop"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="false" />
 
         <receiver
