@@ -34,11 +34,9 @@ junit = "4.13.2"
 awaitility = "4.1.0"
 kotlin_stdlib_jdk7 = "1.9.20" #check with kotlin_gradle_plugin
 kotlin_test = "1.7.20" #check with kotlin_gradle_plugin
-mockito_core = "5.9.0"
 robolectric = "4.9"
 jsonassert = "1.5.0"
 mockk = "1.14.2"
-uiautomator = "2.3.0"
 coroutines_test = "1.7.3"
 hamcrest = "3.0"
 
@@ -110,11 +108,9 @@ test_work_testing = { module = "androidx.work:work-testing", version.ref = "work
 test_junit = { module = "junit:junit", version.ref = "junit" }
 test_awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 test_kotlin_test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin_test" }
-test_mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito_core" }
 test_robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 test_jsonassert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonassert" }
 test_mockk = { module = "io.mockk:mockk", version.ref="mockk"}
-test_uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref="uiautomator"}
 test_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines_test"}
 test_hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 
