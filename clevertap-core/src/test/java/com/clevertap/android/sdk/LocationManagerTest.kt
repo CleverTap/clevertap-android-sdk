@@ -5,9 +5,12 @@ import android.location.Location
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventQueueManager
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import java.util.concurrent.Future
@@ -28,8 +31,15 @@ class LocationManagerTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         coreMetaData = CoreMetaData()
-        eventQueueManager = mock(EventQueueManager::class.java)
-        locationManager = spy(LocationManager(application, cleverTapInstanceConfig, coreMetaData, eventQueueManager))
+        eventQueueManager = mockk<EventQueueManager>(relaxed = true)
+        locationManager = spyk(
+            LocationManager(
+                application,
+                cleverTapInstanceConfig,
+                coreMetaData,
+                eventQueueManager
+            )
+        )
         location = Location("").apply {
             latitude = 17.355
             longitude = 7.355
@@ -56,7 +66,7 @@ class LocationManagerTest : BaseTestCase() {
 
     @Test
     fun test_setLocation_returns_null_when_Location_is_for_geofence_and_last_location_geofence_ping_is_less_than_10_secs() {
-        `when`(locationManager.now).thenReturn(100)
+        every { locationManager.now } returns 100
         CoreMetaData.setAppForeground(true)
         coreMetaData.isLocationForGeofence = true
         locationManager.lastLocationPingTimeForGeofence = 100
@@ -69,11 +79,10 @@ class LocationManagerTest : BaseTestCase() {
 
     @Test
     fun test_setLocation_returns_future_when_Location_is_for_geofence_and_last_location_geofence_ping_is_greater_than_10_secs() {
-        val future = mock(Future::class.java)
+        val future = mockk<Future<*>>(relaxed = true)
 
-        `when`(locationManager.now).thenReturn(150)
-        `when`(eventQueueManager.queueEvent(any(), any(), anyInt()))
-            .thenReturn(future)
+        every { locationManager.now } returns 150
+        every { eventQueueManager.queueEvent(any(), any(), any()) } returns future
 
         CoreMetaData.setAppForeground(true)
         coreMetaData.isLocationForGeofence = true
@@ -81,14 +90,14 @@ class LocationManagerTest : BaseTestCase() {
 
         val futureActual = locationManager._setLocation(location)
 
-        verify(eventQueueManager).queueEvent(any(), any(), anyInt())
+        verify { eventQueueManager.queueEvent(any(), any(), any()) }
         assertNotNull(futureActual)
         assertEquals(locationManager.lastLocationPingTimeForGeofence, 150)
     }
 
     @Test
     fun test_setLocation_returns_null_when_Location_is_not_for_geofence_and_last_location_ping_is_less_than_10_secs() {
-        `when`(locationManager.now).thenReturn(100)
+        every { locationManager.now } returns 100
         CoreMetaData.setAppForeground(true)
         coreMetaData.isLocationForGeofence = false
         locationManager.lastLocationPingTime = 100
@@ -101,11 +110,10 @@ class LocationManagerTest : BaseTestCase() {
 
     @Test
     fun test_setLocation_returns_future_when_Location_is_not_for_geofence_and_last_location_ping_is_greater_than_10_secs() {
-        val future = mock(Future::class.java)
+        val future = mockk<Future<*>>(relaxed = true)
 
-        `when`(locationManager.now).thenReturn(150)
-        `when`(eventQueueManager.queueEvent(any(), any(), anyInt()))
-            .thenReturn(future)
+        every { locationManager.now } returns 150
+        every { eventQueueManager.queueEvent(any(), any(), any()) } returns future
 
         CoreMetaData.setAppForeground(true)
         coreMetaData.isLocationForGeofence = false
@@ -113,7 +121,7 @@ class LocationManagerTest : BaseTestCase() {
 
         val futureActual = locationManager._setLocation(location)
 
-        verify(eventQueueManager).queueEvent(any(), any(), anyInt())
+        verify { eventQueueManager.queueEvent(any(), any(), any()) }
         assertNotNull(futureActual)
         assertEquals(locationManager.lastLocationPingTime, 150)
     }

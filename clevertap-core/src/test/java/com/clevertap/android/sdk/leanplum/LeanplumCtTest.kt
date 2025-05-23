@@ -1,10 +1,10 @@
 package com.clevertap.android.sdk.leanplum
 
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -24,10 +24,12 @@ class LeanplumCtTest : BaseTestCase() {
       params = mapOf("param" to "value")
     )
 
-    Mockito.verify(cleverTapAPI).pushEvent(
-      "event",
-      mapOf("value" to 1.0, "info" to "info", "param" to "value")
-    )
+    verify {
+      cleverTapAPI.pushEvent(
+        "event",
+        mapOf("value" to 1.0, "info" to "info", "param" to "value")
+      )
+    }
   }
 
   @Test
@@ -42,16 +44,18 @@ class LeanplumCtTest : BaseTestCase() {
       )
     )
 
-    Mockito.verify(cleverTapAPI).pushEvent(
-      "event",
-      mapOf(
-        "value" to .0,
-        "param" to "value",
-        "byte_param" to 1,
-        "short_param" to 2,
-        "list" to "[1,2,three]",
+    verify {
+      cleverTapAPI.pushEvent(
+        "event",
+        mapOf(
+          "value" to .0,
+          "param" to "value",
+          "byte_param" to 1,
+          "short_param" to 2,
+          "list" to "[1,2,three]",
+        )
       )
-    )
+    }
   }
 
   @Test
@@ -61,10 +65,12 @@ class LeanplumCtTest : BaseTestCase() {
       info = "info",
       params = mapOf("param" to "value"))
 
-    Mockito.verify(cleverTapAPI).pushEvent(
-      "state_state",
-      mapOf("info" to "info", "param" to "value")
-    )
+    verify {
+      cleverTapAPI.pushEvent(
+        "state_state",
+        mapOf("info" to "info", "param" to "value")
+      )
+    }
   }
 
   @Test
@@ -77,13 +83,15 @@ class LeanplumCtTest : BaseTestCase() {
       )
     )
 
-    Mockito.verify(cleverTapAPI).pushEvent(
-      "state_state",
-      mapOf(
-        "param" to "value",
-        "list" to "[1,2,3]",
+    verify {
+      cleverTapAPI.pushEvent(
+        "state_state",
+        mapOf(
+          "param" to "value",
+          "list" to "[1,2,3]",
+        )
       )
-    )
+    }
   }
 
   @Test
@@ -94,7 +102,7 @@ class LeanplumCtTest : BaseTestCase() {
       "publisherSubCampaign" to "campaign",
     ))
 
-    Mockito.verify(cleverTapAPI).pushInstallReferrer("source", "medium", "campaign")
+    verify { cleverTapAPI.pushInstallReferrer("source", "medium", "campaign") }
   }
 
   @Test
@@ -104,10 +112,14 @@ class LeanplumCtTest : BaseTestCase() {
       "attr2" to "value2"
     ))
 
-    Mockito.verify(cleverTapAPI).pushProfile(mapOf(
-      "attr1" to "value1",
-      "attr2" to "value2"
-    ))
+    verify {
+      cleverTapAPI.pushProfile(
+        mapOf(
+          "attr1" to "value1",
+          "attr2" to "value2"
+        )
+      )
+    }
   }
 
   @Test
@@ -116,9 +128,13 @@ class LeanplumCtTest : BaseTestCase() {
       "list" to listOf(1, 2, 3)
     ))
 
-    Mockito.verify(cleverTapAPI).pushProfile(mapOf(
-      "list" to "[1,2,3]",
-    ))
+    verify {
+      cleverTapAPI.pushProfile(
+        mapOf(
+          "list" to "[1,2,3]",
+        )
+      )
+    }
   }
 
   @Test
@@ -128,12 +144,14 @@ class LeanplumCtTest : BaseTestCase() {
       "attr_to_remove" to null,
     ))
 
-    Mockito.verify(cleverTapAPI).pushProfile(mapOf(
-      "attr" to "value",
-    ))
-    Mockito.verify(cleverTapAPI).removeValueForKey(
-      "attr_to_remove"
-    )
+    verify {
+      cleverTapAPI.pushProfile(
+        mapOf(
+          "attr" to "value",
+        )
+      )
+    }
+    verify { cleverTapAPI.removeValueForKey("attr_to_remove") }
   }
 
   @Test
@@ -143,21 +161,27 @@ class LeanplumCtTest : BaseTestCase() {
       attributes = mapOf("attr" to "value"),
     )
 
-    Mockito.verify(cleverTapAPI).onUserLogin(
-      mapOf("Identity" to "userId")
-    )
-    Mockito.verify(cleverTapAPI).pushProfile(
-      mapOf("attr" to "value")
-    )
+    verify {
+      cleverTapAPI.onUserLogin(
+        mapOf("Identity" to "userId")
+      )
+    }
+    verify {
+      cleverTapAPI.pushProfile(
+        mapOf("attr" to "value")
+      )
+    }
   }
 
   @Test
   fun testSetUserId() {
     LeanplumCT.setUserId("userId")
 
-    Mockito.verify(cleverTapAPI).onUserLogin(
-      mapOf("Identity" to "userId")
-    )
+    verify {
+      cleverTapAPI.onUserLogin(
+        mapOf("Identity" to "userId")
+      )
+    }
   }
 
   @Test
@@ -172,15 +196,19 @@ class LeanplumCtTest : BaseTestCase() {
       params = mapOf("param" to "value"),
     )
 
-    Mockito.verify(cleverTapAPI).pushChargedEvent(hashMapOf(
-      "event" to "event",
-      "value" to 1.0,
-      "currencyCode" to "currency",
-      "googlePlayPurchaseData" to "data",
-      "googlePlayPurchaseDataSignature" to "signature",
-      "item" to "item",
-      "param" to "value",
-    ), arrayListOf())
+    verify {
+      cleverTapAPI.pushChargedEvent(
+        hashMapOf(
+          "event" to "event",
+          "value" to 1.0,
+          "currencyCode" to "currency",
+          "googlePlayPurchaseData" to "data",
+          "googlePlayPurchaseDataSignature" to "signature",
+          "item" to "item",
+          "param" to "value",
+        ), arrayListOf()
+      )
+    }
   }
 
   @Test
@@ -194,15 +222,19 @@ class LeanplumCtTest : BaseTestCase() {
       params = mapOf("list" to listOf(1, 2, 3)),
     )
 
-    Mockito.verify(cleverTapAPI).pushChargedEvent(hashMapOf(
-      "event" to "Purchase",
-      "value" to 1.0,
-      "currencyCode" to "currency",
-      "googlePlayPurchaseData" to "data",
-      "googlePlayPurchaseDataSignature" to "signature",
-      "item" to "item",
-      "list" to "[1,2,3]",
-    ), arrayListOf())
+    verify {
+      cleverTapAPI.pushChargedEvent(
+        hashMapOf(
+          "event" to "Purchase",
+          "value" to 1.0,
+          "currencyCode" to "currency",
+          "googlePlayPurchaseData" to "data",
+          "googlePlayPurchaseDataSignature" to "signature",
+          "item" to "item",
+          "list" to "[1,2,3]",
+        ), arrayListOf()
+      )
+    }
   }
 
   @Test
@@ -214,13 +246,16 @@ class LeanplumCtTest : BaseTestCase() {
       params = mapOf("param" to "value", "list" to "[1,2,3]"),
     )
 
-    Mockito.verify(cleverTapAPI).pushChargedEvent(hashMapOf(
-      "event" to "event",
-      "value" to 1.0,
-      "currencyCode" to "currency",
-      "param" to "value",
-      "list" to "[1,2,3]",
-    ), arrayListOf())
+    verify {
+      cleverTapAPI.pushChargedEvent(
+        hashMapOf(
+          "event" to "event",
+          "value" to 1.0,
+          "currencyCode" to "currency",
+          "param" to "value",
+          "list" to "[1,2,3]",
+        ), arrayListOf()
+      )
+    }
   }
-
 }

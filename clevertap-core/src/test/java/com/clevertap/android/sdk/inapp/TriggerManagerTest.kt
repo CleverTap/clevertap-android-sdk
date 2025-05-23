@@ -4,8 +4,8 @@ import android.content.SharedPreferences
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
+import io.mockk.mockk
 import org.junit.*
-import org.mockito.*
 import java.lang.ref.WeakReference
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -13,7 +13,6 @@ import kotlin.test.assertNull
 
 class TriggerManagerTest : BaseTestCase() {
 
-    @Mock
     private lateinit var deviceInfo: DeviceInfo
 
     private lateinit var triggerManager: TriggerManager
@@ -22,7 +21,7 @@ class TriggerManagerTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
-        MockitoAnnotations.openMocks(this)
+        deviceInfo = mockk(relaxed = true)
 
         application = TestApplication.application
 

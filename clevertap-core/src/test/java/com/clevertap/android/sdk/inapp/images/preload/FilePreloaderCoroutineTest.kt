@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
-import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -42,25 +41,29 @@ class FilePreloaderCoroutineTest {
     @Test
     fun `preload image fetches images from all urls`() = testScheduler.run {
 
-        val urls = mutableListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k").map { Pair(it,
-                                                                                                   CtCacheType.IMAGE) }
+        val urls = mutableListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k").map {
+            Pair(
+                it,
+                CtCacheType.IMAGE
+            )
+        }
         val successUrls = mutableListOf<String>()
 
-        urls.forEach{
+        urls.forEach {
             every {
                 mFileResourceProvider.fetchInAppImageV1(it.first)
             } returns mockBitmap
         }
 
-        val func = fun (url: Pair<String, CtCacheType>) {
+        val func = fun(url: Pair<String, CtCacheType>) {
             // dummy func
             successUrls.add(url.first)
         }
 
-        filePreloaderCoroutine.preloadFilesAndCache(urls, func,{},{},{})
+        filePreloaderCoroutine.preloadFilesAndCache(urls, func, {}, {}, {})
         advanceUntilIdle()
 
-        urls.forEach{
+        urls.forEach {
             verify {
                 mFileResourceProvider.fetchInAppImageV1(it.first)
             }
@@ -75,21 +78,21 @@ class FilePreloaderCoroutineTest {
             .map { Pair(it, CtCacheType.GIF) }
         val successUrls = mutableListOf<String>()
 
-        urls.forEach{
+        urls.forEach {
             every {
                 mFileResourceProvider.fetchInAppGifV1(it.first)
             } returns byteArray
         }
 
-        val func = fun (url: Pair<String, CtCacheType>) {
+        val func = fun(url: Pair<String, CtCacheType>) {
             // dummy func
             successUrls.add(url.first)
         }
 
-        filePreloaderCoroutine.preloadFilesAndCache(urls, func,{},{},{})
+        filePreloaderCoroutine.preloadFilesAndCache(urls, func, {}, {}, {})
         advanceUntilIdle()
 
-        urls.forEach{
+        urls.forEach {
             verify {
                 mFileResourceProvider.fetchInAppGifV1(it.first)
             }
@@ -104,7 +107,7 @@ class FilePreloaderCoroutineTest {
         val successUrls = mutableListOf<String>()
 
         // replace with forEach
-        urls.forEach{
+        urls.forEach {
             every {
                 mFileResourceProvider.fetchFile(it.first)
             } returns byteArray
@@ -112,7 +115,7 @@ class FilePreloaderCoroutineTest {
 
         filePreloaderCoroutine.preloadFilesAndCache(urls, { url ->
             successUrls.add(url.first)
-        },{},{},{})
+        }, {}, {}, {})
         advanceUntilIdle()
 
         urls.forEach {
@@ -180,6 +183,7 @@ class FilePreloaderCoroutineTest {
         assertEquals(mapOf("x" to true, "y" to false, "z" to true), finishedStatus)
 
     }
+
     @Test
     fun `preloadFilesAndCache invokes all callbacks for files`() = testScheduler.run {
         val urls = listOf("p", "q", "r").map { Pair(it, CtCacheType.FILES) }
@@ -271,9 +275,9 @@ class FilePreloaderCoroutineTest {
         advanceUntilIdle()
 
         // Assertions :
-        assertThat(successfulExpected).containsExactlyElementsIn(successUrls)
-        assertThat(failedExpected).containsExactlyElementsIn(failedUrls)
-        assertThat(startedExpected).containsExactlyElementsIn(completedUrls)
+        assertEquals(successfulExpected, successUrls)
+        assertEquals(failedExpected, failedUrls)
+        assertEquals(startedExpected, completedUrls)
         assertEquals(
             expected = finishedExpected,
             actual = finishedStatus

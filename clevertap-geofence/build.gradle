@@ -25,39 +25,17 @@ android {
 }
 
 dependencies {
-    compileOnly (project(":clevertap-core"))
-    compileOnly (libs.play.services.location)
-    compileOnly (libs.androidx.work.runtime)
-    compileOnly (libs.androidx.concurrent.futures)
-
-    testRuntimeOnly (libs.test.junit.jupiter.engine)
+    compileOnly(project(":clevertap-core"))
+    compileOnly(libs.play.services.location)
+    compileOnly(libs.androidx.work.runtime)
+    compileOnly(libs.androidx.concurrent.futures)
 
     // Unit testing dependencies
-    testImplementation (libs.test.junit.platform.runner)
-    testImplementation (libs.test.junit.jupiter.api)
+    testImplementation(project(":test_shared"))
+    testImplementation(libs.play.services.location)
+    testImplementation(libs.test.work.testing)
+    testImplementation(libs.test.awaitility)
 
-    testImplementation (libs.test.mockito.core)
-    testImplementation (libs.test.robolectric)
-
-    testImplementation (libs.test.core)
-    testImplementation (libs.test.ext.junit)
-    testImplementation (libs.androidx.appcompat)
-    testImplementation (libs.firebase.messaging)
-
-    testImplementation (libs.catch.exception)
-    testImplementation (project(":clevertap-core"))
-
-    testImplementation (libs.installreferrer)
-    testImplementation (libs.play.services.location)
-    testImplementation (libs.test.jsonassert)
-    testImplementation (libs.test.work.testing)
-    testImplementation (libs.test.awaitility)
-    testImplementation (libs.androidx.concurrent.futures)
-    testImplementation (libs.androidx.core.ktx)
-    testImplementation (libs.kotlin.stdlib.jdk7)
-
-    // AndroidJUnitRunner and JUnit Rules
-    androidTestImplementation (libs.test.runner)
-    androidTestImplementation (libs.test.rules)
-    androidTestImplementation (libs.test.espresso.core)
+    // Needed for mocking com.clevertap.android.sdk.Utils in UtilsTest.testNotifyLocationUpdates
+    testImplementation(libs.firebase.messaging)
 }

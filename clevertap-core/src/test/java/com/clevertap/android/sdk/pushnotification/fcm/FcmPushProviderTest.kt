@@ -2,46 +2,44 @@ package com.clevertap.android.sdk.pushnotification.fcm
 
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
 import com.clevertap.android.shared.test.BaseTestCase
-import com.clevertap.android.shared.test.TestApplication
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.Mockito.*
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [28], application = TestApplication::class)
 class FcmPushProviderTest : BaseTestCase() {
 
     private lateinit var provider: FcmPushProvider
     private lateinit var ctPushProviderListener: CTPushProviderListener
     private lateinit var sdkHandler: IFcmSdkHandler
 
-    @Before
     override fun setUp() {
         super.setUp()
-        ctPushProviderListener = mock(CTPushProviderListener::class.java)
+        ctPushProviderListener = mockk(relaxed = true)
         provider = FcmPushProvider(ctPushProviderListener, application, cleverTapInstanceConfig)
-        sdkHandler = mock(FcmSdkHandlerImpl::class.java)
+        sdkHandler = mockk<FcmSdkHandlerImpl>(relaxed = true)
         provider.setHandler(sdkHandler)
     }
 
     @Test
     fun testGetPushType() {
         provider.pushType
-        verify(sdkHandler, times(1)).pushType
+        verify(exactly = 1) { sdkHandler.pushType }
     }
 
     @Test
     fun testIsAvailable() {
         provider.isAvailable
-        verify(sdkHandler, times(1)).isAvailable
+        verify(exactly = 1) { sdkHandler.isAvailable }
     }
 
     @Test
     fun isSupported() {
         provider.isSupported
-        verify(sdkHandler, times(1)).isSupported
+        verify(exactly = 1) { sdkHandler.isSupported }
     }
 
     @Test
@@ -52,6 +50,6 @@ class FcmPushProviderTest : BaseTestCase() {
     @Test
     fun requestToken() {
         provider.requestToken()
-        verify(sdkHandler, times(1)).requestToken()
+        verify(exactly = 1) { sdkHandler.requestToken() }
     }
 }

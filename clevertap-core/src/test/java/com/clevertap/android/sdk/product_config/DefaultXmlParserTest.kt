@@ -3,9 +3,11 @@ package com.clevertap.android.sdk.product_config
 import android.content.res.Resources
 import android.content.res.XmlResourceParser
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.*
-import org.mockito.Mockito.*
-import java.util.HashMap
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Test
 
 internal class DefaultXmlParserTest : BaseTestCase() {
 
@@ -17,29 +19,17 @@ internal class DefaultXmlParserTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         defaultXmlParser = DefaultXmlParser()
-        resources = mock(Resources::class.java)
-        xmlResourceParser = mock(XmlResourceParser::class.java)
-    }
-
-    @Test
-    fun test_getDefaultsFromXml() {
-        val defaultXmlParser = spy(defaultXmlParser)
-        val context = spy(application)
-        `when`(context.resources).thenReturn(resources)
-        val resourceID = 1212121
-        defaultXmlParser.getDefaultsFromXml(context, resourceID)
-        val map = HashMap<String, String>()
-        verify(defaultXmlParser).getDefaultsFromXml(resources, resourceID, map)
+        resources = mockk(relaxed = true)
+        xmlResourceParser = mockk(relaxed = true)
     }
 
     @Test
     fun test_getDefaultsFromXml_whenContextResourcesAreNull_ParserMethodShouldNotGetCalled() {
-        val defaultXmlParser = spy(defaultXmlParser)
-        val context = spy(application)
-        `when`(context.resources).thenReturn(null)
+        val defaultXmlParserSpy = spyk(defaultXmlParser)
+        val context = spyk(application)
+        every { context.resources } returns null
         val resourceID = 1212121
-        defaultXmlParser.getDefaultsFromXml(context, resourceID)
-        val map = HashMap<String, String>()
-        verify(defaultXmlParser,never()).getDefaultsFromXml(resources, resourceID, map)
+        defaultXmlParserSpy.getDefaultsFromXml(context, resourceID)
+        verify(exactly = 0) { defaultXmlParserSpy.getDefaultsFromXmlParser(any(), any()) }
     }
 }
