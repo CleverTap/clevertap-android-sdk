@@ -132,16 +132,15 @@ internal class NetworkManager(
                 "Somebody has invoked me to send the queue to CleverTap servers"
             )
 
-        var cursor: QueueData
         var previousCursor: QueueData? = null
         var loadMore = true
 
         while (loadMore) {
             // Retrieve queued events from the local database in batch size of 50
 
-            cursor = databaseManager.getQueuedEvents(context, 50, previousCursor, eventGroup)
+            val cursor: QueueData = databaseManager.getQueuedEvents(context, 50, previousCursor, eventGroup)
 
-            if (cursor == null || cursor.isEmpty) {
+            if (cursor.isEmpty) {
                 // No events in the queue, log and break
                 config.logger.verbose(config.accountId, "No events in the queue, failing")
 
@@ -558,6 +557,7 @@ internal class NetworkManager(
                     handleVariablesResponse(response)
                 } else {
                     handleSendQueueResponse(
+                        eventGroup = eventGroup,
                         response = response,
                         isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody),
                         notifyNetworkHeaderListeners = {
@@ -660,35 +660,35 @@ internal class NetworkManager(
 
     private fun sendQueueApi(eventGroup: EventGroup, body: SendQueueRequestBody): Response {
         val response: Response
-        if (config.isEncryptionInTransitEnabled) {
+        if (eventGroup == EventGroup.REGULAR && config.isEncryptionInTransitEnabled && coreMetaData.isRelaxNetwork.not()) {
             val encryptionResult = encryptionManager.encryptResponse(body.toString())
             val sessionEncryptionKey = encryptionManager.sessionEncryptionKey()
 
             if (encryptionResult is EncryptionSuccess) {
                 val bodyEnc = EncryptedSendQueueRequestBody(
-                    encryptionResult.data,
-                    sessionEncryptionKey,
-                    encryptionResult.iv
+                    encryptedPayload = encryptionResult.data,
+                    key = sessionEncryptionKey,
+                    iv = encryptionResult.iv
                 ).toJsonString()
                 logger.verbose("Encrypted Request = $bodyEnc")
                 response = ctApiWrapper.ctApi.sendQueue(
-                    eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
-                    bodyEnc,
-                    true
+                    isViewedEvent = false,
+                    body = bodyEnc,
+                    isEncrypted = true
                 )
             } else {
                 logger.verbose("Normal Request cause encryption failed = $body")
                 response = ctApiWrapper.ctApi.sendQueue(
-                    eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
-                    body.toString(),
-                    false
+                    isViewedEvent = false,
+                    body = body.toString(),
+                    isEncrypted = false
                 )
             }
         } else {
             response = ctApiWrapper.ctApi.sendQueue(
-                eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
-                body.toString(),
-                false
+                isViewedEvent = eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+                body = body.toString(),
+                isEncrypted = false
             )
         }
         return response
@@ -748,12 +748,13 @@ internal class NetworkManager(
 
     @WorkerThread
     private fun handleSendQueueResponse(
+        eventGroup: EventGroup,
         response: Response,
         isFullResponse: Boolean,
         notifyNetworkHeaderListeners: () -> Unit
     ): Boolean {
         if (!response.isSuccess()) {
-            handleSendQueueResponseError(response)
+            handleSendQueueResponseError(eventGroup, response)
             return false
         }
 
@@ -812,8 +813,26 @@ internal class NetworkManager(
         return true
     }
 
-    private fun handleSendQueueResponseError(response: Response) {
+    private fun handleSendQueueResponseError(
+        eventGroup: EventGroup,
+        response: Response
+    ) {
         logger.info("Received error response code: " + response.code)
+        when (eventGroup) {
+            EventGroup.REGULAR -> {
+                when (response.code) {
+                    419 -> {
+                        coreMetaData.isRelaxNetwork = true
+                    }
+                    else -> {
+                        // no-op
+                    }
+                }
+            }
+            else -> {
+                // no-op
+            }
+        }
     }
 
     private fun doesBodyContainAppLaunchedOrFetchEvents(body: SendQueueRequestBody): Boolean {

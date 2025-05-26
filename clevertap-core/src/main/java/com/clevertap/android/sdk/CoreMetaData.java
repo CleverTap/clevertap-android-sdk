@@ -77,6 +77,8 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private JSONObject wzrkParams = null;
 
+    private boolean relaxNetwork = false;
+
     private static int initialAppEnteredForegroundTime = 0;
 
     public static Activity getCurrentActivity() {
@@ -353,5 +355,13 @@ public class CoreMetaData extends CleverTapMetaData {
 
     static void incrementActivityCount() {
         activityCount++;
+    }
+
+    public boolean isRelaxNetwork() {
+        return relaxNetwork;
+    }
+
+    public void setRelaxNetwork(boolean relaxNetwork) {
+        this.relaxNetwork = relaxNetwork;
     }
 }
