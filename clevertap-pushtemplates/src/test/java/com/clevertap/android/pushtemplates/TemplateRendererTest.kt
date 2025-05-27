@@ -12,7 +12,7 @@ import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.styles.*
-import com.clevertap.android.pushtemplates.validators.BasicTemplateValidator
+import com.clevertap.android.pushtemplates.validators.ContentValidator
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ManifestInfo
@@ -42,7 +42,7 @@ class TemplateRendererTest {
     private lateinit var mockConfig: CleverTapInstanceConfig
 
     @MockK
-    private lateinit var mockBasicTemplateValidator: BasicTemplateValidator
+    private lateinit var mockContentValidator: ContentValidator
 
     @MockK
     private lateinit var mockNotificationManager: NotificationManager
@@ -144,13 +144,13 @@ class TemplateRendererTest {
     fun test_setSmallIcon_setsIconCorrectly() {
         // Arrange
         val testIcon = 123
-        every { Utils.setBitMapColour(any(), testIcon, any()) } returns mockBitmap
+        every { Utils.setBitMapColour(any(), testIcon, any(), any()) } returns mockBitmap
 
         // Act
         templateRenderer.setSmallIcon(testIcon, context)
 
         // Assert
-        verify { Utils.setBitMapColour(any(), testIcon, any()) }
+        verify { Utils.setBitMapColour(any(), testIcon, any(), any()) }
         assertEquals(testIcon, templateRenderer.smallIcon)
     }
 
@@ -167,8 +167,8 @@ class TemplateRendererTest {
                 TemplateType.BASIC,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         mockkConstructor(BasicStyle::class)
         every {
@@ -209,8 +209,8 @@ class TemplateRendererTest {
                 TemplateType.BASIC,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns false
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
 
         // Act
         val result = templateRenderer.renderNotification(
@@ -238,8 +238,8 @@ class TemplateRendererTest {
                 TemplateType.AUTO_CAROUSEL,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         mockkConstructor(AutoCarouselStyle::class)
         every {
@@ -285,8 +285,8 @@ class TemplateRendererTest {
                 TemplateType.RATING,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         mockkConstructor(RatingStyle::class)
         every {
@@ -333,8 +333,8 @@ class TemplateRendererTest {
                 TemplateType.MANUAL_CAROUSEL,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         mockkConstructor(ManualCarouselStyle::class)
         every {
@@ -381,8 +381,8 @@ class TemplateRendererTest {
                 TemplateType.FIVE_ICONS,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         val mockSmallContentView = mockk<FiveIconSmallContentView>()
         val mockBigContentView = mockk<FiveIconBigContentView>()
@@ -435,8 +435,8 @@ class TemplateRendererTest {
                 TemplateType.FIVE_ICONS,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         val mockSmallContentView = mockk<FiveIconSmallContentView>()
         val mockBigContentView = mockk<FiveIconBigContentView>()
@@ -489,8 +489,8 @@ class TemplateRendererTest {
                 TemplateType.PRODUCT_DISPLAY,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         mockkConstructor(ProductDisplayStyle::class)
         every {
@@ -536,8 +536,8 @@ class TemplateRendererTest {
                 TemplateType.ZERO_BEZEL,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         mockkConstructor(ZeroBezelStyle::class)
         every {
@@ -587,8 +587,8 @@ class TemplateRendererTest {
                 TemplateType.TIMER,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
 
         mockkConstructor(TimerStyle::class)
@@ -638,14 +638,14 @@ class TemplateRendererTest {
                 TemplateType.TIMER,
                 any()
             )
-        } returns mockBasicTemplateValidator
+        } returns mockContentValidator
         every {
             ValidatorFactory.getValidator(
                 TemplateType.BASIC,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         mockkConstructor(BasicStyle::class)
         every {
@@ -691,8 +691,8 @@ class TemplateRendererTest {
                 TemplateType.INPUT_BOX,
                 any()
             )
-        } returns mockBasicTemplateValidator
-        every { mockBasicTemplateValidator.validate() } returns true
+        } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
 
         mockkConstructor(InputBoxStyle::class)
         every {
