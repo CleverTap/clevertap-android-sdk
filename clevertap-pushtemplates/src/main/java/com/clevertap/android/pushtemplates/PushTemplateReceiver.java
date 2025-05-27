@@ -805,9 +805,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         if (pt_subtitle == null || pt_subtitle.isEmpty()) {
             pt_subtitle = extras.getString(Constants.WZRK_SUBTITLE);
         }
-        if (pt_small_icon_clr == null || pt_small_icon_clr.isEmpty()) {
-            pt_small_icon_clr = extras.getString(Constants.WZRK_COLOR);
-        }
     }
 
     private void setToast(Context context, String message,

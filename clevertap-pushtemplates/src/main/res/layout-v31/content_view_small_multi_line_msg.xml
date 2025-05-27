@@ -4,6 +4,7 @@
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
     android:layout_marginTop="@dimen/padding_micro"
     android:layout_marginRight="@dimen/padding_micro"
     android:layout_marginLeft="@dimen/padding_micro">
@@ -15,7 +16,6 @@
 
         <TextView
             android:id="@+id/title"
-            android:textColor="@color/lightBlack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/metadata_title_margin_horizontal"

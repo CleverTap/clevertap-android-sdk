@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
+    android:orientation="vertical">
 
     <include
         android:id="@+id/rel_lyt"
-        layout="@layout/content_view_small_multi_line_msg" />
+        layout="@layout/content_view_small_multi_line_msg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <RelativeLayout
+        android:id="@+id/view_flipper"
         android:layout_width="match_parent"
-        android:layout_height="196dp"
-        android:layout_below="@id/rel_lyt">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:minHeight="196dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -24,7 +30,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:layout_marginEnd="3dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="6"
                 android:inAnimation="@anim/pt_fade_in"
                 android:outAnimation="@anim/pt_fade_out" />
@@ -34,8 +40,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="3"
-                android:layout_marginLeft="-4dp"
-                android:layout_marginRight="-4dp"
                 android:inAnimation="@anim/pt_fade_in"
                 android:outAnimation="@anim/pt_fade_out" />
 
@@ -45,7 +49,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:layout_marginStart="3dp"
+                android:layout_marginStart="8dp"
                 android:layout_weight="6"
                 android:inAnimation="@anim/pt_fade_in"
                 android:outAnimation="@anim/pt_fade_out" />
@@ -62,5 +66,10 @@
             android:background="@drawable/pt_btn_ripple_background" />
     </RelativeLayout>
 
+    <include
+        android:id="@+id/action_buttons"
+        layout="@layout/action_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
-</RelativeLayout>
+</LinearLayout>

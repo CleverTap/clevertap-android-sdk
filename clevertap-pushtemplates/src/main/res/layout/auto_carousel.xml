@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
     android:orientation="vertical">
 
     <include layout="@layout/content_view_small_multi_line_msg"
@@ -11,10 +12,15 @@
     <ViewFlipper
         android:id="@+id/view_flipper"
         android:layout_width="match_parent"
-        android:layout_height="196dp"
-        android:layout_below="@id/rel_lyt"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:minHeight="196dp"
         android:autoStart="true"
         android:inAnimation="@anim/pt_slide_in_right"
         android:outAnimation="@anim/pt_slide_out_left">
     </ViewFlipper>
-</RelativeLayout>
+
+    <include
+        android:id="@+id/action_buttons"
+        layout="@layout/action_buttons" />
+</LinearLayout>

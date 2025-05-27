@@ -52,6 +52,8 @@
                     android:layout_marginTop="8dp"
                     android:layout_below="@id/product_price"
                     android:gravity="center"
+                    android:padding="@dimen/custom_btn_padding"
+                    android:background="@color/customButtonBackground"
                     android:layout_centerHorizontal="true"
                     android:textAppearance="@style/PushMessage"/>
 

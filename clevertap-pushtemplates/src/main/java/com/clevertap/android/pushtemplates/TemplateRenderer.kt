@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.media.RingtoneManager
 import android.net.Uri
@@ -12,7 +13,6 @@ import android.os.*
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
@@ -77,11 +77,14 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     private var pt_cancel_notif_id: String? = null
     private var pt_cancel_notif_ids: ArrayList<Int>? = null
     var actions: JSONArray? = null
+    var actionButtons = emptyList<ActionButton>()
+    var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
     internal var pt_subtitle: String? = null
     private var pID: String? = null
     internal var pt_flip_interval = 0
     private var pt_collapse_key: Any? = null
     internal var pt_manual_carousel_type: String? = null
+    internal var pt_scale_type: PTScaleType = PTScaleType.CENTER_CROP
     internal var config: CleverTapInstanceConfig? = null
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
@@ -110,15 +113,16 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     }
 
     override fun renderNotification(
-        extras: Bundle, context: Context, nb: NotificationCompat.Builder,
+        extras: Bundle, context: Context, nb: Builder,
         config: CleverTapInstanceConfig,
         notificationId: Int
-    ): NotificationCompat.Builder? {
+    ): Builder? {
         if (pt_id == null) {
             PTLog.verbose("Template ID not provided. Cannot create the notification")
             return null
         }
         this.notificationId = notificationId
+        this.actionButtons = getActionButtons(context, extras, notificationId, actions)
         when (templateType) {
             TemplateType.BASIC ->
                 if (ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true)
@@ -166,7 +170,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 if (ValidatorFactory.getValidator(TemplateType.ZERO_BEZEL, this)?.validate() == true)
                     return ZeroBezelStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
-            TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            TemplateType.TIMER -> if (VERSION.SDK_INT >= VERSION_CODES.O) {
                 ValidatorFactory.getValidator(TemplateType.TIMER, this)
                     ?.takeIf { it.validate() }
                     ?.let {
@@ -309,7 +313,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     override fun setSmallIcon(smallIcon: Int, context: Context) {
         this.smallIcon = smallIcon
         try {
-            pt_small_icon = Utils.setBitMapColour(context, smallIcon, pt_small_icon_clr)
+            pt_small_icon = Utils.setBitMapColour(context, smallIcon, pt_small_icon_clr, PT_META_CLR_DEFAULTS)
         } catch (e: NullPointerException) {
             PTLog.debug("NPE while setting small icon color")
         }
@@ -336,7 +340,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     var s = o
                     if (s == "true") {
                         soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    } else if (!s.isEmpty()) {
+                    } else if (s.isNotEmpty()) {
                         if (s.contains(".mp3") || s.contains(".ogg") || s.contains(".wav")) {
                             s = s.substring(0, s.length - 4)
                         }
@@ -358,13 +362,16 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     }
 
     private fun setUp(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) {
+        val isDarkMode = (context.resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
         pt_id = extras.getString(PT_ID)
         val pt_json = extras.getString(PT_JSON)
         if (pt_id != null) {
             templateType = TemplateType.fromString(pt_id)
             var newExtras: Bundle? = null
             try {
-                if (pt_json != null && pt_json.isNotEmpty()) {
+                if (pt_json.isNotNullAndEmpty()) {
                     newExtras = Utils.fromJson(JSONObject(pt_json))
                 }
             } catch (e: JSONException) {
@@ -372,13 +379,15 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
             }
             if (newExtras != null) extras.putAll(newExtras)
         }
+
+        val darkModeAdaptiveColors = Utils.createColorMap(extras, isDarkMode)
         pt_msg = extras.getString(PT_MSG)
         pt_msg_summary = extras.getString(PT_MSG_SUMMARY)
-        pt_msg_clr = extras.getString(PT_MSG_COLOR)
+        pt_msg_clr = darkModeAdaptiveColors[PT_MSG_COLOR]
         pt_title = extras.getString(PT_TITLE)
-        pt_title_clr = extras.getString(PT_TITLE_COLOR)
-        pt_meta_clr = extras.getString(PT_META_CLR)
-        pt_bg = extras.getString(PT_BG)
+        pt_title_clr = darkModeAdaptiveColors[PT_TITLE_COLOR]
+        pt_meta_clr = darkModeAdaptiveColors[PT_META_CLR]
+        pt_bg = darkModeAdaptiveColors[PT_BG]
         pt_big_img = extras.getString(PT_BIG_IMG)
         pt_large_icon = extras.getString(PT_NOTIF_ICON)
         pt_small_view = extras.getString(PT_SMALL_VIEW)
@@ -396,23 +405,23 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_input_feedback = extras.getString(PT_INPUT_FEEDBACK)
         pt_input_auto_open = extras.getString(PT_INPUT_AUTO_OPEN)
         pt_dismiss_on_click = extras.getString(PT_DISMISS_ON_CLICK)
-        pt_chrono_title_clr = extras.getString(PT_CHRONO_TITLE_COLOUR)
+        pt_chrono_title_clr = darkModeAdaptiveColors[PT_CHRONO_TITLE_COLOUR]
         pt_product_display_action = extras.getString(PT_PRODUCT_DISPLAY_ACTION)
-        pt_product_display_action_clr = extras.getString(PT_PRODUCT_DISPLAY_ACTION_COLOUR)
+        pt_product_display_action_clr = darkModeAdaptiveColors[PT_PRODUCT_DISPLAY_ACTION_COLOUR]
         pt_timer_end = Utils.getTimerEnd(extras)
         pt_big_img_alt = extras.getString(PT_BIG_IMG_ALT)
         pt_msg_alt = extras.getString(PT_MSG_ALT)
         pt_title_alt = extras.getString(PT_TITLE_ALT)
         pt_product_display_linear = extras.getString(PT_PRODUCT_DISPLAY_LINEAR)
-        pt_product_display_action_text_clr =
-            extras.getString(PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR)
-        pt_small_icon_clr = extras.getString(PT_SMALL_ICON_COLOUR)
+        pt_product_display_action_text_clr = darkModeAdaptiveColors[PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR]
+        pt_small_icon_clr = darkModeAdaptiveColors[PT_SMALL_ICON_COLOUR]
         pt_cancel_notif_id = extras.getString(PT_CANCEL_NOTIF_ID)
         pt_cancel_notif_ids = Utils.getNotificationIds(context)
         actions = Utils.getActionKeys(extras)
         pt_subtitle = extras.getString(PT_SUBTITLE)
         pt_collapse_key = extras[PT_COLLAPSE_KEY]
         pt_flip_interval = Utils.getFlipInterval(extras)
+        pt_scale_type = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE))
         pID = extras.getString(Constants.WZRK_PUSH_ID)
         pt_manual_carousel_type = extras.getString(PT_MANUAL_CAROUSEL_TYPE)
         if (config != null) {
@@ -446,141 +455,191 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         if (pt_subtitle == null || pt_subtitle!!.isEmpty()) {
             pt_subtitle = extras.getString(Constants.WZRK_SUBTITLE)
         }
-        if (pt_small_icon_clr == null || pt_small_icon_clr!!.isEmpty()) {
-            pt_small_icon_clr = extras.getString(Constants.WZRK_COLOR)
-        }
         if (pt_collapse_key == null) {
             pt_collapse_key = extras[Constants.WZRK_COLLAPSE]
         }
     }
 
     override fun setActionButtons(
+        context: Context?,
+        extras: Bundle?,
+        notificationId: Int,
+        nb: Builder,
+        actions: JSONArray?
+    ): Builder {
+        actionButtons.forEach { button ->
+            val pendingIntent = actionButtonPendingIntents[button.id]
+            if (pendingIntent != null) {
+                nb.addAction(button.icon, button.label, pendingIntent)
+            }
+        }
+        return nb
+    }
+
+    internal fun getActionButtons(
         context: Context,
         extras: Bundle,
         notificationId: Int,
-        nb: Builder, actions: JSONArray?
-    ): Builder {
-        val intentServiceName = ManifestInfo.getInstance(context).intentServiceName
-        var clazz: Class<*>? = null
-        if (intentServiceName != null) {
-            try {
-                clazz = Class.forName(intentServiceName)
-            } catch (e: ClassNotFoundException) {
-                try {
-                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
-                } catch (ex: ClassNotFoundException) {
-                    Logger.d("No Intent Service found")
-                }
-            }
-        } else {
-            try {
-                clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
-            } catch (ex: ClassNotFoundException) {
-                Logger.d("No Intent Service found")
-            }
-        }
-        val isCTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
+        actions: JSONArray?
+    ): List<ActionButton> {
+        val actionButtons = mutableListOf<ActionButton>()
         if (actions != null && actions.length() > 0) {
             for (i in 0 until actions.length()) {
                 try {
                     val action = actions.getJSONObject(i)
                     val label = action.optString("l")
-                    val dl = action.optString("dl")
                     val ico = action.optString(actionButtonIconKey)
                     val id = action.optString("id")
-                    val autoCancel = action.optBoolean("ac", true)
+                    
                     if (label.isEmpty() || id.isEmpty()) {
                         Logger.d("not adding push notification action: action label or id missing")
                         continue
                     }
                     var icon = 0
-                    if (!ico.isEmpty()) {
+                    if (ico.isNotEmpty()) {
                         try {
                             icon = context.resources.getIdentifier(ico, "drawable", context.packageName)
                         } catch (t: Throwable) {
                             Logger.d("unable to add notification action icon: " + t.localizedMessage)
                         }
                     }
-                    var sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
-                            && isCTIntentServiceAvailable)
-                    val dismissOnClick = extras.getString("pt_dismiss_on_click")
-                    /**
-                     * Send to CTIntentService in case (OS >= S) and notif is for Push templates with remind action
-                     */
-                    if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
-                        && id.contains("remind") && dismissOnClick != null &&
-                        dismissOnClick.equals("true", ignoreCase = true) && autoCancel &&
-                        isCTIntentServiceAvailable
-                    ) {
-                        sendToCTIntentService = true
+                    
+                    // Create the button object
+                    val button = ActionButton(id, label, icon)
+                    actionButtons.add(button)
+                    
+                    // Create and store the pendingIntent
+                    val pendingIntent = createActionButtonPendingIntent(context, action, extras, notificationId)
+                    if (pendingIntent != null) {
+                        actionButtonPendingIntents[id] = pendingIntent
                     }
-                    /**
-                     * Send to CTIntentService in case (OS >= S) and notif is for Push templates with pt_dismiss_on_click
-                     * true
-                     */
-                    if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
-                        && dismissOnClick != null && dismissOnClick.equals("true", ignoreCase = true)
-                        && autoCancel && isCTIntentServiceAvailable
-                    ) {
-                        sendToCTIntentService = true
-                    }
-                    var actionLaunchIntent: Intent?
-                    if (sendToCTIntentService) {
-                        actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
-                        actionLaunchIntent.setPackage(context.packageName)
-                        actionLaunchIntent.putExtra(
-                            Constants.KEY_CT_TYPE,
-                            CTNotificationIntentService.TYPE_BUTTON_CLICK
-                        )
-                        if (dl.isNotEmpty()) {
-                            actionLaunchIntent.putExtra("dl", dl)
-                        }
-                    } else {
-                        if (dl.isNotEmpty()) {
-                            actionLaunchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
-                            Utils.setPackageNameFromResolveInfoList(
-                                context,
-                                actionLaunchIntent
-                            )
-                        } else {
-                            actionLaunchIntent = context.packageManager
-                                .getLaunchIntentForPackage(context.packageName)
-                        }
-                    }
-                    if (actionLaunchIntent != null) {
-                        actionLaunchIntent.putExtras(extras)
-                        actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS)
-                        actionLaunchIntent.putExtra("actionId", id)
-                        actionLaunchIntent.putExtra("autoCancel", autoCancel)
-                        actionLaunchIntent.putExtra("wzrk_c2a", id)
-                        actionLaunchIntent.putExtra("notificationId", notificationId)
-                        actionLaunchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    }
-                    var actionIntent: PendingIntent?
-                    val requestCode = Random().nextInt()
-                    var flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
-                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                        flagsActionLaunchPendingIntent =
-                            flagsActionLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
-                    }
-                    actionIntent = if (sendToCTIntentService) {
-                        PendingIntent.getService(
-                            context, requestCode,
-                            actionLaunchIntent!!, flagsActionLaunchPendingIntent
-                        )
-                    } else {
-                        PendingIntent.getActivity(
-                            context, requestCode,
-                            actionLaunchIntent!!, flagsActionLaunchPendingIntent, null
-                        )
-                    }
-                    nb.addAction(icon, label, actionIntent)
                 } catch (t: Throwable) {
                     Logger.d("error adding notification action : " + t.localizedMessage)
                 }
             }
-        } // Uncommon - END
-        return nb
+        }
+        return actionButtons
+    }
+    
+    private fun createActionButtonPendingIntent(
+        context: Context,
+        action: JSONObject,
+        extras: Bundle,
+        notificationId: Int
+    ): PendingIntent? {
+        try {
+            // Extract necessary properties from the action
+            val dl = action.optString("dl")
+            val id = action.optString("id")
+            val autoCancel = action.optBoolean("ac", true)
+            
+            // Determine if the intent should be sent to CTIntentService
+            val intentServiceName = ManifestInfo.getInstance(context).intentServiceName
+            var clazz: Class<*>? = null
+            if (intentServiceName != null) {
+                try {
+                    clazz = Class.forName(intentServiceName)
+                } catch (e: ClassNotFoundException) {
+                    try {
+                        clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+                    } catch (ex: ClassNotFoundException) {
+                        Logger.d("No Intent Service found")
+                    }
+                }
+            } else {
+                try {
+                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+                } catch (ex: ClassNotFoundException) {
+                    Logger.d("No Intent Service found")
+                }
+            }
+            val isCTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
+            
+            var sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
+                    && isCTIntentServiceAvailable)
+            val dismissOnClick = extras.getString("pt_dismiss_on_click")
+
+            /**
+             * Send to CTIntentService in case (OS >= S) and notif is for Push templates with remind action
+             */
+            if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
+                && id.contains("remind") && dismissOnClick != null &&
+                dismissOnClick.equals("true", ignoreCase = true) && autoCancel &&
+                isCTIntentServiceAvailable
+            ) {
+                sendToCTIntentService = true
+            }
+
+            /**
+             * Send to CTIntentService in case (OS >= S) and notif is for Push templates with pt_dismiss_on_click
+             * true
+             */
+            if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
+                && dismissOnClick != null && dismissOnClick.equals("true", ignoreCase = true)
+                && autoCancel && isCTIntentServiceAvailable
+            ) {
+                sendToCTIntentService = true
+            }
+            
+            // Create the appropriate intent
+            var actionLaunchIntent: Intent? = null
+            
+            if (sendToCTIntentService) {
+                actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
+                actionLaunchIntent.setPackage(context.packageName)
+                actionLaunchIntent.putExtra(
+                    Constants.KEY_CT_TYPE,
+                    CTNotificationIntentService.TYPE_BUTTON_CLICK
+                )
+                if (dl.isNotEmpty()) {
+                    actionLaunchIntent.putExtra("dl", dl)
+                }
+            } else {
+                if (dl.isNotEmpty()) {
+                    actionLaunchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                    Utils.setPackageNameFromResolveInfoList(context, actionLaunchIntent)
+                } else {
+                    actionLaunchIntent = context.packageManager
+                        .getLaunchIntentForPackage(context.packageName)
+                }
+            }
+            
+            // Configure intent extras
+            if (actionLaunchIntent != null) {
+                actionLaunchIntent.putExtras(extras)
+                actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS)
+                actionLaunchIntent.putExtra("actionId", id)
+                actionLaunchIntent.putExtra("autoCancel", autoCancel)
+                actionLaunchIntent.putExtra("wzrk_c2a", id)
+                actionLaunchIntent.putExtra("notificationId", notificationId)
+                actionLaunchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            } else {
+                return null
+            }
+            
+            // Create and return the PendingIntent
+            val requestCode = Random().nextInt()
+            var flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+            if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                flagsActionLaunchPendingIntent =
+                    flagsActionLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
+            }
+            
+            return if (sendToCTIntentService) {
+                PendingIntent.getService(
+                    context, requestCode,
+                    actionLaunchIntent, flagsActionLaunchPendingIntent
+                )
+            } else {
+                PendingIntent.getActivity(
+                    context, requestCode,
+                    actionLaunchIntent, flagsActionLaunchPendingIntent, null
+                )
+            }
+        } catch (t: Throwable) {
+            Logger.d("error creating pending intent for action button: " + t.localizedMessage)
+            return null
+        }
     }
 
     companion object {

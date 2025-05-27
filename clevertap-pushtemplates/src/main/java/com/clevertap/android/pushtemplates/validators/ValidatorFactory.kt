@@ -7,7 +7,6 @@ import com.clevertap.android.pushtemplates.checkers.*
 
 const val PT_TITLE = "PT_TITLE"
 const val PT_MSG = "PT_MSG"
-const val PT_BG = "PT_BG"
 const val PT_DEEPLINK_LIST = "PT_DEEPLINK_LIST"
 const val PT_THREE_IMAGE_LIST = "PT_IMAGE_LIST"
 const val PT_PRODUCT_THREE_IMAGE_LIST = "PT_PRODUCT_THREE_IMAGE_LIST"
@@ -56,23 +55,19 @@ internal class ValidatorFactory {
             keys = createKeysMap(templateRenderer)
 
             return when (templateType) {
-                BASIC -> BasicTemplateValidator(ContentValidator(keys))
+                BASIC -> ContentValidator(keys)
                 AUTO_CAROUSEL, MANUAL_CAROUSEL -> CarouselTemplateValidator(
-                    BasicTemplateValidator(
-                        ContentValidator(
-                            keys
-                        )
+                    ContentValidator(
+                        keys
                     )
                 )
-                RATING -> RatingTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
-                FIVE_ICONS -> FiveIconsTemplateValidator(BackgroundValidator(keys))
+                RATING -> RatingTemplateValidator(ContentValidator(keys))
+                FIVE_ICONS -> FiveIconsTemplateValidator(keys)
                 PRODUCT_DISPLAY -> ProductDisplayTemplateValidator(
-                    BasicTemplateValidator(
-                        ContentValidator(keys)
-                    )
+                    ContentValidator(keys)
                 )
                 ZERO_BEZEL -> ZeroBezelTemplateValidator(ContentValidator(keys))
-                TIMER -> TimerTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
+                TIMER -> TimerTemplateValidator(ContentValidator(keys))
                 INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
                 else -> null
             }
@@ -85,11 +80,7 @@ internal class ValidatorFactory {
                 StringSizeChecker(templateRenderer.pt_title, 0, "Title is missing or empty")
             hashMap[PT_MSG] =
                 StringSizeChecker(templateRenderer.pt_msg, 0, "Message is missing or empty")
-            hashMap[PT_BG] = StringSizeChecker(
-                templateRenderer.pt_bg,
-                0,
-                "Background colour is missing or empty"
-            )
+
             //----------CAROUSEL-------------
             hashMap[PT_DEEPLINK_LIST] =
                 ListSizeChecker(templateRenderer.deepLinkList, 1, "Deeplink is missing or empty")
