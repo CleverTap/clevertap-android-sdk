@@ -280,8 +280,7 @@ internal class NetworkManager(
         }
 
     private fun hasDomainChanged(newDomain: String): Boolean {
-        val oldDomain =
-            StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null)
+        val oldDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null)
         return newDomain != oldDomain
     }
 
@@ -465,7 +464,7 @@ internal class NetworkManager(
                     if (response.isSuccess()) {
                         logger.verbose(config.accountId, "Received success from handshake :)")
 
-                        if (processIncomingHeaders(context, response)) {
+                        if (processMuteAndDomainChanges(context, response)) {
                             logger.verbose(config.accountId, "We are not muted")
                             // We have a new domain, run the callback
                             handshakeSuccessCallback.run()
@@ -488,7 +487,7 @@ internal class NetworkManager(
      * @return True to continue sending requests, false otherwise.
      */
     @WorkerThread
-    private fun processIncomingHeaders(context: Context, response: Response): Boolean {
+    private fun processMuteAndDomainChanges(context: Context, response: Response): Boolean {
         response.getHeaderValue(CtApi.HEADER_MUTE)?.trim()?.takeIf { it.isNotEmpty() }?.let { muteCommand ->
             // muteCommand is guaranteed to be non-null and non-empty here
             if (muteCommand == "true") {
@@ -553,20 +552,25 @@ internal class NetworkManager(
         try {
             callApiForEventGroup(eventGroup, requestBody).use { response ->
                 networkRetryCount = 0
-                val isProcessed = if (eventGroup == EventGroup.VARIABLES) {
-                    handleVariablesResponse(response)
-                } else {
-                    handleSendQueueResponse(
-                        eventGroup = eventGroup,
-                        response = response,
-                        isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody),
-                        notifyNetworkHeaderListeners = {
-                            notifyHeaderListeners(
-                                requestBody,
-                                endpointId
-                            )
-                        }
-                    )
+                val isProcessed = when (eventGroup) {
+                    EventGroup.VARIABLES -> {
+                        handleVariablesResponse(response)
+                    }
+                    EventGroup.REGULAR,
+                    EventGroup.PUSH_NOTIFICATION_VIEWED -> {
+                        // split the flows; this is how it has been historically.
+                        handleSendQueueResponse(
+                            eventGroup = eventGroup,
+                            response = response,
+                            isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody),
+                            notifyNetworkHeaderListeners = {
+                                notifyHeaderListeners(
+                                    requestBody,
+                                    endpointId
+                                )
+                            }
+                        )
+                    }
                 }
 
                 if (isProcessed) {
@@ -786,7 +790,7 @@ internal class NetworkManager(
 
         notifyNetworkHeaderListeners()
 
-        if (!processIncomingHeaders(context, response)) {
+        if (!processMuteAndDomainChanges(context, response)) {
             return false
         }
 
@@ -805,6 +809,7 @@ internal class NetworkManager(
             val decryptResponse = encryptionManager.decryptResponse(bodyString = bodyString)
             when (decryptResponse) {
                 is EncryptionFailure -> {
+                    logger.verbose(config.accountId, "Failed to decrypt response")
                     return false // todo lp check if this should be considered as nw failure?
                 }
                 is EncryptionSuccess -> {
