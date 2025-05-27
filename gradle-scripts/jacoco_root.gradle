@@ -1,6 +1,6 @@
 apply plugin: 'jacoco'
 jacoco {
-    toolVersion = "0.8.8"
+    toolVersion = "0.8.12"
 }
 tasks.withType(Test) {
     jacoco.includeNoLocationClasses = true
@@ -63,6 +63,7 @@ def createVariantCoverage(variant) {
 
         reports {
             html.required = true
+            xml.required = true
         }
 
         def javaClasses = fileTree(dir: variant.javaCompileProvider.get().destinationDir, excludes: project.excludes)

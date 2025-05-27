@@ -1,3 +1,5 @@
+package com.clevertap.android.sdk.login
+
 import android.content.Context
 import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.BaseCallbackManager
@@ -13,24 +15,21 @@ import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
-import com.clevertap.android.sdk.login.ChangeUserCallback
-import com.clevertap.android.sdk.login.LoginController
-import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.runs
 import io.mockk.verify
 import io.mockk.verifyOrder
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import org.mockito.Mockito
 import java.util.concurrent.CountDownLatch
 import kotlin.test.assertTrue
 
@@ -54,7 +53,6 @@ class LoginControllerTest : BaseTestCase() {
     private lateinit var loginController: LoginController
     private lateinit var loginInfoProvider: LoginInfoProvider
 
-    @Before
     override fun setUp() {
         super.setUp()
         context = mockk(relaxed = true)
@@ -102,14 +100,13 @@ class LoginControllerTest : BaseTestCase() {
         val cacheGuid = "12345"
         val cleverTapID = "54321"
 
-
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.executors(Mockito.any())).thenReturn(
-                MockCTExecutors(cleverTapInstanceConfig)
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
+                cleverTapInstanceConfig
             )
+
             loginController.asyncProfileSwitchUser(profile, cacheGuid, cleverTapID)
         }
-
 
         verifyOrder {
             coreMetaData.isCurrentUserOptedOut = false
@@ -137,11 +134,13 @@ class LoginControllerTest : BaseTestCase() {
         val cleverTapID = "54321"
 
         every { config.enableCustomCleverTapId } returns false
-        every { deviceInfo.forceNewDeviceID() } just Runs
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.executors(Mockito.any())).thenReturn(
-                MockCTExecutors(cleverTapInstanceConfig)
+        every { deviceInfo.forceNewDeviceID() } just runs
+
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
+                cleverTapInstanceConfig
             )
+
             loginController.asyncProfileSwitchUser(profile, cacheGuid, cleverTapID)
         }
 
@@ -170,13 +169,13 @@ class LoginControllerTest : BaseTestCase() {
         val cacheGuid = "12345"
         val cleverTapID = "54321"
 
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.executors(Mockito.any())).thenReturn(
-                MockCTExecutors(cleverTapInstanceConfig)
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
+                cleverTapInstanceConfig
             )
+
             loginController.asyncProfileSwitchUser(profile, cacheGuid, cleverTapID)
         }
-
 
         verifyOrder {
             coreMetaData.setCurrentUserOptedOut(false)
@@ -204,10 +203,12 @@ class LoginControllerTest : BaseTestCase() {
         val cleverTapID = "1234"
 
         every { config.enableCustomCleverTapId } returns true
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.executors(Mockito.any())).thenReturn(
-                MockCTExecutors(cleverTapInstanceConfig)
+
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
+                cleverTapInstanceConfig
             )
+
             loginController.asyncProfileSwitchUser(profile, cacheGuid, cleverTapID)
         }
 
@@ -239,7 +240,7 @@ class LoginControllerTest : BaseTestCase() {
 
         (1..10).forEach { _ ->
             expectedChangeUserCallbackList.add(mockk<ChangeUserCallback> {
-                every { onChangeUser(any(), any()) } just Runs
+                every { onChangeUser(any(), any()) } just runs
             })
         }
         expectedChangeUserCallbackList.forEach {
@@ -277,7 +278,7 @@ class LoginControllerTest : BaseTestCase() {
         // Arrange
         val cm = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         val mockChangeUserCallback = mockk<ChangeUserCallback> {
-            every { onChangeUser(any(), any()) } just Runs
+            every { onChangeUser(any(), any()) } just runs
         }
         val loginController = LoginController(
             context,
@@ -330,5 +331,4 @@ class LoginControllerTest : BaseTestCase() {
         //Assert
         assertTrue(isPassed, "Exceptions must not be thrown but this is thrown $ex")
     }
-
 }

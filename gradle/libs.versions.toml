@@ -29,32 +29,22 @@ material = "1.12.0"
 espresso_core = "3.6.1"
 test_ext_junit = "1.2.1"
 test_core = "1.6.1"
-test_rules = "1.6.1"
-test_runner = "1.6.2"
 work_testing = "2.9.1"
-truth = "1.1.3"
 junit = "4.13.2"
 awaitility = "4.1.0"
 kotlin_stdlib_jdk7 = "1.9.20" #check with kotlin_gradle_plugin
 kotlin_test = "1.7.20" #check with kotlin_gradle_plugin
-junit_jupiter_api = "5.8.2"
-junit_jupiter_engine = "5.8.2"
-junit_platform_runner = "1.8.2"
-mockito_kotlin = "3.2.0"
-mockito_core = "5.9.0"
-opentest4j = "1.2.0"
 robolectric = "4.9"
 jsonassert = "1.5.0"
-xmlpull = "1.1.3.1"
-mockk = "1.13.5"
-uiautomator = "2.3.0"
+mockk = "1.14.2"
 coroutines_test = "1.7.3"
+hamcrest = "3.0"
 
 #Install Referrer
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "7.3.1"
+clevertap_android_sdk = "7.4.0"
 clevertap_rendermax_sdk = "1.0.3"
 clevertap_geofence_sdk = "1.4.0"
 clevertap_hms_sdk = "1.5.0"
@@ -74,9 +64,7 @@ media3 = "1.4.0"
 #Play Services
 play_services_ads = "23.6.0"
 play_services_location = "21.3.0"
-
-#Gson
-gson = "2.10.1"
+play_review = "2.0.2"
 
 #FCM
 firebase_messaging = "24.0.0"
@@ -87,10 +75,6 @@ google_services = "4.4.2"
 #HMS Push Plugin/Lib
 agcp = "1.9.1.301"
 push = "6.11.0.300"
-
-#Catch Exception
-catch_exception = "2.0"
-
 
 [libraries]
 # Project
@@ -120,26 +104,15 @@ android_material = { module = "com.google.android.material:material", version.re
 test_espresso_core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso_core" }
 test_ext_junit = { module = "androidx.test.ext:junit", version.ref = "test_ext_junit" }
 test_core = { module = "androidx.test:core", version.ref = "test_core" }
-test_rules = { module = "androidx.test:rules", version.ref = "test_rules" }
-test_runner = { module = "androidx.test:runner", version.ref = "test_runner" }
 test_work_testing = { module = "androidx.work:work-testing", version.ref = "work_testing" }
-test_truth = { module = "com.google.truth:truth", version.ref = "truth" }
 test_junit = { module = "junit:junit", version.ref = "junit" }
 test_awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 test_kotlin_test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin_test" }
-test_junit_jupiter_api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit_jupiter_api" }
-test_junit_jupiter_engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit_jupiter_engine" }
-test_junit_platform_runner = { module = "org.junit.platform:junit-platform-runner", version.ref = "junit_platform_runner" }
-test_mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito_core" }
-test_mockito_kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito_kotlin" }
-test_mockito_inline = { module = "org.mockito:mockito-inline", version.ref = "mockito_core" }
-test_opentest4j = { module = "org.opentest4j:opentest4j", version.ref = "opentest4j" }
 test_robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 test_jsonassert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonassert" }
-test_xmlpull = { module = "xmlpull:xmlpull", version.ref = "xmlpull" }
 test_mockk = { module = "io.mockk:mockk", version.ref="mockk"}
-test_uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref="uiautomator"}
 test_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines_test"}
+test_hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 
 #Kotlin Stdlib
 kotlin_stdlib_jdk7 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk7", version.ref = "kotlin_stdlib_jdk7" }
@@ -171,9 +144,7 @@ media3_ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
 #Play Services
 play_services_ads = { module = "com.google.android.gms:play-services-ads", version.ref = "play_services_ads" }
 play_services_location = { module = "com.google.android.gms:play-services-location", version.ref = "play_services_location" }
-
-#Gson
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+play_review = { module = "com.google.android.play:review", version.ref = "play_review" }
 
 #FCM
 firebase_messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase_messaging" }
@@ -184,9 +155,6 @@ google_services = { module = "com.google.gms:google-services", version.ref = "go
 #HMS Push Plugin/Lib
 huawei_agcp_plugin = { module = "com.huawei.agconnect:agcp", version.ref = "agcp" }
 huawei_push = { module = "com.huawei.hms:push", version.ref = "push" }
-
-#Catch Exception
-catch_exception = { module = "eu.codearte.catch-exception:catch-exception", version.ref = "catch_exception" }
 
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]

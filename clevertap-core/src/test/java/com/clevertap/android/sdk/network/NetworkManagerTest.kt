@@ -5,7 +5,7 @@ import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.MockCoreState
+import com.clevertap.android.sdk.MockCoreStateKotlin
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
@@ -21,15 +21,13 @@ import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -41,43 +39,43 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var networkManager: NetworkManager
     private lateinit var ctApi: CtApi
     private lateinit var mockHttpClient: MockHttpClient
-    @Mock private lateinit var ctApiWrapper : CtApiWrapper
+    private lateinit var ctApiWrapper: CtApiWrapper
 
     @Before
     fun setUpNetworkManager() {
-        MockitoAnnotations.openMocks(this)
+        ctApiWrapper = mockk()
         mockHttpClient = MockHttpClient()
         ctApi = CtApiTestProvider.provideTestCtApiForConfig(cleverTapInstanceConfig, mockHttpClient)
         networkManager = provideNetworkManager()
-        `when`(ctApiWrapper.ctApi).thenReturn(ctApi)
+        every { ctApiWrapper.ctApi } returns ctApi
     }
 
     @Test
     fun test_initHandshake_noHeaders_callSuccessCallback() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         networkManager.initHandshake(REGULAR, callback)
-        Mockito.verify(callback).run()
+        verify { callback.run() }
     }
 
     @Test
     fun test_initHandshake_muteHeadersTrue_neverCallSuccessCallback() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         mockHttpClient.responseHeaders = mapOf(Constants.HEADER_MUTE to listOf("true"))
         networkManager.initHandshake(REGULAR, callback)
-        Mockito.verify(callback, Mockito.never()).run()
+        verify(exactly = 0) { callback.run() }
     }
 
     @Test
     fun test_initHandshake_muteHeadersFalse_callSuccessCallback() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         mockHttpClient.responseHeaders = mapOf(Constants.HEADER_MUTE to listOf("false"))
         networkManager.initHandshake(REGULAR, callback)
-        Mockito.verify(callback).run()
+        verify { callback.run() }
     }
 
     @Test
     fun test_initHandshake_changeDomainsHeaders_callSuccessCallbackAndUseDomains() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         val domain = "region.header-domain.com"
         val spikyDomain = "region-spiky.header-domain.com"
         // we only use changed domain when region is not configured
@@ -88,7 +86,7 @@ class NetworkManagerTest : BaseTestCase() {
         )
         networkManager.initHandshake(REGULAR, callback)
 
-        Mockito.verify(callback).run()
+        verify { callback.run() }
         assertEquals(domain, networkManager.getDomain(REGULAR))
         assertEquals(spikyDomain, networkManager.getDomain(PUSH_NOTIFICATION_VIEWED))
     }
@@ -156,7 +154,7 @@ class NetworkManagerTest : BaseTestCase() {
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
-        val coreState = MockCoreState(cleverTapInstanceConfig)
+        val coreState = MockCoreStateKotlin(cleverTapInstanceConfig)
         val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         val lockManager = CTLockManager()
         val dbManager = DBManager(cleverTapInstanceConfig, lockManager)

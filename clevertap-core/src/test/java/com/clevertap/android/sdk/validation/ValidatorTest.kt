@@ -2,11 +2,12 @@ package com.clevertap.android.sdk.validation
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.spyk
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 import kotlin.test.*
@@ -83,13 +84,13 @@ class ValidatorTest : BaseTestCase() {
 
     @Test
     fun test_cleanMultiValuePropertyKey_when_AKeyNameIsPassed_should_ReturnAppropriateValidationResult() {
-        val vSpy = Mockito.spy(validator)
+        val vSpy = spyk(validator)
 
         // this function creates a validation result by first calling validator.cleanObjectKey(...)
         // function on the input string. therefore, to prevent any impact from other function call,
         // we mock the results provided by validator.cleanObjectKey(...)
         var assumedResult = ValidationResult().also { it.`object`="abcd" }
-        Mockito.`when`(vSpy.cleanObjectKey(Mockito.anyString())).thenReturn(assumedResult)
+        every { vSpy.cleanObjectKey(any()) } returns assumedResult
 
         // when keyname is not one of the restricted key names (i.e RestrictedMultiValueFields.Name/Email/Education/Married/DOB/Gender/Phone/Age/FBID/GPID/Birthday),
         // then no validation results are changed
@@ -104,7 +105,7 @@ class ValidatorTest : BaseTestCase() {
 
         "Name/Email/Education/Married/DOB/Gender/Phone/Age/FBID/GPID/Birthday".split('/').forEach {forbidden ->
             assumedResult = ValidationResult().also { it.`object`=forbidden }
-            Mockito.`when`(vSpy.cleanObjectKey(Mockito.anyString())).thenReturn(assumedResult)
+            every { vSpy.cleanObjectKey(any()) } returns assumedResult
             result = vSpy.cleanMultiValuePropertyKey(forbidden)
 
             val error = ValidationResultFactory.create(523, Constants.RESTRICTED_MULTI_VALUE_KEY, forbidden)

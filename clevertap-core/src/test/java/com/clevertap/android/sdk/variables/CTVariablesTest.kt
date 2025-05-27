@@ -31,8 +31,7 @@ class CTVariablesTest : BaseTestCase() {
     varCache = VarCache(
         cleverTapInstanceConfig,
         application,
-        fileResourcesRepoImpl,
-        fileResourceProvider
+        fileResourcesRepoImpl
     )
     varCache = spyk(varCache)
     ctVariables = CTVariables(varCache)

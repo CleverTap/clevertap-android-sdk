@@ -5,11 +5,13 @@ import android.os.Build.VERSION_CODES
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import io.mockk.clearAllMocks
+import io.mockk.mockk
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.*
+import org.junit.After
+import org.junit.Before
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.Shadows
 import org.robolectric.android.controller.ActivityController
@@ -40,7 +42,7 @@ abstract class BaseTestCase {
     open fun setUp() {
         application = TestApplication.application
         shadowApplication = Shadows.shadowOf(application)
-        cleverTapAPI = Mockito.mock(CleverTapAPI::class.java)
+        cleverTapAPI = mockk<CleverTapAPI>(relaxed = true)
         cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(
             application,
             Constant.ACC_ID,
@@ -52,6 +54,11 @@ abstract class BaseTestCase {
         activityController = Robolectric.buildActivity(TestActivity::class.java)
         appCtx = application.applicationContext
 
+    }
+
+    @After
+    open fun cleanUp() {
+        clearAllMocks()
     }
 
 
@@ -74,5 +81,4 @@ abstract class BaseTestCase {
         }
         return range.also { if(printGenArray)println("generated : $range") }
     }
-
 }

@@ -1,33 +1,24 @@
 package com.clevertap.android.sdk.inapp;
 
-import static com.clevertap.android.sdk.PushPermissionManager.ANDROID_PERMISSION_STRING;
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
-import com.clevertap.android.sdk.CTPreferenceCache;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
@@ -37,7 +28,6 @@ import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate;
@@ -72,8 +62,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import kotlin.Pair;
@@ -83,8 +71,7 @@ import kotlin.jvm.functions.Function2;
 
 // inapp db handle // glovbal dn
 @RestrictTo(Scope.LIBRARY_GROUP)
-public class InAppController implements InAppListener,
-        InAppNotificationActivity.PushPermissionResultCallback {
+public class InAppController implements InAppListener {
 
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
@@ -119,6 +106,7 @@ public class InAppController implements InAppListener,
                     storeRegistry.getInAppAssetsStore());
 
             String templateName = null;
+            FileResourceProvider fileResourceProvider = FileResourceProvider.getInstance(context, logger);
             if (CTInAppType.CTInAppTypeCustomCodeTemplate.equals(inApp.getInAppType())) {
                 final CustomTemplateInAppData customTemplateData = inApp.getCustomTemplateData();
                 final List<String> fileUrls;
@@ -132,7 +120,7 @@ public class InAppController implements InAppListener,
                 int index = 0;
                 while (index < fileUrls.size()) {
                     String url = fileUrls.get(index);
-                    byte[] bytes = resourceProvider.fetchFile(url);
+                    byte[] bytes = fileResourceProvider.fetchFile(url);
 
                     if (bytes != null && bytes.length > 0) {
                         FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url, CtCacheType.FILES), storePair);
@@ -146,14 +134,14 @@ public class InAppController implements InAppListener,
             } else {
                 for (CTInAppNotificationMedia media : inApp.getMediaList()) {
                     if (media.isGIF()) {
-                        byte[] bytes = resourceProvider.fetchInAppGifV1(media.getMediaUrl());
+                        byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
                         if (bytes == null || bytes.length == 0) {
                             inApp.setError("Error processing GIF");
                             break;
                         }
                     } else if (media.isImage()) {
 
-                        Bitmap bitmap = resourceProvider.fetchInAppImageV1(media.getMediaUrl());
+                        Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
                         if (bitmap == null) {
                             inApp.setError("Error processing image as bitmap was NULL");
                         }
@@ -221,23 +209,19 @@ public class InAppController implements InAppListener,
 
     private final Logger logger;
 
-    private final FileResourceProvider resourceProvider;
-
     private final MainLooperHandler mainLooperHandler;
 
     private final InAppQueue inAppQueue;
 
     public final Function0<Unit> onAppLaunchEventSent;
 
+    private final InAppActionHandler inAppActionHandler;
+
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
 
     public final static String IS_HARD_PERMISSION_REQUEST = "isHardPermissionRequest";
 
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
-
-    public final static String DISPLAY_HARD_PERMISSION_BUNDLE_KEY = "displayHardPermissionDialog";
-
-    public final static String SHOW_FALLBACK_SETTINGS_BUNDLE_KEY = "shouldShowFallbackSettings";
 
     public InAppController(
             Context context,
@@ -250,9 +234,9 @@ public class InAppController implements InAppListener,
             final DeviceInfo deviceInfo,
             InAppQueue inAppQueue,
             final EvaluationManager evaluationManager,
-            FileResourceProvider resourceProvider,
             TemplatesManager templatesManager,
-            final StoreRegistry storeRegistry) {
+            final StoreRegistry storeRegistry,
+            final InAppActionHandler inAppActionHandler) {
         this.context = context;
         this.config = config;
         this.logger = this.config.getLogger();
@@ -263,7 +247,6 @@ public class InAppController implements InAppListener,
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
         this.deviceInfo = deviceInfo;
-        this.resourceProvider = resourceProvider;
         this.inAppQueue = inAppQueue;
         this.evaluationManager = evaluationManager;
         this.templatesManager = templatesManager;
@@ -278,6 +261,7 @@ public class InAppController implements InAppListener,
             }
             return null;
         };
+        this.inAppActionHandler = inAppActionHandler;
     }
 
 
@@ -297,88 +281,28 @@ public class InAppController implements InAppListener,
         }
     }
 
-    @RequiresApi(api = 33)
-    public void promptPushPrimer(JSONObject jsonObject){
-        int permissionStatus = ContextCompat.checkSelfPermission(context,
-                Manifest.permission.POST_NOTIFICATIONS);
-
-        if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            //Checks whether permission request is asked for the first time.
-            boolean isFirstTimeRequest = CTPreferenceCache.getInstance(context, config).isFirstTimeRequest();
-
-            Activity currentActivity = CoreMetaData.getCurrentActivity();
-            if (currentActivity == null) {
-                Logger.d("CurrentActivity reference is null. SDK can't process the promptPushPrimer(jsonObject) method! Ensure the following things:\n" +
-                        "1. Calling ActivityLifecycleCallback.register(this) in your custom application class before super.onCreate().\n" +
-                        "   Alternatively, register CleverTap SDK's Application class in the manifest using com.clevertap.android.sdk.Application.\n" +
-                        "2. Ensure that the promptPushPrimer() API is called from the onResume() lifecycle method, not onCreate().");
-                return;
-            }
-            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                    currentActivity,
-                    ANDROID_PERMISSION_STRING);
-
-            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
-                if (!jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false)) {
-                    Logger.v("Notification permission is denied. Please grant notification permission access" +
-                            " in your app's settings to send notifications");
-                    notifyPushPermissionResult(false);
-                } else {
-                    showSoftOrHardPrompt(jsonObject);
-                }
-                return;
-            }
-            showSoftOrHardPrompt(jsonObject);
-        } else {
-            notifyPushPermissionResult(true);
-        }
-    }
-
-    @RequiresApi(api = 33)
-    public void promptPermission(boolean showFallbackSettings) {
-        JSONObject object = new JSONObject();
+    public void promptPushPrimer(final JSONObject jsonObject) {
         try {
-            object.put(FALLBACK_TO_NOTIFICATION_SETTINGS, showFallbackSettings);
-            object.put(IS_HARD_PERMISSION_REQUEST, true);
+            jsonObject.put(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, true);
         } catch (JSONException e) {
-            e.printStackTrace();
+            // should not happen, nothing to do
         }
-        promptPushPrimer(object);
-    }
-
-    /**
-     * Shows either push primer or directly calls hard permission dialog flow based on whether
-     * `isFromPromptPermission` is true.
-     * @param jsonObject InApp object
-     */
-    private void showSoftOrHardPrompt(final JSONObject jsonObject) {
+        boolean fallbackToSettings = jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false);
         if (jsonObject.optBoolean(IS_HARD_PERMISSION_REQUEST, false)) {
-            startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    config, jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false));
+            inAppActionHandler.launchPushPermissionPrompt(fallbackToSettings);
         } else {
-            prepareNotificationForDisplay(jsonObject);
+            inAppActionHandler.launchPushPermissionPrompt(
+                    fallbackToSettings,
+                    activity -> prepareNotificationForDisplay(jsonObject));
         }
     }
 
-    public static void startPrompt(Activity activity, CleverTapInstanceConfig config,
-                                   boolean showFallbackSettings){
-        if (!activity.getClass().equals(InAppNotificationActivity.class)) {
-            Intent intent = new Intent(activity, InAppNotificationActivity.class);
-            Bundle configBundle = new Bundle();
-            configBundle.putParcelable("config", config);
-            intent.putExtra("configBundle", configBundle);
-            intent.putExtra(Constants.INAPP_KEY, currentlyDisplayingInApp);
-            intent.putExtra(DISPLAY_HARD_PERMISSION_BUNDLE_KEY, true);
-            intent.putExtra(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY, showFallbackSettings);
-            activity.startActivity(intent);
-        }
+    public void promptPermission(boolean showFallbackSettings) {
+        inAppActionHandler.launchPushPermissionPrompt(showFallbackSettings);
     }
 
-    @RequiresApi(api = 33)
-    public boolean isPushPermissionGranted(){
-        int permissionStatus = ContextCompat.checkSelfPermission(context,
-                Manifest.permission.POST_NOTIFICATIONS);
-        return permissionStatus == PackageManager.PERMISSION_GRANTED;
+    public boolean isPushPermissionGranted() {
+        return inAppActionHandler.arePushNotificationsEnabled();
     }
 
     public void discardInApps() {
@@ -425,7 +349,7 @@ public class InAppController implements InAppListener,
             case OPEN_URL:
                 String actionUrl = action.getActionUrl();
                 if (actionUrl != null) {
-                    openUrl(actionUrl, activityContext);
+                    inAppActionHandler.openUrl(actionUrl, activityContext);
                 } else {
                     logger.debug("Cannot trigger open url action without url value");
                 }
@@ -463,7 +387,6 @@ public class InAppController implements InAppListener,
     public void inAppNotificationDidDismiss(
             @NonNull final CTInAppNotification inAppNotification,
             @Nullable final Bundle formData) {
-        inAppNotification.didDismiss(resourceProvider);
 
         if (controllerManager.getInAppFCManager() != null) {
             String templateName = inAppNotification.getCustomTemplateData() != null
@@ -549,25 +472,6 @@ public class InAppController implements InAppListener,
             presentTemplate(inAppNotification);
         } else {
             displayNotification(inAppNotification);
-        }
-    }
-
-    @Override
-    public void onPushPermissionAccept() {
-        notifyPushPermissionResult(true);
-    }
-
-    @Override
-    public void onPushPermissionDeny() {
-        notifyPushPermissionResult(false);
-    }
-
-    //iterates over the PushPermissionResponseListenerList to notify the result
-    public void notifyPushPermissionResult(boolean result) {
-        for (final PushPermissionResponseListener listener: callbackManager.getPushPermissionResponseListenerList()) {
-            if (listener != null){
-                listener.onPushPermissionResponse(result);
-            }
         }
     }
 
@@ -678,51 +582,15 @@ public class InAppController implements InAppListener,
             return;
         }
 
-        if (controllerManager.getInAppFCManager() != null) {
-
-            final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
-                final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
-                return !evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
-            };
-
-            if (!controllerManager.getInAppFCManager().canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {
-                logger.verbose(config.getAccountId(),
-                        "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
-                showInAppNotificationIfAny();
-                return;
-            }
-        } else {
+        if (inAppNotification.isRequestForPushPermission() && inAppActionHandler.arePushNotificationsEnabled()) {
             logger.verbose(config.getAccountId(),
-                    "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
-            return;
-        }
-
-        final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
-
-        final boolean goFromListener;
-
-        if (listener != null) {
-            final HashMap<String, Object> kvs;
-
-            if (inAppNotification.getCustomExtras() != null) {
-                kvs = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
-            } else {
-                kvs = new HashMap<>();
-            }
-
-            goFromListener = listener.beforeShow(kvs);
-        } else {
-            goFromListener = true;
-        }
-
-        if (!goFromListener) {
-            logger.verbose(config.getAccountId(),
-                    "Application has decided to not show this in-app notification: " + inAppNotification
-                            .getCampaignId());
+                    "Not showing push permission request, permission is already granted");
+            inAppActionHandler.notifyPushPermissionListeners();
             showInAppNotificationIfAny();
             return;
         }
-        showInApp(context, inAppNotification, config, this);
+
+        checkLimitsBeforeShowing(context, inAppNotification, config, this);
         incrementLocalInAppCountInPersistentStore(context, inAppNotification);
     }
 
@@ -770,7 +638,7 @@ public class InAppController implements InAppListener,
         }
     }
 
-    private static void checkPendingNotifications(
+    private void checkPendingNotifications(
             @NonNull final Context context,
             final CleverTapInstanceConfig config,
             final InAppController inAppController
@@ -780,13 +648,7 @@ public class InAppController implements InAppListener,
             try {
                 final CTInAppNotification notification = pendingNotifications.get(0);
                 pendingNotifications.remove(0);
-                MainLooperHandler mainHandler = new MainLooperHandler();
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        showInApp(context, notification, config, inAppController);
-                    }
-                });
+                checkLimitsBeforeShowing(context, notification, config, inAppController);
             } catch (Throwable t) {
                 // no-op
             }
@@ -794,7 +656,7 @@ public class InAppController implements InAppListener,
     }
 
     //InApp
-    private static void inAppDidDismiss(
+    private void inAppDidDismiss(
             @NonNull Context context,
             CleverTapInstanceConfig config,
             CTInAppNotification inAppNotification,
@@ -823,13 +685,77 @@ public class InAppController implements InAppListener,
         }
     }
 
+    private void checkLimitsBeforeShowing(
+            @NonNull Context context,
+            final CTInAppNotification inAppNotification,
+            CleverTapInstanceConfig config,
+            InAppController inAppController) {
+        Task<Boolean> task = CTExecutorFactory.executors(config).ioTask();
+        task.addOnSuccessListener(canShow -> {
+            if(canShow) {
+                showInApp(context, inAppNotification, config, inAppController);
+            } else {
+                showNotificationIfAvailable();
+            }
+        });
+        task.execute("checkLimitsBeforeShowing", () -> {
+            if (controllerManager.getInAppFCManager() != null) {
+                final Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut = (inAppJSON, inAppId) -> {
+                    final List<LimitAdapter> listOfWhenLimits = InAppResponseAdapter.getListOfWhenLimits(inAppJSON);
+                    return !evaluationManager.matchWhenLimitsBeforeDisplay(listOfWhenLimits, inAppId);
+                };
+
+                if (!controllerManager.getInAppFCManager().canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {
+                    logger.verbose(config.getAccountId(),
+                            "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
+                    return false;
+                }
+            } else {
+                logger.verbose(config.getAccountId(),
+                        "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
+                return false;
+            }
+            return true;
+        });
+    }
+
+    private boolean checkBeforeShowApprovalBeforeDisplay(final CTInAppNotification inAppNotification) {
+        final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
+
+        final boolean goFromListener;
+
+        if (listener != null) {
+            final HashMap<String, Object> kvs;
+
+            if (inAppNotification.getCustomExtras() != null) {
+                kvs = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
+            } else {
+                kvs = new HashMap<>();
+            }
+
+            goFromListener = listener.beforeShow(kvs);
+        } else {
+            goFromListener = true;
+        }
+
+        return goFromListener;
+    }
     //InApp
-    private static void showInApp(
+    private void showInApp(
             @NonNull Context context,
             final CTInAppNotification inAppNotification,
             CleverTapInstanceConfig config,
             InAppController inAppController
     ) {
+
+        boolean goFromListener = checkBeforeShowApprovalBeforeDisplay(inAppNotification);
+        if (!goFromListener) {
+            logger.verbose(config.getAccountId(),
+                    "Application has decided to not show this in-app notification: " + inAppNotification
+                            .getCampaignId());
+            showInAppNotificationIfAny();
+            return;
+        }
 
         Logger.v(config.getAccountId(), "Attempting to show next In-App");
 
@@ -882,11 +808,6 @@ public class InAppController implements InAppListener,
             case CTInAppTypeHalfInterstitialImageOnly:
             case CTInAppTypeCoverImageOnly:
 
-                Intent intent = new Intent(context, InAppNotificationActivity.class);
-                intent.putExtra(Constants.INAPP_KEY, inAppNotification);
-                Bundle configBundle = new Bundle();
-                configBundle.putParcelable("config", config);
-                intent.putExtra("configBundle", configBundle);
                 try {
                     Activity currentActivity = CoreMetaData.getCurrentActivity();
                     if (currentActivity == null) {
@@ -894,7 +815,7 @@ public class InAppController implements InAppListener,
                     }
                     config.getLogger().verbose(config.getAccountId(),
                             "calling InAppActivity for notification: " + inAppNotification.getJsonDescription());
-                    currentActivity.startActivity(intent);
+                    InAppNotificationActivity.launchForInAppNotification(currentActivity, inAppNotification, config);
                     Logger.d("Displaying In-App: " + inAppNotification.getJsonDescription());
 
                 } catch (Throwable t) {
@@ -1010,7 +931,7 @@ public class InAppController implements InAppListener,
     }
 
     private void presentTemplate(final CTInAppNotification inAppNotification) {
-        templatesManager.presentTemplate(inAppNotification, this,resourceProvider);
+        templatesManager.presentTemplate(inAppNotification, this, FileResourceProvider.getInstance(context, logger));
     }
 
     private JSONArray filterNonRegisteredCustomTemplates(JSONArray inAppNotifications) {
@@ -1061,37 +982,6 @@ public class InAppController implements InAppListener,
             }
         } else {
             logger.debug("Cannot present template without name.");
-        }
-    }
-
-    private void openUrl(String url, @Nullable Context launchContext) {
-        try {
-            Uri uri = Uri.parse(url.replace("\n", "").replace("\r", ""));
-            Set<String> queryParamSet = uri.getQueryParameterNames();
-            Bundle queryBundle = new Bundle();
-            if (queryParamSet != null && !queryParamSet.isEmpty()) {
-                for (String queryName : queryParamSet) {
-                    queryBundle.putString(queryName, uri.getQueryParameter(queryName));
-                }
-            }
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            if (!queryBundle.isEmpty()) {
-                intent.putExtras(queryBundle);
-            }
-
-            if (launchContext == null) {
-                launchContext = context;
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            }
-
-            Utils.setPackageNameFromResolveInfoList(launchContext, intent);
-            launchContext.startActivity(intent);
-        } catch (Exception e) {
-            if (url.startsWith(Constants.WZRK_URL_SCHEMA)) {
-                // Ignore logging CT scheme actions
-                return;
-            }
-            logger.debug("No activity found to open url: " + url);
         }
     }
 

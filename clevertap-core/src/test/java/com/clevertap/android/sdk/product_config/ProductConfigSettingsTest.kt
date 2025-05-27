@@ -5,12 +5,15 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FileUtils
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import io.mockk.verify
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
-import java.lang.RuntimeException
 import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
@@ -23,7 +26,7 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
     @Before
     override fun setUp() {
         super.setUp()
-        fileUtils = mock(FileUtils::class.java)
+        fileUtils = mockk(relaxed = true)
         settings = ProductConfigSettings(guid, cleverTapInstanceConfig, fileUtils)
     }
 
@@ -92,11 +95,12 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
 
     @Test
     fun testReset() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
             settings.reset(fileUtils)
-            verify(fileUtils).deleteFile(settings.fullPath)
-
+            verify { fileUtils.deleteFile(settings.fullPath) }
         }
         aInitTest()
     }
@@ -104,8 +108,8 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
     @Test
     fun testLoadSettings_Empty_String() {
         settings.loadSettings(fileUtils)
-        `when`(fileUtils.readFromFile(anyString())).thenReturn("")
-        verify(fileUtils).readFromFile(settings.fullPath)
+        every { fileUtils.readFromFile(any()) } returns ""
+        verify { fileUtils.readFromFile(settings.fullPath) }
         aInitTest()
     }
 
@@ -116,16 +120,15 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
 
     @Test
     fun when_fileUtils_Throws_Exception_loadSetting_throws_Exception() {
-        val spySettings = spy(settings)
-        `when`(fileUtils.readFromFile(settings.fullPath)).thenThrow(RuntimeException("Something went wrong"))
+        val spySettings = spyk(settings)
+        every { fileUtils.readFromFile(settings.fullPath) } throws RuntimeException("Something went wrong")
         spySettings.loadSettings(fileUtils)
-        verify(spySettings, never()).getJsonObject(anyString())
-        verify(spySettings, never()).populateMapWithJson(any(JSONObject::class.java))
+        verify(exactly = 0) { spySettings.getJsonObject(any()) }
+        verify(exactly = 0) { spySettings.populateMapWithJson(any()) }
     }
 
     @Test
     fun testLoadSettings_Non_Empty_Data() {
-
         val map = HashMap<String, String>()
         map.put(CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS, "10")
         map.put(CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS, "60")
@@ -136,12 +139,12 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
             TimeUnit.MINUTES.toSeconds(16).toString()
         )
         val jsonString = JSONObject(map as Map<*, *>).toString()
-        `when`(fileUtils.readFromFile(anyString())).thenReturn(jsonString)
+        every { fileUtils.readFromFile(any()) } returns jsonString
 
         settings.loadSettings(fileUtils)
         settings.setMinimumFetchIntervalInSeconds(TimeUnit.MINUTES.toSeconds(45))
 
-        verify(fileUtils).readFromFile(settings.fullPath)
+        verify { fileUtils.readFromFile(settings.fullPath) }
         Assert.assertEquals(settings.lastFetchTimeStampInMillis, timeStamp)
         Assert.assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(45))
 

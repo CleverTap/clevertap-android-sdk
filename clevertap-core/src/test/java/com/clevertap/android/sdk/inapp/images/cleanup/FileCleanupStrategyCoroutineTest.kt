@@ -2,20 +2,20 @@ package com.clevertap.android.sdk.inapp.images.cleanup
 
 import TestDispatchers
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import io.mockk.*
 import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
-import org.mockito.Mockito
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class FileCleanupStrategyCoroutineTest {
 
-    private val mFileResourceProvider = Mockito.mock(FileResourceProvider::class.java)
-
     private val testScheduler = TestCoroutineScheduler()
     private val dispatchers = TestDispatchers(testScheduler)
-
+    private val mFileResourceProvider = mockk<FileResourceProvider>(relaxed = true)
     private val cleanupStrategy = FileCleanupStrategyCoroutine(
-        fileResourceProvider = mFileResourceProvider,
+        { mFileResourceProvider },
         dispatchers = dispatchers
     )
 
@@ -33,10 +33,30 @@ class FileCleanupStrategyCoroutineTest {
         advanceUntilIdle()
 
         urls.forEach { url ->
-            Mockito.verify(mFileResourceProvider).deleteData(url)
+            verify {mFileResourceProvider.deleteData(url) }
         }
 
         // assert
         assertEquals(urls.size, successUrls.size)
+    }
+
+    @Test
+    fun `clearFileAssets with empty list does nothing`() = runTest {
+        // setup
+        val emptyUrls = emptyList<String>()
+        val successUrls = mutableListOf<String>()
+
+        // invoke
+        cleanupStrategy.clearFileAssets(emptyUrls) { url ->
+            successUrls.add(url)
+        }
+
+        testScheduler.advanceUntilIdle()
+
+        // verify no interactions with file provider
+        verify(exactly = 0) { mFileResourceProvider.deleteData(any()) }
+
+        // verify no callbacks
+        assertTrue(successUrls.isEmpty())
     }
 }
