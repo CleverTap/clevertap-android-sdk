@@ -10,13 +10,10 @@
         android:id="@+id/rel_lyt"
         layout="@layout/content_view_small_multi_line_msg" />
 
-    <ImageView
-        android:id="@+id/big_image"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:minHeight="196dp"
-        android:scaleType="centerCrop" />
+
+    <include layout="@layout/image_view_dynamic"
+        android:id="@+id/big_image_configurable"/>
+
     <include
         android:id="@+id/action_buttons"
         layout="@layout/action_buttons"/>

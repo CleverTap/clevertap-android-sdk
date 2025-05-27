@@ -15,13 +15,8 @@
         android:orientation="vertical"
         android:layout_below="@id/rel_lyt">
 
-        <ImageView
-            android:id="@+id/big_image"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:minHeight="196dp"
-            android:scaleType="centerCrop" />
+        <include layout="@layout/image_view_dynamic"
+            android:id="@+id/big_image_configurable"/>
 
         <LinearLayout
             android:id="@+id/rating_lyt"
@@ -36,6 +31,7 @@
                 android:layout_width="0dp"
                 android:layout_height="@dimen/rating_star"
                 android:layout_weight="1"
+                android:contentDescription="@string/rating_star_1"
                 android:src="@drawable/pt_star_outline" />
 
             <ImageView
@@ -43,28 +39,32 @@
                 android:layout_width="0dp"
                 android:layout_height="@dimen/rating_star"
                 android:layout_weight="1"
-                android:src="@drawable/pt_star_outline" />
+                android:src="@drawable/pt_star_outline"
+                android:contentDescription="@string/rating_star_2" />
 
             <ImageView
                 android:id="@+id/star3"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/rating_star"
                 android:layout_weight="1"
-                android:src="@drawable/pt_star_outline" />
+                android:src="@drawable/pt_star_outline"
+                android:contentDescription="@string/rating_star_3" />
 
             <ImageView
                 android:id="@+id/star4"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/rating_star"
                 android:layout_weight="1"
-                android:src="@drawable/pt_star_outline" />
+                android:src="@drawable/pt_star_outline"
+                android:contentDescription="@string/rating_star_4" />
 
             <ImageView
                 android:id="@+id/star5"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/rating_star"
                 android:layout_weight="1"
-                android:src="@drawable/pt_star_outline" />
+                android:src="@drawable/pt_star_outline"
+                android:contentDescription="@string/rating_star_5" />
 
         </LinearLayout>
         <TextView

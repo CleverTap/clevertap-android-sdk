@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
@@ -83,7 +84,6 @@ internal open class ContentView(
         }
     }
 
-
     fun setCustomContentViewSmallIcon() {
         if (renderer.pt_small_icon != null) {
             Utils.loadImageBitmapIntoRemoteView(R.id.small_icon, renderer.pt_small_icon, remoteView)
@@ -119,6 +119,19 @@ internal open class ContentView(
                     resId,
                     color
                 )
+            }
+        }
+    }
+
+    fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType) {
+        if (pt_big_img.isNotNullAndEmpty()) {
+            val imageViewId = when (scaleType) {
+                PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+                PTScaleType.CENTER_CROP -> R.id.big_image
+            }
+            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context)
+            if (!Utils.getFallback()) {
+                remoteView.setViewVisibility(imageViewId, View.VISIBLE)
             }
         }
     }

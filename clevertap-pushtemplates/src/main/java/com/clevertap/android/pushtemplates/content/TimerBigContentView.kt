@@ -3,10 +3,8 @@ package com.clevertap.android.pushtemplates.content
 import android.content.Context
 import android.os.Build
 import android.text.Html
-import android.view.View
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 
 internal class TimerBigContentView(context: Context, timer_end: Int?, renderer: TemplateRenderer) :
     TimerSmallContentView(context, timer_end, renderer, R.layout.timer) {
@@ -14,7 +12,7 @@ internal class TimerBigContentView(context: Context, timer_end: Int?, renderer: 
     init {
         setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
-        setCustomContentViewBigImage(renderer.pt_big_img)
+        setCustomContentViewBigImage(renderer.pt_big_img, renderer.pt_scale_type)
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
@@ -27,17 +25,6 @@ internal class TimerBigContentView(context: Context, timer_end: Int?, renderer: 
             } else {
                 remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg_summary))
             }
-        }
-    }
-
-    private fun setCustomContentViewBigImage(pt_big_img: String?) {
-        if (pt_big_img != null && pt_big_img.isNotEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView,context)
-            if (Utils.getFallback()) {
-                remoteView.setViewVisibility(R.id.big_image, View.GONE)
-            }
-        } else {
-            remoteView.setViewVisibility(R.id.big_image, View.GONE)
         }
     }
 }
