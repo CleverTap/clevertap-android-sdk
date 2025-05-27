@@ -248,4 +248,358 @@ class UtilsTest {
         // Then
         assertEquals(Integer.MAX_VALUE, result)
     }
+
+    // Tests for getColourOrNull method
+
+    @Test
+    fun `getColourOrNull should return parsed color for valid hex color with hash`() {
+        // Given
+        val validColor = "#FF0000" // Red
+        val expectedColor = -65536 // Red color value
+
+        // When
+        val result = Utils.getColourOrNull(validColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test
+    fun `getColourOrNull should return parsed color for valid 6-digit hex color`() {
+        // Given
+        val validColor = "#00FF00" // Green
+        val expectedColor = -16711936 // Green color value
+
+        // When
+        val result = Utils.getColourOrNull(validColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test
+    fun `getColourOrNull should return parsed color for valid 8-digit hex color with alpha`() {
+        // Given
+        val validColor = "#80FF0000" // Semi-transparent red
+        val expectedColor = -2130771968 // Semi-transparent red color value
+
+        // When
+        val result = Utils.getColourOrNull(validColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+
+    @Test
+    fun `getColourOrNull should return parsed color for black`() {
+        // Given
+        val blackColor = "#000000"
+        val expectedColor = -16777216 // Black color value
+
+        // When
+        val result = Utils.getColourOrNull(blackColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test
+    fun `getColourOrNull should return parsed color for white`() {
+        // Given
+        val whiteColor = "#FFFFFF"
+        val expectedColor = -1 // White color value
+
+        // When
+        val result = Utils.getColourOrNull(whiteColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for null input`() {
+        // Given
+        val nullColor: String? = null
+
+        // When
+        val result = Utils.getColourOrNull(nullColor)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for empty string`() {
+        // Given
+        val emptyColor = ""
+
+        // When
+        val result = Utils.getColourOrNull(emptyColor)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for invalid hex color without hash`() {
+        // Given
+        val invalidColor = "FF0000" // Missing hash
+
+        // When
+        val result = Utils.getColourOrNull(invalidColor)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for invalid hex color with invalid characters`() {
+        // Given
+        val invalidColor = "#GG0000" // Invalid hex characters
+
+        // When
+        val result = Utils.getColourOrNull(invalidColor)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for invalid hex length`() {
+        // Given
+        val invalidColor = "#FF00" // Invalid length (5 characters)
+
+        // When
+        val result = Utils.getColourOrNull(invalidColor)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for hex color with spaces`() {
+        // Given
+        val invalidColor = "#FF 00 00" // Spaces in hex
+
+        // When
+        val result = Utils.getColourOrNull(invalidColor)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for hex color with leading spaces`() {
+        // Given
+        val invalidColor = "  #FF0000" // Leading spaces
+
+        // When
+        val result = Utils.getColourOrNull(invalidColor)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for hex color with trailing spaces`() {
+        // Given
+        val invalidColor = "#FF0000  " // Trailing spaces
+
+        // When
+        val result = Utils.getColourOrNull(invalidColor)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for random string`() {
+        // Given
+        val randomString = "randomtext"
+
+        // When
+        val result = Utils.getColourOrNull(randomString)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for special characters`() {
+        // Given
+        val specialChars = "@#$%^&*()"
+
+        // When
+        val result = Utils.getColourOrNull(specialChars)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should handle case sensitivity correctly`() {
+        // Given - Both should be valid as hex is case insensitive
+        val lowerCaseColor = "#ff0000"
+        val upperCaseColor = "#FF0000"
+        val expectedColor = -65536 // Red color value
+
+        // When
+        val lowerResult = Utils.getColourOrNull(lowerCaseColor)
+        val upperResult = Utils.getColourOrNull(upperCaseColor)
+
+        // Then
+        assertEquals(expectedColor, lowerResult)
+        assertEquals(expectedColor, upperResult)
+        assertEquals(lowerResult, upperResult)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for too long hex string`() {
+        // Given
+        val tooLongColor = "#FF0000FF00" // 9 digits after hash (too long)
+
+        // When
+        val result = Utils.getColourOrNull(tooLongColor)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return null for just hash symbol`() {
+        // Given
+        val justHash = "#"
+
+        // When
+        val result = Utils.getColourOrNull(justHash)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getColourOrNull should return parsed color for transparent`() {
+        // Given
+        val transparentColor = "#00000000" // Fully transparent
+        val expectedColor = 0 // Transparent color value
+
+        // When
+        val result = Utils.getColourOrNull(transparentColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+
+    @Test
+    fun `getColourOrNull should handle mixed case hex correctly`() {
+        // Given
+        val mixedCaseColor = "#Ff00Aa" // Mixed case hex
+        val expectedColor = -65366 // Color value for #FF00AA
+
+        // When
+        val result = Utils.getColourOrNull(mixedCaseColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    // Tests for getColour method
+
+    @Test
+    fun `getColour should return parsed color when valid color provided`() {
+        // Given
+        val validColor = "#FF0000" // Red
+        val defaultColor = "#000000" // Black
+        val expectedColor = -65536 // Red color value
+
+        // When
+        val result = Utils.getColour(validColor, defaultColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test
+    fun `getColour should return default color when invalid color provided`() {
+        // Given
+        val invalidColor = "invalid"
+        val defaultColor = "#00FF00" // Green
+        val expectedColor = -16711936 // Green color value
+
+        // When
+        val result = Utils.getColour(invalidColor, defaultColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test
+    fun `getColour should return default color when null color provided`() {
+        // Given
+        val nullColor: String? = null
+        val defaultColor = "#0000FF" // Blue
+        val expectedColor = -16776961 // Blue color value
+
+        // When
+        val result = Utils.getColour(nullColor, defaultColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test
+    fun `getColour should return default color when empty color provided`() {
+        // Given
+        val emptyColor = ""
+        val defaultColor = "#FFFFFF" // White
+        val expectedColor = -1 // White color value
+
+        // When
+        val result = Utils.getColour(emptyColor, defaultColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test
+    fun `getColour should handle both valid colors correctly`() {
+        // Given
+        val validColor = "#FF0000" // Red
+        val validDefault = "#00FF00" // Green (should not be used)
+        val expectedColor = -65536 // Red color value
+
+        // When
+        val result = Utils.getColour(validColor, validDefault)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test
+    fun `getColour should work with 8-digit hex colors`() {
+        // Given
+        val validColor = "#80FF0000" // Semi-transparent red
+        val defaultColor = "#000000" // Black
+        val expectedColor = -2130771968 // Semi-transparent red color value
+
+        // When
+        val result = Utils.getColour(validColor, defaultColor)
+
+        // Then
+        assertEquals(expectedColor, result)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `getColour should throw exception when both colors are invalid`() {
+        // Given
+        val invalidColor = "invalid"
+        val invalidDefault = "alsoInvalid"
+
+        // When
+        Utils.getColour(invalidColor, invalidDefault)
+
+        // Then - Exception should be thrown
+    }
 }
