@@ -788,11 +788,11 @@ internal class NetworkManager(
             return false
         }
 
-        notifyNetworkHeaderListeners()
-
         if (!processMuteAndDomainChanges(context, response)) {
             return false
         }
+
+        notifyNetworkHeaderListeners()
 
         logger.debug(config.accountId, "Queue sent successfully")
         lastRequestTimestamp = currentRequestTimestamp
