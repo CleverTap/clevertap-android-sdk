@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
@@ -38,11 +39,14 @@ internal open class ProductDisplayLinearBigContentView(
         setCustomContentViewBasicKeys()
         if (renderer.bigTextList!!.isNotEmpty()) setCustomContentViewText(R.id.product_name, productName)
         if (renderer.priceList!!.isNotEmpty()) setCustomContentViewText(R.id.product_price, productPrice)
-        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
+
         setCustomContentViewButtonLabel(R.id.product_action, renderer.pt_product_display_action)
-        setCustomContentViewButtonColour(R.id.product_action, renderer.pt_product_display_action_clr)
-        setCustomContentViewButtonText(R.id.product_action, renderer.pt_product_display_action_text_clr)
-        setImageList(extras)
+
+        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
+        setCustomBackgroundColour(renderer.pt_product_display_action_clr, R.id.product_action)
+        setCustomTextColour(renderer.pt_product_display_action_text_clr, R.id.product_action)
+
+        setImageList(extras, renderer.pt_scale_type)
         remoteView.setDisplayedChild(R.id.carousel_image, currentPosition)
 
         setCustomContentViewSmallIcon()
@@ -86,7 +90,7 @@ internal open class ProductDisplayLinearBigContentView(
         )
     }
 
-    internal fun setImageList(extras: Bundle) {
+    internal fun setImageList(extras: Bundle, scaleType: PTScaleType) {
         var imageCounter = 0
         var isFirstImageOk = false
         val smallImageLayoutIds = ArrayList<Int>()
@@ -94,31 +98,37 @@ internal open class ProductDisplayLinearBigContentView(
         smallImageLayoutIds.add(R.id.small_image2)
         smallImageLayoutIds.add(R.id.small_image3)
         val tempImageList = ArrayList<String>()
-        for (index in renderer.imageList!!.indices) {
+        val imageViewId = when (scaleType) {
+            PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+            PTScaleType.CENTER_CROP -> R.id.big_image
+        }
+
+        renderer.imageList?.forEachIndexed { index, imageUrl ->
 
             Utils.loadImageURLIntoRemoteView(
-                smallImageLayoutIds[imageCounter], renderer.imageList!![index], remoteView,context
+                smallImageLayoutIds[imageCounter], imageUrl, remoteView, context
             )
-            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view)
-            Utils.loadImageURLIntoRemoteView(R.id.fimg, renderer.imageList!![index], tempRemoteView,context)
+
+            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_flipper_dynamic)
+            Utils.loadImageURLIntoRemoteView(imageViewId, imageUrl, tempRemoteView, context)
+
             if (!Utils.getFallback()) {
                 if (!isFirstImageOk) {
                     isFirstImageOk = true
                 }
-                remoteView.setViewVisibility(
-                    smallImageLayoutIds[imageCounter],
-                    View.VISIBLE
-                )
+                tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
+                remoteView.setViewVisibility(smallImageLayoutIds[imageCounter], View.VISIBLE)
                 remoteView.addView(R.id.carousel_image, tempRemoteView)
                 imageCounter++
-                tempImageList.add(renderer.imageList!![index])
+                tempImageList.add(imageUrl)
             } else {
-                renderer.deepLinkList!!.removeAt(index)
-                renderer.bigTextList!!.removeAt(index)
-                renderer.smallTextList!!.removeAt(index)
-                renderer.priceList!!.removeAt(index)
+                renderer.deepLinkList?.removeAt(index)
+                renderer.bigTextList?.removeAt(index)
+                renderer.smallTextList?.removeAt(index)
+                renderer.priceList?.removeAt(index)
             }
         }
+
 
         extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
         extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, renderer.deepLinkList)
@@ -154,31 +164,6 @@ internal open class ProductDisplayLinearBigContentView(
             } else {
                 remoteView.setTextViewText(resourceID, Html.fromHtml(pt_product_display_action))
             }
-        }
-    }
-
-    private fun setCustomContentViewButtonColour(resourceID: Int, pt_product_display_action_clr: String?) {
-        if (pt_product_display_action_clr != null && pt_product_display_action_clr.isNotEmpty()) {
-            remoteView.setInt(
-                resourceID,
-                "setBackgroundColor",
-                Utils.getColour(
-                    pt_product_display_action_clr,
-                    PTConstants.PT_PRODUCT_DISPLAY_ACTION_CLR_DEFAULTS
-                )
-            )
-        }
-    }
-
-    internal fun setCustomContentViewButtonText(resourceID: Int, pt_product_display_action_text_clr: String?) {
-        if (pt_product_display_action_text_clr != null && pt_product_display_action_text_clr.isNotEmpty()) {
-            remoteView.setTextColor(
-                resourceID,
-                Utils.getColour(
-                    pt_product_display_action_text_clr,
-                    PTConstants.PT_PRODUCT_DISPLAY_ACTION_TEXT_CLR_DEFAULT
-                )
-            )
         }
     }
 }

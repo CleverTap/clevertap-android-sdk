@@ -42,6 +42,7 @@
     <dimen name="product_display_button_height">24dp</dimen>
     <dimen name="product_display_margin_top">8dp</dimen>
     <dimen name="rating_big_img">96dp</dimen>
+    <dimen name="custom_btn_padding">4dp</dimen>
 
 
 </resources>

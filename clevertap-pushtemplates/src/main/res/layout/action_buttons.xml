@@ -7,7 +7,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:paddingHorizontal="16dp"
-    android:background="@color/white">
+    android:background="@color/actionButtonBackground">
 
     <TextView
         android:id="@+id/action0"

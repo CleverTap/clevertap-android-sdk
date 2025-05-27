@@ -2,20 +2,19 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_view_small"
+    android:background="@android:color/transparent"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <ImageView
-        android:id="@+id/big_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"/>
+    <include layout="@layout/image_view_flipper_dynamic"
+        android:id="@+id/big_image_configurable"/>
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignBottom="@+id/big_image"
-        android:background="@drawable/pt_scrim" />
+        android:layout_alignBottom="@+id/big_image_configurable"
+        android:background="@drawable/pt_scrim"
+        android:contentDescription="@string/notification_scrim" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -31,9 +30,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             tools:text="title"
-            android:textAppearance="@style/PushTitle"
-            android:textColor="@color/white" />
-
+            android:textAppearance="@style/PushTitle" />
         <TextView
             android:id="@+id/msg"
             android:layout_width="match_parent"
@@ -43,8 +40,7 @@
             android:ellipsize="end"
             android:maxLines="2"
             tools:text="message message message"
-            android:textAppearance="@style/PushMessage"
-            android:textColor="@color/white" />
+            android:textAppearance="@style/PushMessage" />
 
     </RelativeLayout>
 </RelativeLayout>

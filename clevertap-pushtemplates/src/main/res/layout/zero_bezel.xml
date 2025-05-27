@@ -5,7 +5,7 @@
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@android:color/white"
+    android:background="@android:color/transparent"
     android:orientation="vertical">
 
     <RelativeLayout
@@ -16,23 +16,21 @@
         android:minHeight="196dp"
         android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/big_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"/>
+        <include layout="@layout/image_view_flipper_dynamic"
+            android:id="@+id/big_image_configurable"/>
 
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignBottom="@+id/big_image"
-            android:background="@drawable/pt_scrim"/>
+            android:layout_alignBottom="@+id/big_image_configurable"
+            android:background="@drawable/pt_scrim"
+            android:contentDescription="@string/notification_scrim" />
 
         <RelativeLayout
             android:id="@+id/rel_lyt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@+id/big_image"
+            android:layout_alignBottom="@+id/big_image_configurable"
             android:paddingStart="@dimen/padding_horizontal"
             android:paddingLeft="@dimen/padding_horizontal"
             android:paddingTop="@dimen/padding_vertical"
@@ -52,8 +50,7 @@
                 android:layout_alignStart="@id/metadata"
                 android:layout_marginTop="@dimen/metadata_title_margin_vertical"
                 tools:text="title"
-                android:textAppearance="@style/PushTitle"
-                android:textColor="@color/white"/>
+                android:textAppearance="@style/PushTitle"/>
 
             <TextView
                 android:id="@+id/msg"
@@ -62,8 +59,7 @@
                 android:layout_below="@+id/title"
                 android:layout_alignStart="@id/title"
                 tools:text="message"
-                android:textAppearance="@style/PushMessageMultiLine"
-                android:textColor="@color/white"/>
+                android:textAppearance="@style/PushMessageMultiLine"/>
 
         </RelativeLayout>
     </RelativeLayout>

@@ -4,7 +4,7 @@
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="@android:color/transparent"
     android:orientation="vertical">
 
     <RelativeLayout
@@ -56,6 +56,8 @@
             android:id="@+id/chronometer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:textColor="@color/titleColor"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
@@ -65,13 +67,8 @@
 
     </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/big_image"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:minHeight="196dp"
-        android:scaleType="centerCrop" />
+    <include layout="@layout/image_view_dynamic"
+        android:id="@+id/big_image_configurable"/>
 
     <include
         android:id="@+id/action_buttons"

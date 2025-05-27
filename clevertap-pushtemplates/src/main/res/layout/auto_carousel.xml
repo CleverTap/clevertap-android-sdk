@@ -3,6 +3,7 @@
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
     android:orientation="vertical">
 
     <include layout="@layout/content_view_small_multi_line_msg"

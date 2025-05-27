@@ -4,10 +4,8 @@ import android.content.Context
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.text.Html
-import android.view.View
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
 internal open class BigImageContentView(
@@ -18,12 +16,12 @@ internal open class BigImageContentView(
         setCustomContentViewBasicKeys()
         setCustomContentViewTitle(renderer.pt_title)
         setCustomContentViewMessage(renderer.pt_msg)
-        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
-        setCustomContentViewTitleColour(renderer.pt_title_clr)
-        setCustomContentViewMessageColour(renderer.pt_msg_clr)
+        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
+        setCustomTextColour(renderer.pt_title_clr, R.id.title)
+        setCustomTextColour(renderer.pt_msg_clr, R.id.msg)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
         setCustomContentViewSmallIcon()
-        setCustomContentViewBigImage(renderer.pt_big_img)
+        setCustomContentViewBigImage(renderer.pt_big_img, renderer.pt_scale_type)
         setCustomContentViewLargeIcon(renderer.pt_large_icon)
     }
 
@@ -36,17 +34,6 @@ internal open class BigImageContentView(
             } else {
                 remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg_summary))
             }
-        }
-    }
-
-    private fun setCustomContentViewBigImage(pt_big_img: String?) {
-        if (pt_big_img.isNotNullAndEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView, context)
-            if (Utils.getFallback()) {
-                remoteView.setViewVisibility(R.id.big_image, View.GONE)
-            }
-        } else {
-            remoteView.setViewVisibility(R.id.big_image, View.GONE)
         }
     }
 }

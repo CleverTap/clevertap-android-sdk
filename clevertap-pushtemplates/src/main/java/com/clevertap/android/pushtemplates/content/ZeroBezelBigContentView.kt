@@ -3,10 +3,8 @@ package com.clevertap.android.pushtemplates.content
 import android.content.Context
 import android.os.Build
 import android.text.Html
-import android.view.View
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
 internal class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer) :
@@ -17,10 +15,10 @@ internal class ZeroBezelBigContentView(context: Context, renderer: TemplateRende
         setCustomContentViewTitle(renderer.pt_title)
         setCustomContentViewMessage(renderer.pt_msg)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
-        setCustomContentViewTitleColour(renderer.pt_title_clr)
-        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
-        setCustomContentViewMessageColour(renderer.pt_msg_clr)
-        setCustomContentViewBigImage(renderer.pt_big_img)
+        setCustomTextColour(renderer.pt_title_clr, R.id.title)
+        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
+        setCustomTextColour(renderer.pt_msg_clr, R.id.msg)
+        setCustomContentViewBigImage(renderer.pt_big_img, renderer.pt_scale_type)
         setCustomContentViewSmallIcon()
     }
 
@@ -34,17 +32,6 @@ internal class ZeroBezelBigContentView(context: Context, renderer: TemplateRende
             } else {
                 remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg_summary))
             }
-        }
-    }
-
-    private fun setCustomContentViewBigImage(pt_big_img: String?) {
-        if (pt_big_img.isNotNullAndEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView, context)
-            if (Utils.getFallback()) {
-                remoteView.setViewVisibility(R.id.big_image, View.GONE)
-            }
-        } else {
-            remoteView.setViewVisibility(R.id.big_image, View.GONE)
         }
     }
 }

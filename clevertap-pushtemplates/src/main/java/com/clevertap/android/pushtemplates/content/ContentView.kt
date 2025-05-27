@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
@@ -36,21 +37,12 @@ internal open class ContentView(
             remoteView.setViewVisibility(R.id.subtitle, View.GONE)
             remoteView.setViewVisibility(R.id.sep_subtitle, View.GONE)
         }
-        if (renderer.pt_meta_clr != null && renderer.pt_meta_clr!!.isNotEmpty()) {
-            remoteView.setTextColor(
-                R.id.app_name,
-                Utils.getColour(renderer.pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
-            )
-            remoteView.setTextColor(
-                R.id.timestamp,
-                Utils.getColour(renderer.pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
-            )
-            remoteView.setTextColor(
-                R.id.subtitle,
-                Utils.getColour(renderer.pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
-            )
-            setDotSep()
+
+        listOf(R.id.app_name, R.id.timestamp, R.id.subtitle).forEach { resId ->
+            setCustomTextColour(renderer.pt_meta_clr, resId)
         }
+
+        setDotSep()
     }
 
     private fun setDotSep() {
@@ -60,7 +52,7 @@ internal open class ContentView(
                 "drawable",
                 context.packageName
             )
-            renderer.pt_dot_sep = Utils.setBitMapColour(context, renderer.pt_dot, renderer.pt_meta_clr)
+            renderer.pt_dot_sep = Utils.setBitMapColour(context, renderer.pt_dot, renderer.pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
         } catch (e: NullPointerException) {
             PTLog.debug("NPE while setting dot sep color")
         }
@@ -92,34 +84,6 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewCollapsedBackgroundColour(pt_bg: String?) {
-        if (pt_bg.isNotNullAndEmpty()) {
-            remoteView.setInt(
-                R.id.content_view_small,
-                "setBackgroundColor",
-                Utils.getColour(pt_bg, PTConstants.PT_COLOUR_WHITE)
-            )
-        }
-    }
-
-    fun setCustomContentViewTitleColour(pt_title_clr: String?) {
-        if (pt_title_clr.isNotNullAndEmpty()) {
-            remoteView.setTextColor(
-                R.id.title,
-                Utils.getColour(pt_title_clr, PTConstants.PT_COLOUR_BLACK)
-            )
-        }
-    }
-
-    fun setCustomContentViewMessageColour(pt_msg_clr: String?) {
-        if (pt_msg_clr.isNotNullAndEmpty()) {
-            remoteView.setTextColor(
-                R.id.msg,
-                Utils.getColour(pt_msg_clr, PTConstants.PT_COLOUR_BLACK)
-            )
-        }
-    }
-
     fun setCustomContentViewSmallIcon() {
         if (renderer.pt_small_icon != null) {
             Utils.loadImageBitmapIntoRemoteView(R.id.small_icon, renderer.pt_small_icon, remoteView)
@@ -136,13 +100,39 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewExpandedBackgroundColour(pt_bg: String?) {
-        if (pt_bg.isNotNullAndEmpty()) {
-            remoteView.setInt(
-                R.id.content_view_big,
-                "setBackgroundColor",
-                Utils.getColour(pt_bg, PTConstants.PT_COLOUR_WHITE)
-            )
+    fun setCustomBackgroundColour(pt_bg: String?, resId: Int) {
+        pt_bg?.takeIf { it.isNotEmpty() }?.let {
+            Utils.getColourOrNull(it)?.let { color ->
+                remoteView.setInt(
+                    resId,
+                    "setBackgroundColor",
+                    color
+                )
+            }
+        }
+    }
+
+    fun setCustomTextColour(pt_text_clr: String?, resId: Int) {
+        pt_text_clr?.takeIf { it.isNotEmpty() }?.let {
+            Utils.getColourOrNull(it)?.let { color ->
+                remoteView.setTextColor(
+                    resId,
+                    color
+                )
+            }
+        }
+    }
+
+    fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType) {
+        if (pt_big_img.isNotNullAndEmpty()) {
+            val imageViewId = when (scaleType) {
+                PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+                PTScaleType.CENTER_CROP -> R.id.big_image
+            }
+            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context)
+            if (!Utils.getFallback()) {
+                remoteView.setViewVisibility(imageViewId, View.VISIBLE)
+            }
         }
     }
 }
