@@ -464,11 +464,14 @@ internal class NetworkManager(
                     if (response.isSuccess()) {
                         logger.verbose(config.accountId, "Received success from handshake :)")
 
-                        if (processMuteAndDomainChanges(context, response)) {
-                            logger.verbose(config.accountId, "We are not muted")
-                            // We have a new domain, run the callback
-                            handshakeSuccessCallback.run()
+                        if (shouldMuteSdk(response, context)) {
+                            return
                         }
+
+                        saveDomainChanges(context, response)
+                        logger.verbose(config.accountId, "We are not muted")
+                        // We have a new domain, run the callback
+                        handshakeSuccessCallback.run()
                     } else {
                         logger.verbose(
                             config.accountId,
@@ -487,21 +490,12 @@ internal class NetworkManager(
      * @return True to continue sending requests, false otherwise.
      */
     @WorkerThread
-    private fun processMuteAndDomainChanges(context: Context, response: Response): Boolean {
-        response.getHeaderValue(CtApi.HEADER_MUTE)?.trim()?.takeIf { it.isNotEmpty() }?.let { muteCommand ->
-            // muteCommand is guaranteed to be non-null and non-empty here
-            if (muteCommand == "true") {
-                setMuted(context, true)
-                return false
-            } else {
-                setMuted(context, false)
-            }
-        }
+    private fun saveDomainChanges(context: Context, response: Response) {
 
         val domainName = response.getHeaderValue(CtApi.HEADER_DOMAIN_NAME)
         Logger.v("Getting domain from header - $domainName")
         if (domainName.isNullOrBlank()) {
-            return true
+            return
         }
 
         val spikyDomainName = response.getHeaderValue(CtApi.SPIKY_HEADER_DOMAIN_NAME)
@@ -515,7 +509,23 @@ internal class NetworkManager(
         } else {
             setSpikyDomain(context, spikyDomainName)
         }
-        return true
+    }
+
+    private fun shouldMuteSdk(
+        response: Response,
+        context: Context
+    ): Boolean {
+        response.getHeaderValue(CtApi.HEADER_MUTE)?.trim()?.takeIf { it.isNotEmpty() }
+            ?.let { muteCommand ->
+                // muteCommand is guaranteed to be non-null and non-empty here
+                if (muteCommand == "true") {
+                    setMuted(context, true)
+                    return true
+                } else {
+                    setMuted(context, false)
+                }
+            }
+        return false
     }
 
     /**
@@ -788,10 +798,11 @@ internal class NetworkManager(
             return false
         }
 
-        if (!processMuteAndDomainChanges(context, response)) {
+        if (shouldMuteSdk(response, context)) {
             return false
         }
 
+        saveDomainChanges(context, response)
         notifyNetworkHeaderListeners()
 
         logger.debug(config.accountId, "Queue sent successfully")
