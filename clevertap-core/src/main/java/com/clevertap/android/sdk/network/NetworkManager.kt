@@ -651,16 +651,22 @@ internal class NetworkManager(
 
     @WorkerThread
     private fun callApiForEventGroup(eventGroup: EventGroup, body: SendQueueRequestBody): Response {
-        return if (eventGroup == EventGroup.VARIABLES) {
-            ctApiWrapper.ctApi.defineVars(body)
-        } else {
-            sendQueueApi(eventGroup, body)
+        return when (eventGroup) {
+            EventGroup.VARIABLES -> {
+                ctApiWrapper.ctApi.defineVars(body)
+            }
+            EventGroup.REGULAR -> {
+                sendQueueApi(eventGroup, body)
+            }
+            EventGroup.PUSH_NOTIFICATION_VIEWED -> {
+                sendImpressionsApi(eventGroup, body)
+            }
         }
     }
 
     private fun sendQueueApi(eventGroup: EventGroup, body: SendQueueRequestBody): Response {
         val response: Response
-        if (eventGroup == EventGroup.REGULAR && config.isEncryptionInTransitEnabled && coreMetaData.isRelaxNetwork.not()) {
+        if (config.isEncryptionInTransitEnabled && coreMetaData.isRelaxNetwork.not()) {
             val encryptionResult = encryptionManager.encryptResponse(body.toString())
             val sessionEncryptionKey = encryptionManager.sessionEncryptionKey()
 
@@ -691,6 +697,15 @@ internal class NetworkManager(
                 isEncrypted = false
             )
         }
+        return response
+    }
+
+    private fun sendImpressionsApi(eventGroup: EventGroup, body: SendQueueRequestBody): Response {
+        val response: Response = ctApiWrapper.ctApi.sendQueue(
+                isViewedEvent = eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+                body = body.toString(),
+                isEncrypted = false
+            )
         return response
     }
 
