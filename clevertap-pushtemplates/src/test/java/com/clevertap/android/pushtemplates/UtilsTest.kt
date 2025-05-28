@@ -16,6 +16,8 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import io.mockk.*
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -2901,6 +2903,486 @@ class UtilsTest {
     }
 
     // Tests for getTimerThreshold method end
+
+    // Tests for fromJson method
+
+    @Test
+    fun `fromJson should return empty bundle when JSONObject is empty`() {
+        // Given
+        val jsonObject = JSONObject()
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertNotNull(result)
+        assertTrue(result.keySet().isEmpty())
+    }
+
+    @Test
+    fun `fromJson should convert string values to bundle strings`() {
+        // Given
+        val jsonString = """
+            {
+                "title": "Test Title",
+                "message": "Test Message",
+                "id": "123"
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(3, result.keySet().size)
+        assertEquals("Test Title", result.getString("title"))
+        assertEquals("Test Message", result.getString("message"))
+        assertEquals("123", result.getString("id"))
+    }
+
+    @Test
+    fun `fromJson should convert non-empty JSONArray to string array`() {
+        // Given
+        val jsonString = """
+            {
+                "images": ["image1.jpg", "image2.jpg", "image3.jpg"],
+                "tags": ["tag1", "tag2"]
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(2, result.keySet().size)
+        
+        val images = result.getStringArray("images")
+        assertNotNull(images)
+        assertEquals(3, images!!.size)
+        assertEquals("image1.jpg", images[0])
+        assertEquals("image2.jpg", images[1])
+        assertEquals("image3.jpg", images[2])
+        
+        val tags = result.getStringArray("tags")
+        assertNotNull(tags)
+        assertEquals(2, tags!!.size)
+        assertEquals("tag1", tags[0])
+        assertEquals("tag2", tags[1])
+    }
+
+    @Test
+    fun `fromJson should convert empty JSONArray to empty string array`() {
+        // Given
+        val jsonString = """
+            {
+                "empty_array": [],
+                "another_empty": []
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(2, result.keySet().size)
+        
+        val emptyArray1 = result.getStringArray("empty_array")
+        assertNotNull(emptyArray1)
+        assertEquals(0, emptyArray1!!.size)
+        
+        val emptyArray2 = result.getStringArray("another_empty")
+        assertNotNull(emptyArray2)
+        assertEquals(0, emptyArray2!!.size)
+    }
+
+    @Test
+    fun `fromJson should handle mixed string and array values`() {
+        // Given
+        val jsonString = """
+            {
+                "title": "Test Title",
+                "images": ["img1.jpg", "img2.jpg"],
+                "description": "Test Description",
+                "tags": ["tag1"],
+                "id": "456"
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(5, result.keySet().size)
+        
+        assertEquals("Test Title", result.getString("title"))
+        assertEquals("Test Description", result.getString("description"))
+        assertEquals("456", result.getString("id"))
+        
+        val images = result.getStringArray("images")
+        assertNotNull(images)
+        assertEquals(2, images!!.size)
+        assertEquals("img1.jpg", images[0])
+        assertEquals("img2.jpg", images[1])
+        
+        val tags = result.getStringArray("tags")
+        assertNotNull(tags)
+        assertEquals(1, tags!!.size)
+        assertEquals("tag1", tags[0])
+    }
+
+    @Test
+    fun `fromJson should handle JSONArray with null elements`() {
+        // Given
+        val jsonObject = JSONObject()
+        val jsonArray = JSONArray()
+        jsonArray.put("item1")
+        jsonArray.put(JSONObject.NULL)
+        jsonArray.put("item3")
+        jsonObject.put("mixed_array", jsonArray)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(1, result.keySet().size)
+        
+        val mixedArray = result.getStringArray("mixed_array")
+        assertNotNull(mixedArray)
+        assertEquals(3, mixedArray!!.size)
+        assertEquals("item1", mixedArray[0])
+        assertEquals("null", mixedArray[1]) // JSONObject.NULL.toString() returns "null"
+        assertEquals("item3", mixedArray[2])
+    }
+
+    @Test
+    fun `fromJson should handle single element JSONArray`() {
+        // Given
+        val jsonString = """
+            {
+                "single_item": ["only_item"]
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(1, result.keySet().size)
+        
+        val singleArray = result.getStringArray("single_item")
+        assertNotNull(singleArray)
+        assertEquals(1, singleArray!!.size)
+        assertEquals("only_item", singleArray[0])
+    }
+
+    @Test
+    fun `fromJson should handle empty string values`() {
+        // Given
+        val jsonString = """
+            {
+                "empty_string": "",
+                "normal_string": "content"
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(2, result.keySet().size)
+        assertEquals("", result.getString("empty_string"))
+        assertEquals("content", result.getString("normal_string"))
+    }
+
+    @Test
+    fun `fromJson should handle numeric values as strings`() {
+        // Given
+        val jsonString = """
+            {
+                "number": 123,
+                "float": 45.67,
+                "boolean": true
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(3, result.keySet().size)
+        assertEquals("123", result.getString("number"))
+        assertEquals("45.67", result.getString("float"))
+        assertEquals("true", result.getString("boolean"))
+    }
+
+    @Test
+    fun `fromJson should handle JSONArray with numeric values`() {
+        // Given
+        val jsonString = """
+            {
+                "numbers": [1, 2, 3],
+                "mixed_types": ["text", 123, true, 45.67]
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(2, result.keySet().size)
+        
+        val numbers = result.getStringArray("numbers")
+        assertNotNull(numbers)
+        assertEquals(3, numbers!!.size)
+        assertEquals("1", numbers[0])
+        assertEquals("2", numbers[1])
+        assertEquals("3", numbers[2])
+        
+        val mixedTypes = result.getStringArray("mixed_types")
+        assertNotNull(mixedTypes)
+        assertEquals(4, mixedTypes!!.size)
+        assertEquals("text", mixedTypes[0])
+        assertEquals("123", mixedTypes[1])
+        assertEquals("true", mixedTypes[2])
+        assertEquals("45.67", mixedTypes[3])
+    }
+
+    @Test
+    fun `fromJson should handle special characters in strings`() {
+        // Given
+        val jsonString = """
+            {
+                "special_chars": "Hello\nWorld\t!",
+                "unicode": "café\u00A9",
+                "symbols": "@#$%^&*()"
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(3, result.keySet().size)
+        assertEquals("Hello\nWorld\t!", result.getString("special_chars"))
+        assertEquals("café©", result.getString("unicode"))
+        assertEquals("@#$%^&*()", result.getString("symbols"))
+    }
+
+    @Test
+    fun `fromJson should handle nested JSONObject as string`() {
+        // Given
+        val jsonString = """
+            {
+                "nested": {"inner": "value"},
+                "normal": "string"
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(2, result.keySet().size)
+        assertEquals("string", result.getString("normal"))
+        // Nested object should be converted to its string representation
+        val nestedString = result.getString("nested")
+        assertTrue(nestedString!!.contains("inner"))
+        assertTrue(nestedString.contains("value"))
+    }
+
+    @Test
+    fun `fromJson should handle large JSONArray`() {
+        // Given
+        val jsonObject = JSONObject()
+        val largeArray = JSONArray()
+        for (i in 0 until 100) {
+            largeArray.put("item_$i")
+        }
+        jsonObject.put("large_array", largeArray)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(1, result.keySet().size)
+        
+        val resultArray = result.getStringArray("large_array")
+        assertNotNull(resultArray)
+        assertEquals(100, resultArray!!.size)
+        assertEquals("item_0", resultArray[0])
+        assertEquals("item_50", resultArray[50])
+        assertEquals("item_99", resultArray[99])
+    }
+
+    @Test
+    fun `fromJson should handle keys with special characters`() {
+        // Given
+        val jsonString = """
+            {
+                "key-with-dashes": "value1",
+                "key_with_underscores": "value2",
+                "key.with.dots": "value3",
+                "key with spaces": "value4"
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(4, result.keySet().size)
+        assertEquals("value1", result.getString("key-with-dashes"))
+        assertEquals("value2", result.getString("key_with_underscores"))
+        assertEquals("value3", result.getString("key.with.dots"))
+        assertEquals("value4", result.getString("key with spaces"))
+    }
+
+    @Test
+    fun `fromJson should handle JSONArray with empty strings`() {
+        // Given
+        val jsonString = """
+            {
+                "array_with_empty": ["", "content", "", "more_content"]
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(1, result.keySet().size)
+        
+        val arrayWithEmpty = result.getStringArray("array_with_empty")
+        assertNotNull(arrayWithEmpty)
+        assertEquals(4, arrayWithEmpty!!.size)
+        assertEquals("", arrayWithEmpty[0])
+        assertEquals("content", arrayWithEmpty[1])
+        assertEquals("", arrayWithEmpty[2])
+        assertEquals("more_content", arrayWithEmpty[3])
+    }
+
+    @Test
+    fun `fromJson should handle very long strings`() {
+        // Given
+        val longString = "a".repeat(10000)
+        val jsonString = """
+            {
+                "long_string": "$longString"
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(1, result.keySet().size)
+        assertEquals(longString, result.getString("long_string"))
+        assertEquals(10000, result.getString("long_string")?.length)
+    }
+
+    @Test
+    fun `fromJson should preserve order independence`() {
+        // Given
+        val jsonString1 = """
+            {
+                "a": "value_a",
+                "b": ["item1", "item2"],
+                "c": "value_c"
+            }
+        """.trimIndent()
+        val jsonString2 = """
+            {
+                "c": "value_c",
+                "a": "value_a",
+                "b": ["item1", "item2"]
+            }
+        """.trimIndent()
+
+        // When
+        val result1 = Utils.fromJson(JSONObject(jsonString1))
+        val result2 = Utils.fromJson(JSONObject(jsonString2))
+
+        // Then
+        assertEquals(3, result1.keySet().size)
+        assertEquals(3, result2.keySet().size)
+        
+        assertEquals(result1.getString("a"), result2.getString("a"))
+        assertEquals(result1.getString("c"), result2.getString("c"))
+        
+        val array1 = result1.getStringArray("b")
+        val array2 = result2.getStringArray("b")
+        assertNotNull(array1)
+        assertNotNull(array2)
+        assertEquals(array1!!.size, array2!!.size)
+        for (i in array1.indices) {
+            assertEquals(array1[i], array2[i])
+        }
+    }
+
+    @Test
+    fun `fromJson should handle real-world notification payload`() {
+        // Given
+        val jsonString = """
+            {
+                "pt_id": "campaign_123",
+                "pt_title": "Special Offer",
+                "pt_msg": "Don't miss out on this deal!",
+                "pt_img": ["image1.jpg", "image2.jpg"],
+                "pt_cta": ["Buy Now", "Learn More"],
+                "pt_deeplink": ["myapp://buy", "myapp://info"],
+                "pt_timer_end": "1640995200",
+                "pt_bg": "#FF0000"
+            }
+        """.trimIndent()
+        val jsonObject = JSONObject(jsonString)
+
+        // When
+        val result = Utils.fromJson(jsonObject)
+
+        // Then
+        assertEquals(8, result.keySet().size)
+        
+        // String values
+        assertEquals("campaign_123", result.getString("pt_id"))
+        assertEquals("Special Offer", result.getString("pt_title"))
+        assertEquals("Don't miss out on this deal!", result.getString("pt_msg"))
+        assertEquals("1640995200", result.getString("pt_timer_end"))
+        assertEquals("#FF0000", result.getString("pt_bg"))
+        
+        // Array values
+        val images = result.getStringArray("pt_img")
+        assertNotNull(images)
+        assertEquals(2, images!!.size)
+        assertEquals("image1.jpg", images[0])
+        assertEquals("image2.jpg", images[1])
+        
+        val ctas = result.getStringArray("pt_cta")
+        assertNotNull(ctas)
+        assertEquals(2, ctas!!.size)
+        assertEquals("Buy Now", ctas[0])
+        assertEquals("Learn More", ctas[1])
+        
+        val deeplinks = result.getStringArray("pt_deeplink")
+        assertNotNull(deeplinks)
+        assertEquals(2, deeplinks!!.size)
+        assertEquals("myapp://buy", deeplinks[0])
+        assertEquals("myapp://info", deeplinks[1])
+    }
+
+    // Tests for fromJson method end
 
     // Tests for getCTAListFromExtras method
 
