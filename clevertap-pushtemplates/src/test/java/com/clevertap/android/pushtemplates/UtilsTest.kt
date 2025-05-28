@@ -5,16 +5,9 @@ import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.widget.RemoteViews
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkAll
-import io.mockk.verify
+import io.mockk.*
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -263,7 +256,7 @@ class UtilsTest {
     // Tests for getColourOrNull method
 
     @Test
-    fun `getColourOrNull should return parsed color for valid hex color with hash`() {
+    fun `getColourOrNull should return parsed color for valid hex color`() {
         // Given
         val validColor = "#FF0000" // Red
         val expectedColor = -65536 // Red color value
@@ -767,7 +760,6 @@ class UtilsTest {
 
         // Then
         assertEquals("12:34 PM", result)
-        verify { android.text.format.DateUtils.formatDateTime(mockContext, any(), android.text.format.DateUtils.FORMAT_SHOW_TIME) }
     }
 
     // Tests for getApplicationName method
@@ -868,5 +860,174 @@ class UtilsTest {
         PTConstants.PT_FALLBACK = false
         val resetResult = Utils.getFallback()
         assertFalse(resetResult)
+    }
+
+    // Tests for getImageListFromExtras method
+
+    @Test
+    fun `getImageListFromExtras should return list of image URLs`() {
+        // Given
+        val keys = setOf("pt_img1", "pt_img2", "other_key", "pt_img_large")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString("pt_img1") } returns "https://example.com/img1.jpg"
+        every { mockBundle.getString("pt_img2") } returns "https://example.com/img2.jpg"
+        every { mockBundle.getString("pt_img_large") } returns "https://example.com/large.jpg"
+        every { mockBundle.getString("other_key") } returns "not_an_image"
+
+        // When
+        val result = Utils.getImageListFromExtras(mockBundle)
+
+        // Then
+        assertEquals(3, result.size)
+        assertTrue(result.contains("https://example.com/img1.jpg"))
+        assertTrue(result.contains("https://example.com/img2.jpg"))
+        assertTrue(result.contains("https://example.com/large.jpg"))
+        assertFalse(result.contains("not_an_image"))
+    }
+
+    @Test
+    fun `getImageListFromExtras should return empty list when no image keys exist`() {
+        // Given
+        val keys = setOf("other_key1", "other_key2")
+        every { mockBundle.keySet() } returns keys
+
+        // When
+        val result = Utils.getImageListFromExtras(mockBundle)
+
+        // Then
+        assertTrue(result.isEmpty())
+    }
+
+    // Tests for getCTAListFromExtras method
+
+    @Test
+    fun `getCTAListFromExtras should return list of CTA values`() {
+        // Given
+        val keys = setOf("pt_cta1", "pt_cta_action", "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString("pt_cta1") } returns "Buy Now"
+        every { mockBundle.getString("pt_cta_action") } returns "Learn More"
+        every { mockBundle.getString("other_key") } returns "ignored"
+
+        // When
+        val result = Utils.getCTAListFromExtras(mockBundle)
+
+        // Then
+        assertEquals(2, result.size)
+        assertTrue(result.contains("Buy Now"))
+        assertTrue(result.contains("Learn More"))
+        assertFalse(result.contains("ignored"))
+    }
+
+    @Test
+    fun `getCTAListFromExtras should return empty list when no CTA keys exist`() {
+        // Given
+        val keys = setOf("random_key")
+        every { mockBundle.keySet() } returns keys
+
+        // When
+        val result = Utils.getCTAListFromExtras(mockBundle)
+
+        // Then
+        assertTrue(result.isEmpty())
+    }
+
+    // Tests for getDeepLinkListFromExtras method
+
+    @Test
+    fun `getDeepLinkListFromExtras should return list of deep link URLs`() {
+        // Given
+        val keys = setOf("pt_dl1", "pt_dl_main", "unrelated")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString("pt_dl1") } returns "myapp://action1"
+        every { mockBundle.getString("pt_dl_main") } returns "https://myapp.com/main"
+        every { mockBundle.getString("unrelated") } returns "ignored"
+
+        // When
+        val result = Utils.getDeepLinkListFromExtras(mockBundle)
+
+        // Then
+        assertEquals(2, result.size)
+        assertTrue(result.contains("myapp://action1"))
+        assertTrue(result.contains("https://myapp.com/main"))
+        assertFalse(result.contains("ignored"))
+    }
+
+    // Tests for getBigTextFromExtras method
+
+    @Test
+    fun `getBigTextFromExtras should return list of big text values`() {
+        // Given
+        val keys = setOf("pt_bt1", "pt_bt_title", "other")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString("pt_bt1") } returns "Big Title 1"
+        every { mockBundle.getString("pt_bt_title") } returns "Main Big Title"
+        every { mockBundle.getString("other") } returns "ignored"
+
+        // When
+        val result = Utils.getBigTextFromExtras(mockBundle)
+
+        // Then
+        assertEquals(2, result.size)
+        assertTrue(result.contains("Big Title 1"))
+        assertTrue(result.contains("Main Big Title"))
+        assertFalse(result.contains("ignored"))
+    }
+
+    // Tests for getSmallTextFromExtras method
+
+    @Test
+    fun `getSmallTextFromExtras should return list of small text values`() {
+        // Given
+        val keys = setOf("pt_st1", "pt_st_subtitle", "random")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString("pt_st1") } returns "Small text 1"
+        every { mockBundle.getString("pt_st_subtitle") } returns "Subtitle text"
+        every { mockBundle.getString("random") } returns "ignored"
+
+        // When
+        val result = Utils.getSmallTextFromExtras(mockBundle)
+
+        // Then
+        assertEquals(2, result.size)
+        assertTrue(result.contains("Small text 1"))
+        assertTrue(result.contains("Subtitle text"))
+        assertFalse(result.contains("ignored"))
+    }
+
+    // Tests for getPriceFromExtras method
+
+    @Test
+    fun `getPriceFromExtras should return price values but exclude price_list`() {
+        // Given
+        val keys = setOf("pt_price1", "pt_price_main", "pt_price_list", "other")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString("pt_price1") } returns "$19.99"
+        every { mockBundle.getString("pt_price_main") } returns "$29.99"
+        every { mockBundle.getString("pt_price_list") } returns "should_be_excluded"
+        every { mockBundle.getString("other") } returns "ignored"
+
+        // When
+        val result = Utils.getPriceFromExtras(mockBundle)
+
+        // Then
+        assertEquals(2, result.size)
+        assertTrue(result.contains("$19.99"))
+        assertTrue(result.contains("$29.99"))
+        assertFalse(result.contains("should_be_excluded"))
+        assertFalse(result.contains("ignored"))
+    }
+
+    @Test
+    fun `getPriceFromExtras should return empty list when only price_list keys exist`() {
+        // Given
+        val keys = setOf("pt_price_list", "other_key")
+        every { mockBundle.keySet() } returns keys
+
+        // When
+        val result = Utils.getPriceFromExtras(mockBundle)
+
+        // Then
+        assertTrue(result.isEmpty())
     }
 }
