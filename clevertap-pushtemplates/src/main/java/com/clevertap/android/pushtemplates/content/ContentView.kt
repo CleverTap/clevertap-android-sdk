@@ -47,13 +47,9 @@ internal open class ContentView(
 
     private fun setDotSep() {
         try {
-            renderer.pt_dot = context.resources.getIdentifier(
-                PTConstants.PT_DOT_SEP,
-                "drawable",
-                context.packageName
-            )
-            renderer.pt_dot_sep = Utils.setBitMapColour(context, renderer.pt_dot, renderer.pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
-        } catch (e: NullPointerException) {
+            renderer.pt_dot = R.drawable.pt_dot_sep
+            Utils.setBitMapColour(context, renderer.pt_dot, renderer.pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
+        } catch (_: NullPointerException) {
             PTLog.debug("NPE while setting dot sep color")
         }
     }

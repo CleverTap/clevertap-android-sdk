@@ -73,7 +73,6 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     internal var pt_product_display_action_text_clr: String? = null
     internal var pt_small_icon_clr: String? = null
     internal var pt_small_icon: Bitmap? = null
-    internal var pt_dot_sep: Bitmap? = null
     private var pt_cancel_notif_id: String? = null
     private var pt_cancel_notif_ids: ArrayList<Int>? = null
     var actions: JSONArray? = null
