@@ -5,6 +5,9 @@ import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.widget.RemoteViews
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
 import io.mockk.*
 import org.junit.After
 import org.junit.Assert.*
@@ -1012,6 +1015,181 @@ class UtilsTest {
 
         // Then
         assertEquals(negativeIconId, result)
+    }
+
+    // Tests for raiseNotificationClicked method
+
+    @Test
+    fun `raiseNotificationClicked should use instanceWithConfig when config is provided`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+        every { mockInstance.pushNotificationClickedEvent(mockBundle) } just Runs
+
+        // When
+        Utils.raiseNotificationClicked(mockContext, mockBundle, mockConfig)
+
+        // Then
+        verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+        verify { mockInstance.pushNotificationClickedEvent(mockBundle) }
+        verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+    }
+
+    @Test
+    fun `raiseNotificationClicked should use getDefaultInstance when config is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+        every { mockInstance.pushNotificationClickedEvent(mockBundle) } just Runs
+
+        // When
+        Utils.raiseNotificationClicked(mockContext, mockBundle, null)
+
+        // Then
+        verify { CleverTapAPI.getDefaultInstance(mockContext) }
+        verify { mockInstance.pushNotificationClickedEvent(mockBundle) }
+        verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+    }
+
+    @Test
+    fun `raiseNotificationClicked should not call pushNotificationClickedEvent when instance is null with config`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
+
+        // When
+        Utils.raiseNotificationClicked(mockContext, mockBundle, mockConfig)
+
+        // Then
+        verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+        // No verification for pushNotificationClickedEvent as instance is null
+    }
+
+    @Test
+    fun `raiseNotificationClicked should not call pushNotificationClickedEvent when instance is null without config`() {
+        // Given
+        val mockContext = mockk<Context>()
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getDefaultInstance(mockContext) } returns null
+
+        // When
+        Utils.raiseNotificationClicked(mockContext, mockBundle, null)
+
+        // Then
+        verify { CleverTapAPI.getDefaultInstance(mockContext) }
+        // No verification for pushNotificationClickedEvent as instance is null
+    }
+
+    // Tests for getActionKeys method
+
+    @Test
+    fun `getActionKeys should return JSONArray when valid JSON string exists`() {
+        // Given
+        val jsonString = "[{\"id\":\"1\",\"label\":\"Action 1\"},{\"id\":\"2\",\"label\":\"Action 2\"}]"
+        every { mockBundle.getString(Constants.WZRK_ACTIONS) } returns jsonString
+
+        // When
+        val result = Utils.getActionKeys(mockBundle)
+
+        // Then
+        assertNotNull(result)
+        assertEquals(2, result!!.length())
+        assertEquals("1", result.getJSONObject(0).getString("id"))
+        assertEquals("Action 1", result.getJSONObject(0).getString("label"))
+        assertEquals("2", result.getJSONObject(1).getString("id"))
+        assertEquals("Action 2", result.getJSONObject(1).getString("label"))
+    }
+
+    @Test
+    fun `getActionKeys should return empty JSONArray when empty array string provided`() {
+        // Given
+        val emptyArrayString = "[]"
+        every { mockBundle.getString(Constants.WZRK_ACTIONS) } returns emptyArrayString
+
+        // When
+        val result = Utils.getActionKeys(mockBundle)
+
+        // Then
+        assertNotNull(result)
+        assertEquals(0, result!!.length())
+    }
+
+    @Test
+    fun `getActionKeys should return null when WZRK_ACTIONS key has null value`() {
+        // Given
+        every { mockBundle.getString(Constants.WZRK_ACTIONS) } returns null
+
+        // When
+        val result = Utils.getActionKeys(mockBundle)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getActionKeys should return null when invalid JSON string provided`() {
+        // Given
+        val invalidJsonString = "invalid json string"
+        every { mockBundle.getString(Constants.WZRK_ACTIONS) } returns invalidJsonString
+
+        // When
+        val result = Utils.getActionKeys(mockBundle)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getActionKeys should return null when malformed JSON array provided`() {
+        // Given
+        val malformedJsonString = "[{\"id\":\"1\",\"label\":\"Action 1\"},{\"id\":\"2\",\"label\":\"Action 2\"]"
+        every { mockBundle.getString(Constants.WZRK_ACTIONS) } returns malformedJsonString
+
+        // When
+        val result = Utils.getActionKeys(mockBundle)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getActionKeys should return JSONArray with single item when single action provided`() {
+        // Given
+        val singleActionString = "[{\"id\":\"1\",\"label\":\"Single Action\"}]"
+        every { mockBundle.getString(Constants.WZRK_ACTIONS) } returns singleActionString
+
+        // When
+        val result = Utils.getActionKeys(mockBundle)
+
+        // Then
+        assertNotNull(result)
+        assertEquals(1, result!!.length())
+        assertEquals("1", result.getJSONObject(0).getString("id"))
+        assertEquals("Single Action", result.getJSONObject(0).getString("label"))
+    }
+
+    @Test
+    fun `getActionKeys should handle JSON with different structure`() {
+        // Given
+        val differentStructureString = "[\"action1\",\"action2\",\"action3\"]"
+        every { mockBundle.getString(Constants.WZRK_ACTIONS) } returns differentStructureString
+
+        // When
+        val result = Utils.getActionKeys(mockBundle)
+
+        // Then
+        assertNotNull(result)
+        assertEquals(3, result!!.length())
+        assertEquals("action1", result.getString(0))
+        assertEquals("action2", result.getString(1))
+        assertEquals("action3", result.getString(2))
     }
 
     // Tests for convertRatingBundleObjectToHashMap method
