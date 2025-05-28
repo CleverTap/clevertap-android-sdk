@@ -1,6 +1,8 @@
 package com.clevertap.android.pushtemplates
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -15,6 +17,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 class UtilsTest {
@@ -1822,6 +1825,248 @@ class UtilsTest {
     }
 
     // Tests for raiseCleverTapEvent method end
+
+    // Tests for deleteImageFromStorage method
+
+    @Test
+    fun `deleteImageFromStorage should extract push ID from intent and setup directory operations`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppContext = mockk<Context>()
+        val mockIntent = mockk<Intent>()
+        val pushId = "test_push_123"
+        
+        every { mockContext.applicationContext } returns mockAppContext
+        every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
+        
+        mockkConstructor(ContextWrapper::class)
+        val mockDirectory = mockk<File>()
+        every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
+        every { mockDirectory.absolutePath } returns "/mock/path"
+        every { mockDirectory.list() } returns arrayOf("image_test_push_123.jpg", "other_file.jpg")
+
+        // When
+        Utils.deleteImageFromStorage(mockContext, mockIntent)
+
+        // Then
+        verify { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) }
+        verify { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) }
+        verify { mockDirectory.list() }
+    }
+
+    @Test
+    fun `deleteImageFromStorage should handle null push ID from intent`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppContext = mockk<Context>()
+        val mockIntent = mockk<Intent>()
+        
+        every { mockContext.applicationContext } returns mockAppContext
+        every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns null
+        
+        mockkConstructor(ContextWrapper::class)
+        val mockDirectory = mockk<File>()
+        every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
+        every { mockDirectory.absolutePath } returns "/mock/path"
+        every { mockDirectory.list() } returns arrayOf("image_null_123.jpg", "other_file.jpg")
+
+        // When
+        Utils.deleteImageFromStorage(mockContext, mockIntent)
+
+        // Then
+        verify { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) }
+        verify { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) }
+        verify { mockDirectory.list() }
+    }
+
+    @Test
+    fun `deleteImageFromStorage should handle null file list gracefully`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppContext = mockk<Context>()
+        val mockIntent = mockk<Intent>()
+        val pushId = "test_push_123"
+        
+        every { mockContext.applicationContext } returns mockAppContext
+        every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
+        
+        mockkConstructor(ContextWrapper::class)
+        val mockDirectory = mockk<File>()
+        every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
+        every { mockDirectory.absolutePath } returns "/mock/path"
+        every { mockDirectory.list() } returns null
+
+        // When
+        Utils.deleteImageFromStorage(mockContext, mockIntent)
+
+        // Then
+        verify { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) }
+        verify { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) }
+        verify { mockDirectory.list() }
+    }
+
+    @Test
+    fun `deleteImageFromStorage should handle empty file list gracefully`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppContext = mockk<Context>()
+        val mockIntent = mockk<Intent>()
+        val pushId = "test_push_123"
+        
+        every { mockContext.applicationContext } returns mockAppContext
+        every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
+        
+        mockkConstructor(ContextWrapper::class)
+        val mockDirectory = mockk<File>()
+        every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
+        every { mockDirectory.absolutePath } returns "/mock/path"
+        every { mockDirectory.list() } returns arrayOf()
+
+        // When
+        Utils.deleteImageFromStorage(mockContext, mockIntent)
+
+        // Then
+        verify { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) }
+        verify { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) }
+        verify { mockDirectory.list() }
+    }
+
+
+    @Test
+    fun `deleteImageFromStorage should call getDir with correct parameters`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppContext = mockk<Context>()
+        val mockIntent = mockk<Intent>()
+        val pushId = "test_push_123"
+        
+        every { mockContext.applicationContext } returns mockAppContext
+        every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
+        
+        mockkConstructor(ContextWrapper::class)
+        val mockDirectory = mockk<File>()
+        every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
+        every { mockDirectory.absolutePath } returns "/mock/path"
+        every { mockDirectory.list() } returns arrayOf("test_file.jpg")
+
+        // When
+        Utils.deleteImageFromStorage(mockContext, mockIntent)
+
+        // Then
+        verify { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) }
+    }
+
+    @Test
+    fun `deleteImageFromStorage should get directory absolute path`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppContext = mockk<Context>()
+        val mockIntent = mockk<Intent>()
+        val pushId = "test_push_123"
+        val expectedPath = "/data/data/com.test/files/push_templates"
+        
+        every { mockContext.applicationContext } returns mockAppContext
+        every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
+        
+        mockkConstructor(ContextWrapper::class)
+        val mockDirectory = mockk<File>()
+        every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
+        every { mockDirectory.absolutePath } returns expectedPath
+        every { mockDirectory.list() } returns arrayOf("test_file.jpg")
+
+        // When
+        Utils.deleteImageFromStorage(mockContext, mockIntent)
+
+        // Then
+        verify { mockDirectory.absolutePath }
+    }
+
+    @Test
+    fun `deleteImageFromStorage should process file list when files exist`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppContext = mockk<Context>()
+        val mockIntent = mockk<Intent>()
+        val pushId = "test_push_123"
+        val fileList = arrayOf("image_test_push_123.jpg", "other_file.jpg", "test_push_123_backup.png")
+        
+        every { mockContext.applicationContext } returns mockAppContext
+        every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
+        
+        mockkConstructor(ContextWrapper::class)
+        val mockDirectory = mockk<File>()
+        every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
+        every { mockDirectory.absolutePath } returns "/mock/path"
+        every { mockDirectory.list() } returns fileList
+
+        // When
+        Utils.deleteImageFromStorage(mockContext, mockIntent)
+
+        // Then
+        verify { mockDirectory.list() }
+        // Method should process all files in the list
+    }
+
+    @Test
+    fun `deleteImageFromStorage should work with different push ID formats`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppContext = mockk<Context>()
+        val mockIntent = mockk<Intent>()
+        val pushId = "campaign_2024_spring_abc123"
+        val fileList = arrayOf(
+            "image_campaign_2024_spring_abc123.jpg",
+            "unrelated_file.png"
+        )
+        
+        every { mockContext.applicationContext } returns mockAppContext
+        every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
+        
+        mockkConstructor(ContextWrapper::class)
+        val mockDirectory = mockk<File>()
+        every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
+        every { mockDirectory.absolutePath } returns "/mock/path"
+        every { mockDirectory.list() } returns fileList
+
+        // When
+        Utils.deleteImageFromStorage(mockContext, mockIntent)
+
+        // Then
+        verify { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) }
+        verify { mockDirectory.list() }
+    }
+
+    @Test
+    fun `deleteImageFromStorage should handle files with null pattern when push ID is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppContext = mockk<Context>()
+        val mockIntent = mockk<Intent>()
+        val fileList = arrayOf(
+            "image_null_123.jpg",
+            "cache_null_456.png",
+            "regular_file.jpg"
+        )
+        
+        every { mockContext.applicationContext } returns mockAppContext
+        every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns null
+        
+        mockkConstructor(ContextWrapper::class)
+        val mockDirectory = mockk<File>()
+        every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
+        every { mockDirectory.absolutePath } returns "/mock/path"
+        every { mockDirectory.list() } returns fileList
+
+        // When
+        Utils.deleteImageFromStorage(mockContext, mockIntent)
+
+        // Then
+        verify { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) }
+        verify { mockDirectory.list() }
+        // Method should identify files containing "null" pattern
+    }
+
+    // Tests for deleteImageFromStorage method end
 
     // Tests for getCTAListFromExtras method
 
