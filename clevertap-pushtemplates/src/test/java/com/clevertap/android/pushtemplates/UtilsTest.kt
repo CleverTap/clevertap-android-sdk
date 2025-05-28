@@ -1,10 +1,13 @@
 package com.clevertap.android.pushtemplates
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.widget.RemoteViews
 import com.clevertap.android.sdk.CleverTapAPI
@@ -17,7 +20,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.io.File
+import kotlin.intArrayOf
 
 @RunWith(RobolectricTestRunner::class)
 class UtilsTest {
@@ -2067,6 +2072,130 @@ class UtilsTest {
     }
 
     // Tests for deleteImageFromStorage method end
+
+    // Tests for isNotificationChannelEnabled method
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `isNotificationChannelEnabled should return false when SDK version is below O`() {
+        // Given
+        val mockChannel = mockk<NotificationChannel>()
+
+        // When
+        val result = Utils.isNotificationChannelEnabled(mockChannel)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `isNotificationChannelEnabled should return false when channel is null`() {
+        // When
+        val result = Utils.isNotificationChannelEnabled(null)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun `isNotificationChannelEnabled should return false when channel importance is NONE`() {
+        // Given
+        val mockChannel = mockk<NotificationChannel>()
+        every { mockChannel.importance } returns NotificationManager.IMPORTANCE_NONE
+
+
+        // When
+        val result = Utils.isNotificationChannelEnabled(mockChannel)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun `isNotificationChannelEnabled should return true when channel importance is not NONE`() {
+        // Given
+        val mockChannel = mockk<NotificationChannel>()
+        every { mockChannel.importance } returns NotificationManager.IMPORTANCE_HIGH
+
+        // When
+        val result = Utils.isNotificationChannelEnabled(mockChannel)
+
+        // Then
+        assertTrue(result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    fun `isNotificationChannelEnabled should return true for various importance levels`() {
+        // Given
+        val mockChannel = mockk<NotificationChannel>()
+
+        val importanceLevels = listOf(
+            NotificationManager.IMPORTANCE_MIN,
+            NotificationManager.IMPORTANCE_LOW,
+            NotificationManager.IMPORTANCE_DEFAULT,
+            NotificationManager.IMPORTANCE_HIGH,
+            NotificationManager.IMPORTANCE_MAX
+        )
+
+        importanceLevels.forEach { importance ->
+            // Given
+            every { mockChannel.importance } returns importance
+
+            // When
+            val result = Utils.isNotificationChannelEnabled(mockChannel)
+
+            // Then
+            assertTrue("Should return true for importance level $importance", result)
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun `isNotificationChannelEnabled should handle SDK version exactly at O`() {
+        // Given
+        val mockChannel = mockk<NotificationChannel>()
+        every { mockChannel.importance } returns NotificationManager.IMPORTANCE_DEFAULT
+
+        // When
+        val result = Utils.isNotificationChannelEnabled(mockChannel)
+
+        // Then
+        assertTrue(result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    fun `isNotificationChannelEnabled should handle SDK version above O`() {
+        // Given
+        val mockChannel = mockk<NotificationChannel>()
+        every { mockChannel.importance } returns NotificationManager.IMPORTANCE_DEFAULT
+
+        // When
+        val result = Utils.isNotificationChannelEnabled(mockChannel)
+
+        // Then
+        assertTrue(result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `isNotificationChannelEnabled should return false when both conditions fail`() {
+        // Given
+        val mockChannel = mockk<NotificationChannel>()
+        every { mockChannel.importance } returns NotificationManager.IMPORTANCE_NONE
+
+        // When
+        val result = Utils.isNotificationChannelEnabled(mockChannel)
+
+        // Then
+        assertFalse(result)
+    }
+
+    // Tests for isNotificationChannelEnabled method end
 
     // Tests for getCTAListFromExtras method
 
