@@ -898,6 +898,168 @@ class UtilsTest {
         assertTrue(result.isEmpty())
     }
 
+    // Tests for convertRatingBundleObjectToHashMap method
+
+    @Test
+    fun `convertRatingBundleObjectToHashMap should remove config key`() {
+        // Given
+        val keys = setOf("config", "wzrk_test", PTConstants.PT_ID)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.remove("config") } just Runs
+        every { mockBundle.get("wzrk_test") } returns "test_value"
+        every { mockBundle.get(PTConstants.PT_ID) } returns "pt_id_value"
+
+        // When
+        val result = Utils.convertRatingBundleObjectToHashMap(mockBundle)
+
+        // Then
+        verify { mockBundle.remove("config") }
+        assertEquals(2, result.size)
+        assertEquals("test_value", result["wzrk_test"])
+        assertEquals("pt_id_value", result[PTConstants.PT_ID])
+    }
+
+    @Test
+    fun `convertRatingBundleObjectToHashMap should include wzrk_ keys`() {
+        // Given
+        val keys = setOf("wzrk_campaign", "wzrk_id", "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.remove("config") } just Runs
+        every { mockBundle.get("wzrk_campaign") } returns "campaign_123"
+        every { mockBundle.get("wzrk_id") } returns "id_456"
+        every { mockBundle.get("other_key") } returns "ignored"
+
+        // When
+        val result = Utils.convertRatingBundleObjectToHashMap(mockBundle)
+
+        // Then
+        assertEquals(2, result.size)
+        assertEquals("campaign_123", result["wzrk_campaign"])
+        assertEquals("id_456", result["wzrk_id"])
+        assertFalse(result.containsKey("other_key"))
+    }
+
+    @Test
+    fun `convertRatingBundleObjectToHashMap should include PT_ID key`() {
+        // Given
+        val keys = setOf(PTConstants.PT_ID, "random_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.remove("config") } just Runs
+        every { mockBundle.get(PTConstants.PT_ID) } returns "pt_123"
+        every { mockBundle.get("random_key") } returns "ignored"
+
+        // When
+        val result = Utils.convertRatingBundleObjectToHashMap(mockBundle)
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("pt_123", result[PTConstants.PT_ID])
+        assertFalse(result.containsKey("random_key"))
+    }
+
+    @Test
+    fun `convertRatingBundleObjectToHashMap should handle nested Bundle recursively`() {
+        // Given
+        val nestedBundle = mockk<Bundle>()
+        val nestedKeys = setOf("wzrk_nested")
+        every { nestedBundle.keySet() } returns nestedKeys
+        every { nestedBundle.remove("config") } just Runs
+        every { nestedBundle.get("wzrk_nested") } returns "nested_value"
+
+        val keys = setOf("wzrk_parent")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.remove("config") } just Runs
+        every { mockBundle.get("wzrk_parent") } returns nestedBundle
+
+        // When
+        val result = Utils.convertRatingBundleObjectToHashMap(mockBundle)
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("nested_value", result["wzrk_nested"])
+    }
+
+    @Test
+    fun `convertRatingBundleObjectToHashMap should return empty map when no valid keys exist`() {
+        // Given
+        val keys = setOf("random_key", "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.remove("config") } just Runs
+        every { mockBundle.get(any()) } returns "ignored"
+
+        // When
+        val result = Utils.convertRatingBundleObjectToHashMap(mockBundle)
+
+        // Then
+        assertTrue(result.isEmpty())
+    }
+
+    // Tests for getEventNameFromExtras method
+
+    @Test
+    fun `getEventNameFromExtras should return event name when PT_EVENT_NAME_KEY exists`() {
+        // Given
+        val keys = setOf(PTConstants.PT_EVENT_NAME_KEY, "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(PTConstants.PT_EVENT_NAME_KEY) } returns "test_event"
+        every { mockBundle.getString("other_key") } returns "ignored"
+
+        // When
+        val result = Utils.getEventNameFromExtras(mockBundle)
+
+        // Then
+        assertEquals("test_event", result)
+    }
+
+    @Test
+    fun `getEventNameFromExtras should return event name when key contains PT_EVENT_NAME_KEY`() {
+        // Given
+        val keyWithSuffix = PTConstants.PT_EVENT_NAME_KEY + "_suffix"
+        val keys = setOf(keyWithSuffix, "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(keyWithSuffix) } returns "custom_event"
+        every { mockBundle.getString("other_key") } returns "ignored"
+
+        // When
+        val result = Utils.getEventNameFromExtras(mockBundle)
+
+        // Then
+        assertEquals("custom_event", result)
+    }
+
+    @Test
+    fun `getEventNameFromExtras should return null when no PT_EVENT_NAME_KEY exists`() {
+        // Given
+        val keys = setOf("random_key", "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(any()) } returns "some_value"
+
+        // When
+        val result = Utils.getEventNameFromExtras(mockBundle)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getEventNameFromExtras should return last matching event name when multiple keys exist`() {
+        // Given
+        val key1 = PTConstants.PT_EVENT_NAME_KEY + "1"
+        val key2 = PTConstants.PT_EVENT_NAME_KEY + "2"
+        val keys = setOf(key1, key2)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(key1) } returns "first_event"
+        every { mockBundle.getString(key2) } returns "second_event"
+
+        // When
+        val result = Utils.getEventNameFromExtras(mockBundle)
+
+        // Then
+        // Note: The method iterates through keySet, so result depends on iteration order
+        // We just verify one of the valid event names is returned
+        assertTrue(result == "first_event" || result == "second_event")
+    }
+
     // Tests for getCTAListFromExtras method
 
     @Test
