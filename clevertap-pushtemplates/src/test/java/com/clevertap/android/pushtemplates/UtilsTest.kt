@@ -1551,6 +1551,278 @@ class UtilsTest {
         assertTrue(result.isEmpty())
     }
 
+    // Tests for raiseCleverTapEvent method
+
+    @Test
+    fun `raiseCleverTapEvent should use instanceWithConfig when config is provided`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String,Any>().apply {
+            put("key1", "value1")
+            put("key2", "value2")
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+        every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, mockConfig, eventName, eventProps)
+
+        // Then
+        verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+        verify { mockInstance.pushEvent(eventName, eventProps) }
+        verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should use getDefaultInstance when config is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>().apply {
+            put("key1", "value1")
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+        every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, null, eventName, eventProps)
+
+        // Then
+        verify { CleverTapAPI.getDefaultInstance(mockContext) }
+        verify { mockInstance.pushEvent(eventName, eventProps) }
+        verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should not call pushEvent when instance is null with config`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>().apply {
+            put("key1", "value1")
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, mockConfig, eventName, eventProps)
+
+        // Then
+        verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+        // No verification for pushEvent as instance is null
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should not call pushEvent when instance is null without config`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>().apply {
+            put("key1", "value1")
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getDefaultInstance(mockContext) } returns null
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, null, eventName, eventProps)
+
+        // Then
+        verify { CleverTapAPI.getDefaultInstance(mockContext) }
+        // No verification for pushEvent as instance is null
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should not call pushEvent when event name is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventProps = hashMapOf<String, Any>().apply {
+            put("key1", "value1")
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+        every { mockInstance.pushEvent(any(), any()) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, mockConfig, null, eventProps)
+
+        // Then
+        verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+        verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should not call pushEvent when event name is empty`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventProps = hashMapOf<String, Any>().apply {
+            put("key1", "value1")
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+        every { mockInstance.pushEvent(any(), any()) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, mockConfig, "", eventProps)
+
+        // Then
+        verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+        verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should call pushEvent with empty properties when eventProps is empty`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>()
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+        every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, mockConfig, eventName, eventProps)
+
+        // Then
+        verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+        verify { mockInstance.pushEvent(eventName, eventProps) }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should handle whitespace in event name correctly`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "  "
+        val eventProps = hashMapOf<String, Any>().apply {
+            put("key1", "value1")
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+        every { mockInstance.pushEvent(any(), any()) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, null, eventName, eventProps)
+
+        // Then
+        verify { CleverTapAPI.getDefaultInstance(mockContext) }
+        // Should call pushEvent because whitespace is not considered empty by isEmpty()
+        verify { mockInstance.pushEvent(eventName, eventProps) }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should work with complex event properties`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "complex_event"
+        val eventProps = hashMapOf<String, Any>().apply {
+            put("string_prop", "test_value")
+            put("number_prop", 123)
+            put("boolean_prop", true)
+            put("nested_object", mapOf("inner_key" to "inner_value"))
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+        every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, null, eventName, eventProps)
+
+        // Then
+        verify { CleverTapAPI.getDefaultInstance(mockContext) }
+        verify { mockInstance.pushEvent(eventName, eventProps) }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should handle null event properties gracefully`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "test_event"
+        val eventProps: HashMap<String, Any>? = null
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+        every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, null, eventName, eventProps)
+
+        // Then
+        verify { CleverTapAPI.getDefaultInstance(mockContext) }
+        verify { mockInstance.pushEvent(eventName, eventProps) }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should verify method call order`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "order_test_event"
+        val eventProps = hashMapOf<String, Any>().apply {
+            put("test_key", "test_value")
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+        every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, mockConfig, eventName, eventProps)
+
+        // Then
+        verifyOrder {
+            CleverTapAPI.instanceWithConfig(mockContext, mockConfig)
+            mockInstance.pushEvent(eventName, eventProps)
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent should handle event name with special characters`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "event_with_@#$%_special_chars"
+        val eventProps = hashMapOf<String, Any>().apply {
+            put("key", "value")
+        }
+        
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+        every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+        // When
+        Utils.raiseCleverTapEvent(mockContext, null, eventName, eventProps)
+
+        // Then
+        verify { mockInstance.pushEvent(eventName, eventProps) }
+    }
+
+    // Tests for raiseCleverTapEvent method end
+
     // Tests for getCTAListFromExtras method
 
     @Test
