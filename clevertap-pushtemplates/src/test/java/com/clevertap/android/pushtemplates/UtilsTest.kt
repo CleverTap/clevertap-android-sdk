@@ -1,6 +1,10 @@
 package com.clevertap.android.pushtemplates
 
+import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.widget.RemoteViews
 import io.mockk.*
 import org.junit.After
 import org.junit.Assert.*
@@ -8,6 +12,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 class UtilsTest {
@@ -602,4 +607,112 @@ class UtilsTest {
 
         // Then - Exception should be thrown
     }
+
+    // Tests for createColorMap method
+
+    @Test
+    fun `createColorMap should return map with light mode colors when isDarkMode is false`() {
+        // Given
+        every { mockBundle.getString(match { it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns null
+        every { mockBundle.getString(match { !it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns "#FFFFFF"
+
+        // When
+        val result = Utils.createColorMap(mockBundle, false)
+
+        // Then
+        for (key in PTConstants.COLOR_KEYS) {
+            assertEquals("#FFFFFF", result[key])
+        }
+    }
+
+    @Test
+    fun `createColorMap should return map with light mode colors when isDarkMode is false and all colours present`() {
+        // Given
+        every { mockBundle.getString(match { it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns "#123456"
+        every { mockBundle.getString(match { !it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns "#FFFFFF"
+
+        // When
+        val result = Utils.createColorMap(mockBundle, false)
+
+        // Then
+        for (key in PTConstants.COLOR_KEYS) {
+            assertEquals("#FFFFFF", result[key])
+        }
+    }
+
+    @Test
+    fun `createColorMap should return map with dark mode colors when isDarkMode is true and dark colors exist`() {
+        // Given
+        every { mockBundle.getString(match { it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns "#123456"
+        every { mockBundle.getString(match { !it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns null
+
+        // When
+        val result = Utils.createColorMap(mockBundle, true)
+
+        // Then
+        for (key in PTConstants.COLOR_KEYS) {
+            assertEquals("#123456", result[key])
+        }
+    }
+
+    @Test
+    fun `createColorMap should return map with dark mode colors when isDarkMode is true and all colors exist`() {
+        // Given
+        every { mockBundle.getString(match { it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns "#123456"
+        every { mockBundle.getString(match { !it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns "#FFFFFF"
+
+        // When
+        val result = Utils.createColorMap(mockBundle, true)
+
+        // Then
+        for (key in PTConstants.COLOR_KEYS) {
+            assertEquals("#123456", result[key])
+        }
+    }
+
+    @Test
+    fun `createColorMap should return null for key when no colours exist`() {
+        // Given
+        every { mockBundle.getString(match { it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns null
+        every { mockBundle.getString(match { !it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns null
+
+        // When
+        val result = Utils.createColorMap(mockBundle, true)
+
+        // Then
+        for (key in PTConstants.COLOR_KEYS) {
+            assertNull(result[key])
+        }
+    }
+
+    @Test
+    fun `createColorMap should return light mode colours when isDarkMode is true and darkMode colours are missing`() {
+        // Given
+        every { mockBundle.getString(match { it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns null
+        every { mockBundle.getString(match { !it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns "#FFFFFF"
+
+        // When
+        val result = Utils.createColorMap(mockBundle, true)
+
+        // Then
+        for (key in PTConstants.COLOR_KEYS) {
+            assertEquals("#FFFFFF", result[key])
+        }
+    }
+
+    @Test
+    fun `createColorMap should return return null for key when isDarkMode is false and lightMode colours are missing`() {
+        // Given
+        every { mockBundle.getString(match { it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns "#FFFFFF"
+        every { mockBundle.getString(match { !it.endsWith(PTConstants.PT_DARK_MODE_SUFFIX) }) } returns null
+
+        // When
+        val result = Utils.createColorMap(mockBundle, false)
+
+        // Then
+        for (key in PTConstants.COLOR_KEYS) {
+            assertNull(result[key])
+        }
+    }
+
 }
