@@ -15,6 +15,8 @@ import android.widget.RemoteViews
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
+import com.clevertap.android.sdk.network.DownloadedBitmap
 import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -3383,6 +3385,397 @@ class UtilsTest {
     }
 
     // Tests for fromJson method end
+
+    // Tests for loadImageURLIntoRemoteView method
+
+    @Test
+    fun `loadImageURLIntoRemoteView should set bitmap when image is successfully downloaded`() {
+        // Given
+        val imageViewID = 123
+        val imageUrl = "https://example.com/image.jpg"
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        val mockBitmap = mockk<Bitmap>()
+        
+        // Mock the HttpBitmapLoader and related components
+        mockkStatic(HttpBitmapLoader::class)
+        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
+        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.SUCCESS
+        every { mockDownloadedBitmap.bitmap } returns mockBitmap
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.verbose(any()) } just Runs
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+
+        // When
+        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+
+        // Then
+        verify { Utils.setFallback(false) }
+        verify { mockRemoteViews.setImageViewBitmap(imageViewID, mockBitmap) }
+        verify { PTLog.verbose(match { it.contains("Fetched IMAGE") && it.contains(imageUrl) }) }
+        verify(exactly = 0) { Utils.setFallback(true) }
+    }
+
+    @Test
+    fun `loadImageURLIntoRemoteView should set fallback when image download fails`() {
+        // Given
+        val imageViewID = 456
+        val imageUrl = "https://example.com/invalid-image.jpg"
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        
+        // Mock the HttpBitmapLoader to return failure
+        mockkStatic(HttpBitmapLoader::class)
+        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
+        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.debug(any()) } just Runs
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+
+        // When
+        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+
+        // Then
+        verify { Utils.setFallback(false) }
+        verify { Utils.setFallback(true) }
+        verify { PTLog.debug(match { it.contains("Image was not perfect") && it.contains(imageUrl) }) }
+        verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
+        verify(exactly = 0) { PTLog.verbose(any()) }
+    }
+
+    @Test
+    fun `loadImageURLIntoRemoteView should handle null image URL gracefully`() {
+        // Given
+        val imageViewID = 789
+        val imageUrl: String? = null
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        
+        // Mock the HttpBitmapLoader to return failure for null URL
+        mockkStatic(HttpBitmapLoader::class)
+        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
+        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.debug(any()) } just Runs
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+
+        // When
+        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+
+        // Then
+        verify { Utils.setFallback(false) }
+        verify { Utils.setFallback(true) }
+        verify { PTLog.debug(match { it.contains("Image was not perfect") && it.contains("null") }) }
+        verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
+    }
+
+    @Test
+    fun `loadImageURLIntoRemoteView should handle empty image URL`() {
+        // Given
+        val imageViewID = 101
+        val imageUrl = ""
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        
+        // Mock the HttpBitmapLoader to return failure for empty URL
+        mockkStatic(HttpBitmapLoader::class)
+        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
+        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.debug(any()) } just Runs
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+
+
+        // When
+        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+
+        // Then
+        verify { Utils.setFallback(false) }
+        verify { Utils.setFallback(true) }
+        verify { PTLog.debug(match { it.contains("Image was not perfect") && it.contains(imageUrl) }) }
+        verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
+    }
+
+
+    @Test
+    fun `loadImageURLIntoRemoteView should handle different image view IDs`() {
+        // Given
+        val imageViewIDs = listOf(1, 100, 999, -1, 0)
+        val imageUrl = "https://example.com/test.jpg"
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        val mockBitmap = mockk<Bitmap>()
+        
+        // Mock the HttpBitmapLoader
+        mockkStatic(HttpBitmapLoader::class)
+        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
+        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.SUCCESS
+        every { mockDownloadedBitmap.bitmap } returns mockBitmap
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.verbose(any()) } just Runs
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+
+        imageViewIDs.forEach { imageViewID ->
+            // When
+            Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+
+            // Then
+            verify { mockRemoteViews.setImageViewBitmap(imageViewID, mockBitmap) }
+        }
+    }
+
+    @Test
+    fun `loadImageURLIntoRemoteView should handle various image URL formats`() {
+        // Given
+        val imageViewID = 303
+        val imageUrls = listOf(
+            "https://example.com/image.jpg",
+            "http://test.com/pic.png",
+            "https://cdn.example.com/assets/image.gif",
+            "https://example.com/image-with-dashes.jpg",
+            "https://example.com/image_with_underscores.png"
+        )
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        val mockBitmap = mockk<Bitmap>()
+        
+        // Mock the HttpBitmapLoader
+        mockkStatic(HttpBitmapLoader::class)
+        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
+        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.SUCCESS
+        every { mockDownloadedBitmap.bitmap } returns mockBitmap
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.verbose(any()) } just Runs
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+
+        imageUrls.forEach { imageUrl ->
+            // When
+            Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+
+            // Then
+            verify { mockRemoteViews.setImageViewBitmap(imageViewID, mockBitmap) }
+            verify { PTLog.verbose(match { it.contains(imageUrl) }) }
+        }
+    }
+
+    @Test
+    fun `loadImageURLIntoRemoteView should call setFallback false at start regardless of outcome`() {
+        // Given
+        val imageViewID = 404
+        val imageUrl = "https://example.com/image.jpg"
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.verbose(any()) } just Runs
+        every { PTLog.debug(any()) } just Runs
+
+        // Test with successful image download
+        mockkStatic(HttpBitmapLoader::class)
+        val mockSuccessBitmap = mockk<DownloadedBitmap>()
+        every { mockSuccessBitmap.status } returns DownloadedBitmap.Status.SUCCESS
+        every { mockSuccessBitmap.bitmap } returns mockk<Bitmap>()
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockSuccessBitmap
+        
+        // When
+        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+        
+        // Then
+        verify { Utils.setFallback(false) }
+        
+        // Test with failed image download
+        val mockFailedBitmap = mockk<DownloadedBitmap>()
+        every { mockFailedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
+        
+        // When
+        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+        
+        // Then
+        verify(exactly = 2) { Utils.setFallback(false) } // Called twice
+    }
+
+    @Test
+    fun `loadImageURLIntoRemoteView should log correct messages for success and failure cases`() {
+        // Given
+        val imageViewID = 505
+        val successUrl = "https://example.com/success.jpg"
+        val failUrl = "https://example.com/fail.jpg"
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        val mockBitmap = mockk<Bitmap>()
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.verbose(any()) } just Runs
+        every { PTLog.debug(any()) } just Runs
+
+        // Test success case
+        mockkStatic(HttpBitmapLoader::class)
+        val mockSuccessBitmap = mockk<DownloadedBitmap>()
+        every { mockSuccessBitmap.status } returns DownloadedBitmap.Status.SUCCESS
+        every { mockSuccessBitmap.bitmap } returns mockBitmap
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockSuccessBitmap
+        
+        // When
+        Utils.loadImageURLIntoRemoteView(imageViewID, successUrl, mockRemoteViews, mockContext)
+        
+        // Then
+        verify { PTLog.verbose(match { 
+            it.contains("Fetched IMAGE") && 
+            it.contains(successUrl) && 
+            it.contains("millis")
+        }) }
+        verify(exactly = 0) { PTLog.debug(any()) }
+        
+        // Test failure case
+        val mockFailedBitmap = mockk<DownloadedBitmap>()
+        every { mockFailedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
+        
+        // When
+        Utils.loadImageURLIntoRemoteView(imageViewID, failUrl, mockRemoteViews, mockContext)
+        
+        // Then
+        verify { PTLog.debug(match { 
+            it.contains("Image was not perfect") && 
+            it.contains(failUrl) && 
+            it.contains("hiding image view")
+        }) }
+    }
+
+    @Test
+    fun `loadImageURLIntoRemoteView should handle malformed URLs`() {
+        // Given
+        val imageViewID = 606
+        val malformedUrls = listOf(
+            "not-a-url",
+            "://missing-protocol",
+            "https://",
+            "ftp://unsupported-protocol.com/image.jpg"
+        )
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        
+        mockkStatic(HttpBitmapLoader::class)
+        val mockFailedBitmap = mockk<DownloadedBitmap>()
+        every { mockFailedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.debug(any()) } just Runs
+
+        malformedUrls.forEach { malformedUrl ->
+            // When
+            Utils.loadImageURLIntoRemoteView(imageViewID, malformedUrl, mockRemoteViews, mockContext)
+
+            // Then
+            verify { Utils.setFallback(true) }
+            verify { PTLog.debug(match { it.contains(malformedUrl) }) }
+            verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `loadImageURLIntoRemoteView should handle context being null`() {
+        // Given
+        val imageViewID = 808
+        val imageUrl = "https://example.com/image.jpg"
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext: Context? = null
+        
+        mockkStatic(HttpBitmapLoader::class)
+        val mockFailedBitmap = mockk<DownloadedBitmap>()
+        every { mockFailedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.debug(any()) } just Runs
+
+        // When
+        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+
+        // Then
+        verify { Utils.setFallback(false) }
+        verify { Utils.setFallback(true) }
+        verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
+    }
+
+    @Test
+    fun `loadImageURLIntoRemoteView should handle different bitmap download statuses`() {
+        // Given
+        val imageViewID = 909
+        val imageUrl = "https://example.com/image.jpg"
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockContext = mockk<Context>()
+        
+        mockkStatic("com.clevertap.android.pushtemplates.Utils")
+        every { Utils.setFallback(any()) } just Runs
+        
+        mockkStatic(PTLog::class)
+        every { PTLog.verbose(any()) } just Runs
+        every { PTLog.debug(any()) } just Runs
+
+        
+        val downloadStatuses = listOf(
+            DownloadedBitmap.Status.NO_NETWORK,
+            DownloadedBitmap.Status.SIZE_LIMIT_EXCEEDED,
+            DownloadedBitmap.Status.DOWNLOAD_FAILED
+        )
+
+        downloadStatuses.forEach { status ->
+            // Given
+            mockkStatic(HttpBitmapLoader::class)
+            val mockFailedBitmap = mockk<DownloadedBitmap>()
+            every { mockFailedBitmap.status } returns status
+            every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
+            
+            // When
+            Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
+            
+            // Then
+            verify { Utils.setFallback(true) }
+            verify { PTLog.debug(match { it.contains("Image was not perfect") }) }
+            verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
+        }
+    }
+
+    // Tests for loadImageURLIntoRemoteView method end
 
     // Tests for getCTAListFromExtras method
 
