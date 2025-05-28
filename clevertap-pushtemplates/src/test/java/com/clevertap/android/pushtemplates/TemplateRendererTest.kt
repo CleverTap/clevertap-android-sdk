@@ -625,7 +625,7 @@ class TemplateRendererTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.N]) // Below Nougat
+    @Config(sdk = [Build.VERSION_CODES.N])
     fun test_renderNotification_timer_template_below_oreo() {
         // Arrange
         val timerBundle = Bundle(testBundle)
