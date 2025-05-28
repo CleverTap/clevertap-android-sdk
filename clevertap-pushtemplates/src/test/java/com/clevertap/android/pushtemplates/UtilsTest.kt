@@ -898,6 +898,122 @@ class UtilsTest {
         assertTrue(result.isEmpty())
     }
 
+    // Tests for _getManifestStringValueForKey method
+
+    @Test
+    fun `_getManifestStringValueForKey should return string value when object exists`() {
+        // Given
+        val keyName = "test_key"
+        every { mockBundle.get(keyName) } returns "test_value"
+
+        // When
+        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+
+        // Then
+        assertEquals("test_value", result)
+    }
+
+    @Test
+    fun `_getManifestStringValueForKey should return string representation of non-string object`() {
+        // Given
+        val keyName = "number_key"
+        every { mockBundle.get(keyName) } returns 12345
+
+        // When
+        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+
+        // Then
+        assertEquals("12345", result)
+    }
+
+    @Test
+    fun `_getManifestStringValueForKey should return null when object is null`() {
+        // Given
+        val keyName = "null_key"
+        every { mockBundle.get(keyName) } returns null
+
+        // When
+        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `_getManifestStringValueForKey should return null when exception is thrown`() {
+        // Given
+        val keyName = "exception_key"
+        every { mockBundle.get(keyName) } throws RuntimeException("Test exception")
+
+        // When
+        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `_getManifestStringValueForKey should handle boolean values`() {
+        // Given
+        val keyName = "boolean_key"
+        every { mockBundle.get(keyName) } returns true
+
+        // When
+        val result = Utils._getManifestStringValueForKey(mockBundle, keyName)
+
+        // Then
+        assertEquals("true", result)
+    }
+
+    // Tests for getAppIconAsIntId method
+
+    @Test
+    fun `getAppIconAsIntId should return icon resource id from ApplicationInfo`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppInfo = mockk<ApplicationInfo>()
+        val expectedIconId = 123456
+        mockAppInfo.icon = expectedIconId
+        every { mockContext.applicationInfo } returns mockAppInfo
+
+        // When
+        val result = Utils.getAppIconAsIntId(mockContext)
+
+        // Then
+        assertEquals(expectedIconId, result)
+    }
+
+    @Test
+    fun `getAppIconAsIntId should return 0 when icon is not set`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppInfo = mockk<ApplicationInfo>()
+        mockAppInfo.icon = 0 // Default/unset icon
+        every { mockContext.applicationInfo } returns mockAppInfo
+
+        // When
+        val result = Utils.getAppIconAsIntId(mockContext)
+
+        // Then
+        assertEquals(0, result)
+    }
+
+    @Test
+    fun `getAppIconAsIntId should handle negative icon values`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppInfo = mockk<ApplicationInfo>()
+        val negativeIconId = -1
+        mockAppInfo.icon = negativeIconId
+        every { mockContext.applicationInfo } returns mockAppInfo
+
+        // When
+        val result = Utils.getAppIconAsIntId(mockContext)
+
+        // Then
+        assertEquals(negativeIconId, result)
+    }
+
     // Tests for convertRatingBundleObjectToHashMap method
 
     @Test
