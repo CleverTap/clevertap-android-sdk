@@ -5,14 +5,20 @@ import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.widget.RemoteViews
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import io.mockk.verify
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 class UtilsTest {
@@ -715,4 +721,152 @@ class UtilsTest {
         }
     }
 
+    // Tests for loadImageBitmapIntoRemoteView method
+
+    @Test
+    fun `loadImageBitmapIntoRemoteView should set bitmap on remote view`() {
+        // Given
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val mockBitmap = mockk<Bitmap>()
+        val imageViewId = 123
+
+        // When
+        Utils.loadImageBitmapIntoRemoteView(imageViewId, mockBitmap, mockRemoteViews)
+
+        // Then
+        verify { mockRemoteViews.setImageViewBitmap(imageViewId, mockBitmap) }
+    }
+
+    // Tests for loadImageRidIntoRemoteView method
+
+    @Test
+    fun `loadImageRidIntoRemoteView should set resource on remote view`() {
+        // Given
+        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
+        val imageViewId = 123
+        val resourceId = 456
+
+        // When
+        Utils.loadImageRidIntoRemoteView(imageViewId, resourceId, mockRemoteViews)
+
+        // Then
+        verify { mockRemoteViews.setImageViewResource(imageViewId, resourceId) }
+    }
+
+    // Tests for getTimeStamp method
+
+    @Test
+    fun `getTimeStamp should return formatted time string`() {
+        // Given
+        val mockContext = mockk<Context>()
+        mockkStatic("android.text.format.DateUtils")
+        every { android.text.format.DateUtils.formatDateTime(any(), any(), any()) } returns "12:34 PM"
+
+        // When
+        val result = Utils.getTimeStamp(mockContext)
+
+        // Then
+        assertEquals("12:34 PM", result)
+        verify { android.text.format.DateUtils.formatDateTime(mockContext, any(), android.text.format.DateUtils.FORMAT_SHOW_TIME) }
+    }
+
+    // Tests for getApplicationName method
+
+    @Test
+    fun `getApplicationName should return string from labelRes when available`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppInfo = mockk<ApplicationInfo>()
+        mockAppInfo.labelRes = 123
+        every { mockContext.applicationInfo } returns mockAppInfo
+        every { mockContext.getString(123) } returns "Test App"
+
+        // When
+        val result = Utils.getApplicationName(mockContext)
+
+        // Then
+        assertEquals("Test App", result)
+    }
+
+    @Test
+    fun `getApplicationName should return nonLocalizedLabel when labelRes is 0`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockAppInfo = mockk<ApplicationInfo>()
+        mockAppInfo.labelRes = 0
+        mockAppInfo.nonLocalizedLabel = "Direct Label"
+        every { mockContext.applicationInfo } returns mockAppInfo
+
+        // When
+        val result = Utils.getApplicationName(mockContext)
+
+        // Then
+        assertEquals("Direct Label", result)
+    }
+
+    // Tests for getTimerEnd method
+
+    @Test
+    fun `getTimerEnd should return MIN_VALUE when timer end value is -1`() {
+        // Given
+        every { mockBundle.keySet() } returns setOf(PTConstants.PT_TIMER_END)
+        every { mockBundle.getString(PTConstants.PT_TIMER_END) } returns "-1"
+
+        // When
+        val result = Utils.getTimerEnd(mockBundle)
+
+        // Then
+        assertEquals(Integer.MIN_VALUE, result)
+    }
+
+    @Test
+    fun `getTimerEnd should calculate difference when valid timestamp provided`() {
+        // Given
+        val futureTimestamp = (System.currentTimeMillis() / 1000) + 3600 // 1 hour from now
+        every { mockBundle.keySet() } returns setOf(PTConstants.PT_TIMER_END)
+        every { mockBundle.getString(PTConstants.PT_TIMER_END) } returns futureTimestamp.toString()
+
+        // When
+        val result = Utils.getTimerEnd(mockBundle)
+
+        // Then
+        assertTrue("Result should be positive for future timestamp", result > 0)
+        assertTrue("Result should be around 3600 seconds", result > 3500 && result <= 3600)
+    }
+
+    @Test
+    fun `getTimerEnd should handle formatted timestamp with D_ prefix`() {
+        // Given
+        val futureTimestamp = (System.currentTimeMillis() / 1000) + 1800 // 30 minutes from now
+        val formattedValue = "\$D_$futureTimestamp"
+        every { mockBundle.keySet() } returns setOf(PTConstants.PT_TIMER_END)
+        every { mockBundle.getString(PTConstants.PT_TIMER_END) } returns formattedValue
+
+        // When
+        val result = Utils.getTimerEnd(mockBundle)
+
+        // Then
+        assertTrue("Result should be positive for future timestamp", result > 0)
+        assertTrue("Result should be around 1800 seconds", result > 1700 && result <= 1800)
+    }
+
+
+    // Tests for getFallback method
+
+    @Test
+    fun `getFallback should return current fallback value`() {
+        // Given
+        PTConstants.PT_FALLBACK = true
+
+        // When
+        val result = Utils.getFallback()
+
+        // Then
+        assertTrue(result)
+
+        // Reset
+        PTConstants.PT_FALLBACK = false
+        val resetResult = Utils.getFallback()
+        assertFalse(resetResult)
+    }
 }
