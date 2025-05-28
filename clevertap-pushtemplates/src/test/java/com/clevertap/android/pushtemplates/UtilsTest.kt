@@ -2641,6 +2641,267 @@ class UtilsTest {
 
     // Tests for notification methods end
 
+    // Tests for getTimerThreshold method
+
+    @Test
+    fun `getTimerThreshold should return default -1 when no timer threshold key exists`() {
+        // Given
+        val keys = setOf("random_key", "other_key")
+        every { mockBundle.keySet() } returns keys
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(-1, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should return parsed value when exact PT_TIMER_THRESHOLD key exists`() {
+        // Given
+        val keys = setOf(PTConstants.PT_TIMER_THRESHOLD, "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) } returns "30"
+        every { mockBundle.getString("other_key") } returns "ignored"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(30, result)
+        verify { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) }
+    }
+
+    @Test
+    fun `getTimerThreshold should return parsed value when key contains PT_TIMER_THRESHOLD`() {
+        // Given
+        val timerKey = PTConstants.PT_TIMER_THRESHOLD + "_custom"
+        val keys = setOf(timerKey, "random_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(timerKey) } returns "60"
+        every { mockBundle.getString("random_key") } returns "ignored"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(60, result)
+        verify { mockBundle.getString(timerKey) }
+    }
+
+    @Test
+    fun `getTimerThreshold should return last found value when multiple timer threshold keys exist`() {
+        // Given
+        val timerKey1 = PTConstants.PT_TIMER_THRESHOLD + "1"
+        val timerKey2 = PTConstants.PT_TIMER_THRESHOLD + "2" 
+        val keys = setOf(timerKey1, timerKey2)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(timerKey1) } returns "25"
+        every { mockBundle.getString(timerKey2) } returns "45"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        // Note: Result depends on keySet iteration order, but should be one of the valid values
+        assertTrue("Result should be one of the timer threshold values", result == 25 || result == 45)
+    }
+
+    @Test
+    fun `getTimerThreshold should return -1 when timer threshold value is null`() {
+        // Given
+        val keys = setOf(PTConstants.PT_TIMER_THRESHOLD)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) } returns null
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(-1, result)
+    }
+
+
+    @Test
+    fun `getTimerThreshold should return parsed value for negative numbers`() {
+        // Given
+        val keys = setOf(PTConstants.PT_TIMER_THRESHOLD)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) } returns "-100"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(-100, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should return parsed value for zero`() {
+        // Given
+        val keys = setOf(PTConstants.PT_TIMER_THRESHOLD)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) } returns "0"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(0, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should return parsed value for large positive numbers`() {
+        // Given
+        val keys = setOf(PTConstants.PT_TIMER_THRESHOLD)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) } returns "999999"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(999999, result)
+    }
+
+
+    @Test
+    fun `getTimerThreshold should handle edge case of Integer MIN_VALUE`() {
+        // Given
+        val keys = setOf(PTConstants.PT_TIMER_THRESHOLD)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) } returns Integer.MIN_VALUE.toString()
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(Integer.MIN_VALUE, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should handle edge case of Integer MAX_VALUE`() {
+        // Given
+        val keys = setOf(PTConstants.PT_TIMER_THRESHOLD)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) } returns Integer.MAX_VALUE.toString()
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(Integer.MAX_VALUE, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should find timer threshold key with prefix`() {
+        // Given
+        val timerKey = "custom_" + PTConstants.PT_TIMER_THRESHOLD
+        val keys = setOf(timerKey, "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(timerKey) } returns "75"
+        every { mockBundle.getString("other_key") } returns "ignored"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(75, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should find timer threshold key anywhere in the key name`() {
+        // Given
+        val timerKey = "prefix_" + PTConstants.PT_TIMER_THRESHOLD + "_suffix"
+        val keys = setOf(timerKey, "random_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(timerKey) } returns "120"
+        every { mockBundle.getString("random_key") } returns "ignored"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(120, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should return -1 when key contains partial match but not full PT_TIMER_THRESHOLD`() {
+        // Given
+        val partialKey = "pt_timer_thresh" // Missing 'old' part
+        val keys = setOf(partialKey, "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(partialKey) } returns "50"
+        every { mockBundle.getString("other_key") } returns "ignored"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(-1, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should verify correct method calls`() {
+        // Given
+        val keys = setOf(PTConstants.PT_TIMER_THRESHOLD, "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) } returns "40"
+        every { mockBundle.getString("other_key") } returns "ignored"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        verify(exactly = 1) { mockBundle.keySet() }
+        verify(exactly = 1) { mockBundle.getString(PTConstants.PT_TIMER_THRESHOLD) }
+        verify(exactly = 0) { mockBundle.getString("other_key") }
+        assertEquals(40, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should handle mixed case in key name`() {
+        // Given
+        val timerKey = PTConstants.PT_TIMER_THRESHOLD.uppercase() // Different case
+        val keys = setOf(timerKey)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(timerKey) } returns "85"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        // Should not match because contains() is case-sensitive
+        assertEquals(-1, result)
+    }
+
+    @Test
+    fun `getTimerThreshold should process multiple keys but only check those containing timer threshold`() {
+        // Given
+        val timerKey = PTConstants.PT_TIMER_THRESHOLD + "_test"
+        val keys = setOf("key1", "key2", timerKey, "key3", "key4")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(timerKey) } returns "95"
+        every { mockBundle.getString("key1") } returns "value1"
+        every { mockBundle.getString("key2") } returns "value2"
+        every { mockBundle.getString("key3") } returns "value3"
+        every { mockBundle.getString("key4") } returns "value4"
+
+        // When
+        val result = Utils.getTimerThreshold(mockBundle)
+
+        // Then
+        assertEquals(95, result)
+        verify(exactly = 1) { mockBundle.getString(timerKey) }
+        // Should not call getString on keys that don't contain PT_TIMER_THRESHOLD
+        verify(exactly = 0) { mockBundle.getString("key1") }
+        verify(exactly = 0) { mockBundle.getString("key2") }
+        verify(exactly = 0) { mockBundle.getString("key3") }
+        verify(exactly = 0) { mockBundle.getString("key4") }
+    }
+
+    // Tests for getTimerThreshold method end
+
     // Tests for getCTAListFromExtras method
 
     @Test
