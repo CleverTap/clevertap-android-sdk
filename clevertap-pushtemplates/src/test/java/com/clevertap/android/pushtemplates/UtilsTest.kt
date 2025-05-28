@@ -1,5 +1,6 @@
 package com.clevertap.android.pushtemplates
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -9,6 +10,7 @@ import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
+import android.service.notification.StatusBarNotification
 import android.widget.RemoteViews
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -2196,6 +2198,448 @@ class UtilsTest {
     }
 
     // Tests for isNotificationChannelEnabled method end
+
+    // Tests for isNotificationInTray method
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `isNotificationInTray should return true when notification with matching ID exists`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = 123
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification3 = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2, mockStatusBarNotification3)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.id } returns 456
+        every { mockStatusBarNotification2.id } returns targetNotificationId
+        every { mockStatusBarNotification3.id } returns 789
+
+        // When
+        val result = Utils.isNotificationInTray(mockContext, targetNotificationId)
+
+        // Then
+        assertTrue(result)
+        verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
+        verify { mockNotificationManager.activeNotifications }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `isNotificationInTray should return false when notification with matching ID does not exist`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = 123
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.id } returns 456
+        every { mockStatusBarNotification2.id } returns 789
+
+        // When
+        val result = Utils.isNotificationInTray(mockContext, targetNotificationId)
+
+        // Then
+        assertFalse(result)
+        verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
+        verify { mockNotificationManager.activeNotifications }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `isNotificationInTray should return false when no notifications exist`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = 123
+        val notifications = arrayOf<StatusBarNotification>()
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+
+        // When
+        val result = Utils.isNotificationInTray(mockContext, targetNotificationId)
+
+        // Then
+        assertFalse(result)
+        verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
+        verify { mockNotificationManager.activeNotifications }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `isNotificationInTray should return true when first notification matches`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = 123
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.id } returns targetNotificationId
+        every { mockStatusBarNotification2.id } returns 789
+
+        // When
+        val result = Utils.isNotificationInTray(mockContext, targetNotificationId)
+
+        // Then
+        assertTrue(result)
+        verify { mockStatusBarNotification1.id }
+        // Should not check second notification since first matches
+        verify(exactly = 0) { mockStatusBarNotification2.id }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `isNotificationInTray should handle negative notification IDs`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = -1
+        val mockStatusBarNotification = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification.id } returns targetNotificationId
+
+        // When
+        val result = Utils.isNotificationInTray(mockContext, targetNotificationId)
+
+        // Then
+        assertTrue(result)
+    }
+
+    // Tests for getNotificationById method
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationById should return notification when matching ID exists`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = 123
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val mockNotification = mockk<Notification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.id } returns 456
+        every { mockStatusBarNotification2.id } returns targetNotificationId
+        every { mockStatusBarNotification2.notification } returns mockNotification
+
+        // When
+        val result = Utils.getNotificationById(mockContext, targetNotificationId)
+
+        // Then
+        assertEquals(mockNotification, result)
+        verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
+        verify { mockNotificationManager.activeNotifications }
+        verify { mockStatusBarNotification2.notification }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationById should return null when matching ID does not exist`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = 123
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.id } returns 456
+        every { mockStatusBarNotification2.id } returns 789
+
+        // When
+        val result = Utils.getNotificationById(mockContext, targetNotificationId)
+
+        // Then
+        assertNull(result)
+        verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
+        verify { mockNotificationManager.activeNotifications }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationById should return null when no notifications exist`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = 123
+        val notifications = arrayOf<StatusBarNotification>()
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+
+        // When
+        val result = Utils.getNotificationById(mockContext, targetNotificationId)
+
+        // Then
+        assertNull(result)
+        verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
+        verify { mockNotificationManager.activeNotifications }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationById should return first matching notification when multiple match`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = 123
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val mockNotification1 = mockk<Notification>()
+        val mockNotification2 = mockk<Notification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.id } returns targetNotificationId
+        every { mockStatusBarNotification2.id } returns targetNotificationId
+        every { mockStatusBarNotification1.notification } returns mockNotification1
+        every { mockStatusBarNotification2.notification } returns mockNotification2
+
+        // When
+        val result = Utils.getNotificationById(mockContext, targetNotificationId)
+
+        // Then
+        assertEquals(mockNotification1, result) // Should return first match
+        verify { mockStatusBarNotification1.notification }
+        verify(exactly = 0) { mockStatusBarNotification2.notification } // Should not call second
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationById should handle zero notification ID`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val targetNotificationId = 0
+        val mockStatusBarNotification = mockk<StatusBarNotification>()
+        val mockNotification = mockk<Notification>()
+        val notifications = arrayOf(mockStatusBarNotification)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification.id } returns targetNotificationId
+        every { mockStatusBarNotification.notification } returns mockNotification
+
+        // When
+        val result = Utils.getNotificationById(mockContext, targetNotificationId)
+
+        // Then
+        assertEquals(mockNotification, result)
+    }
+
+    // Tests for getNotificationIds method
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationIds should return matching package notifications when SDK is M or above`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val packageName = "com.test.app"
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification3 = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2, mockStatusBarNotification3)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockContext.packageName } returns packageName
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.packageName } returns packageName
+        every { mockStatusBarNotification1.id } returns 123
+        every { mockStatusBarNotification2.packageName } returns "com.other.app"
+        every { mockStatusBarNotification2.id } returns 456
+        every { mockStatusBarNotification3.packageName } returns packageName
+        every { mockStatusBarNotification3.id } returns 789
+
+
+        // When
+        val result = Utils.getNotificationIds(mockContext)
+
+        // Then
+        assertEquals(2, result.size)
+        assertTrue(result.contains(123))
+        assertFalse(result.contains(456)) // Different package
+        assertTrue(result.contains(789))
+        verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
+        verify { mockContext.packageName }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationIds should return empty list when no notifications exist`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val notifications = arrayOf<StatusBarNotification>()
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockNotificationManager.activeNotifications } returns notifications
+
+        // When
+        val result = Utils.getNotificationIds(mockContext)
+
+        // Then
+        assertTrue(result.isEmpty())
+        verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationIds should return empty list when no notifications match package`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val packageName = "com.test.app"
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockContext.packageName } returns packageName
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.packageName } returns "com.other.app"
+        every { mockStatusBarNotification2.packageName } returns "com.another.app"
+
+
+        // When
+        val result = Utils.getNotificationIds(mockContext)
+
+        // Then
+        assertTrue(result.isEmpty())
+        verify { mockContext.packageName }
+        verify { mockStatusBarNotification1.packageName }
+        verify { mockStatusBarNotification2.packageName }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationIds should handle case insensitive package name comparison`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val packageName = "com.test.app"
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockContext.packageName } returns packageName
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.packageName } returns "COM.TEST.APP" // Different case
+        every { mockStatusBarNotification1.id } returns 123
+        every { mockStatusBarNotification2.packageName } returns "com.Test.App" // Mixed case
+        every { mockStatusBarNotification2.id } returns 456
+
+        // When
+        val result = Utils.getNotificationIds(mockContext)
+
+        // Then
+        assertEquals(2, result.size)
+        assertTrue(result.contains(123))
+        assertTrue(result.contains(456))
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationIds should handle SDK version exactly at M`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val packageName = "com.test.app"
+        val mockStatusBarNotification = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockContext.packageName } returns packageName
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification.packageName } returns packageName
+        every { mockStatusBarNotification.id } returns 123
+
+
+        // When
+        val result = Utils.getNotificationIds(mockContext)
+
+        // Then
+        assertEquals(1, result.size)
+        assertTrue(result.contains(123))
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun `getNotificationIds should handle SDK version above M`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val packageName = "com.test.app"
+        val mockStatusBarNotification = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockContext.packageName } returns packageName
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification.packageName } returns packageName
+        every { mockStatusBarNotification.id } returns 123
+
+        // When
+        val result = Utils.getNotificationIds(mockContext)
+
+        // Then
+        assertEquals(1, result.size)
+        assertTrue(result.contains(123))
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `getNotificationIds should handle duplicate notification IDs`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockNotificationManager = mockk<NotificationManager>()
+        val packageName = "com.test.app"
+        val mockStatusBarNotification1 = mockk<StatusBarNotification>()
+        val mockStatusBarNotification2 = mockk<StatusBarNotification>()
+        val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
+        
+        every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
+        every { mockContext.packageName } returns packageName
+        every { mockNotificationManager.activeNotifications } returns notifications
+        every { mockStatusBarNotification1.packageName } returns packageName
+        every { mockStatusBarNotification1.id } returns 123
+        every { mockStatusBarNotification2.packageName } returns packageName
+        every { mockStatusBarNotification2.id } returns 123 // Same ID
+
+        // When
+        val result = Utils.getNotificationIds(mockContext)
+
+        // Then
+        assertEquals(2, result.size) // Both should be added (method doesn't deduplicate)
+        assertTrue(result.contains(123))
+        assertEquals(123, result[0])
+        assertEquals(123, result[1])
+    }
+
+    // Tests for notification methods end
 
     // Tests for getCTAListFromExtras method
 
