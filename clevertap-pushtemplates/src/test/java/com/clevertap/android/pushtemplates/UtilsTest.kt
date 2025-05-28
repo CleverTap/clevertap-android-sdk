@@ -1060,6 +1060,203 @@ class UtilsTest {
         assertTrue(result == "first_event" || result == "second_event")
     }
 
+    // Tests for getEventPropertiesFromExtras(Bundle extras) method
+
+    @Test
+    fun `getEventPropertiesFromExtras should return properties when PT_EVENT_PROPERTY_KEY exists with separator`() {
+        // Given
+        val propertyKey = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "campaign_id"
+        val keys = setOf(propertyKey, "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(propertyKey) } returns "campaign_123"
+        every { mockBundle.getString("other_key") } returns "ignored"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle)
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("campaign_123", result["campaign_id"])
+    }
+
+    @Test
+    fun `getEventPropertiesFromExtras should return multiple properties when multiple valid keys exist`() {
+        // Given
+        val propertyKey1 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "user_id"
+        val propertyKey2 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "session_id"
+        val keys = setOf(propertyKey1, propertyKey2, "random_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(propertyKey1) } returns "user_456"
+        every { mockBundle.getString(propertyKey2) } returns "session_789"
+        every { mockBundle.getString("random_key") } returns "ignored"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle)
+
+        // Then
+        assertEquals(2, result.size)
+        assertEquals("user_456", result["user_id"])
+        assertEquals("session_789", result["session_id"])
+    }
+
+    @Test
+    fun `getEventPropertiesFromExtras should return empty map when no valid property keys exist`() {
+        // Given
+        val keys = setOf("random_key", "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(any()) } returns "some_value"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle)
+
+        // Then
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `getEventPropertiesFromExtras should skip properties without separator`() {
+        // Given
+        val propertyKeyWithoutSeparator = PTConstants.PT_EVENT_PROPERTY_KEY + "no_separator"
+        val propertyKeyWithSeparator = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "valid_prop"
+        val keys = setOf(propertyKeyWithoutSeparator, propertyKeyWithSeparator)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(propertyKeyWithoutSeparator) } returns "should_be_skipped"
+        every { mockBundle.getString(propertyKeyWithSeparator) } returns "valid_value"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle)
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("valid_value", result["valid_prop"])
+    }
+
+    @Test
+    fun `getEventPropertiesFromExtras should skip properties with empty or null values`() {
+        // Given
+        val propertyKey1 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "empty_prop"
+        val propertyKey2 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "null_prop"
+        val propertyKey3 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "valid_prop"
+        val keys = setOf(propertyKey1, propertyKey2, propertyKey3)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(propertyKey1) } returns ""
+        every { mockBundle.getString(propertyKey2) } returns null
+        every { mockBundle.getString(propertyKey3) } returns "valid_value"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle)
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("valid_value", result["valid_prop"])
+    }
+
+    // Tests for getEventPropertiesFromExtras(Bundle extras, String pkey, String value) method
+
+    @Test
+    fun `getEventPropertiesFromExtras with pkey should replace matching property value`() {
+        // Given
+        val propertyKey1 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "user_id"
+        val propertyKey2 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "session_id"
+        val keys = setOf(propertyKey1, propertyKey2)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(propertyKey1) } returns "original_user"
+        every { mockBundle.getString(propertyKey2) } returns "session_123"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle, "original_user", "replaced_user")
+
+        // Then
+        assertEquals(2, result.size)
+        assertEquals("replaced_user", result["user_id"])
+        assertEquals("session_123", result["session_id"])
+    }
+
+    @Test
+    fun `getEventPropertiesFromExtras with pkey should use original value when no match found`() {
+        // Given
+        val propertyKey1 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "user_id"
+        val propertyKey2 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "session_id"
+        val keys = setOf(propertyKey1, propertyKey2)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(propertyKey1) } returns "user_456"
+        every { mockBundle.getString(propertyKey2) } returns "session_789"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle, "nonexistent_value", "replacement")
+
+        // Then
+        assertEquals(2, result.size)
+        assertEquals("user_456", result["user_id"])
+        assertEquals("session_789", result["session_id"])
+    }
+
+    @Test
+    fun `getEventPropertiesFromExtras with pkey should handle case insensitive matching`() {
+        // Given
+        val propertyKey = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "campaign"
+        val keys = setOf(propertyKey)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(propertyKey) } returns "CAMPAIGN_ID"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle, "campaign_id", "new_campaign")
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("new_campaign", result["campaign"])
+    }
+
+    @Test
+    fun `getEventPropertiesFromExtras with pkey should skip properties without separator`() {
+        // Given
+        val propertyKeyWithoutSeparator = PTConstants.PT_EVENT_PROPERTY_KEY + "no_separator"
+        val propertyKeyWithSeparator = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "valid_prop"
+        val keys = setOf(propertyKeyWithoutSeparator, propertyKeyWithSeparator)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(propertyKeyWithoutSeparator) } returns "should_be_skipped"
+        every { mockBundle.getString(propertyKeyWithSeparator) } returns "valid_value"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle, "valid_value", "replaced_value")
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("replaced_value", result["valid_prop"])
+    }
+
+    @Test
+    fun `getEventPropertiesFromExtras with pkey should skip properties with empty or null values`() {
+        // Given
+        val propertyKey1 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "empty_prop"
+        val propertyKey2 = PTConstants.PT_EVENT_PROPERTY_KEY + PTConstants.PT_EVENT_PROPERTY_SEPERATOR + "valid_prop"
+        val keys = setOf(propertyKey1, propertyKey2)
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(propertyKey1) } returns ""
+        every { mockBundle.getString(propertyKey2) } returns "valid_value"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle, "valid_value", "replaced_value")
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("replaced_value", result["valid_prop"])
+    }
+
+    @Test
+    fun `getEventPropertiesFromExtras with pkey should return empty map when no valid properties exist`() {
+        // Given
+        val keys = setOf("random_key", "other_key")
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString(any()) } returns "some_value"
+
+        // When
+        val result = Utils.getEventPropertiesFromExtras(mockBundle, "some_value", "replacement")
+
+        // Then
+        assertTrue(result.isEmpty())
+    }
+
     // Tests for getCTAListFromExtras method
 
     @Test
