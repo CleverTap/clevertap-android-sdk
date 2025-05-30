@@ -679,7 +679,6 @@ internal class NetworkManager(
     }
 
     private fun sendQueueApi(body: SendQueueRequestBody): Response {
-        val response: Response
         if (config.isEncryptionInTransitEnabled && coreMetaData.isRelaxNetwork.not()) {
             val encryptionResult = encryptionManager.encryptResponse(body.toString())
             val sessionEncryptionKey = encryptionManager.sessionEncryptionKey()
@@ -691,27 +690,20 @@ internal class NetworkManager(
                     iv = encryptionResult.iv
                 ).toJsonString()
                 logger.verbose("Encrypted Request = $bodyEnc")
-                response = ctApiWrapper.ctApi.sendQueue(
+                return ctApiWrapper.ctApi.sendQueue(
                     isViewedEvent = false,
                     body = bodyEnc,
                     isEncrypted = true
                 )
             } else {
                 logger.verbose("Normal Request cause encryption failed = $body")
-                response = ctApiWrapper.ctApi.sendQueue(
-                    isViewedEvent = false,
-                    body = body.toString(),
-                    isEncrypted = false
-                )
             }
-        } else {
-            response = ctApiWrapper.ctApi.sendQueue(
-                isViewedEvent = false,
-                body = body.toString(),
-                isEncrypted = false
-            )
         }
-        return response
+        return ctApiWrapper.ctApi.sendQueue(
+            isViewedEvent = false,
+            body = body.toString(),
+            isEncrypted = false
+        )
     }
 
     private fun sendImpressionsApi(body: SendQueueRequestBody): Response {
