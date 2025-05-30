@@ -780,14 +780,9 @@ internal class NetworkManager(
             return false
         }
 
-        if (abortDueToDomainChange(response)) {
+        if (abortDueToDomainChange(response) || shouldMuteSdk(response)) {
             return false
         }
-
-        if (shouldMuteSdk(response)) {
-            return false
-        }
-
         saveDomainChanges(response)
 
         logger.debug(config.accountId, "Push Impressions sent successfully")
@@ -810,11 +805,7 @@ internal class NetworkManager(
             return false
         }
 
-        if (abortDueToDomainChange(response)) {
-            return false
-        }
-
-        if (shouldMuteSdk(response)) {
+        if (abortDueToDomainChange(response) || shouldMuteSdk(response)) {
             return false
         }
 
