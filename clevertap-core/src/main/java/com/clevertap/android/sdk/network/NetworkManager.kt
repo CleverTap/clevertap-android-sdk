@@ -464,11 +464,11 @@ internal class NetworkManager(
                     if (response.isSuccess()) {
                         logger.verbose(config.accountId, "Received success from handshake :)")
 
-                        if (shouldMuteSdk(response, context)) {
+                        if (shouldMuteSdk(response)) {
                             return
                         }
 
-                        saveDomainChanges(context, response)
+                        saveDomainChanges(response)
                         logger.verbose(config.accountId, "We are not muted")
                         // We have a new domain, run the callback
                         handshakeSuccessCallback.run()
@@ -490,7 +490,7 @@ internal class NetworkManager(
      * @return True to continue sending requests, false otherwise.
      */
     @WorkerThread
-    private fun saveDomainChanges(context: Context, response: Response) {
+    private fun saveDomainChanges(response: Response) {
 
         val domainName = response.getHeaderValue(CtApi.HEADER_DOMAIN_NAME)
         Logger.v("Getting domain from header - $domainName")
@@ -511,10 +511,7 @@ internal class NetworkManager(
         }
     }
 
-    private fun shouldMuteSdk(
-        response: Response,
-        context: Context
-    ): Boolean {
+    private fun shouldMuteSdk(response: Response): Boolean {
         response.getHeaderValue(CtApi.HEADER_MUTE)?.trim()?.takeIf { it.isNotEmpty() }
             ?.let { muteCommand ->
                 // muteCommand is guaranteed to be non-null and non-empty here
@@ -783,22 +780,15 @@ internal class NetworkManager(
             return false
         }
 
-        val newDomain: String? = response.getHeaderValue(HEADER_DOMAIN_NAME)
-
-        if (newDomain.isNotNullAndBlank() && hasDomainChanged(newDomain)) {
-            setDomain(context, newDomain)
-            logger.debug(
-                config.accountId,
-                "The domain has changed to $newDomain. The request will be retried shortly."
-            )
+        if (abortDueToDomainChange(response)) {
             return false
         }
 
-        if (shouldMuteSdk(response, context)) {
+        if (shouldMuteSdk(response)) {
             return false
         }
 
-        saveDomainChanges(context, response)
+        saveDomainChanges(response)
 
         logger.debug(config.accountId, "Push Impressions sent successfully")
         lastRequestTimestamp = currentRequestTimestamp
@@ -820,22 +810,15 @@ internal class NetworkManager(
             return false
         }
 
-        val newDomain: String? = response.getHeaderValue(HEADER_DOMAIN_NAME)
-
-        if (newDomain.isNotNullAndBlank() && hasDomainChanged(newDomain)) {
-            setDomain(context, newDomain)
-            logger.debug(
-                config.accountId,
-                "The domain has changed to $newDomain. The request will be retried shortly."
-            )
+        if (abortDueToDomainChange(response)) {
             return false
         }
 
-        if (shouldMuteSdk(response, context)) {
+        if (shouldMuteSdk(response)) {
             return false
         }
 
-        saveDomainChanges(context, response)
+        saveDomainChanges(response)
         notifyNetworkHeaderListeners()
 
         logger.debug(config.accountId, "Queue sent successfully")
@@ -875,6 +858,20 @@ internal class NetworkManager(
         }
 
         return true
+    }
+
+    fun abortDueToDomainChange(response: Response): Boolean {
+        val newDomain: String? = response.getHeaderValue(HEADER_DOMAIN_NAME)
+
+        if (newDomain.isNotNullAndBlank() && hasDomainChanged(newDomain)) {
+            setDomain(context, newDomain)
+            logger.debug(
+                config.accountId,
+                "The domain has changed to $newDomain. The request will be retried shortly."
+            )
+            return true
+        }
+        return false
     }
 
     private fun handleSendQueueResponseError(
