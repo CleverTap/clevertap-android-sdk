@@ -228,7 +228,7 @@ internal class NetworkManager(
     fun initHandshake(eventGroup: EventGroup, handshakeSuccessCallback: Runnable) {
         // Always set this to 0 so that the handshake is not performed during a HTTP failure
         responseFailureCount = 0
-        performHandshakeForDomain(context, eventGroup, handshakeSuccessCallback)
+        performHandshakeForDomain(eventGroup, handshakeSuccessCallback)
     }
 
     @WorkerThread
@@ -454,7 +454,6 @@ internal class NetworkManager(
 
     @WorkerThread
     private fun performHandshakeForDomain(
-        context: Context,
         eventGroup: EventGroup,
         handshakeSuccessCallback: Runnable
     ) {
