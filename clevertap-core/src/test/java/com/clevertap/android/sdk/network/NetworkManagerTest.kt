@@ -530,6 +530,7 @@ class NetworkManagerTest : BaseTestCase() {
             deviceInfo = deviceInfo
         )
         val queueHeaderBuilder = mockk<QueueHeaderBuilder>()
+        every { queueHeaderBuilder.buildHeader(any()) } returns JSONObject()
 
         // Create 10 spy processors for response handling tests
         val responses = ArrayList<CleverTapResponse>()
