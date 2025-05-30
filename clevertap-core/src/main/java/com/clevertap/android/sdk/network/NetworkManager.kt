@@ -565,7 +565,6 @@ internal class NetworkManager(
                     }
                     EventGroup.REGULAR -> {
                         handleSendQueueResponse(
-                            eventGroup = eventGroup,
                             response = response,
                             isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody),
                             notifyNetworkHeaderListeners = {
@@ -662,21 +661,24 @@ internal class NetworkManager(
     }
 
     @WorkerThread
-    private fun callApiForEventGroup(eventGroup: EventGroup, body: SendQueueRequestBody): Response {
+    private fun callApiForEventGroup(
+        eventGroup: EventGroup,
+        body: SendQueueRequestBody
+    ): Response {
         return when (eventGroup) {
             EventGroup.VARIABLES -> {
                 ctApiWrapper.ctApi.defineVars(body)
             }
             EventGroup.REGULAR -> {
-                sendQueueApi(eventGroup, body)
+                sendQueueApi(body)
             }
             EventGroup.PUSH_NOTIFICATION_VIEWED -> {
-                sendImpressionsApi(eventGroup, body)
+                sendImpressionsApi(body)
             }
         }
     }
 
-    private fun sendQueueApi(eventGroup: EventGroup, body: SendQueueRequestBody): Response {
+    private fun sendQueueApi(body: SendQueueRequestBody): Response {
         val response: Response
         if (config.isEncryptionInTransitEnabled && coreMetaData.isRelaxNetwork.not()) {
             val encryptionResult = encryptionManager.encryptResponse(body.toString())
@@ -704,7 +706,7 @@ internal class NetworkManager(
             }
         } else {
             response = ctApiWrapper.ctApi.sendQueue(
-                isViewedEvent = eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+                isViewedEvent = false,
                 body = body.toString(),
                 isEncrypted = false
             )
@@ -712,9 +714,9 @@ internal class NetworkManager(
         return response
     }
 
-    private fun sendImpressionsApi(eventGroup: EventGroup, body: SendQueueRequestBody): Response {
+    private fun sendImpressionsApi(body: SendQueueRequestBody): Response {
         val response: Response = ctApiWrapper.ctApi.sendQueue(
-                isViewedEvent = eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED,
+                isViewedEvent = true,
                 body = body.toString(),
                 isEncrypted = false
             )
@@ -795,13 +797,12 @@ internal class NetworkManager(
 
     @WorkerThread
     private fun handleSendQueueResponse(
-        eventGroup: EventGroup,
         response: Response,
         isFullResponse: Boolean,
         notifyNetworkHeaderListeners: () -> Unit
     ): Boolean {
         if (!response.isSuccess()) {
-            handleSendQueueResponseError(eventGroup, response)
+            handleSendQueueResponseError(response)
             return false
         }
 
@@ -865,21 +866,11 @@ internal class NetworkManager(
         return false
     }
 
-    private fun handleSendQueueResponseError(
-        eventGroup: EventGroup,
-        response: Response
-    ) {
+    private fun handleSendQueueResponseError(response: Response) {
         logger.info("Received error response code: " + response.code)
-        when (eventGroup) {
-            EventGroup.REGULAR -> {
-                when (response.code) {
-                    419 -> {
-                        coreMetaData.isRelaxNetwork = true
-                    }
-                    else -> {
-                        // no-op
-                    }
-                }
+        when (response.code) {
+            419 -> {
+                coreMetaData.isRelaxNetwork = true
             }
             else -> {
                 // no-op

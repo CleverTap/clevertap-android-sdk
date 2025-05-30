@@ -62,6 +62,7 @@ internal class CtApi(
     var currentRequestTimestampSeconds = 0
         private set
 
+    // todo break down into sendQueue and sendQueueForSpiky
     fun sendQueue(
         isViewedEvent: Boolean,
         body: String,
