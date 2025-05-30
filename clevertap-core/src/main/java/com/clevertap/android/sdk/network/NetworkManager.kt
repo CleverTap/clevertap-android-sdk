@@ -59,6 +59,7 @@ import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.EncryptionFailure
+import com.clevertap.android.sdk.response.ContentFetchResponse
 
 internal class NetworkManager(
     private val context: Context,
@@ -76,6 +77,16 @@ internal class NetworkManager(
     private val encryptionManager: NetworkEncryptionManager,
     private val ijRepo: IJRepo,
     private val arpRepo: ArpRepo,
+    private val logger: ILogger = config.logger,
+    private val contentFetchManager: ContentFetchManager = ContentFetchManager(config)
+) {
+
+
+    init {
+        // Set NetworkManager reference after initialization
+        contentFetchManager.setNetworkManager(this)
+    }
+
     val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
         inAppResponse,
         MetadataResponse(config, deviceInfo, ijRepo),
@@ -97,10 +108,9 @@ internal class NetworkManager(
         DisplayUnitResponse(config, callbackManager, controllerManager),
         FeatureFlagResponse(config, controllerManager),
         ProductConfigResponse(config, coreMetaData, controllerManager),
-        GeofenceResponse(config, callbackManager)
-    ),
-    private val logger: ILogger = config.logger
-) {
+        GeofenceResponse(config, callbackManager),
+        ContentFetchResponse(config, contentFetchManager)
+    )
 
     private var responseFailureCount = 0
 
@@ -598,6 +608,64 @@ internal class NetworkManager(
                 callbackManager.failureFlushListener.failureFlush(context)
             }
             return false
+        }
+    }
+
+    /**
+     * Sends a content fetch request to the /content endpoint
+     *
+     * @param context The Context object
+     * @param payload The JSON payload to send
+     */
+    fun sendContentFetchRequest(context: Context, payload: String) {
+        try {
+            val queueHeader: JSONObject? = getQueueHeader(context, null)
+            logger.debug(config.accountId, "Sending content fetch request")
+            logger.verbose(config.accountId, "Content fetch payload: $payload")
+
+            val body = "[${queueHeader.toString()},${payload.toString().substring(1)}"
+            Logger.v("Content fetch request body: $body")
+            // Create the content fetch request
+            val response = ctApiWrapper.ctApi.sendContentFetch(body)
+
+            response.use {
+                if (it.isSuccess()) {
+                    logger.debug(config.accountId, "Content fetch request sent successfully")
+                    handleContentFetchResponse(it, context)
+                } else {
+                    logger.info("Content fetch request failed with response code: ${it.code}")
+                }
+            }
+
+        } catch (e: Exception) {
+            logger.debug(config.accountId, "Content fetch request failed with exception", e)
+        }
+    }
+
+    /**
+     * Handles the response from content fetch requests
+     * Processes through normal ResponseDecorator route
+     */
+    private fun handleContentFetchResponse(response: Response, context: Context) {
+        try {
+            val bodyString = response.readBody()
+            val bodyJson = bodyString?.let {
+                try {
+                    JSONObject(it)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            logger.verbose(config.accountId, "Processing content fetch response: $bodyJson")
+
+            // Process through normal response decorators
+            for (processor: CleverTapResponse in cleverTapResponses) {
+                processor.processResponse(bodyJson, bodyString, context)
+            }
+
+        } catch (e: Exception) {
+            logger.verbose(config.accountId, "Failed to process content fetch response", e)
         }
     }
 

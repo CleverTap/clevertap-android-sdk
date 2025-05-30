@@ -17,7 +17,8 @@ enum class EndpointId(val identifier: String) {
     ENDPOINT_SPIKY("-spiky"),
     ENDPOINT_A1("/a1"),
     ENDPOINT_HELLO("/hello"),
-    ENDPOINT_DEFINE_VARS("/defineVars");
+    ENDPOINT_DEFINE_VARS("/defineVars"),
+    CONTENT_FETCH("/content");
 
     companion object {
 
