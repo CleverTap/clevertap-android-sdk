@@ -1023,10 +1023,9 @@ internal class NetworkManager(
             setDomain(context, null)
 
             // Clear all the queues
-            val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>()
+            val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Unit>()
             task.execute("CommsManager#setMuted") {
                 databaseManager.clearQueues(context)
-                null
             }
         } else {
             StorageHelper.putInt(
