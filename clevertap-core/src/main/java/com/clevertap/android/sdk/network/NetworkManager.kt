@@ -564,11 +564,9 @@ internal class NetworkManager(
                 networkRetryCount = 0
                 val isProcessed = when (eventGroup) {
                     EventGroup.VARIABLES -> {
-                        handleVariablesResponse(response)
+                        handleVariablesResponse(response = response)
                     }
-                    EventGroup.REGULAR,
-                    EventGroup.PUSH_NOTIFICATION_VIEWED -> {
-                        // split the flows; this is how it has been historically.
+                    EventGroup.REGULAR -> {
                         handleSendQueueResponse(
                             eventGroup = eventGroup,
                             response = response,
@@ -580,6 +578,9 @@ internal class NetworkManager(
                                 )
                             }
                         )
+                    }
+                    EventGroup.PUSH_NOTIFICATION_VIEWED -> {
+                        handlePushImpressionsResponse(response = response)
                     }
                 }
 
@@ -773,6 +774,38 @@ internal class NetworkManager(
                 logger.info(config.accountId, "Custom templates warnings: $warnings")
             }
         }
+    }
+
+    @WorkerThread
+    private fun handlePushImpressionsResponse(response: Response): Boolean {
+        if (!response.isSuccess()) {
+            logger.info("Received error response code: " + response.code)
+            return false
+        }
+
+        val newDomain: String? = response.getHeaderValue(HEADER_DOMAIN_NAME)
+
+        if (newDomain.isNotNullAndBlank() && hasDomainChanged(newDomain)) {
+            setDomain(context, newDomain)
+            logger.debug(
+                config.accountId,
+                "The domain has changed to $newDomain. The request will be retried shortly."
+            )
+            return false
+        }
+
+        if (shouldMuteSdk(response, context)) {
+            return false
+        }
+
+        saveDomainChanges(context, response)
+
+        logger.debug(config.accountId, "Push Impressions sent successfully")
+        lastRequestTimestamp = currentRequestTimestamp
+        setFirstRequestTimestampIfNeeded(currentRequestTimestamp)
+
+        logger.verbose(config.accountId, "Processing response : ${response.readBody().toJsonOrNull()}")
+        return true
     }
 
     @WorkerThread
