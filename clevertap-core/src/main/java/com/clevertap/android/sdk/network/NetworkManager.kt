@@ -809,32 +809,29 @@ internal class NetworkManager(
         lastRequestTimestamp = currentRequestTimestamp
         setFirstRequestTimestampIfNeeded(currentRequestTimestamp)
 
-        val isEncryptedResponse = response.getHeaderValue(HEADER_ENCRYPTION_ENABLED).toBoolean()
         var bodyString: String? = response.readBody()
         var bodyJson: JSONObject? = bodyString.toJsonOrNull()
 
-        if (isEncryptedResponse && bodyString != null) {
-
-            logger.verbose("Encrypted response = $bodyString")
-
-            val decryptResponse = encryptionManager.decryptResponse(bodyString = bodyString)
-            when (decryptResponse) {
-                is EncryptionFailure -> {
-                    logger.verbose(config.accountId, "Failed to decrypt response")
-                    return false // todo lp check if this should be considered as nw failure?
-                }
-                is EncryptionSuccess -> {
-                    // reassign before processing responses
-                    bodyString = decryptResponse.data
-                    bodyJson = bodyString.toJsonOrNull()
-                }
-            }
-
-        } else {
-            // no-op, we have assigned body already
+        logger.verbose(config.accountId, "Processing response : $bodyJson")
+        if (bodyString.isNullOrBlank() || bodyJson == null) {
+            // no-op: there is nothing to handle, considering success as per legacy contract.
+            return true
         }
 
-        logger.verbose(config.accountId, "Processing response : $bodyJson")
+        val isEncryptedResponse = response.getHeaderValue(HEADER_ENCRYPTION_ENABLED).toBoolean()
+        if (isEncryptedResponse) {
+            when (val decryptResponse = encryptionManager.decryptResponse(bodyString = bodyString)) {
+                is EncryptionFailure -> {
+                    logger.verbose(config.accountId, "Failed to decrypt response")
+                    return false
+                }
+                is EncryptionSuccess -> {
+                    bodyString = decryptResponse.data
+                    bodyJson = bodyString.toJsonOrNull()
+                    logger.verbose("Decrypted response = $bodyString")
+                }
+            }
+        }
 
         for (processor: CleverTapResponse in cleverTapResponses) {
             processor.isFullResponse = isFullResponse
