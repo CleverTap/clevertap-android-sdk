@@ -38,6 +38,7 @@ import com.clevertap.android.sdk.network.FetchInAppListener
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
@@ -302,7 +303,37 @@ internal object CleverTapFactory {
             logger = config.logger,
             deviceInfo = deviceInfo
         )
-        
+
+        // todo inject in network manager
+        val queueHeaderBuilder = QueueHeaderBuilder(
+            context,
+            config,
+            coreMetaData,
+            controllerManager,
+            deviceInfo,
+            arpRepo,
+            ijRepo,
+            baseDatabaseManager,
+            validationResultStack,
+            {
+                StorageHelper.getIntFromPrefs(
+                    context,
+                    config,
+                    Constants.KEY_FIRST_TS,
+                    0
+                )
+            },
+            {
+                StorageHelper.getIntFromPrefs(
+                    context,
+                    config,
+                    Constants.KEY_LAST_TS,
+                    0
+                )
+            },
+            config.logger
+        )
+
         val networkManager = NetworkManager(
             context = context,
             config = config,
@@ -318,7 +349,8 @@ internal object CleverTapFactory {
             ctApiWrapper = ctApiWrapper,
             encryptionManager = encryptionManager,
             ijRepo = ijRepo,
-            arpRepo = arpRepo
+            arpRepo = arpRepo,
+            queueHeaderBuilder = queueHeaderBuilder
         )
         coreState.networkManager = networkManager
 

@@ -17,14 +17,12 @@ import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.Utils
-import com.clevertap.android.sdk.areAppNotificationsEnabled
 import com.clevertap.android.sdk.copyFrom
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.inapp.evaluation.EventType.Companion.fromBoolean
-import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.network.EndpointId.Companion.fromEventGroup
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApiWrapper
@@ -48,7 +46,6 @@ import com.clevertap.android.sdk.response.ProductConfigResponse
 import com.clevertap.android.sdk.response.PushAmpResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
-import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
 import org.json.JSONArray
@@ -76,6 +73,7 @@ internal class NetworkManager(
     private val encryptionManager: NetworkEncryptionManager,
     private val ijRepo: IJRepo,
     private val arpRepo: ArpRepo,
+    private val queueHeaderBuilder: QueueHeaderBuilder,
     val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
         inAppResponse,
         MetadataResponse(config, deviceInfo, ijRepo),
@@ -285,175 +283,14 @@ internal class NetworkManager(
     }
 
     /**
-     * Constructs a header [JSONObject] to be included as a first element of a sendQueue request
-     *
-     * @param context The Context object.
-     * @param caller  The optional caller identifier.
+     * Use QueueHeaderBuilder for header construction
      */
-    private fun getQueueHeader(context: Context, caller: String?): JSONObject? {
-        try {
-            // Construct the header JSON object
-            val header = JSONObject()
-
-            // Add caller if available
-            if (caller != null) {
-                header.put(Constants.D_SRC, caller)
-            }
-
-            // Add device ID
-            val deviceId = deviceInfo.deviceID
-            if (deviceId != null && deviceId != "") {
-                header.put("g", deviceId)
-            } else {
-                logger.verbose(
-                    config.accountId,
-                    "CRITICAL: Couldn't finalise on a device ID! Using error device ID instead!"
-                )
-            }
-
-            // Add type as "meta"
-            header.put("type", "meta")
-
-            // Add app fields
-            val appFields = deviceInfo.appLaunchedFields
-            if (coreMetaData.isWebInterfaceInitializedExternally) {
-                appFields.put("wv_init", true)
-            }
-            header.put("af", appFields)
-
-            // Add _i and _j if available
-            val i = ijRepo.getI(context)
-            if (i > 0) {
-                header.put("_i", i)
-            }
-
-            val j = ijRepo.getJ(context)
-            if (j > 0) {
-                header.put("_j", j)
-            }
-
-            val accountId = config.accountId
-            val token = config.accountToken
-
-            if (accountId == null || token == null) {
-                logger.debug(
-                    config.accountId,
-                    "Account ID/token not found, unable to configure queue request"
-                )
-                return null
-            }
-
-            // Add account ID, token, and timestamps
-            header.put("id", accountId)
-            header.put("tk", token)
-            header.put("l_ts", lastRequestTimestamp)
-            header.put("f_ts", firstRequestTimestamp)
-
-            // Add ct_pi (identities)
-            header.put(
-                "ct_pi", IdentityRepoFactory
-                    .getRepo(this.context, config, validationResultStack).identitySet.toString()
-            )
-
-            // Add ddnd (Do Not Disturb)
-            header.put(
-                "ddnd",
-                !(this.context.areAppNotificationsEnabled()
-                        && (controllerManager.pushProviders == null
-                        || controllerManager.pushProviders.isNotificationSupported))
-            )
-
-            // Add bk (Background Ping) if required
-            if (coreMetaData.isBgPing) {
-                header.put("bk", 1)
-                coreMetaData.isBgPing = false
-            }
-            // Add rtl (Rendered Target List)
-            header.put(
-                "rtl", CTJsonConverter.getRenderedTargetList(
-                    databaseManager.loadDBAdapter(
-                        this.context
-                    )
-                )
-            )
-
-            // Add rct and ait (Referrer Click Time and App Install Time) if not sent before
-            if (!coreMetaData.isInstallReferrerDataSent) {
-                header.put("rct", coreMetaData.referrerClickTime)
-                header.put("ait", coreMetaData.appInstallTime)
-            }
-            // Add frs (First Request in Session) and update first request flag
-            header.put("frs", coreMetaData.isFirstRequestInSession)
-
-            // Add debug flag to show errors and events on the integration-debugger
-            if (CleverTapAPI.getDebugLevel() == 3) {
-                header.put("debug", true)
-            }
-
-            coreMetaData.isFirstRequestInSession = false
-
-            //Add ARP (Additional Request Parameters)
-            try {
-                val arp = arpRepo.getARP(context)
-                if (arp != null && arp.length() > 0) {
-                    header.put("arp", arp)
-                }
-            } catch (e: JSONException) {
-                logger.verbose(config.accountId, "Failed to attach ARP", e)
-            }
-
-            // Add ref (Referrer Information)
-            val ref = JSONObject()
-            try {
-                val utmSource = coreMetaData.source
-                if (utmSource != null) {
-                    ref.put("us", utmSource)
-                }
-
-                val utmMedium = coreMetaData.medium
-                if (utmMedium != null) {
-                    ref.put("um", utmMedium)
-                }
-
-                val utmCampaign = coreMetaData.campaign
-                if (utmCampaign != null) {
-                    ref.put("uc", utmCampaign)
-                }
-
-                if (ref.length() > 0) {
-                    header.put("ref", ref)
-                }
-            } catch (e: JSONException) {
-                logger.verbose(config.accountId, "Failed to attach ref", e)
-            }
-
-            // Add wzrk_ref (CleverTap-specific Parameters)
-            val wzrkParams = coreMetaData.wzrkParams
-            if (wzrkParams != null && wzrkParams.length() > 0) {
-                header.put("wzrk_ref", wzrkParams)
-            }
-
-            // Attach InAppFC to header if available
-            if (controllerManager.inAppFCManager != null) {
-                Logger.v("Attaching InAppFC to Header")
-                header.put("imp", controllerManager.inAppFCManager.shownTodayCount)
-                header.put("tlc", controllerManager.inAppFCManager.getInAppsCount(context))
-            } else {
-                logger.verbose(
-                    config.accountId,
-                    "controllerManager.getInAppFCManager() is NULL, not Attaching InAppFC to Header"
-                )
-            }
-
-            return header
-        } catch (e: JSONException) {
-            logger.verbose(config.accountId, "CommsManager: Failed to attach header", e)
-            return null
-        }
+    private fun getQueueHeader(caller: String?): JSONObject? {
+        return queueHeaderBuilder.buildHeader(caller)
     }
 
     @WorkerThread
-    private fun performHandshakeForDomain(
+    fun performHandshakeForDomain(
         eventGroup: EventGroup,
         handshakeSuccessCallback: Runnable
     ) {
@@ -550,7 +387,7 @@ internal class NetworkManager(
         }
 
         val endpointId: EndpointId = fromEventGroup(eventGroup)
-        val queueHeader: JSONObject? = getQueueHeader(context, caller)
+        val queueHeader: JSONObject? = getQueueHeader(caller)
         applyQueueHeaderListeners(queueHeader, endpointId, queue.optJSONObject(0).has("profile"))
 
         val requestBody = SendQueueRequestBody(queueHeader, queue)
@@ -558,12 +395,13 @@ internal class NetworkManager(
         try {
             callApiForEventGroup(eventGroup, requestBody).use { response ->
                 networkRetryCount = 0
-                val isProcessed = when (eventGroup) {
+                val isProcessed: Boolean
+                when (eventGroup) {
                     EventGroup.VARIABLES -> {
-                        handleVariablesResponse(response = response)
+                        return handleVariablesResponse(response = response)
                     }
                     EventGroup.REGULAR -> {
-                        handleSendQueueResponse(
+                        isProcessed = handleSendQueueResponse(
                             response = response,
                             isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody),
                             notifyNetworkHeaderListeners = {
@@ -575,7 +413,7 @@ internal class NetworkManager(
                         )
                     }
                     EventGroup.PUSH_NOTIFICATION_VIEWED -> {
-                        handlePushImpressionsResponse(response = response)
+                        isProcessed = handlePushImpressionsResponse(response = response)
                     }
                 }
 
@@ -619,11 +457,8 @@ internal class NetworkManager(
     }
 
     @WorkerThread
-    fun defineTemplates(
-        context: Context,
-        templates: Collection<CustomTemplate>
-    ): Boolean {
-        val header = getQueueHeader(context, null) ?: return false
+    fun defineTemplates(templates: Collection<CustomTemplate>): Boolean {
+        val header = getQueueHeader(null) ?: return false
 
         val body = DefineTemplatesRequestBody(header, templates)
         logger.debug(config.accountId, "Will define templates: $body")

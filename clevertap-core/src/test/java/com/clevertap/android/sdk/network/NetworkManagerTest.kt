@@ -481,26 +481,26 @@ class NetworkManagerTest : BaseTestCase() {
     fun `defineTemplates should return false when error response code is received`() {
         mockHttpClient.responseCode = 400
         mockHttpClient.responseBody = getErrorJson().toString()
-        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+        assertFalse(networkManager.defineTemplates(emptyList()))
 
         mockHttpClient.responseCode = 401
-        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+        assertFalse(networkManager.defineTemplates(emptyList()))
 
         mockHttpClient.responseCode = 500
-        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+        assertFalse(networkManager.defineTemplates(emptyList()))
     }
 
     @Test
     fun `defineTemplates should return false when http call results in an exception`() {
         mockHttpClient.alwaysThrowOnExecute = true
-        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+        assertFalse(networkManager.defineTemplates(emptyList()))
     }
 
     @Test
     fun `defineTemplates should return true when success response code is received`() {
         mockHttpClient.responseCode = 200
         mockHttpClient.responseBody = getErrorJson().toString()
-        assertTrue(networkManager.defineTemplates(appCtx, emptyList()))
+        assertTrue(networkManager.defineTemplates(emptyList()))
     }
 
     private fun provideNetworkManager(): NetworkManager {
@@ -529,6 +529,7 @@ class NetworkManagerTest : BaseTestCase() {
             logger = cleverTapInstanceConfig.logger,
             deviceInfo = deviceInfo
         )
+        val queueHeaderBuilder = mockk<QueueHeaderBuilder>()
 
         // Create 10 spy processors for response handling tests
         val responses = ArrayList<CleverTapResponse>()
@@ -554,6 +555,7 @@ class NetworkManagerTest : BaseTestCase() {
             encryptionManager = networkEncryptionManager,
             ijRepo = ijRepo,
             arpRepo = arpRepo,
+            queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponses = responses,
             logger = TestLogger()
         )
