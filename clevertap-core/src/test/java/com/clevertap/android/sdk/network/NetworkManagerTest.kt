@@ -27,7 +27,6 @@ import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.http.MockHttpClient
 import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.response.InAppResponse
-import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
@@ -523,7 +522,6 @@ class NetworkManagerTest : BaseTestCase() {
                 mockk<TemplatesManager>(),
                 metaData
             )
-        val ijRepo = IJRepo(cleverTapInstanceConfig)
         val arpRepo = ArpRepo(
             accountId = cleverTapInstanceConfig.accountId,
             logger = cleverTapInstanceConfig.logger,
@@ -545,16 +543,12 @@ class NetworkManagerTest : BaseTestCase() {
             config = cleverTapInstanceConfig,
             deviceInfo = deviceInfo,
             coreMetaData = metaData,
-            validationResultStack = ValidationResultStack(),
             controllerManager = controllerManager,
             databaseManager = dbManager,
             callbackManager = callbackManager,
-            ctLockManager = lockManager,
             validator = Validator(),
-            inAppResponse = inAppResponse,
             ctApiWrapper = ctApiWrapper,
             encryptionManager = networkEncryptionManager,
-            ijRepo = ijRepo,
             arpRepo = arpRepo,
             queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponses = responses,

@@ -6,7 +6,6 @@ import android.net.ConnectivityManager
 import android.text.TextUtils
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.BaseCallbackManager
-import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -34,19 +33,8 @@ import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
-import com.clevertap.android.sdk.response.ConsoleResponse
-import com.clevertap.android.sdk.response.DisplayUnitResponse
-import com.clevertap.android.sdk.response.FeatureFlagResponse
-import com.clevertap.android.sdk.response.FetchVariablesResponse
-import com.clevertap.android.sdk.response.GeofenceResponse
-import com.clevertap.android.sdk.response.InAppResponse
-import com.clevertap.android.sdk.response.InboxResponse
-import com.clevertap.android.sdk.response.MetadataResponse
-import com.clevertap.android.sdk.response.ProductConfigResponse
-import com.clevertap.android.sdk.response.PushAmpResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
-import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
 import org.json.JSONArray
 import org.json.JSONException
@@ -57,46 +45,20 @@ import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 
-internal class NetworkManager(
+internal class NetworkManager constructor(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
     private val deviceInfo: DeviceInfo,
     private val coreMetaData: CoreMetaData,
-    private val validationResultStack: ValidationResultStack,
     private val controllerManager: ControllerManager,
     private val databaseManager: BaseDatabaseManager,
     private val callbackManager: BaseCallbackManager,
-    ctLockManager: CTLockManager,
     private val validator: Validator,
-    inAppResponse: InAppResponse,
     private val ctApiWrapper: CtApiWrapper,
     private val encryptionManager: NetworkEncryptionManager,
-    private val ijRepo: IJRepo,
     private val arpRepo: ArpRepo,
     private val queueHeaderBuilder: QueueHeaderBuilder,
-    val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
-        inAppResponse,
-        MetadataResponse(config, deviceInfo, ijRepo),
-        ARPResponse(config, validator, controllerManager, arpRepo),
-        ConsoleResponse(config),
-        InboxResponse(
-            config, ctLockManager,
-            callbackManager,
-            controllerManager
-        ),
-        PushAmpResponse(
-            context,
-            config,
-            databaseManager,
-            callbackManager,
-            controllerManager
-        ),
-        FetchVariablesResponse(config, controllerManager, callbackManager),
-        DisplayUnitResponse(config, callbackManager, controllerManager),
-        FeatureFlagResponse(config, controllerManager),
-        ProductConfigResponse(config, coreMetaData, controllerManager),
-        GeofenceResponse(config, callbackManager)
-    ),
+    val cleverTapResponses: MutableList<CleverTapResponse>,
     private val logger: ILogger = config.logger
 ) {
 

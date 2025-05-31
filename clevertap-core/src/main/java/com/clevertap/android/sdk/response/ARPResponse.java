@@ -132,8 +132,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
                 logger.verbose(config.getAccountId(), "Validator object is NULL");
             }
         } catch (JSONException e) {
-            logger
-                    .verbose(config.getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
+            logger.verbose(config.getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
         }
     }
 }

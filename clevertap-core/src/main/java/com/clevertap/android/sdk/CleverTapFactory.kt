@@ -42,7 +42,18 @@ import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
+import com.clevertap.android.sdk.response.ARPResponse
+import com.clevertap.android.sdk.response.CleverTapResponse
+import com.clevertap.android.sdk.response.ConsoleResponse
+import com.clevertap.android.sdk.response.DisplayUnitResponse
+import com.clevertap.android.sdk.response.FeatureFlagResponse
+import com.clevertap.android.sdk.response.FetchVariablesResponse
+import com.clevertap.android.sdk.response.GeofenceResponse
 import com.clevertap.android.sdk.response.InAppResponse
+import com.clevertap.android.sdk.response.InboxResponse
+import com.clevertap.android.sdk.response.MetadataResponse
+import com.clevertap.android.sdk.response.ProductConfigResponse
+import com.clevertap.android.sdk.response.PushAmpResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.utils.Clock.Companion.SYSTEM
@@ -334,23 +345,44 @@ internal object CleverTapFactory {
             config.logger
         )
 
+        val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
+            inAppResponse,
+            MetadataResponse(config, deviceInfo, ijRepo),
+            ARPResponse(config, validator, controllerManager, arpRepo),
+            ConsoleResponse(config),
+            InboxResponse(
+                config, ctLockManager,
+                callbackManager,
+                controllerManager
+            ),
+            PushAmpResponse(
+                context,
+                config,
+                baseDatabaseManager,
+                callbackManager,
+                controllerManager
+            ),
+            FetchVariablesResponse(config, controllerManager, callbackManager),
+            DisplayUnitResponse(config, callbackManager, controllerManager),
+            FeatureFlagResponse(config, controllerManager),
+            ProductConfigResponse(config, coreMetaData, controllerManager),
+            GeofenceResponse(config, callbackManager)
+        )
+
         val networkManager = NetworkManager(
             context = context,
             config = config,
             deviceInfo = deviceInfo,
             coreMetaData = coreMetaData,
-            validationResultStack = validationResultStack,
             controllerManager = controllerManager,
             databaseManager = baseDatabaseManager,
             callbackManager = callbackManager,
-            ctLockManager = ctLockManager,
             validator = validator,
-            inAppResponse = inAppResponse,
             ctApiWrapper = ctApiWrapper,
             encryptionManager = encryptionManager,
-            ijRepo = ijRepo,
             arpRepo = arpRepo,
-            queueHeaderBuilder = queueHeaderBuilder
+            queueHeaderBuilder = queueHeaderBuilder,
+            cleverTapResponses = cleverTapResponses
         )
         coreState.networkManager = networkManager
 
