@@ -35,7 +35,6 @@ import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
-import com.clevertap.android.sdk.validation.Validator
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -53,10 +52,9 @@ internal class NetworkManager constructor(
     private val controllerManager: ControllerManager,
     private val databaseManager: BaseDatabaseManager,
     private val callbackManager: BaseCallbackManager,
-    private val validator: Validator,
     private val ctApiWrapper: CtApiWrapper,
     private val encryptionManager: NetworkEncryptionManager,
-    private val arpRepo: ArpRepo,
+    private val arpResponse: ARPResponse,
     private val queueHeaderBuilder: QueueHeaderBuilder,
     val cleverTapResponses: MutableList<CleverTapResponse>,
     private val logger: ILogger = config.logger
@@ -518,8 +516,7 @@ internal class NetworkManager constructor(
 
             logger.verbose(config.accountId, "Processing variables response : $bodyJson")
 
-            ARPResponse(config, validator, controllerManager, arpRepo)
-                .processResponse(bodyJson, bodyString, this.context)
+            arpResponse.processResponse(bodyJson, bodyString, this.context)
             return true
         } else {
             handleVarsOrTemplatesResponseError(response, "Variables")

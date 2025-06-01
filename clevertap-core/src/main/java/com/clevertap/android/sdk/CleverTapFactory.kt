@@ -315,18 +315,17 @@ internal object CleverTapFactory {
             deviceInfo = deviceInfo
         )
 
-        // todo inject in network manager
         val queueHeaderBuilder = QueueHeaderBuilder(
-            context,
-            config,
-            coreMetaData,
-            controllerManager,
-            deviceInfo,
-            arpRepo,
-            ijRepo,
-            baseDatabaseManager,
-            validationResultStack,
-            {
+            context = context,
+            config = config,
+            coreMetaData = coreMetaData,
+            controllerManager = controllerManager,
+            deviceInfo = deviceInfo,
+            arpRepo = arpRepo,
+            ijRepo = ijRepo,
+            databaseManager = baseDatabaseManager,
+            validationResultStack = validationResultStack,
+            firstRequestTs = {
                 StorageHelper.getIntFromPrefs(
                     context,
                     config,
@@ -334,7 +333,7 @@ internal object CleverTapFactory {
                     0
                 )
             },
-            {
+            lastRequestTs = {
                 StorageHelper.getIntFromPrefs(
                     context,
                     config,
@@ -342,13 +341,14 @@ internal object CleverTapFactory {
                     0
                 )
             },
-            config.logger
+            logger = config.logger
         )
 
+        val arpResponse = ARPResponse(config, validator, controllerManager, arpRepo)
         val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
             inAppResponse,
             MetadataResponse(config, deviceInfo, ijRepo),
-            ARPResponse(config, validator, controllerManager, arpRepo),
+            arpResponse,
             ConsoleResponse(config),
             InboxResponse(
                 config, ctLockManager,
@@ -377,10 +377,9 @@ internal object CleverTapFactory {
             controllerManager = controllerManager,
             databaseManager = baseDatabaseManager,
             callbackManager = callbackManager,
-            validator = validator,
             ctApiWrapper = ctApiWrapper,
             encryptionManager = encryptionManager,
-            arpRepo = arpRepo,
+            arpResponse = arpResponse,
             queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponses = cleverTapResponses
         )

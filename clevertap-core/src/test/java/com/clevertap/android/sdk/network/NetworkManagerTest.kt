@@ -13,8 +13,6 @@ import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
 import com.clevertap.android.sdk.events.EventGroup.VARIABLES
-import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
@@ -25,9 +23,8 @@ import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.http.MockHttpClient
+import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
-import com.clevertap.android.sdk.response.InAppResponse
-import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
 import io.mockk.spyk
@@ -511,17 +508,6 @@ class NetworkManagerTest : BaseTestCase() {
         val dbManager = DBManager(cleverTapInstanceConfig, lockManager, IJRepo(cleverTapInstanceConfig))
         val controllerManager =
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
-        val triggersManager = TriggerManager(appCtx, cleverTapInstanceConfig.accountId, deviceInfo)
-        val inAppResponse =
-            InAppResponse(
-                cleverTapInstanceConfig,
-                controllerManager,
-                true,
-                coreState.storeRegistry,
-                triggersManager,
-                mockk<TemplatesManager>(),
-                metaData
-            )
         val arpRepo = ArpRepo(
             accountId = cleverTapInstanceConfig.accountId,
             logger = cleverTapInstanceConfig.logger,
@@ -546,10 +532,9 @@ class NetworkManagerTest : BaseTestCase() {
             controllerManager = controllerManager,
             databaseManager = dbManager,
             callbackManager = callbackManager,
-            validator = Validator(),
             ctApiWrapper = ctApiWrapper,
             encryptionManager = networkEncryptionManager,
-            arpRepo = arpRepo,
+            arpResponse = mockk<ARPResponse>(relaxed =  true),
             queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponses = responses,
             logger = TestLogger()
