@@ -301,8 +301,9 @@ internal object CleverTapFactory {
             coreMetaData
         )
 
+        val networkRepo = NetworkRepo(context = context, config = config)
         val ctApiWrapper = CtApiWrapper(
-            context = context,
+            networkRepo = networkRepo,
             config = config,
             deviceInfo = deviceInfo
         )
@@ -315,8 +316,6 @@ internal object CleverTapFactory {
             logger = config.logger,
             deviceInfo = deviceInfo
         )
-
-        val networkRepo = NetworkRepo(context = context, config = config)
         val queueHeaderBuilder = QueueHeaderBuilder(
             context = context,
             config = config,

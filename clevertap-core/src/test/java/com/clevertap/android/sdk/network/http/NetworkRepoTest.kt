@@ -213,8 +213,54 @@ class NetworkRepoTest : BaseTestCase() {
         // When
         networkRepo.setSpikyDomain(spikyDomainName)
 
-        // Then - The test passes if no exception is thrown
-        assertTrue("setSpikyDomain should complete without error", true)
+        // Then - Verify by reading it back
+        val result = networkRepo.getSpikyDomain()
+        assertEquals(spikyDomainName, result)
+    }
+
+    // Test cases for getSpikyDomain()
+    @Test
+    fun `getSpikyDomain should return spiky domain name from storage`() {
+        // Given
+        val expectedSpikyDomain = "spiky.clevertap.com"
+        networkRepo = NetworkRepo(appCtx, config)
+
+        // First set a value
+        networkRepo.setSpikyDomain(expectedSpikyDomain)
+
+        // When
+        val result = networkRepo.getSpikyDomain()
+
+        // Then
+        assertEquals(expectedSpikyDomain, result)
+    }
+
+    @Test
+    fun `getSpikyDomain should return null when no stored spiky domain`() {
+        // Given
+        networkRepo = NetworkRepo(appCtx, config)
+
+        // When
+        val result = networkRepo.getSpikyDomain()
+
+        // Then
+        assertNull(result)
+    }
+
+    @Test
+    fun `getSpikyDomain should work independently from regular domain`() {
+        // Given
+        networkRepo = NetworkRepo(appCtx, config)
+        val regularDomain = "regular.clevertap.com"
+        val spikyDomain = "spiky.clevertap.com"
+
+        // When
+        networkRepo.setDomain(regularDomain)
+        networkRepo.setSpikyDomain(spikyDomain)
+
+        // Then
+        assertEquals(regularDomain, networkRepo.getDomain())
+        assertEquals(spikyDomain, networkRepo.getSpikyDomain())
     }
 
     // Test cases for getMinDelayFrequency()
@@ -365,17 +411,20 @@ class NetworkRepoTest : BaseTestCase() {
         val firstTs = 1111111111
         val lastTs = 2222222222L.toInt()
         val domain = "integration.test.com"
+        val spikyDomain = "spiky.integration.test.com"
 
         // When
         networkRepo.setFirstRequestTs(firstTs)
         networkRepo.setLastRequestTs(lastTs)
         networkRepo.setDomain(domain)
+        networkRepo.setSpikyDomain(spikyDomain)
         networkRepo.setMuted(true)
 
         // Then
         assertEquals(firstTs, networkRepo.getFirstRequestTs())
         assertEquals(lastTs, networkRepo.getLastRequestTs())
         assertEquals(domain, networkRepo.getDomain())
+        assertEquals(spikyDomain, networkRepo.getSpikyDomain())
     }
 
     // Test with different config instances

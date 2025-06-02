@@ -82,6 +82,15 @@ internal class NetworkRepo(
         )
     }
 
+    fun getSpikyDomain() : String? {
+        return StorageHelper.getStringFromPrefs(
+            context,
+            config,
+            Constants.SPIKY_KEY_DOMAIN_NAME,
+            null
+        )
+    }
+
     fun setSpikyDomain(spikyDomainName: String) {
         StorageHelper.putString(
             context,
