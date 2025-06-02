@@ -40,6 +40,7 @@ import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
+import com.clevertap.android.sdk.network.http.NetworkRepo
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
@@ -315,6 +316,7 @@ internal object CleverTapFactory {
             deviceInfo = deviceInfo
         )
 
+        val networkRepo = NetworkRepo(context = context, config = config)
         val queueHeaderBuilder = QueueHeaderBuilder(
             context = context,
             config = config,
@@ -325,22 +327,8 @@ internal object CleverTapFactory {
             ijRepo = ijRepo,
             databaseManager = baseDatabaseManager,
             validationResultStack = validationResultStack,
-            firstRequestTs = {
-                StorageHelper.getIntFromPrefs(
-                    context,
-                    config,
-                    Constants.KEY_FIRST_TS,
-                    0
-                )
-            },
-            lastRequestTs = {
-                StorageHelper.getIntFromPrefs(
-                    context,
-                    config,
-                    Constants.KEY_LAST_TS,
-                    0
-                )
-            },
+            firstRequestTs = networkRepo::getFirstRequestTs,
+            lastRequestTs = networkRepo::getLastRequestTs,
             logger = config.logger
         )
 
@@ -380,6 +368,7 @@ internal object CleverTapFactory {
             ctApiWrapper = ctApiWrapper,
             encryptionManager = encryptionManager,
             arpResponse = arpResponse,
+            networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponses = cleverTapResponses
         )

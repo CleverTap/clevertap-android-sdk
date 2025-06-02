@@ -5,7 +5,6 @@ import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.MockCoreState
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.TestLogger
@@ -23,6 +22,7 @@ import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.http.MockHttpClient
+import com.clevertap.android.sdk.network.http.NetworkRepo
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.shared.test.BaseTestCase
@@ -502,17 +502,11 @@ class NetworkManagerTest : BaseTestCase() {
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
-        val coreState = MockCoreState(cleverTapInstanceConfig)
         val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         val lockManager = CTLockManager()
         val dbManager = DBManager(cleverTapInstanceConfig, lockManager, IJRepo(cleverTapInstanceConfig))
         val controllerManager =
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
-        val arpRepo = ArpRepo(
-            accountId = cleverTapInstanceConfig.accountId,
-            logger = cleverTapInstanceConfig.logger,
-            deviceInfo = deviceInfo
-        )
         val queueHeaderBuilder = mockk<QueueHeaderBuilder>()
         every { queueHeaderBuilder.buildHeader(any()) } returns JSONObject()
 
@@ -535,6 +529,7 @@ class NetworkManagerTest : BaseTestCase() {
             ctApiWrapper = ctApiWrapper,
             encryptionManager = networkEncryptionManager,
             arpResponse = mockk<ARPResponse>(relaxed =  true),
+            networkRepo = NetworkRepo(appCtx, cleverTapInstanceConfig),
             queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponses = responses,
             logger = TestLogger()
