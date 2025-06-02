@@ -22,7 +22,7 @@ import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.http.MockHttpClient
-import com.clevertap.android.sdk.network.http.NetworkRepo
+import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.shared.test.BaseTestCase

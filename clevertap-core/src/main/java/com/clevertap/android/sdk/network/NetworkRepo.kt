@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.network.http
+package com.clevertap.android.sdk.network
 
 import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -8,7 +8,11 @@ import java.security.SecureRandom
 
 internal class NetworkRepo(
     val context: Context,
-    val config: CleverTapInstanceConfig
+    val config: CleverTapInstanceConfig,
+    val generateRandomDelay: () -> Int = {
+        val randomGen = SecureRandom()
+        (randomGen.nextInt(10) + 1) * 1000
+    }
 ) {
 
     fun getFirstRequestTs() : Int {
@@ -107,9 +111,7 @@ internal class NetworkRepo(
             return Constants.PUSH_DELAY_MS
         } else {
             //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
-            val randomGen = SecureRandom()
-            val randomDelay = (randomGen.nextInt(10) + 1) * 1000
-            val  delayBy = currentDelay + randomDelay
+            val  delayBy = currentDelay + generateRandomDelay()
             if (delayBy < Constants.MAX_DELAY_FREQUENCY) {
                 config.logger.debug(
                     config.accountId,

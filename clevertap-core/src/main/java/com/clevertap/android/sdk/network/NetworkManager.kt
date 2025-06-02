@@ -41,7 +41,7 @@ import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.EncryptionFailure
-import com.clevertap.android.sdk.network.http.NetworkRepo
+import com.clevertap.android.sdk.network.NetworkRepo
 
 internal class NetworkManager constructor(
     private val context: Context,
