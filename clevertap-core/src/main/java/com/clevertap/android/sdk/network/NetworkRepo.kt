@@ -19,7 +19,7 @@ internal class NetworkRepo(
         return StorageHelper.getIntFromPrefs(
             context,
             config,
-            Constants.KEY_FIRST_TS,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_FIRST_TS),
             0
         )
     }
@@ -43,7 +43,7 @@ internal class NetworkRepo(
         return StorageHelper.getIntFromPrefs(
             context,
             config,
-            Constants.KEY_LAST_TS,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_LAST_TS),
             0
         )
     }
@@ -77,7 +77,7 @@ internal class NetworkRepo(
         return StorageHelper.getStringFromPrefs(
             context,
             config,
-            Constants.KEY_DOMAIN_NAME,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_DOMAIN_NAME),
             null
         )
     }
@@ -86,7 +86,7 @@ internal class NetworkRepo(
         return StorageHelper.getStringFromPrefs(
             context,
             config,
-            Constants.SPIKY_KEY_DOMAIN_NAME,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.SPIKY_KEY_DOMAIN_NAME),
             null
         )
     }
