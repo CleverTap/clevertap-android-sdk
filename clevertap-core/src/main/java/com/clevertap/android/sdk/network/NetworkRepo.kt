@@ -19,7 +19,7 @@ internal class NetworkRepo(
         return StorageHelper.getIntFromPrefs(
             context,
             config,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_FIRST_TS),
+            Constants.KEY_FIRST_TS,
             0
         )
     }
@@ -31,6 +31,14 @@ internal class NetworkRepo(
         )
     }
 
+    fun clearFirstRequestTs() {
+        StorageHelper.putInt(
+            context,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_FIRST_TS),
+            0
+        )
+    }
+
     fun setLastRequestTs(lastRequestTs: Int) {
         StorageHelper.putInt(
             context,
@@ -39,11 +47,19 @@ internal class NetworkRepo(
         )
     }
 
+    fun clearLastRequestTs() {
+        StorageHelper.putInt(
+            context,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_LAST_TS),
+            0
+        )
+    }
+
     fun getLastRequestTs() : Int {
         return StorageHelper.getIntFromPrefs(
             context,
             config,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_LAST_TS),
+            Constants.KEY_LAST_TS,
             0
         )
     }
@@ -77,7 +93,7 @@ internal class NetworkRepo(
         return StorageHelper.getStringFromPrefs(
             context,
             config,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_DOMAIN_NAME),
+            Constants.KEY_DOMAIN_NAME,
             null
         )
     }
@@ -86,7 +102,7 @@ internal class NetworkRepo(
         return StorageHelper.getStringFromPrefs(
             context,
             config,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.SPIKY_KEY_DOMAIN_NAME),
+            Constants.SPIKY_KEY_DOMAIN_NAME,
             null
         )
     }

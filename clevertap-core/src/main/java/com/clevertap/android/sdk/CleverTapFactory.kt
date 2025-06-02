@@ -110,6 +110,7 @@ internal object CleverTapFactory {
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
         coreState.config = config
 
+        val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
 
         val fileResourceProviderInit = CTExecutorFactory.executors(config).ioTask<Unit>()
@@ -117,12 +118,14 @@ internal object CleverTapFactory {
             FileResourceProvider.getInstance(context, config.logger)
         }
 
-        val baseDatabaseManager = DBManager(
+        val databaseManager = DBManager(
             config = config,
             ctLockManager = ctLockManager,
-            ijRepo = ijRepo
+            ijRepo = ijRepo,
+            clearFirstRequestTs = networkRepo::clearFirstRequestTs,
+            clearLastRequestTs = networkRepo::clearLastRequestTs
         )
-        coreState.databaseManager = baseDatabaseManager
+        coreState.databaseManager = databaseManager
 
         val repository = CryptRepository(
             context = context,
@@ -146,7 +149,7 @@ internal object CleverTapFactory {
             val dataMigrationRepository = DataMigrationRepository(
                 context = context,
                 config = config,
-                dbAdapter = baseDatabaseManager.loadDBAdapter(context)
+                dbAdapter = databaseManager.loadDBAdapter(context)
             )
 
             val cryptMigrator = CryptMigrator(
@@ -165,7 +168,7 @@ internal object CleverTapFactory {
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
         val localDataStore =
-            LocalDataStore(context, config, cryptHandler, deviceInfo, baseDatabaseManager)
+            LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager)
         coreState.localDataStore = localDataStore
 
         val profileValueHandler = ProfileValueHandler(validator, validationResultStack)
@@ -189,7 +192,7 @@ internal object CleverTapFactory {
             ctLockManager,
             callbackManager,
             deviceInfo,
-            baseDatabaseManager
+            databaseManager
         )
         coreState.controllerManager = controllerManager
 
@@ -301,7 +304,6 @@ internal object CleverTapFactory {
             coreMetaData
         )
 
-        val networkRepo = NetworkRepo(context = context, config = config)
         val ctApiWrapper = CtApiWrapper(
             networkRepo = networkRepo,
             config = config,
@@ -324,7 +326,7 @@ internal object CleverTapFactory {
             deviceInfo = deviceInfo,
             arpRepo = arpRepo,
             ijRepo = ijRepo,
-            databaseManager = baseDatabaseManager,
+            databaseManager = databaseManager,
             validationResultStack = validationResultStack,
             firstRequestTs = networkRepo::getFirstRequestTs,
             lastRequestTs = networkRepo::getLastRequestTs,
@@ -345,7 +347,7 @@ internal object CleverTapFactory {
             PushAmpResponse(
                 context,
                 config,
-                baseDatabaseManager,
+                databaseManager,
                 callbackManager,
                 controllerManager
             ),
@@ -362,7 +364,7 @@ internal object CleverTapFactory {
             deviceInfo = deviceInfo,
             coreMetaData = coreMetaData,
             controllerManager = controllerManager,
-            databaseManager = baseDatabaseManager,
+            databaseManager = databaseManager,
             callbackManager = callbackManager,
             ctApiWrapper = ctApiWrapper,
             encryptionManager = encryptionManager,
@@ -380,7 +382,7 @@ internal object CleverTapFactory {
         )
 
         val baseEventQueueManager = EventQueueManager(
-            baseDatabaseManager,
+            databaseManager,
             context,
             config,
             eventMediator,
@@ -472,7 +474,7 @@ internal object CleverTapFactory {
 
         val pushProviders = PushProviders
             .load(
-                context, config, baseDatabaseManager, validationResultStack,
+                context, config, databaseManager, validationResultStack,
                 analyticsManager, controllerManager, ctWorkManager
             )
         coreState.pushProviders = pushProviders
@@ -494,7 +496,7 @@ internal object CleverTapFactory {
             context, config, deviceInfo,
             validationResultStack, baseEventQueueManager, analyticsManager,
             coreMetaData, controllerManager, sessionManager,
-            localDataStore, callbackManager, baseDatabaseManager, ctLockManager, loginInfoProvider
+            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider
         )
         coreState.loginController = loginController
 

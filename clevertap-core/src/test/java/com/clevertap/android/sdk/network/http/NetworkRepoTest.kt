@@ -43,6 +43,36 @@ class NetworkRepoTest : BaseTestCase() {
     }
 
     @Test
+    fun `clearFirstRequestTs should return 0 from storage`() {
+        // Given
+        networkRepo = NetworkRepo(appCtx, config)
+
+        // First set a value
+        networkRepo.setFirstRequestTs(1234567890)
+
+        // When
+        networkRepo.clearFirstRequestTs()
+
+        // Then
+        assertEquals(0, networkRepo.getFirstRequestTs())
+    }
+
+    @Test
+    fun `clearLastRequestTs should return 0 from storage`() {
+        // Given
+        networkRepo = NetworkRepo(appCtx, config)
+
+        // First set a value
+        networkRepo.setLastRequestTs(1234567890)
+
+        // When
+        networkRepo.clearLastRequestTs()
+
+        // Then
+        assertEquals(0, networkRepo.getLastRequestTs())
+    }
+
+    @Test
     fun `getFirstRequestTs should return default value when no stored value`() {
         // Given
         networkRepo = NetworkRepo(appCtx, config)
