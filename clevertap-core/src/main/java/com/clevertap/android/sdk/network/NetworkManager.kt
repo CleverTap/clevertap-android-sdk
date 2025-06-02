@@ -593,6 +593,11 @@ internal class NetworkManager constructor(
         logger.info("Received error response code: " + response.code)
         when (response.code) {
             419 -> {
+                logger.verbose("There is decryption failure on backend, disabling encrypted requests.")
+                coreMetaData.isRelaxNetwork = true
+            }
+            402 -> {
+                logger.verbose("Encryption in transit feature on not enabled for your account, please contact Clevertap support.")
                 coreMetaData.isRelaxNetwork = true
             }
             else -> {
