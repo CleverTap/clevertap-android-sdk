@@ -22,7 +22,6 @@ import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.http.MockHttpClient
-import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.shared.test.BaseTestCase
@@ -471,6 +470,34 @@ class NetworkManagerTest : BaseTestCase() {
 
         // Verify decryption was not called
         verify(exactly = 0) { networkEncryptionManager.decryptResponse(any()) }
+    }
+
+    @Test
+    fun test_sendQueue_error402_returnFalse() {
+        // Given - HTTP 402 Payment Required error
+        mockHttpClient.responseCode = 402
+        mockHttpClient.responseBody = getErrorJson().toString()
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+
+        // When
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun test_sendQueue_error419_returnFalse() {
+        // Given - HTTP 419 Authentication Timeout error
+        mockHttpClient.responseCode = 419
+        mockHttpClient.responseBody = getErrorJson().toString()
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+
+        // When
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Then
+        assertFalse(result)
     }
 
     @Test
