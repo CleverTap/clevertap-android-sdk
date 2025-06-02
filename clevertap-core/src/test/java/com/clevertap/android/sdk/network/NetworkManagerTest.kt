@@ -164,7 +164,7 @@ class NetworkManagerTest : BaseTestCase() {
         val originalDomain = networkManager.getDomain(REGULAR)
         StorageHelper.putString(
             appCtx,
-            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, Constants.KEY_DOMAIN_NAME),
+            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, NetworkRepo.KEY_DOMAIN_NAME),
             "different-domain.com"
         )
 
@@ -183,7 +183,7 @@ class NetworkManagerTest : BaseTestCase() {
         // Reset domain for other tests
         StorageHelper.putString(
             appCtx,
-            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, Constants.KEY_DOMAIN_NAME),
+            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, NetworkRepo.KEY_DOMAIN_NAME),
             originalDomain
         )
     }
@@ -237,7 +237,7 @@ class NetworkManagerTest : BaseTestCase() {
         val initialTimestamp = StorageHelper.getIntFromPrefs(
             appCtx,
             cleverTapInstanceConfig,
-            Constants.KEY_LAST_TS,
+            NetworkRepo.KEY_LAST_TS,
             0
         )
 
@@ -251,7 +251,7 @@ class NetworkManagerTest : BaseTestCase() {
         val updatedTimestamp = StorageHelper.getIntFromPrefs(
             appCtx,
             cleverTapInstanceConfig,
-            Constants.KEY_LAST_TS,
+            NetworkRepo.KEY_LAST_TS,
             0
         )
         assert(updatedTimestamp >= initialTimestamp)

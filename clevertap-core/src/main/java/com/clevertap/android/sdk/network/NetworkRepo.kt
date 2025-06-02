@@ -15,18 +15,27 @@ internal class NetworkRepo(
     }
 ) {
 
+    companion object {
+        const val KEY_DOMAIN_NAME: String = "comms_dmn"
+        const val SPIKY_KEY_DOMAIN_NAME: String = "comms_dmn_spiky"
+        const val KEY_LAST_TS: String = "comms_last_ts"
+        const val KEY_FIRST_TS: String = "comms_first_ts"
+        const val PUSH_DELAY_MS: Int = 1000
+        const val MAX_DELAY_FREQUENCY: Int = 1000 * 60 * 10
+    }
+
     fun getFirstRequestTs() : Int {
         return StorageHelper.getIntFromPrefs(
             context,
             config,
-            Constants.KEY_FIRST_TS,
+            KEY_FIRST_TS,
             0
         )
     }
     fun setFirstRequestTs(firstRequestTs: Int) {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_FIRST_TS),
+            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_FIRST_TS),
             firstRequestTs
         )
     }
@@ -34,7 +43,7 @@ internal class NetworkRepo(
     fun clearFirstRequestTs() {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_FIRST_TS),
+            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_FIRST_TS),
             0
         )
     }
@@ -42,7 +51,7 @@ internal class NetworkRepo(
     fun setLastRequestTs(lastRequestTs: Int) {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_LAST_TS),
+            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_LAST_TS),
             lastRequestTs
         )
     }
@@ -50,7 +59,7 @@ internal class NetworkRepo(
     fun clearLastRequestTs() {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_LAST_TS),
+            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_LAST_TS),
             0
         )
     }
@@ -59,7 +68,7 @@ internal class NetworkRepo(
         return StorageHelper.getIntFromPrefs(
             context,
             config,
-            Constants.KEY_LAST_TS,
+            KEY_LAST_TS,
             0
         )
     }
@@ -84,7 +93,7 @@ internal class NetworkRepo(
     fun setDomain(domainName: String?) {
         StorageHelper.putString(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_DOMAIN_NAME),
+            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_DOMAIN_NAME),
             domainName
         )
     }
@@ -93,7 +102,7 @@ internal class NetworkRepo(
         return StorageHelper.getStringFromPrefs(
             context,
             config,
-            Constants.KEY_DOMAIN_NAME,
+            KEY_DOMAIN_NAME,
             null
         )
     }
@@ -102,7 +111,7 @@ internal class NetworkRepo(
         return StorageHelper.getStringFromPrefs(
             context,
             config,
-            Constants.SPIKY_KEY_DOMAIN_NAME,
+            SPIKY_KEY_DOMAIN_NAME,
             null
         )
     }
@@ -110,7 +119,7 @@ internal class NetworkRepo(
     fun setSpikyDomain(spikyDomainName: String) {
         StorageHelper.putString(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.SPIKY_KEY_DOMAIN_NAME),
+            StorageHelper.storageKeyWithSuffix(config.accountId, SPIKY_KEY_DOMAIN_NAME),
             spikyDomainName
         )
     }
@@ -127,24 +136,24 @@ internal class NetworkRepo(
                 config.accountId,
                 "Failure count is $networkRetryCount. Setting delay frequency to 1s"
             )
-            return Constants.PUSH_DELAY_MS
+            return PUSH_DELAY_MS
         }
 
         if (config.accountRegion == null) {
             //Retry with delay as 1s if region is null in case of eu1
             config.logger.debug(config.accountId, "Setting delay frequency to 1s")
-            return Constants.PUSH_DELAY_MS
+            return PUSH_DELAY_MS
         } else {
             //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
             val  delayBy = currentDelay + generateRandomDelay()
-            if (delayBy < Constants.MAX_DELAY_FREQUENCY) {
+            if (delayBy < MAX_DELAY_FREQUENCY) {
                 config.logger.debug(
                     config.accountId,
                     "Setting delay frequency to $currentDelay"
                 )
                 return delayBy
             } else {
-                return Constants.PUSH_DELAY_MS
+                return PUSH_DELAY_MS
             }
         }
     }

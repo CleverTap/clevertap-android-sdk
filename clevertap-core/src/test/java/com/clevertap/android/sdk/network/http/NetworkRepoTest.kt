@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.network.http
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Assert.*
@@ -305,7 +304,7 @@ class NetworkRepoTest : BaseTestCase() {
         val result = networkRepo.getMinDelayFrequency(currentDelay, networkRetryCount)
 
         // Then
-        assertEquals(Constants.PUSH_DELAY_MS, result)
+        assertEquals(NetworkRepo.PUSH_DELAY_MS, result)
     }
 
     @Test
@@ -321,7 +320,7 @@ class NetworkRepoTest : BaseTestCase() {
         val result = networkRepo.getMinDelayFrequency(currentDelay, networkRetryCount)
 
         // Then
-        assertEquals(Constants.PUSH_DELAY_MS, result)
+        assertEquals(NetworkRepo.PUSH_DELAY_MS, result)
     }
 
     @Test
@@ -345,7 +344,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `getMinDelayFrequency should return PUSH_DELAY_MS when calculated delay exceeds MAX_DELAY_FREQUENCY`() {
         // Given
-        val currentDelay = Constants.MAX_DELAY_FREQUENCY - 1000
+        val currentDelay = NetworkRepo.MAX_DELAY_FREQUENCY - 1000
         val networkRetryCount = 15
         val randomDelay = 2000 // This will make total delay exceed MAX_DELAY_FREQUENCY
         val generateRandomDelay = { randomDelay }
@@ -356,7 +355,7 @@ class NetworkRepoTest : BaseTestCase() {
         val result = networkRepo.getMinDelayFrequency(currentDelay, networkRetryCount)
 
         // Then
-        assertEquals(Constants.PUSH_DELAY_MS, result)
+        assertEquals(NetworkRepo.PUSH_DELAY_MS, result)
     }
 
     @Test
@@ -406,7 +405,7 @@ class NetworkRepoTest : BaseTestCase() {
         val result = networkRepo.getMinDelayFrequency(currentDelay, networkRetryCount)
 
         // Then
-        assertEquals(Constants.PUSH_DELAY_MS, result)
+        assertEquals(NetworkRepo.PUSH_DELAY_MS, result)
     }
 
     // Test for default generateRandomDelay function
