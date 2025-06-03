@@ -5,7 +5,6 @@ import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.MockCoreState
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.TestLogger
@@ -13,8 +12,6 @@ import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
 import com.clevertap.android.sdk.events.EventGroup.VARIABLES
-import com.clevertap.android.sdk.inapp.TriggerManager
-import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
@@ -25,10 +22,8 @@ import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.http.MockHttpClient
+import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
-import com.clevertap.android.sdk.response.InAppResponse
-import com.clevertap.android.sdk.validation.ValidationResultStack
-import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
 import io.mockk.spyk
@@ -169,7 +164,7 @@ class NetworkManagerTest : BaseTestCase() {
         val originalDomain = networkManager.getDomain(REGULAR)
         StorageHelper.putString(
             appCtx,
-            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, Constants.KEY_DOMAIN_NAME),
+            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, NetworkRepo.KEY_DOMAIN_NAME),
             "different-domain.com"
         )
 
@@ -188,7 +183,7 @@ class NetworkManagerTest : BaseTestCase() {
         // Reset domain for other tests
         StorageHelper.putString(
             appCtx,
-            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, Constants.KEY_DOMAIN_NAME),
+            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, NetworkRepo.KEY_DOMAIN_NAME),
             originalDomain
         )
     }
@@ -242,7 +237,7 @@ class NetworkManagerTest : BaseTestCase() {
         val initialTimestamp = StorageHelper.getIntFromPrefs(
             appCtx,
             cleverTapInstanceConfig,
-            Constants.KEY_LAST_TS,
+            NetworkRepo.KEY_LAST_TS,
             0
         )
 
@@ -256,7 +251,7 @@ class NetworkManagerTest : BaseTestCase() {
         val updatedTimestamp = StorageHelper.getIntFromPrefs(
             appCtx,
             cleverTapInstanceConfig,
-            Constants.KEY_LAST_TS,
+            NetworkRepo.KEY_LAST_TS,
             0
         )
         assert(updatedTimestamp >= initialTimestamp)
@@ -478,57 +473,69 @@ class NetworkManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun test_sendQueue_error402_returnFalse() {
+        // Given - HTTP 402 Payment Required error
+        mockHttpClient.responseCode = 402
+        mockHttpClient.responseBody = getErrorJson().toString()
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+
+        // When
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
+    fun test_sendQueue_error419_returnFalse() {
+        // Given - HTTP 419 Authentication Timeout error
+        mockHttpClient.responseCode = 419
+        mockHttpClient.responseBody = getErrorJson().toString()
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+
+        // When
+        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Then
+        assertFalse(result)
+    }
+
+    @Test
     fun `defineTemplates should return false when error response code is received`() {
         mockHttpClient.responseCode = 400
         mockHttpClient.responseBody = getErrorJson().toString()
-        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+        assertFalse(networkManager.defineTemplates(emptyList()))
 
         mockHttpClient.responseCode = 401
-        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+        assertFalse(networkManager.defineTemplates(emptyList()))
 
         mockHttpClient.responseCode = 500
-        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+        assertFalse(networkManager.defineTemplates(emptyList()))
     }
 
     @Test
     fun `defineTemplates should return false when http call results in an exception`() {
         mockHttpClient.alwaysThrowOnExecute = true
-        assertFalse(networkManager.defineTemplates(appCtx, emptyList()))
+        assertFalse(networkManager.defineTemplates(emptyList()))
     }
 
     @Test
     fun `defineTemplates should return true when success response code is received`() {
         mockHttpClient.responseCode = 200
         mockHttpClient.responseBody = getErrorJson().toString()
-        assertTrue(networkManager.defineTemplates(appCtx, emptyList()))
+        assertTrue(networkManager.defineTemplates(emptyList()))
     }
 
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
-        val coreState = MockCoreState(cleverTapInstanceConfig)
         val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         val lockManager = CTLockManager()
         val dbManager = DBManager(cleverTapInstanceConfig, lockManager, IJRepo(cleverTapInstanceConfig))
         val controllerManager =
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
-        val triggersManager = TriggerManager(appCtx, cleverTapInstanceConfig.accountId, deviceInfo)
-        val inAppResponse =
-            InAppResponse(
-                cleverTapInstanceConfig,
-                controllerManager,
-                true,
-                coreState.storeRegistry,
-                triggersManager,
-                mockk<TemplatesManager>(),
-                metaData
-            )
-        val ijRepo = IJRepo(cleverTapInstanceConfig)
-        val arpRepo = ArpRepo(
-            accountId = cleverTapInstanceConfig.accountId,
-            logger = cleverTapInstanceConfig.logger,
-            deviceInfo = deviceInfo
-        )
+        val queueHeaderBuilder = mockk<QueueHeaderBuilder>()
+        every { queueHeaderBuilder.buildHeader(any()) } returns JSONObject()
 
         // Create 10 spy processors for response handling tests
         val responses = ArrayList<CleverTapResponse>()
@@ -543,17 +550,14 @@ class NetworkManagerTest : BaseTestCase() {
             config = cleverTapInstanceConfig,
             deviceInfo = deviceInfo,
             coreMetaData = metaData,
-            validationResultStack = ValidationResultStack(),
             controllerManager = controllerManager,
             databaseManager = dbManager,
             callbackManager = callbackManager,
-            ctLockManager = lockManager,
-            validator = Validator(),
-            inAppResponse = inAppResponse,
             ctApiWrapper = ctApiWrapper,
             encryptionManager = networkEncryptionManager,
-            ijRepo = ijRepo,
-            arpRepo = arpRepo,
+            arpResponse = mockk<ARPResponse>(relaxed =  true),
+            networkRepo = NetworkRepo(appCtx, cleverTapInstanceConfig),
+            queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponses = responses,
             logger = TestLogger()
         )

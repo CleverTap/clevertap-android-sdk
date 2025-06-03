@@ -3,13 +3,12 @@ package com.clevertap.android.sdk.network.api
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.MockDeviceInfo
+import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
 import org.junit.Test
-import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.runner.*
-import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -19,13 +18,16 @@ class CtApiWrapperTest : BaseTestCase() {
     private lateinit var coreMetaData: CoreMetaData
     private lateinit var deviceInfo: DeviceInfo
     private lateinit var guid: String
+    private lateinit var networkRepo: NetworkRepo
+
     @Before
     override fun setUp() {
         super.setUp()
         guid = "1212121221"
         coreMetaData = CoreMetaData()
         deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
-        ctApiWrapper = CtApiWrapper(application, cleverTapInstanceConfig, deviceInfo)
+        networkRepo = NetworkRepo(application, cleverTapInstanceConfig)
+        ctApiWrapper = CtApiWrapper(networkRepo, cleverTapInstanceConfig, deviceInfo)
     }
 
     @Test
@@ -47,9 +49,9 @@ class CtApiWrapperTest : BaseTestCase() {
     @Test
     fun `test ctApi when different CtApiWrapper creates unique CtApi instance`() {
 
-        val ctApiWrapper1 = CtApiWrapper(application, cleverTapInstanceConfig, deviceInfo)
-        val ctApiWrapper2 = CtApiWrapper(application, cleverTapInstanceConfig, deviceInfo)
-        val ctApiWrapper3 = CtApiWrapper(application, cleverTapInstanceConfig, deviceInfo)
+        val ctApiWrapper1 = CtApiWrapper(networkRepo, cleverTapInstanceConfig, deviceInfo)
+        val ctApiWrapper2 = CtApiWrapper(networkRepo, cleverTapInstanceConfig, deviceInfo)
+        val ctApiWrapper3 = CtApiWrapper(networkRepo, cleverTapInstanceConfig, deviceInfo)
         val ctApi1 = ctApiWrapper1.ctApi
         val ctApi2 = ctApiWrapper2.ctApi
         val ctApi3 = ctApiWrapper3.ctApi

@@ -52,7 +52,6 @@ public interface Constants {
     String GEOFENCE_EXITED_EVENT_NAME = "Geocluster Exited";
     String APP_LAUNCHED_EVENT = "App Launched";
     String ERROR_KEY = "wzrk_error";
-    int PUSH_DELAY_MS = 1000;
     String WZRK_URL_SCHEMA = "wzrk://";
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
@@ -126,10 +125,6 @@ public interface Constants {
     String WZRK_FROM = "CTPushNotificationReceiver";
     String NETWORK_INFO = "NetworkInfo";
     String PRIMARY_DOMAIN = "clevertap-prod.com";
-    String KEY_DOMAIN_NAME = "comms_dmn";
-    String SPIKY_KEY_DOMAIN_NAME = "comms_dmn_spiky";
-    String KEY_LAST_TS = "comms_last_ts";
-    String KEY_FIRST_TS = "comms_first_ts";
     String CACHED_GUIDS_KEY = "cachedGUIDsKey";
     String CACHED_GUIDS_LENGTH_KEY = "cachedGUIDsLengthKey";
     String CACHED_VARIABLES_KEY = "variablesKey";
@@ -357,9 +352,6 @@ public interface Constants {
     HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
 
     HashSet<String> keysToSkipForUserAttributesEvaluation = new HashSet<>(Arrays.asList("cc", "tz", "Carrier"));
-
-
-    int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
 
     /**
      * Valid indexes for the App Inbox item and buttons.
