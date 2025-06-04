@@ -21,6 +21,7 @@ buildscript {
 
 plugins {
     alias(libs.plugins.sonarqube)
+    alias(libs.plugins.vanniktech)
     alias(libs.plugins.compose.compiler) apply false
 }
 allprojects {

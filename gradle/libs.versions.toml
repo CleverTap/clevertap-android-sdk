@@ -4,6 +4,7 @@ android_compileSdk = "35"
 android_gradle_plugin = "8.6.0"
 android_minSdk = "21"
 kotlin_plugin = "2.0.10"
+vanni_plugin = "0.32.0"
 sonarqube_plugin = "3.3"
 android_buildTools = "34.0.0"
 detekt_gradle_plugin = "1.23.3"
@@ -163,3 +164,4 @@ media3 = ["media3_exoplayer", "media3_hls", "media3_ui"]
 [plugins]
 sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin_plugin" }
+vanniktech = { id = "com.vanniktech.maven.publish", version.ref = "vanni_plugin" }
