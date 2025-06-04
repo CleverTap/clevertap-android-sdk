@@ -23,7 +23,7 @@ internal open class ContentView(
 
     fun setCustomContentViewBasicKeys() {
         remoteView.setTextViewText(R.id.app_name, Utils.getApplicationName(context))
-        remoteView.setTextViewText(R.id.timestamp, Utils.getTimeStamp(context))
+        remoteView.setTextViewText(R.id.timestamp, Utils.getTimeStamp(context, System.currentTimeMillis()))
         if (renderer.pt_subtitle != null && renderer.pt_subtitle!!.isNotEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(

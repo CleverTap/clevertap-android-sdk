@@ -408,7 +408,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_chrono_title_clr = darkModeAdaptiveColors[PT_CHRONO_TITLE_COLOUR]
         pt_product_display_action = extras.getString(PT_PRODUCT_DISPLAY_ACTION)
         pt_product_display_action_clr = darkModeAdaptiveColors[PT_PRODUCT_DISPLAY_ACTION_COLOUR]
-        pt_timer_end = Utils.getTimerEnd(extras)
+        pt_timer_end = Utils.getTimerEnd(extras, System.currentTimeMillis())
         pt_big_img_alt = extras.getString(PT_BIG_IMG_ALT)
         pt_msg_alt = extras.getString(PT_MSG_ALT)
         pt_title_alt = extras.getString(PT_TITLE_ALT)

@@ -578,7 +578,7 @@ class TemplateRendererTest {
         timerBundle.putString(PTConstants.PT_ID, "pt_timer")
         timerBundle.putString(PTConstants.PT_TIMER_END, "10")
 
-        every { Utils.getTimerEnd(timerBundle) } returns 10
+        every { Utils.getTimerEnd(timerBundle, any()) } returns 10
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle)
 

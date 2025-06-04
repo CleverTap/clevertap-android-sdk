@@ -3,10 +3,13 @@ package com.clevertap.android.pushtemplates
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ContentResolver
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
@@ -28,6 +31,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.File
+import java.util.Locale
 import kotlin.intArrayOf
 
 @RunWith(RobolectricTestRunner::class)
@@ -768,15 +772,21 @@ class UtilsTest {
     @Test
     fun `getTimeStamp should return formatted time string`() {
         // Given
-        val mockContext = mockk<Context>()
-        mockkStatic("android.text.format.DateUtils")
-        every { android.text.format.DateUtils.formatDateTime(any(), any(), any()) } returns "12:34 PM"
+        val context = mockk<Context>()
+        val resources = mockk<Resources>()
+        val configuration = mockk<Configuration>()
+        val contentResolver = mockk<ContentResolver>()
+        configuration.locale = Locale.ENGLISH
+
+        every { context.resources } returns resources
+        every { context.contentResolver } returns contentResolver
+        every { resources.configuration } returns configuration
 
         // When
-        val result = Utils.getTimeStamp(mockContext)
+        val result = Utils.getTimeStamp(context, 1749033690811L)
 
         // Then
-        assertEquals("12:34 PM", result)
+        assertEquals("4:11 PM", result)
     }
 
     // Tests for getApplicationName method
@@ -817,12 +827,13 @@ class UtilsTest {
 
     @Test
     fun `getTimerEnd should return MIN_VALUE when timer end value is -1`() {
+        val currentTimestamp = 15000L
         // Given
         every { mockBundle.keySet() } returns setOf(PTConstants.PT_TIMER_END)
         every { mockBundle.getString(PTConstants.PT_TIMER_END) } returns "-1"
 
         // When
-        val result = Utils.getTimerEnd(mockBundle)
+        val result = Utils.getTimerEnd(mockBundle, currentTimestamp)
 
         // Then
         assertEquals(Integer.MIN_VALUE, result)
@@ -830,33 +841,32 @@ class UtilsTest {
 
     @Test
     fun `getTimerEnd should calculate difference when valid timestamp provided`() {
-        // Given
-        val futureTimestamp = (System.currentTimeMillis() / 1000) + 3600 // 1 hour from now
+        val futureTimestamp = 20L
+        val currentTimestamp = 15000L
         every { mockBundle.keySet() } returns setOf(PTConstants.PT_TIMER_END)
         every { mockBundle.getString(PTConstants.PT_TIMER_END) } returns futureTimestamp.toString()
 
         // When
-        val result = Utils.getTimerEnd(mockBundle)
+        val result = Utils.getTimerEnd(mockBundle, currentTimestamp)
 
         // Then
-        assertTrue("Result should be positive for future timestamp", result > 0)
-        assertTrue("Result should be around 3600 seconds", result > 3500 && result <= 3600)
+        assertEquals(5, result)
     }
 
     @Test
     fun `getTimerEnd should handle formatted timestamp with D_ prefix`() {
         // Given
-        val futureTimestamp = (System.currentTimeMillis() / 1000) + 1800 // 30 minutes from now
+        val futureTimestamp = 20L
+        val currentTimestamp = 15000L
         val formattedValue = "\$D_$futureTimestamp"
         every { mockBundle.keySet() } returns setOf(PTConstants.PT_TIMER_END)
         every { mockBundle.getString(PTConstants.PT_TIMER_END) } returns formattedValue
 
         // When
-        val result = Utils.getTimerEnd(mockBundle)
+        val result = Utils.getTimerEnd(mockBundle, currentTimestamp)
 
         // Then
-        assertTrue("Result should be positive for future timestamp", result > 0)
-        assertTrue("Result should be around 1800 seconds", result > 1700 && result <= 1800)
+        assertEquals(5, result)
     }
 
 
