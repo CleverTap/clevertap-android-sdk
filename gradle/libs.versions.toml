@@ -4,11 +4,11 @@ android_compileSdk = "35"
 android_gradle_plugin = "8.6.0"
 android_minSdk = "21"
 kotlin_plugin = "2.0.10"
-vanni_plugin = "0.32.0"
 sonarqube_plugin = "3.3"
 android_buildTools = "34.0.0"
 detekt_gradle_plugin = "1.23.3"
 firebase_gradle_crashlytics = "3.0.2"
+vanniktech_maven_pulish_plugin = "0.32.0"
 
 # AndroidX
 annotation = "1.8.2"
@@ -157,6 +157,9 @@ google_services = { module = "com.google.gms:google-services", version.ref = "go
 huawei_agcp_plugin = { module = "com.huawei.agconnect:agcp", version.ref = "agcp" }
 huawei_push = { module = "com.huawei.hms:push", version.ref = "push" }
 
+
+vanniktech_maven_publish = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "vanniktech_maven_pulish_plugin" }
+
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]
 media3 = ["media3_exoplayer", "media3_hls", "media3_ui"]
@@ -164,4 +167,3 @@ media3 = ["media3_exoplayer", "media3_hls", "media3_ui"]
 [plugins]
 sonarqube = { id="org.sonarqube", version.ref = "sonarqube_plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin_plugin" }
-vanniktech = { id = "com.vanniktech.maven.publish", version.ref = "vanni_plugin" }

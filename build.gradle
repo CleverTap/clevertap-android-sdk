@@ -16,12 +16,12 @@ buildscript {
         classpath(libs.kotlin.gradle.plugin)
         classpath(libs.google.services)
         classpath(libs.huawei.agcp.plugin)
+        classpath(libs.vanniktech.maven.publish)
     }
 }
 
 plugins {
     alias(libs.plugins.sonarqube)
-    alias(libs.plugins.vanniktech)
     alias(libs.plugins.compose.compiler) apply false
 }
 allprojects {
