@@ -115,22 +115,32 @@ class NetworkManagerTest : BaseTestCase() {
     fun test_sendQueue_requestFailure_returnFalse() {
         mockHttpClient.alwaysThrowOnExecute = true
         assertFalse(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(2), null))
+        assertFalse(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, getSampleJsonArrayOfJsonObjects(2), null))
     }
 
     @Test
     fun test_sendQueue_successResponseEmptyJsonBody_returnTrue() {
         mockHttpClient.responseBody = JSONObject().toString()
         assertTrue(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(2), null))
+        assertTrue(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, getSampleJsonArrayOfJsonObjects(2), null))
     }
 
     @Test
     fun test_sendQueue_successResponseNullBody_returnTrue() {
         mockHttpClient.responseBody = null
         mockHttpClient.responseCode = 200
-        assertTrue(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(
+        val queue = getSampleJsonArrayOfJsonObjects(
             totalJsonObjects = 4,
             printGenArray = true
-        ), null))
+        )
+        assertTrue(networkManager.sendQueue(appCtx, REGULAR, queue, null))
+        assertTrue(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null))
+
+        // verify we do not process body
+        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any()) }
+        for (processor in networkManager.cleverTapResponses) {
+            verify(exactly = 0) { processor.processResponse(any(), any(), any()) }
+        }
     }
 
     @Test
@@ -169,10 +179,19 @@ class NetworkManagerTest : BaseTestCase() {
         val queue = getSampleJsonArrayOfJsonObjects(2)
 
         // Act
-        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+        val op1 = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
-        assertFalse(result)
+        assertFalse(op1)
+
+        verify { networkRepo.getDomain() }
+        verify { networkRepo.setDomain(newDomain) }
+
+        // Act
+        val op2 = networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null)
+
+        // Assert
+        assertFalse(op2)
 
         verify { networkRepo.getDomain() }
         verify { networkRepo.setDomain(newDomain) }
@@ -193,6 +212,11 @@ class NetworkManagerTest : BaseTestCase() {
 
         // Act & Assert
         assertFalse(networkManager.sendQueue(appCtx, REGULAR, queue, null))
+
+        verify { networkRepo.setMuted(true) }
+
+        // Act & Assert
+        assertFalse(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null))
 
         verify { networkRepo.setMuted(true) }
     }
@@ -236,10 +260,19 @@ class NetworkManagerTest : BaseTestCase() {
 
         every { networkRepo.getFirstRequestTs() } returns 0
         // Act
-        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+        val op1 = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
-        assertTrue(result)
+        assertTrue(op1)
+
+        verify { networkRepo.setLastRequestTs(any()) }
+        verify { networkRepo.setFirstRequestTs(any()) }
+
+        // Act
+        val op2 = networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null)
+
+        // Assert
+        assertTrue(op2)
 
         verify { networkRepo.setLastRequestTs(any()) }
         verify { networkRepo.setFirstRequestTs(any()) }
@@ -259,10 +292,19 @@ class NetworkManagerTest : BaseTestCase() {
 
         every { networkRepo.getFirstRequestTs() } returns 12334
         // Act
-        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+        val op1 = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
-        assertTrue(result)
+        assertTrue(op1)
+
+        verify { networkRepo.setLastRequestTs(any()) }
+        verify(exactly = 0) { networkRepo.setFirstRequestTs(any()) }
+
+        // Act
+        val op2 = networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null)
+
+        // Assert
+        assertTrue(op2)
 
         verify { networkRepo.setLastRequestTs(any()) }
         verify(exactly = 0) { networkRepo.setFirstRequestTs(any()) }
