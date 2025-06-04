@@ -41,7 +41,6 @@ import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.EncryptionFailure
-import com.clevertap.android.sdk.network.NetworkRepo
 
 internal class NetworkManager constructor(
     private val context: Context,
@@ -426,7 +425,6 @@ internal class NetworkManager constructor(
                 ).toJsonString()
                 logger.verbose("Encrypted Request = $bodyEnc")
                 return ctApiWrapper.ctApi.sendQueue(
-                    isViewedEvent = false,
                     body = bodyEnc,
                     isEncrypted = true
                 )
@@ -434,20 +432,11 @@ internal class NetworkManager constructor(
                 logger.verbose("Normal Request cause encryption failed = $body")
             }
         }
-        return ctApiWrapper.ctApi.sendQueue(
-            isViewedEvent = false,
-            body = body.toString(),
-            isEncrypted = false
-        )
+        return ctApiWrapper.ctApi.sendQueue(body = body.toString())
     }
 
     private fun sendImpressionsApi(body: SendQueueRequestBody): Response {
-        val response: Response = ctApiWrapper.ctApi.sendQueue(
-                isViewedEvent = true,
-                body = body.toString(),
-                isEncrypted = false
-            )
-        return response
+        return ctApiWrapper.ctApi.sendImpressions(body = body.toString())
     }
 
     private fun handleVariablesResponse(response: Response): Boolean {
