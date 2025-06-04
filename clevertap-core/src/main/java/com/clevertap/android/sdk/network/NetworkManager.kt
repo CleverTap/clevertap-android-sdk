@@ -293,37 +293,13 @@ internal class NetworkManager constructor(
         val requestBody = SendQueueRequestBody(queueHeader, queue)
         logger.debug(config.accountId, "Send queue contains " + queue.length() + " items: " + requestBody)
         try {
-            callApiForEventGroup(eventGroup, requestBody).use { response ->
-                networkRetryCount = 0
-                val isProcessed: Boolean
-                when (eventGroup) {
-                    EventGroup.VARIABLES -> {
-                        return handleVariablesResponse(response = response)
-                    }
-                    EventGroup.REGULAR -> {
-                        isProcessed = handleSendQueueResponse(
-                            response = response,
-                            isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody),
-                            notifyNetworkHeaderListeners = {
-                                notifyHeaderListeners(
-                                    requestBody,
-                                    endpointId
-                                )
-                            }
-                        )
-                    }
-                    EventGroup.PUSH_NOTIFICATION_VIEWED -> {
-                        isProcessed = handlePushImpressionsResponse(response = response)
-                    }
-                }
-
-                if (isProcessed) {
-                    responseFailureCount = 0
-                } else {
-                    responseFailureCount++
-                }
-                return isProcessed
+            val headersDoneListener = {
+                notifyHeaderListeners(
+                    requestBody,
+                    endpointId
+                )
             }
+            return networkCall(eventGroup, requestBody, headersDoneListener)
         } catch (e: Exception) {
             networkRetryCount++
             responseFailureCount++
@@ -336,6 +312,35 @@ internal class NetworkManager constructor(
                 callbackManager.failureFlushListener.failureFlush(context)
             }
             return false
+        }
+    }
+
+    private fun networkCall(
+        eventGroup: EventGroup,
+        requestBody: SendQueueRequestBody,
+        notifyNetworkHeaderListeners: () -> Unit
+    ): Boolean = callApiForEventGroup(eventGroup, requestBody).use { response ->
+        networkRetryCount = 0
+        return when (eventGroup) {
+            EventGroup.VARIABLES -> {
+                handleVariablesResponse(response = response)
+            }
+
+            EventGroup.REGULAR -> {
+                handleSendQueueResponse(
+                    response = response,
+                    isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody),
+                    notifyNetworkHeaderListeners = notifyNetworkHeaderListeners
+                ).also { isProcessed ->
+                    responseFailureCount = if (isProcessed) 0 else responseFailureCount + 1
+                }
+            }
+
+            EventGroup.PUSH_NOTIFICATION_VIEWED -> {
+                handlePushImpressionsResponse(response = response).also { isProcessed ->
+                    responseFailureCount = if (isProcessed) 0 else responseFailureCount + 1
+                }
+            }
         }
     }
 
