@@ -2,7 +2,7 @@ package com.clevertap.android.sdk
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.NetworkInfo
+import android.net.NetworkInfo.DetailedState
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
 import com.clevertap.android.sdk.events.EventQueueManager
@@ -22,7 +22,6 @@ import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.slot
 import io.mockk.spyk
-import io.mockk.unmockkAll
 import io.mockk.verify
 import org.json.JSONObject
 import org.junit.*
@@ -41,11 +40,8 @@ import kotlin.test.assertTrue
 class EventQueueManagerTest : BaseTestCase() {
 
     private lateinit var corestate: MockCoreStateKotlin
-
     private lateinit var eventQueueManager: EventQueueManager
-
     private lateinit var json: JSONObject
-
     private lateinit var loginInfoProvider: LoginInfoProvider
 
     @Before
@@ -72,12 +68,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 loginInfoProvider
             )
         )
-            json = JSONObject()
-    }
-
-    @After
-    fun tearDown() {
-        unmockkAll()
+        json = JSONObject()
     }
 
     @Test
@@ -89,8 +80,8 @@ class EventQueueManagerTest : BaseTestCase() {
 
             every { corestate.eventMediator.getEventName(event) } returns "test_event"
 
-        // When
-        eventQueueManager.queueEvent(application, event, Constants.RAISED_EVENT)
+            // When
+            eventQueueManager.queueEvent(application, event, Constants.RAISED_EVENT)
 
             // Then
             verify { corestate.localDataStore.persistUserEventLog("test_event") }
@@ -106,18 +97,18 @@ class EventQueueManagerTest : BaseTestCase() {
             event.put("evtName", "test_event")
             every { corestate.eventMediator.getEventName(event) } returns "test_event"
 
-        // Test for different event types that are not RAISED_EVENT
-        listOf(
-            Constants.PROFILE_EVENT,
-            Constants.FETCH_EVENT,
-            Constants.DATA_EVENT,
-            Constants.PING_EVENT,
-            Constants.PAGE_EVENT,
-            Constants.NV_EVENT
-        ).forEach { eventType ->
+            // Test for different event types that are not RAISED_EVENT
+            listOf(
+                Constants.PROFILE_EVENT,
+                Constants.FETCH_EVENT,
+                Constants.DATA_EVENT,
+                Constants.PING_EVENT,
+                Constants.PAGE_EVENT,
+                Constants.NV_EVENT
+            ).forEach { eventType ->
 
-            // When
-            eventQueueManager.queueEvent(application, event, eventType)
+                // When
+                eventQueueManager.queueEvent(application, event, eventType)
 
                 // Then
                 verify(exactly = 0) { corestate.localDataStore.persistUserEventLog(any()) }
@@ -176,7 +167,7 @@ class EventQueueManagerTest : BaseTestCase() {
             every { eventQueueManager.pushInitialEventsAsync() } just runs
             every { corestate.sessionManager.lazyCreateSession(application) } just runs
 
-        eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
+            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
 
             verify { corestate.sessionManager.lazyCreateSession(application) }
             verify { eventQueueManager.pushInitialEventsAsync() }
@@ -207,7 +198,7 @@ class EventQueueManagerTest : BaseTestCase() {
             every { eventQueueManager.pushInitialEventsAsync() } just runs
             every { corestate.sessionManager.lazyCreateSession(application) } just runs
 
-        eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
+            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
 
             val runnableSlot = slot<Runnable>()
             verify { corestate.mainLooperHandler.postDelayed(capture(runnableSlot), any()) }
@@ -259,7 +250,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 )
             } just runs
 
-        eventQueueManager.addToQueue(application, json, Constants.NV_EVENT)
+            eventQueueManager.addToQueue(application, json, Constants.NV_EVENT)
 
             verify {
                 eventQueueManager.processPushNotificationViewedEvent(
@@ -283,7 +274,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 )
             } just runs
 
-        eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT)
+            eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT)
 
             verify(exactly = 0) {
                 eventQueueManager.processPushNotificationViewedEvent(
@@ -311,12 +302,12 @@ class EventQueueManagerTest : BaseTestCase() {
                 )
             } just runs
 
-        eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
+            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
 
-        assertNull(json.optJSONObject(Constants.ERROR_KEY))
-        assertEquals("event", json.getString("type"))
-        assertEquals(1000, json.getInt("s"))
-        assertEquals(7000, json.getInt("ep"))
+            assertNull(json.optJSONObject(Constants.ERROR_KEY))
+            assertEquals("event", json.getString("type"))
+            assertEquals(1000, json.getInt("s"))
+            assertEquals(7000, json.getInt("ep"))
 
             verify {
                 corestate.databaseManager.queuePushNotificationViewedEventToDB(
@@ -341,7 +332,7 @@ class EventQueueManagerTest : BaseTestCase() {
             validationResult.errorDesc = "Fire in the hall"
             validationResult.errorCode = 999
 
-        corestate.validationResultStack.pushValidationResult(validationResult)
+            corestate.validationResultStack.pushValidationResult(validationResult)
 
             val runnableSlot = slot<Runnable>()
             corestate.coreMetaData.currentSessionId = 1000
@@ -357,15 +348,15 @@ class EventQueueManagerTest : BaseTestCase() {
                 )
             } just runs
 
-        // Act
-        eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
+            // Act
+            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
 
-        // Assert
-        assertEquals(validationResult.errorCode, json.getJSONObject(Constants.ERROR_KEY)["c"])
-        assertEquals(validationResult.errorDesc, json.getJSONObject(Constants.ERROR_KEY)["d"])
-        assertEquals("event", json.getString("type"))
-        assertEquals(1000, json.getInt("s"))
-        assertEquals(7000, json.getInt("ep"))
+            // Assert
+            assertEquals(validationResult.errorCode, json.getJSONObject(Constants.ERROR_KEY)["c"])
+            assertEquals(validationResult.errorDesc, json.getJSONObject(Constants.ERROR_KEY)["d"])
+            assertEquals("event", json.getString("type"))
+            assertEquals(1000, json.getInt("s"))
+            assertEquals(7000, json.getInt("ep"))
 
             verify {
                 corestate.databaseManager.queuePushNotificationViewedEventToDB(
@@ -388,7 +379,7 @@ class EventQueueManagerTest : BaseTestCase() {
             corestate.coreMetaData.currentSessionId = 10000
             every { eventQueueManager.pushBasicProfile(null, false) } just runs
 
-        eventQueueManager.pushInitialEventsAsync()
+            eventQueueManager.pushInitialEventsAsync()
 
             verify(exactly = 0) { eventQueueManager.pushBasicProfile(null, false) }
         }
@@ -401,7 +392,7 @@ class EventQueueManagerTest : BaseTestCase() {
             corestate.coreMetaData.currentSessionId = -1
             every { eventQueueManager.pushBasicProfile(null, false) } just runs
 
-        eventQueueManager.pushInitialEventsAsync()
+            eventQueueManager.pushInitialEventsAsync()
 
             verify { eventQueueManager.pushBasicProfile(null, false) }
         }
@@ -415,7 +406,8 @@ class EventQueueManagerTest : BaseTestCase() {
             val runnableSlot = slot<Runnable>()
             every { eventQueueManager.flushQueueSync(any(), any()) } just runs
 
-        eventQueueManager.scheduleQueueFlush(application)
+            // Act
+            eventQueueManager.scheduleQueueFlush(application)
 
             // Assert
             verify { corestate.mainLooperHandler.removeCallbacks(capture(runnableSlot)) }
@@ -434,7 +426,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             every { eventQueueManager.flushQueueAsync(application, REGULAR) } just runs
 
-        eventQueueManager.flush()
+            eventQueueManager.flush()
 
             verify { eventQueueManager.flushQueueAsync(application, REGULAR) }
         }
@@ -448,7 +440,7 @@ class EventQueueManagerTest : BaseTestCase() {
             val shadowOfCM = shadowOf(cm)
             shadowOfCM.setActiveNetworkInfo(null) // make offline
 
-        eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
+            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
             verify(exactly = 0) {
                 corestate.networkManager.needsHandshakeForDomain(
@@ -469,7 +461,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
             shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
 
-        eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
+            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
             verify(exactly = 0) {
                 corestate.networkManager.needsHandshakeForDomain(
@@ -490,7 +482,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
             shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
 
-        eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
+            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
             verify(exactly = 0) { corestate.networkManager.initHandshake(any(), any()) }
             verify {
@@ -514,7 +506,7 @@ class EventQueueManagerTest : BaseTestCase() {
             shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
             every { corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED) } returns true
 
-        eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
+            eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
             verify { corestate.networkManager.initHandshake(any(), capture(runnableSlot)) }
 
@@ -535,14 +527,14 @@ class EventQueueManagerTest : BaseTestCase() {
             // Arrange
             every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
-        val expectedDeviceId = "device_12345"
-        val expectedDeviceCarrier = "carrier_12345"
-        val expectedDeviceCC = "CC_12345"
-        val expectedDeviceTZ = "tz_12345"
+            val expectedDeviceId = "device_12345"
+            val expectedDeviceCarrier = "carrier_12345"
+            val expectedDeviceCC = "CC_12345"
+            val expectedDeviceTZ = "tz_12345"
 
-        val expectedTZ = TimeZone.getDefault()
-        expectedTZ.id = expectedDeviceTZ
-        TimeZone.setDefault(expectedTZ)
+            val expectedTZ = TimeZone.getDefault()
+            expectedTZ.id = expectedDeviceTZ
+            TimeZone.setDefault(expectedTZ)
 
             every { corestate.deviceInfo.deviceID } returns expectedDeviceId
             every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
@@ -551,8 +543,8 @@ class EventQueueManagerTest : BaseTestCase() {
             val jsonSlot = slot<JSONObject>()
             val eventTypeSlot = slot<Int>()
 
-        // Act
-        eventQueueManager.pushBasicProfile(null, false)
+            // Act
+            eventQueueManager.pushBasicProfile(null, false)
 
             // Assert
             verify {
@@ -574,7 +566,7 @@ class EventQueueManagerTest : BaseTestCase() {
             // Arrange
             every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
-        val expectedDeviceId = "device_12345"
+            val expectedDeviceId = "device_12345"
 
             every { corestate.deviceInfo.deviceID } returns expectedDeviceId
             every { corestate.deviceInfo.carrier } returns null
@@ -583,8 +575,8 @@ class EventQueueManagerTest : BaseTestCase() {
             val jsonSlot = slot<JSONObject>()
             val eventTypeSlot = slot<Int>()
 
-        // Act
-        eventQueueManager.pushBasicProfile(null, false)
+            // Act
+            eventQueueManager.pushBasicProfile(null, false)
 
             // Assert
             verify {
@@ -605,7 +597,7 @@ class EventQueueManagerTest : BaseTestCase() {
             // Arrange
             every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
-        val expectedDeviceId = "device_12345"
+            val expectedDeviceId = "device_12345"
 
             every { corestate.deviceInfo.deviceID } returns expectedDeviceId
             every { corestate.deviceInfo.carrier } returns ""
@@ -614,8 +606,8 @@ class EventQueueManagerTest : BaseTestCase() {
             val jsonSlot = slot<JSONObject>()
             val eventTypeSlot = slot<Int>()
 
-        // Act
-        eventQueueManager.pushBasicProfile(null, false)
+            // Act
+            eventQueueManager.pushBasicProfile(null, false)
 
             // Assert
             verify {
@@ -646,21 +638,21 @@ class EventQueueManagerTest : BaseTestCase() {
                 // Arrange
                 every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
-        val expectedDeviceId = "device_12345"
+                val expectedDeviceId = "device_12345"
 
                 every { corestate.deviceInfo.deviceID } returns expectedDeviceId
 
                 val jsonSlot = slot<JSONObject>()
                 val eventTypeSlot = slot<Int>()
 
-        val inputJson = JSONObject()
-        val subInputJson = JSONObject()
-        subInputJson.put("age", 70)
-        inputJson.put("name", "abc")
-        inputJson.put("details", subInputJson)
+                val inputJson = JSONObject()
+                val subInputJson = JSONObject()
+                subInputJson.put("age", 70)
+                inputJson.put("name", "abc")
+                inputJson.put("details", subInputJson)
 
-        // Act
-        eventQueueManager.pushBasicProfile(inputJson, false)
+                // Act
+                eventQueueManager.pushBasicProfile(inputJson, false)
 
                 // Assert
                 verify {
@@ -671,10 +663,10 @@ class EventQueueManagerTest : BaseTestCase() {
                 val actualProfile = jsonSlot.captured["profile"] as JSONObject
                 val actualDetails = actualProfile["details"] as JSONObject
 
-        assertEquals("abc", actualProfile["name"])
-        assertEquals(70, actualDetails["age"])
-
-        unmockkStatic(IdentityRepoFactory::class)
+                assertEquals("abc", actualProfile["name"])
+                assertEquals(70, actualDetails["age"])
+            }
+        }
     }
 
     @Test
@@ -694,23 +686,23 @@ class EventQueueManagerTest : BaseTestCase() {
                 // Arrange
                 every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
-        val expectedDeviceId = "device_12345"
+                val expectedDeviceId = "device_12345"
 
                 every { corestate.deviceInfo.deviceID } returns expectedDeviceId
 
                 val jsonSlot = slot<JSONObject>()
                 val eventTypeSlot = slot<Int>()
 
-        val inputJson = JSONObject()
-        val subInputJson = JSONObject()
-        subInputJson.put("age", 70)
-        inputJson.put("name", "abc")
-        inputJson.put("details", subInputJson)
+                val inputJson = JSONObject()
+                val subInputJson = JSONObject()
+                subInputJson.put("age", 70)
+                inputJson.put("name", "abc")
+                inputJson.put("details", subInputJson)
 
-        every { mockIdentityRepo.hasIdentity("name") } returns true
+                every { mockIdentityRepo.hasIdentity("name") } returns true
 
-        // Act
-        eventQueueManager.pushBasicProfile(inputJson, false)
+                // Act
+                eventQueueManager.pushBasicProfile(inputJson, false)
 
                 // Assert
                 verify { loginInfoProvider.cacheGUIDForIdentifier(expectedDeviceId, "name", "abc") }
@@ -722,10 +714,10 @@ class EventQueueManagerTest : BaseTestCase() {
                 val actualProfile = jsonSlot.captured["profile"] as JSONObject
                 val actualDetails = actualProfile["details"] as JSONObject
 
-        assertEquals("abc", actualProfile["name"])
-        assertEquals(70, actualDetails["age"])
-
-        unmockkStatic(IdentityRepoFactory::class)
+                assertEquals("abc", actualProfile["name"])
+                assertEquals(70, actualDetails["age"])
+            }
+        }
     }
 
     @Test
@@ -745,13 +737,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 //Arrange
                 every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
-        val expectedDeviceID = "_12345789"
-        val expectedDeviceCarrier = "Android"
-        val expectedDeviceCC = "us"
-        val expectedDeviceTZ = "Asia/Kolkata"
-        val expectedTZ = TimeZone.getDefault()
-        expectedTZ.id = expectedDeviceTZ
-        TimeZone.setDefault(expectedTZ)
+                val expectedDeviceID = "_12345789"
+                val expectedDeviceCarrier = "Android"
+                val expectedDeviceCC = "us"
+                val expectedDeviceTZ = "Asia/Kolkata"
+                val expectedTZ = TimeZone.getDefault()
+                expectedTZ.id = expectedDeviceTZ
+                TimeZone.setDefault(expectedTZ)
 
                 every { corestate.deviceInfo.deviceID } returns expectedDeviceID
                 every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
@@ -761,19 +753,19 @@ class EventQueueManagerTest : BaseTestCase() {
                 val jsonSlot = slot<JSONObject>()
                 val eventTypeSlot = slot<Int>()
 
-        val inputJson = JSONObject()
-        inputJson.put("Email", "abc@xyz.com")
+                val inputJson = JSONObject()
+                inputJson.put("Email", "abc@xyz.com")
 
-        every { mockIdentityRepo.hasIdentity("Email") } returns true
+                every { mockIdentityRepo.hasIdentity("Email") } returns true
 
-        //Act
-        eventQueueManager.pushBasicProfile(inputJson, true)
+                //Act
+                eventQueueManager.pushBasicProfile(inputJson, true)
 
                 //Assert
                 verify {
                     loginInfoProvider.removeValueFromCachedGUIDForIdentifier(
-                    expectedDeviceID,
-                    "Email"
+                        expectedDeviceID,
+                        "Email"
                     )
                 }
                 verify {
@@ -782,13 +774,13 @@ class EventQueueManagerTest : BaseTestCase() {
                     )
                 }
 
-        val actualProfile = jsonSlot.captured["profile"] as JSONObject
-        assertEquals("abc@xyz.com", actualProfile["Email"])
-        assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
-        assertEquals(expectedDeviceCC, actualProfile["cc"])
-        assertEquals(expectedDeviceTZ, actualProfile["tz"])
-
-        unmockkStatic(IdentityRepoFactory::class)
+                val actualProfile = jsonSlot.captured["profile"] as JSONObject
+                assertEquals("abc@xyz.com", actualProfile["Email"])
+                assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
+                assertEquals(expectedDeviceCC, actualProfile["cc"])
+                assertEquals(expectedDeviceTZ, actualProfile["tz"])
+            }
+        }
     }
 
     @Test
@@ -808,13 +800,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 //Arrange
                 every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
-        val expectedGUID = "_123456789"
-        val expectedDeviceCarrier = "Android"
-        val expectedDeviceCC = "us"
-        val expectedDeviceTZ = "Asia/Kolkata"
-        val expectedTZ = TimeZone.getDefault()
-        expectedTZ.id = expectedDeviceTZ
-        TimeZone.setDefault(expectedTZ)
+                val expectedGUID = "_123456789"
+                val expectedDeviceCarrier = "Android"
+                val expectedDeviceCC = "us"
+                val expectedDeviceTZ = "Asia/Kolkata"
+                val expectedTZ = TimeZone.getDefault()
+                expectedTZ.id = expectedDeviceTZ
+                TimeZone.setDefault(expectedTZ)
 
                 every { corestate.deviceInfo.deviceID } returns expectedGUID
                 every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
@@ -823,13 +815,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 val jsonSlot = slot<JSONObject>()
                 val eventTypeSlot = slot<Int>()
 
-        val inputJson = JSONObject()
-        inputJson.put("Phone", "+919998988767")
+                val inputJson = JSONObject()
+                inputJson.put("Phone", "+919998988767")
 
-        every { mockIdentityRepo.hasIdentity("Phone") } returns false
+                every { mockIdentityRepo.hasIdentity("Phone") } returns false
 
-        //Act
-        eventQueueManager.pushBasicProfile(inputJson, false)
+                //Act
+                eventQueueManager.pushBasicProfile(inputJson, false)
 
                 //Assert
                 verify {
@@ -838,13 +830,13 @@ class EventQueueManagerTest : BaseTestCase() {
                     )
                 }
 
-        val actualProfile = jsonSlot.captured["profile"] as JSONObject
-        assertEquals("+919998988767", actualProfile["Phone"])
-        assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
-        assertEquals(expectedDeviceCC, actualProfile["cc"])
-        assertEquals(expectedDeviceTZ, actualProfile["tz"])
-
-        unmockkStatic(IdentityRepoFactory::class)
+                val actualProfile = jsonSlot.captured["profile"] as JSONObject
+                assertEquals("+919998988767", actualProfile["Phone"])
+                assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
+                assertEquals(expectedDeviceCC, actualProfile["cc"])
+                assertEquals(expectedDeviceTZ, actualProfile["tz"])
+            }
+        }
     }
 
     @Test
@@ -864,13 +856,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 //Arrange
                 every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
-        val expectedDeviceID = "_12345789"
-        val expectedDeviceCarrier = "Android"
-        val expectedDeviceCC = "us"
-        val expectedDeviceTZ = "Asia/Kolkata"
-        val expectedTZ = TimeZone.getDefault()
-        expectedTZ.id = expectedDeviceTZ
-        TimeZone.setDefault(expectedTZ)
+                val expectedDeviceID = "_12345789"
+                val expectedDeviceCarrier = "Android"
+                val expectedDeviceCC = "us"
+                val expectedDeviceTZ = "Asia/Kolkata"
+                val expectedTZ = TimeZone.getDefault()
+                expectedTZ.id = expectedDeviceTZ
+                TimeZone.setDefault(expectedTZ)
 
                 every { corestate.deviceInfo.deviceID } returns expectedDeviceID
                 every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
@@ -879,13 +871,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 val jsonSlot = slot<JSONObject>()
                 val eventTypeSlot = slot<Int>()
 
-        val inputJson = JSONObject()
-        inputJson.put("Email", "abc@xyz.com")
+                val inputJson = JSONObject()
+                inputJson.put("Email","abc@xyz.com")
 
-        every { mockIdentityRepo.hasIdentity("Email") } returns true
+                every { mockIdentityRepo.hasIdentity("Email") } returns true
 
-        //Act
-        eventQueueManager.pushBasicProfile(inputJson, false)
+                //Act
+                eventQueueManager.pushBasicProfile(inputJson, false)
 
                 //Assert
                 verify {
@@ -899,13 +891,13 @@ class EventQueueManagerTest : BaseTestCase() {
                     )
                 }
 
-        val actualProfile = jsonSlot.captured["profile"] as JSONObject
-        assertEquals("abc@xyz.com", actualProfile["Email"])
-        assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
-        assertEquals(expectedDeviceCC, actualProfile["cc"])
-        assertEquals(expectedDeviceTZ, actualProfile["tz"])
-
-        unmockkStatic(IdentityRepoFactory::class)
+                val actualProfile = jsonSlot.captured["profile"] as JSONObject
+                assertEquals("abc@xyz.com", actualProfile["Email"])
+                assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
+                assertEquals(expectedDeviceCC, actualProfile["cc"])
+                assertEquals(expectedDeviceTZ, actualProfile["tz"])
+            }
+        }
     }
 
     @Test
@@ -925,13 +917,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 //Arrange
                 every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
-        val expectedGUID = "_123456789"
-        val expectedDeviceCarrier = "Android"
-        val expectedDeviceCC = "us"
-        val expectedDeviceTZ = "Asia/Kolkata"
-        val expectedTZ = TimeZone.getDefault()
-        expectedTZ.id = expectedDeviceTZ
-        TimeZone.setDefault(expectedTZ)
+                val expectedGUID = "_123456789"
+                val expectedDeviceCarrier = "Android"
+                val expectedDeviceCC = "us"
+                val expectedDeviceTZ = "Asia/Kolkata"
+                val expectedTZ = TimeZone.getDefault()
+                expectedTZ.id = expectedDeviceTZ
+                TimeZone.setDefault(expectedTZ)
 
                 every { corestate.deviceInfo.deviceID } returns expectedGUID
                 every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
@@ -940,13 +932,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 val jsonSlot = slot<JSONObject>()
                 val eventTypeSlot = slot<Int>()
 
-        val inputJson = JSONObject()
-        inputJson.put("Phone", "+919998988767")
+                val inputJson = JSONObject()
+                inputJson.put("Phone", "+919998988767")
 
-        every { mockIdentityRepo.hasIdentity("Phone") } returns false
+                every { mockIdentityRepo.hasIdentity("Phone") } returns false
 
-        //Act
-        eventQueueManager.pushBasicProfile(inputJson, true)
+                //Act
+                eventQueueManager.pushBasicProfile(inputJson, true)
 
                 //Assert
                 verify {
@@ -955,13 +947,13 @@ class EventQueueManagerTest : BaseTestCase() {
                     )
                 }
 
-        val actualProfile = jsonSlot.captured["profile"] as JSONObject
-        assertEquals("+919998988767", actualProfile["Phone"])
-        assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
-        assertEquals(expectedDeviceCC, actualProfile["cc"])
-        assertEquals(expectedDeviceTZ, actualProfile["tz"])
-
-        unmockkStatic(IdentityRepoFactory::class)
+                val actualProfile = jsonSlot.captured["profile"] as JSONObject
+                assertEquals("+919998988767", actualProfile["Phone"])
+                assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
+                assertEquals(expectedDeviceCC, actualProfile["cc"])
+                assertEquals(expectedDeviceTZ, actualProfile["tz"])
+            }
+        }
     }
 
     @Test
@@ -976,54 +968,59 @@ class EventQueueManagerTest : BaseTestCase() {
             val expectedLastSessionLength = 3600
             val expectedGeofenceSDKVersion = 10
 
-        corestate.coreMetaData.setCurrentScreenName(expectedScreenName)
-        corestate.coreMetaData.currentSessionId = expectedSessionId
-        corestate.coreMetaData.isFirstSession = expectedIsFirstSession
-        corestate.coreMetaData.lastSessionLength = expectedLastSessionLength
-        corestate.coreMetaData.geofenceSDKVersion = expectedGeofenceSDKVersion
-        corestate.coreMetaData.isLocationForGeofence = true
-        CoreMetaData.setActivityCount(0)
-        val actualEvent = JSONObject()
+            corestate.coreMetaData.setCurrentScreenName(expectedScreenName)
+            corestate.coreMetaData.currentSessionId = expectedSessionId
+            corestate.coreMetaData.isFirstSession = expectedIsFirstSession
+            corestate.coreMetaData.lastSessionLength = expectedLastSessionLength
+            corestate.coreMetaData.geofenceSDKVersion = expectedGeofenceSDKVersion
+            corestate.coreMetaData.isLocationForGeofence = true
+            CoreMetaData.setActivityCount(0)
+            val actualEvent = JSONObject()
 
             every { eventQueueManager.now } returns expectedEpoch
             every { eventQueueManager.scheduleQueueFlush(application) } just runs
 
-        // Act
-        eventQueueManager.processEvent(application, actualEvent, Constants.PAGE_EVENT)
+            // Act
+            eventQueueManager.processEvent(application, actualEvent, Constants.PAGE_EVENT)
 
-        // Assert
-        // assert following mappings are present in json
-        assertEquals(1, CoreMetaData.getActivityCount())
-        assertEquals(expectedScreenName, actualEvent["n"])
-        assertEquals(expectedSessionId, actualEvent["s"])
-        assertEquals(1, actualEvent["pg"])
-        assertEquals("page", actualEvent["type"])
-        assertEquals(expectedEpoch, actualEvent["ep"])
-        assertEquals(expectedIsFirstSession, actualEvent["f"])
-        assertEquals(expectedLastSessionLength, actualEvent["lsl"])
+            // Assert
 
-        // assert following values are not modified
-        assertEquals(expectedGeofenceSDKVersion, corestate.coreMetaData.geofenceSDKVersion)
-        assertFalse(corestate.coreMetaData.isBgPing)
-        assertTrue(corestate.coreMetaData.isLocationForGeofence)
+            // assert following mappings are present in json
+            assertEquals(1, CoreMetaData.getActivityCount())
+            assertEquals(expectedScreenName, actualEvent["n"])
+            assertEquals(expectedSessionId, actualEvent["s"])
+            assertEquals(1, actualEvent["pg"])
+            assertEquals("page", actualEvent["type"])
+            assertEquals(expectedEpoch, actualEvent["ep"])
+            assertEquals(expectedIsFirstSession, actualEvent["f"])
+            assertEquals(expectedLastSessionLength, actualEvent["lsl"])
 
-        // assert following keys are absent in json
-        assertNull(actualEvent.opt(Constants.ERROR_KEY))
-        assertNull(actualEvent.opt("pai"))
-        assertNull(actualEvent.opt("mc"))
-        assertNull(actualEvent.opt("nt"))
-        assertNull(actualEvent.opt("gf"))
-        assertNull(actualEvent.opt("gfSDKVersion"))
+            // assert following values are not modified
+            assertEquals(expectedGeofenceSDKVersion, corestate.coreMetaData.geofenceSDKVersion)
+            assertFalse(corestate.coreMetaData.isBgPing)
+            assertTrue(corestate.coreMetaData.isLocationForGeofence)
 
-        // assert following methods called
-        verify { corestate.localDataStore.setDataSyncFlag(actualEvent) }
-        verify { corestate.databaseManager.queueEventToDB(
+            // assert following keys are absent in json
+            assertNull(actualEvent.opt(Constants.ERROR_KEY))
+            assertNull(actualEvent.opt("pai"))
+            assertNull(actualEvent.opt("mc"))
+            assertNull(actualEvent.opt("nt"))
+            assertNull(actualEvent.opt("gf"))
+            assertNull(actualEvent.opt("gfSDKVersion"))
+
+            // assert following methods called
+            verify { corestate.localDataStore.setDataSyncFlag(actualEvent) }
+            verify {
+                corestate.databaseManager.queueEventToDB(
                     application, actualEvent, Constants.PAGE_EVENT
-                ) }
-        verify(exactly = 0) { corestate.localDataStore.persistEvent(
+                )
+            }
+            verify(exactly = 0) {
+                corestate.localDataStore.persistEvent(
                     application, actualEvent, Constants.PAGE_EVENT
-                ) }
-        verify { eventQueueManager.scheduleQueueFlush(application)}
+                )
+            }
+            verify { eventQueueManager.scheduleQueueFlush(application) }
         }
     }
 
@@ -1037,31 +1034,31 @@ class EventQueueManagerTest : BaseTestCase() {
                 validationResult.errorDesc = "Fire in the hall"
                 validationResult.errorCode = 999
 
-        corestate.validationResultStack.pushValidationResult(validationResult)
+                corestate.validationResultStack.pushValidationResult(validationResult)
 
-        val expectedSessionId = 9898
-        val expectedEpoch = 5000
-        val expectedIsFirstSession = true
-        val expectedLastSessionLength = 3600
-        val expectedGeofenceSDKVersion = 0
-        val expectedMemoryConsumption = 100000L
-        val expectedNetworkType = "4G"
-        val expectedActivityCount = 10
+                val expectedSessionId = 9898
+                val expectedEpoch = 5000
+                val expectedIsFirstSession = true
+                val expectedLastSessionLength = 3600
+                val expectedGeofenceSDKVersion = 0
+                val expectedMemoryConsumption = 100000L
+                val expectedNetworkType = "4G"
+                val expectedActivityCount = 10
 
-        corestate.coreMetaData.currentSessionId = expectedSessionId
-        corestate.coreMetaData.isFirstSession = expectedIsFirstSession
-        corestate.coreMetaData.lastSessionLength = expectedLastSessionLength
-        corestate.coreMetaData.geofenceSDKVersion = expectedGeofenceSDKVersion
-        corestate.coreMetaData.isLocationForGeofence = true
-        CoreMetaData.setActivityCount(expectedActivityCount)
+                corestate.coreMetaData.currentSessionId = expectedSessionId
+                corestate.coreMetaData.isFirstSession = expectedIsFirstSession
+                corestate.coreMetaData.lastSessionLength = expectedLastSessionLength
+                corestate.coreMetaData.geofenceSDKVersion = expectedGeofenceSDKVersion
+                corestate.coreMetaData.isLocationForGeofence = true
+                CoreMetaData.setActivityCount(expectedActivityCount)
 
                 every { Utils.getMemoryConsumption() } returns expectedMemoryConsumption
                 every { Utils.getCurrentNetworkType(application) } returns expectedNetworkType
                 every { eventQueueManager.now } returns expectedEpoch
                 every { eventQueueManager.scheduleQueueFlush(application) } just runs
 
-        val actualEvent = JSONObject()
-        actualEvent.put("bk", 1)
+                val actualEvent = JSONObject()
+                actualEvent.put("bk", 1)
 
                 every { eventQueueManager.now } returns expectedEpoch
                 every { eventQueueManager.scheduleQueueFlush(application) } just runs
@@ -1069,53 +1066,59 @@ class EventQueueManagerTest : BaseTestCase() {
                 // Act
                 eventQueueManager.processEvent(application, actualEvent, Constants.PING_EVENT)
 
-        // Assert
-        // assert mapping are as expected
-        assertEquals(expectedMemoryConsumption, actualEvent["mc"])
-        assertEquals(expectedNetworkType, actualEvent["nt"])
-        assertTrue(corestate.coreMetaData.isBgPing)
+                // Assert
 
-        // assert below mapping is removed
-        assertNull(actualEvent.opt("bk"))
+                // assert mapping are as expected
+                assertEquals(expectedMemoryConsumption, actualEvent["mc"])
+                assertEquals(expectedNetworkType, actualEvent["nt"])
+                assertTrue(corestate.coreMetaData.isBgPing)
 
-        // assert following keys are absent in json
-        assertNull(actualEvent.opt("n"))
+                // assert below mapping is removed
+                assertNull(actualEvent.opt("bk"))
 
-        // assert validation error present
-        assertEquals(validationResult.errorCode, actualEvent.getJSONObject(Constants.ERROR_KEY)["c"])
-        assertEquals(validationResult.errorDesc, actualEvent.getJSONObject(Constants.ERROR_KEY)["d"])
+                // assert following keys are absent in json
+                assertNull(actualEvent.opt("n"))
 
-        // ---------
+                // assert validation error present
+                assertEquals(validationResult.errorCode, actualEvent.getJSONObject(Constants.ERROR_KEY)["c"])
+                assertEquals(validationResult.errorDesc, actualEvent.getJSONObject(Constants.ERROR_KEY)["d"])
 
-        // assert following mappings are present in json
-        assertEquals(expectedActivityCount, CoreMetaData.getActivityCount())
-        assertEquals(expectedSessionId, actualEvent["s"])
-        assertEquals(expectedActivityCount, actualEvent["pg"])
-        assertEquals("ping", actualEvent["type"])
-        assertEquals(expectedEpoch, actualEvent["ep"])
-        assertEquals(expectedIsFirstSession, actualEvent["f"])
-        assertEquals(expectedLastSessionLength, actualEvent["lsl"])
-        assertEquals(true, actualEvent["gf"])
-        assertEquals(expectedGeofenceSDKVersion, actualEvent["gfSDKVersion"])
+                // ---------
 
-        // assert following values are modified
-        assertEquals(expectedGeofenceSDKVersion, corestate.coreMetaData.geofenceSDKVersion)
-        assertFalse(corestate.coreMetaData.isLocationForGeofence)
+                // assert following mappings are present in json
+                assertEquals(expectedActivityCount, CoreMetaData.getActivityCount())
+                assertEquals(expectedSessionId, actualEvent["s"])
+                assertEquals(expectedActivityCount, actualEvent["pg"])
+                assertEquals("ping", actualEvent["type"])
+                assertEquals(expectedEpoch, actualEvent["ep"])
+                assertEquals(expectedIsFirstSession, actualEvent["f"])
+                assertEquals(expectedLastSessionLength, actualEvent["lsl"])
+                assertEquals(true, actualEvent["gf"])
+                assertEquals(expectedGeofenceSDKVersion, actualEvent["gfSDKVersion"])
 
-        // assert following keys are absent in json
-        assertNull(actualEvent.opt("pai"))
+                // assert following values are modified
+                assertEquals(expectedGeofenceSDKVersion, corestate.coreMetaData.geofenceSDKVersion)
 
-        // assert following methods called
-        verify { corestate.localDataStore.setDataSyncFlag(actualEvent) }
-        verify { corestate.databaseManager.queueEventToDB(
+                assertFalse(corestate.coreMetaData.isLocationForGeofence)
+
+                // assert following keys are absent in json
+                assertNull(actualEvent.opt("pai"))
+
+                // assert following methods called
+                verify { corestate.localDataStore.setDataSyncFlag(actualEvent) }
+                verify {
+                    corestate.databaseManager.queueEventToDB(
                         application, actualEvent, Constants.PING_EVENT
-                    ) }
-        verify(exactly = 0) { corestate.localDataStore.persistEvent(
+                    )
+                }
+                verify(exactly = 0) {
+                    corestate.localDataStore.persistEvent(
                         application, actualEvent, Constants.PING_EVENT
-                    ) }
-        verify { eventQueueManager.scheduleQueueFlush(application) }
-
-        unmockkStatic(Utils::class)
+                    )
+                }
+                verify { eventQueueManager.scheduleQueueFlush(application) }
+            }
+        }
     }
 
     @Test
@@ -1124,11 +1127,12 @@ class EventQueueManagerTest : BaseTestCase() {
 
             val actualEvent = JSONObject()
 
-        eventQueueManager.processEvent(application, actualEvent, Constants.PROFILE_EVENT)
+            eventQueueManager.processEvent(application, actualEvent, Constants.PROFILE_EVENT)
 
-        assertEquals("profile", actualEvent["type"])
-        // assert following keys are absent in json
-        assertNull(actualEvent.opt("pai"))
+            assertEquals("profile", actualEvent["type"])
+            // assert following keys are absent in json
+            assertNull(actualEvent.opt("pai"))
+        }
     }
 
     @Test
@@ -1137,11 +1141,12 @@ class EventQueueManagerTest : BaseTestCase() {
 
             val actualEvent = JSONObject()
 
-        eventQueueManager.processEvent(application, actualEvent, Constants.DATA_EVENT)
+            eventQueueManager.processEvent(application, actualEvent, Constants.DATA_EVENT)
 
-        assertEquals("data", actualEvent["type"])
-        // assert following keys are absent in json
-        assertNull(actualEvent.opt("pai"))
+            assertEquals("data", actualEvent["type"])
+            // assert following keys are absent in json
+            assertNull(actualEvent.opt("pai"))
+        }
     }
 
     @Test
@@ -1151,11 +1156,12 @@ class EventQueueManagerTest : BaseTestCase() {
             val actualEvent = JSONObject()
             actualEvent.put("evtName", Constants.APP_LAUNCHED_EVENT)
 
-        eventQueueManager.processEvent(application, actualEvent, Constants.RAISED_EVENT)
+            eventQueueManager.processEvent(application, actualEvent, Constants.RAISED_EVENT)
 
-        // assert following keys are present in json
-        assertEquals("event", actualEvent["type"])
-        assertNotNull(actualEvent.opt("pai"))
+            // assert following keys are present in json
+            assertEquals("event", actualEvent["type"])
+            assertNotNull(actualEvent.opt("pai"))
+        }
     }
 
     private fun withMockExecutors(block: () -> Unit) {
