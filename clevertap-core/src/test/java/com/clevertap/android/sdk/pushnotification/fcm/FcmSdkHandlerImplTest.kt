@@ -6,53 +6,53 @@ import com.clevertap.android.sdk.pushnotification.PushConstants.FCM
 import com.clevertap.android.sdk.pushnotification.fcm.TestFcmConstants.Companion.FCM_SENDER_ID
 import com.clevertap.android.sdk.utils.PackageUtils
 import com.clevertap.android.shared.test.BaseTestCase
-import com.clevertap.android.shared.test.TestApplication
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.FirebaseMessaging
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.Mockito.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.verify
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [28], application = TestApplication::class)
 class FcmSdkHandlerImplTest : BaseTestCase() {
 
     private lateinit var handler: FcmSdkHandlerImpl
     private lateinit var listener: CTPushProviderListener
     private lateinit var manifestInfo: ManifestInfo
 
-    @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        listener = mock(CTPushProviderListener::class.java)
+        listener = mockk(relaxed = true)
         handler = FcmSdkHandlerImpl(listener, application, cleverTapInstanceConfig)
-        manifestInfo = mock(ManifestInfo::class.java)
+        manifestInfo = mockk(relaxed = true)
         handler.setManifestInfo(manifestInfo)
     }
 
     @Test
     fun isAvailable_Unavailable_PlayServices_Returns_False() {
-        mockStatic(PackageUtils::class.java).use {
-            `when`(PackageUtils.isGooglePlayServicesAvailable(application)).thenReturn(false)
+        mockkStatic(PackageUtils::class) {
+            every { PackageUtils.isGooglePlayServicesAvailable(application) } returns false
             Assert.assertFalse(handler.isAvailable)
         }
     }
 
     @Test
     fun isAvailable_InValid_Manifest_Valid_Config_Json_Returns_True() {
-        mockStatic(PackageUtils::class.java).use {
-            `when`(PackageUtils.isGooglePlayServicesAvailable(application)).thenReturn(true)
-            `when`(manifestInfo.fcmSenderId).thenReturn(null)
-            val app = mock(FirebaseApp::class.java)
+        mockkStatic(PackageUtils::class) {
+            every { PackageUtils.isGooglePlayServicesAvailable(application) } returns true
+            every { manifestInfo.fcmSenderId } returns null
+            val app = mockk<FirebaseApp>(relaxed = true)
 
-            mockStatic(FirebaseApp::class.java).use {
-                `when`(FirebaseApp.getInstance()).thenReturn(app)
-                val options = mock(FirebaseOptions::class.java)
-                `when`(app.options).thenReturn(options)
-                `when`(options.gcmSenderId).thenReturn(FCM_SENDER_ID)
+            mockkStatic(FirebaseApp::class) {
+                every { FirebaseApp.getInstance() } returns app
+                val options = mockk<FirebaseOptions>(relaxed = true)
+                every { app.options } returns options
+                every { options.gcmSenderId } returns FCM_SENDER_ID
                 Assert.assertTrue(handler.isAvailable)
             }
         }
@@ -60,16 +60,16 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
 
     @Test
     fun isAvailable_InValid_Manifest_InValid_Config_Json_Returns_False() {
-        mockStatic(PackageUtils::class.java).use {
-            `when`(PackageUtils.isGooglePlayServicesAvailable(application)).thenReturn(true)
-            `when`(manifestInfo.fcmSenderId).thenReturn(null)
-            val app = mock(FirebaseApp::class.java)
+        mockkStatic(PackageUtils::class) {
+            every { PackageUtils.isGooglePlayServicesAvailable(application) } returns true
+            every { manifestInfo.fcmSenderId } returns null
+            val app = mockk<FirebaseApp>(relaxed = true)
 
-            mockStatic(FirebaseApp::class.java).use {
-                `when`(FirebaseApp.getInstance()).thenReturn(app)
-                val options = mock(FirebaseOptions::class.java)
-                `when`(app.options).thenReturn(options)
-                `when`(options.gcmSenderId).thenReturn(null)
+            mockkStatic(FirebaseApp::class) {
+                every { FirebaseApp.getInstance() } returns app
+                val options = mockk<FirebaseOptions>(relaxed = true)
+                every { app.options } returns options
+                every { options.gcmSenderId } returns null
                 Assert.assertFalse(handler.isAvailable)
             }
         }
@@ -77,75 +77,67 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
 
     @Test
     fun isAvailable_Exception_Returns_False() {
-        mockStatic(PackageUtils::class.java).use {
-            `when`(PackageUtils.isGooglePlayServicesAvailable(application)).thenThrow(RuntimeException("Something Went Wrong"))
+        mockkStatic(PackageUtils::class) {
+            every { PackageUtils.isGooglePlayServicesAvailable(application) } throws RuntimeException(
+                "Something Went Wrong"
+            )
             Assert.assertFalse(handler.isAvailable)
         }
     }
 
     @Test
     fun isSupported_Returns_True() {
-        mockStatic(PackageUtils::class.java).use {
-            `when`(PackageUtils.isGooglePlayStoreAvailable(application)).thenReturn(true)
+        mockkStatic(PackageUtils::class) {
+            every { PackageUtils.isGooglePlayStoreAvailable(application) } returns true
             Assert.assertTrue(handler.isSupported)
         }
     }
 
     @Test
     fun isSupported_Returns_False() {
-        mockStatic(PackageUtils::class.java).use {
-            `when`(PackageUtils.isGooglePlayStoreAvailable(application)).thenReturn(false)
+        mockkStatic(PackageUtils::class) {
+            every { PackageUtils.isGooglePlayStoreAvailable(application) } returns false
             Assert.assertFalse(handler.isSupported)
         }
     }
 
     @Test
     fun testGetPushType() {
-        Assert.assertEquals(handler.pushType,
-            FCM
-        )
+        Assert.assertEquals(handler.pushType, FCM)
     }
-
-    /*@Test
-    fun testGetFCMSenderID() {
-        handler.fcmSenderID
-        verify(manifestInfo, times(1)).fcmSenderId
-    }*/
 
     @Test
     fun getSenderId_Invalid_Manifest_Valid_Config_Json() {
-        `when`(manifestInfo.fcmSenderId).thenReturn(null)
-        mockStatic(FirebaseApp::class.java).use {
-            val app = mock(FirebaseApp::class.java)
-            val options = mock(FirebaseOptions::class.java)
-            `when`(FirebaseApp.getInstance()).thenReturn(app)
-            `when`(app.options).thenReturn(options)
-            `when`(options.gcmSenderId).thenReturn(FCM_SENDER_ID)
+        every { manifestInfo.fcmSenderId } returns null
+        mockkStatic(FirebaseApp::class) {
+            val app = mockk<FirebaseApp>(relaxed = true)
+            val options = mockk<FirebaseOptions>(relaxed = true)
+            every { FirebaseApp.getInstance() } returns app
+            every { app.options } returns options
+            every { options.gcmSenderId } returns FCM_SENDER_ID
             Assert.assertEquals(handler.senderId, FCM_SENDER_ID)
         }
     }
 
     @Test
     fun getSenderId_Invalid_Manifest_InValid_Config_Json() {
-        `when`(manifestInfo.fcmSenderId).thenReturn(null)
-        mockStatic(FirebaseApp::class.java).use {
-            val app = mock(FirebaseApp::class.java)
-            val options = mock(FirebaseOptions::class.java)
-            `when`(FirebaseApp.getInstance()).thenReturn(app)
-            `when`(app.options).thenReturn(options)
-            `when`(options.gcmSenderId).thenReturn(null)
+        every { manifestInfo.fcmSenderId } returns null
+        mockkStatic(FirebaseApp::class) {
+            val app = mockk<FirebaseApp>(relaxed = true)
+            val options = mockk<FirebaseOptions>(relaxed = true)
+            every { FirebaseApp.getInstance() } returns app
+            every { app.options } returns options
+            every { options.gcmSenderId } returns null
             Assert.assertNull(handler.senderId)
         }
     }
 
     @Test
     fun testRequestToken_Exception_Null_Token() {
-        mockStatic(FirebaseMessaging::class.java).use {
-            `when`(FirebaseMessaging.getInstance()).thenThrow(RuntimeException("Something Went wrong"))
+        mockkStatic(FirebaseMessaging::class) {
+            every { FirebaseMessaging.getInstance() } throws RuntimeException("Something Went wrong")
             handler.requestToken()
-            verify(listener, times(1)).onNewToken(null,
-                FCM
-            )
+            verify(exactly = 1) { listener.onNewToken(null, FCM) }
         }
     }
 }

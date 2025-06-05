@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.product_config
 
 import org.junit.*
-import org.junit.jupiter.api.Test
 
 class ProductConfigUtilTest {
     @Test

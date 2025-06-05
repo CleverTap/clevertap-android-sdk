@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk.task
 
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.*
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
@@ -17,10 +19,9 @@ class IOExecutorTest : BaseTestCase() {
     private lateinit var mExecutorService: ExecutorService
     private lateinit var executor: IOExecutor
 
-    @Before
     override fun setUp() {
         super.setUp()
-        mExecutorService = Mockito.mock(ExecutorService::class.java)
+        mExecutorService = mockk(relaxed = true)
         executor = IOExecutor()
         executor.setExecutorService(mExecutorService)
     }
@@ -41,21 +42,21 @@ class IOExecutorTest : BaseTestCase() {
         val timeout = 10L
         val unit = TimeUnit.MINUTES
         executor.awaitTermination(timeout, unit)
-        Mockito.verify(mExecutorService).awaitTermination(timeout, unit)
+        verify { mExecutorService.awaitTermination(timeout, unit) }
     }
 
     @Test
     fun test_execute() {
         val runnable = Runnable { }
         executor.execute(runnable)
-        Mockito.verify(mExecutorService).execute(runnable)
+        verify { mExecutorService.execute(runnable) }
     }
 
     @Test
     fun test_invokeAll() {
         val taskCollection = ArrayList<Callable<Void>>()
         executor.invokeAll(taskCollection)
-        Mockito.verify(mExecutorService).invokeAll(taskCollection)
+        verify { mExecutorService.invokeAll(taskCollection) }
     }
 
     @Test
@@ -64,14 +65,14 @@ class IOExecutorTest : BaseTestCase() {
         val timeout = 10L
         val unit = TimeUnit.MINUTES
         executor.invokeAll(taskCollection, timeout, unit)
-        Mockito.verify(mExecutorService).invokeAll(taskCollection, timeout, unit)
+        verify { mExecutorService.invokeAll(taskCollection, timeout, unit) }
     }
 
     @Test
     fun test_invokeAny() {
         val taskCollection = ArrayList<Callable<Void>>()
         executor.invokeAny(taskCollection)
-        Mockito.verify(mExecutorService).invokeAny(taskCollection)
+        verify { mExecutorService.invokeAny(taskCollection) }
     }
 
     @Test
@@ -80,38 +81,38 @@ class IOExecutorTest : BaseTestCase() {
         val timeout = 10L
         val unit = TimeUnit.MINUTES
         executor.invokeAny(taskCollection, timeout, unit)
-        Mockito.verify(mExecutorService).invokeAny(taskCollection, timeout, unit)
+        verify { mExecutorService.invokeAny(taskCollection, timeout, unit) }
     }
 
     @Test
     fun test_isShutdown() {
-        executor.isShutdown()
-        Mockito.verify(mExecutorService).isShutdown()
+        executor.isShutdown
+        verify { mExecutorService.isShutdown }
     }
 
     @Test
     fun test_isTerminated() {
-        executor.isTerminated()
-        Mockito.verify(mExecutorService).isTerminated()
+        executor.isTerminated
+        verify { mExecutorService.isTerminated }
     }
 
     @Test
     fun test_shutdown() {
         executor.shutdown()
-        Mockito.verify(mExecutorService).shutdown()
+        verify { mExecutorService.shutdown() }
     }
 
     @Test
     fun test_shutdownNow() {
         executor.shutdownNow()
-        Mockito.verify(mExecutorService).shutdownNow()
+        verify { mExecutorService.shutdownNow() }
     }
 
     @Test
     fun test_submit_Callable() {
         val callable = Callable { }
         executor.submit(callable)
-        Mockito.verify(mExecutorService).submit(callable)
+        verify { mExecutorService.submit(callable) }
     }
 
     @Test
@@ -119,13 +120,13 @@ class IOExecutorTest : BaseTestCase() {
         val callable = Runnable { }
         val result = "121"
         executor.submit(callable, result)
-        Mockito.verify(mExecutorService).submit(callable, result)
+        verify { mExecutorService.submit(callable, result) }
     }
 
     @Test
     fun test_submit_RunnableOnly() {
         val callable = Runnable { }
         executor.submit(callable)
-        Mockito.verify(mExecutorService).submit(callable)
+        verify { mExecutorService.submit(callable) }
     }
 }

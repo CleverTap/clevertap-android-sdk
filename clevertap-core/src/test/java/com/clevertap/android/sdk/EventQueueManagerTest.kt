@@ -15,8 +15,15 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.runs
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.unmockkAll
+import io.mockk.verify
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
@@ -34,48 +41,38 @@ import kotlin.test.assertTrue
 class EventQueueManagerTest : BaseTestCase() {
 
     private lateinit var corestate: MockCoreStateKotlin
-    
+
     private lateinit var eventQueueManager: EventQueueManager
-    
+
     private lateinit var json: JSONObject
-    
-    @MockK
+
     private lateinit var loginInfoProvider: LoginInfoProvider
 
     @Before
     override fun setUp() {
         super.setUp()
-        MockKAnnotations.init(this)
-        
-        mockkStatic(CTExecutorFactory::class)
-        every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(cleverTapInstanceConfig)
-        
         corestate = MockCoreStateKotlin(cleverTapInstanceConfig)
         loginInfoProvider = mockk(relaxed = true)
-        
-        // Create a real instance first
-        eventQueueManager = EventQueueManager(
-            corestate.databaseManager,
-            application,
-            cleverTapInstanceConfig,
-            corestate.eventMediator,
-            corestate.sessionManager,
-            corestate.callbackManager,
-            corestate.mainLooperHandler,
-            corestate.deviceInfo,
-            corestate.validationResultStack,
-            corestate.networkManager as NetworkManager,
-            corestate.coreMetaData,
-            corestate.ctLockManager,
-            corestate.localDataStore,
-            corestate.controllerManager,
-            loginInfoProvider
+        eventQueueManager = spyk(
+            EventQueueManager(
+                corestate.databaseManager,
+                application,
+                cleverTapInstanceConfig,
+                corestate.eventMediator,
+                corestate.sessionManager,
+                corestate.callbackManager,
+                corestate.mainLooperHandler,
+                corestate.deviceInfo,
+                corestate.validationResultStack,
+                corestate.networkManager as NetworkManager,
+                corestate.coreMetaData,
+                corestate.ctLockManager,
+                corestate.localDataStore,
+                corestate.controllerManager,
+                loginInfoProvider
+            )
         )
-        
-        // Now create a spy from the real instance
-        eventQueueManager = spyk(eventQueueManager)
-        
-        json = JSONObject()
+            json = JSONObject()
     }
 
     @After
@@ -85,25 +82,29 @@ class EventQueueManagerTest : BaseTestCase() {
 
     @Test
     fun `test queueEvent when type is raised event updates local store`() {
-        // Given
-        val event = JSONObject()
-        event.put("evtName", "test_event")
+        withMockExecutors {
+            // Given
+            val event = JSONObject()
+            event.put("evtName", "test_event")
 
-        every { corestate.eventMediator.getEventName(event) } returns "test_event"
+            every { corestate.eventMediator.getEventName(event) } returns "test_event"
 
         // When
         eventQueueManager.queueEvent(application, event, Constants.RAISED_EVENT)
 
-        // Then
-        verify { corestate.localDataStore.persistUserEventLog("test_event") }
+            // Then
+            verify { corestate.localDataStore.persistUserEventLog("test_event") }
+        }
     }
 
     @Test
     fun `test queueEvent when type is not raised event does not update local store`() {
-        // Given
-        val event = JSONObject()
-        event.put("evtName", "test_event")
-        every { corestate.eventMediator.getEventName(event) } returns "test_event"
+        withMockExecutors {
+
+            // Given
+            val event = JSONObject()
+            event.put("evtName", "test_event")
+            every { corestate.eventMediator.getEventName(event) } returns "test_event"
 
         // Test for different event types that are not RAISED_EVENT
         listOf(
@@ -118,115 +119,197 @@ class EventQueueManagerTest : BaseTestCase() {
             // When
             eventQueueManager.queueEvent(application, event, eventType)
 
-            // Then
-            verify(exactly = 0) { corestate.localDataStore.persistUserEventLog(any()) }
+                // Then
+                verify(exactly = 0) { corestate.localDataStore.persistUserEventLog(any()) }
+            }
         }
     }
 
     @Test
     fun test_queueEvent_will_not_add_to_queue_when_event_should_be_dropped() {
-        every { corestate.eventMediator.shouldDropEvent(json, Constants.PING_EVENT) } returns true
-        
-        eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
-        
-        verify(exactly = 0) { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT) }
+        withMockExecutors {
+            every {
+                corestate.eventMediator.shouldDropEvent(
+                    json, Constants.PING_EVENT
+                )
+            } returns true
+            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
+            verify(exactly = 0) {
+                eventQueueManager.addToQueue(
+                    application, json, Constants.PING_EVENT
+                )
+            }
+        }
     }
 
     @Test
     fun test_queueEvent_will_add_to_queue_when_event_should_not_be_dropped() {
-        every { corestate.eventMediator.shouldDropEvent(json, Constants.FETCH_EVENT) } returns false
-        every { eventQueueManager.addToQueue(application, json, Constants.FETCH_EVENT) } just runs
-        
-        eventQueueManager.queueEvent(application, json, Constants.FETCH_EVENT)
-        
-        verify { eventQueueManager.addToQueue(application, json, Constants.FETCH_EVENT) }
+        withMockExecutors {
+            every {
+                corestate.eventMediator.shouldDropEvent(
+                    json, Constants.FETCH_EVENT
+                )
+            } returns false
+            every {
+                eventQueueManager.addToQueue(
+                    application, json, Constants.FETCH_EVENT
+                )
+            } just runs
+            eventQueueManager.queueEvent(application, json, Constants.FETCH_EVENT)
+            verify { eventQueueManager.addToQueue(application, json, Constants.FETCH_EVENT) }
+        }
     }
 
     @Test
     fun test_queueEvent_will_process_further_and_add_to_queue_when_event_should_not_be_dropped() {
-        every { corestate.eventMediator.shouldDropEvent(json, Constants.PING_EVENT) } returns false
-        every { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT) } just runs
-        every { eventQueueManager.pushInitialEventsAsync() } just runs
-        every { corestate.sessionManager.lazyCreateSession(application) } just runs
+        withMockExecutors {
+            every {
+                corestate.eventMediator.shouldDropEvent(
+                    json, Constants.PING_EVENT
+                )
+            } returns false
+            every {
+                eventQueueManager.addToQueue(
+                    application, json, Constants.PING_EVENT
+                )
+            } just runs
+            every { eventQueueManager.pushInitialEventsAsync() } just runs
+            every { corestate.sessionManager.lazyCreateSession(application) } just runs
 
         eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
 
-        verify { corestate.sessionManager.lazyCreateSession(application) }
-        verify { eventQueueManager.pushInitialEventsAsync() }
-        verify { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT) }
+            verify { corestate.sessionManager.lazyCreateSession(application) }
+            verify { eventQueueManager.pushInitialEventsAsync() }
+            verify { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT) }
+        }
     }
 
     @Test
     fun test_queueEvent_will_delay_add_to_queue_when_event_processing_should_be_delayed() {
-        val runnableSlot = slot<Runnable>()
-        
-        every { corestate.eventMediator.shouldDropEvent(json, Constants.PING_EVENT) } returns false
-        every { corestate.eventMediator.shouldDeferProcessingEvent(json, Constants.PING_EVENT) } returns true
-        every { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT) } just runs
-        every { eventQueueManager.pushInitialEventsAsync() } just runs
-        every { corestate.sessionManager.lazyCreateSession(application) } just runs
-        every { corestate.mainLooperHandler.postDelayed(capture(runnableSlot), any()) } returns true
+        withMockExecutors {
+
+            every {
+                corestate.eventMediator.shouldDropEvent(
+                    json, Constants.PING_EVENT
+                )
+            } returns false
+
+            every {
+                corestate.eventMediator.shouldDeferProcessingEvent(
+                    json, Constants.PING_EVENT
+                )
+            } returns true
+            every {
+                eventQueueManager.addToQueue(
+                    application, json, Constants.PING_EVENT
+                )
+            } just runs
+            every { eventQueueManager.pushInitialEventsAsync() } just runs
+            every { corestate.sessionManager.lazyCreateSession(application) } just runs
 
         eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
 
-        verify { corestate.mainLooperHandler.postDelayed(any(), any()) }
+            val runnableSlot = slot<Runnable>()
+            verify { corestate.mainLooperHandler.postDelayed(capture(runnableSlot), any()) }
 
-        // Execute the captured runnable
-        runnableSlot.captured.run()
+            runnableSlot.captured.run()
 
-        verify { corestate.sessionManager.lazyCreateSession(application) }
-        verify { eventQueueManager.pushInitialEventsAsync() }
-        verify { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT) }
+            verify { corestate.sessionManager.lazyCreateSession(application) }
+            verify { eventQueueManager.pushInitialEventsAsync() }
+            verify { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT) }
+        }
     }
 
     @Test
     fun test_queueEvent_for_profileEvent_will_process_further_and_add_to_queue_when_event_should_not_be_dropped() {
-        val mockInAppController = mockk<InAppController>(relaxed = true)
-        
-        every { corestate.eventMediator.shouldDropEvent(json, Constants.PROFILE_EVENT) } returns false
-        every { corestate.controllerManager.inAppController } returns mockInAppController
-        every { eventQueueManager.pushInitialEventsAsync() } just runs
-        every { corestate.sessionManager.lazyCreateSession(application) } just runs
+        withMockExecutors {
+            val mockInAppController = mockk<InAppController>(relaxed = true)
+            every {
+                corestate.eventMediator.shouldDropEvent(
+                    json, Constants.PROFILE_EVENT
+                )
+            } returns false
 
-        eventQueueManager.queueEvent(application, json, Constants.PROFILE_EVENT)
+            every {
+                corestate.eventMediator.shouldDropEvent(
+                    json, Constants.PROFILE_EVENT
+                )
+            } returns false
 
-        verify { mockInAppController.onQueueProfileEvent(any(), any()) }
-        verify { corestate.sessionManager.lazyCreateSession(application) }
-        verify { eventQueueManager.pushInitialEventsAsync() }
-        verify { eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT) }
+            every { corestate.controllerManager.inAppController } returns mockInAppController
+
+            every { eventQueueManager.pushInitialEventsAsync() } just runs
+            every { corestate.sessionManager.lazyCreateSession(application) } just runs
+
+            eventQueueManager.queueEvent(application, json, Constants.PROFILE_EVENT)
+
+            verify { mockInAppController.onQueueProfileEvent(any(), any()) }
+            verify { corestate.sessionManager.lazyCreateSession(application) }
+            verify { eventQueueManager.pushInitialEventsAsync() }
+            verify { eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT) }
+        }
     }
 
     @Test
     fun test_addToQueue_when_event_is_notification_viewed() {
-        every { eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.NV_EVENT) } just runs
+        withMockExecutors {
+            every {
+                eventQueueManager.processPushNotificationViewedEvent(
+                    application, json, Constants.NV_EVENT
+                )
+            } just runs
 
         eventQueueManager.addToQueue(application, json, Constants.NV_EVENT)
 
-        verify { eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.NV_EVENT) }
-        verify(exactly = 0) { eventQueueManager.processEvent(application, json, Constants.NV_EVENT) }
+            verify {
+                eventQueueManager.processPushNotificationViewedEvent(
+                    application, json, Constants.NV_EVENT
+                )
+            }
+            verify(exactly = 0) {
+                eventQueueManager.processEvent(
+                    application, json, Constants.NV_EVENT
+                )
+            }
+        }
     }
 
     @Test
     fun test_addToQueue_when_event_is_not_notification_viewed() {
-        every { eventQueueManager.processEvent(application, json, Constants.PROFILE_EVENT) } just runs
+        withMockExecutors {
+            every {
+                eventQueueManager.processEvent(
+                    application, json, Constants.PROFILE_EVENT
+                )
+            } just runs
 
         eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT)
 
-        verify(exactly = 0) { eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT) }
-        verify { eventQueueManager.processEvent(application, json, Constants.PROFILE_EVENT) }
+            verify(exactly = 0) {
+                eventQueueManager.processPushNotificationViewedEvent(
+                    application, json, Constants.PROFILE_EVENT
+                )
+            }
+            verify { eventQueueManager.processEvent(application, json, Constants.PROFILE_EVENT) }
+        }
     }
 
     @Test
     fun test_processPushNotificationViewedEvent_when_there_is_no_validation_error() {
-        val runnableSlot = slot<Runnable>()
-        
-        corestate.coreMetaData.currentSessionId = 1000
-        every { eventQueueManager.now } returns 7000
-        every { eventQueueManager.flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED) } just runs
-        every { eventQueueManager.initInAppEvaluation(application, json, Constants.PROFILE_EVENT) } just runs
-        every { corestate.databaseManager.queuePushNotificationViewedEventToDB(application, json) } just runs
-        every { corestate.mainLooperHandler.removeCallbacks(any()) } just runs
-        every { corestate.mainLooperHandler.post(capture(runnableSlot)) } returns true
+        withMockExecutors {
+            val runnableSlot = slot<Runnable>()
+            corestate.coreMetaData.currentSessionId = 1000
+            every { eventQueueManager.now } returns 7000
+            every {
+                eventQueueManager.flushQueueAsync(
+                    application, PUSH_NOTIFICATION_VIEWED
+                )
+            } just runs
+            every {
+                eventQueueManager.initInAppEvaluation(
+                    application, json, Constants.PROFILE_EVENT
+                )
+            } just runs
 
         eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
 
@@ -235,34 +318,44 @@ class EventQueueManagerTest : BaseTestCase() {
         assertEquals(1000, json.getInt("s"))
         assertEquals(7000, json.getInt("ep"))
 
-        verify { corestate.databaseManager.queuePushNotificationViewedEventToDB(application, json) }
-        verify { corestate.mainLooperHandler.removeCallbacks(any()) }
-        verify { corestate.mainLooperHandler.post(any()) }
+            verify {
+                corestate.databaseManager.queuePushNotificationViewedEventToDB(
+                    application, json
+                )
+            }
+            verify { corestate.mainLooperHandler.removeCallbacks(capture(runnableSlot)) }
+            verify { corestate.mainLooperHandler.post(capture(runnableSlot)) }
 
-        // Execute the captured runnable
-        runnableSlot.captured.run()
+            runnableSlot.captured.run()
 
-        verify { eventQueueManager.flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED) }
+            verify { eventQueueManager.flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED) }
+        }
     }
 
     @Test
     fun test_processPushNotificationViewedEvent_when_there_is_validation_error() {
-        val runnableSlot = slot<Runnable>()
-        
-        // Arrange
-        val validationResult = ValidationResult()
-        validationResult.errorDesc = "Fire in the hall"
-        validationResult.errorCode = 999
+        withMockExecutors {
+
+            // Arrange
+            val validationResult = ValidationResult()
+            validationResult.errorDesc = "Fire in the hall"
+            validationResult.errorCode = 999
 
         corestate.validationResultStack.pushValidationResult(validationResult)
 
-        corestate.coreMetaData.currentSessionId = 1000
-        every { eventQueueManager.now } returns 7000
-        every { eventQueueManager.flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED) } just runs
-        every { eventQueueManager.initInAppEvaluation(application, json, Constants.PROFILE_EVENT) } just runs
-        every { corestate.databaseManager.queuePushNotificationViewedEventToDB(application, json) } just runs
-        every { corestate.mainLooperHandler.removeCallbacks(any()) } just runs
-        every { corestate.mainLooperHandler.post(capture(runnableSlot)) } returns true
+            val runnableSlot = slot<Runnable>()
+            corestate.coreMetaData.currentSessionId = 1000
+            every { eventQueueManager.now } returns 7000
+            every {
+                eventQueueManager.flushQueueAsync(
+                    application, PUSH_NOTIFICATION_VIEWED
+                )
+            } just runs
+            every {
+                eventQueueManager.initInAppEvaluation(
+                    application, json, Constants.PROFILE_EVENT
+                )
+            } just runs
 
         // Act
         eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
@@ -274,153 +367,173 @@ class EventQueueManagerTest : BaseTestCase() {
         assertEquals(1000, json.getInt("s"))
         assertEquals(7000, json.getInt("ep"))
 
-        verify { corestate.databaseManager.queuePushNotificationViewedEventToDB(application, json) }
-        verify { corestate.mainLooperHandler.removeCallbacks(any()) }
-        verify { corestate.mainLooperHandler.post(any()) }
+            verify {
+                corestate.databaseManager.queuePushNotificationViewedEventToDB(
+                    application, json
+                )
+            }
+            verify { corestate.mainLooperHandler.removeCallbacks(capture(runnableSlot)) }
+            verify { corestate.mainLooperHandler.post(capture(runnableSlot)) }
 
-        // Execute the captured runnable
-        runnableSlot.captured.run()
+            runnableSlot.captured.run()
 
-        verify { eventQueueManager.flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED) }
+            verify { eventQueueManager.flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED) }
+        }
     }
 
     @Test
     fun test_pushInitialEventsAsync_does_not_pushBasicProfile_when_inCurrentSession() {
-        corestate.coreMetaData.currentSessionId = 10000
-        every { eventQueueManager.pushBasicProfile(null, false) } just runs
+        withMockExecutors {
+
+            corestate.coreMetaData.currentSessionId = 10000
+            every { eventQueueManager.pushBasicProfile(null, false) } just runs
 
         eventQueueManager.pushInitialEventsAsync()
 
-        verify(exactly = 0) { eventQueueManager.pushBasicProfile(null, false) }
+            verify(exactly = 0) { eventQueueManager.pushBasicProfile(null, false) }
+        }
     }
 
     @Test
     fun test_pushInitialEventsAsync_pushesBasicProfile_when_not_inCurrentSession() {
-        corestate.coreMetaData.currentSessionId = -1
-        every { eventQueueManager.pushBasicProfile(null, false) } just runs
+        withMockExecutors {
+
+            corestate.coreMetaData.currentSessionId = -1
+            every { eventQueueManager.pushBasicProfile(null, false) } just runs
 
         eventQueueManager.pushInitialEventsAsync()
 
-        verify { eventQueueManager.pushBasicProfile(null, false) }
+            verify { eventQueueManager.pushBasicProfile(null, false) }
+        }
     }
 
     @Test
     fun test_scheduleQueueFlush() {
-        val runnableSlot = slot<Runnable>()
-        
-        every { eventQueueManager.flushQueueSync(any(), any()) } just runs
-        every { corestate.mainLooperHandler.removeCallbacks(any()) } just runs
-        every { corestate.mainLooperHandler.postDelayed(capture(runnableSlot), any()) } returns true
+        withMockExecutors {
+
+            // Arrange
+            val runnableSlot = slot<Runnable>()
+            every { eventQueueManager.flushQueueSync(any(), any()) } just runs
 
         eventQueueManager.scheduleQueueFlush(application)
 
-        verify { corestate.mainLooperHandler.removeCallbacks(any()) }
-        verify { corestate.mainLooperHandler.postDelayed(any(), any()) }
+            // Assert
+            verify { corestate.mainLooperHandler.removeCallbacks(capture(runnableSlot)) }
+            verify { corestate.mainLooperHandler.postDelayed(capture(runnableSlot), any()) }
 
-        // Execute the captured runnable
-        runnableSlot.captured.run()
+            runnableSlot.captured.run()
 
-        verify { eventQueueManager.flushQueueSync(application, REGULAR) }
-        verify { eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED) }
+            verify { eventQueueManager.flushQueueSync(application, REGULAR) }
+            verify { eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED) }
+        }
     }
 
     @Test
     fun test_flush() {
-        every { eventQueueManager.flushQueueAsync(application, REGULAR) } just runs
+        withMockExecutors {
+
+            every { eventQueueManager.flushQueueAsync(application, REGULAR) } just runs
 
         eventQueueManager.flush()
 
-        verify { eventQueueManager.flushQueueAsync(application, REGULAR) }
+            verify { eventQueueManager.flushQueueAsync(application, REGULAR) }
+        }
     }
 
     @Test
     fun test_flushQueueSync_when_net_is_offline() {
-        // Set up network connectivity to be offline using Robolectric shadow
-        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val shadowOfCM = shadowOf(cm)
-        shadowOfCM.setActiveNetworkInfo(null) // make offline
+        withMockExecutors {
+
+            val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val shadowOfCM = shadowOf(cm)
+            shadowOfCM.setActiveNetworkInfo(null) // make offline
 
         eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
-        verify(exactly = 0) { corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED) }
+            verify(exactly = 0) {
+                corestate.networkManager.needsHandshakeForDomain(
+                    PUSH_NOTIFICATION_VIEWED
+                )
+            }
+        }
     }
 
     @Test
     fun test_flushQueueSync_when_net_is_online_and_metadata_is_offline() {
-        corestate.coreMetaData.isOffline = true
+        withMockExecutors {
 
-        // Set up network connectivity to be online using Robolectric shadow
-        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val shadowOfCM = shadowOf(cm)
-        val netInfo =
-            ShadowNetworkInfo.newInstance(NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
-        shadowOfCM.setActiveNetworkInfo(netInfo) // make online
+            corestate.coreMetaData.isOffline = true
+            val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val shadowOfCM = shadowOf(cm)
+            val netInfo =
+                ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
+            shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
 
         eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
-        verify(exactly = 0) { corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED) }
+            verify(exactly = 0) {
+                corestate.networkManager.needsHandshakeForDomain(
+                    PUSH_NOTIFICATION_VIEWED
+                )
+            }
+        }
     }
 
     @Test
     fun test_flushQueueSync_when_HandshakeForDomain_not_needed() {
-        corestate.coreMetaData.isOffline = false
+        withMockExecutors {
 
-        // Set up network connectivity to be online using Robolectric shadow
-        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val shadowOfCM = shadowOf(cm)
-        val netInfo =
-            ShadowNetworkInfo.newInstance(NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
-        shadowOfCM.setActiveNetworkInfo(netInfo) // make online
-        
-        every { corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED) } returns false
-        every { corestate.networkManager.flushDBQueue(application, PUSH_NOTIFICATION_VIEWED, null) } just runs
+            corestate.coreMetaData.isOffline = false
+            val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val shadowOfCM = shadowOf(cm)
+            val netInfo =
+                ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
+            shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
 
         eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
-        verify(exactly = 0) { corestate.networkManager.initHandshake(any(), any()) }
-        verify { corestate.networkManager.flushDBQueue(application, PUSH_NOTIFICATION_VIEWED, null) }
+            verify(exactly = 0) { corestate.networkManager.initHandshake(any(), any()) }
+            verify {
+                corestate.networkManager.flushDBQueue(
+                    application, PUSH_NOTIFICATION_VIEWED, null
+                )
+            }
+        }
     }
 
     @Test
     fun test_flushQueueSync_when_HandshakeForDomain_is_needed() {
-        val runnableSlot = slot<Runnable>()
-        
-        corestate.coreMetaData.isOffline = false
+        withMockExecutors {
 
-        // Set up network connectivity to be online using Robolectric shadow
-        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val shadowOfCM = shadowOf(cm)
-        val netInfo =
-            ShadowNetworkInfo.newInstance(NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
-        shadowOfCM.setActiveNetworkInfo(netInfo) // make online
-
-        every { corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED) } returns true
-        every { corestate.networkManager.initHandshake(any(), capture(runnableSlot)) } just runs
-        every { corestate.networkManager.flushDBQueue(application, PUSH_NOTIFICATION_VIEWED, null) } just runs
+            val runnableSlot = slot<Runnable>()
+            corestate.coreMetaData.isOffline = false
+            val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val shadowOfCM = shadowOf(cm)
+            val netInfo =
+                ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
+            shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
+            every { corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED) } returns true
 
         eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
 
-        verify { corestate.networkManager.initHandshake(any(), any()) }
+            verify { corestate.networkManager.initHandshake(any(), capture(runnableSlot)) }
 
-        // Execute the captured runnable
-        runnableSlot.captured.run()
+            runnableSlot.captured.run()
 
-        verify { corestate.networkManager.flushDBQueue(application, PUSH_NOTIFICATION_VIEWED, null) }
+            verify {
+                corestate.networkManager.flushDBQueue(
+                    application, PUSH_NOTIFICATION_VIEWED, null
+                )
+            }
+        }
     }
 
     @Test
     fun test_pushBasicProfile_when_input_is_null() {
-        val jsonSlot = slot<JSONObject>()
-        val eventTypeSlot = slot<Int>()
-        
-        // Arrange
-        every { 
-            eventQueueManager.queueEvent(
-                any(),
-                capture(jsonSlot), 
-                capture(eventTypeSlot)
-            )
-        } returns null
+        withMockExecutors {
+
+            // Arrange
+            every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
         val expectedDeviceId = "device_12345"
         val expectedDeviceCarrier = "carrier_12345"
@@ -431,108 +544,114 @@ class EventQueueManagerTest : BaseTestCase() {
         expectedTZ.id = expectedDeviceTZ
         TimeZone.setDefault(expectedTZ)
 
-        every { corestate.deviceInfo.deviceID } returns expectedDeviceId
-        every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
-        every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
+            every { corestate.deviceInfo.deviceID } returns expectedDeviceId
+            every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
+            every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
+
+            val jsonSlot = slot<JSONObject>()
+            val eventTypeSlot = slot<Int>()
 
         // Act
         eventQueueManager.pushBasicProfile(null, false)
 
-        // Assert
-        verify { eventQueueManager.queueEvent(any(), any(), any()) }
-        val actualProfile = jsonSlot.captured["profile"] as JSONObject
-        assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
-        assertEquals(expectedDeviceCC, actualProfile["cc"])
-        assertEquals(expectedDeviceTZ, actualProfile["tz"])
+            // Assert
+            verify {
+                eventQueueManager.queueEvent(
+                    any(), capture(jsonSlot), capture(eventTypeSlot)
+                )
+            }
+            val actualProfile = jsonSlot.captured["profile"] as JSONObject
+            assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
+            assertEquals(expectedDeviceCC, actualProfile["cc"])
+            assertEquals(expectedDeviceTZ, actualProfile["tz"])
+        }
     }
 
     @Test
     fun test_pushBasicProfile_when_carrier_or_cc_is_null() {
-        val jsonSlot = slot<JSONObject>()
-        val eventTypeSlot = slot<Int>()
-        
-        // Arrange
-        every { 
-            eventQueueManager.queueEvent(
-                any(),
-                capture(jsonSlot), 
-                capture(eventTypeSlot)
-            )
-        } returns null
+        withMockExecutors {
+
+            // Arrange
+            every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
         val expectedDeviceId = "device_12345"
 
-        every { corestate.deviceInfo.deviceID } returns expectedDeviceId
-        every { corestate.deviceInfo.carrier } returns null
-        every { corestate.deviceInfo.countryCode } returns null
+            every { corestate.deviceInfo.deviceID } returns expectedDeviceId
+            every { corestate.deviceInfo.carrier } returns null
+            every { corestate.deviceInfo.countryCode } returns null
+
+            val jsonSlot = slot<JSONObject>()
+            val eventTypeSlot = slot<Int>()
 
         // Act
         eventQueueManager.pushBasicProfile(null, false)
 
-        // Assert
-        verify { eventQueueManager.queueEvent(any(), any(), any()) }
-        val actualProfile = jsonSlot.captured["profile"] as JSONObject
-        assertNull(actualProfile.optString("Carrier", null))
-        assertNull(actualProfile.optString("cc", null))
+            // Assert
+            verify {
+                eventQueueManager.queueEvent(
+                    any(), capture(jsonSlot), capture(eventTypeSlot)
+                )
+            }
+            val actualProfile = jsonSlot.captured["profile"] as JSONObject
+            assertNull(actualProfile.optString("Carrier", null))
+            assertNull(actualProfile.optString("cc", null))
+        }
     }
 
     @Test
     fun test_pushBasicProfile_when_carrier_or_cc_is_blank() {
-        val jsonSlot = slot<JSONObject>()
-        val eventTypeSlot = slot<Int>()
-        
-        // Arrange
-        every { 
-            eventQueueManager.queueEvent(
-                any(),
-                capture(jsonSlot), 
-                capture(eventTypeSlot)
-            )
-        } returns null
+        withMockExecutors {
+
+            // Arrange
+            every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
         val expectedDeviceId = "device_12345"
 
-        every { corestate.deviceInfo.deviceID } returns expectedDeviceId
-        every { corestate.deviceInfo.carrier } returns ""
-        every { corestate.deviceInfo.countryCode } returns ""
+            every { corestate.deviceInfo.deviceID } returns expectedDeviceId
+            every { corestate.deviceInfo.carrier } returns ""
+            every { corestate.deviceInfo.countryCode } returns ""
+
+            val jsonSlot = slot<JSONObject>()
+            val eventTypeSlot = slot<Int>()
 
         // Act
         eventQueueManager.pushBasicProfile(null, false)
 
-        // Assert
-        verify { eventQueueManager.queueEvent(any(), any(), any()) }
-        val actualProfile = jsonSlot.captured["profile"] as JSONObject
-        assertNull(actualProfile.optString("Carrier", null))
-        assertNull(actualProfile.optString("cc", null))
+            // Assert
+            verify {
+                eventQueueManager.queueEvent(
+                    any(), capture(jsonSlot), capture(eventTypeSlot)
+                )
+            }
+            val actualProfile = jsonSlot.captured["profile"] as JSONObject
+            assertNull(actualProfile.optString("Carrier", null))
+            assertNull(actualProfile.optString("cc", null))
+        }
     }
 
     @Test
     fun test_pushBasicProfile_when_input_is_not_null() {
-        val jsonSlot = slot<JSONObject>()
-        val eventTypeSlot = slot<Int>()
-        val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
-        
-        mockkStatic(IdentityRepoFactory::class)
-        every {
-            IdentityRepoFactory.getRepo(
-                application,
-                corestate.config,
-                corestate.validationResultStack
-            )
-        } returns mockIdentityRepo
+        withMockExecutors {
 
-        // Arrange
-        every { 
-            eventQueueManager.queueEvent(
-                any(),
-                capture(jsonSlot), 
-                capture(eventTypeSlot)
-            )
-        } returns null
+            mockkStatic(IdentityRepoFactory::class) {
+                val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
+                every {
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.validationResultStack
+                    )
+                } returns mockIdentityRepo
+
+                // Arrange
+                every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
         val expectedDeviceId = "device_12345"
 
-        every { corestate.deviceInfo.deviceID } returns expectedDeviceId
+                every { corestate.deviceInfo.deviceID } returns expectedDeviceId
+
+                val jsonSlot = slot<JSONObject>()
+                val eventTypeSlot = slot<Int>()
 
         val inputJson = JSONObject()
         val subInputJson = JSONObject()
@@ -543,44 +662,44 @@ class EventQueueManagerTest : BaseTestCase() {
         // Act
         eventQueueManager.pushBasicProfile(inputJson, false)
 
-        // Assert
-        verify { eventQueueManager.queueEvent(any(), any(), any()) }
-        val actualProfile = jsonSlot.captured["profile"] as JSONObject
-        val actualDetails = actualProfile["details"] as JSONObject
+                // Assert
+                verify {
+                    eventQueueManager.queueEvent(
+                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                    )
+                }
+                val actualProfile = jsonSlot.captured["profile"] as JSONObject
+                val actualDetails = actualProfile["details"] as JSONObject
 
         assertEquals("abc", actualProfile["name"])
         assertEquals(70, actualDetails["age"])
-        
+
         unmockkStatic(IdentityRepoFactory::class)
     }
 
     @Test
     fun test_pushBasicProfile_when_key_is_profile_identifier() {
-        val jsonSlot = slot<JSONObject>()
-        val eventTypeSlot = slot<Int>()
-        val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
-        
-        mockkStatic(IdentityRepoFactory::class)
-        every {
-            IdentityRepoFactory.getRepo(
-                application,
-                corestate.config,
-                corestate.validationResultStack
-            )
-        } returns mockIdentityRepo
+        withMockExecutors {
 
-        // Arrange
-        every { 
-            eventQueueManager.queueEvent(
-                any(),
-                capture(jsonSlot), 
-                capture(eventTypeSlot)
-            )
-        } returns null
+            mockkStatic(IdentityRepoFactory::class) {
+                val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
+                every {
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.validationResultStack
+                    )
+                } returns mockIdentityRepo
+
+                // Arrange
+                every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
         val expectedDeviceId = "device_12345"
 
-        every { corestate.deviceInfo.deviceID } returns expectedDeviceId
+                every { corestate.deviceInfo.deviceID } returns expectedDeviceId
+
+                val jsonSlot = slot<JSONObject>()
+                val eventTypeSlot = slot<Int>()
 
         val inputJson = JSONObject()
         val subInputJson = JSONObject()
@@ -593,41 +712,38 @@ class EventQueueManagerTest : BaseTestCase() {
         // Act
         eventQueueManager.pushBasicProfile(inputJson, false)
 
-        // Assert
-        verify { loginInfoProvider.cacheGUIDForIdentifier(expectedDeviceId, "name", "abc") }
-        verify { eventQueueManager.queueEvent(any(), any(), any()) }
-        val actualProfile = jsonSlot.captured["profile"] as JSONObject
-        val actualDetails = actualProfile["details"] as JSONObject
+                // Assert
+                verify { loginInfoProvider.cacheGUIDForIdentifier(expectedDeviceId, "name", "abc") }
+                verify {
+                    eventQueueManager.queueEvent(
+                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                    )
+                }
+                val actualProfile = jsonSlot.captured["profile"] as JSONObject
+                val actualDetails = actualProfile["details"] as JSONObject
 
         assertEquals("abc", actualProfile["name"])
         assertEquals(70, actualDetails["age"])
-        
+
         unmockkStatic(IdentityRepoFactory::class)
     }
 
     @Test
     fun test_pushBasicProfile_when_key_is_profile_identifier_and_removeFromSharedPrefs_is_true() {
-        val jsonSlot = slot<JSONObject>()
-        val eventTypeSlot = slot<Int>()
-        val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
-        
-        mockkStatic(IdentityRepoFactory::class)
-        every {
-            IdentityRepoFactory.getRepo(
-                application,
-                corestate.config,
-                corestate.validationResultStack
-            )
-        } returns mockIdentityRepo
+        withMockExecutors {
 
-        //Arrange
-        every { 
-            eventQueueManager.queueEvent(
-                any(),
-                capture(jsonSlot), 
-                capture(eventTypeSlot)
-            )
-        } returns null
+            mockkStatic(IdentityRepoFactory::class) {
+                val mockIdentityRepo = mockk<IdentityRepo>()
+                every {
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.validationResultStack
+                    )
+                } returns mockIdentityRepo
+
+                //Arrange
+                every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
         val expectedDeviceID = "_12345789"
         val expectedDeviceCarrier = "Android"
@@ -637,10 +753,13 @@ class EventQueueManagerTest : BaseTestCase() {
         expectedTZ.id = expectedDeviceTZ
         TimeZone.setDefault(expectedTZ)
 
-        every { corestate.deviceInfo.deviceID } returns expectedDeviceID
-        every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
-        every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
-        every { corestate.deviceInfo.isErrorDeviceId() } returns false
+                every { corestate.deviceInfo.deviceID } returns expectedDeviceID
+                every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
+                every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
+                every { corestate.deviceInfo.isErrorDeviceId() } returns false
+
+                val jsonSlot = slot<JSONObject>()
+                val eventTypeSlot = slot<Int>()
 
         val inputJson = JSONObject()
         inputJson.put("Email", "abc@xyz.com")
@@ -650,42 +769,44 @@ class EventQueueManagerTest : BaseTestCase() {
         //Act
         eventQueueManager.pushBasicProfile(inputJson, true)
 
-        //Assert
-        verify { loginInfoProvider.removeValueFromCachedGUIDForIdentifier(expectedDeviceID, "Email") }
-        verify { eventQueueManager.queueEvent(any(), any(), any()) }
+                //Assert
+                verify {
+                    loginInfoProvider.removeValueFromCachedGUIDForIdentifier(
+                    expectedDeviceID,
+                    "Email"
+                    )
+                }
+                verify {
+                    eventQueueManager.queueEvent(
+                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                    )
+                }
 
         val actualProfile = jsonSlot.captured["profile"] as JSONObject
         assertEquals("abc@xyz.com", actualProfile["Email"])
         assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
         assertEquals(expectedDeviceCC, actualProfile["cc"])
         assertEquals(expectedDeviceTZ, actualProfile["tz"])
-        
+
         unmockkStatic(IdentityRepoFactory::class)
     }
 
     @Test
     fun test_pushBasicProfile_when_key_is_not_profile_identifier_and_removeFromSharedPrefs_is_false() {
-        val jsonSlot = slot<JSONObject>()
-        val eventTypeSlot = slot<Int>()
-        val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
-        
-        mockkStatic(IdentityRepoFactory::class)
-        every {
-            IdentityRepoFactory.getRepo(
-                application,
-                corestate.config,
-                corestate.validationResultStack
-            )
-        } returns mockIdentityRepo
+        withMockExecutors {
 
-        //Arrange
-        every { 
-            eventQueueManager.queueEvent(
-                any(),
-                capture(jsonSlot), 
-                capture(eventTypeSlot)
-            )
-        } returns null
+            mockkStatic(IdentityRepoFactory::class) {
+                val mockIdentityRepo = mockk<IdentityRepo>()
+                every {
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.validationResultStack
+                    )
+                } returns mockIdentityRepo
+
+                //Arrange
+                every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
         val expectedGUID = "_123456789"
         val expectedDeviceCarrier = "Android"
@@ -695,9 +816,12 @@ class EventQueueManagerTest : BaseTestCase() {
         expectedTZ.id = expectedDeviceTZ
         TimeZone.setDefault(expectedTZ)
 
-        every { corestate.deviceInfo.deviceID } returns expectedGUID
-        every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
-        every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
+                every { corestate.deviceInfo.deviceID } returns expectedGUID
+                every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
+                every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
+
+                val jsonSlot = slot<JSONObject>()
+                val eventTypeSlot = slot<Int>()
 
         val inputJson = JSONObject()
         inputJson.put("Phone", "+919998988767")
@@ -707,41 +831,38 @@ class EventQueueManagerTest : BaseTestCase() {
         //Act
         eventQueueManager.pushBasicProfile(inputJson, false)
 
-        //Assert
-        verify { eventQueueManager.queueEvent(any(), any(), any()) }
+                //Assert
+                verify {
+                    eventQueueManager.queueEvent(
+                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                    )
+                }
 
         val actualProfile = jsonSlot.captured["profile"] as JSONObject
         assertEquals("+919998988767", actualProfile["Phone"])
         assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
         assertEquals(expectedDeviceCC, actualProfile["cc"])
         assertEquals(expectedDeviceTZ, actualProfile["tz"])
-        
+
         unmockkStatic(IdentityRepoFactory::class)
     }
 
     @Test
     fun test_pushBasicProfile_when_key_is_profile_identifier_and_removeFromSharedPrefs_is_false() {
-        val jsonSlot = slot<JSONObject>()
-        val eventTypeSlot = slot<Int>()
-        val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
-        
-        mockkStatic(IdentityRepoFactory::class)
-        every {
-            IdentityRepoFactory.getRepo(
-                application,
-                corestate.config,
-                corestate.validationResultStack
-            )
-        } returns mockIdentityRepo
+        withMockExecutors {
 
-        //Arrange
-        every { 
-            eventQueueManager.queueEvent(
-                any(),
-                capture(jsonSlot), 
-                capture(eventTypeSlot)
-            )
-        } returns null
+            mockkStatic(IdentityRepoFactory::class) {
+                val mockIdentityRepo = mockk<IdentityRepo>()
+                every {
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.validationResultStack
+                    )
+                } returns mockIdentityRepo
+
+                //Arrange
+                every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
         val expectedDeviceID = "_12345789"
         val expectedDeviceCarrier = "Android"
@@ -751,9 +872,12 @@ class EventQueueManagerTest : BaseTestCase() {
         expectedTZ.id = expectedDeviceTZ
         TimeZone.setDefault(expectedTZ)
 
-        every { corestate.deviceInfo.deviceID } returns expectedDeviceID
-        every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
-        every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
+                every { corestate.deviceInfo.deviceID } returns expectedDeviceID
+                every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
+                every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
+
+                val jsonSlot = slot<JSONObject>()
+                val eventTypeSlot = slot<Int>()
 
         val inputJson = JSONObject()
         inputJson.put("Email", "abc@xyz.com")
@@ -763,42 +887,43 @@ class EventQueueManagerTest : BaseTestCase() {
         //Act
         eventQueueManager.pushBasicProfile(inputJson, false)
 
-        //Assert
-        verify { loginInfoProvider.cacheGUIDForIdentifier(expectedDeviceID, "Email", "abc@xyz.com") }
-        verify { eventQueueManager.queueEvent(any(), any(), any()) }
+                //Assert
+                verify {
+                    loginInfoProvider.cacheGUIDForIdentifier(
+                        expectedDeviceID, "Email", "abc@xyz.com"
+                    )
+                }
+                verify {
+                    eventQueueManager.queueEvent(
+                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                    )
+                }
 
         val actualProfile = jsonSlot.captured["profile"] as JSONObject
         assertEquals("abc@xyz.com", actualProfile["Email"])
         assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
         assertEquals(expectedDeviceCC, actualProfile["cc"])
         assertEquals(expectedDeviceTZ, actualProfile["tz"])
-        
+
         unmockkStatic(IdentityRepoFactory::class)
     }
 
     @Test
     fun test_pushBasicProfile_when_key_is_not_profile_identifier_and_removeFromSharedPrefs_is_true() {
-        val jsonSlot = slot<JSONObject>()
-        val eventTypeSlot = slot<Int>()
-        val mockIdentityRepo = mockk<IdentityRepo>(relaxed = true)
-        
-        mockkStatic(IdentityRepoFactory::class)
-        every {
-            IdentityRepoFactory.getRepo(
-                application,
-                corestate.config,
-                corestate.validationResultStack
-            )
-        } returns mockIdentityRepo
+        withMockExecutors {
 
-        //Arrange
-        every { 
-            eventQueueManager.queueEvent(
-                any(),
-                capture(jsonSlot), 
-                capture(eventTypeSlot)
-            )
-        } returns null
+            mockkStatic(IdentityRepoFactory::class) {
+                val mockIdentityRepo = mockk<IdentityRepo>()
+                every {
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.validationResultStack
+                    )
+                } returns mockIdentityRepo
+
+                //Arrange
+                every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
 
         val expectedGUID = "_123456789"
         val expectedDeviceCarrier = "Android"
@@ -808,9 +933,12 @@ class EventQueueManagerTest : BaseTestCase() {
         expectedTZ.id = expectedDeviceTZ
         TimeZone.setDefault(expectedTZ)
 
-        every { corestate.deviceInfo.deviceID } returns expectedGUID
-        every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
-        every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
+                every { corestate.deviceInfo.deviceID } returns expectedGUID
+                every { corestate.deviceInfo.carrier } returns expectedDeviceCarrier
+                every { corestate.deviceInfo.countryCode } returns expectedDeviceCC
+
+                val jsonSlot = slot<JSONObject>()
+                val eventTypeSlot = slot<Int>()
 
         val inputJson = JSONObject()
         inputJson.put("Phone", "+919998988767")
@@ -820,27 +948,33 @@ class EventQueueManagerTest : BaseTestCase() {
         //Act
         eventQueueManager.pushBasicProfile(inputJson, true)
 
-        //Assert
-        verify { eventQueueManager.queueEvent(any(), any(), any()) }
+                //Assert
+                verify {
+                    eventQueueManager.queueEvent(
+                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                    )
+                }
 
         val actualProfile = jsonSlot.captured["profile"] as JSONObject
         assertEquals("+919998988767", actualProfile["Phone"])
         assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
         assertEquals(expectedDeviceCC, actualProfile["cc"])
         assertEquals(expectedDeviceTZ, actualProfile["tz"])
-        
+
         unmockkStatic(IdentityRepoFactory::class)
     }
 
     @Test
     fun test_processEvent_when_type_is_page_event() {
-        // Arrange
-        val expectedScreenName = "Home Page"
-        val expectedSessionId = 9898
-        val expectedEpoch = 5000
-        val expectedIsFirstSession = true
-        val expectedLastSessionLength = 3600
-        val expectedGeofenceSDKVersion = 10
+        withMockExecutors {
+
+            // Arrange
+            val expectedScreenName = "Home Page"
+            val expectedSessionId = 9898
+            val expectedEpoch = 5000
+            val expectedIsFirstSession = true
+            val expectedLastSessionLength = 3600
+            val expectedGeofenceSDKVersion = 10
 
         corestate.coreMetaData.setCurrentScreenName(expectedScreenName)
         corestate.coreMetaData.currentSessionId = expectedSessionId
@@ -851,10 +985,8 @@ class EventQueueManagerTest : BaseTestCase() {
         CoreMetaData.setActivityCount(0)
         val actualEvent = JSONObject()
 
-        every { eventQueueManager.now } returns expectedEpoch
-        every { eventQueueManager.scheduleQueueFlush(application) } just runs
-        every { corestate.localDataStore.setDataSyncFlag(actualEvent) } just runs
-        every { corestate.databaseManager.queueEventToDB(application, actualEvent, Constants.PAGE_EVENT) } just runs
+            every { eventQueueManager.now } returns expectedEpoch
+            every { eventQueueManager.scheduleQueueFlush(application) } just runs
 
         // Act
         eventQueueManager.processEvent(application, actualEvent, Constants.PAGE_EVENT)
@@ -885,19 +1017,25 @@ class EventQueueManagerTest : BaseTestCase() {
 
         // assert following methods called
         verify { corestate.localDataStore.setDataSyncFlag(actualEvent) }
-        verify { corestate.databaseManager.queueEventToDB(application, actualEvent, Constants.PAGE_EVENT) }
-        verify(exactly = 0) { corestate.localDataStore.persistEvent(application, actualEvent, Constants.PAGE_EVENT) }
-        verify { eventQueueManager.scheduleQueueFlush(application) }
+        verify { corestate.databaseManager.queueEventToDB(
+                    application, actualEvent, Constants.PAGE_EVENT
+                ) }
+        verify(exactly = 0) { corestate.localDataStore.persistEvent(
+                    application, actualEvent, Constants.PAGE_EVENT
+                ) }
+        verify { eventQueueManager.scheduleQueueFlush(application)}
+        }
     }
 
     @Test
     fun test_processEvent_when_type_is_ping_event() {
-        mockkStatic(Utils::class)
-        
-        // Arrange
-        val validationResult = ValidationResult()
-        validationResult.errorDesc = "Fire in the hall"
-        validationResult.errorCode = 999
+        withMockExecutors {
+
+            mockkStatic(Utils::class) {
+                // Arrange
+                val validationResult = ValidationResult()
+                validationResult.errorDesc = "Fire in the hall"
+                validationResult.errorCode = 999
 
         corestate.validationResultStack.pushValidationResult(validationResult)
 
@@ -917,19 +1055,19 @@ class EventQueueManagerTest : BaseTestCase() {
         corestate.coreMetaData.isLocationForGeofence = true
         CoreMetaData.setActivityCount(expectedActivityCount)
 
-        every { Utils.getMemoryConsumption() } returns expectedMemoryConsumption
-        every { Utils.getCurrentNetworkType(application) } returns expectedNetworkType
-        every { eventQueueManager.now } returns expectedEpoch
-        every { eventQueueManager.scheduleQueueFlush(application) } just runs
-        
-        every { corestate.localDataStore.setDataSyncFlag(any()) } just runs
-        every { corestate.databaseManager.queueEventToDB(application, any(), Constants.PING_EVENT) } just runs
+                every { Utils.getMemoryConsumption() } returns expectedMemoryConsumption
+                every { Utils.getCurrentNetworkType(application) } returns expectedNetworkType
+                every { eventQueueManager.now } returns expectedEpoch
+                every { eventQueueManager.scheduleQueueFlush(application) } just runs
 
         val actualEvent = JSONObject()
         actualEvent.put("bk", 1)
 
-        // Act
-        eventQueueManager.processEvent(application, actualEvent, Constants.PING_EVENT)
+                every { eventQueueManager.now } returns expectedEpoch
+                every { eventQueueManager.scheduleQueueFlush(application) } just runs
+
+                // Act
+                eventQueueManager.processEvent(application, actualEvent, Constants.PING_EVENT)
 
         // Assert
         // assert mapping are as expected
@@ -969,16 +1107,22 @@ class EventQueueManagerTest : BaseTestCase() {
 
         // assert following methods called
         verify { corestate.localDataStore.setDataSyncFlag(actualEvent) }
-        verify { corestate.databaseManager.queueEventToDB(application, actualEvent, Constants.PING_EVENT) }
-        verify(exactly = 0) { corestate.localDataStore.persistEvent(application, actualEvent, Constants.PING_EVENT) }
+        verify { corestate.databaseManager.queueEventToDB(
+                        application, actualEvent, Constants.PING_EVENT
+                    ) }
+        verify(exactly = 0) { corestate.localDataStore.persistEvent(
+                        application, actualEvent, Constants.PING_EVENT
+                    ) }
         verify { eventQueueManager.scheduleQueueFlush(application) }
-        
+
         unmockkStatic(Utils::class)
     }
 
     @Test
     fun test_processEvent_when_type_is_profile_event() {
-        val actualEvent = JSONObject()
+        withMockExecutors {
+
+            val actualEvent = JSONObject()
 
         eventQueueManager.processEvent(application, actualEvent, Constants.PROFILE_EVENT)
 
@@ -989,7 +1133,9 @@ class EventQueueManagerTest : BaseTestCase() {
 
     @Test
     fun test_processEvent_when_type_is_data_event() {
-        val actualEvent = JSONObject()
+        withMockExecutors {
+
+            val actualEvent = JSONObject()
 
         eventQueueManager.processEvent(application, actualEvent, Constants.DATA_EVENT)
 
@@ -1000,13 +1146,24 @@ class EventQueueManagerTest : BaseTestCase() {
 
     @Test
     fun test_processEvent_when_type_is_normal_event() {
-        val actualEvent = JSONObject()
-        actualEvent.put("evtName", Constants.APP_LAUNCHED_EVENT)
+        withMockExecutors {
+
+            val actualEvent = JSONObject()
+            actualEvent.put("evtName", Constants.APP_LAUNCHED_EVENT)
 
         eventQueueManager.processEvent(application, actualEvent, Constants.RAISED_EVENT)
 
         // assert following keys are present in json
         assertEquals("event", actualEvent["type"])
         assertNotNull(actualEvent.opt("pai"))
+    }
+
+    private fun withMockExecutors(block: () -> Unit) {
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
+            block()
+        }
     }
 }

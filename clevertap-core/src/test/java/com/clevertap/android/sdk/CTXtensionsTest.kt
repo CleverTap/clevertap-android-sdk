@@ -6,13 +6,13 @@ import android.content.Context
 import android.location.Location
 import android.os.Build.VERSION
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.util.ReflectionHelpers
@@ -123,12 +123,12 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_is_null_and_manifestChannel_is_registered_then_return_manifestChannel() {
-        mockStatic(ManifestInfo::class.java).use {
+        mockkStatic(ManifestInfo::class) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val manifestInfo = mock(ManifestInfo::class.java)
+            val manifestInfo = mockk<ManifestInfo>()
 
-            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
-            `when`(manifestInfo.devDefaultPushChannelId).thenReturn("ManifestChannelId")
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestChannelId"
 
             configureTestNotificationChannel(
                 NotificationManager.IMPORTANCE_MAX, true, 30,
@@ -143,12 +143,12 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = null | default = not registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_null_and_manifestChannel_null_then_return_default_channel() {
-        mockStatic(ManifestInfo::class.java).use {
+        mockkStatic(ManifestInfo::class) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val manifestInfo = mock(ManifestInfo::class.java)
+            val manifestInfo = mockk<ManifestInfo>()
 
-            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
-            `when`(manifestInfo.devDefaultPushChannelId).thenReturn(null)
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
 
             val actual = nm.getOrCreateChannel(null, application)
             assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
@@ -158,12 +158,12 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = null | default = registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_is_null_and_manifestChannel_is_null_and_fallback_channel_exists_then_return_fallback_channel() {
-        mockStatic(ManifestInfo::class.java).use {
+        mockkStatic(ManifestInfo::class) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val manifestInfo = mock(ManifestInfo::class.java)
+            val manifestInfo = mockk<ManifestInfo>()
 
-            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
-            `when`(manifestInfo.devDefaultPushChannelId).thenReturn(null)
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
 
             // Configure the test notification channel with an existing fallback channel
             configureTestNotificationChannel(
@@ -179,12 +179,12 @@ class CTXtensionsTest : BaseTestCase() {
     //given = not registered | manifest = null | default = not registered
     @Test
     fun test_getOrCreateChannel_when_channel_not_registered_and_manifestChannel_not_available_then_return_default_channel() {
-        mockStatic(ManifestInfo::class.java).use {
+        mockkStatic(ManifestInfo::class) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val manifestInfo = mock(ManifestInfo::class.java)
+            val manifestInfo = mockk<ManifestInfo>()
 
-            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
-            `when`(manifestInfo.devDefaultPushChannelId).thenReturn(null)
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
 
             val actual = nm.getOrCreateChannel("NonExistentChannel", application)
             assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
@@ -193,12 +193,12 @@ class CTXtensionsTest : BaseTestCase() {
     //given = not registered | manifest = not registered | default
     @Test
     fun test_getOrCreateChannel_when_channel_not_registered_and_manifestChannel_not_registered_then_return_default_channel() {
-        mockStatic(ManifestInfo::class.java).use {
+        mockkStatic(ManifestInfo::class) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val manifestInfo = mock(ManifestInfo::class.java)
+            val manifestInfo = mockk<ManifestInfo>()
 
-            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
-            `when`(manifestInfo.devDefaultPushChannelId).thenReturn("ManifestChannelId")
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestChannelId"
 
             val actual = nm.getOrCreateChannel("NonExistentChannel", application)
             assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
@@ -208,12 +208,12 @@ class CTXtensionsTest : BaseTestCase() {
     //given = not registered | manifest = null | default = registered
     @Test
     fun test_getOrCreateChannel_when_channel_not_registered_and_manifestChannel_not_available_and_fallback_channel_exists_then_return_fallback_channel() {
-        mockStatic(ManifestInfo::class.java).use {
+        mockkStatic(ManifestInfo::class) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val manifestInfo = mock(ManifestInfo::class.java)
+            val manifestInfo = mockk<ManifestInfo>()
 
-            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
-            `when`(manifestInfo.devDefaultPushChannelId).thenReturn(null)
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
 
             // Configure the test notification channel with an existing fallback channel
             configureTestNotificationChannel(
@@ -229,12 +229,12 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = not registered | default = not registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_null_and_manifestChannel_not_registered_and_default_not_registered_then_return_default_channel() {
-        mockStatic(ManifestInfo::class.java).use {
+        mockkStatic(ManifestInfo::class) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val manifestInfo = mock(ManifestInfo::class.java)
+            val manifestInfo = mockk<ManifestInfo>()
 
-            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
-            `when`(manifestInfo.devDefaultPushChannelId).thenReturn("NonRegisteredManifestChannelId")
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "NonRegisteredManifestChannelId"
 
             val actual = nm.getOrCreateChannel(null, application)
             assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
@@ -244,12 +244,12 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = not registered | default = registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_null_and_manifestChannel_not_registered_and_default_is_registered_then_return_default_channel() {
-        mockStatic(ManifestInfo::class.java).use {
+        mockkStatic(ManifestInfo::class) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val manifestInfo = mock(ManifestInfo::class.java)
+            val manifestInfo = mockk<ManifestInfo>()
 
-            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
-            `when`(manifestInfo.devDefaultPushChannelId).thenReturn("NonRegisteredManifestChannelId")
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "NonRegisteredManifestChannelId"
 
             // Configure the test notification channel with an existing fallback channel
             configureTestNotificationChannel(
@@ -265,12 +265,12 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_getNotificationChannel_throws_exception_return_null() {
-        mockStatic(ManifestInfo::class.java).use {
-            val nm = mock(NotificationManager::class.java)
-            val manifestInfo = mock(ManifestInfo::class.java)
+        mockkStatic(ManifestInfo::class) {
+            val nm = mockk<NotificationManager>(relaxed = true)
+            val manifestInfo = mockk<ManifestInfo>()
 
-            `when`(ManifestInfo.getInstance(application)).thenReturn(manifestInfo)
-            `when`(manifestInfo.devDefaultPushChannelId).thenReturn("ManifestChannelId")
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestChannelId"
 
             configureTestNotificationChannel(
                 NotificationManager.IMPORTANCE_MAX, true, 30,
@@ -278,11 +278,10 @@ class CTXtensionsTest : BaseTestCase() {
             )
 
             // Throw an exception from the `getNotificationChannel()` method.
-            `when`(nm.getNotificationChannel("ManifestChannelId")).thenThrow(RuntimeException())
+            every { nm.getNotificationChannel("ManifestChannelId") } throws RuntimeException()
 
             val actual = nm.getOrCreateChannel(null, application)
             assertEquals(null, actual)
-
         }
     }
 

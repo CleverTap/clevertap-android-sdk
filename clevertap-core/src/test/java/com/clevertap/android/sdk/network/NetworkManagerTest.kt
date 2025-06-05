@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.MockCoreStateKotlin
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.db.DBManager
@@ -24,20 +25,16 @@ import com.clevertap.android.sdk.network.http.MockHttpClient
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
 import io.mockk.verify
+import io.mockk.spyk
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.`when`
-import io.mockk.every
-import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -51,18 +48,18 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var networkManager: NetworkManager
     private lateinit var ctApi: CtApi
     private lateinit var mockHttpClient: MockHttpClient
-    @Mock private lateinit var ctApiWrapper : CtApiWrapper
+    private lateinit var ctApiWrapper: CtApiWrapper
     private val networkEncryptionManager: NetworkEncryptionManager = mockk(relaxed = true)
     //private val networkRepo = NetworkRepo(appCtx, cleverTapInstanceConfig)
     private val networkRepo = mockk<NetworkRepo>(relaxed = true)
 
     @Before
-    fun setup() {
-        closeable = MockitoAnnotations.openMocks(this)
+    fun setUpNetworkManager() {
+        ctApiWrapper = mockk()
         mockHttpClient = MockHttpClient()
         ctApi = CtApiTestProvider.provideTestCtApiForConfig(cleverTapInstanceConfig, mockHttpClient)
         networkManager = provideNetworkManager()
-        `when`(ctApiWrapper.ctApi).thenReturn(ctApi)
+        every { ctApiWrapper.ctApi } returns ctApi
     }
 
     @After
@@ -72,30 +69,30 @@ class NetworkManagerTest : BaseTestCase() {
 
     @Test
     fun test_initHandshake_noHeaders_callSuccessCallback() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         networkManager.initHandshake(REGULAR, callback)
-        Mockito.verify(callback).run()
+        verify { callback.run() }
     }
 
     @Test
     fun test_initHandshake_muteHeadersTrue_neverCallSuccessCallback() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         mockHttpClient.responseHeaders = mapOf(HEADER_MUTE to listOf("true"))
         networkManager.initHandshake(REGULAR, callback)
-        Mockito.verify(callback, Mockito.never()).run()
+        verify(exactly = 0) { callback.run() }
     }
 
     @Test
     fun test_initHandshake_muteHeadersFalse_callSuccessCallback() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         mockHttpClient.responseHeaders = mapOf(HEADER_MUTE to listOf("false"))
         networkManager.initHandshake(REGULAR, callback)
-        Mockito.verify(callback).run()
+        verify { callback.run() }
     }
 
     @Test
     fun test_initHandshake_changeDomainsHeaders_callSuccessCallbackAndUseDomains() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         val domain = "region.header-domain.com"
         val spikyDomain = "region-spiky.header-domain.com"
         // we only use changed domain when region is not configured
@@ -106,7 +103,7 @@ class NetworkManagerTest : BaseTestCase() {
         )
         networkManager.initHandshake(REGULAR, callback)
 
-        Mockito.verify(callback).run()
+        verify { callback.run() }
         assertEquals(domain, networkManager.getDomain(REGULAR))
         assertEquals(spikyDomain, networkManager.getDomain(PUSH_NOTIFICATION_VIEWED))
     }
@@ -582,6 +579,7 @@ class NetworkManagerTest : BaseTestCase() {
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
+        val coreState = MockCoreStateKotlin(cleverTapInstanceConfig)
         val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         val lockManager = CTLockManager()
         val dbManager = DBManager(cleverTapInstanceConfig, lockManager, IJRepo(cleverTapInstanceConfig))
