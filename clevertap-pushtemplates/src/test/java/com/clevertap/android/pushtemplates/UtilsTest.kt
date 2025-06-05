@@ -32,6 +32,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.File
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.intArrayOf
 
 @RunWith(RobolectricTestRunner::class)
@@ -778,15 +779,18 @@ class UtilsTest {
         val contentResolver = mockk<ContentResolver>()
         configuration.locale = Locale.ENGLISH
 
+
         every { context.resources } returns resources
         every { context.contentResolver } returns contentResolver
         every { resources.configuration } returns configuration
+
+        TimeZone.setDefault(TimeZone.getTimeZone("India"))
 
         // When
         val result = Utils.getTimeStamp(context, 1749033690811L)
 
         // Then
-        assertEquals("4:11 PM", result)
+        assertEquals("10:41 AM", result)
     }
 
     // Tests for getApplicationName method
