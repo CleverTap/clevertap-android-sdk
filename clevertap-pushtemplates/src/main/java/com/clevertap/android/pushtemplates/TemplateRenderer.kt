@@ -67,13 +67,13 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     var pt_timer_end = 0
     private var pt_title_alt: String? = null
     private var pt_msg_alt: String? = null
+    private var pt_msg_summary_alt: String? = null
     private var pt_big_img_alt: String? = null
     internal var pt_product_display_linear: String? = null
     internal var pt_meta_clr: String? = null
     internal var pt_product_display_action_text_clr: String? = null
     internal var pt_small_icon_clr: String? = null
     internal var pt_small_icon: Bitmap? = null
-    internal var pt_dot_sep: Bitmap? = null
     private var pt_cancel_notif_id: String? = null
     private var pt_cancel_notif_ids: ArrayList<Int>? = null
     var actions: JSONArray? = null
@@ -282,6 +282,13 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         )
                     }
 
+                    if (pt_msg_summary_alt != null && pt_msg_summary_alt!!.isNotEmpty()) {
+                        ptJsonObj?.put(PT_MSG_SUMMARY, pt_msg_summary_alt) ?: basicTemplateBundle.putString(
+                            PT_MSG_SUMMARY,
+                            pt_msg_summary_alt
+                        )
+                    }
+
 
                     if (ptJsonObj != null) {
                         basicTemplateBundle.putString(
@@ -411,6 +418,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_timer_end = Utils.getTimerEnd(extras, System.currentTimeMillis())
         pt_big_img_alt = extras.getString(PT_BIG_IMG_ALT)
         pt_msg_alt = extras.getString(PT_MSG_ALT)
+        pt_msg_summary_alt = extras.getString(PT_MSG_SUMMARY_ALT)
         pt_title_alt = extras.getString(PT_TITLE_ALT)
         pt_product_display_linear = extras.getString(PT_PRODUCT_DISPLAY_LINEAR)
         pt_product_display_action_text_clr = darkModeAdaptiveColors[PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR]

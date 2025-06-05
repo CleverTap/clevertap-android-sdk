@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.text.Html
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
 internal abstract class Style(private var renderer: TemplateRenderer) {
@@ -39,7 +40,7 @@ internal abstract class Style(private var renderer: TemplateRenderer) {
             .setContentIntent(pIntent)
             .setVibrate(longArrayOf(0L))
             .setWhen(System.currentTimeMillis())
-            .setColor(Color.parseColor(renderer.pt_small_icon_clr ?: "#FFFFFF"))
+            .setColor(Color.parseColor(renderer.pt_small_icon_clr ?: PTConstants.PT_META_CLR_DEFAULTS))
             .setAutoCancel(true)
             .setStyle(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

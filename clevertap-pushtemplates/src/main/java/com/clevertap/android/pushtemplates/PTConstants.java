@@ -118,6 +118,8 @@ public class PTConstants {
 
     public static final String PT_MSG_ALT = "pt_msg_alt";
 
+    public static final String PT_MSG_SUMMARY_ALT = "pt_msg_summary_alt";
+
     public static final String PT_PRODUCT_DISPLAY_LINEAR = "pt_product_display_linear";
 
     public static final String PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR = "pt_product_display_action_text_clr";
