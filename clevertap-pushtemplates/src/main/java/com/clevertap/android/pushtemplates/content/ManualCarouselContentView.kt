@@ -60,9 +60,8 @@ internal class ManualCarouselContentView(context: Context, renderer: TemplateRen
                 tempImageList.add(imageUrl)
             } else {
                 val deepLinkList = renderer.deepLinkList
-                val imageListSize = renderer.imageList?.size ?: 0
-                if (deepLinkList != null && deepLinkList.size == imageListSize) {
-                    deepLinkList.removeAt(index)
+                if (deepLinkList != null && imageCounter < deepLinkList.size) {
+                    deepLinkList.removeAt(imageCounter)
                 }
                 PTLog.debug("Skipping Image in Manual Carousel.")
             }

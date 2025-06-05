@@ -17,7 +17,6 @@ const val PT_THREE_DEEPLINK_LIST = "PT_THREE_DEEPLINK_LIST"
 const val PT_BIG_TEXT_LIST = "PT_BIG_TEXT_LIST"
 const val PT_SMALL_TEXT_LIST = "PT_SMALL_TEXT_LIST"
 const val PT_PRODUCT_DISPLAY_ACTION = "PT_PRODUCT_DISPLAY_ACTION"
-const val PT_PRODUCT_DISPLAY_ACTION_CLR = "PT_PRODUCT_DISPLAY_ACTION_CLR"
 const val PT_BIG_IMG = "PT_BIG_IMG"
 const val PT_TIMER_THRESHOLD = "PT_TIMER_THRESHOLD"
 const val PT_TIMER_END = "PT_TIMER_END"
@@ -132,12 +131,6 @@ internal class ValidatorFactory {
                     templateRenderer.pt_product_display_action,
                     0,
                     "Button label is missing or empty"
-                )
-            hashMap[PT_PRODUCT_DISPLAY_ACTION_CLR] =
-                StringSizeChecker(
-                    templateRenderer.pt_product_display_action_clr,
-                    0,
-                    "Button colour is missing or empty"
                 )
             //----------ZERO BEZEL----------------
             hashMap[PT_BIG_IMG] =
