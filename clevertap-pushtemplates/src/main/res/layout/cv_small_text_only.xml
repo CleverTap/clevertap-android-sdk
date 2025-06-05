@@ -4,19 +4,18 @@
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/transparent"
     android:paddingLeft="@dimen/padding_horizontal"
-    android:paddingTop="@dimen/padding_vertical"
+    android:paddingTop="@dimen/padding_micro"
     android:paddingRight="@dimen/padding_horizontal"
-    android:paddingBottom="@dimen/padding_vertical">
+    android:paddingBottom="@dimen/padding_micro">
 
     <ImageView
         android:id="@+id/large_icon"
         android:layout_width="@dimen/large_icon"
         android:layout_height="@dimen/large_icon"
         android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginRight="@dimen/padding_vertical"
-        android:layout_marginEnd="@dimen/padding_vertical"
+        android:layout_marginEnd="@dimen/padding_micro"
         android:scaleType="centerCrop"/>
 
 
@@ -28,8 +27,7 @@
         android:paddingLeft="@dimen/padding_horizontal"
         android:paddingStart="@dimen/padding_horizontal"
         android:paddingRight="@dimen/padding_horizontal"
-        android:paddingEnd="@dimen/padding_horizontal"
-        android:layout_toRightOf="@id/large_icon">
+        android:paddingEnd="@dimen/padding_horizontal">
 
         <include
             android:id="@+id/metadata"
@@ -42,7 +40,7 @@
             android:layout_below="@+id/metadata"
             android:ellipsize="end"
             android:maxLines="2"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="@dimen/padding_micro"
             tools:text="title"
             android:textAppearance="@style/PushTitle"/>
     </RelativeLayout>

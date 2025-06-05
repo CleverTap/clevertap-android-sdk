@@ -12,7 +12,7 @@ import com.clevertap.android.pushtemplates.content.ProductDisplayLinearBigConten
 import com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearBigContentView
 import com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearSmallContentView
 
-class ProductDisplayStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
+internal class ProductDisplayStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return ProductDisplayNonLinearSmallContentView(context, renderer).remoteView
