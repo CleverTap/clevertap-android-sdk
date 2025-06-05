@@ -571,14 +571,14 @@ class TemplateRendererTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    @Config(sdk = [Build.VERSION_CODES.O])
     fun test_renderNotification_timer_template_valid() {
         // Arrange
         val timerBundle = Bundle(testBundle)
         timerBundle.putString(PTConstants.PT_ID, "pt_timer")
         timerBundle.putString(PTConstants.PT_TIMER_END, "10")
 
-        every { Utils.getTimerEnd(timerBundle) } returns 10
+        every { Utils.getTimerEnd(timerBundle, any()) } returns 10
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle)
 
@@ -625,8 +625,8 @@ class TemplateRendererTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.M]) // Below Nougat
-    fun test_renderNotification_timer_template_below_nougat() {
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun test_renderNotification_timer_template_below_oreo() {
         // Arrange
         val timerBundle = Bundle(testBundle)
         timerBundle.putString(PTConstants.PT_ID, "pt_timer")

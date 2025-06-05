@@ -266,8 +266,8 @@ public class Utils {
         remoteViews.setImageViewResource(imageViewID, resourceID);
     }
 
-    public static String getTimeStamp(Context context) {
-        return DateUtils.formatDateTime(context, System.currentTimeMillis(),
+    public static String getTimeStamp(Context context, long timeMillis) {
+        return DateUtils.formatDateTime(context, timeMillis,
                 DateUtils.FORMAT_SHOW_TIME);
     }
 
@@ -478,7 +478,7 @@ public class Utils {
         return eProps;
     }
 
-    public static int getTimerEnd(Bundle extras) {
+    public static int getTimerEnd(Bundle extras, long currentTs) {
         String val = "-1";
         for (String key : extras.keySet()) {
             if (key.contains(PTConstants.PT_TIMER_END)) {
@@ -489,8 +489,7 @@ public class Utils {
             String[] temp = val.split(PTConstants.PT_TIMER_SPLIT);
             val = temp[1];
         }
-        long currentts = System.currentTimeMillis();
-        int diff = (int) (Long.parseLong(val) - (currentts / 1000));
+        int diff = (int) (Long.parseLong(val) - (currentTs / 1000));
         if (val.equals("-1")){
             return Integer.MIN_VALUE;
         }//For empty check in timer_end
