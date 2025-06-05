@@ -5,10 +5,10 @@ import com.clevertap.android.hms.HmsConstants.HPS
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.AdditionalMatchers.*
-import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -24,38 +24,34 @@ class HmsPushProviderTest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        ctPushProviderListener = mock(CTPushProviderListener::class.java)
+        ctPushProviderListener = mockk<CTPushProviderListener>(relaxed = true)
         pushProvider = HmsPushProvider(ctPushProviderListener, application, cleverTapInstanceConfig)
-        sdkHandler = mock(IHmsSdkHandler::class.java)
+        sdkHandler = mockk<IHmsSdkHandler>(relaxed = true)
         pushProvider.setHmsSdkHandler(sdkHandler)
     }
 
     @Test
     fun testRequestToken() {
         pushProvider.requestToken()
-        verify(sdkHandler, times(1)).onNewToken()
-        verify(ctPushProviderListener, times(1)).onNewToken(or(isNull(), anyString()), eq(
-            HPS
-        ))
+        verify(exactly = 1) { sdkHandler.onNewToken() }
+        verify(exactly = 1) { ctPushProviderListener.onNewToken(or(isNull(), any()), eq(HPS)) }
     }
 
     @Test
     fun testIsAvailable() {
         pushProvider.isAvailable
-        verify(sdkHandler, times(1)).isAvailable
+        verify(exactly = 1) { sdkHandler.isAvailable }
     }
 
     @Test
     fun testIsSupported() {
         pushProvider.isSupported
-        verify(sdkHandler, times(1)).isSupported
+        verify(exactly = 1) { sdkHandler.isSupported }
     }
 
     @Test
     fun testGetPushType() {
-        Assert.assertEquals(pushProvider.pushType,
-            HPS
-        )
+        Assert.assertEquals(pushProvider.pushType, HPS)
     }
 
     @Test

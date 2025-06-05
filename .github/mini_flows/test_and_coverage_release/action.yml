@@ -1,3 +1,13 @@
+inputs:
+  github-token:
+    description: 'Github token to post JaCoCo report in a PR comment'
+    required: false
+    default: ''
+  baseline-branch:
+    description: 'The branch to compare the JaCoCo report against'
+    required: false
+    default: ''
+
 runs:
   using: "composite"
   steps:
@@ -82,3 +92,14 @@ runs:
       with:
         name: JacocoReportRelease-clevertap-pushtemplates
         path: clevertap-pushtemplates/build/reports/jacoco
+
+
+   #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
+    - name: Post JaCoCo Report in PR comment
+      if: ${{ inputs.github-token != '' }}
+      uses: ./.github/mini_flows/test_coverage_report
+      with:
+        github-token: ${{ inputs.github-token }}
+        baseline-branch: ${{ inputs.baseline-branch }}
+        comment-title: 'Code Coverage Release'
+        test-release: true

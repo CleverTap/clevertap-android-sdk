@@ -9,10 +9,9 @@ import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.*
-import org.mockito.*
-import org.mockito.Mockito.*
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -22,10 +21,8 @@ import kotlin.test.assertEquals
 
 class ImpressionManagerTest : BaseTestCase() {
 
-    @Mock
     private lateinit var clock: Clock
 
-    @Mock
     private lateinit var deviceInfo: DeviceInfo
 
     private lateinit var impressionStore: ImpressionStore
@@ -34,7 +31,8 @@ class ImpressionManagerTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
-        MockitoAnnotations.openMocks(this)
+        clock = mockk(relaxed = true)
+        deviceInfo = mockk(relaxed = true)
         val mockLegacyInAppStore: LegacyInAppStore = mockk()
         val mockInAppAssetsStore: InAppAssetsStore = mockk()
         val mockFileStore: FileStore = mockk()
@@ -48,7 +46,7 @@ class ImpressionManagerTest : BaseTestCase() {
             storeRegistry = storeRegistry, clock = clock, locale = Locale.getDefault()
         )
 
-        `when`(deviceInfo.deviceID).thenReturn("device_id")
+        every { deviceInfo.deviceID } returns "device_id"
 
         impressionStore = StoreProvider.getInstance().provideImpressionStore(
             appCtx, deviceInfo.deviceID, "account_id"
@@ -156,7 +154,7 @@ class ImpressionManagerTest : BaseTestCase() {
         recordImpression(twoSecondsAgo, campaignId)
         recordImpression(oneSecondAgo, campaignId)
 
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
 
         // test per 1 second
         assertEquals(1, impressionManager.perSecond(campaignId, 1))
@@ -188,7 +186,7 @@ class ImpressionManagerTest : BaseTestCase() {
         recordImpression(oneMinuteAgo, campaignId)
         recordImpression(thirtySecondsAgo, campaignId)
 
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
 
         // test per 1 minute
         assertEquals(2, impressionManager.perMinute(campaignId, 1))
@@ -222,7 +220,7 @@ class ImpressionManagerTest : BaseTestCase() {
         recordImpression(oneHourAgo, campaignId)
         recordImpression(thirtyMinutesAgo, campaignId)
 
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
 
         // test per 1 hour
         assertEquals(2, impressionManager.perHour(campaignId, 1))
@@ -257,7 +255,7 @@ class ImpressionManagerTest : BaseTestCase() {
         //Arrange
         recordImpression(twoDayBeforeMidnightMinus1s, campaignId)
         //Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perDay(campaignId, 0))
         assertEquals(0, impressionManager.perDay(campaignId, 1))
         assertEquals(0, impressionManager.perDay(campaignId, 2))
@@ -266,7 +264,7 @@ class ImpressionManagerTest : BaseTestCase() {
         //Arrange
         recordImpression(twoDaysBeforeMidnightOffset1s, campaignId)
         //Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perDay(campaignId, 0))
         assertEquals(0, impressionManager.perDay(campaignId, 1))
         assertEquals(1, impressionManager.perDay(campaignId, 2))
@@ -275,7 +273,7 @@ class ImpressionManagerTest : BaseTestCase() {
         //Arrange
         recordImpression(oneDayBeforeMidnightMinus1s, campaignId)
         //Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perDay(campaignId, 0))
         assertEquals(0, impressionManager.perDay(campaignId, 1))
         assertEquals(2, impressionManager.perDay(campaignId, 2))
@@ -284,7 +282,7 @@ class ImpressionManagerTest : BaseTestCase() {
         //Arrange
         recordImpression(oneDayBeforeMidnightOffset1s, campaignId)
         //Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perDay(campaignId, 0))
         assertEquals(1, impressionManager.perDay(campaignId, 1))
         assertEquals(3, impressionManager.perDay(campaignId, 2))
@@ -293,7 +291,7 @@ class ImpressionManagerTest : BaseTestCase() {
         //Arrange
         recordImpression(tenHoursBeforeMidnight, campaignId)
         //Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perDay(campaignId, 0))
         assertEquals(2, impressionManager.perDay(campaignId, 1))
         assertEquals(4, impressionManager.perDay(campaignId, 2))
@@ -304,7 +302,7 @@ class ImpressionManagerTest : BaseTestCase() {
         recordImpression(tenHoursFromMidnight, campaignId)
         recordImpression(oneSecondAgo, campaignId)
         //Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(2, impressionManager.perDay(campaignId, 0))
         assertEquals(5, impressionManager.perDay(campaignId, 1))
         assertEquals(7, impressionManager.perDay(campaignId, 2))
@@ -331,7 +329,7 @@ class ImpressionManagerTest : BaseTestCase() {
         // Arrange
         recordImpression(twoWeeksBeforeStartOfWeekMinus1s, campaignId)
         // Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
         assertEquals(0, impressionManager.perWeek(campaignId, 2))
@@ -340,7 +338,7 @@ class ImpressionManagerTest : BaseTestCase() {
         // Arrange
         recordImpression(twoWeeksBeforeStartOfWeekOffset1s, campaignId)
         // Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
         assertEquals(1, impressionManager.perWeek(campaignId, 2))
@@ -349,7 +347,7 @@ class ImpressionManagerTest : BaseTestCase() {
         // Arrange
         recordImpression(oneWeekBeforeStartOfWeekMinus1s, campaignId)
         // Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
         assertEquals(2, impressionManager.perWeek(campaignId, 2))
@@ -358,7 +356,7 @@ class ImpressionManagerTest : BaseTestCase() {
         // Arrange
         recordImpression(oneWeekBeforeStartOfWeekOffset1s, campaignId)
         // Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
         assertEquals(3, impressionManager.perWeek(campaignId, 2))
@@ -367,7 +365,7 @@ class ImpressionManagerTest : BaseTestCase() {
         // Arrange
         recordImpression(tenHoursBeforeStartOfWeek, campaignId)
         // Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
         assertEquals(4, impressionManager.perWeek(campaignId, 2))
@@ -378,7 +376,7 @@ class ImpressionManagerTest : BaseTestCase() {
         recordImpression(tenHoursFromStartOfWeek, campaignId)
         recordImpression(oneSecondAgo, campaignId)
         // Act and Assert
-        `when`(clock.currentTimeSeconds()).thenReturn(currentTimestamp)
+        every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(2, impressionManager.perWeek(campaignId, 0))
         assertEquals(2, impressionManager.perWeek(campaignId, 1))
         assertEquals(7, impressionManager.perWeek(campaignId, 2))
@@ -632,7 +630,7 @@ class ImpressionManagerTest : BaseTestCase() {
     }
 
     private fun recordImpression(timestamp: Long, campaignId: String) {
-        `when`(clock.currentTimeSeconds()).thenReturn(timestamp)
+        every { clock.currentTimeSeconds() } returns timestamp
         impressionManager.recordImpression(campaignId)
     }
 }

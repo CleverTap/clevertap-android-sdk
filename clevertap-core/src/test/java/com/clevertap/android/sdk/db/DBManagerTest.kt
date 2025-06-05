@@ -5,11 +5,12 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.spyk
+import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -29,7 +30,7 @@ class DBManagerTest : BaseTestCase() {
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, "accountId", "accountToken")
         lockManager = CTLockManager()
         dbManager = DBManager(instanceConfig, lockManager)
-        dbManagerSpy = Mockito.spy(dbManager)
+        dbManagerSpy = spyk(dbManager)
         dbAdapter = DBAdapter(appCtx, instanceConfig)
     }
 
@@ -97,8 +98,14 @@ class DBManagerTest : BaseTestCase() {
     @Test
     fun test_getPushNotificationViewedQueuedEvents_when_called_should_ReturnResponseFromGetQueueQueueFunction() {
         dbManagerSpy.getPushNotificationViewedQueuedEvents(appCtx, Int.MAX_VALUE, null)
-        Mockito.verify(dbManagerSpy, Mockito.times(1))
-            .getQueue(appCtx, Table.PUSH_NOTIFICATION_VIEWED, Int.MAX_VALUE, null)
+        verify(exactly = 1) {
+            dbManagerSpy.getQueue(
+                appCtx,
+                Table.PUSH_NOTIFICATION_VIEWED,
+                Int.MAX_VALUE,
+                null
+            )
+        }
     }
 
     @Test
@@ -224,13 +231,18 @@ class DBManagerTest : BaseTestCase() {
     @Test
     fun test_getQueuedEvents_when_called_should_callOtherFunctions() {
         dbManagerSpy.getQueuedEvents(appCtx, Int.MAX_VALUE, null, EventGroup.PUSH_NOTIFICATION_VIEWED)
-        Mockito.verify(dbManagerSpy, Mockito.times(1))
-            .getPushNotificationViewedQueuedEvents(appCtx, Int.MAX_VALUE, null)
+        verify(exactly = 1) {
+            dbManagerSpy.getPushNotificationViewedQueuedEvents(
+                appCtx,
+                Int.MAX_VALUE,
+                null
+            )
+        }
 
         arrayOf(EventGroup.REGULAR).forEach {
-            val spy = Mockito.spy(dbManager)
+            val spy = spyk(dbManager)
             spy.getQueuedEvents(appCtx, Int.MAX_VALUE, null, it)
-            Mockito.verify(spy, Mockito.times(1)).getQueuedDBEvents(appCtx, Int.MAX_VALUE, null)
+            verify(exactly = 1) { spy.getQueuedDBEvents(appCtx, Int.MAX_VALUE, null) }
             spy.loadDBAdapter(appCtx).deleteDB()
         }
     }

@@ -44,8 +44,8 @@ class VarCacheTest : BaseTestCase() {
         parser = Parser(ctVariables)
     }
 
-    @After
-    fun cleanUp() {
+    override fun cleanUp() {
+        super.cleanUp()
         //clear all varCache stored info
         val varCacheKey = StorageHelper.storageKeyWithSuffix(
             cleverTapInstanceConfig.accountId,

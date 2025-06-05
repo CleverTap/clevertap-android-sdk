@@ -68,7 +68,7 @@ If at least 3 icons are not retrieved, the library doesn't render any notificati
 
 This template features a live countdown timer. You can even choose to show different title, message, and background image after the timer expires.
 
-Timer notification is only supported for Android N (7) and above. For OS versions below N, the library falls back to the Basic Template.
+Timer notification is only supported for Android O (8) and above. For OS versions below O, the library falls back to the Basic Template.
 
 <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/TimerAndroid12.gif" alt="TimerAndroid12" width="450" height="800"/>
 
