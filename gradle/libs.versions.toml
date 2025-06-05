@@ -8,6 +8,7 @@ sonarqube_plugin = "3.3"
 android_buildTools = "34.0.0"
 detekt_gradle_plugin = "1.23.3"
 firebase_gradle_crashlytics = "3.0.2"
+vanniktech_maven_pulish_plugin = "0.32.0"
 
 # AndroidX
 annotation = "1.8.2"
@@ -155,6 +156,9 @@ google_services = { module = "com.google.gms:google-services", version.ref = "go
 #HMS Push Plugin/Lib
 huawei_agcp_plugin = { module = "com.huawei.agconnect:agcp", version.ref = "agcp" }
 huawei_push = { module = "com.huawei.hms:push", version.ref = "push" }
+
+
+vanniktech_maven_publish = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "vanniktech_maven_pulish_plugin" }
 
 [bundles]
 exoplayer = ["exoplayer_exoplayer", "exoplayer_hls", "exoplayer_ui"]
