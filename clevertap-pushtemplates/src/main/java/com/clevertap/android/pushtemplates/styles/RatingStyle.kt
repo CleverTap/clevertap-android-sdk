@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.content.RATING_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.RatingContentView
 import com.clevertap.android.pushtemplates.content.SmallContentView
 
-class RatingStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
+internal class RatingStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return SmallContentView(context, renderer).remoteView
