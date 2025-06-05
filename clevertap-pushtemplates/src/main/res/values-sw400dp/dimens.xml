@@ -9,7 +9,7 @@
     <dimen name="padding_horizontal">16dp</dimen>
     <dimen name="padding_vertical">16dp</dimen>
 
-    <dimen name="title_font_size">14sp</dimen>
+    <dimen name="title_font_size">16sp</dimen>
     <dimen name="msg_font_size">14sp</dimen>
 
     <dimen name="metadata_font_size">12dp</dimen>

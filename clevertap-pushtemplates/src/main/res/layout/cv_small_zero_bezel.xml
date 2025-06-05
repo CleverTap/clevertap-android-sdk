@@ -3,30 +3,29 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <include layout="@layout/image_view_flipper_dynamic"
+        android:id="@+id/big_image_configurable"/>
 
     <ImageView
-        android:id="@+id/big_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"/>
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignBottom="@+id/big_image"
-        android:background="@drawable/scrim"/>
+        android:layout_alignBottom="@+id/big_image_configurable"
+        android:background="@drawable/pt_scrim"
+        android:contentDescription="@string/notification_scrim"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/big_image"
+        android:layout_alignBottom="@+id/big_image_configurable"
         android:paddingLeft="@dimen/padding_horizontal"
         android:paddingStart="@dimen/padding_horizontal"
         android:paddingRight="@dimen/padding_horizontal"
         android:paddingEnd="@dimen/padding_horizontal"
-        android:paddingBottom="@dimen/padding_vertical"
-        android:paddingTop="@dimen/padding_vertical">
+        android:paddingBottom="@dimen/padding_micro"
+        android:paddingTop="@dimen/padding_micro">
 
         <include
             android:id="@+id/metadata"
@@ -38,13 +37,11 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/metadata"
             android:layout_alignStart="@+id/metadata"
-            android:layout_alignLeft="@id/metadata"
-            android:layout_marginTop="@dimen/metadata_title_margin_vertical"
+            android:layout_marginTop="@dimen/padding_micro"
             android:ellipsize="end"
             android:maxLines="1"
             tools:text="title"
-            android:textAppearance="@style/PushTitle"
-            android:textColor="@color/white"/>
+            android:textAppearance="@style/PushTitle"/>
 
         <TextView
             android:id="@+id/msg"
@@ -52,12 +49,10 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/title"
             android:layout_alignStart="@id/title"
-            android:layout_alignLeft="@id/title"
             android:ellipsize="end"
             android:maxLines="2"
             tools:text="message message message"
-            android:textAppearance="@style/PushMessage"
-            android:textColor="@color/white"/>
+            android:textAppearance="@style/PushMessage"/>
 
     </RelativeLayout>
 </RelativeLayout>
