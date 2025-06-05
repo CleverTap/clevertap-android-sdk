@@ -12,12 +12,10 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.CTWebInterface
-import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
 class WebViewActivity : AppCompatActivity() {
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,9 +36,9 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val payload = intent?.extras
+        val payload = intent.extras
         if (payload?.containsKey("pt_id") == true && payload["pt_id"] =="pt_rating")
         {
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

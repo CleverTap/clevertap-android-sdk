@@ -194,7 +194,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         Log.i(TAG, "onDisplayUnitsLoaded() called")
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         Log.i("Playground", "onNewIntent()")
 
@@ -202,7 +202,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
          * On Android 12, Raise notification clicked event when Activity is already running in activity backstack
          */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            cleverTapDefaultInstance?.pushNotificationClickedEvent(intent!!.extras)
+            cleverTapDefaultInstance?.pushNotificationClickedEvent(intent.extras)
         }
 
         /**
