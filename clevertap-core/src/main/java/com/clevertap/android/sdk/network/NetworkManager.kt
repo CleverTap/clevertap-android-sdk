@@ -237,7 +237,7 @@ internal class NetworkManager constructor(
         val spikyDomainName = response.getHeaderValue(CtApi.SPIKY_HEADER_DOMAIN_NAME)
         Logger.v("Getting spiky domain from header - $spikyDomainName")
 
-        setMuted(context, false)
+        setMuted(false)
         setDomain(domainName)
         Logger.v("Setting spiky domain from header as -$spikyDomainName")
         if (spikyDomainName == null) {
@@ -252,10 +252,10 @@ internal class NetworkManager constructor(
             ?.let { muteCommand ->
                 // muteCommand is guaranteed to be non-null and non-empty here
                 if (muteCommand == "true") {
-                    setMuted(context, true)
+                    setMuted(true)
                     return true
                 } else {
-                    setMuted(context, false)
+                    setMuted(false)
                 }
             }
         return false
@@ -698,7 +698,7 @@ internal class NetworkManager constructor(
     }
 
     @WorkerThread
-    private fun setMuted(context: Context, mute: Boolean) {
+    private fun setMuted(mute: Boolean) {
         if (mute) {
             networkRepo.setMuted(true)
             networkRepo.setDomain(null)
