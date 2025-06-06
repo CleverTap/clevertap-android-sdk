@@ -16,14 +16,23 @@ internal class NetworkEncryptionManager(
 ) {
 
     companion object {
+        @Volatile
         private var sessionKey: SecretKey? = null
+        private val lock = Any()
     }
 
     /**
      * Returns session key for encryption
      */
     private fun sessionKeyForEncryption(): SecretKey {
-        return sessionKey ?: keyGenerator.generateSecretKey().also { sessionKey = it }
+        if (sessionKey == null) {
+            synchronized(lock) {
+                if (sessionKey == null) {
+                    sessionKey = keyGenerator.generateSecretKey()
+                }
+            }
+        }
+        return sessionKey!! // Safe due to the synchronized block
     }
 
     private fun sessionKeyBytes() : ByteArray {
