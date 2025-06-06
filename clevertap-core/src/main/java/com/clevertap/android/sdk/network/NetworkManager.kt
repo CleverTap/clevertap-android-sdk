@@ -41,8 +41,6 @@ import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.EncryptionFailure
-import com.clevertap.android.sdk.network.NetworkRepo
-import com.clevertap.android.sdk.response.ContentFetchResponse
 
 internal class NetworkManager constructor(
     private val context: Context,
@@ -59,7 +57,6 @@ internal class NetworkManager constructor(
     private val queueHeaderBuilder: QueueHeaderBuilder,
     val cleverTapResponses: MutableList<CleverTapResponse>,
     private val logger: ILogger = config.logger,
-    private val contentFetchManager: ContentFetchManager = ContentFetchManager(config)
 ) {
 
     private var responseFailureCount = 0
@@ -329,6 +326,10 @@ internal class NetworkManager constructor(
                 handleVariablesResponse(response = response)
             }
 
+            EventGroup.CONTENT_FETCH -> {
+                handleContentFetchResponse(response = response)
+            }
+
             EventGroup.REGULAR -> {
                 handleSendQueueResponse(
                     response = response,
@@ -347,61 +348,34 @@ internal class NetworkManager constructor(
         }
     }
 
-    /**
-     * Sends a content fetch request to the /content endpoint
-     *
-     * @param context The Context object
-     * @param payload The JSON payload to send
-     */
-    fun sendContentFetchRequest(context: Context, payload: String) {
-        try {
-            val queueHeader: JSONObject? = getQueueHeader(context, null)
-            logger.debug(config.accountId, "Sending content fetch request")
-            logger.verbose(config.accountId, "Content fetch payload: $payload")
-
-            val body = "[${queueHeader.toString()},${payload.toString().substring(1)}"
-            Logger.v("Content fetch request body: $body")
-            // Create the content fetch request
-            val response = ctApiWrapper.ctApi.sendContentFetch(body)
-
-            response.use {
-                if (it.isSuccess()) {
-                    logger.debug(config.accountId, "Content fetch request sent successfully")
-                    handleContentFetchResponse(it, context)
-                } else {
-                    logger.info("Content fetch request failed with response code: ${it.code}")
-                }
-            }
-
-        } catch (e: Exception) {
-            logger.debug(config.accountId, "Content fetch request failed with exception", e)
-        }
-    }
 
     /**
      * Handles the response from content fetch requests
      * Processes through normal ResponseDecorator route
      */
-    private fun handleContentFetchResponse(response: Response, context: Context) {
-        try {
+    private fun handleContentFetchResponse(response: Response): Boolean {
+        if (response.isSuccess()) {
             val bodyString = response.readBody()
-            val bodyJson = bodyString?.let {
-                try {
-                    JSONObject(it)
-                } catch (e: Exception) {
-                    null
-                }
-            }
+            val bodyJson = bodyString.toJsonOrNull()
 
-            logger.verbose(config.accountId, "Processing content fetch response: $bodyJson")
+            logger.info(config.accountId, "Content fetch response received successfully")
 
             // Process through normal response decorators
             for (processor: CleverTapResponse in cleverTapResponses) {
-                processor.processResponse(bodyJson, bodyString, context)
+                processor.processResponse(bodyJson, bodyString, this.context)
             }
+            return true
+        } else {
+            when (response.code) {
+                439 -> {
+                    logger.info(
+                        config.accountId, "Content fetch request was rate limited (429). Consider reducing request frequency."
+                    )
+                }
 
-        } catch (e: Exception) {
-            logger.verbose(config.accountId, "Failed to process content fetch response", e)
+                else -> logger.info(config.accountId, "Content fetch request failed with response code: ${response.code}")
+            }
+            return false
         }
     }
 
@@ -474,6 +448,10 @@ internal class NetworkManager constructor(
             }
             EventGroup.PUSH_NOTIFICATION_VIEWED -> {
                 sendImpressionsApi(body)
+            }
+
+            EventGroup.CONTENT_FETCH -> {
+                ctApiWrapper.ctApi.sendContentFetch(body)
             }
         }
     }

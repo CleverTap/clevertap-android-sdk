@@ -96,12 +96,12 @@ internal class CtApi(
      * @param timeoutMs The timeout in milliseconds
      * @return Response from the server
      */
-    fun sendContentFetch(body: String, timeoutMs: Int = 10000): Response =
+    fun sendContentFetch(body: SendQueueRequestBody): Response =
         httpClient.execute(
             createRequest(
                 baseUrl = getActualDomain(isViewedEvent = false, true) ?: defaultDomain,
                 relativeUrl = "content",
-                body = body
+                body = body.toString()
             )
         )
 
@@ -147,6 +147,7 @@ internal class CtApi(
 
     fun getActualDomain(isViewedEvent: Boolean, contentFetch: Boolean = false): String? {
 
+        // todo remove this
         if (contentFetch) {
             return "sk1-content-staging.clevertap-prod.com"
         }

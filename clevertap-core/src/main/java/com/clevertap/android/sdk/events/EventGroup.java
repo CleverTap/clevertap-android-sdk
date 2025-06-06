@@ -4,7 +4,8 @@ public enum EventGroup {
 
     REGULAR("",""),
     PUSH_NOTIFICATION_VIEWED("-spiky",""),
-    VARIABLES("","/defineVars");
+    VARIABLES("","/defineVars"),
+    CONTENT_FETCH("","/content");
 
     public final String httpResource;
     public final String additionalPath;

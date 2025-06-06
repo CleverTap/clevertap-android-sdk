@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.events.EventGroup
+import com.clevertap.android.sdk.events.EventGroup.CONTENT_FETCH
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
 import com.clevertap.android.sdk.events.EventGroup.VARIABLES
@@ -18,7 +19,7 @@ enum class EndpointId(val identifier: String) {
     ENDPOINT_A1("/a1"),
     ENDPOINT_HELLO("/hello"),
     ENDPOINT_DEFINE_VARS("/defineVars"),
-    CONTENT_FETCH("/content");
+    ENDPOINT_CONTENT_FETCH("/content");
 
     companion object {
 
@@ -33,6 +34,7 @@ enum class EndpointId(val identifier: String) {
                 PUSH_NOTIFICATION_VIEWED -> ENDPOINT_SPIKY
                 REGULAR -> ENDPOINT_A1
                 VARIABLES -> ENDPOINT_DEFINE_VARS
+                CONTENT_FETCH -> ENDPOINT_CONTENT_FETCH
             }
         }
     }
