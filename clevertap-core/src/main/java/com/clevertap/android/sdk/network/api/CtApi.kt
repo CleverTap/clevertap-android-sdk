@@ -89,6 +89,21 @@ internal class CtApi(
             )
         )
 
+    /**
+     * Sends content fetch request to the /content endpoint
+     *
+     * @param body The JSON payload to send
+     * @return Response from the server
+     */
+    fun sendContentFetch(body: ContentFetchRequestBody): Response =
+        httpClient.execute(
+            createRequest(
+                baseUrl = getActualDomain(isViewedEvent = false, true) ?: defaultDomain,
+                relativeUrl = "content",
+                body = body.toString()
+            )
+        )
+
     fun performHandshakeForDomain(isViewedEvent: Boolean): Response {
         val baseUrl = getHandshakeDomain(isViewedEvent)
 
@@ -129,8 +144,12 @@ internal class CtApi(
             )
         )
 
-    fun getActualDomain(isViewedEvent: Boolean): String? {
+    fun getActualDomain(isViewedEvent: Boolean, contentFetch: Boolean = false): String? {
 
+        // todo remove this
+        if (contentFetch) {
+            return "sk1-content-staging.clevertap-prod.com"
+        }
         if (region.isNotNullAndBlank()) {
             return buildString {
                 append(region)

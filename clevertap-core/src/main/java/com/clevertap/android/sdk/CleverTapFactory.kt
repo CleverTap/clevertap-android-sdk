@@ -34,6 +34,7 @@ import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.AppLaunchListener
 import com.clevertap.android.sdk.network.ArpRepo
 import com.clevertap.android.sdk.network.CompositeBatchListener
+import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.network.FetchInAppListener
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
@@ -46,6 +47,7 @@ import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.response.ConsoleResponse
+import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.response.FeatureFlagResponse
 import com.clevertap.android.sdk.response.FetchVariablesResponse
@@ -334,6 +336,7 @@ internal object CleverTapFactory {
         )
 
         val arpResponse = ARPResponse(config, validator, controllerManager, arpRepo)
+        val contentFetchManager = ContentFetchManager(config)
         val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
             inAppResponse,
             MetadataResponse(config, deviceInfo, ijRepo),
@@ -355,7 +358,8 @@ internal object CleverTapFactory {
             DisplayUnitResponse(config, callbackManager, controllerManager),
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),
-            GeofenceResponse(config, callbackManager)
+            GeofenceResponse(config, callbackManager),
+            ContentFetchResponse(config, contentFetchManager)
         )
 
         val networkManager = NetworkManager(
@@ -374,6 +378,7 @@ internal object CleverTapFactory {
             cleverTapResponses = cleverTapResponses
         )
         coreState.networkManager = networkManager
+        contentFetchManager.setNetworkManager(networkManager)
 
         val loginInfoProvider = LoginInfoProvider(
             context,
