@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.network
 
 import android.util.Base64
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.cryption.AESGCMCrypt
 import com.clevertap.android.sdk.cryption.CTKeyGenerator
 import com.clevertap.android.sdk.network.api.EncryptedResponseBody
@@ -94,6 +95,7 @@ internal class NetworkEncryptionManager(
                 EncryptionFailure
             }
         } catch (e: Exception) {
+            Logger.v("Error decrypting response", e)
             return EncryptionFailure
         }
     }
