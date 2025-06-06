@@ -1,19 +1,28 @@
 package com.clevertap.android.sdk.network
 
 import android.content.Context
-import com.clevertap.android.sdk.*
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.areAppNotificationsEnabled
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
-import com.google.common.truth.Truth.assertThat
-import org.json.JSONArray
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.`when`
-import kotlin.use
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class QueueHeaderBuilderTest {
     private val context = mockk<Context>(relaxed = true)
@@ -50,17 +59,17 @@ class QueueHeaderBuilderTest {
         val caller = "test_caller"
         val header = builder.buildHeader(caller)
 
-        assertThat(header).isNotNull()
-        assertThat(header!!.optString(Constants.D_SRC)).isEqualTo(caller)
+        assertNotNull(header)
+        assertEquals(caller, header!!.optString(Constants.D_SRC))
     }
 
     @Test
     fun `header contains debug true when debug level is 3`() {
-        mockStatic(CleverTapAPI::class.java).use {
-            `when`(CleverTapAPI.getDebugLevel()).thenReturn(3)
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getDebugLevel() } returns 3
             val header = builder.buildHeader(null)
-            assertThat(header).isNotNull()
-            assertThat(header!!.optBoolean("debug")).isTrue()
+            assertNotNull(header)
+            assertTrue(header!!.optBoolean("debug"))
         }
     }
 
@@ -70,7 +79,7 @@ class QueueHeaderBuilderTest {
         every { config.accountToken } returns null
 
         val header = builder.buildHeader("caller")
-        assertThat(header).isNull()
+        assertNull(header)
     }
 
     @Test
@@ -78,9 +87,9 @@ class QueueHeaderBuilderTest {
         every { coreMetaData.isInstallReferrerDataSent } returns true
 
         val header = builder.buildHeader("test_caller")!!
-        assertThat(header).isNotNull()
-        assertThat(header.optLong("rct")).isEqualTo(0)
-        assertThat(header.optLong("ait")).isEqualTo(0)
+        assertNotNull(header)
+        assertEquals(0, header.optLong("rct"))
+        assertEquals(0, header.optLong("ait"))
     }
 
     @Test
@@ -88,14 +97,14 @@ class QueueHeaderBuilderTest {
         every { arpRepo.getARP(any()) } returns JSONObject()
 
         val header1 = builder.buildHeader("caller")!!
-        assertThat(header1).isNotNull()
-        assertThat(header1.optJSONObject("arp")).isNull()
+        assertNotNull(header1)
+        assertNull(header1.optJSONObject("arp"))
 
         every { arpRepo.getARP(any()) } returns null
 
         val header2 = builder.buildHeader("caller")!!
-        assertThat(header2).isNotNull()
-        assertThat(header2.optJSONObject("arp")).isNull()
+        assertNotNull(header2)
+        assertNull(header2.optJSONObject("arp"))
     }
 
     @Test
@@ -116,7 +125,12 @@ class QueueHeaderBuilderTest {
         every { coreMetaData.referrerClickTime } returns 111L
         every { coreMetaData.appInstallTime } returns 222L
         every { coreMetaData.isFirstRequestInSession } returns true
-        every { coreMetaData.wzrkParams } returns JSONObject().apply { put("wzrk_key", "wzrk_value") }
+        every { coreMetaData.wzrkParams } returns JSONObject().apply {
+            put(
+                "wzrk_key",
+                "wzrk_value"
+            )
+        }
         every { coreMetaData.source } returns "src"
         every { coreMetaData.medium } returns "med"
         every { coreMetaData.campaign } returns "camp"
@@ -126,11 +140,11 @@ class QueueHeaderBuilderTest {
         every { ijRepo.getJ(any()) } returns 8
 
         val inappsJson = JSONArray().apply {
-            JSONObject().apply {
+            put(JSONObject().apply { // Added put to actually add the JSONObject to JSONArray
                 put("inappId", "inappId")
                 put("todayCount", 2)
                 put("lifetimeCount", 22)
-            }
+            })
         }
         // Mock controllerManager
         every { controllerManager.pushProviders } returns null
@@ -152,35 +166,35 @@ class QueueHeaderBuilderTest {
 
         val header = builder.buildHeader("test_caller")!!
 
-        assertThat(header).isNotNull()
+        assertNotNull(header)
         // Basic fields
-        assertThat(header.optString(Constants.D_SRC)).isEqualTo("test_caller")
-        assertThat(header.optString("g")).isEqualTo("device_id_123")
-        assertThat(header.optString("type")).isEqualTo("meta")
-        assertThat(header.optJSONObject("af")?.optString("foo")).isEqualTo("bar")
-        assertThat(header.optInt("_i")).isEqualTo(7)
-        assertThat(header.optInt("_j")).isEqualTo(8)
-        assertThat(header.optString("id")).isEqualTo("test_account_id")
-        assertThat(header.optString("tk")).isEqualTo("test_token")
-        assertThat(header.optInt("l_ts")).isEqualTo(456)
-        assertThat(header.optInt("f_ts")).isEqualTo(123)
-        assertThat(header.optString("ct_pi")).contains("Email")
-        assertThat(header.optString("ct_pi")).contains("Identity")
-        assertThat(header.optBoolean("ddnd")).isFalse()
-        assertThat(header.optInt("bk")).isEqualTo(1)
-        assertThat(header.optJSONArray("rtl")?.length()).isEqualTo(2)
-        assertThat(header.optLong("rct")).isEqualTo(111L)
-        assertThat(header.optLong("ait")).isEqualTo(222L)
-        assertThat(header.optBoolean("frs")).isTrue()
-        assertThat(header.optBoolean("debug")).isFalse()
-        assertThat(header.optJSONObject("arp")?.optString("arp_key")).isEqualTo("arp_val")
+        assertEquals("test_caller", header.optString(Constants.D_SRC))
+        assertEquals("device_id_123", header.optString("g"))
+        assertEquals("meta", header.optString("type"))
+        assertEquals("bar", header.optJSONObject("af")?.optString("foo"))
+        assertEquals(7, header.optInt("_i"))
+        assertEquals(8, header.optInt("_j"))
+        assertEquals("test_account_id", header.optString("id"))
+        assertEquals("test_token", header.optString("tk"))
+        assertEquals(456, header.optInt("l_ts"))
+        assertEquals(123, header.optInt("f_ts"))
+        assertTrue(header.optString("ct_pi").contains("Email"))
+        assertTrue(header.optString("ct_pi").contains("Identity"))
+        assertFalse(header.optBoolean("ddnd"))
+        assertEquals(1, header.optInt("bk"))
+        assertEquals(2, header.optJSONArray("rtl")?.length())
+        assertEquals(111L, header.optLong("rct"))
+        assertEquals(222L, header.optLong("ait"))
+        assertTrue(header.optBoolean("frs"))
+        assertFalse(header.optBoolean("debug"))
+        assertEquals("arp_val", header.optJSONObject("arp")?.optString("arp_key"))
         val ref = header.optJSONObject("ref")!!
-        assertThat(ref.optString("us")).isEqualTo("src")
-        assertThat(ref.optString("um")).isEqualTo("med")
-        assertThat(ref.optString("uc")).isEqualTo("camp")
+        assertEquals("src", ref.optString("us"))
+        assertEquals("med", ref.optString("um"))
+        assertEquals("camp", ref.optString("uc"))
         val wzrk = header.optJSONObject("wzrk_ref")!!
-        assertThat(wzrk.optString("wzrk_key")).isEqualTo("wzrk_value")
-        assertThat(header.optInt("imp")).isEqualTo(5)
-        assertThat(header.optJSONArray("tlc")?.toString()).isEqualTo(inappsJson.toString())
+        assertEquals("wzrk_value", wzrk.optString("wzrk_key"))
+        assertEquals(5, header.optInt("imp"))
+        assertEquals(inappsJson.toString(), header.optJSONArray("tlc")?.toString())
     }
 }

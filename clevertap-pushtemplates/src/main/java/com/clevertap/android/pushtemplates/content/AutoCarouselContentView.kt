@@ -3,19 +3,21 @@ package com.clevertap.android.pushtemplates.content
 import android.content.Context
 import android.os.Build
 import android.text.Html
+import android.view.View
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class AutoCarouselContentView(context: Context, renderer: TemplateRenderer) :
+internal class AutoCarouselContentView(context: Context, renderer: TemplateRenderer) :
     BigImageContentView(context, renderer, R.layout.auto_carousel) {
 
     init {
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
         setCustomContentViewViewFlipperInterval(renderer.pt_flip_interval)
-        setViewFlipper()
+        setViewFlipper(renderer.pt_scale_type)
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
@@ -35,14 +37,25 @@ class AutoCarouselContentView(context: Context, renderer: TemplateRenderer) :
         remoteView.setInt(R.id.view_flipper, "setFlipInterval", interval)
     }
 
-    private fun setViewFlipper() {
-        var imageCounter = 0
-        for (index in renderer.imageList!!.indices) {
-            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view)
-            Utils.loadImageURLIntoRemoteView(R.id.fimg, renderer.imageList!![index], tempRemoteView,context)
+    private fun setViewFlipper(scaleType: PTScaleType) {
+        val imageViewId = when (scaleType) {
+            PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+            PTScaleType.CENTER_CROP -> R.id.big_image
+        }
+
+        renderer.imageList?.forEach { imageUrl ->
+            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_flipper_dynamic)
+
+            Utils.loadImageURLIntoRemoteView(
+                imageViewId,
+                imageUrl,
+                tempRemoteView,
+                context
+            )
+
             if (!Utils.getFallback()) {
+                tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
                 remoteView.addView(R.id.view_flipper, tempRemoteView)
-                imageCounter++
             } else {
                 PTLog.debug("Skipping Image in Auto Carousel.")
             }

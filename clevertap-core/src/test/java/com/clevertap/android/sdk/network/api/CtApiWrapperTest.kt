@@ -5,10 +5,12 @@ import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Before
 import org.junit.Test
-import org.junit.jupiter.api.Assertions.*
-import org.junit.runner.*
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -18,6 +20,7 @@ class CtApiWrapperTest : BaseTestCase() {
     private lateinit var coreMetaData: CoreMetaData
     private lateinit var deviceInfo: DeviceInfo
     private lateinit var guid: String
+
     private lateinit var networkRepo: NetworkRepo
 
     @Before
@@ -34,6 +37,7 @@ class CtApiWrapperTest : BaseTestCase() {
     fun `test ctApi initialization`() {
         assertNotNull(ctApiWrapper.ctApi)
     }
+
     @Test
     fun `test ctApi when multiple times get is called returns same CtApi instance`() {
         val ctApi1 = ctApiWrapper.ctApi
@@ -46,6 +50,7 @@ class CtApiWrapperTest : BaseTestCase() {
         assertEquals(ctApi1,ctApi3)
         assertEquals(ctApi2,ctApi3)
     }
+
     @Test
     fun `test ctApi when different CtApiWrapper creates unique CtApi instance`() {
 

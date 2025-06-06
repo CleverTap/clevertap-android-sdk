@@ -4,6 +4,7 @@
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
     android:layout_height="100dp"
+    android:background="@android:color/transparent"
     android:padding="8dp">
 
 

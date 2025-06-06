@@ -14,7 +14,7 @@
         android:id="@+id/carousel_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/product_display_margin_top"
         android:weightSum="1">
 
         <ViewFlipper
@@ -22,8 +22,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.5"
-            android:inAnimation="@anim/fade_in"
-            android:outAnimation="@anim/fade_out"/>
+            android:inAnimation="@anim/pt_fade_in"
+            android:outAnimation="@anim/pt_fade_out"/>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -52,6 +52,8 @@
                     android:layout_marginTop="8dp"
                     android:layout_below="@id/product_price"
                     android:gravity="center"
+                    android:padding="@dimen/custom_btn_padding"
+                    android:background="@color/customButtonBackground"
                     android:layout_centerHorizontal="true"
                     android:textAppearance="@style/PushMessage"/>
 

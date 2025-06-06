@@ -11,7 +11,7 @@ import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 
-class FiveIconBigContentView constructor(
+internal class FiveIconBigContentView constructor(
     context: Context,
     renderer: TemplateRenderer,
     extras: Bundle
@@ -23,7 +23,7 @@ class FiveIconBigContentView constructor(
         if (renderer.pt_title == null || renderer.pt_title!!.isEmpty()) {
             renderer.pt_title = Utils.getApplicationName(context)
         }
-        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
+        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
         for (imageKey in renderer.imageList!!.indices) {
             if (imageKey == 0) {
                 remoteView.setViewVisibility(R.id.cta1, View.VISIBLE)

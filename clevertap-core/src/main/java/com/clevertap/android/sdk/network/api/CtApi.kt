@@ -62,15 +62,13 @@ internal class CtApi(
     var currentRequestTimestampSeconds = 0
         private set
 
-    // todo break down into sendQueue and sendQueueForSpiky
     fun sendQueue(
-        isViewedEvent: Boolean,
         body: String,
         isEncrypted: Boolean = false
     ): Response =
         httpClient.execute(
             createRequest(
-                baseUrl = getActualDomain(isViewedEvent = isViewedEvent) ?: defaultDomain,
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
                 relativeUrl = "a1",
                 body = body,
                 headers = if (isEncrypted) {
@@ -78,6 +76,16 @@ internal class CtApi(
                 } else {
                     defaultHeaders
                 }
+            )
+        )
+
+    fun sendImpressions(body: String): Response =
+        httpClient.execute(
+            createRequest(
+                baseUrl = getActualDomain(isViewedEvent = true) ?: defaultDomain,
+                relativeUrl = "a1",
+                body = body,
+                headers = defaultHeaders
             )
         )
 

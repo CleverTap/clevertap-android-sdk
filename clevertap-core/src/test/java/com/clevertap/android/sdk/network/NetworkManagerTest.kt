@@ -5,8 +5,8 @@ import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.MockCoreStateKotlin
 import com.clevertap.android.sdk.MockDeviceInfo
-import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
@@ -25,20 +25,16 @@ import com.clevertap.android.sdk.network.http.MockHttpClient
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
 import io.mockk.verify
+import io.mockk.spyk
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.`when`
-import io.mockk.every
-import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -52,16 +48,18 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var networkManager: NetworkManager
     private lateinit var ctApi: CtApi
     private lateinit var mockHttpClient: MockHttpClient
-    @Mock private lateinit var ctApiWrapper : CtApiWrapper
+    private lateinit var ctApiWrapper: CtApiWrapper
     private val networkEncryptionManager: NetworkEncryptionManager = mockk(relaxed = true)
+    //private val networkRepo = NetworkRepo(appCtx, cleverTapInstanceConfig)
+    private val networkRepo = mockk<NetworkRepo>(relaxed = true)
 
     @Before
-    fun setup() {
-        closeable = MockitoAnnotations.openMocks(this)
+    fun setUpNetworkManager() {
+        ctApiWrapper = mockk()
         mockHttpClient = MockHttpClient()
         ctApi = CtApiTestProvider.provideTestCtApiForConfig(cleverTapInstanceConfig, mockHttpClient)
         networkManager = provideNetworkManager()
-        `when`(ctApiWrapper.ctApi).thenReturn(ctApi)
+        every { ctApiWrapper.ctApi } returns ctApi
     }
 
     @After
@@ -71,30 +69,30 @@ class NetworkManagerTest : BaseTestCase() {
 
     @Test
     fun test_initHandshake_noHeaders_callSuccessCallback() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         networkManager.initHandshake(REGULAR, callback)
-        Mockito.verify(callback).run()
+        verify { callback.run() }
     }
 
     @Test
     fun test_initHandshake_muteHeadersTrue_neverCallSuccessCallback() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         mockHttpClient.responseHeaders = mapOf(HEADER_MUTE to listOf("true"))
         networkManager.initHandshake(REGULAR, callback)
-        Mockito.verify(callback, Mockito.never()).run()
+        verify(exactly = 0) { callback.run() }
     }
 
     @Test
     fun test_initHandshake_muteHeadersFalse_callSuccessCallback() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         mockHttpClient.responseHeaders = mapOf(HEADER_MUTE to listOf("false"))
         networkManager.initHandshake(REGULAR, callback)
-        Mockito.verify(callback).run()
+        verify { callback.run() }
     }
 
     @Test
     fun test_initHandshake_changeDomainsHeaders_callSuccessCallbackAndUseDomains() {
-        val callback = Mockito.mock(Runnable::class.java)
+        val callback = mockk<Runnable>(relaxed = true)
         val domain = "region.header-domain.com"
         val spikyDomain = "region-spiky.header-domain.com"
         // we only use changed domain when region is not configured
@@ -105,7 +103,7 @@ class NetworkManagerTest : BaseTestCase() {
         )
         networkManager.initHandshake(REGULAR, callback)
 
-        Mockito.verify(callback).run()
+        verify { callback.run() }
         assertEquals(domain, networkManager.getDomain(REGULAR))
         assertEquals(spikyDomain, networkManager.getDomain(PUSH_NOTIFICATION_VIEWED))
     }
@@ -114,22 +112,32 @@ class NetworkManagerTest : BaseTestCase() {
     fun test_sendQueue_requestFailure_returnFalse() {
         mockHttpClient.alwaysThrowOnExecute = true
         assertFalse(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(2), null))
+        assertFalse(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, getSampleJsonArrayOfJsonObjects(2), null))
     }
 
     @Test
     fun test_sendQueue_successResponseEmptyJsonBody_returnTrue() {
         mockHttpClient.responseBody = JSONObject().toString()
         assertTrue(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(2), null))
+        assertTrue(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, getSampleJsonArrayOfJsonObjects(2), null))
     }
 
     @Test
     fun test_sendQueue_successResponseNullBody_returnTrue() {
         mockHttpClient.responseBody = null
         mockHttpClient.responseCode = 200
-        assertTrue(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(
+        val queue = getSampleJsonArrayOfJsonObjects(
             totalJsonObjects = 4,
             printGenArray = true
-        ), null))
+        )
+        assertTrue(networkManager.sendQueue(appCtx, REGULAR, queue, null))
+        assertTrue(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null))
+
+        // verify we do not process body
+        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any()) }
+        for (processor in networkManager.cleverTapResponses) {
+            verify(exactly = 0) { processor.processResponse(any(), any(), any()) }
+        }
     }
 
     @Test
@@ -155,44 +163,42 @@ class NetworkManagerTest : BaseTestCase() {
     fun test_sendQueue_domainChanges_returnFalse() {
         // Arrange
         val newDomain = "new-domain.clevertap.com"
+        val originalDomain = "original-domain.clevertap.com"
+
         mockHttpClient.responseCode = 200
         mockHttpClient.responseHeaders = mapOf(
             HEADER_DOMAIN_NAME to listOf(newDomain)
         )
 
-        // Force network manager to recognize domain as changed
-        val originalDomain = networkManager.getDomain(REGULAR)
-        StorageHelper.putString(
-            appCtx,
-            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, NetworkRepo.KEY_DOMAIN_NAME),
-            "different-domain.com"
-        )
+        every { networkRepo.getDomain() } returns originalDomain
+        every { networkRepo.setDomain(any()) } returns Unit
 
         val queue = getSampleJsonArrayOfJsonObjects(2)
 
         // Act
-        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+        val op1 = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
-        assertFalse(result)
+        assertFalse(op1)
 
-        // Check if domain was updated
-        val updatedDomain = networkManager.getDomain(REGULAR)
-        assert(updatedDomain == newDomain)
+        verify { networkRepo.getDomain() }
+        verify { networkRepo.setDomain(newDomain) }
 
-        // Reset domain for other tests
-        StorageHelper.putString(
-            appCtx,
-            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, NetworkRepo.KEY_DOMAIN_NAME),
-            originalDomain
-        )
+        // Act
+        val op2 = networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null)
+
+        // Assert
+        assertFalse(op2)
+
+        verify { networkRepo.getDomain() }
+        verify { networkRepo.setDomain(newDomain) }
     }
 
     /**
      * Test that when processIncomingHeaders returns false (muted), sendQueue returns false
      */
     @Test
-    fun test_sendQueue_processingHeadersFails_returnFalse() {
+    fun test_sendQueue_processingMuteHeaders_returnFalse() {
         // Arrange
         mockHttpClient.responseCode = 200
         mockHttpClient.responseHeaders = mapOf(
@@ -204,28 +210,44 @@ class NetworkManagerTest : BaseTestCase() {
         // Act & Assert
         assertFalse(networkManager.sendQueue(appCtx, REGULAR, queue, null))
 
-        // Verify we're muted
-        val isMuted = StorageHelper.getIntFromPrefs(
-            appCtx,
-            cleverTapInstanceConfig,
-            Constants.KEY_MUTED,
-            0
-        )
-        assert(isMuted > 0)
+        verify { networkRepo.setMuted(true) }
 
-        // Reset muted status for other tests
-        StorageHelper.putInt(
-            appCtx,
-            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, Constants.KEY_MUTED),
-            0
+        // Act & Assert
+        assertFalse(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null))
+
+        verify { networkRepo.setMuted(true) }
+    }
+
+    @Test
+    fun test_sendQueue_processingMuteHeaders_returnTrue() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseHeaders = mapOf(
+            HEADER_MUTE to listOf("false") // This will cause processIncomingHeaders to return false
         )
+
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+
+        // Act & Assert
+        assertTrue(networkManager.sendQueue(appCtx, REGULAR, queue, null))
+
+        verify { networkRepo.setMuted(false) }
+
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseHeaders = mapOf(
+            HEADER_MUTE to listOf("some-garbage") // This will cause processIncomingHeaders to return false
+        )
+
+        // Act & Assert
+        assertTrue(networkManager.sendQueue(appCtx, REGULAR, queue, null))
     }
 
     /**
-     * Test that when everything is successful, sendQueue returns true
+     * Test that when everything is successful, sendQueue saves request timestamps
      */
     @Test
-    fun test_sendQueue_success_returnTrue() {
+    fun test_sendQueue_success_firstTime_savesRequestTs() {
         // Arrange
         mockHttpClient.responseCode = 200
         mockHttpClient.responseBody = JSONObject().toString()
@@ -233,28 +255,56 @@ class NetworkManagerTest : BaseTestCase() {
 
         val queue = getSampleJsonArrayOfJsonObjects(2)
 
-        // Get the current timestamps for verification
-        val initialTimestamp = StorageHelper.getIntFromPrefs(
-            appCtx,
-            cleverTapInstanceConfig,
-            NetworkRepo.KEY_LAST_TS,
-            0
-        )
-
+        every { networkRepo.getFirstRequestTs() } returns 0
         // Act
-        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+        val op1 = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
-        assertTrue(result)
+        assertTrue(op1)
 
-        // Verify timestamps were updated
-        val updatedTimestamp = StorageHelper.getIntFromPrefs(
-            appCtx,
-            cleverTapInstanceConfig,
-            NetworkRepo.KEY_LAST_TS,
-            0
-        )
-        assert(updatedTimestamp >= initialTimestamp)
+        verify { networkRepo.setLastRequestTs(any()) }
+        verify { networkRepo.setFirstRequestTs(any()) }
+
+        // Act
+        val op2 = networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null)
+
+        // Assert
+        assertTrue(op2)
+
+        verify { networkRepo.setLastRequestTs(any()) }
+        verify { networkRepo.setFirstRequestTs(any()) }
+    }
+
+    /**
+     * Test that when everything is successful (not first time), sendQueue saves request last timestamp
+     */
+    @Test
+    fun test_sendQueue_success_savesLastRequestTs() {
+        // Arrange
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        mockHttpClient.responseHeaders = emptyMap()
+
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+
+        every { networkRepo.getFirstRequestTs() } returns 12334
+        // Act
+        val op1 = networkManager.sendQueue(appCtx, REGULAR, queue, null)
+
+        // Assert
+        assertTrue(op1)
+
+        verify { networkRepo.setLastRequestTs(any()) }
+        verify(exactly = 0) { networkRepo.setFirstRequestTs(any()) }
+
+        // Act
+        val op2 = networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null)
+
+        // Assert
+        assertTrue(op2)
+
+        verify { networkRepo.setLastRequestTs(any()) }
+        verify(exactly = 0) { networkRepo.setFirstRequestTs(any()) }
     }
 
     /**
@@ -529,6 +579,7 @@ class NetworkManagerTest : BaseTestCase() {
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
+        val coreState = MockCoreStateKotlin(cleverTapInstanceConfig)
         val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         val lockManager = CTLockManager()
         val dbManager = DBManager(cleverTapInstanceConfig, lockManager, IJRepo(cleverTapInstanceConfig))
@@ -556,7 +607,7 @@ class NetworkManagerTest : BaseTestCase() {
             ctApiWrapper = ctApiWrapper,
             encryptionManager = networkEncryptionManager,
             arpResponse = mockk<ARPResponse>(relaxed =  true),
-            networkRepo = NetworkRepo(appCtx, cleverTapInstanceConfig),
+            networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponses = responses,
             logger = TestLogger()

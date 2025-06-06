@@ -1,9 +1,12 @@
 package com.clevertap.android.sdk.task
 
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.*
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.Assert
+import org.junit.Ignore
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
@@ -15,10 +18,9 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
     private lateinit var mExecutorService: ExecutorService
     private lateinit var executor: PostAsyncSafelyExecutor
 
-    @Before
     override fun setUp() {
         super.setUp()
-        mExecutorService = Mockito.mock(ExecutorService::class.java)
+        mExecutorService = mockk(relaxed = true)
         executor = PostAsyncSafelyExecutor()
         executor.setExecutor(mExecutorService)
     }
@@ -34,7 +36,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
         val timeout = 10L
         val unit = TimeUnit.MINUTES
         executor.awaitTermination(timeout, unit)
-        Mockito.verify(mExecutorService).awaitTermination(timeout, unit)
+        verify { mExecutorService.awaitTermination(timeout, unit) }
     }
 
     @Test
@@ -42,7 +44,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
         executor.execute({
             println("Do something")
         })
-        Mockito.verify(mExecutorService).execute(Mockito.any(Runnable::class.java))
+        verify { mExecutorService.execute(any()) }
     }
 
     @Test
@@ -57,7 +59,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
                 threadID2 = Thread.currentThread().id
             })
         })
-        Mockito.verify(mExecutorService).execute(Mockito.any(Runnable::class.java))
+        verify { mExecutorService.execute(any()) }
         Thread.sleep(1000)
         Assert.assertEquals(threadID1, threadID2)
     }
@@ -97,26 +99,26 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
 
     @Test
     fun test_isShutdown() {
-        executor.isShutdown()
-        Mockito.verify(mExecutorService).isShutdown()
+        executor.isShutdown
+        verify { mExecutorService.isShutdown }
     }
 
     @Test
     fun test_isTerminated() {
-        executor.isTerminated()
-        Mockito.verify(mExecutorService).isTerminated()
+        executor.isTerminated
+        verify { mExecutorService.isTerminated }
     }
 
     @Test
     fun test_shutdown() {
         executor.shutdown()
-        Mockito.verify(mExecutorService).shutdown()
+        verify { mExecutorService.shutdown() }
     }
 
     @Test
     fun test_shutdownNow() {
         executor.shutdownNow()
-        Mockito.verify(mExecutorService).shutdownNow()
+        verify { mExecutorService.shutdownNow() }
     }
 
     @Test(expected = NullPointerException::class)
@@ -128,7 +130,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
     fun test_submit_Callable() {
         val callable = Callable { }
         executor.submit(callable)
-        Mockito.verify(mExecutorService).submit(Mockito.any(Callable::class.java))
+        verify { mExecutorService.submit(any<Callable<Any>>()) }
     }
 
     @Test
@@ -136,7 +138,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
         val callable = Runnable { }
         val result = "121"
         executor.submit(callable, result)
-        Mockito.verify(mExecutorService).execute(Mockito.any(Runnable::class.java))
+        verify { mExecutorService.execute(any<Runnable>()) }
     }
 
     @Test(expected = NullPointerException::class)
@@ -149,7 +151,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
     fun test_submit_RunnableOnly() {
         val callable = Runnable { }
         executor.submit(callable)
-        Mockito.verify(mExecutorService).execute(Mockito.any(Runnable::class.java))
+        verify { mExecutorService.execute(any()) }
     }
 
     @Test(expected = NullPointerException::class)
