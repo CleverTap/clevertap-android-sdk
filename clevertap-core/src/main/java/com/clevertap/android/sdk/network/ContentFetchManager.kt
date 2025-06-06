@@ -21,9 +21,10 @@ internal class ContentFetchManager(
         this.networkManager = networkManager
     }
 
-    fun processContentFetchItems(context: Context, contentFetchItems: List<JSONObject>) {
-        logger.verbose(TAG, "Processing ${contentFetchItems.size} content fetch items")
-
+    fun createContentFetchPayload(
+        context: Context,
+        contentFetchItems: List<JSONObject>,
+    ) {
         val payload = JSONArray()
 
         contentFetchItems.forEach { item ->
@@ -35,13 +36,13 @@ internal class ContentFetchManager(
                 }
 
                 payload.put(event)
-                logger.verbose(TAG, "Processed content fetch for item: $item")
+                logger.verbose(TAG, "Added content fetch item: $item")
             } catch (e: Exception) {
-                logger.verbose(TAG, "Error processing content fetch for tgtId: $item", e)
+                logger.verbose(TAG, "Error adding content fetch item: $item", e)
             }
-        }
 
-        sendContentFetchRequest(context, payload)
+            sendContentFetchRequest(context, payload)
+        }
     }
 
     private fun sendContentFetchRequest(context: Context, requestArray: JSONArray) {

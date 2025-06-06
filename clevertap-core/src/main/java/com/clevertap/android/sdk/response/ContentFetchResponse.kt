@@ -3,10 +3,8 @@ package com.clevertap.android.sdk.response
 import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.network.ContentFetchManager
-//import com.clevertap.android.sdk.network.ContentFetchManager
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -67,7 +65,7 @@ internal class ContentFetchResponse(
 
         if (contentFetchItems.isNotEmpty()) {
             logger.verbose(config.accountId, "Delegating ${contentFetchItems.size} content fetch items to ContentFetchManager")
-            contentFetchManager.processContentFetchItems(context, contentFetchItems)
+            contentFetchManager.createContentFetchPayload(context, contentFetchItems)
         }
     }
 }

@@ -93,7 +93,6 @@ internal class CtApi(
      * Sends content fetch request to the /content endpoint
      *
      * @param body The JSON payload to send
-     * @param timeoutMs The timeout in milliseconds
      * @return Response from the server
      */
     fun sendContentFetch(body: SendQueueRequestBody): Response =
