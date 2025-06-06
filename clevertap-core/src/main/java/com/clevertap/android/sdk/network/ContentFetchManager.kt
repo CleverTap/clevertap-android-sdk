@@ -2,15 +2,24 @@ package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.utils.CtDefaultDispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 
 internal class ContentFetchManager(
-    config: CleverTapInstanceConfig
+    config: CleverTapInstanceConfig,
+    parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS
 ) {
     companion object {
-        const val TAG: String = "ContentFetch"
+        private const val DEFAULT_PARALLEL_REQUESTS = 5
+        private const val TAG: String = "ContentFetch"
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val scope = CoroutineScope(CtDefaultDispatchers().io().limitedParallelism(parallelRequests))
 
     private var networkManager: NetworkManager? = null
     private val logger: Logger = config.logger
@@ -20,27 +29,29 @@ internal class ContentFetchManager(
     }
 
     fun handleContentFetch(contentFetchItems: JSONArray) {
-        val payload = JSONArray()
+        scope.launch {
+            val payload = JSONArray()
 
-        for (i in 0 until contentFetchItems.length()) {
-            val item = contentFetchItems.opt(i) ?: continue  // Skip nulls safely
-            try {
-                val event = JSONObject().apply {
-                    put("type", "event")
-                    put("evtName", "content_fetch")
-                    put("evtData", item)
+            for (i in 0 until contentFetchItems.length()) {
+                val item = contentFetchItems.opt(i) ?: continue
+                try {
+                    val event = JSONObject().apply {
+                        put("type", "event")
+                        put("evtName", "content_fetch")
+                        put("evtData", item)
+                    }
+                    payload.put(event)
+                    logger.verbose(TAG, "Added content fetch item: $item")
+                } catch (e: Exception) {
+                    logger.verbose(TAG, "Error adding content fetch item: $item", e)
                 }
-                payload.put(event)
-                logger.verbose(TAG, "Added content fetch item: $item")
-            } catch (e: Exception) {
-                logger.verbose(TAG, "Error adding content fetch item: $item", e)
             }
-        }
 
-        if (payload.length() > 0) {
-            fetchContent(payload)
-        } else {
-            logger.verbose(TAG, "No valid content fetch items to send.")
+            if (payload.length() > 0) {
+                fetchContent(payload)
+            } else {
+                logger.verbose(TAG, "No valid content fetch items to send.")
+            }
         }
     }
 
