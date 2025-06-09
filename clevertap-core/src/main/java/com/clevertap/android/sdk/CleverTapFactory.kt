@@ -336,7 +336,7 @@ internal object CleverTapFactory {
         )
 
         val arpResponse = ARPResponse(config, validator, controllerManager, arpRepo)
-        val contentFetchManager = ContentFetchManager(config)
+        val contentFetchManager = ContentFetchManager(config, coreMetaData)
         val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
             inAppResponse,
             MetadataResponse(config, deviceInfo, ijRepo),

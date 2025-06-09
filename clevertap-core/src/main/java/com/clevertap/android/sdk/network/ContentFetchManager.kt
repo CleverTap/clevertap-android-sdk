@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.Utils.getNow
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -11,41 +13,27 @@ import org.json.JSONObject
 
 internal class ContentFetchManager(
     config: CleverTapInstanceConfig,
+    private val coreMetaData: CoreMetaData,
     parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS
 ) {
     companion object {
         private const val DEFAULT_PARALLEL_REQUESTS = 5
-        private const val TAG: String = "ContentFetch"
+        private const val TAG = "ContentFetch"
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val scope = CoroutineScope(CtDefaultDispatchers().io().limitedParallelism(parallelRequests))
 
-    private var networkManager: NetworkManager? = null
     private val logger: Logger = config.logger
+    private var networkManager: NetworkManager? = null
 
-    fun setNetworkManager(networkManager: NetworkManager) {
-        this.networkManager = networkManager
+    fun setNetworkManager(manager: NetworkManager) {
+        this.networkManager = manager
     }
 
-    fun handleContentFetch(contentFetchItems: JSONArray) {
+    fun handleContentFetch(contentFetchItems: JSONArray, packageName: String) {
         scope.launch {
-            val payload = JSONArray()
-
-            for (i in 0 until contentFetchItems.length()) {
-                val item = contentFetchItems.opt(i) ?: continue
-                try {
-                    val event = JSONObject().apply {
-                        put("type", "event")
-                        put("evtName", "content_fetch")
-                        put("evtData", item)
-                    }
-                    payload.put(event)
-                    logger.verbose(TAG, "Added content fetch item: $item")
-                } catch (e: Exception) {
-                    logger.verbose(TAG, "Error adding content fetch item: $item", e)
-                }
-            }
+            val payload = getContentFetchPayload(contentFetchItems, packageName)
 
             if (payload.length() > 0) {
                 fetchContent(payload)
@@ -55,16 +43,47 @@ internal class ContentFetchManager(
         }
     }
 
+    private fun getContentFetchPayload(contentFetchItems: JSONArray, packageName: String): JSONArray {
+        val payload = JSONArray()
 
-    private fun fetchContent(requestArray: JSONArray) {
-        try {
-            // Todo - Add handshake if not completed
-            networkManager?.sendContentFetchRequest(requestArray)
-                ?: logger.verbose(TAG, "NetworkManager not set, cannot send content fetch request")
-        } catch (e: Exception) {
-            logger.verbose(TAG, "Failed to send content fetch request ", e)
+        for (i in 0 until contentFetchItems.length()) {
+            val item = contentFetchItems.opt(i) ?: continue
+            try {
+                val event = getMetaData(packageName).apply {
+                    put("evtData", item)
+                }
+                payload.put(event)
+                logger.verbose(TAG, "Added content fetch item: $item")
+            } catch (e: Exception) {
+                logger.verbose(TAG, "Error adding content fetch item: $item", e)
+            }
+        }
+
+        return payload
+    }
+
+    private fun getMetaData(packageName: String): JSONObject {
+        return JSONObject().apply {
+            put("type", "event")
+            put("evtName", "content_fetch")
+            put("s", coreMetaData.currentSessionId)
+            put("pg", CoreMetaData.getActivityCount())
+            put("ep", getNow())
+            put("f", coreMetaData.isFirstSession)
+            put("lsl", coreMetaData.lastSessionLength)
+            put("pai", packageName)
+            coreMetaData.screenName?.let { put("n", it) }
         }
     }
 
-    //todo add deviceID clearing
+    private fun fetchContent(payload: JSONArray) {
+        try {
+            networkManager?.sendContentFetchRequest(payload)
+                ?: logger.verbose(TAG, "NetworkManager not set, cannot send content fetch request.")
+        } catch (e: Exception) {
+            logger.verbose(TAG, "Failed to send content fetch request", e)
+        }
+    }
+
+    // todo add deviceID clearing
 }

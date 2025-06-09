@@ -37,19 +37,19 @@ internal class ContentFetchResponse(
         try {
             logger.verbose(config.accountId, "Processing Content Fetch response")
             val contentFetchArray = jsonBody.getJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY)
-            processContentFetchItems(contentFetchArray)
+            processContentFetchItems(contentFetchArray, context)
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "Failed to parse content fetch response", t)
         }
     }
 
-    private fun processContentFetchItems(contentFetchArray: JSONArray) {
+    private fun processContentFetchItems(contentFetchArray: JSONArray, context: Context) {
         if (contentFetchArray.length() == 0) {
             logger.verbose(config.accountId, "No content fetch items to process")
             return
         }
 
         logger.verbose(config.accountId, "Found ${contentFetchArray.length()} content fetch items")
-        contentFetchManager.handleContentFetch(contentFetchArray)
+        contentFetchManager.handleContentFetch(contentFetchArray, context.packageName)
     }
 }
