@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.network
 
 import android.util.Base64
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.cryption.AESGCMCrypt
 import com.clevertap.android.sdk.cryption.CTKeyGenerator
 import com.clevertap.android.sdk.network.api.EncryptedResponseBody
@@ -16,14 +17,23 @@ internal class NetworkEncryptionManager(
 ) {
 
     companion object {
+        @Volatile
         private var sessionKey: SecretKey? = null
+        private val lock = Any()
     }
 
     /**
      * Returns session key for encryption
      */
     private fun sessionKeyForEncryption(): SecretKey {
-        return sessionKey ?: keyGenerator.generateSecretKey().also { sessionKey = it }
+        if (sessionKey == null) {
+            synchronized(lock) {
+                if (sessionKey == null) {
+                    sessionKey = keyGenerator.generateSecretKey()
+                }
+            }
+        }
+        return sessionKey!! // Safe due to the synchronized block
     }
 
     private fun sessionKeyBytes() : ByteArray {
@@ -85,6 +95,7 @@ internal class NetworkEncryptionManager(
                 EncryptionFailure
             }
         } catch (e: Exception) {
+            Logger.v("Error decrypting response", e)
             return EncryptionFailure
         }
     }
