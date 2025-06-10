@@ -16,6 +16,7 @@ import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
+import com.clevertap.android.sdk.inapp.InAppNotificationCreator
 import com.clevertap.android.sdk.inapp.InAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
@@ -46,6 +47,7 @@ import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
+import com.clevertap.android.sdk.video.VideoLibChecker
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -351,6 +353,15 @@ internal object CleverTapFactory {
         )
         coreState.analyticsManager = analyticsManager
 
+        val inAppNotificationCreator = InAppNotificationCreator(
+            storeRegistry,
+            FileResourceProvider.getInstance(context, config.logger),
+            mainLooperHandler,
+            templatesManager,
+            CTExecutorFactory.executors(config),
+            VideoLibChecker.haveVideoPlayerSupport
+        )
+
         networkManager.addNetworkHeadersListener(evaluationManager)
         val inAppController = InAppController(
             context,
@@ -365,7 +376,8 @@ internal object CleverTapFactory {
             evaluationManager,
             templatesManager,
             storeRegistry,
-            inAppActionHandler
+            inAppActionHandler,
+            inAppNotificationCreator
         )
 
         coreState.inAppController = inAppController
