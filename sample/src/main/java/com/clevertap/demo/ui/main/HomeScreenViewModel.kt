@@ -755,6 +755,13 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "15-0" -> {
                 cleverTapAPI?.locale = "en_IN"
             }
+            "16-0" -> {
+                cleverTapAPI?.syncRegisteredInAppTemplates()
+            }
+            "16-1" -> {
+                val template =cleverTapAPI?.getActiveContextForTemplate("template-a")
+                Log.i(TAG, "Active Template for Context = $template")
+            }
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }

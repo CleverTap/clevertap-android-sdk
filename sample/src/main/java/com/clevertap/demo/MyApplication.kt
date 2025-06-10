@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.PushType
+import com.clevertap.demo.ui.main.CustomInAppTemplates
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
@@ -72,6 +73,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
         TemplateRenderer.debugLevel = 3;
         CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
+        CleverTapAPI.registerCustomInAppTemplates { CustomInAppTemplates.registerCustomTemplates() }
 
         // this is for clevertap to start sending events => app launched => hence done in app create
         val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
