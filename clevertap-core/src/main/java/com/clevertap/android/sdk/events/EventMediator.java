@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ProfileValueHandler;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.validation.Validator;
 import com.clevertap.android.sdk.variables.JsonUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,15 +67,9 @@ public class EventMediator {
     }
 
     public boolean shouldDropEvent(JSONObject event, int eventType) {
+
         if (eventType == Constants.FETCH_EVENT || eventType == Constants.DEFINE_VARS_EVENT) {
             return false;
-        }
-
-        if (cleverTapMetaData.isCurrentUserOptedOut()) {
-            String eventString = event == null ? "null" : event.toString();
-            config.getLogger()
-                    .debug(config.getAccountId(), "Current user is opted out dropping event: " + eventString);
-            return true;
         }
 
         if (isMuted()) {
@@ -83,7 +78,30 @@ public class EventMediator {
             return true;
         }
 
-        return false;
+        if (!cleverTapMetaData.isCurrentUserOptedOut()) {
+            return false;
+        }
+
+        if (!cleverTapMetaData.getEnabledSystemEvents()) {
+            config.getLogger().debug(config.getAccountId(), "Current user is opted out dropping event: " + event);
+            // opted-out and system events disabled
+            return true;
+        }
+
+        if (eventType != Constants.RAISED_EVENT && eventType != Constants.NV_EVENT) {
+            // opted-out and system events enabled
+            return false;
+        }
+
+        // opted-out and system events enabled
+        // check for Constants.RAISED_EVENT and Constants.NV_EVENT event special cases
+        String eName = event != null ? getEventName(event) : null;
+        boolean isSystemEvent = Arrays.asList(Validator.restrictedNames).contains(eName);
+        boolean dropEvent = !isSystemEvent;
+        if (dropEvent) {
+            config.getLogger().debug(config.getAccountId(), "Current user is opted out dropping event: " + event);
+        }
+        return dropEvent;
     }
 
     public boolean isAppLaunchedEvent(JSONObject event) {

@@ -2829,19 +2829,27 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void setOptOut(boolean userOptOut) {
-        final boolean enable = userOptOut;
+        // this is legacy behavior, on opt out we should not allow system events
+        setOptOut(userOptOut, false);
+    }
+
+    public void setOptOut(final boolean userOptOut, final boolean allowSystemEvents) {
         Task<Void> task = CTExecutorFactory.executors(coreState.getConfig()).postAsyncSafelyTask();
         task.execute("setOptOut", () -> {
             // generate the data for a profile push to alert the server to the optOut state change
             HashMap<String, Object> optOutMap = new HashMap<>();
-            optOutMap.put(Constants.CLEVERTAP_OPTOUT, enable);
+            optOutMap.put(Constants.CLEVERTAP_OPTOUT, userOptOut);
+            optOutMap.put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, allowSystemEvents);
 
             // determine order of operations depending on enabled/disabled
-            if (enable) {  // if opting out first push profile event then set the flag
+            if (userOptOut) {  // if opting out first push profile event then set the flag
                 pushProfile(optOutMap);
                 coreState.getCoreMetaData().setCurrentUserOptedOut(true);
+                coreState.getCoreMetaData().setEnabledSystemEvents(allowSystemEvents);
             } else {  // if opting back in first reset the flag to false then push the profile event
                 coreState.getCoreMetaData().setCurrentUserOptedOut(false);
+                // if opt-out is false, we should always allow system events
+                coreState.getCoreMetaData().setEnabledSystemEvents(true);
                 pushProfile(optOutMap);
             }
             // persist the new optOut state
@@ -2851,8 +2859,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                         .verbose(getAccountId(), "Unable to persist user OptOut state, storage key is null");
                 return null;
             }
-            StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(getConfig(), key), enable);
-            getConfigLogger().verbose(getAccountId(), "Set current user OptOut state to: " + enable);
+            StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(getConfig().getAccountId(), key), userOptOut);
+            getConfigLogger().verbose(getAccountId(), "Set current user OptOut state to: " + userOptOut);
             return null;
         });
     }
