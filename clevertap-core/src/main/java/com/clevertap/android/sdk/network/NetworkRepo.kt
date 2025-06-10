@@ -73,6 +73,29 @@ internal class NetworkRepo(
         )
     }
 
+    /**
+     * @return true if the mute command was sent anytime between now and now - 24 hours.
+     */
+    fun isMuted() : Boolean {
+        val now = (System.currentTimeMillis() / 1000).toInt()
+        val muteTS = StorageHelper.getIntFromPrefs(
+            context,
+            config,
+            Constants.KEY_MUTED,
+            0
+        )
+        return now - muteTS < 24 * 60 * 60
+    }
+
+    fun getMuted() : Int {
+        return StorageHelper.getIntFromPrefs(
+            context,
+            config,
+            Constants.KEY_MUTED,
+            0
+        )
+    }
+
     fun setMuted(mute: Boolean) {
         if (mute) {
             val now = (System.currentTimeMillis() / 1000).toInt()

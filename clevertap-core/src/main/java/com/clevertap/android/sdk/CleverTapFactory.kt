@@ -175,7 +175,7 @@ internal object CleverTapFactory {
         coreState.profileValueHandler = profileValueHandler
 
         val eventMediator =
-            EventMediator(context, config, coreMetaData, localDataStore, profileValueHandler)
+            EventMediator(config, coreMetaData, localDataStore, profileValueHandler, networkRepo)
         coreState.eventMediator = eventMediator
 
         getInstance(context, config)
