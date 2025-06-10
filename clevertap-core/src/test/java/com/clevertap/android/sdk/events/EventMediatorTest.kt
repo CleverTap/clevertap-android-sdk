@@ -24,13 +24,13 @@ class EventMediatorTest {
     @MockK
     private lateinit var profileValueHandler: ProfileValueHandler
 
-    @MockK
+    @MockK(relaxed = true)
     private lateinit var networkRepo: NetworkRepo
 
-    @MockK
+    @MockK(relaxed = true)
     private lateinit var config: CleverTapInstanceConfig
 
-    @MockK
+    @MockK(relaxed = true)
     private lateinit var cleverTapMetaData: CoreMetaData
 
     private lateinit var eventMediator: EventMediator
@@ -488,5 +488,192 @@ class EventMediatorTest {
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.FETCH_EVENT)
         
         assertFalse(result)
+    }
+
+    // Tests for shouldDropEvent method
+    @Test
+    fun `shouldDropEvent returns false for FETCH_EVENT regardless of other conditions`() {
+        val event = JSONObject()
+        every { networkRepo.isMuted() } returns true
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.FETCH_EVENT)
+        
+        assertFalse(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns false for DEFINE_VARS_EVENT regardless of other conditions`() {
+        val event = JSONObject()
+        every { networkRepo.isMuted() } returns true
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.DEFINE_VARS_EVENT)
+        
+        assertFalse(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns true when network is muted`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, "CustomEvent")
+        every { networkRepo.isMuted() } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
+        
+        assertTrue(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns false when network is not muted and user not opted out`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, "CustomEvent")
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns false
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
+        
+        assertFalse(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns true when user opted out and system events disabled for RAISED_EVENT`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, "CustomEvent")
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns false
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
+        
+        assertTrue(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns true when user opted out and system events disabled for NV_EVENT`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, "CustomEvent")
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns false
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.NV_EVENT)
+        
+        assertTrue(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns false when user opted out and system events enabled for PROFILE_EVENT`() {
+        val event = JSONObject()
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.PROFILE_EVENT)
+        
+        assertFalse(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns false when user opted out and system events enabled for PAGE_EVENT`() {
+        val event = JSONObject()
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.PAGE_EVENT)
+        
+        assertFalse(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns false when user opted out and system events enabled for DATA_EVENT`() {
+        val event = JSONObject()
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.DATA_EVENT)
+        
+        assertFalse(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns false for RAISED_EVENT with system event when user opted out and system events enabled`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, Constants.APP_LAUNCHED_EVENT)
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
+        
+        assertFalse(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns true for RAISED_EVENT with non-system event when user opted out and system events enabled`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, "CustomEvent")
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
+        
+        assertTrue(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns false for NV_EVENT with system event when user opted out and system events enabled`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.NV_EVENT)
+        
+        assertFalse(result)
+    }
+
+    @Test
+    fun `shouldDropEvent returns true for NV_EVENT with non-system event when user opted out and system events enabled`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, "CustomNVEvent")
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.NV_EVENT)
+        
+        assertTrue(result)
+    }
+
+    @Test
+    fun `shouldDropEvent handles null event gracefully when checking event name`() {
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(null, Constants.RAISED_EVENT)
+        
+        assertTrue(result) // Should drop because event name is null (not a system event)
+    }
+
+    @Test
+    fun `shouldDropEvent handles event without evtName when user opted out and system events enabled`() {
+        val event = JSONObject() // No evtName field
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
+        
+        assertTrue(result) // Should drop because event name is null (not a system event)
+    }
+
+    @Test
+    fun `shouldDropEvent handles JSONException gracefully when event name is invalid type`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, 123) // Invalid type
+        every { networkRepo.isMuted() } returns false
+        every { cleverTapMetaData.isCurrentUserOptedOut } returns true
+        every { cleverTapMetaData.enabledSystemEvents } returns true
+        
+        val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
+        
+        assertTrue(result) // Should drop because event name extraction fails
     }
 }
