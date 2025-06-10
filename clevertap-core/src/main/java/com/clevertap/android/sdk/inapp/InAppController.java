@@ -73,95 +73,6 @@ import kotlin.jvm.functions.Function2;
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class InAppController implements InAppListener {
 
-    //InApp
-    private final class NotificationPrepareRunnable implements Runnable {
-
-        private final WeakReference<InAppController> inAppControllerWeakReference;
-
-        private final JSONObject jsonObject;
-
-        private final boolean videoSupport = VideoLibChecker.haveVideoPlayerSupport;
-
-        NotificationPrepareRunnable(InAppController inAppController, JSONObject jsonObject) {
-            this.inAppControllerWeakReference = new WeakReference<>(inAppController);
-            this.jsonObject = jsonObject;
-        }
-
-        @Override
-        public void run() {
-            final CTInAppNotification inAppNotification = new CTInAppNotification()
-                    .initWithJSON(jsonObject, videoSupport);
-            if (inAppNotification.getError() != null) {
-                logger
-                        .debug(config.getAccountId(),
-                                "Unable to parse inapp notification " + inAppNotification.getError());
-                return;
-            }
-            prepareForDisplay(inAppNotification);
-        }
-
-        void prepareForDisplay(CTInAppNotification inApp) {
-
-            final Pair<FileStore, InAppAssetsStore> storePair = new Pair<>(storeRegistry.getFilesStore(),
-                    storeRegistry.getInAppAssetsStore());
-
-            String templateName = null;
-            FileResourceProvider fileResourceProvider = FileResourceProvider.getInstance(context, logger);
-            if (CTInAppType.CTInAppTypeCustomCodeTemplate.equals(inApp.getInAppType())) {
-                final CustomTemplateInAppData customTemplateData = inApp.getCustomTemplateData();
-                final List<String> fileUrls;
-                if (customTemplateData != null) {
-                    templateName = customTemplateData.getTemplateName();
-                    fileUrls = customTemplateData.getFileArgsUrls(templatesManager);
-                } else {
-                    fileUrls = Collections.emptyList();
-                }
-
-                int index = 0;
-                while (index < fileUrls.size()) {
-                    String url = fileUrls.get(index);
-                    byte[] bytes = fileResourceProvider.fetchFile(url);
-
-                    if (bytes != null && bytes.length > 0) {
-                        FileResourcesRepoImpl.saveUrlExpiryToStore(new Pair<>(url, CtCacheType.FILES), storePair);
-                    } else {
-                        // download fail
-                        inApp.setError("Error processing the custom code in-app template: file download failed.");
-                        break;
-                    }
-                    index++;
-                }
-            } else {
-                for (CTInAppNotificationMedia media : inApp.getMediaList()) {
-                    if (media.isGIF()) {
-                        byte[] bytes = fileResourceProvider.fetchInAppGifV1(media.getMediaUrl());
-                        if (bytes == null || bytes.length == 0) {
-                            inApp.setError("Error processing GIF");
-                            break;
-                        }
-                    } else if (media.isImage()) {
-
-                        Bitmap bitmap = fileResourceProvider.fetchInAppImageV1(media.getMediaUrl());
-                        if (bitmap == null) {
-                            inApp.setError("Error processing image as bitmap was NULL");
-                        }
-                    } else if (media.isVideo() || media.isAudio()) {
-                        if (!inApp.isVideoSupported()) {
-                            inApp.setError("InApp Video/Audio is not supported");
-                        }
-                    }
-                }
-            }
-
-            InAppController controller = inAppControllerWeakReference.get();
-            if (controller != null) {
-                final CustomTemplate template =
-                        templateName != null ? templatesManager.getTemplate(templateName) : null;
-                controller.notificationReady(inApp, template);
-            }
-        }
-    }
-
     private enum InAppState {
         DISCARDED(-1),
         SUSPENDED(0),
@@ -181,7 +92,7 @@ public class InAppController implements InAppListener {
     private static CTInAppNotification currentlyDisplayingInApp = null;
 
     private static final List<CTInAppNotification> pendingNotifications = Collections
-            .synchronizedList(new ArrayList<CTInAppNotification>());
+            .synchronizedList(new ArrayList<>());
 
     private final AnalyticsManager analyticsManager;
 
@@ -217,6 +128,8 @@ public class InAppController implements InAppListener {
 
     private final InAppActionHandler inAppActionHandler;
 
+    private final InAppNotificationCreator inAppNotificationCreator;
+
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
 
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
@@ -234,7 +147,8 @@ public class InAppController implements InAppListener {
             final EvaluationManager evaluationManager,
             TemplatesManager templatesManager,
             final StoreRegistry storeRegistry,
-            final InAppActionHandler inAppActionHandler) {
+            final InAppActionHandler inAppActionHandler,
+            final InAppNotificationCreator inAppNotificationCreator) {
         this.context = context;
         this.config = config;
         this.logger = this.config.getLogger();
@@ -260,6 +174,7 @@ public class InAppController implements InAppListener {
             return null;
         };
         this.inAppActionHandler = inAppActionHandler;
+        this.inAppNotificationCreator = inAppNotificationCreator;
     }
 
 
@@ -446,23 +361,16 @@ public class InAppController implements InAppListener {
         }
     }
 
-    //InApp
-    private void notificationReady(final CTInAppNotification inAppNotification,
-                                   @Nullable final CustomTemplate template) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainLooperHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    notificationReady(inAppNotification, template);
-                }
-            });
-            return;
-        }
-
+    private void notificationReady(final CTInAppNotification inAppNotification) {
         if (inAppNotification.getError() != null) {
             logger.debug(config.getAccountId(),
                     "Unable to process inapp notification " + inAppNotification.getError());
             return;
+        }
+        final CustomTemplateInAppData templateData = inAppNotification.getCustomTemplateData();
+        CustomTemplate template = null;
+        if (templateData != null && templateData.getTemplateName() != null) {
+            template = templatesManager.getTemplate(templateData.getTemplateName());
         }
         logger.debug(config.getAccountId(), "Notification ready: " + inAppNotification.getJsonDescription());
         if (template != null && !template.isVisual()) {
@@ -570,12 +478,7 @@ public class InAppController implements InAppListener {
     private void displayNotification(final CTInAppNotification inAppNotification) {
 
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainLooperHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    displayNotification(inAppNotification);
-                }
-            });
+            mainLooperHandler.post(() -> displayNotification(inAppNotification));
             return;
         }
 
@@ -593,16 +496,12 @@ public class InAppController implements InAppListener {
 
     //InApp
     private void prepareNotificationForDisplay(final JSONObject jsonObject) {
-        logger.debug(config.getAccountId(), "Preparing In-App for display: " + jsonObject.toString());
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-        task.execute("InappController#prepareNotificationForDisplay", new Callable<Void>() {
-            @Override
-            public Void call() {
-                new NotificationPrepareRunnable(InAppController.this, jsonObject).run();
-                return null;
-            }
-        });
+        logger.debug(config.getAccountId(), "Preparing In-App for display: " + jsonObject);
+        inAppNotificationCreator.createNotification(jsonObject,
+                "InappController#prepareNotificationForDisplay",
+                this::notificationReady);
     }
+
     private void showInAppNotificationIfAny() {
         if (!config.isAnalyticsOnly()) {
             Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
@@ -671,13 +570,10 @@ public class InAppController implements InAppListener {
         if (inAppNotification.isLocalInApp()) {
             deviceInfo.incrementLocalInAppCount();//update cache
             Task<Void> task = CTExecutorFactory.executors(config).ioTask();
-            task.execute("InAppController#incrementLocalInAppCountInPersistentStore", new Callable<Void>() {
-                @Override
-                public Void call() {
-                    StorageHelper.putIntImmediate(context, LOCAL_INAPP_COUNT,
-                            deviceInfo.getLocalInAppCount());// update disk with cache
-                    return null;
-                }
+            task.execute("InAppController#incrementLocalInAppCountInPersistentStore", () -> {
+                StorageHelper.putIntImmediate(context, LOCAL_INAPP_COUNT,
+                        deviceInfo.getLocalInAppCount());// update disk with cache
+                return null;
             });
         }
     }
@@ -980,12 +876,5 @@ public class InAppController implements InAppListener {
         } else {
             logger.debug("Cannot present template without name.");
         }
-    }
-
-    public TemplatesManager getTemplatesManager() {
-        return templatesManager;
-    }
-    public StoreRegistry getStoreRegistry() {
-        return storeRegistry;
     }
 }
