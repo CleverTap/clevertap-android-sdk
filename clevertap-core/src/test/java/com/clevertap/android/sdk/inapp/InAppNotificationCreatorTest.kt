@@ -258,10 +258,10 @@ class InAppNotificationCreatorTest {
 
         return InAppNotificationCreator(
             mockStoreRegistry,
-            mockFileResourceProvider,
-            mockHandler,
             mockTemplateManager,
             MockCTExecutors(),
+            mockHandler,
+            mockFileResourceProvider,
             isVideoSupported
         )
     }
