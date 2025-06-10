@@ -344,7 +344,7 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false when config is created post app launch`() {
         val event = JSONObject()
-        every { config.isCreatedPostAppLaunch() } returns true
+        every { config.isCreatedPostAppLaunch } returns true
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -354,7 +354,7 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for system events when not created post app launch`() {
         val event = JSONObject().put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
-        every { config.isCreatedPostAppLaunch() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -365,8 +365,8 @@ class EventMediatorTest {
     @Ignore("The test is failing due to incorrect code, we can fix it later")
     fun `shouldDeferProcessingEvent returns false for App Launched system event`() {
         val event = JSONObject().put("evtName", Constants.APP_LAUNCHED_EVENT)
-        every { config.isCreatedPostAppLaunch() } returns false
-        every { cleverTapMetaData.isAppLaunchPushed() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
+        every { cleverTapMetaData.isAppLaunchPushed } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -376,7 +376,7 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for Notification Viewed system event`() {
         val event = JSONObject().put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
-        every { config.isCreatedPostAppLaunch() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -386,7 +386,7 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for Geofence Entered system event`() {
         val event = JSONObject().put("evtName", Constants.GEOFENCE_ENTERED_EVENT_NAME)
-        every { config.isCreatedPostAppLaunch() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -396,7 +396,7 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for Geofence Exited system event`() {
         val event = JSONObject().put("evtName", Constants.GEOFENCE_EXITED_EVENT_NAME)
-        every { config.isCreatedPostAppLaunch() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -406,8 +406,8 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns true for RAISED_EVENT when app launch not pushed and not created post app launch`() {
         val event = JSONObject().put("evtName", "CustomEvent")
-        every { config.isCreatedPostAppLaunch() } returns false
-        every { cleverTapMetaData.isAppLaunchPushed() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
+        every { cleverTapMetaData.isAppLaunchPushed } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -417,8 +417,8 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for RAISED_EVENT when app launch is pushed`() {
         val event = JSONObject().put("evtName", "CustomEvent")
-        every { config.isCreatedPostAppLaunch() } returns false
-        every { cleverTapMetaData.isAppLaunchPushed() } returns true
+        every { config.isCreatedPostAppLaunch } returns false
+        every { cleverTapMetaData.isAppLaunchPushed } returns true
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -428,7 +428,7 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for non-RAISED_EVENT when not created post app launch`() {
         val event = JSONObject()
-        every { config.isCreatedPostAppLaunch() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.PROFILE_EVENT)
         
@@ -438,8 +438,8 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for RAISED_EVENT when event has no evtName`() {
         val event = JSONObject()
-        every { config.isCreatedPostAppLaunch() } returns false
-        every { cleverTapMetaData.isAppLaunchPushed() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
+        every { cleverTapMetaData.isAppLaunchPushed } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -449,8 +449,8 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent handles JSONException gracefully when evtName is not string`() {
         val event = JSONObject().put("evtName", 123) // Invalid evtName type
-        every { config.isCreatedPostAppLaunch() } returns false
-        every { cleverTapMetaData.isAppLaunchPushed() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
+        every { cleverTapMetaData.isAppLaunchPushed } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
         
@@ -460,8 +460,8 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for PAGE_EVENT regardless of other conditions`() {
         val event = JSONObject().put("evtName", "CustomEvent")
-        every { config.isCreatedPostAppLaunch() } returns false
-        every { cleverTapMetaData.isAppLaunchPushed() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
+        every { cleverTapMetaData.isAppLaunchPushed } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.PAGE_EVENT)
         
@@ -471,8 +471,8 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for PROFILE_EVENT regardless of other conditions`() {
         val event = JSONObject().put("evtName", "CustomEvent")
-        every { config.isCreatedPostAppLaunch() } returns false
-        every { cleverTapMetaData.isAppLaunchPushed() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
+        every { cleverTapMetaData.isAppLaunchPushed } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.PROFILE_EVENT)
         
@@ -482,8 +482,8 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for FETCH_EVENT regardless of other conditions`() {
         val event = JSONObject().put("evtName", "CustomEvent")
-        every { config.isCreatedPostAppLaunch() } returns false
-        every { cleverTapMetaData.isAppLaunchPushed() } returns false
+        every { config.isCreatedPostAppLaunch } returns false
+        every { cleverTapMetaData.isAppLaunchPushed } returns false
         
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.FETCH_EVENT)
         
