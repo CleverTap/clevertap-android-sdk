@@ -47,7 +47,6 @@ import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
-import com.clevertap.android.sdk.video.VideoLibChecker
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -355,11 +354,10 @@ internal object CleverTapFactory {
 
         val inAppNotificationCreator = InAppNotificationCreator(
             storeRegistry,
-            FileResourceProvider.getInstance(context, config.logger),
-            mainLooperHandler,
             templatesManager,
             CTExecutorFactory.executors(config),
-            VideoLibChecker.haveVideoPlayerSupport
+            mainLooperHandler,
+            FileResourceProvider.getInstance(context, config.logger)
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)
