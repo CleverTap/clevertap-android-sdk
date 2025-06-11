@@ -42,6 +42,9 @@ import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.EncryptionFailure
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 
 internal class NetworkManager constructor(
     private val context: Context,
@@ -417,17 +420,20 @@ internal class NetworkManager constructor(
     }
 
     @WorkerThread
-    fun sendContentFetchRequest(content: JSONArray): Boolean {
+    fun sendContentFetchRequest(content: JSONArray, job: Job): Boolean {
         val header = getQueueHeader(null) ?: return false
-
         val body = ContentFetchRequestBody(header, content)
         logger.debug(config.accountId, "Fetching Content: $body")
 
         try {
             ctApiWrapper.ctApi.sendContentFetch(body).use { response ->
+                job.ensureActive()
                 handleContentFetchResponse(response)
                 return true
             }
+        } catch (_: CancellationException) {
+            logger.verbose(config.accountId, "Fetch job was cancelled.")
+            return false
         } catch (e: Exception) {
             logger.debug(config.accountId, "An exception occurred while fetching content.", e)
             return false
