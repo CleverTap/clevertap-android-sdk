@@ -26,6 +26,7 @@ internal class ContentFetchManager(
     companion object {
         private const val DEFAULT_PARALLEL_REQUESTS = 5
         private const val TAG = "ContentFetch"
+        //todo fix this value
         private const val TIMEOUT_DELAY_MS = 2 * 60L
     }
 
@@ -94,9 +95,9 @@ internal class ContentFetchManager(
         }
     }
 
-    private fun fetchContent(payload: JSONArray) {
+    private suspend fun fetchContent(payload: JSONArray) {
         try {
-            networkManager?.sendContentFetchRequest(payload, parentJob)
+            networkManager?.sendContentFetchRequest(payload)
                 ?: logger.verbose(TAG, "NetworkManager not set, cannot send content fetch request.")
         } catch (e: Exception) {
             logger.verbose(TAG, "Failed to send content fetch request", e)
@@ -104,7 +105,7 @@ internal class ContentFetchManager(
     }
 
     fun completePendingContentFetch() = runBlocking {
-        logger.verbose(TAG, "Waiting up to ${deviceIdChangeTimeout}ms to cancel running jobs" + parentJob.children.count())
+        logger.verbose(TAG, "Waiting up to ${deviceIdChangeTimeout}ms to cancel running jobs")
 
         val allJobsCompleted = withTimeoutOrNull(deviceIdChangeTimeout) {
             parentJob.join()
