@@ -4,6 +4,7 @@ import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.StorageHelper
+import com.clevertap.android.sdk.utils.Clock
 import java.security.SecureRandom
 
 internal class NetworkRepo(
@@ -12,7 +13,8 @@ internal class NetworkRepo(
     val generateRandomDelay: () -> Int = {
         val randomGen = SecureRandom()
         (randomGen.nextInt(10) + 1) * 1000
-    }
+    },
+    val clock: Clock = Clock.SYSTEM
 ) {
 
     companion object {
@@ -77,7 +79,7 @@ internal class NetworkRepo(
      * @return true if the mute command was sent anytime between now and now - 24 hours.
      */
     fun isMuted() : Boolean {
-        val now = (System.currentTimeMillis() / 1000).toInt()
+        val now = clock.currentTimeSecondsInt()
         val muteTS = StorageHelper.getIntFromPrefs(
             context,
             config,
@@ -98,7 +100,7 @@ internal class NetworkRepo(
 
     fun setMuted(mute: Boolean) {
         if (mute) {
-            val now = (System.currentTimeMillis() / 1000).toInt()
+            val now = clock.currentTimeSecondsInt()
             StorageHelper.putInt(
                 context,
                 StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_MUTED),

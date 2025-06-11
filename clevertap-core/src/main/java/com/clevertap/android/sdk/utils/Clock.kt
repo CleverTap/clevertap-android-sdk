@@ -27,6 +27,10 @@ interface Clock {
     return TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis())
   }
 
+  fun currentTimeSecondsInt(): Int {
+    return (currentTimeMillis() / 1000).toInt()
+  }
+
   /**
    * Creates instance of type Date.
    *
