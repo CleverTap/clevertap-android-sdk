@@ -428,8 +428,7 @@ internal class NetworkManager constructor(
         try {
             ctApiWrapper.ctApi.sendContentFetch(body).use { response ->
                 job.ensureActive()
-                handleContentFetchResponse(response)
-                return true
+                return handleContentFetchResponse(response)
             }
         } catch (_: CancellationException) {
             logger.verbose(config.accountId, "Fetch job was cancelled.")

@@ -501,7 +501,7 @@ internal object CleverTapFactory {
             context, config, deviceInfo,
             validationResultStack, baseEventQueueManager, analyticsManager,
             coreMetaData, controllerManager, sessionManager,
-            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider
+            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager
         )
         coreState.loginController = loginController
 
