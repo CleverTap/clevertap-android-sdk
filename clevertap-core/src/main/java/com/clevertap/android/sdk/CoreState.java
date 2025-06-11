@@ -98,6 +98,68 @@ public class CoreState {
 
     private CTVariables ctVariables;
 
+    public CoreState(
+            BaseLocationManager baseLocationManager,
+            CleverTapInstanceConfig config,
+            CoreMetaData coreMetaData,
+            BaseDatabaseManager databaseManager,
+            DeviceInfo deviceInfo,
+            EventMediator eventMediator,
+            LocalDataStore localDataStore,
+            ActivityLifeCycleManager activityLifeCycleManager,
+            AnalyticsManager analyticsManager,
+            BaseEventQueueManager baseEventQueueManager,
+            CTLockManager ctLockManager,
+            BaseCallbackManager callbackManager,
+            ControllerManager controllerManager,
+            InAppController inAppController,
+            EvaluationManager evaluationManager,
+            ImpressionManager impressionManager,
+            LoginController loginController,
+            SessionManager sessionManager,
+            ValidationResultStack validationResultStack,
+            MainLooperHandler mainLooperHandler,
+            NetworkManager networkManager,
+            PushProviders pushProviders,
+            VarCache varCache,
+            Parser parser,
+            CryptHandler cryptHandler,
+            StoreRegistry storeRegistry,
+            TemplatesManager templatesManager,
+            ProfileValueHandler profileValueHandler,
+            CTVariables ctVariables
+    ) {
+        this.baseLocationManager = baseLocationManager;
+        this.config = config;
+        this.coreMetaData = coreMetaData;
+        this.databaseManager = databaseManager;
+        this.deviceInfo = deviceInfo;
+        this.eventMediator = eventMediator;
+        this.localDataStore = localDataStore;
+        this.activityLifeCycleManager = activityLifeCycleManager;
+        this.analyticsManager = analyticsManager;
+        this.baseEventQueueManager = baseEventQueueManager;
+        this.ctLockManager = ctLockManager;
+        this.callbackManager = callbackManager;
+        this.controllerManager = controllerManager;
+        this.inAppController = inAppController;
+        this.evaluationManager = evaluationManager;
+        this.impressionManager = impressionManager;
+        this.loginController = loginController;
+        this.sessionManager = sessionManager;
+        this.validationResultStack = validationResultStack;
+        this.mainLooperHandler = mainLooperHandler;
+        this.networkManager = networkManager;
+        this.pushProviders = pushProviders;
+        this.varCache = varCache;
+        this.parser = parser;
+        this.cryptHandler = cryptHandler;
+        this.storeRegistry = storeRegistry;
+        this.templatesManager = templatesManager;
+        this.profileValueHandler = profileValueHandler;
+        this.ctVariables = ctVariables;
+    }
+
     public Parser getParser() {
         return parser;
     }
