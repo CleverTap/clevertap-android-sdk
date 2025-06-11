@@ -3,7 +3,7 @@ package com.clevertap.android.sdk
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import io.mockk.mockk
 
-class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceConfig) : CoreState(
+internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceConfig) : CoreState(
     mockk(relaxed = true),
     cleverTapInstanceConfig,
     CoreMetaData(),

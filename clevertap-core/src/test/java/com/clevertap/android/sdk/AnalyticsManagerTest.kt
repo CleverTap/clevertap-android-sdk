@@ -88,7 +88,7 @@ class AnalyticsManagerTest {
             coreState.deviceInfo,
             coreState.callbackManager,
             coreState.controllerManager,
-            coreState.ctLockManager,
+            coreState.cTLockManager,
             inAppResponse,
             timeProvider
         )
