@@ -24,61 +24,61 @@ import com.clevertap.android.sdk.variables.VarCache;
 
 public class CoreState {
 
-    private BaseLocationManager baseLocationManager;
+    private final BaseLocationManager baseLocationManager;
 
-    private CleverTapInstanceConfig config;
+    private final CleverTapInstanceConfig config;
 
-    private CoreMetaData coreMetaData;
+    private final CoreMetaData coreMetaData;
 
-    private BaseDatabaseManager databaseManager;
+    private final BaseDatabaseManager databaseManager;
 
-    private DeviceInfo deviceInfo;
+    private final DeviceInfo deviceInfo;
 
-    private EventMediator eventMediator;
+    private final EventMediator eventMediator;
 
-    private LocalDataStore localDataStore;
+    private final LocalDataStore localDataStore;
 
-    private ActivityLifeCycleManager activityLifeCycleManager;
+    private final ActivityLifeCycleManager activityLifeCycleManager;
 
-    private AnalyticsManager analyticsManager;
+    private final AnalyticsManager analyticsManager;
 
-    private BaseEventQueueManager baseEventQueueManager;
+    private final BaseEventQueueManager baseEventQueueManager;
 
-    private CTLockManager ctLockManager;
+    private final CTLockManager ctLockManager;
 
-    private BaseCallbackManager callbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private ControllerManager controllerManager;
+    private final ControllerManager controllerManager;
 
-    private InAppController inAppController;
+    private final InAppController inAppController;
 
-    private EvaluationManager evaluationManager;
+    private final EvaluationManager evaluationManager;
 
-    private ImpressionManager impressionManager;
+    private final ImpressionManager impressionManager;
 
-    private LoginController loginController;
+    private final LoginController loginController;
 
-    private SessionManager sessionManager;
+    private final SessionManager sessionManager;
 
-    private ValidationResultStack validationResultStack;
+    private final ValidationResultStack validationResultStack;
 
-    private MainLooperHandler mainLooperHandler;
+    private final MainLooperHandler mainLooperHandler;
 
-    private NetworkManager networkManager;
+    private final NetworkManager networkManager;
 
-    private PushProviders pushProviders;
+    private final PushProviders pushProviders;
 
-    private VarCache varCache;
+    private final VarCache varCache;
 
-    private Parser parser;
+    private final Parser parser;
 
-    private CryptHandler cryptHandler;
+    private final CryptHandler cryptHandler;
 
-    private StoreRegistry storeRegistry;
+    private final StoreRegistry storeRegistry;
 
-    private TemplatesManager templatesManager;
+    private final TemplatesManager templatesManager;
 
-    private ProfileValueHandler profileValueHandler;
+    private final ProfileValueHandler profileValueHandler;
 
     public CTVariables getCTVariables() {
         return ctVariables;
@@ -164,80 +164,36 @@ public class CoreState {
         return parser;
     }
 
-    public void setImpressionManager(final ImpressionManager impressionManager) {
-        this.impressionManager = impressionManager;
-    }
-
-    public void setParser(final Parser parser) {
-        this.parser = parser;
-    }
-
     public ActivityLifeCycleManager getActivityLifeCycleManager() {
         return activityLifeCycleManager;
-    }
-
-    public void setActivityLifeCycleManager(final ActivityLifeCycleManager activityLifeCycleManager) {
-        this.activityLifeCycleManager = activityLifeCycleManager;
     }
 
     public AnalyticsManager getAnalyticsManager() {
         return analyticsManager;
     }
 
-    public void setAnalyticsManager(final AnalyticsManager analyticsManager) {
-        this.analyticsManager = analyticsManager;
-    }
-
     public BaseEventQueueManager getBaseEventQueueManager() {
         return baseEventQueueManager;
-    }
-
-    public void setStoreRegistry(final StoreRegistry storeRegistry) {
-        this.storeRegistry = storeRegistry;
-    }
-
-    void setBaseEventQueueManager(final BaseEventQueueManager baseEventQueueManager) {
-        this.baseEventQueueManager = baseEventQueueManager;
     }
 
     public CTLockManager getCTLockManager() {
         return ctLockManager;
     }
 
-    public void setCTLockManager(final CTLockManager CTLockManager) {
-        ctLockManager = CTLockManager;
-    }
-
     public BaseCallbackManager getCallbackManager() {
         return callbackManager;
-    }
-
-    void setCallbackManager(final BaseCallbackManager callbackManager) {
-        this.callbackManager = callbackManager;
     }
 
     public CleverTapInstanceConfig getConfig() {
         return config;
     }
 
-    public void setConfig(final CleverTapInstanceConfig config) {
-        this.config = config;
-    }
-
     public ControllerManager getControllerManager() {
         return controllerManager;
     }
 
-    public void setControllerManager(final ControllerManager controllerManager) {
-        this.controllerManager = controllerManager;
-    }
-
     public CoreMetaData getCoreMetaData() {
         return coreMetaData;
-    }
-
-    void setCoreMetaData(final CoreMetaData coreMetaData) {
-        this.coreMetaData = coreMetaData;
     }
 
     /**
@@ -255,132 +211,64 @@ public class CoreState {
         return databaseManager;
     }
 
-    void setDatabaseManager(final BaseDatabaseManager databaseManager) {
-        this.databaseManager = databaseManager;
-    }
-
     public DeviceInfo getDeviceInfo() {
         return deviceInfo;
-    }
-
-    public void setDeviceInfo(final DeviceInfo deviceInfo) {
-        this.deviceInfo = deviceInfo;
     }
 
     public InAppController getInAppController() {
         return inAppController;
     }
 
-    public void setInAppController(final InAppController inAppController) {
-        this.inAppController = inAppController;
-    }
-
     public EvaluationManager getEvaluationManager() {
         return evaluationManager;
-    }
-
-    public void setEvaluationManager(final EvaluationManager evaluationManager) {
-        this.evaluationManager = evaluationManager;
     }
 
     public LocalDataStore getLocalDataStore() {
         return localDataStore;
     }
 
-    public void setLocalDataStore(final LocalDataStore localDataStore) {
-        this.localDataStore = localDataStore;
-    }
-
     public LoginController getLoginController() {
         return loginController;
-    }
-
-    public void setLoginController(final LoginController loginController) {
-        this.loginController = loginController;
     }
 
     public NetworkManager getNetworkManager() {
         return networkManager;
     }
 
-    void setNetworkManager(final NetworkManager networkManager) {
-        this.networkManager = networkManager;
-    }
-
     public PushProviders getPushProviders() {
         return pushProviders;
-    }
-
-    public void setPushProviders(final PushProviders pushProviders) {
-        this.pushProviders = pushProviders;
     }
 
     public SessionManager getSessionManager() {
         return sessionManager;
     }
 
-    public void setSessionManager(final SessionManager sessionManager) {
-        this.sessionManager = sessionManager;
-    }
-
     public ValidationResultStack getValidationResultStack() {
         return validationResultStack;
-    }
-
-    public void setValidationResultStack(final ValidationResultStack validationResultStack) {
-        this.validationResultStack = validationResultStack;
     }
 
     BaseLocationManager getLocationManager() {
         return baseLocationManager;
     }
 
-    void setLocationManager(final BaseLocationManager baseLocationManager) {
-        this.baseLocationManager = baseLocationManager;
-    }
-
     public EventMediator getEventMediator() {
         return eventMediator;
-    }
-
-    public void setEventMediator(final EventMediator eventMediator) {
-        this.eventMediator = eventMediator;
     }
 
     public MainLooperHandler getMainLooperHandler() {
         return mainLooperHandler;
     }
 
-    public void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
-        this.mainLooperHandler = mainLooperHandler;
-    }
-
     public VarCache getVarCache() {
         return varCache;
-    }
-
-    public void setVarCache(final VarCache varCache) {
-        this.varCache = varCache;
     }
 
     public CryptHandler getCryptHandler() {
         return cryptHandler;
     }
 
-    public void setCryptHandler(final CryptHandler cryptHandler) {
-        this.cryptHandler = cryptHandler;
-    }
-
     public TemplatesManager getTemplatesManager() {
         return templatesManager;
-    }
-
-    public void setTemplatesManager(final TemplatesManager templatesManager) {
-        this.templatesManager = templatesManager;
-    }
-
-    public void setProfileValueHandler(final ProfileValueHandler profileValueHandler) {
-        this.profileValueHandler = profileValueHandler;
     }
 
     public ProfileValueHandler getProfileValueHandler() {

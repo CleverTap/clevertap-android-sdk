@@ -407,18 +407,16 @@ class CleverTapAPITest : BaseTestCase() {
         // Arrange
         val messageIDs = arrayListOf("1", "2", "3")
         val inboxController = null
-        val controllerManager = mockk<ControllerManager>()
-        corestate.controllerManager = controllerManager
 
         // Act
         executeBasicTest {
-            every { controllerManager.ctInboxController } returns inboxController
+            every { corestate.controllerManager.ctInboxController } returns inboxController
             initializeCleverTapAPI()
             cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
 
             // Assert
-            verify { controllerManager.ctInboxController }
-            confirmVerified(controllerManager)
+            verify { corestate.controllerManager.ctInboxController }
+            confirmVerified(corestate.controllerManager)
         }
     }
 
@@ -427,17 +425,15 @@ class CleverTapAPITest : BaseTestCase() {
         // Arrange
         val messageIDs = arrayListOf("1", "2", "3")
         val inboxController = mockk<CTInboxController>(relaxed = true)
-        val controllerManager = mockk<ControllerManager>(relaxed = true)
-        corestate.controllerManager = controllerManager
 
         // Act
         executeBasicTest {
-            every { controllerManager.ctInboxController } returns inboxController
+            every { corestate.controllerManager.ctInboxController } returns inboxController
             initializeCleverTapAPI()
             cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
 
             // Assert
-            verify(exactly = 2) { controllerManager.ctInboxController }
+            verify(exactly = 2) { corestate.controllerManager.ctInboxController }
             verify { inboxController.deleteInboxMessagesForIDs(messageIDs) }
         }
     }
@@ -447,18 +443,16 @@ class CleverTapAPITest : BaseTestCase() {
         // Arrange
         val messageIDs = arrayListOf("1", "2", "3")
         val inboxController = null
-        val controllerManager = mockk<ControllerManager>(relaxed = true)
-        corestate.controllerManager = controllerManager
 
         // Act
         executeBasicTest {
-            every { controllerManager.ctInboxController } returns inboxController
+            every { corestate.controllerManager.ctInboxController } returns inboxController
             initializeCleverTapAPI()
             cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
 
             // Assert
-            verify { controllerManager.ctInboxController }
-            confirmVerified(controllerManager)
+            verify { corestate.controllerManager.ctInboxController }
+            confirmVerified(corestate.controllerManager)
         }
     }
 
@@ -467,17 +461,15 @@ class CleverTapAPITest : BaseTestCase() {
         // Arrange
         val messageIDs = arrayListOf("1", "2", "3")
         val inboxController = mockk<CTInboxController>(relaxed = true)
-        val controllerManager = mockk<ControllerManager>(relaxed = true)
-        corestate.controllerManager = controllerManager
 
         // Act
         executeBasicTest {
-            every { controllerManager.ctInboxController } returns inboxController
+            every { corestate.controllerManager.ctInboxController } returns inboxController
             initializeCleverTapAPI()
             cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
 
             // Assert
-            verify(exactly = 2) { controllerManager.ctInboxController }
+            verify(exactly = 2) { corestate.controllerManager.ctInboxController }
             verify { inboxController.markReadInboxMessagesForIDs(messageIDs) }
         }
     }
