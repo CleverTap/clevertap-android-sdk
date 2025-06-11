@@ -367,7 +367,7 @@ internal class NetworkManager constructor(
             return true
         } else {
             when (response.code) {
-                439 -> {
+                429 -> {
                     logger.info(
                         config.accountId, "Content fetch request was rate limited (429). Consider reducing request frequency."
                     )
