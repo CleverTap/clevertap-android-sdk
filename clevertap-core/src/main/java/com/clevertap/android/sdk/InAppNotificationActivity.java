@@ -22,6 +22,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.clevertap.android.sdk.inapp.CTInAppAction;
+import com.clevertap.android.sdk.inapp.CTInAppBaseFragment;
 import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
@@ -174,10 +175,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         if (savedInstanceState == null) {
             contentFragment = createContentFragment();
             if (contentFragment != null) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable("inApp", inAppNotification);
-                bundle.putParcelable("config", config);
-                contentFragment.setArguments(bundle);
+                contentFragment.setArguments(inAppNotification, config);
                 getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
                         .add(android.R.id.content, contentFragment, getFragmentTag())

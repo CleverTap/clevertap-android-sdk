@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
+import androidx.annotation.OpenForTesting
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
@@ -21,7 +22,8 @@ import org.json.JSONObject
  *
  * @constructor Creates an InAppQueue with the given configuration and store registry.
  */
-internal class InAppQueue(
+@OpenForTesting
+internal open class InAppQueue(
     private val config: CleverTapInstanceConfig,
     private val storeRegistry: StoreRegistry
 ) {
@@ -33,7 +35,7 @@ internal class InAppQueue(
      */
     @WorkerThread
     @Synchronized
-    fun enqueue(jsonObject: JSONObject) {
+    open fun enqueue(jsonObject: JSONObject) {
         val currentQueue = getQueue()
         currentQueue.put(jsonObject)
         saveQueue(currentQueue)
@@ -46,7 +48,7 @@ internal class InAppQueue(
      */
     @WorkerThread
     @Synchronized
-    fun enqueueAll(jsonArray: JSONArray) {
+    open fun enqueueAll(jsonArray: JSONArray) {
         val currentQueue = getQueue()
         for (i in 0 until jsonArray.length()) {
             try {
@@ -68,7 +70,7 @@ internal class InAppQueue(
      */
     @WorkerThread
     @Synchronized
-    fun insertInFront(jsonObject: JSONObject) {
+    open fun insertInFront(jsonObject: JSONObject) {
         val currentQueue = getQueue()
         currentQueue.prepend(jsonObject)
         saveQueue(currentQueue)
@@ -81,7 +83,7 @@ internal class InAppQueue(
      */
     @WorkerThread
     @Synchronized
-    fun dequeue(): JSONObject? {
+    open fun dequeue(): JSONObject? {
         val currentQueue = getQueue()
         if (currentQueue.length() == 0) {
             return null
@@ -98,7 +100,7 @@ internal class InAppQueue(
      */
     @WorkerThread
     @Synchronized
-    fun getQueueLength(): Int {
+    open fun getQueueLength(): Int {
         val currentQueue = getQueue()
         return currentQueue.length()
     }
