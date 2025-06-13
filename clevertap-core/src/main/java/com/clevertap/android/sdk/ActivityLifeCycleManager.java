@@ -117,7 +117,7 @@ class ActivityLifeCycleManager {
             }
         }
         baseEventQueueManager.pushInitialEventsAsync();
-        inAppController.checkPendingInAppNotifications(activity);
+        inAppController.showNotificationIfAvailable();
     }
 
     public void onActivityCreated(final Bundle notification, final Uri deepLink, String accountId) {

@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.task.MockCTExecutors
+import com.clevertap.android.sdk.utils.handlerMock
 import io.mockk.Runs
 import io.mockk.confirmVerified
 import io.mockk.every
@@ -48,11 +49,7 @@ class InAppNotificationCreatorTest {
         mockFileResourceProvider = mockk<FileResourceProvider>()
         mockTemplateManager = mockk<TemplatesManager>()
 
-        mockHandler = mockk<Handler>()
-        every { mockHandler.post(any()) } answers {
-            (args[0] as Runnable).run()
-            true
-        }
+        mockHandler = handlerMock()
 
         mockkObject(FileResourcesRepoImpl)
         every { FileResourcesRepoImpl.saveUrlExpiryToStore(any(), any()) } just Runs

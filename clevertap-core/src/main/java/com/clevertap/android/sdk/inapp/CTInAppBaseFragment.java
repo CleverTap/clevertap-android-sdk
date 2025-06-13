@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -7,9 +8,13 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentTransaction;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.utils.UriHelper;
@@ -44,6 +49,40 @@ public abstract class CTInAppBaseFragment extends Fragment {
     private WeakReference<InAppListener> listenerWeakReference;
 
     private DidClickForHardPermissionListener didClickForHardPermissionListener;
+
+    public static boolean showOnActivity(@NonNull CTInAppBaseFragment inAppFragment,
+                                         Activity activity,
+                                         @NonNull CTInAppNotification inAppNotification,
+                                         @NonNull CleverTapInstanceConfig config,
+                                         @NonNull String logTag) {
+        try {
+            //noinspection Constant Conditions
+            FragmentTransaction fragmentTransaction = ((FragmentActivity) activity)
+                    .getSupportFragmentManager()
+                    .beginTransaction();
+            inAppFragment.setArguments(inAppNotification, config);
+            fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
+            fragmentTransaction.add(android.R.id.content, inAppFragment, inAppNotification.getType());
+            Logger.v(logTag, "calling InAppFragment " + inAppNotification.getCampaignId());
+            fragmentTransaction.commitNow();
+            return true;
+        } catch (ClassCastException e) {
+            Logger.v(logTag,
+                    "Fragment not able to render, please ensure your Activity is an instance of AppCompatActivity"
+                            + e.getMessage());
+            return false;
+        } catch (Throwable t) {
+            Logger.v(logTag, "Fragment not able to render", t);
+            return false;
+        }
+    }
+
+    public void setArguments(CTInAppNotification inAppNotification, CleverTapInstanceConfig config) {
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(Constants.INAPP_KEY, inAppNotification);
+        bundle.putParcelable(Constants.KEY_CONFIG, config);
+        setArguments(bundle);
+    }
 
     @Override
     public void onAttach(@NonNull Context context) {

@@ -352,10 +352,12 @@ internal object CleverTapFactory {
         )
         coreState.analyticsManager = analyticsManager
 
+        val executors = CTExecutorFactory.executors(config)
+
         val inAppNotificationCreator = InAppNotificationCreator(
             storeRegistry,
             templatesManager,
-            CTExecutorFactory.executors(config),
+            executors,
             mainLooperHandler,
             FileResourceProvider.getInstance(context, config.logger)
         )
@@ -365,17 +367,19 @@ internal object CleverTapFactory {
             context,
             config,
             mainLooperHandler,
+            executors,
             controllerManager,
             callbackManager,
             analyticsManager,
             coreMetaData,
+            ManifestInfo.getInstance(context),
             deviceInfo,
             InAppQueue(config, storeRegistry),
             evaluationManager,
             templatesManager,
-            storeRegistry,
             inAppActionHandler,
-            inAppNotificationCreator
+            inAppNotificationCreator,
+            SYSTEM
         )
 
         coreState.inAppController = inAppController
