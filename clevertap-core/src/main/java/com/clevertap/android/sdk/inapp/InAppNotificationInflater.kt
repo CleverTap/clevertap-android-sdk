@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.video.VideoLibChecker
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 
-internal class InAppNotificationCreator(
+internal class InAppNotificationInflater(
     private val storeRegistry: StoreRegistry,
     private val templatesManager: TemplatesManager,
     private val executors: CTExecutors,
@@ -28,8 +28,10 @@ internal class InAppNotificationCreator(
         fun onNotificationReady(notification: CTInAppNotification)
     }
 
-    fun createNotification(
-        inAppJson: JSONObject, taskLogTag: String, listener: InAppNotificationReadyListener
+    fun inflate(
+        inAppJson: JSONObject,
+        taskLogTag: String,
+        listener: InAppNotificationReadyListener
     ) {
         val listenerWeakReference = WeakReference<InAppNotificationReadyListener>(listener)
         val task: Task<Unit> = executors.postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS)

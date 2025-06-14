@@ -13,7 +13,7 @@ import com.clevertap.android.sdk.InAppNotificationActivity
 import com.clevertap.android.sdk.InAppNotificationButtonListener
 import com.clevertap.android.sdk.InAppNotificationListener
 import com.clevertap.android.sdk.ManifestInfo
-import com.clevertap.android.sdk.inapp.InAppNotificationCreator.InAppNotificationReadyListener
+import com.clevertap.android.sdk.inapp.InAppNotificationInflater.InAppNotificationReadyListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.function
@@ -55,7 +55,7 @@ class InAppControllerTest {
     private lateinit var mockTemplatesManager: TemplatesManager
     private lateinit var mockConfig: CleverTapInstanceConfig
     private lateinit var mockInAppActionHandler: InAppActionHandler
-    private lateinit var mockInAppCreator: InAppNotificationCreator
+    private lateinit var mockInAppInflater: InAppNotificationInflater
     private lateinit var fakeInAppQueue: FakeInAppQueue
     private val fakeClock = FakeClock(timeMillis = 1735686000000) // 01.01.2025
 
@@ -110,8 +110,8 @@ class InAppControllerTest {
         mockEvaluationManager = mockk()
         mockTemplatesManager = mockk(relaxed = true)
 
-        mockInAppCreator = mockk()
-        every { mockInAppCreator.createNotification(any(), any(), any()) } answers {
+        mockInAppInflater = mockk()
+        every { mockInAppInflater.inflate(any(), any(), any()) } answers {
             (args[2] as InAppNotificationReadyListener).onNotificationReady(
                 CTInAppNotification().initWithJSON(args[0] as JSONObject, true)
             )
@@ -701,7 +701,7 @@ class InAppControllerTest {
             mockEvaluationManager,
             mockTemplatesManager,
             mockInAppActionHandler,
-            mockInAppCreator,
+            mockInAppInflater,
             fakeClock
         )
     }
