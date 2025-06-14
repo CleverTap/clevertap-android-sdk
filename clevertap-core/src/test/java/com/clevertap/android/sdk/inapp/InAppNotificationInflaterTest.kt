@@ -27,7 +27,7 @@ import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class InAppNotificationCreatorTest {
+class InAppNotificationInflaterTest {
 
     companion object {
         private const val FILE_URL_1 = "https://example.com/file1.jpeg"
@@ -61,23 +61,23 @@ class InAppNotificationCreatorTest {
     }
 
     @Test
-    fun `createNotification should set error when invalid json is provided`() {
-        val creator = getCreator()
-        val listener = object : InAppNotificationCreator.InAppNotificationReadyListener {
+    fun `inflate should set error when invalid json is provided`() {
+        val inflater = createInflater()
+        val listener = object : InAppNotificationInflater.InAppNotificationReadyListener {
             override fun onNotificationReady(notification: CTInAppNotification) {
                 assertNotNull(notification.error)
             }
         }
         val listenerSpy = spyk(listener)
-        creator.createNotification(JSONObject(), "Test", listenerSpy)
+        inflater.inflate(JSONObject(), "Test", listenerSpy)
         verify(exactly = 1) { listenerSpy.onNotificationReady(any()) }
     }
 
     @Test
-    fun `createNotification should initiate fetch file for all custom template file args`() {
+    fun `inflate should initiate fetch file for all custom template file args`() {
         val templateJson = setupCustomTemplateWithFileArgs()
-        val creator = getCreator()
-        creator.createNotification(templateJson, "Test") { inApp ->
+        val inflater = createInflater()
+        inflater.inflate(templateJson, "Test") { inApp ->
             assertNull(inApp.error)
         }
 
@@ -86,7 +86,7 @@ class InAppNotificationCreatorTest {
     }
 
     @Test
-    fun `createNotification should not initiate fetch file for custom templates without file args`() {
+    fun `inflate should not initiate fetch file for custom templates without file args`() {
         val mockTemplate = mockk<CustomTemplate>()
         every { mockTemplate.args } returns emptyList()
         every { mockTemplateManager.getTemplate(any()) } returns mockTemplate
@@ -103,8 +103,8 @@ class InAppNotificationCreatorTest {
         """.trimIndent()
         )
 
-        val creator = getCreator()
-        creator.createNotification(templateJson, "Test") { inApp ->
+        val inflater = createInflater()
+        inflater.inflate(templateJson, "Test") { inApp ->
             assertNull(inApp.error)
         }
 
@@ -112,16 +112,16 @@ class InAppNotificationCreatorTest {
     }
 
     @Test
-    fun `createNotification should set error when custom template file is not downloaded`() {
+    fun `inflate should set error when custom template file is not downloaded`() {
         val templateJson = setupCustomTemplateWithFileArgs()
-        val creator = getCreator(shouldFetchFilesSuccessfully = false)
-        creator.createNotification(templateJson, "Test") { inApp ->
+        val inflater = createInflater(shouldFetchFilesSuccessfully = false)
+        inflater.inflate(templateJson, "Test") { inApp ->
             assertNotNull(inApp.error)
         }
     }
 
     @Test
-    fun `createNotification should initiate media fetch for in-apps`() {
+    fun `inflate should initiate media fetch for in-apps`() {
         val inAppJson = JSONObject(
             """
             {
@@ -138,8 +138,8 @@ class InAppNotificationCreatorTest {
         """.trimIndent()
         )
 
-        val creator = getCreator()
-        creator.createNotification(inAppJson, "Test") { inApp ->
+        val inflater = createInflater()
+        inflater.inflate(inAppJson, "Test") { inApp ->
             assertNull(inApp.error)
         }
 
@@ -148,7 +148,7 @@ class InAppNotificationCreatorTest {
     }
 
     @Test
-    fun `createNotification should set error when in-apps contain video media and video is not supported`() {
+    fun `inflate should set error when in-apps contain video media and video is not supported`() {
         val inAppJson = JSONObject(
             """
             {
@@ -161,8 +161,8 @@ class InAppNotificationCreatorTest {
         """.trimIndent()
         )
 
-        val creator = getCreator(isVideoSupported = false)
-        creator.createNotification(inAppJson, "Test") { inApp ->
+        val inflater = createInflater(isVideoSupported = false)
+        inflater.inflate(inAppJson, "Test") { inApp ->
             assertNotNull(inApp.error)
         }
 
@@ -170,7 +170,7 @@ class InAppNotificationCreatorTest {
     }
 
     @Test
-    fun `createNotification should set error when image fetch for in-apps fails`() {
+    fun `inflate should set error when image fetch for in-apps fails`() {
         val inAppJson = JSONObject(
             """
             {
@@ -183,8 +183,8 @@ class InAppNotificationCreatorTest {
         """.trimIndent()
         )
 
-        val creator = getCreator(shouldFetchFilesSuccessfully = false)
-        creator.createNotification(inAppJson, "Test") { inApp ->
+        val inflater = createInflater(shouldFetchFilesSuccessfully = false)
+        inflater.inflate(inAppJson, "Test") { inApp ->
             assertNotNull(inApp.error)
         }
 
@@ -192,7 +192,7 @@ class InAppNotificationCreatorTest {
     }
 
     @Test
-    fun `createNotification should set error when gif fetch for in-apps fails`() {
+    fun `inflate should set error when gif fetch for in-apps fails`() {
         val inAppJson = JSONObject(
             """
             {
@@ -205,8 +205,8 @@ class InAppNotificationCreatorTest {
         """.trimIndent()
         )
 
-        val creator = getCreator(shouldFetchFilesSuccessfully = false)
-        creator.createNotification(inAppJson, "Test") { inApp ->
+        val inflater = createInflater(shouldFetchFilesSuccessfully = false)
+        inflater.inflate(inAppJson, "Test") { inApp ->
             assertNotNull(inApp.error)
         }
 
@@ -236,10 +236,10 @@ class InAppNotificationCreatorTest {
         )
     }
 
-    private fun getCreator(
+    private fun createInflater(
         shouldFetchFilesSuccessfully: Boolean = true,
         isVideoSupported: Boolean = true
-    ): InAppNotificationCreator {
+    ): InAppNotificationInflater {
         val byteArray: ByteArray?
         val bitmap: Bitmap?
         if (shouldFetchFilesSuccessfully) {
@@ -253,7 +253,7 @@ class InAppNotificationCreatorTest {
         every { mockFileResourceProvider.fetchInAppGifV1(any()) } returns byteArray
         every { mockFileResourceProvider.fetchInAppImageV1(any()) } returns bitmap
 
-        return InAppNotificationCreator(
+        return InAppNotificationInflater(
             mockStoreRegistry,
             mockTemplateManager,
             MockCTExecutors(),

@@ -16,7 +16,7 @@ import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
-import com.clevertap.android.sdk.inapp.InAppNotificationCreator
+import com.clevertap.android.sdk.inapp.InAppNotificationInflater
 import com.clevertap.android.sdk.inapp.InAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
@@ -354,7 +354,7 @@ internal object CleverTapFactory {
 
         val executors = CTExecutorFactory.executors(config)
 
-        val inAppNotificationCreator = InAppNotificationCreator(
+        val inAppNotificationInflater = InAppNotificationInflater(
             storeRegistry,
             templatesManager,
             executors,
@@ -378,7 +378,7 @@ internal object CleverTapFactory {
             evaluationManager,
             templatesManager,
             inAppActionHandler,
-            inAppNotificationCreator,
+            inAppNotificationInflater,
             SYSTEM
         )
 

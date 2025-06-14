@@ -120,7 +120,7 @@ public class InAppController implements InAppListener {
 
     private final InAppActionHandler inAppActionHandler;
 
-    private final InAppNotificationCreator inAppNotificationCreator;
+    private final InAppNotificationInflater inAppNotificationInflater;
 
     private final Clock clock;
 
@@ -143,7 +143,7 @@ public class InAppController implements InAppListener {
             final EvaluationManager evaluationManager,
             TemplatesManager templatesManager,
             final InAppActionHandler inAppActionHandler,
-            final InAppNotificationCreator inAppNotificationCreator,
+            final InAppNotificationInflater inAppNotificationInflater,
             final Clock clock) {
         this.context = context;
         this.config = config;
@@ -171,7 +171,7 @@ public class InAppController implements InAppListener {
             return null;
         };
         this.inAppActionHandler = inAppActionHandler;
-        this.inAppNotificationCreator = inAppNotificationCreator;
+        this.inAppNotificationInflater = inAppNotificationInflater;
         this.inAppExcludedActivityNames = getExcludedActivitiesSet(manifestInfo);
         this.clock = clock;
     }
@@ -520,7 +520,7 @@ public class InAppController implements InAppListener {
     }
     private void prepareNotificationForDisplay(final JSONObject jsonObject) {
         logger.debug(defaultLogTag, "Preparing In-App for display: " + jsonObject);
-        inAppNotificationCreator.createNotification(jsonObject,
+        inAppNotificationInflater.inflate(jsonObject,
                 "InappController#prepareNotificationForDisplay",
                 this::notificationReady);
     }
