@@ -634,4 +634,70 @@ object InAppFixtures {
         "wzrk_ttl": 1749731439
     }
     """.trimIndent()
+
+    val TYPE_HALF_INTERSTITIAL_WITH_BUTTON_ACTION_RFP = """
+    {
+        "type": "half-interstitial",
+        "bg": "#ffffff",
+        "tablet": false,
+        "close": true,
+        "message": {
+            "text": "Message",
+            "color": "#434761",
+            "replacements": "Message",
+            "og": ""
+        },
+        "title": {
+            "text": "Title",
+            "color": "#434761",
+            "replacements": "Title",
+            "og": ""
+        },
+        "buttons": [{
+            "text": "Button",
+            "color": "#000000",
+            "bg": "#1EB858",
+            "border": "#1EB858",
+            "radius": "4",
+            "actions": {
+                "close": true,
+                "type": "rfp",
+                "fbSettings": true,
+                "android": "",
+                "ios": "",
+                "kv": {}
+            }
+        }],
+        "media": {},
+        "isMediaSourceRecommended": false,
+        "recommendedText": {
+            "text": "",
+            "replacements": "",
+            "og": ""
+        },
+        "mediaLandscape": {},
+        "isMediaSourceRecommendedLandscape": false,
+        "recommendedTextLandscape": {
+            "text": "",
+            "replacements": "",
+            "og": ""
+        },
+        "hasPortrait": true,
+        "hasLandscape": false,
+        "rounded-borders": false,
+        "rfp": false,
+        "is_native": true,
+        "ti": 1745433648,
+        "wzrk_id": "1745433648_20250611",
+        "wzrk_pivot": "wzrk_default",
+        "priority": 10,
+        "whenTriggers": [{
+            "eventName": "Home"
+        }],
+        "frequencyLimits": [],
+        "excludeGlobalFCaps": -1,
+        "occurrenceLimits": [],
+        "wzrk_ttl": 1749838274
+    }
+    """.trimIndent()
 }

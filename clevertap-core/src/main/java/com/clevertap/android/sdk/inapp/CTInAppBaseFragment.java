@@ -56,7 +56,6 @@ public abstract class CTInAppBaseFragment extends Fragment {
                                          @NonNull CleverTapInstanceConfig config,
                                          @NonNull String logTag) {
         try {
-            //noinspection Constant Conditions
             FragmentTransaction fragmentTransaction = ((FragmentActivity) activity)
                     .getSupportFragmentManager()
                     .beginTransaction();
