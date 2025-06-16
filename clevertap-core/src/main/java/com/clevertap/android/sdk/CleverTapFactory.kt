@@ -96,8 +96,9 @@ internal object CleverTapFactory {
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
+        val executors = CTExecutorFactory.executors(config)
 
-        val fileResourceProviderInit = CTExecutorFactory.executors(config).ioTask<Unit>()
+        val fileResourceProviderInit = executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
             FileResourceProvider.getInstance(context, config.logger)
         }
@@ -124,7 +125,7 @@ internal object CleverTapFactory {
             repository = repository,
             cryptFactory = cryptFactory
         )
-        val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Unit>()
+        val task = executors.postAsyncSafelyTask<Unit>()
         task.execute("migratingEncryption") {
 
             val dataMigrationRepository = DataMigrationRepository(
@@ -192,7 +193,7 @@ internal object CleverTapFactory {
             templatesManager = templatesManager
         )
 
-        val taskInitStores = CTExecutorFactory.executors(config).ioTask<Unit>()
+        val taskInitStores = executors.ioTask<Unit>()
         taskInitStores.execute("initStores") {
             if (deviceInfo.getDeviceID() != null) {
                 if (storeRegistry.inAppStore == null) {
@@ -219,7 +220,7 @@ internal object CleverTapFactory {
         }
 
         //Get device id should be async to avoid strict mode policy.
-        val taskInitFCManager = CTExecutorFactory.executors(config).ioTask<Unit>()
+        val taskInitFCManager = executors.ioTask<Unit>()
         taskInitFCManager.execute("initFCManager") {
             val deviceId = deviceInfo.deviceID
             if (deviceId != null && controllerManager.inAppFCManager == null) {
@@ -255,7 +256,7 @@ internal object CleverTapFactory {
 
         val parser = Parser(ctVariables)
 
-        val taskVariablesInit = CTExecutorFactory.executors(config).ioTask<Unit>()
+        val taskVariablesInit = executors.ioTask<Unit>()
         taskVariablesInit.execute("initCTVariables") {
             ctVariables.init()
         }
@@ -415,7 +416,7 @@ internal object CleverTapFactory {
         batchListener.addListener(FetchInAppListener(callbackManager))
         callbackManager.batchListener = batchListener
 
-        val taskInitFeatureFlags = CTExecutorFactory.executors(config).ioTask<Unit>()
+        val taskInitFeatureFlags = executors.ioTask<Unit>()
         taskInitFeatureFlags.execute("initFeatureFlags") {
             initFeatureFlags(
                 context,
@@ -457,35 +458,36 @@ internal object CleverTapFactory {
         )
 
         return CoreState(
-            locationManager,
-            config,
-            coreMetaData,
-            databaseManager,
-            deviceInfo,
-            eventMediator,
-            localDataStore,
-            activityLifeCycleManager,
-            analyticsManager,
-            baseEventQueueManager,
-            ctLockManager,
-            callbackManager,
-            controllerManager,
-            inAppController,
-            evaluationManager,
-            impressionManager,
-            loginController,
-            sessionManager,
-            validationResultStack,
-            mainLooperHandler,
-            networkManager,
-            pushProviders,
-            varCache,
-            parser,
-            cryptHandler,
-            storeRegistry,
-            templatesManager,
-            profileValueHandler,
-            ctVariables
+            locationManager = locationManager,
+            config = config,
+            coreMetaData = coreMetaData,
+            databaseManager = databaseManager,
+            deviceInfo = deviceInfo,
+            eventMediator = eventMediator,
+            localDataStore = localDataStore,
+            activityLifeCycleManager = activityLifeCycleManager,
+            analyticsManager = analyticsManager,
+            baseEventQueueManager = baseEventQueueManager,
+            cTLockManager = ctLockManager,
+            callbackManager = callbackManager,
+            controllerManager = controllerManager,
+            inAppController = inAppController,
+            evaluationManager = evaluationManager,
+            impressionManager = impressionManager,
+            loginController = loginController,
+            sessionManager = sessionManager,
+            validationResultStack = validationResultStack,
+            mainLooperHandler = mainLooperHandler,
+            networkManager = networkManager,
+            pushProviders = pushProviders,
+            varCache = varCache,
+            parser = parser,
+            cryptHandler = cryptHandler,
+            storeRegistry = storeRegistry,
+            templatesManager = templatesManager,
+            profileValueHandler = profileValueHandler,
+            cTVariables = ctVariables,
+            executors = executors
         )
     }
 

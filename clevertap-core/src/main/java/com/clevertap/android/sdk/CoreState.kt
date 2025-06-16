@@ -15,12 +15,14 @@ import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.product_config.CTProductConfigController
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory
 import com.clevertap.android.sdk.pushnotification.PushProviders
+import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
 
+@Suppress("DEPRECATION")
 internal open class CoreState(
     val locationManager: BaseLocationManager,
     val config: CleverTapInstanceConfig,
@@ -50,7 +52,8 @@ internal open class CoreState(
     val storeRegistry: StoreRegistry,
     val templatesManager: TemplatesManager,
     val profileValueHandler: ProfileValueHandler,
-    var cTVariables: CTVariables
+    val cTVariables: CTVariables,
+    val executors: CTExecutors
 ) {
     /**
      *
@@ -61,7 +64,7 @@ internal open class CoreState(
     @Deprecated("")
     fun getCtProductConfigController(context: Context?): CTProductConfigController? {
         initProductConfig(context)
-        return this.controllerManager!!.getCTProductConfigController()
+        return this.controllerManager.ctProductConfigController
     }
 
     /**
@@ -72,25 +75,25 @@ internal open class CoreState(
      */
     @Deprecated("")
     private fun initProductConfig(context: Context?) {
-        if (this.config.isAnalyticsOnly()) {
+        if (this.config.isAnalyticsOnly) {
             this.config.getLogger()
                 .debug(
-                    this.config.getAccountId(),
+                    this.config.accountId,
                     "Product Config is not enabled for this instance"
                 )
             return
         }
-        if (this.controllerManager!!.getCTProductConfigController() == null) {
+        if (this.controllerManager.ctProductConfigController == null) {
             this.config.getLogger().verbose(
-                config.getAccountId() + ":async_deviceID",
-                "Initializing Product Config with device Id = " + this.deviceInfo!!.getDeviceID()
+                config.accountId + ":async_deviceID",
+                "Initializing Product Config with device Id = " + this.deviceInfo.getDeviceID()
             )
             val ctProductConfigController = CTProductConfigFactory
                 .getInstance(
                     context, this.deviceInfo,
                     this.config, analyticsManager, coreMetaData, callbackManager
                 )
-            this.controllerManager.setCTProductConfigController(ctProductConfigController)
+            this.controllerManager.ctProductConfigController = ctProductConfigController
         }
     }
 }
