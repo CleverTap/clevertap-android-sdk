@@ -2,4 +2,5 @@
 <resources>
     <string name="ct_fcm_fallback_notification_channel_label">Miscellaneous</string>
     <string name="no_messages_to_show">No Message(s) to show</string>
+    <string name="ct_notification_big_picture_alt_text">Notification Big Picture</string>
 </resources>
