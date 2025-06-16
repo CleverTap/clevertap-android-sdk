@@ -4,10 +4,14 @@ import android.content.Context
 import android.content.Intent
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.PushPermissionHandler
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertFalse
@@ -16,13 +20,15 @@ import kotlin.test.assertTrue
 class InAppActionHandlerTest : BaseTestCase() {
 
     private lateinit var inAppActionHandler: InAppActionHandler
+    private lateinit var mockPushPermissionHandler: PushPermissionHandler
 
     @Before
     fun init() {
+        mockPushPermissionHandler = mockk(relaxed = true)
         inAppActionHandler = InAppActionHandler(
             application,
             getMockCtConfig(),
-            pushPermissionHandler = mockk(relaxed = true)
+            mockPushPermissionHandler
         )
     }
 
@@ -109,6 +115,15 @@ class InAppActionHandlerTest : BaseTestCase() {
         inAppActionHandler.launchPlayStoreReviewFlow(onCompleteMock, onErrorMock)
         verify {
             onErrorMock.invoke(any())
+        }
+    }
+
+    @Test
+    fun `launchPushPermissionPrompt should trigger pushPermissionHandler`() {
+        mockkStatic(CoreMetaData::class) {
+            every { CoreMetaData.getCurrentActivity() } returns mockk(relaxed = true)
+            inAppActionHandler.launchPushPermissionPrompt(false)
+            verify { mockPushPermissionHandler.requestPermission(any(), false, any()) }
         }
     }
 
