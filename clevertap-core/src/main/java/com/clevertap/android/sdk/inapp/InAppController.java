@@ -699,6 +699,8 @@ public class InAppController implements InAppListener {
                 } catch (Throwable t) {
                     Logger.v("Please verify the integration of your app." +
                             " It is not setup to support in-app notifications yet.", t);
+                    currentlyDisplayingInApp = null;
+                    return;
                 }
                 break;
             case CTInAppTypeFooterHTML:
