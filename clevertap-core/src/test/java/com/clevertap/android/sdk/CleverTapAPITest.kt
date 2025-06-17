@@ -42,8 +42,14 @@ class CleverTapAPITest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
+        CleverTapAPI.setInstances(null) // clear existing CleverTapAPI instances
         corestate = MockCoreStateKotlin(cleverTapInstanceConfig)
         testClock = TestClock()
+    }
+
+    @After
+    fun tearDown() {
+        CleverTapAPI.setInstances(null) // clear existing CleverTapAPI instances
     }
 
     private fun verifyCommonConstructorBehavior() {
@@ -483,10 +489,5 @@ class CleverTapAPITest : BaseTestCase() {
         // Assert
         assertEquals(5, appLaunchCountActual)
         verify { corestate.localDataStore.readUserEventLogCount(Constants.APP_LAUNCHED_EVENT) }
-    }
-
-    @After
-    fun tearDown() {
-        CleverTapAPI.setInstances(null) // clear existing CleverTapAPI instances
     }
 }
