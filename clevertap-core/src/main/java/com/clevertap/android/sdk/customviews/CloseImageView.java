@@ -17,24 +17,25 @@ import com.clevertap.android.sdk.Logger;
  */
 public final class CloseImageView extends AppCompatImageView {
 
+    public static final int VIEW_ID = 199272;
     private final int canvasSize = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH);
 
     @SuppressLint("ResourceType")
     public CloseImageView(Context context) {
         super(context);
-        setId(199272);
+        setId(VIEW_ID);
     }
 
     @SuppressLint("ResourceType")
     public CloseImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setId(199272);
+        setId(VIEW_ID);
     }
 
     @SuppressLint("ResourceType")
     public CloseImageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        setId(199272);
+        setId(VIEW_ID);
     }
 
     @SuppressLint("DrawAllocation")
