@@ -29,8 +29,8 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
         when (commandPosition) {
             "0-0" -> {
-                cleverTapAPI?.pushEvent("testEventPushAmp")
-                cleverTapAPI?.pushEvent("BlockBRTesting")
+                cleverTapAPI?.pushEvent("ewe")
+//                cleverTapAPI?.pushEvent("BlockBRTesting")
             }
 
             "0-1" -> {
@@ -755,6 +755,11 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "15-0" -> {
                 cleverTapAPI?.locale = "en_IN"
             }
+
+            "16-0" -> {
+                cleverTapAPI?.syncRegisteredInAppTemplates()
+            }
+
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }

@@ -26,6 +26,7 @@ import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.PushType
 import com.clevertap.demo.ui.main.NotificationUtils
+import com.clevertap.demo.ui.customtemplates.createCustomTemplates
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
@@ -67,6 +68,12 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     private fun cleverTapPreAppCreated() {
+        // Register custom templates
+        CleverTapAPI.registerCustomInAppTemplates {
+            // Create templates with direct presenters (no ViewModel dependency)
+            createCustomTemplates()
+        }
+
         CleverTapAPI.setDebugLevel(VERBOSE)
         //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
         //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
