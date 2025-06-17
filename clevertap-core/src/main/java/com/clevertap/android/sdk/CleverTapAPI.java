@@ -69,6 +69,7 @@ import com.clevertap.android.sdk.pushnotification.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
+import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
@@ -163,6 +164,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private final Context context;
 
     private CoreState coreState;
+
+    private static Clock clevertapClock = Clock.SYSTEM;
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
 
@@ -1005,7 +1008,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         if (CoreMetaData.getInitialAppEnteredForegroundTime() <= 0) {
-            int initialAppEnteredForegroundTime = Utils.getNow();
+            int initialAppEnteredForegroundTime = clevertapClock.currentTimeSecondsInt();
             CoreMetaData.setInitialAppEnteredForegroundTime(initialAppEnteredForegroundTime);
         }
 
@@ -1214,17 +1217,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             final CleverTapInstanceConfig config,
             String cleverTapID
     ) {
-        this(context, config, CleverTapFactory.getCoreState(context, config, cleverTapID));
+        this(context, config, CleverTapFactory.getCoreState(context, config, cleverTapID), Clock.SYSTEM);
     }
 
     // Internal constructor for testing
     CleverTapAPI(
             final Context context,
             final CleverTapInstanceConfig config,
-            CoreState coreState
+            final CoreState coreState,
+            final Clock clock
     ) {
         this.context = context;
         this.coreState = coreState;
+        CleverTapAPI.clevertapClock = clock;
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "CoreState is set");
         asyncStartup();
         Logger.i("CleverTap SDK initialized with accountId: " + config.getAccountId() + " accountToken: " + config
@@ -1235,13 +1240,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         Task<Void> task = coreState.getExecutors().postAsyncSafelyTask();
         task.execute("CleverTapAPI#initializeDeviceInfo", () -> {
             if (getConfig().isDefaultInstance()) {
-                ManifestValidator
-                        .validate(context, coreState.getDeviceInfo(), coreState.getPushProviders());
+                ManifestValidator.validate(context, coreState.getDeviceInfo(), coreState.getPushProviders());
             }
             return null;
         });
 
-        int now = Utils.getNow();
+        int now = clevertapClock.currentTimeSecondsInt();
         if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > 5) {
             coreState.getConfig().setCreatedPostAppLaunch();
         }
@@ -2114,7 +2118,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return -1;
         }
 
-        int now = Utils.getNow();
+        int now = clevertapClock.currentTimeSecondsInt();
         return now - currentSession;
     }
 

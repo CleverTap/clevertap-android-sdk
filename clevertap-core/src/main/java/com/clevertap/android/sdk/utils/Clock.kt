@@ -39,12 +39,20 @@ interface Clock {
   fun newDate(): Date
 
   companion object {
+    @JvmField
     val SYSTEM = object : Clock {
       override fun currentTimeMillis(): Long {
         return System.currentTimeMillis()
       }
       override fun newDate(): Date {
         return Date()
+      }
+      override fun currentTimeSeconds(): Long {
+        return TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis())
+      }
+
+      override fun currentTimeSecondsInt(): Int {
+        return (currentTimeMillis() / 1000).toInt()
       }
     }
   }
