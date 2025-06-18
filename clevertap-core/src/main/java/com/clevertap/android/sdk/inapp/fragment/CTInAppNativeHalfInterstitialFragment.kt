@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.os.Handler
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -74,9 +73,7 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
             Configuration.ORIENTATION_LANDSCAPE -> relativeLayout.getViewTreeObserver()
                 .addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
                     override fun onGlobalLayout() {
-                        val relativeLayout1 =
-                            fl.findViewById<RelativeLayout>(R.id.half_interstitial_relative_layout)
-                        val layoutParams = relativeLayout1.layoutParams as FrameLayout.LayoutParams
+                        val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
                         if (!inAppNotification.isTablet || !isTablet()) {
                             if (isTablet()) {
                                 layoutParams.setMargins(
@@ -86,14 +83,12 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
                                     getScaledPixels(100)
                                 )
                                 layoutParams.height =
-                                    relativeLayout1.measuredHeight - getScaledPixels(
-                                        130
-                                    )
+                                    relativeLayout.measuredHeight - getScaledPixels(130)
                                 layoutParams.width = (layoutParams.height * 1.3f).toInt()
                                 layoutParams.gravity = Gravity.CENTER
-                                relativeLayout1.setLayoutParams(layoutParams)
+                                relativeLayout.setLayoutParams(layoutParams)
 
-                                Handler().post(object : Runnable {
+                                relativeLayout.post(object : Runnable {
                                     override fun run() {
                                         val margin = closeImageView.measuredWidth / 2
                                         closeImageView.x = (relativeLayout.right - margin).toFloat()
@@ -101,10 +96,10 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
                                     }
                                 })
                             } else {
-                                layoutParams.width = (relativeLayout1.measuredHeight * 1.3f).toInt()
+                                layoutParams.width = (relativeLayout.measuredHeight * 1.3f).toInt()
                                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL
-                                relativeLayout1.setLayoutParams(layoutParams)
-                                Handler().post(object : Runnable {
+                                relativeLayout.setLayoutParams(layoutParams)
+                                relativeLayout.post(object : Runnable {
                                     override fun run() {
                                         val margin = closeImageView.measuredWidth / 2
                                         closeImageView.x = (relativeLayout.right - margin).toFloat()
@@ -113,10 +108,10 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
                                 })
                             }
                         } else {
-                            layoutParams.width = (relativeLayout1.measuredHeight * 1.3f).toInt()
+                            layoutParams.width = (relativeLayout.measuredHeight * 1.3f).toInt()
                             layoutParams.gravity = Gravity.CENTER
-                            relativeLayout1.setLayoutParams(layoutParams)
-                            Handler().post(object : Runnable {
+                            relativeLayout.setLayoutParams(layoutParams)
+                            relativeLayout.post(object : Runnable {
                                 override fun run() {
                                     val margin = closeImageView.measuredWidth / 2
                                     closeImageView.x = (relativeLayout.right - margin).toFloat()

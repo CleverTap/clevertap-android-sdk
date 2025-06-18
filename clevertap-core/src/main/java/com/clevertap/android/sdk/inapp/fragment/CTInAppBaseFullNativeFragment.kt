@@ -31,14 +31,14 @@ internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment(
             var borderDrawable: ShapeDrawable? = null
             var shapeDrawable: ShapeDrawable? = null
 
-            if (!inAppNotificationButton.borderRadius.isEmpty()) {
-                val value: Float =
-                    inAppNotificationButton.borderRadius.toFloat() * (480.0f / getDPI()) * 2
+            if (inAppNotificationButton.borderRadius.isNotEmpty()) {
+                val buttonRadius = inAppNotificationButton.borderRadius.toFloatOrNull() ?: 0f
+                val radiusDp: Float = buttonRadius * (480.0f / getDPI()) * 2
                 shapeDrawable = ShapeDrawable(
                     RoundRectShape(
                         floatArrayOf(
-                            value, value, value, value,
-                            value, value, value, value
+                            radiusDp, radiusDp, radiusDp, radiusDp,
+                            radiusDp, radiusDp, radiusDp, radiusDp
                         ), null,
                         floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
                     )
@@ -49,12 +49,12 @@ internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment(
                 borderDrawable = ShapeDrawable(
                     RoundRectShape(
                         floatArrayOf(
-                            value, value, value, value,
-                            value, value, value, value
+                            radiusDp, radiusDp, radiusDp, radiusDp,
+                            radiusDp, radiusDp, radiusDp, radiusDp
                         ), null,
                         floatArrayOf(
-                            value, value, value, value,
-                            value, value, value, value
+                            radiusDp, radiusDp, radiusDp, radiusDp,
+                            radiusDp, radiusDp, radiusDp, radiusDp
                         )
                     )
                 )
