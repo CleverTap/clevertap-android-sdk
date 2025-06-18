@@ -1,5 +1,6 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
+import android.R
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
@@ -14,12 +15,16 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DidClickForHardPermissionListener
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.customviews.CloseImageView
+import com.clevertap.android.sdk.inapp.CTInAppAction
+import com.clevertap.android.sdk.inapp.CTInAppNotification
+import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
+import com.clevertap.android.sdk.inapp.InAppActionType
+import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.utils.UriHelper
 
 import java.lang.ref.WeakReference
 import java.net.URLDecoder
-import java.util.concurrent.atomic.AtomicBoolean
 
 internal abstract class CTInAppBaseFragment : Fragment() {
 
@@ -36,10 +41,10 @@ internal abstract class CTInAppBaseFragment : Fragment() {
                     (activity as FragmentActivity).supportFragmentManager.beginTransaction()
                 inAppFragment.setArguments(inAppNotification, config)
                 fragmentTransaction.setCustomAnimations(
-                    android.R.animator.fade_in, android.R.animator.fade_out
+                    R.animator.fade_in, R.animator.fade_out
                 )
                 fragmentTransaction.add(
-                    android.R.id.content, inAppFragment, inAppNotification.type
+                    R.id.content, inAppFragment, inAppNotification.type
                 )
                 Logger.v(logTag, "calling InAppFragment " + inAppNotification.campaignId)
                 fragmentTransaction.commitNow()
@@ -135,7 +140,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
                         config.logger.debug("Error parsing c2a param", e)
                     }
                     // use the url from the callToAction param
-                    action = CTInAppAction.createOpenUrlAction(parts[1])
+                    action = CTInAppAction.CREATOR.createOpenUrlAction(parts[1])
                 }
             }
             if (callToAction == null) {
@@ -148,7 +153,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     }
 
     fun openActionUrl(url: String) {
-        triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
+        triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
     }
 
     fun didDismiss(data: Bundle?) {
@@ -216,7 +221,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     private fun didClick(button: CTInAppNotificationButton): Bundle? {
         var action = button.action
         if (action == null) {
-            action = CTInAppAction.createCloseAction()
+            action = CTInAppAction.CREATOR.createCloseAction()
         }
         return notifyActionTriggered(action, button.text, null)
     }

@@ -1,6 +1,5 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
-import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle

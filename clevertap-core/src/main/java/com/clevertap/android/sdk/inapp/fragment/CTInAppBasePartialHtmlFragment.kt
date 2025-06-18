@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -20,6 +20,8 @@ import com.clevertap.android.sdk.CTWebInterface
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.CTInAppAction.CREATOR.createCloseAction
+import com.clevertap.android.sdk.inapp.CTInAppWebView
+import com.clevertap.android.sdk.inapp.InAppWebViewClient
 import kotlin.math.abs
 
 internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragment(),

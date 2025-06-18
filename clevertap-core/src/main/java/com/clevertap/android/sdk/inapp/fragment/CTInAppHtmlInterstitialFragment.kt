@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
-internal class CTInAppHtmlHalfInterstitialFragment : CTInAppBaseFullHtmlFragment() {
+internal class CTInAppHtmlInterstitialFragment : CTInAppBaseFullHtmlFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,

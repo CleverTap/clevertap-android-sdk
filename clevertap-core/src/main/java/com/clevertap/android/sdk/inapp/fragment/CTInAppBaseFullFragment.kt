@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
 import android.os.Handler
 import android.view.Gravity
@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.customviews.CloseImageView
+import com.clevertap.android.sdk.inapp.InAppListener
 
 internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
     fun addCloseImageView(relativeLayout: RelativeLayout, closeImageView: CloseImageView) {

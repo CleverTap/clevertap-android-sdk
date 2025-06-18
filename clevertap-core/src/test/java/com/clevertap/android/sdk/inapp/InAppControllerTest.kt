@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.function
 import com.clevertap.android.sdk.inapp.customtemplates.template
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FakeClock

@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
@@ -15,6 +15,8 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.customviews.CloseImageView
+import com.clevertap.android.sdk.inapp.CTInAppWebView
+import com.clevertap.android.sdk.inapp.InAppWebViewClient
 
 internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() {
 
