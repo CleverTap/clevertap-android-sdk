@@ -34,6 +34,7 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
         actionUrl = parcel?.readString()
         keyValues = parcel?.readHashMap(null) as? HashMap<String, String>
         customTemplateInAppData = parcel?.readParcelable(CustomTemplateInAppData::class.java.getClassLoader())
+        shouldFallbackToSettings = parcel?.readByte()?.toInt() != 0x00
     }
 
     private constructor(json: JSONObject) : this(null) {
@@ -45,6 +46,7 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
         dest.writeString(actionUrl)
         dest.writeMap(keyValues)
         dest.writeParcelable(customTemplateInAppData, flags)
+        dest.writeByte((if (shouldFallbackToSettings) 0x01 else 0x00).toByte())
     }
 
     override fun describeContents(): Int {

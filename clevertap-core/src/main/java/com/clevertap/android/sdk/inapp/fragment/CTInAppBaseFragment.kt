@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp.fragment
 
-import android.R
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
@@ -41,10 +40,10 @@ internal abstract class CTInAppBaseFragment : Fragment() {
                     (activity as FragmentActivity).supportFragmentManager.beginTransaction()
                 inAppFragment.setArguments(inAppNotification, config)
                 fragmentTransaction.setCustomAnimations(
-                    R.animator.fade_in, R.animator.fade_out
+                    android.R.animator.fade_in, android.R.animator.fade_out
                 )
                 fragmentTransaction.add(
-                    R.id.content, inAppFragment, inAppNotification.type
+                    android.R.id.content, inAppFragment, inAppNotification.type
                 )
                 Logger.v(logTag, "calling InAppFragment " + inAppNotification.campaignId)
                 fragmentTransaction.commitNow()
@@ -66,7 +65,8 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     protected inner class CTInAppNativeButtonClickListener : View.OnClickListener {
 
         override fun onClick(view: View) {
-            handleButtonClickAtIndex(view.tag as Int)
+            val index = view.tag as? Int ?: return
+            handleButtonClickAtIndex(index)
         }
     }
 
@@ -189,7 +189,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
 
     fun handleButtonClickAtIndex(index: Int) {
         try {
-            val button = inAppNotification.buttons?.get(index) ?: return
+            val button = inAppNotification.buttons[index]
             val clickData = didClick(button)
 
             if (index == 0 && inAppNotification.isLocalInApp && didClickForHardPermissionListener != null) {

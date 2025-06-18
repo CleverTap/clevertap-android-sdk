@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp.fragment
 
-import android.os.Handler
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
@@ -12,8 +11,9 @@ import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.inapp.InAppListener
 
 internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
+
     fun addCloseImageView(relativeLayout: RelativeLayout, closeImageView: CloseImageView) {
-        Handler().post(object : Runnable {
+        relativeLayout.post(object : Runnable {
             override fun run() {
                 val margin = closeImageView.measuredWidth / 2
                 closeImageView.x = (relativeLayout.right - margin).toFloat()
