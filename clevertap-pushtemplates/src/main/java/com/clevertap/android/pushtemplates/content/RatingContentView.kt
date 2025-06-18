@@ -14,7 +14,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.*
 
-class RatingContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
+internal class RatingContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
     BigImageContentView(context, renderer, R.layout.rating) {
 
     init {
