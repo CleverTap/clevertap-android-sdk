@@ -34,7 +34,8 @@ object HomeScreenModel {
                 "Mark multiple InboxMessages as read by list of messageIDs",
                 "Notification Viewed event for Message",
                 "Notification Clicked event for Message",
-                "Custom KV Root level"
+                "Custom KV Root level",
+                "Open Compose Inbox Screen"
             ),
             "DISPLAY UNITS" to listOf(
                 "Get Display Unit For Id", "Get All Display Units",
