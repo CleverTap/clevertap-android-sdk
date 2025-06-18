@@ -629,4 +629,128 @@ class CleverTapAPITest : BaseTestCase() {
             corestate.deviceInfo.saveOptOutState(false)
         }
     }
+
+    // =========================
+    // EVENT TRACKING TESTS
+    // =========================
+
+    @Test
+    fun test_pushEvent_withEventNameOnly() {
+        // Arrange
+        val eventName = "Custom event"
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushEvent(eventName)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushEvent(eventName, null)
+        }
+    }
+
+    @Test
+    fun test_pushEvent_withEventNameAndActions() {
+        // Arrange
+        val eventName = "custom name"
+        val eventData = mapOf<String, Any>(
+            "Product Name" to "iPhone 15",
+            "Price" to 999.99,
+            "Quantity" to 1,
+            "Category" to "Electronics"
+        )
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushEvent(eventName, eventData)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushEvent(eventName, eventData)
+        }
+    }
+
+    @Test
+    fun test_pushEvent_withInvalidNames() {
+        // Arrange
+        initializeCleverTapAPI()
+
+        // Act
+        cleverTapAPI.pushEvent("")
+        cleverTapAPI.pushEvent(null)
+        cleverTapAPI.pushEvent("    ")
+        cleverTapAPI.pushEvent("  ")
+
+        // Assert
+        verify(exactly = 0) {
+            corestate.analyticsManager.pushEvent(any(), null)
+        }
+    }
+
+    @Test
+    fun test_pushChargedEvent_withValidData() {
+        // Arrange
+        val chargeDetails = hashMapOf<String, Any>(
+            "Amount" to 299.99,
+            "Currency" to "USD",
+            "Payment Mode" to "Credit Card",
+            "Charged ID" to "order_12345"
+        )
+        val items = arrayListOf<HashMap<String, Any>>(
+            hashMapOf<String, Any>(
+                "Product Name" to "Wireless Headphones",
+                "Category" to "Electronics",
+                "Price" to 149.99,
+                "Quantity" to 1
+            ),
+            hashMapOf<String, Any>(
+                "Product Name" to "Phone Case",
+                "Category" to "Accessories",
+                "Price" to 29.99,
+                "Quantity" to 2
+            )
+        )
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushChargedEvent(chargeDetails, items)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushChargedEvent(chargeDetails, items)
+        }
+    }
+
+    @Test
+    fun test_pushError() {
+        // Arrange
+        val errorMessage = "Network connection failed"
+        val errorCode = 500
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushError(errorMessage, errorCode)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushError(errorMessage, errorCode)
+        }
+    }
+
+    @Test
+    fun test_pushInstallReferrer() {
+        // Arrange
+        val source = "google"
+        val medium = "cpc"
+        val campaign = "summer_sale_2024"
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushInstallReferrer(source, medium, campaign)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushInstallReferrer(source, medium, campaign)
+        }
+    }
 }
