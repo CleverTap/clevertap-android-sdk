@@ -25,8 +25,10 @@ import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.PushType
+import com.clevertap.demo.ui.customtemplates.CustomInterstitialPresenter
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.clevertap.demo.ui.customtemplates.createCustomTemplates
+import com.clevertap.demo.utils.ActivityTracker
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
@@ -68,10 +70,8 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     private fun cleverTapPreAppCreated() {
-        // Register custom templates
         CleverTapAPI.registerCustomInAppTemplates {
-            // Create templates with direct presenters (no ViewModel dependency)
-            createCustomTemplates()
+            createCustomTemplates(customInterPresenter = CustomInterstitialPresenter(this))
         }
 
         CleverTapAPI.setDebugLevel(VERBOSE)
@@ -86,6 +86,9 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
         // this is for the setup for canceling notifications
         registerActivityLifecycleCallbacks(this)
+        
+        // Register activity tracker for getting current activity
+        registerActivityLifecycleCallbacks(ActivityTracker)
     }
 
     private fun cleverTapPostAppCreated() {

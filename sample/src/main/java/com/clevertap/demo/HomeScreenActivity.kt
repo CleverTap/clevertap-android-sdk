@@ -13,6 +13,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.clevertap.demo.ui.overlay.OverlayDialogConfig
+import com.clevertap.demo.ui.overlay.OverlayScreen
 import com.clevertap.android.sdk.*
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
@@ -42,6 +49,10 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     var cleverTapDefaultInstance: CleverTapAPI? = MyApplication.ctInstance // access singleton
 
+    // Overlay dialog state
+    private var showOverlayDialog by mutableStateOf(false) // Changed to false - don't show by default
+    private lateinit var overlayComposeView: ComposeView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_screen_activity)
@@ -55,6 +66,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
         fakeNotification(send = false)
         cleverTapListeners()
+        setupOverlayDialog()
 
         checkFirstTimePreferences { isReadPolicy, email ->
             if (!isReadPolicy) {
@@ -62,6 +74,13 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             } else if (email == null) {
                 EmailDialogFragment().show(supportFragmentManager, "Email")
             }
+        }
+    }
+
+    private fun setupOverlayDialog() {
+        overlayComposeView = findViewById(R.id.overlay_compose_view)
+        overlayComposeView.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         }
     }
 
@@ -306,5 +325,73 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     override fun onDestroy() {
         super.onDestroy()
         cleverTapDefaultInstance?.unregisterPushPermissionNotificationResponseListener(this)
+    }
+
+    // Method to show overlay dialog programmatically
+    fun showCustomOverlayDialog() {
+        showOverlayDialog = true
+    }
+
+    // Method to hide overlay dialog programmatically
+    fun hideCustomOverlayDialog() {
+        showOverlayDialog = false
+    }
+
+    // Method to show overlay dialog with custom template data
+    fun showCustomTemplateDialog(
+        title: String,
+        message: String,
+        imageUrl: String? = null,
+        primaryButtonText: String = "Continue",
+        secondaryButtonText: String = "Close",
+        onPrimaryAction: () -> Unit = {},
+        onSecondaryAction: () -> Unit = {},
+    ) {
+        overlayComposeView.setContent {
+            val dialogConfig = OverlayDialogConfig(
+                title = title,
+                message = message,
+                image = imageUrl,
+                primaryButtonText = primaryButtonText,
+                secondaryButtonText = secondaryButtonText,
+                onPrimaryClick = {
+                    onPrimaryAction()
+                },
+                onSecondaryClick = {
+                    onSecondaryAction()
+                    hideCustomOverlayDialog()
+                },
+                onDismiss = {
+                    hideCustomOverlayDialog()
+                }
+            )
+
+            OverlayScreen(
+                dialogConfig = dialogConfig,
+                showDialog = showOverlayDialog, // Use the state variable instead of hardcoded true
+                onDismissDialog = {
+                    hideCustomOverlayDialog()
+                }
+            )
+        }
+        showOverlayDialog = true
+    }
+    
+    // Test method to verify button dismissal works
+    fun testCustomTemplateDialog() {
+        Log.d(TAG, "Testing custom template dialog with proper dismissal")
+        showCustomTemplateDialog(
+            title = "Test Dialog",
+            message = "This is a test to verify that the buttons properly dismiss the dialog and that buttons appear at the bottom.",
+            imageUrl = "https://via.placeholder.com/160x160.png?text=TEST",
+            primaryButtonText = "Primary",
+            secondaryButtonText = "Secondary",
+            onPrimaryAction = {
+                Toast.makeText(this, "Primary clicked - dialog should dismiss", Toast.LENGTH_SHORT).show()
+            },
+            onSecondaryAction = {
+                Toast.makeText(this, "Secondary clicked - dialog should dismiss", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 }
