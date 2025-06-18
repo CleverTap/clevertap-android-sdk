@@ -130,8 +130,4 @@ class MockDeviceInfo(
         obj.put("cc", "us")
         return obj
     }
-
-    override fun optOutKey(): String {
-        return "false"
-    }
 }

@@ -12,6 +12,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -489,5 +490,143 @@ class CleverTapAPITest : BaseTestCase() {
         // Assert
         assertEquals(5, appLaunchCountActual)
         verify { corestate.localDataStore.readUserEventLogCount(Constants.APP_LAUNCHED_EVENT) }
+    }
+
+    @Test
+    fun test_setOptOut_true() {
+        // Setup
+        initializeCleverTapAPI()
+
+        // generate the data for a profile push to alert the server to the optOut state change
+        val expectedMap = hashMapOf<String, Any>().apply {
+            put(Constants.CLEVERTAP_OPTOUT, true)
+            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, false)
+        }
+
+        // Act
+        cleverTapAPI.setOptOut(true)
+
+        // Assert
+        verifyOrder {
+            corestate.analyticsManager.pushProfile(expectedMap)
+            corestate.coreMetaData.isCurrentUserOptedOut = true
+            corestate.coreMetaData.enabledSystemEvents = false
+            corestate.deviceInfo.saveOptOutState(true)
+        }
+    }
+
+    @Test
+    fun test_setOptOut_false() {
+        // Setup
+        initializeCleverTapAPI()
+
+        // generate the data for a profile push to alert the server to the optOut state change
+        val expectedMap = hashMapOf<String, Any>().apply {
+            put(Constants.CLEVERTAP_OPTOUT, false)
+            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, false)
+        }
+
+        // Act
+        cleverTapAPI.setOptOut(false)
+
+        // Assert
+        verifyOrder {
+            corestate.coreMetaData.isCurrentUserOptedOut = false
+            corestate.coreMetaData.enabledSystemEvents = true
+            corestate.analyticsManager.pushProfile(expectedMap)
+            corestate.deviceInfo.saveOptOutState(false)
+        }
+    }
+
+    @Test
+    fun test_setOptOut_true_allowSystemEvents_false() {
+        // Setup
+        initializeCleverTapAPI()
+
+        // generate the data for a profile push to alert the server to the optOut state change
+        val expectedMap = hashMapOf<String, Any>().apply {
+            put(Constants.CLEVERTAP_OPTOUT, true)
+            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, false)
+        }
+
+        // Act
+        cleverTapAPI.setOptOut(true, false)
+
+        // Assert
+        verifyOrder {
+            corestate.coreMetaData.isCurrentUserOptedOut = true
+            corestate.coreMetaData.enabledSystemEvents = false
+            corestate.analyticsManager.pushProfile(expectedMap)
+            corestate.deviceInfo.saveOptOutState(true)
+        }
+    }
+
+    @Test
+    fun test_setOptOut_true_allowSystemEvents_true() {
+        // Setup
+        initializeCleverTapAPI()
+
+        // generate the data for a profile push to alert the server to the optOut state change
+        val expectedMap = hashMapOf<String, Any>().apply {
+            put(Constants.CLEVERTAP_OPTOUT, true)
+            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, true)
+        }
+
+        // Act
+        cleverTapAPI.setOptOut(true, true)
+
+        // Assert
+        verifyOrder {
+            corestate.coreMetaData.isCurrentUserOptedOut = true
+            corestate.coreMetaData.enabledSystemEvents = true
+            corestate.analyticsManager.pushProfile(expectedMap)
+            corestate.deviceInfo.saveOptOutState(true)
+        }
+    }
+
+    @Test
+    fun test_setOptOut_false_allowSystemEvents_false() {
+        // Setup
+        initializeCleverTapAPI()
+
+        // generate the data for a profile push to alert the server to the optOut state change
+        val expectedMap = hashMapOf<String, Any>().apply {
+            put(Constants.CLEVERTAP_OPTOUT, false)
+            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, false)
+        }
+
+        // Act
+        cleverTapAPI.setOptOut(false, false)
+
+        // Assert
+        verifyOrder {
+            corestate.coreMetaData.isCurrentUserOptedOut = false
+            corestate.coreMetaData.enabledSystemEvents = true
+            corestate.analyticsManager.pushProfile(expectedMap)
+            corestate.deviceInfo.saveOptOutState(false)
+        }
+    }
+
+    @Test
+    fun test_setOptOut_false_allowSystemEvents_true() {
+        // Setup
+        initializeCleverTapAPI()
+
+        // generate the data for a profile push to alert the server to the optOut state change
+        val expectedMap = hashMapOf<String, Any>().apply {
+            put(Constants.CLEVERTAP_OPTOUT, false)
+            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, true)
+        }
+
+        // Act
+        cleverTapAPI.setOptOut(false, true)
+
+        // Assert
+        verifyOrder {
+            corestate.coreMetaData.isCurrentUserOptedOut = false
+            corestate.coreMetaData.enabledSystemEvents = true
+            corestate.analyticsManager.pushProfile(expectedMap)
+            corestate.deviceInfo.saveOptOutState(false)
+        }
     }
 }

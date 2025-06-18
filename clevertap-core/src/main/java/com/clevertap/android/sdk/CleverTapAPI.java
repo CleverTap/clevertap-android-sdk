@@ -2860,24 +2860,17 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
             // determine order of operations depending on enabled/disabled
             if (userOptOut) {  // if opting out first push profile event then set the flag
-                pushProfile(optOutMap);
+                coreState.getAnalyticsManager().pushProfile(optOutMap);
                 coreState.getCoreMetaData().setCurrentUserOptedOut(true);
                 coreState.getCoreMetaData().setEnabledSystemEvents(allowSystemEvents);
             } else {  // if opting back in first reset the flag to false then push the profile event
                 coreState.getCoreMetaData().setCurrentUserOptedOut(false);
                 // if opt-out is false, we should always allow system events
                 coreState.getCoreMetaData().setEnabledSystemEvents(true);
-                pushProfile(optOutMap);
+                coreState.getAnalyticsManager().pushProfile(optOutMap);
             }
             // persist the new optOut state
-            String key = coreState.getDeviceInfo().optOutKey();
-            if (key == null) {
-                getConfigLogger()
-                        .verbose(getAccountId(), "Unable to persist user OptOut state, storage key is null");
-                return null;
-            }
-            StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(getConfig().getAccountId(), key), userOptOut);
-            getConfigLogger().verbose(getAccountId(), "Set current user OptOut state to: " + userOptOut);
+            coreState.getDeviceInfo().saveOptOutState(userOptOut);
             return null;
         });
     }

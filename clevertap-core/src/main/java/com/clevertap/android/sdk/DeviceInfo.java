@@ -758,7 +758,19 @@ public class DeviceInfo {
 
     }
 
-    String optOutKey() {
+    void saveOptOutState(boolean userOptOut) {
+        // persist the new optOut state
+        String key = optOutKey();
+        if (key == null) {
+            getConfigLogger()
+                    .verbose(config.getAccountId(), "Unable to persist user OptOut state, storage key is null");
+            return;
+        }
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), key), userOptOut);
+        getConfigLogger().verbose(config.getAccountId(), "Set current user OptOut state to: " + userOptOut);
+    }
+
+    private String optOutKey() {
         String guid = getDeviceID();
         if (guid == null) {
             return null;
