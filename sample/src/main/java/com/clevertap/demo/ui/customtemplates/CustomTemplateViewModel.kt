@@ -6,15 +6,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import android.util.Log
 import com.clevertap.android.sdk.CleverTapAPI
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancel
 
 data class CustomTemplateDialogState(
     val isVisible: Boolean = false,
     val config: OverlayDialogConfig? = null
 )
 
-class CustomTemplateViewModel(
-    private val cleverTapInstance: CleverTapAPI?
-) : ViewModel() {
+class CustomTemplateViewModel() : ViewModel() {
     
     companion object {
         private const val TAG = "CustomTemplateViewModel"
@@ -23,6 +27,10 @@ class CustomTemplateViewModel(
     // Dialog state
     var dialogState by mutableStateOf(CustomTemplateDialogState())
         private set
+    
+    // Coroutine scope for auto-close functionality
+    private val viewModelScope = CoroutineScope(Dispatchers.Main)
+    private var autoCloseJob: Job? = null
     
     /**
      * Show a custom template dialog with the provided configuration
@@ -33,10 +41,15 @@ class CustomTemplateViewModel(
         imageUrl: String? = null,
         primaryButtonText: String = "Continue",
         secondaryButtonText: String = "Close",
+        autoCloseAfterSeconds: Int = 0,
         onPrimaryAction: () -> Unit = {},
         onSecondaryAction: () -> Unit = {},
+        onAutoClose: () -> Unit = {},
     ) {
-        Log.d(TAG, "showDialog called with title: $title, message: $message")
+        Log.d(TAG, "showDialog called with title: $title, message: $message, autoCloseAfter: ${autoCloseAfterSeconds}s")
+        
+        // Cancel any existing auto-close job
+        autoCloseJob?.cancel()
         
         val config = OverlayDialogConfig(
             title = title,
@@ -46,10 +59,12 @@ class CustomTemplateViewModel(
             secondaryButtonText = secondaryButtonText,
             onPrimaryClick = {
                 Log.d(TAG, "Primary button clicked")
+                autoCloseJob?.cancel() // Cancel auto-close when user interacts
                 onPrimaryAction()
             },
             onSecondaryClick = {
                 Log.d(TAG, "Secondary button clicked")
+                autoCloseJob?.cancel() // Cancel auto-close when user interacts
                 onSecondaryAction()
             },
             onDismiss = {
@@ -61,12 +76,23 @@ class CustomTemplateViewModel(
             isVisible = true,
             config = config
         )
+        
+        // Setup auto-close if specified (value > 0)
+        if (autoCloseAfterSeconds > 0) {
+            autoCloseJob = viewModelScope.launch {
+                delay(autoCloseAfterSeconds * 1000L) // Convert seconds to milliseconds
+                onAutoClose()
+            }
+        }
     }
     
     /**
      * Hide the currently visible dialog
      */
     fun hideDialog() {
+        Log.d(TAG, "Hiding dialog")
+        // Cancel auto-close job when manually hiding dialog
+        autoCloseJob?.cancel()
         dialogState = CustomTemplateDialogState(
             isVisible = false,
             config = null
@@ -78,6 +104,7 @@ class CustomTemplateViewModel(
      */
     fun forceHideDialog() {
         Log.w(TAG, "Force hiding dialog")
+        autoCloseJob?.cancel()
         dialogState = CustomTemplateDialogState(isVisible = false, config = null)
     }
 
@@ -85,7 +112,8 @@ class CustomTemplateViewModel(
     override fun onCleared() {
         super.onCleared()
         Log.d(TAG, "ViewModel cleared")
-        // Force hide any active dialogs when ViewModel is cleared
+        autoCloseJob?.cancel()
+        viewModelScope.cancel()
         forceHideDialog()
     }
 }

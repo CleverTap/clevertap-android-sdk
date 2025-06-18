@@ -16,7 +16,7 @@ class ViewModelFactory(
                 isAssignableFrom(HomeScreenViewModel::class.java) ->
                     HomeScreenViewModel(cleverTapAPI)
                 isAssignableFrom(CustomTemplateViewModel::class.java) ->
-                    CustomTemplateViewModel(cleverTapAPI)
+                    CustomTemplateViewModel()
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }

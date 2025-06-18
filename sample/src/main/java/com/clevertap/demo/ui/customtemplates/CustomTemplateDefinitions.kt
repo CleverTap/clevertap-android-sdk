@@ -1,6 +1,5 @@
 package com.clevertap.demo.ui.customtemplates
 
-import android.content.Context
 import android.util.Log
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatePresenter
 import com.clevertap.android.sdk.inapp.customtemplates.function
@@ -18,7 +17,7 @@ fun createCustomTemplates(customInterPresenter: CustomInterstitialPresenter) = t
         fileArgument("Image")
         actionArgument("Open action")
         booleanArgument("Show close button", true)
-        intArgument("Auto close after", 0)
+        intArgument("Auto close after", 0) // Auto close dialog after specified seconds (0 = no auto close)
         presenter(customInterPresenter)
     },
 
@@ -44,7 +43,7 @@ class CustomInterstitialPresenter() : TemplatePresenter {
         val message = context.getString("Message") ?: "This is a custom message"
         val imageFile = context.getFile("Image")
         val showCloseButton = context.getBoolean("Show close button") ?: true
-        val autoCloseAfter = context.getInt("Auto close after") ?: 0
+        val autoCloseAfter = context.getInt("Auto close after") ?: 0 // Get auto-close duration in seconds
         
         val viewModel = CustomTemplateManager.getViewModel()
         
@@ -54,11 +53,15 @@ class CustomInterstitialPresenter() : TemplatePresenter {
             imageUrl = imageFile?.toString(),
             primaryButtonText = "Trigger",
             secondaryButtonText = if (showCloseButton) "Close" else "",
+            autoCloseAfterSeconds = autoCloseAfter,
             onPrimaryAction = {
                 context.triggerActionArgument("Open action")
                 onClose(context)
             },
             onSecondaryAction = {
+                onClose(context)
+            },
+            onAutoClose = {
                 onClose(context)
             }
         )
