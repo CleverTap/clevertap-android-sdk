@@ -5,7 +5,7 @@ import com.clevertap.android.sdk.inapp.InAppActionType.CLOSE
 import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.sdk.inapp.InAppActionType.OPEN_URL
 import com.clevertap.android.sdk.inapp.InAppListener
-import com.clevertap.android.sdk.inapp.createCtInAppNotification
+import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.ContextDismissListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.TemplateContext
@@ -22,7 +22,7 @@ class CustomTemplateContextTest {
     fun `createContext factory method should create contexts of correct types`() {
         val templateContext = CustomTemplateContext.createContext(
             template = templateDefinition,
-            notification = createCtInAppNotification(templateNotificationJson),
+            notification = CTInAppNotification(templateNotificationJson, false),
             inAppListener = mockk(),
             resourceProvider = mockk(),
             dismissListener = mockk(),
@@ -33,7 +33,7 @@ class CustomTemplateContextTest {
 
         val functionContext = CustomTemplateContext.createContext(
             template = functionDefinition,
-            notification = createCtInAppNotification(functionNotificationJson),
+            notification = CTInAppNotification(functionNotificationJson, false),
             inAppListener = mockk(),
             resourceProvider = mockk(),
             dismissListener = mockk(),
@@ -84,7 +84,7 @@ class CustomTemplateContextTest {
 
         val functionContext = CustomTemplateContext.createContext(
             template = functionDefinition,
-            notification = createCtInAppNotification(functionNotificationJson),
+            notification = CTInAppNotification(functionNotificationJson, false),
             inAppListener = mockk(),
             resourceProvider = mockk(),
             dismissListener = mockk(),
@@ -226,8 +226,8 @@ class CustomTemplateContextTest {
     @Test
     fun `setPresented and setDismissed should not call InAppListener for templates that are triggered as actions`() {
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
-        val notification = createCtInAppNotification(functionNotificationJson)
-        notification.customTemplateData.isAction = true
+        val notification = CTInAppNotification(functionNotificationJson, false)
+        notification.customTemplateData?.isAction = true
         val functionContext = CustomTemplateContext.createContext(
             template = functionDefinition,
             notification = notification,
@@ -266,7 +266,7 @@ class CustomTemplateContextTest {
         dismissListener: ContextDismissListener? = null
     ) = TemplateContext(
         templateDefinition,
-        createCtInAppNotification(templateNotificationJson),
+        CTInAppNotification(templateNotificationJson, false),
         inAppListener,
         mockk(),
         dismissListener,

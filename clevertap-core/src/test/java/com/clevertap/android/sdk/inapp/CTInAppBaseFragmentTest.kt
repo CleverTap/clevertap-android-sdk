@@ -51,7 +51,7 @@ class CTInAppBaseFragmentTest {
         every { mockFragmentManager.beginTransaction() } returns mockFragmentTransaction
         every { mockActivity.supportFragmentManager } returns mockFragmentManager
 
-        val inApp = CTInAppNotification().initWithJSON(
+        val inApp = CTInAppNotification(
             JSONObject(InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA),
             true
         )
@@ -99,7 +99,7 @@ class CTInAppBaseFragmentTest {
         every { mockFragmentManager.beginTransaction() } returns mockFragmentTransaction
         every { mockActivity.supportFragmentManager } returns mockFragmentManager
 
-        val inApp = CTInAppNotification().initWithJSON(
+        val inApp = CTInAppNotification(
             JSONObject(InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA),
             true
         )
@@ -125,7 +125,7 @@ class CTInAppBaseFragmentTest {
             .setPositiveBtnText("Positive Button")
             .setNegativeBtnText("Negative Button")
             .build()
-        val inApp = CTInAppNotification().initWithJSON(localInAppJson, true)
+        val inApp = CTInAppNotification(localInAppJson, true)
         val mockConfig = configMock()
         val contextMock =
             mockk<Context>(moreInterfaces = arrayOf(DidClickForHardPermissionListener::class))
@@ -150,7 +150,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `handleButtonClickAtIndex should trigger permission listener for rfp actions and dismiss the inApp`() {
-        val inApp = CTInAppNotification().initWithJSON(
+        val inApp = CTInAppNotification(
             JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL_WITH_BUTTON_ACTION_RFP),
             true
         )

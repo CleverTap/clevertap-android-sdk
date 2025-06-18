@@ -75,6 +75,31 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
         }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CTInAppAction
+
+        if (shouldFallbackToSettings != other.shouldFallbackToSettings) return false
+        if (type != other.type) return false
+        if (actionUrl != other.actionUrl) return false
+        if (keyValues != other.keyValues) return false
+        if (customTemplateInAppData != other.customTemplateInAppData) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = shouldFallbackToSettings.hashCode()
+        result = 31 * result + (type?.hashCode() ?: 0)
+        result = 31 * result + (actionUrl?.hashCode() ?: 0)
+        result = 31 * result + (keyValues?.hashCode() ?: 0)
+        result = 31 * result + (customTemplateInAppData?.hashCode() ?: 0)
+        return result
+    }
+
+
     companion object CREATOR : Creator<CTInAppAction> {
 
         override fun createFromParcel(parcel: Parcel): CTInAppAction {

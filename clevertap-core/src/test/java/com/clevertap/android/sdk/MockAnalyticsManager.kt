@@ -5,7 +5,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification
 import org.json.JSONObject
 import java.util.ArrayList
 
-class MockAnalyticsManager : BaseAnalyticsManager() {
+internal class MockAnalyticsManager : BaseAnalyticsManager() {
 
     override fun addMultiValuesForKey(key: String, values: ArrayList<String>) {}
     override fun incrementValue(key: String, value: Number) {

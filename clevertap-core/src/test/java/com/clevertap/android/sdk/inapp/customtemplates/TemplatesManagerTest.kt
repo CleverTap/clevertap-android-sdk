@@ -4,7 +4,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.sdk.inapp.InAppListener
-import com.clevertap.android.sdk.inapp.createCtInAppNotification
+import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext.FunctionContext
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import io.mockk.called
@@ -209,14 +209,14 @@ class TemplatesManagerTest {
         val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
 
         templatesManager.presentTemplate(
-            notification = createCtInAppNotification(simpleFunctionNotificationJson),
+            notification = CTInAppNotification(simpleFunctionNotificationJson, false),
             inAppListener = mockInAppListener,
             resourceProvider = mockFileResourceProvider
         )
         verify { functionPresenter.onPresent(any()) }
 
         templatesManager.presentTemplate(
-            notification = createCtInAppNotification(simpleTemplateNotificationJson),
+            notification = CTInAppNotification(simpleTemplateNotificationJson, false),
             inAppListener = mockInAppListener,
             resourceProvider = mockFileResourceProvider
         )
@@ -241,7 +241,11 @@ class TemplatesManagerTest {
         val mockFileResourceProvider = mockk<FileResourceProvider>(relaxed = true)
         val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
 
-        templatesManager.presentTemplate(createCtInAppNotification(simpleTemplateNotificationJson), mockInAppListener,mockFileResourceProvider)
+        templatesManager.presentTemplate(
+            CTInAppNotification(simpleTemplateNotificationJson, false),
+            mockInAppListener,
+            mockFileResourceProvider
+        )
 
         verify { functionPresenter wasNot called }
     }
@@ -271,7 +275,11 @@ class TemplatesManagerTest {
         val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         functionPresenter.templatesManager = templatesManager
 
-        templatesManager.presentTemplate(createCtInAppNotification(simpleFunctionNotificationJson), mockInAppListener,mockFileResourceProvider)
+        templatesManager.presentTemplate(
+            CTInAppNotification(simpleFunctionNotificationJson, false),
+            mockInAppListener,
+            mockFileResourceProvider
+        )
         val context = templatesManager.getActiveContextForTemplate(SIMPLE_FUNCTION_NAME)!!
         assertEquals(SIMPLE_FUNCTION_NAME, context.templateName)
 
@@ -313,7 +321,7 @@ class TemplatesManagerTest {
         val mockInAppListener = mockk<InAppListener>(relaxed = true)
         val mockFileResourceProvider = mockk<FileResourceProvider>(relaxed = true)
         val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
-        val notification = createCtInAppNotification(simpleTemplateNotificationJson)
+        val notification = CTInAppNotification(simpleTemplateNotificationJson, false)
 
         templatesManager.presentTemplate(notification, mockInAppListener, mockFileResourceProvider)
         templatesManager.closeTemplate(notification)
@@ -336,11 +344,11 @@ class TemplatesManagerTest {
         val templatesManager = createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
 
         // not registered template
-        templatesManager.closeTemplate(createCtInAppNotification(simpleFunctionNotificationJson))
+        templatesManager.closeTemplate(CTInAppNotification(simpleFunctionNotificationJson, false))
         verify { templatePresenter wasNot called }
 
         // not active template
-        val notification = createCtInAppNotification(simpleTemplateNotificationJson)
+        val notification = CTInAppNotification(simpleTemplateNotificationJson, false)
         templatesManager.closeTemplate(notification)
         verify { templatePresenter wasNot called }
     }

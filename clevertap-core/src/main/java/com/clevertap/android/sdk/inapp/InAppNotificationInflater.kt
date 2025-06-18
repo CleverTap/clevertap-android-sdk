@@ -37,7 +37,7 @@ internal class InAppNotificationInflater(
         val task: Task<Unit> = executors.postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS)
         task.execute(taskLogTag) {
 
-            val inApp = CTInAppNotification().initWithJSON(inAppJson, isVideoSupported)
+            val inApp = CTInAppNotification(inAppJson, isVideoSupported)
             if (inApp.error != null) {
                 notifyListener(listenerWeakReference, inApp)
                 return@execute
