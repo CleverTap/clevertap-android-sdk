@@ -171,7 +171,7 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
         mHeight = (mHeight / d).toInt()
         mWidth = (mWidth / d).toInt()
 
-        var html = inAppNotification.html
+        var html = inAppNotification.html ?: return
 
         val style =
             "<style>body{width: ${mWidth}px; height: ${mHeight}px; margin: 0; padding:0;}</style>"

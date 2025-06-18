@@ -26,6 +26,7 @@ import com.clevertap.android.sdk.utils.configMock
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkAll
@@ -73,7 +74,7 @@ class InAppControllerTest {
             )
         } just runs
 
-        mockkStatic(CTInAppBaseFragment::class)
+        mockkObject(CTInAppBaseFragment.Companion)
         every { CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any()) } returns true
 
         mockkStatic(NetworkManager::class)
@@ -112,7 +113,7 @@ class InAppControllerTest {
         mockInAppInflater = mockk()
         every { mockInAppInflater.inflate(any(), any(), any()) } answers {
             (args[2] as InAppNotificationReadyListener).onNotificationReady(
-                CTInAppNotification().initWithJSON(args[0] as JSONObject, true)
+                CTInAppNotification(args[0] as JSONObject, true)
             )
         }
         fakeInAppQueue = FakeInAppQueue()
@@ -156,7 +157,7 @@ class InAppControllerTest {
     fun `inAppActionTriggered should raise notification clicked event`() {
         val inAppController = createInAppController()
         val campaignId = "test-campaign"
-        val inApp = CTInAppNotification().initWithJSON(
+        val inApp = CTInAppNotification(
             JSONObject(
                 """{
             "${Constants.KEY_TYPE}": "${CTInAppType.CTInAppTypeInterstitial}",
@@ -204,7 +205,7 @@ class InAppControllerTest {
         every { mockTemplatesManager.isTemplateRegistered(testTemplate.name) } returns true
 
         val inAppJson = getCustomTemplateInAppJson(testTemplate.name)
-        val inApp = CTInAppNotification().initWithJSON(JSONObject(inAppJson), false)
+        val inApp = CTInAppNotification(JSONObject(inAppJson), false)
 
         val inAppController = createInAppController()
         inAppController.inAppNotificationActionTriggered(
@@ -277,7 +278,7 @@ class InAppControllerTest {
     @Test
     fun `inAppNotificationDidDismiss should trigger InAppNotificationListener`() {
         val inApp =
-            CTInAppNotification().initWithJSON(
+            CTInAppNotification(
                 JSONObject(InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV),
                 false
             )
@@ -290,7 +291,7 @@ class InAppControllerTest {
     @Test
     fun `inAppNotificationDidShow should track NotificationViewed event and trigger InAppNotificationListener`() {
         val inApp =
-            CTInAppNotification().initWithJSON(
+            CTInAppNotification(
                 JSONObject(InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV),
                 false
             )
@@ -577,7 +578,7 @@ class InAppControllerTest {
     fun `showNotificationIfAvailable should drop expired in-apps`() {
         //TODO verify next in-apps will not be shown after a ttl expired in-app
         val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
-        val ttl = CTInAppNotification().initWithJSON(
+        val ttl = CTInAppNotification(
             JSONObject(InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA),
             false
         ).timeToLive
@@ -648,7 +649,7 @@ class InAppControllerTest {
 
         verify(exactly = 1) {
             mockTemplatesManager.presentTemplate(match { inApp ->
-                inApp.customTemplateData.templateName == testTemplate.name
+                inApp.customTemplateData?.templateName == testTemplate.name
             }, any(), any())
         }
 
@@ -661,7 +662,7 @@ class InAppControllerTest {
     }
 
     private fun getInAppWithAction(actionJsonString: String): CTInAppNotification {
-        return CTInAppNotification().initWithJSON(
+        return CTInAppNotification(
             JSONObject(
                 """{
             "${Constants.KEY_TYPE}": "${CTInAppType.CTInAppTypeCover}",

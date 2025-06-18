@@ -133,7 +133,8 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
         val webView = this.webView ?: return
         webView.updateDimension()
 
-        if (inAppNotification.customInAppUrl.isEmpty()) {
+        val customUrl = inAppNotification.customInAppUrl
+        if (customUrl.isNullOrEmpty()) {
             var mHeight = webView.dim.y
             var mWidth = webView.dim.x
 
@@ -141,7 +142,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
             mHeight = (mHeight / d).toInt()
             mWidth = (mWidth / d).toInt()
 
-            var html = inAppNotification.html
+            var html = inAppNotification.html ?: return
 
             val style =
                 "<style>body{width: ${mWidth}px; height: ${mHeight}px; margin: 0; padding:0;}</style>"
@@ -151,9 +152,8 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
             webView.setInitialScale((d * 100).toInt())
             webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null)
         } else {
-            val url = inAppNotification.customInAppUrl
             webView.setWebViewClient(WebViewClient())
-            webView.loadUrl(url)
+            webView.loadUrl(customUrl)
         }
     }
 

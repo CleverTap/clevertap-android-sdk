@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp
 
 import android.os.Parcel
+import com.clevertap.android.sdk.Constants
 import io.mockk.every
 import io.mockk.mockk
 import org.json.JSONException
@@ -17,84 +18,84 @@ import kotlin.system.measureTimeMillis
 class CTInAppNotificationTest {
 
     @Test
-    fun `initWithJSON for advanced builder custom-html should initialize correctly for html header`() {
+    fun `constructor for advanced builder custom-html should initialize correctly for html header`() {
         // Arrange - Html in app
         val jsonObject = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_HEADER)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         assertEquals("custom-html", notification.type)
         assertEquals(CTInAppType.CTInAppTypeHeaderHTML, notification.inAppType)
     }
 
     @Test
-    fun `initWithJSON for advanced builder custom-html should initialize correctly for html footer`() {
+    fun `constructor for advanced builder custom-html should initialize correctly for html footer`() {
         // Arrange - Html in app
         val jsonObject = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_FOOTER)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         assertEquals("custom-html", notification.type)
         assertEquals(CTInAppType.CTInAppTypeFooterHTML, notification.inAppType)
     }
 
     @Test
-    fun `initWithJSON for advanced builder custom-html should initialize correctly for html header legacy`() {
+    fun `constructor for advanced builder custom-html should initialize correctly for html header legacy`() {
         // Arrange - Html in app
         val jsonObject = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_HEADER_LEGACY)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         assertEquals("custom-html", notification.type)
         assertEquals(CTInAppType.CTInAppTypeHeaderHTML, notification.inAppType)
     }
 
     @Test
-    fun `initWithJSON for advanced builder custom-html should initialize correctly for html footer legacy`() {
+    fun `constructor for advanced builder custom-html should initialize correctly for html footer legacy`() {
         // Arrange - Html in app
         val jsonObject = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_FOOTER_LEGACY)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         assertEquals("custom-html", notification.type)
         assertEquals(CTInAppType.CTInAppTypeFooterHTML, notification.inAppType)
     }
 
     @Test
-    fun `initWithJSON for advanced builder custom-html should initialize correctly for interstitial`() {
+    fun `constructor for advanced builder custom-html should initialize correctly for interstitial`() {
         // Arrange - Html in app
         val jsonObject = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_INTERSTITIAL)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         assertEquals("custom-html", notification.type)
         assertEquals(CTInAppType.CTInAppTypeInterstitialHTML, notification.inAppType)
     }
 
     @Test
-    fun `initWithJSON for advanced builder custom-html should initialize correctly for half interstitial`() {
+    fun `constructor for advanced builder custom-html should initialize correctly for half interstitial`() {
         // Arrange - Html in app
         val jsonObject = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_HALF_INTERSTITIAL)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         assertEquals("custom-html", notification.type)
         assertEquals(CTInAppType.CTInAppTypeHalfInterstitialHTML, notification.inAppType)
     }
 
     @Test
-    fun `initWithJSON for advanced builder custom-html should initialize correctly for cover`() {
+    fun `constructor for advanced builder custom-html should initialize correctly for cover`() {
         // Arrange - Html in app
         val jsonObject = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         // Assert
         assertNotNull(notification)
@@ -120,12 +121,12 @@ class CTInAppNotificationTest {
     }
 
     @Test
-    fun `initWithJSON half interstitial json should initialize correctly`() {
+    fun `constructor half interstitial json should initialize correctly`() {
         // Arrange - Half interstitial inapp
         val jsonObject = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         // Assert
         assertNotNull(notification)
@@ -172,7 +173,7 @@ class CTInAppNotificationTest {
     }
 
     @Test
-    fun `initWithJSON missingFields should handle defaults`() {
+    fun `constructor should set defaults for missing json fields`() {
         // Arrange
         val type = "garbage"
         val jsonString = """
@@ -183,7 +184,7 @@ class CTInAppNotificationTest {
         val jsonObject = JSONObject(jsonString)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         // Assert
         assertNotNull(notification)
@@ -194,34 +195,33 @@ class CTInAppNotificationTest {
         assertEquals(-1, notification.totalDailyCount)
         assertEquals(-1, notification.maxPerSession)
         assertFalse(notification.isTablet)
-        assertEquals("#FFFFFF", notification.backgroundColor)
+        assertEquals(Constants.WHITE, notification.backgroundColor)
         assertTrue(notification.isPortrait)
         assertFalse(notification.isLandscape)
         assertNull(notification.title)
-        assertNull(notification.titleColor)
+        assertEquals(Constants.BLACK, notification.titleColor)
         assertNull(notification.message)
-        assertNull(notification.messageColor)
+        assertEquals(Constants.BLACK, notification.messageColor)
         assertFalse(notification.isHideCloseButton)
         assertNotNull(notification.mediaList)
         assertEquals(0, notification.mediaList.size)
     }
 
     @Test
-    fun `initWithJSON invalidJson should set error`() {
+    fun `constructor invalidJson should set error`() {
         // Arrange
         val inAppNotification = mockk<JSONObject>()
         every { inAppNotification.has(any()) } throws JSONException("some exception")
         every { inAppNotification.get(any()) } throws JSONException("some exception")
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(inAppNotification, true)
-        // Assert
-        assertNotNull(notification)
+        val notification = CTInAppNotification(inAppNotification, true)
+
         assertNotNull(notification.error)
     }
 
     @Test
-    fun `initWithJSON customHtmlType should call legacy configure`() {
+    fun `constructor customHtmlType should call legacy configure`() {
         // Arrange
         val jsonString = """
             {
@@ -231,7 +231,7 @@ class CTInAppNotificationTest {
         val jsonObject = JSONObject(jsonString)
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
         // Assert
         assertNotNull(notification)
@@ -239,11 +239,11 @@ class CTInAppNotificationTest {
     }
 
     @Test
-    fun `initWithJSON checks invalid aspect ratio and defaults it to -1`() {
+    fun `constructor checks invalid aspect ratio and defaults it to -1`() {
 
         // Arrange data which is invalid json from BE with aspect ratio 0.0
         val jo = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_INVALID_ASPECT_RATIO)
-        val notification = CTInAppNotification().initWithJSON(jo, true)
+        val notification = CTInAppNotification(jo, true)
 
         // assert it is set as default -1.0
         assertEquals(CTInAppNotification.HTML_DEFAULT_ASPECT_RATIO, notification.aspectRatio, Double.MIN_VALUE)
@@ -251,37 +251,40 @@ class CTInAppNotificationTest {
 
     @Test
     fun checkTimeForParcelize() {
-        val timeInMillisHalfInter = measureTimeMillis { parcelizeCheck(JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL)) }
-        System.out.println("Time taken to parcelize half inter = $timeInMillisHalfInter")
+        val timeInMillisHalfInter = parcelizeCheck(JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL))
+        println("Time taken to parcelize half inter = $timeInMillisHalfInter")
         assertTrue(timeInMillisHalfInter < 50)
 
-        val timeInMillisHtml = measureTimeMillis { parcelizeCheck(JSONObject(InAppFixtures.TYPE_BIG_HTML)) }
-        System.out.println("Time taken to parcelize html = $timeInMillisHtml")
+        val timeInMillisHtml = parcelizeCheck(JSONObject(InAppFixtures.TYPE_BIG_HTML))
+        println("Time taken to parcelize html = $timeInMillisHtml")
         assertTrue(timeInMillisHtml < 50)
     }
 
-    fun parcelizeCheck(
-        jsonObject : JSONObject
-    ) {
+    fun parcelizeCheck(jsonObject: JSONObject): Long {
 
         // Act
-        val notification = CTInAppNotification().initWithJSON(jsonObject, true)
+        val notification = CTInAppNotification(jsonObject, true)
 
+        var createdFromParcel: CTInAppNotification
+        var eop = 0
         val parcel = Parcel.obtain()
-        notification.writeToParcel(parcel, 0)
+        val parcelizeTime = measureTimeMillis {
+            notification.writeToParcel(parcel, 0)
 
-        //>>>>> Record dataPosition
-        val eop = parcel.dataPosition()
+            //>>>>> Record dataPosition
+            eop = parcel.dataPosition()
 
-        // After you're done with writing, you need to reset the parcel for reading:
-        parcel.setDataPosition(0)
+            // After you're done with writing, you need to reset the parcel for reading:
+            parcel.setDataPosition(0)
 
-        // Reconstruct object from parcel and asserts:
-        val createdFromParcel: CTInAppNotification = CTInAppNotification.CREATOR.createFromParcel(parcel)
-
+            // Reconstruct object from parcel and asserts:
+            createdFromParcel = CTInAppNotification.CREATOR.createFromParcel(parcel)
+        }
         // Assert
-        assertInAppNotificationsAreEqual(createdFromParcel, notification)
+        assertInAppNotificationsAreEqual(notification, createdFromParcel)
         assertEquals(eop, parcel.dataPosition());
+
+        return parcelizeTime
     }
 
     private fun assertInAppNotificationsAreEqual(
@@ -312,7 +315,7 @@ class CTInAppNotificationTest {
         assertEquals(expected.isPortrait, actual.isPortrait)
         assertEquals(expected.isTablet, actual.isTablet)
         assertEquals(expected.isJsEnabled, actual.isJsEnabled)
-        //assertEquals(expected.jsonDescription, actual.jsonDescription)
+        assertEquals(expected.jsonDescription.toString(), actual.jsonDescription.toString())
         assertEquals(expected.message, actual.message)
         assertEquals(expected.messageColor, actual.messageColor)
         assertEquals(expected.type, actual.type)
@@ -326,7 +329,8 @@ class CTInAppNotificationTest {
         assertEquals(expected.isPortrait, actual.isPortrait)
         assertEquals(expected.isLandscape, actual.isLandscape)
         assertEquals(expected.timeToLive, actual.timeToLive)
-        //assertEquals(expected.buttons, actual.buttons)
+        assertEquals(expected.buttons, actual.buttons)
+        assertEquals(expected.mediaList, actual.mediaList)
         assertEquals(expected.position, actual.position)
         assertEquals(expected.isShowClose, actual.isShowClose)
         assertNotEquals(expected.isVideoSupported, actual.isVideoSupported)

@@ -88,26 +88,27 @@ internal class InAppResponseAdapter(
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
 
                 if (portrait != null) {
-                    val portraitMedia = CTInAppNotificationMedia()
-                        .initWithJSON(portrait, Configuration.ORIENTATION_PORTRAIT)
+                    val portraitMedia = CTInAppNotificationMedia.create(
+                        portrait,
+                        Configuration.ORIENTATION_PORTRAIT
+                    )
 
-                    if (portraitMedia != null && portraitMedia.mediaUrl != null) {
-                        if (portraitMedia.isImage) {
+                    if (portraitMedia != null && portraitMedia.mediaUrl.isNotBlank()) {
+                        if (portraitMedia.isImage()) {
                             imageList.add(portraitMedia.mediaUrl)
-                        } else if (portraitMedia.isGIF) {
+                        } else if (portraitMedia.isGIF()) {
                             gifList.add(portraitMedia.mediaUrl)
                         }
                     }
                 }
                 val landscape = jsonObject.optJSONObject(Constants.KEY_MEDIA_LANDSCAPE)
                 if (landscape != null) {
-                    val landscapeMedia = CTInAppNotificationMedia()
-                            .initWithJSON(landscape, Configuration.ORIENTATION_LANDSCAPE)
+                    val landscapeMedia = CTInAppNotificationMedia.create(landscape, Configuration.ORIENTATION_LANDSCAPE)
 
-                    if (landscapeMedia != null && landscapeMedia.mediaUrl != null) {
-                        if (landscapeMedia.isImage) {
+                    if (landscapeMedia != null && landscapeMedia.mediaUrl.isNotBlank()) {
+                        if (landscapeMedia.isImage()) {
                             imageList.add(landscapeMedia.mediaUrl)
-                        } else if (landscapeMedia.isGIF) {
+                        } else if (landscapeMedia.isGIF()) {
                             gifList.add(landscapeMedia.mediaUrl)
                         }
                     }

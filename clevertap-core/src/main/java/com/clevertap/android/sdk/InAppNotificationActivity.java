@@ -40,6 +40,7 @@ import com.clevertap.android.sdk.inapp.InAppListener;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.List;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
         DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback {
@@ -390,7 +391,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     private void showAlertDialogForInApp() {
-        ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
+        List<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
         if (buttons.isEmpty()) {
             config.getLogger()
                     .debug("InAppNotificationActivity: Notification has no buttons, not showing Alert InApp");
