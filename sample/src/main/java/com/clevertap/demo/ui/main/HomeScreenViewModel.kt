@@ -29,7 +29,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
         when (commandPosition) {
             "0-0" -> {
-                cleverTapAPI?.pushEvent("ewe")
+                cleverTapAPI?.pushEvent("Product viewed")
 //                cleverTapAPI?.pushEvent("BlockBRTesting")
             }
 

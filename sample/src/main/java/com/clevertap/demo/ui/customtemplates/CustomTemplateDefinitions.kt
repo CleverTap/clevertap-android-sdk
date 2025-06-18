@@ -8,8 +8,6 @@ import com.clevertap.android.sdk.inapp.customtemplates.template
 import com.clevertap.android.sdk.inapp.customtemplates.templatesSet
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext
 import com.clevertap.android.sdk.inapp.customtemplates.FunctionPresenter
-import com.clevertap.demo.HomeScreenActivity
-import com.clevertap.demo.utils.ActivityTracker
 
 fun createCustomTemplates(customInterPresenter: CustomInterstitialPresenter) = templatesSet(
     // Custom Interstitial Template (in-app)
@@ -39,7 +37,7 @@ fun createCustomTemplates(customInterPresenter: CustomInterstitialPresenter) = t
     }
 )
 
-class CustomInterstitialPresenter(private val appCtx: Context) : TemplatePresenter {
+class CustomInterstitialPresenter() : TemplatePresenter {
     override fun onPresent(context: CustomTemplateContext.TemplateContext) {
         // Extract template data
         val title = context.getString("Title") ?: "Welcome!"
@@ -48,36 +46,30 @@ class CustomInterstitialPresenter(private val appCtx: Context) : TemplatePresent
         val showCloseButton = context.getBoolean("Show close button") ?: true
         val autoCloseAfter = context.getInt("Auto close after") ?: 0
         
-        Log.d("CustomTemplate", "Title: $title")
-        Log.d("CustomTemplate", "Message: $message")
-        Log.d("CustomTemplate", "Show close button: $showCloseButton")
-        Log.d("CustomTemplate", "Auto close after: $autoCloseAfter")
-        Log.d("CustomTemplate", "Image file: ${imageFile?.let { "Available: $it" } ?: "Not provided"}")
+        val viewModel = CustomTemplateManager.getViewModel()
         
-        // Get the current activity from CleverTap context
-        val activity = ActivityTracker.currentForegroundActivity
-        if (activity is HomeScreenActivity) {
-            // Show the overlay dialog with template data
-            activity.showCustomTemplateDialog(
-                title = title,
-                message = message,
-                imageUrl = imageFile?.toString(), // Convert file to string for URL
-                primaryButtonText = "Continue",
-                secondaryButtonText = if (showCloseButton) "Close" else "Cancel",
-                onPrimaryAction = {
-                   context.triggerActionArgument("Open action", activity)
-                },
-                onSecondaryAction = {
-                    Log.d("CustomTemplate", "Secondary action - closing template")
-                },
-            )
-            context.setPresented()
-        } else {
-            Log.e("CustomTemplate", "Activity is not HomeScreenActivity, cannot show dialog")
-        }
+        viewModel.showDialog(
+            title = title,
+            message = message,
+            imageUrl = imageFile?.toString(),
+            primaryButtonText = "Trigger",
+            secondaryButtonText = if (showCloseButton) "Close" else "",
+            onPrimaryAction = {
+                context.triggerActionArgument("Open action")
+                onClose(context)
+            },
+            onSecondaryAction = {
+                onClose(context)
+            }
+        )
+        
+        // Mark template as presented
+        context.setPresented()
     }
 
     override fun onClose(context: CustomTemplateContext.TemplateContext) {
+        val viewModel = CustomTemplateManager.getViewModel()
+        viewModel.hideDialog()
         context.setDismissed()
     }
 }
@@ -88,6 +80,8 @@ class OpenURLConfirmPresenter : FunctionPresenter {
             "CustomTemplate",
             "onPresent called for template: ${context.templateName}"
         )
+        
+        context.setPresented()
     }
 }
 
@@ -97,5 +91,7 @@ class CopyToClipboardPresenter : FunctionPresenter {
             "CustomTemplate",
             "onPresent called for template: ${context.templateName}"
         )
+        
+        context.setPresented()
     }
 }

@@ -112,7 +112,7 @@ object HomeScreenModel {
                 //"Add onceVariablesChangedAndNoDownloadsPending \n first time after app launch for first time",
             ),
             "LOCALE" to listOf("Set Locale"),
-            "CUSTOM TEMPLATES" to listOf("Sync Registered Custom Templates"),
+            "CUSTOM TEMPLATES" to listOf("Sync Registered Custom Templates", "Test Custom Template Dialog"),
         )
     }
 }

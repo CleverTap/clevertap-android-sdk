@@ -28,7 +28,6 @@ import com.clevertap.android.sdk.pushnotification.PushType
 import com.clevertap.demo.ui.customtemplates.CustomInterstitialPresenter
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.clevertap.demo.ui.customtemplates.createCustomTemplates
-import com.clevertap.demo.utils.ActivityTracker
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
@@ -71,13 +70,13 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
     private fun cleverTapPreAppCreated() {
         CleverTapAPI.registerCustomInAppTemplates {
-            createCustomTemplates(customInterPresenter = CustomInterstitialPresenter(this))
+            createCustomTemplates(customInterPresenter = CustomInterstitialPresenter())
         }
 
         CleverTapAPI.setDebugLevel(VERBOSE)
         //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
         //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
-        TemplateRenderer.debugLevel = 3;
+        TemplateRenderer.debugLevel = 3
         CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
 
         // this is for clevertap to start sending events => app launched => hence done in app create
@@ -86,9 +85,6 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
         // this is for the setup for canceling notifications
         registerActivityLifecycleCallbacks(this)
-        
-        // Register activity tracker for getting current activity
-        registerActivityLifecycleCallbacks(ActivityTracker)
     }
 
     private fun cleverTapPostAppCreated() {
@@ -218,7 +214,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                     .penaltyLog()
                     //.penaltyDeath()
                     .build()
-            );
+            )
             StrictMode.setVmPolicy(
                 StrictMode.VmPolicy.Builder()
                     .detectAll()
@@ -252,11 +248,11 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     override fun onActivityResumed(activity: Activity) {
         val payload = activity.intent?.extras
         if (payload?.containsKey("pt_id") == true && payload["pt_id"] == "pt_rating") {
-            val nm = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val nm = activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.cancel(payload["notificationId"] as Int)
         }
         if (payload?.containsKey("pt_id") == true && payload["pt_id"] == "pt_product_display") {
-            val nm = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val nm = activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.cancel(payload["notificationId"] as Int)
         }
     }

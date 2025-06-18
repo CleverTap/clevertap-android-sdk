@@ -15,11 +15,10 @@ import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import com.clevertap.demo.ui.overlay.OverlayDialogConfig
-import com.clevertap.demo.ui.overlay.OverlayScreen
+import androidx.activity.viewModels
+import com.clevertap.demo.ui.customtemplates.OverlayScreen
+import com.clevertap.demo.ui.customtemplates.CustomTemplateViewModel
+import com.clevertap.demo.ui.customtemplates.CustomTemplateManager
 import com.clevertap.android.sdk.*
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
@@ -49,8 +48,10 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     var cleverTapDefaultInstance: CleverTapAPI? = MyApplication.ctInstance // access singleton
 
-    // Overlay dialog state
-    private var showOverlayDialog by mutableStateOf(false) // Changed to false - don't show by default
+    // ViewModel for managing dialog state
+    private val customTemplateViewModel by viewModels<CustomTemplateViewModel> {
+        ViewModelFactory(cleverTapDefaultInstance)
+    }
     private lateinit var overlayComposeView: ComposeView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,15 +79,24 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     }
 
     private fun setupOverlayDialog() {
+        CustomTemplateManager.setViewModel(customTemplateViewModel)
         overlayComposeView = findViewById(R.id.overlay_compose_view)
         overlayComposeView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val dialogState = customTemplateViewModel.dialogState
+                
+                OverlayScreen(
+                    dialogConfig = dialogState.config,
+                    showDialog = dialogState.isVisible,
+                )
+            }
         }
     }
 
     private fun checkFirstTimePreferences(callback: (Boolean, String?) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {
-            val sharedPref = getPreferences(Context.MODE_PRIVATE)
+            val sharedPref = getPreferences(MODE_PRIVATE)
             val isReadPolicy = sharedPref.getBoolean("isReadPolicy", false)
             val email = sharedPref.getString("email", null)
 
@@ -114,7 +124,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
                 override fun onAccept(isFirstTime: Boolean) {
                     showLocationPermissionPolicyDialog {
                         lifecycleScope.launch(Dispatchers.IO) {
-                            getPreferences(Context.MODE_PRIVATE).edit().apply {
+                            getPreferences(MODE_PRIVATE).edit().apply {
                                 putBoolean("isReadPolicy", true)
                                 apply()
                             }
@@ -325,73 +335,5 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     override fun onDestroy() {
         super.onDestroy()
         cleverTapDefaultInstance?.unregisterPushPermissionNotificationResponseListener(this)
-    }
-
-    // Method to show overlay dialog programmatically
-    fun showCustomOverlayDialog() {
-        showOverlayDialog = true
-    }
-
-    // Method to hide overlay dialog programmatically
-    fun hideCustomOverlayDialog() {
-        showOverlayDialog = false
-    }
-
-    // Method to show overlay dialog with custom template data
-    fun showCustomTemplateDialog(
-        title: String,
-        message: String,
-        imageUrl: String? = null,
-        primaryButtonText: String = "Continue",
-        secondaryButtonText: String = "Close",
-        onPrimaryAction: () -> Unit = {},
-        onSecondaryAction: () -> Unit = {},
-    ) {
-        overlayComposeView.setContent {
-            val dialogConfig = OverlayDialogConfig(
-                title = title,
-                message = message,
-                image = imageUrl,
-                primaryButtonText = primaryButtonText,
-                secondaryButtonText = secondaryButtonText,
-                onPrimaryClick = {
-                    onPrimaryAction()
-                },
-                onSecondaryClick = {
-                    onSecondaryAction()
-                    hideCustomOverlayDialog()
-                },
-                onDismiss = {
-                    hideCustomOverlayDialog()
-                }
-            )
-
-            OverlayScreen(
-                dialogConfig = dialogConfig,
-                showDialog = showOverlayDialog, // Use the state variable instead of hardcoded true
-                onDismissDialog = {
-                    hideCustomOverlayDialog()
-                }
-            )
-        }
-        showOverlayDialog = true
-    }
-    
-    // Test method to verify button dismissal works
-    fun testCustomTemplateDialog() {
-        Log.d(TAG, "Testing custom template dialog with proper dismissal")
-        showCustomTemplateDialog(
-            title = "Test Dialog",
-            message = "This is a test to verify that the buttons properly dismiss the dialog and that buttons appear at the bottom.",
-            imageUrl = "https://via.placeholder.com/160x160.png?text=TEST",
-            primaryButtonText = "Primary",
-            secondaryButtonText = "Secondary",
-            onPrimaryAction = {
-                Toast.makeText(this, "Primary clicked - dialog should dismiss", Toast.LENGTH_SHORT).show()
-            },
-            onSecondaryAction = {
-                Toast.makeText(this, "Secondary clicked - dialog should dismiss", Toast.LENGTH_SHORT).show()
-            }
-        )
     }
 }
