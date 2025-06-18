@@ -2,6 +2,7 @@ package com.clevertap.android.sdk
 
 import android.location.Location
 import android.os.Bundle
+import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer
 import com.clevertap.android.sdk.usereventlogs.UserEventLogTestData
@@ -1059,5 +1060,100 @@ class CleverTapAPITest : BaseTestCase() {
         // Assert
         assertEquals(null, actualValue)
         verify(exactly = 0) { corestate.localDataStore.getProfileProperty(any()) }
+    }
+
+    // =========================
+    // IN-APP NOTIFICATION MANAGEMENT TESTS
+    // =========================
+
+    @Test
+    fun test_discardInAppNotifications() {
+
+        initializeCleverTapAPI()
+        // Arrange
+        corestate.config.isAnalyticsOnly = true
+
+        // Act
+        cleverTapAPI.discardInAppNotifications()
+
+        // Assert
+        verify(exactly = 0) { corestate.inAppController.discardInApps() }
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = false
+
+        // Act
+        cleverTapAPI.discardInAppNotifications()
+
+        // Assert
+        verify{ corestate.inAppController.discardInApps() }
+    }
+
+    @Test
+    fun test_resumeInAppNotifications() {
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = true
+        initializeCleverTapAPI()
+
+        // Act
+        cleverTapAPI.resumeInAppNotifications()
+
+        // Assert
+        verify(exactly = 0) { corestate.inAppController.resumeInApps() }
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = false
+
+        // Act
+        cleverTapAPI.resumeInAppNotifications()
+
+        // Assert
+        verify { corestate.inAppController.resumeInApps() }
+    }
+
+    @Test
+    fun test_suspendInAppNotifications() {
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = true
+        initializeCleverTapAPI()
+
+        // Act
+        cleverTapAPI.suspendInAppNotifications()
+
+        // Assert
+        verify(exactly = 0) { corestate.inAppController.suspendInApps() }
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = false
+
+        // Act
+        cleverTapAPI.suspendInAppNotifications()
+
+        // Assert
+        verify { corestate.inAppController.suspendInApps() }
+    }
+
+    @Test
+    fun test_fetchInApps_analyticsOnly_false() {
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = false
+        initializeCleverTapAPI()
+        val expectedJson = cleverTapAPI.getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS)
+
+        val callback = mockk<FetchInAppsCallback>()
+
+        // Act
+        cleverTapAPI.fetchInApps(callback)
+
+        // Assert
+        val jsonSlot = slot<JSONObject>()
+        verifyOrder {
+            corestate.callbackManager.fetchInAppsCallback = callback
+            corestate.analyticsManager.sendFetchEvent(capture(jsonSlot))
+        }
+        assertEquals(expectedJson.toString(), jsonSlot.captured.toString())
     }
 }
