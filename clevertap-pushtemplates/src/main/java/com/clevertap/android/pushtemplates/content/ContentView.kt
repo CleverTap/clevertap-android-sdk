@@ -119,13 +119,13 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType) {
+    fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType, altText: String) {
         if (pt_big_img.isNotNullAndEmpty()) {
             val imageViewId = when (scaleType) {
                 PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
                 PTScaleType.CENTER_CROP -> R.id.big_image
             }
-            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context)
+            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context, altText)
             if (!Utils.getFallback()) {
                 remoteView.setViewVisibility(imageViewId, View.VISIBLE)
             }

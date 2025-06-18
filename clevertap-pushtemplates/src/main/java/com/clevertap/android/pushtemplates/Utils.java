@@ -258,6 +258,24 @@ public class Utils {
             PTLog.debug("Image was not perfect. URL:" + imageUrl + " hiding image view");
             setFallback(true);
         }
+    }
+
+
+    public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl, RemoteViews remoteViews,Context context, String altText) {
+        long bmpDownloadStartTimeInMillis = System.currentTimeMillis();
+        Bitmap image = getBitmapFromURL(imageUrl,context);
+        setFallback(false);
+
+        if (image != null) {
+            remoteViews.setImageViewBitmap(imageViewID, image);
+            remoteViews.setContentDescription(imageViewID, altText);
+            long bmpDownloadEndTimeInMillis = System.currentTimeMillis();
+            long pift = bmpDownloadEndTimeInMillis - bmpDownloadStartTimeInMillis;
+            PTLog.verbose("Fetched IMAGE "+imageUrl+" in "+pift+" millis");
+        } else {
+            PTLog.debug("Image was not perfect. URL:" + imageUrl + " hiding image view");
+            setFallback(true);
+        }
 
     }
 
