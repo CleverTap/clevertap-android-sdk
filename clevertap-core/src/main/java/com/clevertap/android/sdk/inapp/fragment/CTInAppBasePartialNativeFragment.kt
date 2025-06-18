@@ -1,11 +1,8 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
 import android.content.Context
-import android.graphics.Color
-import android.os.Bundle
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnLongClickListener
@@ -19,6 +16,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import kotlin.math.abs
 import androidx.core.graphics.toColorInt
+import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
 
 internal abstract class CTInAppBasePartialNativeFragment : CTInAppBasePartialFragment(),
     OnTouchListener, OnLongClickListener {

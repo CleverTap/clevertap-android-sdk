@@ -40,6 +40,11 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
+import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlFooterFragment
+import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHeaderFragment
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeFooterFragment
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.CTExecutors

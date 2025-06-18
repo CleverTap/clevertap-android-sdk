@@ -7,6 +7,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import java.lang.ref.WeakReference
 
 internal class InAppWebViewClient(fragment: CTInAppBaseFragment) : WebViewClient() {

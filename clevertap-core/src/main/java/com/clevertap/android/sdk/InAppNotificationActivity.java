@@ -22,16 +22,16 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.clevertap.android.sdk.inapp.CTInAppAction;
-import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
-import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
-import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
-import com.clevertap.android.sdk.inapp.CTInAppHtmlInterstitialFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeCoverFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeCoverImageFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFullFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlCoverFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHalfInterstitialFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlInterstitialFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeCoverFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeCoverImageFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHalfInterstitialFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHalfInterstitialImageFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeInterstitialFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton;
 import com.clevertap.android.sdk.inapp.CTInAppType;
@@ -39,7 +39,6 @@ import com.clevertap.android.sdk.inapp.InAppActionType;
 import com.clevertap.android.sdk.inapp.InAppListener;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.List;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,

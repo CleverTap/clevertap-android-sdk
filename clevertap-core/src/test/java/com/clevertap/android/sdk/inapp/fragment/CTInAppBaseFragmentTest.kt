@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
 import android.app.Activity
 import android.content.Context
@@ -11,6 +11,12 @@ import androidx.fragment.app.FragmentTransaction
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DidClickForHardPermissionListener
+import com.clevertap.android.sdk.inapp.CTInAppAction
+import com.clevertap.android.sdk.inapp.CTInAppNotification
+import com.clevertap.android.sdk.inapp.CTLocalInApp
+import com.clevertap.android.sdk.inapp.InAppActionType
+import com.clevertap.android.sdk.inapp.InAppFixtures
+import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.utils.configMock
 import io.mockk.confirmVerified
 import io.mockk.every
@@ -117,7 +123,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `handleButtonClickAtIndex should trigger permission listener for localInApps and dismiss the inApp`() {
-        val localInAppJson = CTLocalInApp.builder()
+        val localInAppJson = CTLocalInApp.Companion.builder()
             .setInAppType(CTLocalInApp.InAppType.ALERT)
             .setTitleText("Title")
             .setMessageText("Message")
@@ -184,7 +190,7 @@ class CTInAppBaseFragmentTest {
             .appendQueryParameter("param3", param3)
             .build().toString()
 
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -224,7 +230,7 @@ class CTInAppBaseFragmentTest {
             putString("param2", dataParam2)
         }
 
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, data)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, data)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -250,7 +256,7 @@ class CTInAppBaseFragmentTest {
             .appendQueryParameter(Constants.KEY_C2A, callToActionParam)
             .build().toString()
 
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -262,7 +268,7 @@ class CTInAppBaseFragmentTest {
         }
 
         val callToActionArgument = "argument"
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), callToActionArgument, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), callToActionArgument, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -287,7 +293,7 @@ class CTInAppBaseFragmentTest {
             .appendQueryParameter("param1", param1)
             .build().toString()
 
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -306,7 +312,7 @@ class CTInAppBaseFragmentTest {
         }
 
         val callToActionArgument = "argument"
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), callToActionArgument, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), callToActionArgument, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),

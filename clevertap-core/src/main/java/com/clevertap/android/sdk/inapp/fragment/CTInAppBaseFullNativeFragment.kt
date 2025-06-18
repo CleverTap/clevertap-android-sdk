@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
 import android.content.Context
 import android.graphics.Paint
@@ -12,6 +12,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import androidx.core.graphics.toColorInt
+import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
 
 internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment() {
 

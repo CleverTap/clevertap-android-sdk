@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Utils
