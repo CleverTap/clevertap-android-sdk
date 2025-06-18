@@ -27,7 +27,7 @@ object CustomTemplateManager {
     }
 
     /**
-     * Set the ViewModel instance (called from Activity when using proper lifecycle)
+     * Set the ViewModel instance
      */
     fun setViewModel(viewModel: CustomTemplateViewModel) {
         synchronized(this) {

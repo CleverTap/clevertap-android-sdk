@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import android.util.Log
-import com.clevertap.android.sdk.CleverTapAPI
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
@@ -85,10 +84,7 @@ class CustomTemplateViewModel() : ViewModel() {
             }
         }
     }
-    
-    /**
-     * Hide the currently visible dialog
-     */
+
     fun hideDialog() {
         Log.d(TAG, "Hiding dialog")
         // Cancel auto-close job when manually hiding dialog
@@ -99,11 +95,9 @@ class CustomTemplateViewModel() : ViewModel() {
         )
     }
     
-    /**
-     * Force hide dialog (useful for emergency cases)
-     */
+
     fun forceHideDialog() {
-        Log.w(TAG, "Force hiding dialog")
+        Log.d(TAG, "Force hiding dialog")
         autoCloseJob?.cancel()
         dialogState = CustomTemplateDialogState(isVisible = false, config = null)
     }
