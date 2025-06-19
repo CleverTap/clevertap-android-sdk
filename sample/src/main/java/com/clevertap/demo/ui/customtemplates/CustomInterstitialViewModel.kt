@@ -4,10 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 
@@ -22,8 +21,6 @@ class CustomTemplateViewModel() : ViewModel() {
     var dialogState by mutableStateOf(CustomTemplateDialogState())
         private set
     
-    // Coroutine scope for auto-close functionality
-    private val viewModelScope = CoroutineScope(Dispatchers.Main)
     private var autoCloseJob: Job? = null
     
     /**

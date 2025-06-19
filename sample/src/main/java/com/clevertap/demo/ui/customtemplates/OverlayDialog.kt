@@ -52,23 +52,37 @@ fun CustomTemplateImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit
 ) {
-    GlideImage(
-        model = imageUrl,
-        contentDescription = null,
-        modifier = modifier,
-        contentScale = contentScale,
-        loading = placeholder {
-            Box(
-                modifier = modifier,
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = Color(0xFF6200EA)
-                )
+    if (imageUrl != null) {
+        GlideImage(
+            model = imageUrl,
+            contentDescription = null,
+            modifier = modifier,
+            contentScale = contentScale,
+            loading = placeholder {
+                Box(
+                    modifier = modifier,
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color(0xFF6200EA)
+                    )
+                }
+            },
+            failure = placeholder {
+                Box(
+                    modifier = modifier,
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Image Unavailable",
+                        color = Color.Red,
+                        fontSize = 16.sp
+                    )
+                }
             }
-        },
-    )
+        )
+    }
 }
 
 @Composable
