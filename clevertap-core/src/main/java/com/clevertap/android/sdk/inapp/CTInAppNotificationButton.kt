@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppAction.CREATOR.createFromJson
 import org.json.JSONObject
 
-internal class CTInAppNotificationButton : Parcelable {
+class CTInAppNotificationButton : Parcelable {
 
     val backgroundColor: String
 

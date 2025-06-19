@@ -13,7 +13,7 @@ import com.clevertap.android.sdk.utils.readJson
 import com.clevertap.android.sdk.utils.writeJson
 import org.json.JSONObject
 
-internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable {
+class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable {
 
     var templateName: String?
         private set
@@ -22,7 +22,7 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
      * Whether this in-app template was triggered from another template as an action or it was the main template in
      * the notification.
      */
-    var isAction = false
+    internal var isAction = false
 
     private var templateId: String?
     private var templateDescription: String?
@@ -48,13 +48,13 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
         }
     }
 
-    fun getFileArgsUrls(templatesManager: TemplatesManager): List<String> {
+    internal fun getFileArgsUrls(templatesManager: TemplatesManager): List<String> {
         val urls = mutableListOf<String>()
         getFileArgsUrls(templatesManager, urls)
         return urls
     }
 
-    fun getFileArgsUrls(templatesManager: TemplatesManager, filesList: MutableList<String>) {
+    internal fun getFileArgsUrls(templatesManager: TemplatesManager, filesList: MutableList<String>) {
         val templateName = templateName ?: return
         val customTemplate = templatesManager.getTemplate(templateName) ?: return
         val inAppArguments = args ?: return

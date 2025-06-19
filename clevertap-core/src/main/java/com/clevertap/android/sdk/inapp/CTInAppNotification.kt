@@ -14,9 +14,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import kotlin.reflect.KClass
 
-internal class CTInAppNotification : Parcelable {
+class CTInAppNotification : Parcelable {
 
     var actionExtras: JSONObject? = null
+        private set
 
     var backgroundColor: String = Constants.WHITE
         private set

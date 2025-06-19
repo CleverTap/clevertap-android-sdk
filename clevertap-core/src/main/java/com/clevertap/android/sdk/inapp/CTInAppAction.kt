@@ -11,7 +11,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.utils.getStringOrNull
 import org.json.JSONObject
 
-internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
+class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
 
     var type: InAppActionType?
         private set
@@ -137,7 +137,7 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
     }
 }
 
-internal enum class InAppActionType(private val stringValue: String) {
+enum class InAppActionType(private val stringValue: String) {
     CLOSE("close"),
     OPEN_URL("url"),
     KEY_VALUES("kv"),
