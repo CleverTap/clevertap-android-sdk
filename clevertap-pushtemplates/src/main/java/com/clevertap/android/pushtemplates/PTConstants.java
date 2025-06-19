@@ -117,6 +117,7 @@ public class PTConstants {
     public static final int PT_TIMER_MIN_THRESHOLD = 10;
 
     public static final String PT_BIG_IMG_ALT = "pt_big_img_alt";
+    public static final String PT_BIG_IMG_ALT_ALT_TEXT = "pt_big_img_alt_alt_text";
 
     public static final String PT_TITLE_ALT = "pt_title_alt";
 

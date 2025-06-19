@@ -111,7 +111,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             pt_msg_summary = extras.getString(PTConstants.PT_MSG_SUMMARY);
             pt_title = extras.getString(PTConstants.PT_TITLE);
             pt_rating_default_dl = extras.getString(PTConstants.PT_DEFAULT_DL);
-            imageList = Utils.getImageListFromExtras(extras);
             deepLinkList = Utils.getDeepLinkListFromExtras(extras);
             bigTextList = Utils.getBigTextFromExtras(extras);
             smallTextList = Utils.getSmallTextFromExtras(extras);

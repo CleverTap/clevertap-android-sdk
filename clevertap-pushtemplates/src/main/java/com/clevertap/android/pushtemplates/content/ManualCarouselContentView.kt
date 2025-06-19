@@ -35,14 +35,17 @@ internal class ManualCarouselContentView(context: Context, renderer: TemplateRen
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
-        renderer.imageList?.forEachIndexed { index, imageUrl ->
+        renderer.imageList?.forEachIndexed { index, imageData ->
+            val imageUrl = imageData.url
+            val altText = imageData.altText
             val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_flipper_dynamic)
 
             Utils.loadImageURLIntoRemoteView(
                 imageViewId,
                 imageUrl,
                 tempRemoteView,
-                context
+                context,
+                altText
             )
 
             if (!Utils.getFallback()) {

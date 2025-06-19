@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">PushTemplates</string>
     <string name="confirm_btn">Confirm</string>
+    <string name="confirm_btn_content_description">Confirm Button</string>
+    <string name="next_btn_content_description">Next Image</string>
+    <string name="prev_btn_content_description">Previous Image</string>
     <string name="notification_scrim">Notification Scrim</string>
     <string name="rating_star_1">Rating One Star</string>
     <string name="rating_star_2">Rating Two Star</string>
