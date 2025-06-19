@@ -3,6 +3,7 @@ package com.clevertap.demo
 import android.app.Activity
 import android.app.Application.ActivityLifecycleCallbacks
 import android.app.NotificationManager
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -25,6 +26,7 @@ import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.PushType
+import com.clevertap.demo.ui.customtemplates.CopyToClipboardPresenter
 import com.clevertap.demo.ui.customtemplates.CustomInterstitialPresenter
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.clevertap.demo.ui.customtemplates.createCustomTemplates
@@ -69,8 +71,12 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     private fun cleverTapPreAppCreated() {
+        val clipboardManager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         CleverTapAPI.registerCustomInAppTemplates {
-            createCustomTemplates(customInterPresenter = CustomInterstitialPresenter())
+            createCustomTemplates(
+                customInterPresenter = CustomInterstitialPresenter(),
+                copyToClipboardPresenter = CopyToClipboardPresenter(clipboardManager)
+            )
         }
 
         CleverTapAPI.setDebugLevel(VERBOSE)

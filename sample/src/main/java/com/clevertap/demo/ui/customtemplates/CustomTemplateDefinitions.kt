@@ -1,5 +1,7 @@
 package com.clevertap.demo.ui.customtemplates
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.util.Log
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatePresenter
 import com.clevertap.android.sdk.inapp.customtemplates.function
@@ -8,16 +10,25 @@ import com.clevertap.android.sdk.inapp.customtemplates.templatesSet
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext
 import com.clevertap.android.sdk.inapp.customtemplates.FunctionPresenter
 
-fun createCustomTemplates(customInterPresenter: CustomInterstitialPresenter) = templatesSet(
+fun createCustomTemplates(
+    customInterPresenter: CustomInterstitialPresenter,
+    copyToClipboardPresenter: CopyToClipboardPresenter
+) = templatesSet(
     // Custom Interstitial Template (in-app)
     template {
         name("Custom Interstitial")
         stringArgument("Title", "Welcome!")
-        stringArgument("Message", "This is a custom interstitial message that can be quite long and will be displayed in a scrollable view if needed. You can add multiple lines of text here and it will automatically scroll when the content exceeds the available space.") // Message string with default
+        stringArgument(
+            "Message",
+            "This is a custom interstitial message that can be quite long and will be displayed in a scrollable view if needed. You can add multiple lines of text here and it will automatically scroll when the content exceeds the available space."
+        ) // Message string with default
         fileArgument("Image")
         actionArgument("Open action")
         booleanArgument("Show close button", true)
-        intArgument("Auto close after", 0) // Auto close dialog after specified seconds (0 = no auto close)
+        intArgument(
+            "Auto close after",
+            0
+        ) // Auto close dialog after specified seconds (0 = no auto close)
         presenter(customInterPresenter)
     },
 
@@ -25,7 +36,7 @@ fun createCustomTemplates(customInterPresenter: CustomInterstitialPresenter) = t
     function(isVisual = false) {
         name("Copy to clipboard")
         stringArgument("Text", "Hello from CleverTap!") // Text string to copy with default
-        presenter(CopyToClipboardPresenter())
+        presenter(copyToClipboardPresenter)
     },
 
     // Open URL with Confirm Function (visual)
@@ -43,10 +54,11 @@ class CustomInterstitialPresenter() : TemplatePresenter {
         val message = context.getString("Message") ?: "This is a custom message"
         val imageFile = context.getFile("Image")
         val showCloseButton = context.getBoolean("Show close button") ?: true
-        val autoCloseAfter = context.getInt("Auto close after") ?: 0 // Get auto-close duration in seconds
-        
+        val autoCloseAfter =
+            context.getInt("Auto close after") ?: 0 // Get auto-close duration in seconds
+
         val viewModel = CustomTemplateManager.getViewModel()
-        
+
         viewModel.showDialog(
             title = title,
             message = message,
@@ -65,7 +77,7 @@ class CustomInterstitialPresenter() : TemplatePresenter {
                 onClose(context)
             }
         )
-        
+
         // Mark template as presented
         context.setPresented()
     }
@@ -83,18 +95,20 @@ class OpenURLConfirmPresenter : FunctionPresenter {
             "CustomTemplate",
             "onPresent called for template: ${context.templateName}"
         )
-        
+
         context.setPresented()
     }
 }
 
-class CopyToClipboardPresenter : FunctionPresenter {
+class CopyToClipboardPresenter(private val clipboardManager: ClipboardManager) : FunctionPresenter {
     override fun onPresent(context: CustomTemplateContext.FunctionContext) {
-        Log.d(
-            "CustomTemplate",
-            "onPresent called for template: ${context.templateName}"
+        val copiedData = context.getString("Text")
+        clipboardManager.setPrimaryClip(
+            ClipData.newPlainText("Text", copiedData)
         )
-        
         context.setPresented()
+
+        // non-visual functions need not be dismissed
+        // context.setDismissed()
     }
 }
