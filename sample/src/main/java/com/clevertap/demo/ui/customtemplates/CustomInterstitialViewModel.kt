@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import android.util.Log
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
@@ -18,10 +17,6 @@ data class CustomTemplateDialogState(
 )
 
 class CustomTemplateViewModel() : ViewModel() {
-    
-    companion object {
-        private const val TAG = "CustomTemplateViewModel"
-    }
     
     // Dialog state
     var dialogState by mutableStateOf(CustomTemplateDialogState())
@@ -45,8 +40,6 @@ class CustomTemplateViewModel() : ViewModel() {
         onSecondaryAction: () -> Unit = {},
         onAutoClose: () -> Unit = {},
     ) {
-        Log.d(TAG, "showDialog called with title: $title, message: $message, autoCloseAfter: ${autoCloseAfterSeconds}s")
-        
         // Cancel any existing auto-close job
         autoCloseJob?.cancel()
         
@@ -57,14 +50,12 @@ class CustomTemplateViewModel() : ViewModel() {
             primaryButtonText = primaryButtonText,
             secondaryButtonText = secondaryButtonText,
             onPrimaryClick = {
-                Log.d(TAG, "Primary button clicked")
-                autoCloseJob?.cancel() // Cancel auto-close when user interacts
                 onPrimaryAction()
+                hideDialog()
             },
             onSecondaryClick = {
-                Log.d(TAG, "Secondary button clicked")
-                autoCloseJob?.cancel() // Cancel auto-close when user interacts
                 onSecondaryAction()
+                hideDialog()
             },
             onDismiss = {
                 hideDialog()
@@ -86,7 +77,6 @@ class CustomTemplateViewModel() : ViewModel() {
     }
 
     fun hideDialog() {
-        Log.d(TAG, "Hiding dialog")
         // Cancel auto-close job when manually hiding dialog
         autoCloseJob?.cancel()
         dialogState = CustomTemplateDialogState(
@@ -97,7 +87,6 @@ class CustomTemplateViewModel() : ViewModel() {
     
 
     fun forceHideDialog() {
-        Log.d(TAG, "Force hiding dialog")
         autoCloseJob?.cancel()
         dialogState = CustomTemplateDialogState(isVisible = false, config = null)
     }
@@ -105,7 +94,6 @@ class CustomTemplateViewModel() : ViewModel() {
     
     override fun onCleared() {
         super.onCleared()
-        Log.d(TAG, "ViewModel cleared")
         autoCloseJob?.cancel()
         viewModelScope.cancel()
         forceHideDialog()

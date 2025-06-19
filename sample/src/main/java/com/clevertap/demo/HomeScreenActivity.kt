@@ -2,7 +2,6 @@ package com.clevertap.demo
 
 
 import android.app.NotificationManager
-import android.content.Context
 
 import android.content.Intent
 import android.os.Build
@@ -19,6 +18,9 @@ import androidx.activity.viewModels
 import com.clevertap.demo.ui.customtemplates.OverlayScreen
 import com.clevertap.demo.ui.customtemplates.CustomTemplateViewModel
 import com.clevertap.demo.ui.customtemplates.CustomTemplateManager
+import com.clevertap.demo.ui.customtemplates.OpenUrlConfirmDialog
+import com.clevertap.demo.ui.customtemplates.OpenUrlConfirmViewModel
+import com.clevertap.demo.ui.customtemplates.OpenUrlConfirmViewModelProvider
 import com.clevertap.android.sdk.*
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
@@ -52,6 +54,12 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     private val customTemplateViewModel by viewModels<CustomTemplateViewModel> {
         ViewModelFactory(cleverTapDefaultInstance)
     }
+    
+    // ViewModel for managing OpenURL confirm dialog state
+    private val openUrlConfirmViewModel by viewModels<OpenUrlConfirmViewModel> {
+        ViewModelFactory(cleverTapDefaultInstance)
+    }
+    
     private lateinit var overlayComposeView: ComposeView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,15 +88,22 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     private fun setupOverlayDialog() {
         CustomTemplateManager.setViewModel(customTemplateViewModel)
+        OpenUrlConfirmViewModelProvider.setViewModel(openUrlConfirmViewModel)
         overlayComposeView = findViewById(R.id.overlay_compose_view)
         overlayComposeView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 val dialogState = customTemplateViewModel.dialogState
+                val openUrlDialogState = openUrlConfirmViewModel.dialogState
                 
                 OverlayScreen(
                     dialogConfig = dialogState.config,
                     showDialog = dialogState.isVisible,
+                )
+                
+                // Add the OpenURL confirm dialog
+                OpenUrlConfirmDialog(
+                    state = openUrlDialogState
                 )
             }
         }

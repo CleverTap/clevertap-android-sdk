@@ -2,7 +2,9 @@ package com.clevertap.demo.ui.customtemplates
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.util.Log
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatePresenter
 import com.clevertap.android.sdk.inapp.customtemplates.function
 import com.clevertap.android.sdk.inapp.customtemplates.template
@@ -12,6 +14,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.FunctionPresenter
 
 fun createCustomTemplates(
     customInterPresenter: CustomInterstitialPresenter,
+    openUrlConfirmPresenter: OpenURLConfirmPresenter,
     copyToClipboardPresenter: CopyToClipboardPresenter
 ) = templatesSet(
     // Custom Interstitial Template (in-app)
@@ -43,7 +46,7 @@ fun createCustomTemplates(
     function(isVisual = true) {
         name("Open URL with confirm")
         stringArgument("URL", "https://clevertap.com") // URL string to open with default
-        presenter(OpenURLConfirmPresenter())
+        presenter(openUrlConfirmPresenter)
     }
 )
 
@@ -83,19 +86,45 @@ class CustomInterstitialPresenter() : TemplatePresenter {
     }
 
     override fun onClose(context: CustomTemplateContext.TemplateContext) {
-        val viewModel = CustomTemplateManager.getViewModel()
-        viewModel.hideDialog()
         context.setDismissed()
     }
 }
 
-class OpenURLConfirmPresenter : FunctionPresenter {
+class OpenURLConfirmPresenter(private val appCtx: Context) : FunctionPresenter {
     override fun onPresent(context: CustomTemplateContext.FunctionContext) {
-        Log.d(
-            "CustomTemplate",
-            "onPresent called for template: ${context.templateName}"
+
+        // Get the URL from the template argument
+        val url = context.getString("URL")
+        if (url == null) {
+            context.setPresented()
+            context.setDismissed()
+            return
+        }
+
+
+        val viewModel = OpenUrlConfirmViewModelProvider.getViewModel()
+
+        viewModel.showDialog(
+            url = url,
+            onConfirm = {
+                // User confirmed, open the URL
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    appCtx.startActivity(intent)
+
+                } catch (_: Exception) {
+
+                }
+                context.setDismissed()
+            },
+            onCancel = {
+                context.setDismissed()
+            }
         )
 
+        // Mark template as presented
         context.setPresented()
     }
 }

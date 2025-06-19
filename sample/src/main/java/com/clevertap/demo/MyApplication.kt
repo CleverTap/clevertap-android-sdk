@@ -28,6 +28,7 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.PushType
 import com.clevertap.demo.ui.customtemplates.CopyToClipboardPresenter
 import com.clevertap.demo.ui.customtemplates.CustomInterstitialPresenter
+import com.clevertap.demo.ui.customtemplates.OpenURLConfirmPresenter
 import com.clevertap.demo.ui.main.NotificationUtils
 import com.clevertap.demo.ui.customtemplates.createCustomTemplates
 import com.github.anrwatchdog.ANRWatchDog
@@ -75,6 +76,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         CleverTapAPI.registerCustomInAppTemplates {
             createCustomTemplates(
                 customInterPresenter = CustomInterstitialPresenter(),
+                openUrlConfirmPresenter = OpenURLConfirmPresenter(this),
                 copyToClipboardPresenter = CopyToClipboardPresenter(clipboardManager)
             )
         }
@@ -145,7 +147,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         handshakeDomain: String? = null
     ): CleverTapAPI {
         val ctInstance = if (useDefaultInstance) {
-            
+
             // Different ways of creating default instance
             // Type 1
             val defaultConfig = CleverTapInstanceConfig.getDefaultInstance(this)
