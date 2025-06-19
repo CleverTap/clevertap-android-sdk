@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
-internal enum class CTInAppType(private val type: String) {
+enum class CTInAppType(private val type: String) {
     CTInAppTypeHTML("html"),
     CTInAppTypeCoverHTML("coverHtml"),
     CTInAppTypeInterstitialHTML("interstitialHtml"),
@@ -24,7 +24,6 @@ internal enum class CTInAppType(private val type: String) {
     }
 
     companion object {
-        @Suppress("unused")
         fun fromString(type: String?): CTInAppType {
             return when (type) {
                 "html" -> CTInAppTypeHTML
