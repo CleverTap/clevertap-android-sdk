@@ -83,6 +83,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private String pt_big_img_alt;
 
+    private String pt_big_img_alt_alt_text;
+
     private String pt_small_icon_clr;
 
     private String pt_big_img;
@@ -118,6 +120,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             pt_product_display_linear = extras.getString(PTConstants.PT_PRODUCT_DISPLAY_LINEAR);
             notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
             pt_big_img_alt = extras.getString(PTConstants.PT_BIG_IMG_ALT);
+            pt_big_img_alt_alt_text = extras.getString(PTConstants.PT_BIG_IMG_ALT_ALT_TEXT, context.getString(R.string.pt_big_image_alt));
             pt_small_icon_clr = extras.getString(PTConstants.PT_SMALL_ICON_COLOUR);
             requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
             pt_dismiss_intent = extras.getBoolean(PTConstants.PT_DISMISS_INTENT, false);
@@ -318,7 +321,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                         .setWhen(System.currentTimeMillis())
                         .setAutoCancel(true);
 
-                setStandardViewBigImageStyle(pt_big_img_alt, extras, context, repliedNotification);
+                setStandardViewBigImageStyle(pt_big_img_alt, extras, context, repliedNotification, pt_big_img_alt_alt_text);
 
                 Notification notification = repliedNotification.build();
                 notificationManager.notify(notificationId, notification);
@@ -731,7 +734,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     }
 
     private void setStandardViewBigImageStyle(String imgUrl, Bundle extras, Context context,
-            NotificationCompat.Builder notificationBuilder) {
+            NotificationCompat.Builder notificationBuilder, String altText) {
         NotificationCompat.Style bigPictureStyle;
         if (imgUrl != null && imgUrl.startsWith("http")) {
             try {
@@ -745,6 +748,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                         .setSummaryText(extras.getString(PTConstants.PT_INPUT_FEEDBACK))
                         .bigPicture(bpMap);
 
+                if (VERSION.SDK_INT >= VERSION_CODES.S) {
+                    ((NotificationCompat.BigPictureStyle) bigPictureStyle).setContentDescription(altText);
+                }
             } catch (Throwable t) {
                 bigPictureStyle = new NotificationCompat.BigTextStyle()
                         .bigText(extras.getString(PTConstants.PT_INPUT_FEEDBACK));
