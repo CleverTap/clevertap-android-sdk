@@ -6,17 +6,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-
-val RedCt = Color(0xFFD32F2F)
-val btnClr = Color(0xFF757de8)
 
 @Composable
 fun InboxScreen(
     viewModel: CustomInboxViewModelContract,
     modifier: Modifier = Modifier
 ) {
+    val redCt = MaterialTheme.colorScheme.error
+    val btnClr = MaterialTheme.colorScheme.primary
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -89,7 +87,7 @@ fun InboxScreen(
                                     Text("Mark Read", color = btnClr)
                                 }
                                 TextButton(onClick = { viewModel.delete(message) }) {
-                                    Text("Delete", color = RedCt)
+                                    Text("Delete", color = redCt)
                                 }
                             }
                         }
