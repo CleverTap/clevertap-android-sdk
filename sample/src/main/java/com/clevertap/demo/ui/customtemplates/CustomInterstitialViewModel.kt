@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.cancel
 
 data class CustomTemplateDialogState(
     val isVisible: Boolean = false,
@@ -92,7 +91,6 @@ class CustomTemplateViewModel() : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         autoCloseJob?.cancel()
-        viewModelScope.cancel()
         forceHideDialog()
     }
 }
