@@ -8,7 +8,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-
 @Composable
 fun InboxScreen(
     viewModel: CustomInboxViewModelContract,
@@ -49,7 +48,6 @@ fun InboxScreen(
                     ) {
                         Column(
                             Modifier
-                                .fillMaxWidth()
                                 .fillMaxWidth()
                                 .padding(16.dp)
                         ) {

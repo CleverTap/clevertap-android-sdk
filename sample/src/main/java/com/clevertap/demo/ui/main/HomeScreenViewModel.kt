@@ -29,8 +29,8 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
         when (commandPosition) {
             "0-0" -> {
-                cleverTapAPI?.pushEvent("testEventPushAmp")
-                cleverTapAPI?.pushEvent("BlockBRTesting")
+                cleverTapAPI?.pushEvent("Product viewed")
+//                cleverTapAPI?.pushEvent("BlockBRTesting")
             }
 
             "0-1" -> {
@@ -755,8 +755,54 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "15-0" -> {
                 cleverTapAPI?.locale = "en_IN"
             }
+
+            "16-0" -> {
+                cleverTapAPI?.syncRegisteredInAppTemplates()
+            }
+            
+            "16-1" -> {
+                // Test Custom Template Dialog with auto-close functionality
+                // This directly tests the implementation without requiring dashboard configuration
+                Log.i(TAG, "Testing Custom Template Dialog with 5-second auto-close")
+                testCustomTemplateDialog()
+            }
+
             //"60" -> webViewClickListener?.onWebViewClick()
 
+        }
+    }
+    
+    /**
+     * Test method to demonstrate the auto-close functionality
+     * This method directly tests the custom template without requiring dashboard configuration
+     */
+    private fun testCustomTemplateDialog() {
+        // Import the custom template manager and test directly
+        try {
+            val customTemplateManager = com.clevertap.demo.ui.customtemplates.CustomTemplateManager
+            val viewModel = customTemplateManager.getViewModel()
+            
+            Log.i(TAG, "Testing custom template with auto-close after 5 seconds")
+            
+            viewModel.showDialog(
+                title = "Auto-Close Test",
+                message = "This dialog will automatically close in 5 seconds. You can also click buttons to close it manually.",
+                imageUrl = null,
+                primaryButtonText = "Primary Action",
+                secondaryButtonText = "Close",
+                autoCloseAfterSeconds = 5,
+                onPrimaryAction = {
+                    Log.i(TAG, "Primary action clicked - auto-close cancelled")
+                },
+                onSecondaryAction = {
+                    Log.i(TAG, "Secondary action clicked - dialog closed manually")
+                },
+                onAutoClose = {
+                    Log.i(TAG, "Dialog auto-closed after 5 seconds")
+                }
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error testing custom template dialog", e)
         }
     }
 }
