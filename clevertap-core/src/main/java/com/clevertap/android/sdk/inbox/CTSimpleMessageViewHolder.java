@@ -164,6 +164,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         try {
             switch (inboxMessage.getOrientation()) {
                 case "l":
+                    if(!content.getMediaContentDescription().isEmpty()) {
+                        this.mediaImage.setContentDescription(content.getMediaContentDescription());
+                    }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.mediaImage.setVisibility(View.VISIBLE);
@@ -251,6 +254,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }
                     break;
                 case "p":
+                    if(!content.getMediaContentDescription().isEmpty()) {
+                        this.squareImage.setContentDescription(content.getMediaContentDescription());
+                    }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);

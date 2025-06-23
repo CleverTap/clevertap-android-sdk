@@ -169,6 +169,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         try {
             switch (inboxMessage.getOrientation()) {
                 case "l":
+                    if (!content.getMediaContentDescription().isEmpty()) {
+                        this.mediaImage.setContentDescription(content.getMediaContentDescription());
+                    }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.mediaImage.setVisibility(View.VISIBLE);
@@ -257,6 +260,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }
                     break;
                 case "p":
+                    if (!content.getMediaContentDescription().isEmpty()) {
+                        this.squareImage.setContentDescription(content.getMediaContentDescription());
+                    }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);
@@ -377,6 +383,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         try {
             if (!content.getIcon().isEmpty()) {
                 iconImage.setVisibility(View.VISIBLE);
+                if (!content.getMediaContentDescription().isEmpty()) {
+                    iconImage.setContentDescription(content.getIconContentDescription());
+                }
                 try {
                     Glide.with(iconImage.getContext())
                             .load(content.getIcon())

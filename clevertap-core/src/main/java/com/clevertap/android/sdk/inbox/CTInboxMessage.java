@@ -188,6 +188,21 @@ public class CTInboxMessage implements Parcelable {
     }
 
     /**
+     * Returns an ArrayList of CTInboxMessageData(url, contentDescription) of the Carousel Images
+     *
+     * @return ArrayList of CTInboxImageData
+     */
+    public ArrayList<CTInboxImageData> getCarouselImagesData() {
+        ArrayList<CTInboxImageData> carouselImages = new ArrayList<>();
+        for (CTInboxMessageContent ctInboxMessageContent : getInboxMessageContents()) {
+            carouselImages.add(new CTInboxImageData(ctInboxMessageContent.getMedia(),
+                    ctInboxMessageContent.getMediaContentDescription()));
+        }
+        return carouselImages;
+    }
+
+
+    /**
      * Returns an ArrayList of String URLs of the Carousel Images
      *
      * @return ArrayList of Strings
