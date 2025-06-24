@@ -4,10 +4,10 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.Constant.Companion
+import io.mockk.every
+import io.mockk.mockkStatic
 import org.junit.*
 import org.junit.runner.*;
-import org.mockito.*
-import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner;
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -110,11 +110,9 @@ class CleverTapFactoryTest : BaseTestCase() {
     fun test_getCoreState_ReturnedObjectMustHaveNonNullInAppFCManagerInsideControllerManager(){
         // Create instance first to avoid stackoverflow error
         CleverTapAPI.instanceWithConfig(application,cleverTapInstanceConfig)
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.executors(Mockito.any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
+                cleverTapInstanceConfig
             )
             val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
             assertNotNull(coreState.controllerManager.inAppFCManager)
@@ -149,12 +147,11 @@ class CleverTapFactoryTest : BaseTestCase() {
     fun test_getCoreState_ReturnedObjectMustHaveNonNullInControllerInsideControllerManager(){
         // Create instance first to avoid stackoverflow error
         CleverTapAPI.instanceWithConfig(application,cleverTapInstanceConfig)
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.executors(Mockito.any())).thenReturn(
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns
                 MockCTExecutors(
                     cleverTapInstanceConfig
                 )
-            )
             val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
             assertNotNull(coreState.controllerManager.inAppController)
         }
@@ -164,12 +161,11 @@ class CleverTapFactoryTest : BaseTestCase() {
     fun test_getCoreState_ReturnedObjectMustHaveNonNullCTFeatureFlagsControllerInsideControllerManager(){
         // Create instance first to avoid stackoverflow error
         CleverTapAPI.instanceWithConfig(application,cleverTapInstanceConfig)
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.executors(Mockito.any())).thenReturn(
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns
                 MockCTExecutors(
                     cleverTapInstanceConfig
                 )
-            )
             val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
             assertNotNull(coreState.controllerManager.ctFeatureFlagsController)
         }

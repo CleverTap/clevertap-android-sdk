@@ -5,7 +5,7 @@ import android.view.View
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
-class ZeroBezelTextOnlySmallContentView(context: Context, renderer: TemplateRenderer) :
+internal class ZeroBezelTextOnlySmallContentView(context: Context, renderer: TemplateRenderer) :
     ZeroBezelSmallContentView(context, R.layout.cv_small_text_only, renderer) {
 
     init {

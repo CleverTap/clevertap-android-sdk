@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="@android:color/transparent"
     android:orientation="vertical">
 
     <RelativeLayout
         android:id="@+id/rel_lyt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/padding_vertical">
+        android:layout_marginTop="@dimen/padding_micro"
+        android:layout_marginRight="@dimen/padding_micro"
+        android:layout_marginLeft="@dimen/padding_micro">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -24,7 +26,7 @@
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/metadata_title_margin_vertical"
+                android:layout_marginBottom="6dp"
                 tools:text="title"
                 android:textAppearance="@style/PushTitle" />
 
@@ -34,6 +36,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/title"
                 android:layout_alignStart="@+id/title"
+                android:layout_marginBottom="8dp"
                 tools:text="message"
                 android:textAppearance="@style/PushMessageMultiLine" />
 
@@ -43,6 +46,8 @@
             android:id="@+id/chronometer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:textColor="@color/titleColor"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:textAlignment="center"
@@ -50,12 +55,7 @@
 
     </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/big_image"
-        android:layout_width="match_parent"
-        android:layout_height="196dp"
-        android:layout_below="@id/rel_lyt"
-        android:layout_alignParentBottom="true"
-        android:scaleType="centerCrop" />
+    <include layout="@layout/image_view_dynamic"
+        android:id="@+id/big_image_configurable"/>
 
-</RelativeLayout>
+</LinearLayout>

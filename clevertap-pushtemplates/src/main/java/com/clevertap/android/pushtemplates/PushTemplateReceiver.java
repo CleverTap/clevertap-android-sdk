@@ -713,7 +713,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private void setCustomContentViewBasicKeys(RemoteViews contentView, Context context) {
         contentView.setTextViewText(R.id.app_name, Utils.getApplicationName(context));
-        contentView.setTextViewText(R.id.timestamp, Utils.getTimeStamp(context));
+        contentView.setTextViewText(R.id.timestamp, Utils.getTimeStamp(context, System.currentTimeMillis()));
         if (pt_subtitle != null && !pt_subtitle.isEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 contentView.setTextViewText(R.id.subtitle, Html.fromHtml(pt_subtitle, Html.FROM_HTML_MODE_LEGACY));
@@ -804,9 +804,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         }
         if (pt_subtitle == null || pt_subtitle.isEmpty()) {
             pt_subtitle = extras.getString(Constants.WZRK_SUBTITLE);
-        }
-        if (pt_small_icon_clr == null || pt_small_icon_clr.isEmpty()) {
-            pt_small_icon_clr = extras.getString(Constants.WZRK_COLOR);
         }
     }
 

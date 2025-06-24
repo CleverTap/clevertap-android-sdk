@@ -3,7 +3,7 @@
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@android:color/white"
+    android:background="@android:color/transparent"
     android:orientation="vertical"
     android:clipToPadding="false">
 
@@ -16,8 +16,8 @@
             android:layout_width="match_parent"
             android:layout_height="140dp"
             android:layout_weight="4.5"
-            android:inAnimation="@anim/fade_in"
-            android:outAnimation="@anim/fade_out" />
+            android:inAnimation="@anim/pt_fade_in"
+            android:outAnimation="@anim/pt_fade_out" />
 
         <LinearLayout
             android:id="@+id/buy_price"
@@ -40,9 +40,9 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="@android:color/holo_red_dark"
-                android:textAppearance="@style/PushMessage"
-                android:textColor="@android:color/white" />
+                android:padding="@dimen/custom_btn_padding"
+                android:background="@color/customButtonBackground"
+                android:textAppearance="@style/PushMessage" />
 
         </LinearLayout>
 

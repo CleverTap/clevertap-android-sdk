@@ -2,9 +2,8 @@ package com.clevertap.android.sdk.inapp.customtemplates
 
 import io.mockk.mockk
 import org.junit.Test
-import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
-
+import kotlin.test.assertFailsWith
 
 class JsonTemplatesProducerTest {
 
@@ -62,7 +61,7 @@ class JsonTemplatesProducerTest {
 
     @Test
     fun `producer should throw exception when an invalid json is provided`() {
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer("[]", templatesPresenter, functionPresenter)
                 .defineTemplates(mockk())
         }
@@ -70,11 +69,11 @@ class JsonTemplatesProducerTest {
 
     @Test
     fun `producer should throw when appropriate presenter is not provided`() {
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer("{$template1}", null, functionPresenter)
                 .defineTemplates(mockk())
         }
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer("{$function1}", templatesPresenter, null)
                 .defineTemplates(mockk())
         }
@@ -95,7 +94,7 @@ class JsonTemplatesProducerTest {
                 }
             }
         """.trimIndent()
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer(invalidTemplateTypeJson, templatesPresenter, functionPresenter)
                 .defineTemplates(mockk())
         }
@@ -114,7 +113,7 @@ class JsonTemplatesProducerTest {
                 }
             }
         """.trimIndent()
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer(invalidArgumentTypeJson, templatesPresenter, functionPresenter)
                 .defineTemplates(mockk())
         }
@@ -132,7 +131,7 @@ class JsonTemplatesProducerTest {
                 }
             }
         """.trimIndent()
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer(invalidFileValueJson, templatesPresenter, functionPresenter)
                 .defineTemplates(mockk())
         }
@@ -149,7 +148,7 @@ class JsonTemplatesProducerTest {
                 }
             }
         """.trimIndent()
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer(
                 invalidFunctionFileValueJson,
                 templatesPresenter,
@@ -171,7 +170,7 @@ class JsonTemplatesProducerTest {
                 }
             }
         """.trimIndent()
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer(invalidActionValueJson, templatesPresenter, functionPresenter)
                 .defineTemplates(mockk())
         }
@@ -189,7 +188,7 @@ class JsonTemplatesProducerTest {
                 }
             }
         """.trimIndent()
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer(invalidFunctionActionJson, templatesPresenter, functionPresenter)
                 .defineTemplates(mockk())
         }
@@ -211,7 +210,7 @@ class JsonTemplatesProducerTest {
                 }
             }
         """.trimIndent()
-        assertThrows<CustomTemplateException> {
+        assertFailsWith<CustomTemplateException> {
             JsonTemplatesProducer(invalidNestedFileJson, templatesPresenter, functionPresenter)
                 .defineTemplates(mockk())
         }

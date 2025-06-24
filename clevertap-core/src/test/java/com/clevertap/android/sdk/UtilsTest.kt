@@ -53,7 +53,6 @@ import com.google.firebase.messaging.RemoteMessage
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
-import org.junit.jupiter.api.assertAll
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows

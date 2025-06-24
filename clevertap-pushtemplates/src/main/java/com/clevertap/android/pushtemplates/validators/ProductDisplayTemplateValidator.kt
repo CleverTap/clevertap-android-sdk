@@ -13,7 +13,7 @@ class ProductDisplayTemplateValidator(private var validator: Validator) :
         return listOf(
             keys[PT_THREE_DEEPLINK_LIST]!!, keys[PT_BIG_TEXT_LIST]!!,
             keys[PT_SMALL_TEXT_LIST]!!, keys[PT_PRODUCT_DISPLAY_ACTION]!!,
-            keys[PT_PRODUCT_DISPLAY_ACTION_CLR]!!, keys[PT_PRODUCT_THREE_IMAGE_LIST]!!
+            keys[PT_PRODUCT_THREE_IMAGE_LIST]!!
         )
     }
 }
