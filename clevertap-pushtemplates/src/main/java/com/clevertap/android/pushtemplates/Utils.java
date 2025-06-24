@@ -248,6 +248,10 @@ public class Utils {
     }
 
     public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
+                                                  RemoteViews remoteViews, Context context) {
+        loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, context, null);
+    }
+    public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
                                                   RemoteViews remoteViews, Context context, String altText) {
 
         long bmpDownloadStartTimeInMillis = System.currentTimeMillis();
@@ -256,7 +260,7 @@ public class Utils {
 
         if (image != null) {
             remoteViews.setImageViewBitmap(imageViewID, image);
-            if (!altText.isEmpty()) {
+            if (!TextUtils.isEmpty(altText)) {
                 remoteViews.setContentDescription(imageViewID, altText);
             }
             long bmpDownloadEndTimeInMillis = System.currentTimeMillis();
