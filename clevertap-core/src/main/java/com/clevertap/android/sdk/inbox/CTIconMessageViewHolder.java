@@ -383,7 +383,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         try {
             if (!content.getIcon().isEmpty()) {
                 iconImage.setVisibility(View.VISIBLE);
-                if (!content.getMediaContentDescription().isEmpty()) {
+                if (!content.getIconContentDescription().isEmpty()) {
                     iconImage.setContentDescription(content.getIconContentDescription());
                 }
                 try {
