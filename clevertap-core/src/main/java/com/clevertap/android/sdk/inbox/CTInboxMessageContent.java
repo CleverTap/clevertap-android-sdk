@@ -496,13 +496,13 @@ public class CTInboxMessageContent implements Parcelable {
                     .getJSONObject(Constants.KEY_ICON) : null;
             if (iconObject != null) {
                 this.icon = iconObject.has(Constants.KEY_URL) ? iconObject.getString(Constants.KEY_URL) : "";
-                this.iconContentDescription = iconObject.optString(Constants.KEY_CONTENT_DESCRIPTION, "");
+                this.iconContentDescription = iconObject.optString(Constants.KEY_ALT_TEXT, "");
             }
             JSONObject mediaObject = contentObject.has(Constants.KEY_MEDIA) ? contentObject
                     .getJSONObject(Constants.KEY_MEDIA) : null;
             if (mediaObject != null) {
                 this.media = mediaObject.has(Constants.KEY_URL) ? mediaObject.getString(Constants.KEY_URL) : "";
-                this.mediaContentDescription = mediaObject.optString(Constants.KEY_CONTENT_DESCRIPTION, "");
+                this.mediaContentDescription = mediaObject.optString(Constants.KEY_ALT_TEXT, "");
                 this.contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject
                         .getString(Constants.KEY_CONTENT_TYPE) : "";
                 this.posterUrl = mediaObject.has(Constants.KEY_POSTER_URL) ? mediaObject
