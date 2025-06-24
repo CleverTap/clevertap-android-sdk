@@ -8,17 +8,18 @@ import org.json.JSONObject
 
 class CTInAppNotificationButton : Parcelable {
 
-    val backgroundColor: String
-
-    val borderColor: String
-
-    val borderRadius: String
-
     val text: String
 
-    val textColor: String
+    internal val backgroundColor: String
 
-    val action: CTInAppAction?
+    internal val borderColor: String
+
+    internal val borderRadius: String
+
+    internal val textColor: String
+
+    @JvmField()
+    internal val action: CTInAppAction?
 
     internal constructor(jsonObject: JSONObject) {
         text = jsonObject.optString(Constants.KEY_TEXT)
@@ -36,6 +37,10 @@ class CTInAppNotificationButton : Parcelable {
         borderColor = parcel.readString() ?: Constants.WHITE
         borderRadius = parcel.readString() ?: ""
         action = parcel.readParcelable<CTInAppAction?>(CTInAppAction::class.java.getClassLoader())
+    }
+
+    fun getKeyValues(): Map<String, String>? {
+        return action?.keyValues
     }
 
     override fun describeContents(): Int {

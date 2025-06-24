@@ -6,20 +6,14 @@ import com.clevertap.android.sdk.Constants
 import org.json.JSONObject
 import java.util.UUID
 
-class CTInAppNotificationMedia : Parcelable {
+internal class CTInAppNotificationMedia : Parcelable {
 
     var mediaUrl: String
-        internal set
-
-    var contentType: String
-        private set
-
-    var cacheKey: String? = null
-        private set
-
+    val contentType: String
+    val cacheKey: String?
     val orientation: Int
 
-    internal constructor(
+    constructor(
         mediaUrl: String,
         contentType: String,
         cacheKey: String?,

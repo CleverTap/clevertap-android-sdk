@@ -4,6 +4,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import android.os.Parcelable.Creator
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.copy
 import com.clevertap.android.sdk.copyFrom
 import com.clevertap.android.sdk.inapp.CTInAppType
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType.FILE
@@ -13,7 +14,7 @@ import com.clevertap.android.sdk.utils.readJson
 import com.clevertap.android.sdk.utils.writeJson
 import org.json.JSONObject
 
-class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable {
+internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable {
 
     var templateName: String?
         private set
@@ -40,12 +41,8 @@ class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable 
         setFieldsFromJson(json)
     }
 
-    fun getArguments(): JSONObject? {
-        return args?.let {
-            val copy = JSONObject()
-            copy.copyFrom(it)
-            copy
-        }
+    internal fun getArguments(): JSONObject? {
+        return args?.copy()
     }
 
     internal fun getFileArgsUrls(templatesManager: TemplatesManager): List<String> {
@@ -92,7 +89,7 @@ class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable 
         return 0
     }
 
-    fun writeFieldsToJson(json: JSONObject) {
+    internal fun writeFieldsToJson(json: JSONObject) {
         json.put(KEY_TEMPLATE_NAME, templateName)
         json.put(KEY_IS_ACTION, isAction)
         json.put(KEY_TEMPLATE_ID, templateId)
@@ -100,7 +97,7 @@ class CustomTemplateInAppData private constructor(parcel: Parcel?) : Parcelable 
         json.put(KEY_VARS, args)
     }
 
-    fun copy(): CustomTemplateInAppData {
+    internal fun copy(): CustomTemplateInAppData {
         val copy = CustomTemplateInAppData(null)
         copy.templateName = templateName
         copy.isAction = isAction

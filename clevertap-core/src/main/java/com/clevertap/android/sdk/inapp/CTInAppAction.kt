@@ -11,7 +11,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.utils.getStringOrNull
 import org.json.JSONObject
 
-class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
+internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
 
     var type: InAppActionType?
         private set

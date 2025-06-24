@@ -453,11 +453,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         Bundle clickData = didClick(button);
 
         if (isPositive && inAppNotification.isLocalInApp()) {
-            showPushPermissionPrompt(inAppNotification.fallBackToNotificationSettings());
+            showPushPermissionPrompt(inAppNotification.getFallBackToNotificationSettings());
             return;
         }
 
-        CTInAppAction action = button.getAction();
+        CTInAppAction action = button.action;
         if (action != null && InAppActionType.REQUEST_FOR_PERMISSIONS == action.getType()) {
             showPushPermissionPrompt(action.shouldFallbackToSettings());
             return;

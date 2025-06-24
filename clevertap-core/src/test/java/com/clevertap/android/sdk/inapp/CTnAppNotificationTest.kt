@@ -189,7 +189,7 @@ class CTInAppNotificationTest {
         // Assert
         assertNotNull(notification)
         assertFalse(notification.isLocalInApp)
-        assertFalse(notification.fallBackToNotificationSettings())
+        assertFalse(notification.fallBackToNotificationSettings)
         assertFalse(notification.isExcludeFromCaps)
         assertEquals(-1, notification.totalLifetimeCount)
         assertEquals(-1, notification.totalDailyCount)
@@ -322,7 +322,7 @@ class CTInAppNotificationTest {
         assertEquals(expected.title, actual.title)
         assertEquals(expected.titleColor, actual.titleColor)
         assertEquals(expected.isLocalInApp, actual.isLocalInApp)
-        assertEquals(expected.fallBackToNotificationSettings(), actual.fallBackToNotificationSettings())
+        assertEquals(expected.fallBackToNotificationSettings, actual.fallBackToNotificationSettings)
         assertEquals(expected.totalLifetimeCount, actual.totalLifetimeCount)
         assertEquals(expected.totalDailyCount, actual.totalDailyCount)
         assertEquals(expected.maxPerSession, actual.maxPerSession)
