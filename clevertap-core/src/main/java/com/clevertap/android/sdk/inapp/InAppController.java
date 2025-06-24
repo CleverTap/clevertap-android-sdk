@@ -884,37 +884,42 @@ public class InAppController implements InAppListener {
         if (activity == null || !(activity instanceof CustomInAppDisplayProvider) ) {
             return false; // not a CustomInAppDisplayProvider
         }
-        CustomInAppDisplayProvider displayProvider = (CustomInAppDisplayProvider) activity;
-        if (!displayProvider.canDisplay(notification, config, activity)) {
-            return false; // not supported/wanted
+        try {
+            CustomInAppDisplayProvider displayProvider = (CustomInAppDisplayProvider) activity;
+            if (!displayProvider.canDisplay(notification, config, activity)) {
+                return false; // not supported/wanted
+            }
+            displayProvider.display(notification, config, activity, new CustomInAppDisplayProvider.Callbacks() {
+                @Override
+                public Bundle onActionTriggered(@NonNull CTInAppNotification notification,
+                        @NonNull CTInAppAction action,
+                        @NonNull String callToAction,
+                        Bundle additionalData,
+                        Context activityContext) {
+                    return inAppNotificationActionTriggered(notification, action, callToAction, additionalData,
+                            activityContext);
+                }
+
+                @Override
+                public void onButtonClicked(@NonNull CTInAppNotification notification, CTInAppNotificationButton button,
+                        Context activityContext) {
+                    inAppNotificationDidClick(notification, button, activityContext);
+                }
+
+                @Override
+                public void onDismissed(@NonNull CTInAppNotification notification, Bundle formData) {
+                    inAppNotificationDidDismiss(notification, formData);
+                }
+
+                @Override
+                public void onShown(@NonNull CTInAppNotification notification, Bundle formData) {
+                    inAppNotificationDidShow(notification, formData);
+                }
+            });
+        } catch (Exception e) {
+            Logger.d(config.getAccountId(), "Error in custom in-app display provider: " + e.getMessage(), e);
+            return false; // fall back to standard display
         }
-        displayProvider.display(notification, config, activity, new CustomInAppDisplayProvider.Callbacks() {
-            @Override
-            public Bundle onActionTriggered(@NonNull CTInAppNotification notification,
-                    @NonNull CTInAppAction action,
-                    @NonNull String callToAction,
-                    Bundle additionalData,
-                    Context activityContext) {
-                return inAppNotificationActionTriggered(notification, action, callToAction, additionalData,
-                        activityContext);
-            }
-
-            @Override
-            public void onButtonClicked(@NonNull CTInAppNotification notification, CTInAppNotificationButton button,
-                    Context activityContext) {
-                inAppNotificationDidClick(notification, button, activityContext);
-            }
-
-            @Override
-            public void onDismissed(@NonNull CTInAppNotification notification, Bundle formData) {
-                inAppNotificationDidDismiss(notification, formData);
-            }
-
-            @Override
-            public void onShown(@NonNull CTInAppNotification notification, Bundle formData) {
-                inAppNotificationDidShow(notification, formData);
-            }
-        });
 
         return true; // handled
     }
