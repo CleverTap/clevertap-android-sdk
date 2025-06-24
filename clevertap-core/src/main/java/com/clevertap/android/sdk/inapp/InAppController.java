@@ -42,6 +42,7 @@ import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.FileStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
+import com.clevertap.android.sdk.interfaces.CustomInAppDisplayProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
@@ -794,6 +795,10 @@ public class InAppController implements InAppListener {
 
         currentlyDisplayingInApp = inAppNotification;
 
+        if (tryCustomShowInApp(inAppNotification)) {
+            return; // handled by a CustomInAppDisplayProvider
+        }
+
         CTInAppBaseFragment inAppFragment = null;
         CTInAppType type = inAppNotification.getInAppType();
         switch (type) {
@@ -870,6 +875,48 @@ public class InAppController implements InAppListener {
                 currentlyDisplayingInApp = null;
             }
         }
+    }
+
+    // Tries to show the notification via a CustomInAppDisplayProvider implemented by the current Activity.
+    // Returns true if shown, false otherwise.
+    private boolean tryCustomShowInApp(CTInAppNotification notification) {
+        Activity activity = CoreMetaData.getCurrentActivity();
+        if (activity == null || !(activity instanceof CustomInAppDisplayProvider) ) {
+            return false; // not a CustomInAppDisplayProvider
+        }
+        CustomInAppDisplayProvider displayProvider = (CustomInAppDisplayProvider) activity;
+        if (!displayProvider.canDisplay(notification, config, activity)) {
+            return false; // not supported/wanted
+        }
+        displayProvider.display(notification, config, activity, new CustomInAppDisplayProvider.Callbacks() {
+            @Override
+            public Bundle onActionTriggered(@NonNull CTInAppNotification notification,
+                    @NonNull CTInAppAction action,
+                    @NonNull String callToAction,
+                    Bundle additionalData,
+                    Context activityContext) {
+                return inAppNotificationActionTriggered(notification, action, callToAction, additionalData,
+                        activityContext);
+            }
+
+            @Override
+            public void onButtonClicked(@NonNull CTInAppNotification notification, CTInAppNotificationButton button,
+                    Context activityContext) {
+                inAppNotificationDidClick(notification, button, activityContext);
+            }
+
+            @Override
+            public void onDismissed(@NonNull CTInAppNotification notification, Bundle formData) {
+                inAppNotificationDidDismiss(notification, formData);
+            }
+
+            @Override
+            public void onShown(@NonNull CTInAppNotification notification, Bundle formData) {
+                inAppNotificationDidShow(notification, formData);
+            }
+        });
+
+        return true; // handled
     }
 
     @WorkerThread
