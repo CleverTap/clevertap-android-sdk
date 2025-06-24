@@ -734,8 +734,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     }
 
     private void setStandardViewBigImageStyle(String imgUrl, Bundle extras, Context context,
-            NotificationCompat.Builder notificationBuilder, String altText) {
-        NotificationCompat.Style bigPictureStyle;
+                                              NotificationCompat.Builder notificationBuilder, String altText) {
         if (imgUrl != null && imgUrl.startsWith("http")) {
             try {
                 Bitmap bpMap = Utils.getNotificationBitmap(imgUrl, false, context);
@@ -744,26 +743,27 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     throw new Exception("Failed to fetch big picture!");
                 }
 
-                bigPictureStyle = new NotificationCompat.BigPictureStyle()
+                NotificationCompat.BigPictureStyle bigPictureStyle = new NotificationCompat.BigPictureStyle()
                         .setSummaryText(extras.getString(PTConstants.PT_INPUT_FEEDBACK))
                         .bigPicture(bpMap);
 
                 if (VERSION.SDK_INT >= VERSION_CODES.S) {
-                    ((NotificationCompat.BigPictureStyle) bigPictureStyle).setContentDescription(altText);
+                    bigPictureStyle.setContentDescription(altText);
                 }
+
+                notificationBuilder.setStyle(bigPictureStyle);
+                return;
+
             } catch (Throwable t) {
-                bigPictureStyle = new NotificationCompat.BigTextStyle()
-                        .bigText(extras.getString(PTConstants.PT_INPUT_FEEDBACK));
                 PTLog.verbose("Falling back to big text notification, couldn't fetch big picture", t);
             }
-        } else {
-            bigPictureStyle = new NotificationCompat.BigTextStyle()
-                    .bigText(extras.getString(PTConstants.PT_INPUT_FEEDBACK));
         }
 
-        notificationBuilder.setStyle(bigPictureStyle);
-
+        NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle()
+                .bigText(extras.getString(PTConstants.PT_INPUT_FEEDBACK));
+        notificationBuilder.setStyle(bigTextStyle);
     }
+
 
     private void setSmallIcon(Context context) {
         Bundle metaData;
