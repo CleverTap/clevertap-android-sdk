@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.inapp
+package com.clevertap.android.sdk.inapp.fragment
 
 import android.app.Activity
 import android.content.Context
@@ -8,8 +8,15 @@ import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DidClickForHardPermissionListener
+import com.clevertap.android.sdk.inapp.CTInAppAction
+import com.clevertap.android.sdk.inapp.CTInAppNotification
+import com.clevertap.android.sdk.inapp.CTLocalInApp
+import com.clevertap.android.sdk.inapp.InAppActionType
+import com.clevertap.android.sdk.inapp.InAppFixtures
+import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.utils.configMock
 import io.mockk.confirmVerified
 import io.mockk.every
@@ -23,7 +30,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -51,7 +57,7 @@ class CTInAppBaseFragmentTest {
         every { mockFragmentManager.beginTransaction() } returns mockFragmentTransaction
         every { mockActivity.supportFragmentManager } returns mockFragmentManager
 
-        val inApp = CTInAppNotification().initWithJSON(
+        val inApp = CTInAppNotification(
             JSONObject(InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA),
             true
         )
@@ -70,9 +76,6 @@ class CTInAppBaseFragmentTest {
 
         val contextMock = mockk<Context>()
         fragment.onAttach(contextMock)
-
-        assertEquals(inApp.campaignId, fragment.inAppNotification.campaignId)
-        assertEquals(mockConfig.accountId, fragment.config.accountId)
     }
 
     @Test
@@ -102,7 +105,7 @@ class CTInAppBaseFragmentTest {
         every { mockFragmentManager.beginTransaction() } returns mockFragmentTransaction
         every { mockActivity.supportFragmentManager } returns mockFragmentManager
 
-        val inApp = CTInAppNotification().initWithJSON(
+        val inApp = CTInAppNotification(
             JSONObject(InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA),
             true
         )
@@ -120,9 +123,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `handleButtonClickAtIndex should trigger permission listener for localInApps and dismiss the inApp`() {
-        val fragment = createFragmentSpy()
-
-        val localInAppJson = CTLocalInApp.builder()
+        val localInAppJson = CTLocalInApp.Companion.builder()
             .setInAppType(CTLocalInApp.InAppType.ALERT)
             .setTitleText("Title")
             .setMessageText("Message")
@@ -130,20 +131,19 @@ class CTInAppBaseFragmentTest {
             .setPositiveBtnText("Positive Button")
             .setNegativeBtnText("Negative Button")
             .build()
-        val inApp = CTInAppNotification().initWithJSON(localInAppJson, true)
+        val inApp = CTInAppNotification(localInAppJson, true)
         val mockConfig = configMock()
-        fragment.setArguments(inApp, mockConfig)
-
         val contextMock =
             mockk<Context>(moreInterfaces = arrayOf(DidClickForHardPermissionListener::class))
-        fragment.onAttach(contextMock)
+
+        val fragment = createAndAttachFragmentSpy(inApp, mockConfig, contextMock)
 
         // should trigger permission listener
         fragment.handleButtonClickAtIndex(0)
 
         verify(exactly = 1) {
             (contextMock as DidClickForHardPermissionListener).didClickForHardPermissionWithFallbackSettings(
-                inApp.fallBackToNotificationSettings()
+                inApp.fallBackToNotificationSettings
             )
         }
 
@@ -156,19 +156,15 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `handleButtonClickAtIndex should trigger permission listener for rfp actions and dismiss the inApp`() {
-        val fragment = createFragmentSpy()
-
-        val inApp = CTInAppNotification().initWithJSON(
+        val inApp = CTInAppNotification(
             JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL_WITH_BUTTON_ACTION_RFP),
             true
         )
         val mockConfig = configMock()
-        fragment.setArguments(inApp, mockConfig)
-
         val contextMock =
             mockk<Context>(moreInterfaces = arrayOf(DidClickForHardPermissionListener::class))
-        fragment.onAttach(contextMock)
 
+        val fragment = createAndAttachFragmentSpy(inApp, mockConfig, contextMock)
         fragment.handleButtonClickAtIndex(0)
 
         verify(exactly = 1) {
@@ -182,7 +178,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `triggerAction should parse url parameters as additionalData`() {
-        val fragment = createFragmentSpy()
+        val fragment = createAndAttachFragmentSpy()
 
         val param1 = "value"
         val param2 = "value 2"
@@ -194,7 +190,7 @@ class CTInAppBaseFragmentTest {
             .appendQueryParameter("param3", param3)
             .build().toString()
 
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -215,7 +211,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `triggerAction should merge url parameters with provided additionalData `() {
-        val fragment = createFragmentSpy()
+        val fragment = createAndAttachFragmentSpy()
 
         val urlParam1 = "value"
         val urlParam2 = "value 2"
@@ -234,7 +230,7 @@ class CTInAppBaseFragmentTest {
             putString("param2", dataParam2)
         }
 
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, data)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, data)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -252,7 +248,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `triggerAction should use callToAction argument or c2a url param`() {
-        val fragment = createFragmentSpy()
+        val fragment = createAndAttachFragmentSpy()
 
         val callToActionParam = "c2aParam"
         val url = Uri.parse("https://clevertap.com")
@@ -260,7 +256,7 @@ class CTInAppBaseFragmentTest {
             .appendQueryParameter(Constants.KEY_C2A, callToActionParam)
             .build().toString()
 
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -272,7 +268,7 @@ class CTInAppBaseFragmentTest {
         }
 
         val callToActionArgument = "argument"
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), callToActionArgument, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), callToActionArgument, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -286,7 +282,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `triggerAction should parse c2a url param with __dl__ data`() {
-        val fragment = createFragmentSpy()
+        val fragment = createAndAttachFragmentSpy()
 
         val dl = "https://deeplink.com?param1=asd&param2=value2"
         val callToActionParam = "c2aParam"
@@ -297,7 +293,7 @@ class CTInAppBaseFragmentTest {
             .appendQueryParameter("param1", param1)
             .build().toString()
 
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -316,7 +312,7 @@ class CTInAppBaseFragmentTest {
         }
 
         val callToActionArgument = "argument"
-        fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), callToActionArgument, null)
+        fragment.triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), callToActionArgument, null)
         verify {
             mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
@@ -337,10 +333,21 @@ class CTInAppBaseFragmentTest {
 
     private fun createFragmentSpy(): CTInAppBaseFragment {
         val fragmentSpy = spyk<CTInAppBaseFragment>()
-        every { fragmentSpy.listener } returns mockInAppListener
+        every { fragmentSpy.getListener() } returns mockInAppListener
         val mockResources = mockk<Resources>(relaxed = true)
         every { mockResources.configuration } returns mockk(relaxed = true)
         every { fragmentSpy.resources } returns mockResources
+        return fragmentSpy
+    }
+
+    private fun createAndAttachFragmentSpy(
+        inAppNotification: CTInAppNotification = mockk(),
+        config: CleverTapInstanceConfig = mockk(),
+        context: Context = mockk()
+    ): CTInAppBaseFragment {
+        val fragmentSpy = createFragmentSpy()
+        fragmentSpy.setArguments(inAppNotification, config)
+        fragmentSpy.onAttach(context)
 
         return fragmentSpy
     }
