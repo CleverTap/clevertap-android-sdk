@@ -14,7 +14,9 @@ import com.clevertap.android.pushtemplates.content.INPUT_BOX_CONTENT_PENDING_INT
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_REPLY_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
-class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+
+    private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
     override fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,
@@ -45,6 +47,12 @@ class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
         nb: NotificationCompat.Builder
     ): NotificationCompat.Builder {
         var inputBoxNotificationBuilder = super.builderFromStyle(context, extras, notificationId, nb)
+        
+        // Apply action buttons with special flag for InputBoxStyle
+        inputBoxNotificationBuilder = actionButtonsHandler.addActionButtons(
+            context, extras, notificationId, inputBoxNotificationBuilder, true
+        )
+        
         inputBoxNotificationBuilder = setStandardViewBigImageStyle(
             renderer.pt_big_img, extras,
             context, inputBoxNotificationBuilder
@@ -74,7 +82,6 @@ class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
         if (renderer.pt_dismiss_on_click != null && renderer.pt_dismiss_on_click!!.isNotEmpty()) {
             extras.putString(PTConstants.PT_DISMISS_ON_CLICK, renderer.pt_dismiss_on_click)
         }
-        renderer.setActionButtons(context, extras, notificationId, inputBoxNotificationBuilder, renderer.actions)
         return inputBoxNotificationBuilder
     }
 

@@ -9,7 +9,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -41,12 +40,10 @@ class CTWebInterfaceTest : BaseTestCase() {
 
         // when ctApi is not null, calling this function will call ctApi's internal function
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        val ctMock = Mockito.mock(CleverTapAPI::class.java)
+        val ctMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.addMultiValueForKey("key2","value2")
-        Mockito.verify(ctMock,Mockito.times(1))?.addMultiValueForKey("key2","value2")
-
-
+        verify(exactly = 1) { ctMock.addMultiValueForKey("key2", "value2") }
     }
 
 
@@ -62,11 +59,11 @@ class CTWebInterfaceTest : BaseTestCase() {
         ctApi = CleverTapAPI.getDefaultInstance(application)
 
         inputs.forEach  {
-            val ctMock = Mockito.mock(CleverTapAPI::class.java)
+            val ctMock = mockk<CleverTapAPI>(relaxed = true)
             ctWebInterface = CTWebInterface(ctMock)
 
             ctWebInterface.incrementValue("key2",it.toDouble())
-            Mockito.verify(ctMock,Mockito.times(1))?.incrementValue("key2",it.toDouble())
+            verify(exactly = 1) { ctMock.incrementValue("key2", it.toDouble()) }
         }
     }
 
@@ -84,11 +81,11 @@ class CTWebInterfaceTest : BaseTestCase() {
         ctApi = CleverTapAPI.getDefaultInstance(application)
 
         inputs.forEach {
-            val ctMock = Mockito.mock(CleverTapAPI::class.java)
+            val ctMock = mockk<CleverTapAPI>(relaxed = true)
             ctWebInterface = CTWebInterface(ctMock)
 
             ctWebInterface.decrementValue("key2",it.toDouble())
-            Mockito.verify(ctMock,Mockito.times(1))?.decrementValue("key2",it.toDouble())
+            verify(exactly = 1) { ctMock.decrementValue("key2", it.toDouble()) }
         }
     }
 
@@ -103,31 +100,28 @@ class CTWebInterfaceTest : BaseTestCase() {
 
         // when ctApi is not null, but key(or value) is null,  calling this function will do nothing.
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        var ctMock = Mockito.mock(CleverTapAPI::class.java)
+        var ctMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.addMultiValuesForKey(null,"[{'k1':'v1'},{'k2':'v2'}]")
         var valuesArray = JSONArray("[{'k1':'v1'},{'k2':'v2'}]")
         var expectedVal =  Utils.convertJSONArrayToArrayList(valuesArray)
-        Mockito.verify(ctMock,Mockito.never())?.addMultiValuesForKey(null,expectedVal)
+        verify(exactly = 0) { ctMock.addMultiValuesForKey(null, expectedVal) }
 
         ctWebInterface.addMultiValuesForKey("keyx",null)
-        Mockito.verify(ctMock,Mockito.never())?.addMultiValuesForKey("keyx",null)
+        verify(exactly = 0) { ctMock.addMultiValuesForKey("keyx", null) }
 
 
         //when ctApi and key and value  are all not null, calling this function will call ctApi's internal function
         ctWebInterface.addMultiValuesForKey("key2","[{'k1':'v1'},{'k2':'v2'}]")
          valuesArray = JSONArray("[{'k1':'v1'},{'k2':'v2'}]")
          expectedVal =  Utils.convertJSONArrayToArrayList(valuesArray)
-        Mockito.verify(ctMock,Mockito.times(1))?.addMultiValuesForKey("key2",expectedVal)
+        verify(exactly = 1) { ctMock.addMultiValuesForKey("key2", expectedVal) }
 
         // when passed json is malformed, no function will be called
-        ctMock = Mockito.mock(CleverTapAPI::class.java)
+        ctMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.addMultiValuesForKey("key2","[{'k1':'v1'")
-        Mockito.verify(ctMock,Mockito.times(0))?.addMultiValuesForKey("key2",expectedVal)
-
-
-
+        verify(exactly = 0) { ctMock.addMultiValuesForKey("key2", expectedVal) }
     }
 
     @Test
@@ -144,86 +138,91 @@ class CTWebInterfaceTest : BaseTestCase() {
         // when ctApi is not null, following actions will happen
         //1. if either the eventname or values is null, function will return without any action
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        var ctApiMock = Mockito.mock(CleverTapAPI::class.java)
+        var ctApiMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctApiMock)
         eventName = "{'event':'eventName'}"
         eventValues = "[{'k1':'v1'},{'k2':'v2'}]"
 
         ctWebInterface.pushChargedEvent(eventName, null)
-        Mockito.verify(ctApiMock, Mockito.never())?.pushChargedEvent(Mockito.any(), Mockito.any())
+        verify(exactly = 0) { ctApiMock.pushChargedEvent(any(), any()) }
 
         ctWebInterface.pushChargedEvent(null, eventValues)
-        Mockito.verify(ctApiMock, Mockito.never())?.pushChargedEvent(Mockito.any(), Mockito.any())
+        verify(exactly = 0) { ctApiMock.pushChargedEvent(any(), any()) }
 
         // if neither is null, ctApi's  function will get called
-
         ctWebInterface.pushChargedEvent(eventName, eventValues)
         val eventDetails = Utils.convertJSONObjectToHashMap(JSONObject(eventName))
         val eventData = Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(JSONArray(eventValues))
-        Mockito.verify(ctApiMock, Mockito.times(1))?.pushChargedEvent(eventDetails, eventData)
+        verify(exactly = 1) { ctApiMock.pushChargedEvent(eventDetails, eventData) }
 
        // when passed json is malformed, no function will be called
-        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
+        ctApiMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctApiMock)
         ctWebInterface.pushChargedEvent(eventName, "{'k2':'v2'}]")
-        Mockito.verify(ctApiMock, Mockito.times(0))?.pushChargedEvent(eventDetails, eventData)
+        verify(exactly = 0) { ctApiMock.pushChargedEvent(eventDetails, eventData) }
 
     }
 
     @Test
     fun test_pushEvent_when_FunctionIsCalledWithEventNameAndProperties_should_CallAssocClevertapApiFunctionWithTransformedData() {
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        var ctApiMock = Mockito.mock(CleverTapAPI::class.java)
+        var ctApiMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctApiMock)
         ctWebInterface.pushEvent("event")
-        Mockito.verify(ctApiMock, Mockito.times(1))?.pushEvent("event")
+        verify(exactly = 1) { ctApiMock.pushEvent("event") }
 
-        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctApiMock)
         ctWebInterface.pushEvent("event2","{'k1':'v1'}")
         val eventData = Utils.convertJSONObjectToHashMap(JSONObject("{'k1':'v1'}"))
-        Mockito.verify(ctApiMock, Mockito.times(1))?.pushEvent("event2",eventData)
-
+        verify(exactly = 1) { ctApiMock.pushEvent("event2", eventData) }
 
         // if actions are null, not assoc api function will be called
-        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctApiMock)
         ctWebInterface.pushEvent("event3",null)
-        Mockito.verify(ctApiMock, Mockito.times(0))?.pushEvent("event3",eventData)
+        verify(exactly = 0) { ctApiMock.pushEvent("event3", eventData) }
 
         // if json is malformed, not assoc api function will be called
-        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctApiMock)
         ctWebInterface.pushEvent("event3","{''v1'}")
-        Mockito.verify(ctApiMock, Mockito.times(0))?.pushEvent("event3",eventData)
-
-
-
+        verify(exactly = 0) { ctApiMock.pushEvent("event3", eventData) }
     }
 
     @Test
     fun test_pushProfile_when_CalledWithJsonString_should_CallAssocClevertapApiFunction() {
         // if profile is null, function returns without any changes
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        var ctApiMock = Mockito.mock(CleverTapAPI::class.java)
+        var ctApiMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctApiMock)
-        var profile:String? = null
-        ctWebInterface.pushProfile(profile)
-        Mockito.verify(ctApiMock, Mockito.never())?.pushProfile(Mockito.anyMap())
+        ctWebInterface.pushProfile(null)
+        verify(exactly = 0) { ctApiMock.pushProfile(any()) }
 
         // if profile is not null, function calls associated CT api function
-        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctApiMock)
-        profile = "{'key1':'value1'}"
+        var profile = "{'key1':'value1'}"
         ctWebInterface.pushProfile(profile)
-        Mockito.verify(ctApiMock, Mockito.times(1))?.pushProfile(Utils.convertJSONObjectToHashMap(JSONObject(profile)))
+        verify(exactly = 1) {
+            ctApiMock.pushProfile(
+                Utils.convertJSONObjectToHashMap(
+                    JSONObject(
+                        profile
+                    )
+                )
+            )
+        }
 
         // if json is malformed, not assoc api function will be called
-        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctApiMock)
         profile = "{'key2':'value2'}"
         ctWebInterface.pushProfile(":'value1'}")
-        Mockito.verify(ctApiMock, Mockito.times(0))?.pushProfile(Utils.convertJSONObjectToHashMap(JSONObject(profile)))
+        verify(exactly = 0) {
+            ctApiMock.pushProfile(
+                Utils.convertJSONObjectToHashMap(
+                    JSONObject(
+                        profile
+                    )
+                )
+            )
+        }
 
     }
 
@@ -231,25 +230,38 @@ class CTWebInterfaceTest : BaseTestCase() {
     fun test_onUserLogin_when_CalledWithJsonString_should_CallAssocClevertapApiFunction() {
         // if profile is null, function returns without any changes
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        var ctApiMock = Mockito.mock(CleverTapAPI::class.java)
+        var ctApiMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctApiMock)
-        var profile:String? = null
-        ctWebInterface.onUserLogin(profile)
-        Mockito.verify(ctApiMock, Mockito.never())?.onUserLogin(Mockito.anyMap())
+        ctWebInterface.onUserLogin(null)
+        verify(exactly = 0) { ctApiMock.onUserLogin(any()) }
 
         // if profile is not null, function calls associated CT api function
-        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctApiMock)
-        profile = "{'key1':'value1'}"
+        var profile = "{'key1':'value1'}"
         ctWebInterface.onUserLogin(profile)
-        Mockito.verify(ctApiMock, Mockito.times(1))?.onUserLogin(Utils.convertJSONObjectToHashMap(JSONObject(profile)))
+        verify(exactly = 1) {
+            ctApiMock.onUserLogin(
+                Utils.convertJSONObjectToHashMap(
+                    JSONObject(
+                        profile
+                    )
+                )
+            )
+        }
 
         // if json is malformed, not assoc api function will be called
-        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctApiMock)
         profile = "{'key2':'value2'}"
         ctWebInterface.onUserLogin(":'value1'}")
-        Mockito.verify(ctApiMock, Mockito.times(0))?.onUserLogin(Utils.convertJSONObjectToHashMap(JSONObject(profile)))
+        verify(exactly = 0) {
+            ctApiMock.onUserLogin(
+                Utils.convertJSONObjectToHashMap(
+                    JSONObject(
+                        profile
+                    )
+                )
+            )
+        }
     }
 
 
@@ -264,18 +276,18 @@ class CTWebInterfaceTest : BaseTestCase() {
 
         // when ctApi , key and value are not null, calling this function will call ctApi's internal function
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        val ctMock = Mockito.mock(CleverTapAPI::class.java)
+        val ctMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctMock)
 
         ctWebInterface.removeMultiValueForKey(null, "value21")
-        Mockito.verify(ctMock, Mockito.never())?.removeMultiValueForKey(null, "value21")
+        verify(exactly = 0) { ctMock.removeMultiValueForKey(null, "value21") }
 
         ctWebInterface.removeMultiValueForKey("key21", null)
-        Mockito.verify(ctMock, Mockito.never())?.removeMultiValueForKey("key21", null)
+        verify(exactly = 0) { ctMock.removeMultiValueForKey("key21", null) }
 
 
         ctWebInterface.removeMultiValueForKey("key2", "value2")
-        Mockito.verify(ctMock, Mockito.times(1))?.removeMultiValueForKey("key2", "value2")
+        verify(exactly = 1) { ctMock.removeMultiValueForKey("key2", "value2") }
     }
 
     @Test
@@ -287,27 +299,40 @@ class CTWebInterfaceTest : BaseTestCase() {
 
         // when ctApi is not null, but key(or value) is null,  calling this function will do nothing.
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        var ctMock = Mockito.mock(CleverTapAPI::class.java)
+        var ctMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.removeMultiValuesForKey(null,"[{'k1':'v1'},{'k2':'v2'}]")
-        Mockito.verify(ctMock,Mockito.never())?.removeMultiValuesForKey(null,Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]")))
+        verify(exactly = 0) {
+            ctMock.removeMultiValuesForKey(
+                null,
+                Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]"))
+            )
+        }
 
         ctWebInterface.removeMultiValuesForKey("keyx",null)
-        Mockito.verify(ctMock,Mockito.never())?.removeMultiValuesForKey("keyx",null)
+        verify(exactly = 0) { ctMock.removeMultiValuesForKey("keyx", null) }
 
 
         //when ctApi and key and value  are all not null, calling this function will call ctApi's internal function
-        ctMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.removeMultiValuesForKey("key2","[{'k1':'v1'},{'k2':'v2'}]")
-        Mockito.verify(ctMock,Mockito.times(1))?.removeMultiValuesForKey("key2",Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]")))
+        verify(exactly = 1) {
+            ctMock.removeMultiValuesForKey(
+                "key2",
+                Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]"))
+            )
+        }
 
 
         // when passed json is malformed, no function will be called
-        ctMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.removeMultiValuesForKey("key22","'k1':'v1'},{'k2':'v2'}]")
-        Mockito.verify(ctMock,Mockito.never())?.removeMultiValuesForKey("key22",Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]")))
+        verify(exactly = 0) {
+            ctMock.removeMultiValuesForKey(
+                "key22",
+                Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]"))
+            )
+        }
 
 
 
@@ -317,16 +342,15 @@ class CTWebInterfaceTest : BaseTestCase() {
     fun test_removeValueForKey_when_CalledWithKey_should_CallAssocClevertapApiFunction() {
         // if key is null, function returns without any changes
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        val ctApiMock = Mockito.mock(CleverTapAPI::class.java)
+        var ctApiMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctApiMock)
-        var key:String? = null
-        ctWebInterface.removeValueForKey(key)
-        Mockito.verify(ctApiMock, Mockito.never())?.removeValueForKey(key)
+        ctWebInterface.removeValueForKey(null)
+        verify(exactly = 0) { ctApiMock.removeValueForKey(null) }
 
         // if profile is not null, function calls associated CT api function
-        key = "key"
+        val key = "key"
         ctWebInterface.removeValueForKey(key)
-        Mockito.verify(ctApiMock, Mockito.times(1))?.removeValueForKey(key)
+        verify(exactly = 1) { ctApiMock.removeValueForKey(key) }
 
     }
 
@@ -338,33 +362,44 @@ class CTWebInterfaceTest : BaseTestCase() {
         ctWebInterface.setMultiValueForKey("key","[{'k0':'v0'},{'k20':'v20'}]")
 
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        var ctMock = Mockito.mock(CleverTapAPI::class.java)
+        var ctMock = mockk<CleverTapAPI>(relaxed = true)
 
         // when ctApi is not null, but key(or value) is null,  calling this function will do nothing.
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.setMultiValueForKey(null,"[{'k1':'v1'},{'k2':'v2'}]")
-        Mockito.verify(ctMock,Mockito.never())?.setMultiValuesForKey(null,Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]")))
+        verify(exactly = 0) {
+            ctMock.setMultiValuesForKey(
+                null,
+                Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]"))
+            )
+        }
 
-         ctMock = Mockito.mock(CleverTapAPI::class.java)
+        ctMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.setMultiValueForKey("keyx",null)
-        Mockito.verify(ctMock,Mockito.never())?.setMultiValuesForKey("keyx",null)
+        verify(exactly = 0) { ctMock.setMultiValuesForKey("keyx", null) }
 
 
         //when ctApi and key and value  are all not null, calling this function will call ctApi's internal function
-        ctMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.setMultiValueForKey("key2","[{'k1':'v1'},{'k2':'v2'}]")
-        Mockito.verify(ctMock,Mockito.times(1))?.setMultiValuesForKey("key2",Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]")))
+        verify(exactly = 1) {
+            ctMock.setMultiValuesForKey(
+                "key2",
+                Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]"))
+            )
+        }
 
         // when passed json is malformed, no function will be called
-        ctMock = Mockito.mock(CleverTapAPI::class.java)
+        ctMock = mockk<CleverTapAPI>(relaxed = true)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.setMultiValueForKey("key2","'k1':'v1',{'k2':'v2'}]")
-        Mockito.verify(ctMock,Mockito.times(0))?.setMultiValuesForKey("key2",Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]")))
-
-
-
+        verify(exactly = 0) {
+            ctMock.setMultiValuesForKey(
+                "key2",
+                Utils.convertJSONArrayToArrayList(JSONArray("[{'k1':'v1'},{'k2':'v2'}]"))
+            )
+        }
     }
 
     @Test

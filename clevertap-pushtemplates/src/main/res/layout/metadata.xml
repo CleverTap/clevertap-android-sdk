@@ -38,7 +38,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:ellipsize="end"
-        android:maxWidth="120dp"
+        android:maxWidth="@dimen/metadata_subtitle_max_width"
         android:maxLines="1"
         android:layout_marginTop="@dimen/padding_negative"
         android:gravity="center_vertical"

@@ -3,31 +3,24 @@ package com.clevertap.android.sdk.pushnotification.fcm
 import android.os.Bundle
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
-import com.clevertap.android.shared.test.TestApplication
 import com.google.firebase.messaging.RemoteMessage
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.mockk
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.jupiter.api.*
-import org.junit.runner.*
-import org.mockito.*
-import org.mockito.Mockito.*
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [28], application = TestApplication::class)
 class FcmNotificationBundleManipulationTest : BaseTestCase() {
 
     private lateinit var messageBundle: Bundle
-
-    @Mock
     private lateinit var remoteMessage: RemoteMessage
     private lateinit var notificationManipulation: FcmNotificationBundleManipulation
 
-    @BeforeEach
     override fun setUp() {
-        MockitoAnnotations.initMocks(this)
         messageBundle = Bundle()
+        remoteMessage = mockk(relaxed = true)
         notificationManipulation = FcmNotificationBundleManipulation(messageBundle)
     }
 
@@ -37,8 +30,8 @@ class FcmNotificationBundleManipulationTest : BaseTestCase() {
         val originalPriority = RemoteMessage.PRIORITY_NORMAL
         val strPriority = Constants.PRIORITY_HIGH
 
-        `when`(remoteMessage.originalPriority).thenReturn(originalPriority)
-        `when`(remoteMessage.priority).thenReturn(priority)
+        every { remoteMessage.originalPriority } returns originalPriority
+        every { remoteMessage.priority } returns priority
 
         assertEquals(null, messageBundle.getString(Constants.WZRK_PN_PRT))
 
@@ -48,14 +41,15 @@ class FcmNotificationBundleManipulationTest : BaseTestCase() {
 
         assertEquals(strPriority, messageBundle.getString(Constants.WZRK_PN_PRT))
     }
+
     @Test
     fun addPriority_withDifferentOriginalPriority_shouldAddNormalPriorityToBundle() {
         val priority = RemoteMessage.PRIORITY_NORMAL
         val originalPriority = RemoteMessage.PRIORITY_HIGH
         val strPriority = Constants.PRIORITY_NORMAL
 
-        `when`(remoteMessage.originalPriority).thenReturn(originalPriority)
-        `when`(remoteMessage.priority).thenReturn(priority)
+        every { remoteMessage.originalPriority } returns originalPriority
+        every { remoteMessage.priority } returns priority
 
         assertEquals(null, messageBundle.getString(Constants.WZRK_PN_PRT))
 
@@ -71,8 +65,8 @@ class FcmNotificationBundleManipulationTest : BaseTestCase() {
         val originalPriority = RemoteMessage.PRIORITY_HIGH
         val strPriority = Constants.PRIORITY_UNKNOWN
 
-        `when`(remoteMessage.originalPriority).thenReturn(originalPriority)
-        `when`(remoteMessage.priority).thenReturn(priority)
+        every { remoteMessage.originalPriority } returns originalPriority
+        every { remoteMessage.priority } returns priority
 
         assertEquals(null, messageBundle.getString(Constants.WZRK_PN_PRT))
 
@@ -88,8 +82,8 @@ class FcmNotificationBundleManipulationTest : BaseTestCase() {
         val priority = RemoteMessage.PRIORITY_NORMAL
         val originalPriority = RemoteMessage.PRIORITY_NORMAL
 
-        `when`(remoteMessage.originalPriority).thenReturn(originalPriority)
-        `when`(remoteMessage.priority).thenReturn(priority)
+        every { remoteMessage.originalPriority } returns originalPriority
+        every { remoteMessage.priority } returns priority
 
         val actualBundle = notificationManipulation.addPriority(remoteMessage).build()
 

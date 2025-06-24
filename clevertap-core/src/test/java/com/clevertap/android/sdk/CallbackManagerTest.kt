@@ -13,7 +13,6 @@ import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowLooper
@@ -42,11 +41,13 @@ class CallbackManagerTest : BaseTestCase() {
             override fun inboxDidInitialize() {}
             override fun inboxMessagesDidUpdate() {}
         }
-        val ibSpy = Mockito.spy(ib)
+        val ibSpy = spyk<CTInboxListener>(ib)
         callbackManager.inboxListener = ibSpy
         callbackManager._notifyInboxMessagesDidUpdate()
 
-        Mockito.verify(ibSpy, Mockito.atLeastOnce()).inboxMessagesDidUpdate()
+        verify(atLeast = 1) {
+            ibSpy.inboxMessagesDidUpdate()
+        }
     }
 
     @Test
@@ -56,14 +57,12 @@ class CallbackManagerTest : BaseTestCase() {
         assertEquals(failureListener, callbackManager.failureFlushListener)
     }
 
-
     @Test
     fun test_SetterGetterForFeatureFlagListener() {
         val listener = CTFeatureFlagsListener { }
         callbackManager.featureFlagListener = listener
         assertEquals(listener, callbackManager.featureFlagListener)
     }
-
 
     @Test
     fun test_SetterGetterGeofenceCallback() {
@@ -75,15 +74,12 @@ class CallbackManagerTest : BaseTestCase() {
         assertEquals(listener, callbackManager.geofenceCallback)
     }
 
-
     @Test
     fun test_SetterGetterInAppNotificationButtonListener() {
         val listener = InAppNotificationButtonListener { }
         callbackManager.inAppNotificationButtonListener = listener
         assertEquals(listener, callbackManager.inAppNotificationButtonListener)
     }
-
-
 
     @Test
     fun test_SetterGetterInAppNotificationListener() {
@@ -102,8 +98,6 @@ class CallbackManagerTest : BaseTestCase() {
         assertEquals(listener, callbackManager.inAppNotificationListener)
     }
 
-
-
     @Test
     fun test_SetterGetterInboxListener() {
         val listener = object : CTInboxListener {
@@ -113,11 +107,7 @@ class CallbackManagerTest : BaseTestCase() {
 
         callbackManager.inboxListener = listener
         assertEquals(listener, callbackManager.inboxListener)
-
-
     }
-
-
 
     @Test
     fun test_SetterGetterProductConfigListener() {
@@ -128,10 +118,7 @@ class CallbackManagerTest : BaseTestCase() {
         }
         callbackManager.productConfigListener = listener
         assertEquals(listener, callbackManager.productConfigListener)
-
     }
-
-
 
     @Test
     fun test_SetterGetterPushAmpListener() {
@@ -146,8 +133,6 @@ class CallbackManagerTest : BaseTestCase() {
         callbackManager.pushNotificationListener = listener
         assertEquals(listener, callbackManager.pushNotificationListener)
     }
-
-
 
     @Test
     fun test_getterSetterSyncListener() {
@@ -187,54 +172,58 @@ class CallbackManagerTest : BaseTestCase() {
     @Test
     fun test_notifyUserProfileInitialized_when_FunctionIsCalledWithDeviceID_ShouldCallSyncListenerWithDeviceID() {
 
-        val syncListenrSpy = Mockito.spy(object : SyncListener {
+        val syncListenrSpy = spyk(object : SyncListener {
             override fun profileDataUpdated(updates: JSONObject?) {}
-            override fun profileDidInitialize(CleverTapID: String?) {}
+            override fun profileDidInitialize(cleverTapID: String?) {}
         })
         callbackManager.syncListener = syncListenrSpy
 
-        // if sync listener is function is called with null string, then it will not return without anyfurther actions
+        // if sync listener is function is called with null string, then it will not return without any further actions
         callbackManager.notifyUserProfileInitialized(null)
-        Mockito.verify(syncListenrSpy, Mockito.times(0)).profileDidInitialize(null)
+        verify(exactly = 0) {
+            syncListenrSpy.profileDidInitialize(null)
+        }
 
         // if sync listener is set on callback manager and function is called with non-empty string, then it will call synclistener's profileDidInitialize
         callbackManager.notifyUserProfileInitialized("deviceID")
-        Mockito.verify(syncListenrSpy, Mockito.times(1)).profileDidInitialize("deviceID")
+        verify(exactly = 1) {
+            syncListenrSpy.profileDidInitialize("deviceID")
+        }
 
 
         //3. this function also has a non parameter overload which will use device id from cached memory to return a device id which might be null but perform equally
-        val deviceInfoSpy = Mockito.spy(deviceInfo)
+        val deviceInfoSpy = spyk(deviceInfo)
         callbackManager = CallbackManager(config, deviceInfoSpy)
         callbackManager.syncListener = syncListenrSpy
-        Mockito.`when`(deviceInfoSpy.getDeviceID()).thenReturn("motorola")
+        every { deviceInfoSpy.deviceID } returns "motorola"
         callbackManager.notifyUserProfileInitialized()
-        Mockito.verify(syncListenrSpy, Mockito.times(1)).profileDidInitialize("motorola")
+        verify(exactly = 1) { syncListenrSpy.profileDidInitialize("motorola") }
 
     }
 
     @Test
     fun test_setDisplayUnitListener_when_FunctionIsCalledWithAValidListener_ShouldAttachItselfWithAWeakReferenceOfThatListener() {
-        val configSpy = Mockito.spy(config)
+        val configSpy = spyk(config)
         callbackManager = CallbackManager(configSpy, deviceInfo)
         var listener: DisplayUnitListener? = DisplayUnitListener { }
 
         callbackManager.setDisplayUnitListener(listener)
-        Mockito.verify(configSpy, Mockito.never()).accountId
+        verify(exactly = 0) { configSpy.accountId }
 
         listener = null
         callbackManager.setDisplayUnitListener(listener)
-        Mockito.verify(configSpy, Mockito.times(1)).accountId
+        verify(exactly = 1) { configSpy.accountId }
     }
 
     @Test
     fun test__notifyInboxInitialized_when_FunctionIsCalled_ShouldCallInboxListnersFunctionIfAvailable() {
-        val spy = Mockito.spy(object : CTInboxListener {
+        val inboxListenerSpy = spyk(object : CTInboxListener {
             override fun inboxDidInitialize() {}
             override fun inboxMessagesDidUpdate() {}
         })
-        callbackManager.inboxListener = spy
+        callbackManager.inboxListener = inboxListenerSpy
         callbackManager._notifyInboxInitialized()
-        Mockito.verify(spy, Mockito.times(1)).inboxDidInitialize()
+        verify(exactly = 1) { inboxListenerSpy.inboxDidInitialize() }
     }
 
     @Test
@@ -244,20 +233,18 @@ class CallbackManagerTest : BaseTestCase() {
 
             }
         }
-        val spy = Mockito.spy(displayUnitListener)
-        callbackManager.setDisplayUnitListener(spy)
-        var units: ArrayList<CleverTapDisplayUnit>? = null
+        val listenerSpy = spyk(displayUnitListener)
+        callbackManager.setDisplayUnitListener(listenerSpy)
 
+        callbackManager.notifyDisplayUnitsLoaded(null)
+        verify(exactly = 0) { listenerSpy.onDisplayUnitsLoaded(any()) }
+
+        var units: ArrayList<CleverTapDisplayUnit> = arrayListOf()
         callbackManager.notifyDisplayUnitsLoaded(units)
-        Mockito.verify(spy, Mockito.never()).onDisplayUnitsLoaded(Mockito.anyList<CleverTapDisplayUnit>()  as ArrayList<CleverTapDisplayUnit>)
-
-        units = arrayListOf()
-        callbackManager.notifyDisplayUnitsLoaded(units)
-        Mockito.verify(spy, Mockito.never()).onDisplayUnitsLoaded(units)
-
+        verify(exactly = 0) { listenerSpy.onDisplayUnitsLoaded(units) }
 
         units = arrayListOf(CleverTapDisplayUnit.toDisplayUnit(JSONObject()))
         callbackManager.notifyDisplayUnitsLoaded(units)
-        Mockito.verify(spy, Mockito.atLeastOnce()).onDisplayUnitsLoaded(units)
+        verify { listenerSpy.onDisplayUnitsLoaded(units) }
     }
 }

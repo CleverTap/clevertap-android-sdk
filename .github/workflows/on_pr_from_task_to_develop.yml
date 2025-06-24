@@ -10,6 +10,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      pull-requests: write
 
     steps:
       - name: Checkout the code from Repo
@@ -29,9 +30,9 @@ jobs:
 
       - name: Unit Tests and Jacoco Coverage (DEBUG)
         uses: ./.github/mini_flows/test_and_coverage_debug
-
-      - name: Unit Tests and Jacoco Coverage (RELEASE)
-        uses: ./.github/mini_flows/test_and_coverage_release
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          baseline-branch: develop
 
       - name: Build AARs (RELEASE)
         uses: ./.github/mini_flows/build_code_release

@@ -3,11 +3,12 @@ package com.clevertap.android.sdk.displayunits
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.displayunits.model.MockCleverTapDisplayUnit
 import com.clevertap.android.shared.test.BaseTestCase
-import org.json.JSONArray
-import org.json.JSONObject
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.Mockito.*
+import io.mockk.every
+import io.mockk.mockkStatic
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -51,12 +52,9 @@ class CTDisplayUnitControllerTest : BaseTestCase() {
 
     @Test
     fun test_updateDisplayUnits_whenAnyException_returnNullDisplayUnit() {
-        mockStatic(CleverTapDisplayUnit::class.java).use {
-            `when`(CleverTapDisplayUnit.toDisplayUnit(any(JSONObject::class.java))).thenThrow(
-                java.lang.RuntimeException(
-                    "Something went wrong"
-                )
-            )
+        mockkStatic(CleverTapDisplayUnit::class) {
+            every { CleverTapDisplayUnit.toDisplayUnit(any()) } throws RuntimeException("Something went wrong")
+
             ctDisplayUnitController.updateDisplayUnits(MockCleverTapDisplayUnit().getMockResponse(1))
             Assert.assertNull(ctDisplayUnitController.getDisplayUnitForID(null))
             Assert.assertNull(ctDisplayUnitController.getDisplayUnitForID(""))

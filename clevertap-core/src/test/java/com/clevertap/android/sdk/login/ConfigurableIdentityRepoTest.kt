@@ -1,16 +1,16 @@
 package com.clevertap.android.sdk.login
 
-import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Assert
 import org.junit.Test
-import org.mockito.Mockito
-import java.util.*
 
 class ConfigurableIdentityRepoTest:BaseTestCase() {
     private lateinit var configurableIdentityRepo: ConfigurableIdentityRepo
@@ -21,16 +21,13 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
     private lateinit var validationStack :ValidationResultStack
     private lateinit var loginInfoProvider: LoginInfoProvider
 
-
-
     override fun setUp() {
         super.setUp()
-        // using spy everywhere to easily provide a custom value when <someDependency>.publicGetter() is called
-        coreMetaData = Mockito.mock(CoreMetaData::class.java)
-        config = Mockito.mock(CleverTapInstanceConfig::class.java)
-        deviceInfo = Mockito.mock(DeviceInfo::class.java)
-        loginInfoProvider = Mockito.mock(LoginInfoProvider::class.java)
-        validationStack = Mockito.mock(ValidationResultStack::class.java)
+        coreMetaData = mockk(relaxed = true)
+        config = mockk(relaxed = true)
+        deviceInfo = mockk(relaxed = true)
+        loginInfoProvider = mockk(relaxed = true)
+        validationStack = mockk(relaxed = true)
         // note: no need to setup configurableIdentityRepo instance here as it makes a crucial function call during initialisation. therefore, we create an instance in tests, wherever required
     }
 
@@ -39,7 +36,6 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         //note: this function does not have any important cases on its own, so we are testing its creator function , i.e loadIdentitySet() which gets called when constructor is called
         Assert.assertEquals(true,true)
     }
-
 
     /**
      * Loads the identity set:
@@ -79,8 +75,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         val commonKeys = arrayOf(Constants.TYPE_IDENTITY)
 
         //assertions
-        Mockito.`when`(loginInfoProvider.cachedIdentityKeysForAccount).thenReturn(commonKeys.joinToString(","))
-        Mockito.`when`(config.identityKeys).thenReturn(commonKeys)
+        every { loginInfoProvider.cachedIdentityKeysForAccount } returns commonKeys.joinToString(",")
+        every { config.identityKeys } returns commonKeys
 
         //test call
         configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
@@ -88,8 +84,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
 
         //validations
         println("final result=== ${result.toString()}")
-        Mockito.verify(validationStack,Mockito.never()).pushValidationResult(Mockito.any())
-        Mockito.verify(loginInfoProvider,Mockito.times(0)).saveIdentityKeysForAccount(Mockito.any())
+        verify(exactly = 0) { validationStack.pushValidationResult(any()) }
+        verify(exactly = 0) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
         Assert.assertEquals(true,result.isValid)
         commonKeys.forEach { Assert.assertEquals(true,result.contains(it)) }
     }
@@ -100,12 +96,11 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         //         (from config) are different, then   error is generated and  keys are set to that of loginInfoProvider.
         //         since lip keys are valid, saveIdentityKeysForAccount(..) will  not be called
 
-
         val lipKeys = arrayOf(Constants.TYPE_IDENTITY)
         val configKeys = arrayOf(Constants.TYPE_EMAIL)
         //assertions
-        Mockito.`when`(loginInfoProvider.cachedIdentityKeysForAccount).thenReturn(lipKeys.joinToString(","))
-        Mockito.`when`(config.identityKeys).thenReturn(configKeys)
+        every { loginInfoProvider.cachedIdentityKeysForAccount } returns lipKeys.joinToString(",")
+        every { config.identityKeys } returns configKeys
 
         //test call
         configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
@@ -113,9 +108,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
 
         //validations
         println("final result=== ${result.toString()}")
-        Mockito.verify(validationStack,Mockito.times(1)).pushValidationResult(Mockito.any())
-        Mockito.verify(loginInfoProvider,Mockito.times(0)).saveIdentityKeysForAccount(Mockito.any())
-
+        verify(exactly = 1) { validationStack.pushValidationResult(any()) }
+        verify(exactly = 0) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
 
         Assert.assertEquals(true,result.isValid)
         lipKeys.forEach { Assert.assertEquals(true,result.contains(it)) }
@@ -127,12 +121,11 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         //         and identityKeys  (from config) are valid, then  error is not generated(why??) and idenity keys are set
         //         to keys from config . since lip keys are invalid, saveIdentityKeysForAccount(..) will be called
 
-
         val lipKeys = emptyArray<String>()
         val configKeys = arrayOf(Constants.TYPE_EMAIL)
         //assertions
-        Mockito.`when`(loginInfoProvider.cachedIdentityKeysForAccount).thenReturn(lipKeys.joinToString(","))
-        Mockito.`when`(config.identityKeys).thenReturn(configKeys)
+        every { loginInfoProvider.cachedIdentityKeysForAccount } returns lipKeys.joinToString(",")
+        every { config.identityKeys } returns configKeys
 
         //test call
         configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
@@ -140,12 +133,13 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
 
         //validations
         println("final result=== ${result.toString()}")
-        Mockito.verify(validationStack,Mockito.times(0)).pushValidationResult(Mockito.any())
-        Mockito.verify(loginInfoProvider,Mockito.times(1)).saveIdentityKeysForAccount(Mockito.any())
+        verify(exactly = 0) { validationStack.pushValidationResult(any()) }
+        verify(exactly = 1) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
 
         Assert.assertEquals(true,result.isValid)
         configKeys.forEach { Assert.assertEquals(true,result.contains(it)) }
     }
+
     @Test
     fun loadIdentitySet_when_KeysInLIPandConfigAreBothInvalid_should_SetDefaultKeysAsIdentitySet(){
         //case 4 : when cachedIdentityKeysForAccount(from loginInfoProvider) are invalid (i.e empty set)
@@ -156,8 +150,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         val configKeys = emptyArray<String>()
         val defaultKeys = arrayOf(Constants.TYPE_IDENTITY, Constants.TYPE_EMAIL)
         //assertions
-        Mockito.`when`(loginInfoProvider.cachedIdentityKeysForAccount).thenReturn(lipKeys.joinToString(","))
-        Mockito.`when`(config.identityKeys).thenReturn(configKeys)
+        every { loginInfoProvider.cachedIdentityKeysForAccount } returns lipKeys.joinToString(",")
+        every { config.identityKeys } returns configKeys
 
         //test call
         configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
@@ -165,20 +159,19 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
 
         //validations
         println("final result=== ${result.toString()}")
-        Mockito.verify(validationStack,Mockito.times(0)).pushValidationResult(Mockito.any())
-        Mockito.verify(loginInfoProvider,Mockito.times(1)).saveIdentityKeysForAccount(Mockito.any())
+        verify(exactly = 0) { validationStack.pushValidationResult(any()) }
+        verify(exactly = 1) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
 
         Assert.assertEquals(true,result.isValid)
         defaultKeys.forEach { Assert.assertEquals(true,result.contains(it)) }
     }
 
-
     @Test
     fun hasIdentity_when_calledWithKey_should_ReturnWhetherTheKeyExistsInSetOrNot(){
         val commonKeys = arrayOf(Constants.TYPE_IDENTITY,Constants.TYPE_PHONE)
         //assertions
-        Mockito.`when`(loginInfoProvider.cachedIdentityKeysForAccount).thenReturn(commonKeys.joinToString(","))
-        Mockito.`when`(config.identityKeys).thenReturn(commonKeys)
+        every { loginInfoProvider.cachedIdentityKeysForAccount } returns commonKeys.joinToString(",")
+        every { config.identityKeys } returns commonKeys
 
         //test call
         configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)

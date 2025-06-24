@@ -11,9 +11,13 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FileUtils
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import io.mockk.verify
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -32,14 +36,16 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
             coreMetaData = CoreMetaData()
-            analyticsManager = mock(BaseAnalyticsManager::class.java)
+            analyticsManager = mockk(relaxed = true)
             deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
             callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
-            fileUtils = spy(FileUtils(application, cleverTapInstanceConfig))
-            featureFlagsListener = mock(CTFeatureFlagsListener::class.java)
+            fileUtils = spyk(FileUtils(application, cleverTapInstanceConfig))
+            featureFlagsListener = mockk(relaxed = true)
             callbackManager.featureFlagListener = featureFlagsListener
             mCTFeatureFlagsController = CTFeatureFlagsController(
                 guid,
@@ -52,19 +58,24 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
 
     @Test
     fun test_constructor_whenFeatureFlagIsNotSave_InitShouldReturnTrue() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
-            val controller = spy(mCTFeatureFlagsController)
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
+            val controller = spyk(mCTFeatureFlagsController)
             Assert.assertTrue(controller.isInitialized)
         }
     }
 
     @Test
     fun when_Non_Empty_Feature_Flag_Config_Then_Init_Return_True() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
-            `when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
-                .thenReturn(MockFFResponse().getResponseJSON().toString())
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
+            every { fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()) } returns
+                    MockFFResponse().getResponseJSON().toString()
+
             val controller = CTFeatureFlagsController(
                 guid,
                 cleverTapInstanceConfig,
@@ -77,10 +88,13 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
 
     @Test
     fun when_Non_Empty_Feature_Flag_Config_Read_Exception_Then_Init_Return_True() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
-            `when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
-                .thenThrow(RuntimeException("Something Went Wrong"))
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
+            every { fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()) } throws
+                    RuntimeException("Something Went Wrong")
+
             val controller = CTFeatureFlagsController(
                 guid,
                 cleverTapInstanceConfig,
@@ -93,20 +107,23 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
 
     @Test
     fun when_Feature_Flag_Response_Success() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
-            `when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
-                .thenThrow(RuntimeException("Something Went Wrong"))
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
+            every { fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()) } throws
+                    RuntimeException("Something Went Wrong")
+
             val jsonObject = MockFFResponse().getResponseJSON()
             mCTFeatureFlagsController.updateFeatureFlags(jsonObject)
-            verify(featureFlagsListener).featureFlagsUpdated()
-            verify(
-                fileUtils
-            ).writeJsonToFile(
-                mCTFeatureFlagsController.cachedDirName,
-                mCTFeatureFlagsController.cachedFileName,
-                jsonObject
-            )
+            verify { featureFlagsListener.featureFlagsUpdated() }
+            verify {
+                fileUtils.writeJsonToFile(
+                    mCTFeatureFlagsController.cachedDirName,
+                    mCTFeatureFlagsController.cachedFileName,
+                    jsonObject
+                )
+            }
 
             Assert.assertTrue(mCTFeatureFlagsController.get("feature_A", false))
             Assert.assertFalse(mCTFeatureFlagsController.get("feature_B", true))
@@ -119,8 +136,10 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
 
     @Test
     fun test_get_whenNotInitialized_shouldReturnDefaultValue() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
             val jsonObject = MockFFResponse().getResponseJSON()
             mCTFeatureFlagsController.updateFeatureFlags(jsonObject)
             mCTFeatureFlagsController.isInitialized = false
@@ -130,47 +149,55 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
 
     @Test
     fun test_Fetch_FF_Success() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
             mCTFeatureFlagsController.fetchFeatureFlags()
-            verify(analyticsManager).fetchFeatureFlags()
+            verify { analyticsManager.fetchFeatureFlags() }
         }
     }
 
     @Test
     fun test_resetWithGuid() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
             val guid = "121u3203u129"
-            val controller = spy(mCTFeatureFlagsController)
+            val controller = spyk(mCTFeatureFlagsController)
             controller.resetWithGuid(guid)
             Assert.assertEquals(guid, controller.guid)
-            verify(controller).init()
+            verify { controller.init() }
         }
     }
 
     @Test
     fun test_setGuidAndInit_whenInitialised_initMethodShouldNotGetCalled() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
-            val controller = spy(mCTFeatureFlagsController)
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
+            val controller = spyk(mCTFeatureFlagsController)
             val newGuid = "131"
             controller.setGuidAndInit(newGuid)
             Assert.assertNotEquals(controller.guid, newGuid)
-            verify(controller, never()).init()
+            verify(exactly = 0) { controller.init() }
         }
     }
 
     @Test
     fun test_setGuidAndInit_whenNotInitialised_initMethodShouldGetCalled() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
-            val controller = spy(mCTFeatureFlagsController)
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
+                cleverTapInstanceConfig
+            )
+            val controller = spyk(mCTFeatureFlagsController)
             val newGuid = "131"
             controller.isInitialized = false
             controller.setGuidAndInit(newGuid)
             Assert.assertEquals(controller.guid, newGuid)
-            verify(controller).init()
+            verify { controller.init() }
         }
     }
 }

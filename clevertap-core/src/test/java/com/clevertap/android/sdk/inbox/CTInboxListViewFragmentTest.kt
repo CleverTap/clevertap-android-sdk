@@ -2,11 +2,12 @@ package com.clevertap.android.sdk.inbox
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.spyk
+import io.mockk.verify
 import org.json.JSONObject
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.*
-import org.mockito.Mockito.*
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -49,7 +50,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
                 "{\"type\":\"kv\",\"text\":\"Link\",\"color\":\"#007bff\",\"bg\":\"#ffffff\",\"copyText\":{\"text\":\"\",\"replacements\":\"\",\"og\":\"\"},\"url\":{\"android\":{\"text\":\"\",\"replacements\":\"\",\"og\":\"\"},\"ios\":{\"text\":\"\",\"replacements\":\"\",\"og\":\"\"}},\"kv\":{\"Test\":\"TestValue\"}}".trimMargin()
             )
         ctInboxListViewFragment = CTInboxListViewFragment()
-        ctInboxListViewFragmentSpy = Mockito.spy(ctInboxListViewFragment)
+        ctInboxListViewFragmentSpy = spyk(ctInboxListViewFragment)
     }
 
     @Test
@@ -67,10 +68,9 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
-        verify(
-            ctInboxListViewFragmentSpy,
-            Mockito.atLeastOnce()
-        ).fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        verify(atLeast = 1) {
+            ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        }
     }
 
     @Test
@@ -88,10 +88,9 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
-        verify(
-            ctInboxListViewFragmentSpy,
-            Mockito.atLeastOnce()
-        ).fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        verify(atLeast = 1) {
+            ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        }
     }
 
     @Test
@@ -109,10 +108,9 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
-        verify(
-            ctInboxListViewFragmentSpy,
-            Mockito.atLeastOnce()
-        ).fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        verify(atLeast = 1) {
+            ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        }
     }
 
     @Test
@@ -132,10 +130,9 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObj, keyValuePayload, buttonIndex)
 
         //Assert
-        verify(
-            ctInboxListViewFragmentSpy,
-            Mockito.atLeastOnce()
-        ).fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        verify(atLeast = 1) {
+            ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        }
     }
 
     @Test
@@ -153,10 +150,9 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
-        verify(
-            ctInboxListViewFragmentSpy,
-            Mockito.atLeastOnce()
-        ).fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        verify(atLeast = 1) {
+            ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        }
     }
 
     @Test
@@ -174,10 +170,9 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
-        verify(
-            ctInboxListViewFragmentSpy,
-            Mockito.atLeastOnce()
-        ).fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        verify(atLeast = 1) {
+            ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        }
     }
 
     @Test
@@ -195,10 +190,9 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjUrlType, keyValuePayload, buttonIndex)
 
         //Assert
-        verify(
-            ctInboxListViewFragmentSpy,
-            Mockito.atLeastOnce()
-        ).fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        verify(atLeast = 1) {
+            ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        }
     }
 
     @Test
@@ -217,9 +211,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.handleClick(itemPosition, viewPagerPosition, buttonTxt, buttonJsonObjKVType, keyValuePayload, buttonIndex)
 
         //Assert
-        verify(
-            ctInboxListViewFragmentSpy,
-            Mockito.never()
-        ).fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        verify(exactly = 0) {
+            ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
+        }
     }
 }

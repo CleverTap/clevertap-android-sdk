@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="product_display_margin_top">4dp</dimen>
+    <dimen name="five_cta_padding">0dp</dimen>
+</resources>

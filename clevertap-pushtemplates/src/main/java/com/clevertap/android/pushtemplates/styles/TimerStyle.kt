@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
+import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.TemplateRenderer
@@ -12,7 +13,9 @@ import com.clevertap.android.pushtemplates.content.TIMER_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.TimerBigContentView
 import com.clevertap.android.pushtemplates.content.TimerSmallContentView
 
-class TimerStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
+internal class TimerStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
+
+    private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
         return if (getTimerEnd() == null)
@@ -47,6 +50,16 @@ class TimerStyle(private var renderer: TemplateRenderer, private var extras: Bun
         notificationId: Int
     ): PendingIntent? {
         return null
+    }
+    
+    override fun builderFromStyle(
+        context: Context,
+        extras: Bundle,
+        notificationId: Int,
+        nb: NotificationCompat.Builder
+    ): NotificationCompat.Builder {
+        val builder = super.builderFromStyle(context, extras, notificationId, nb)
+        return actionButtonsHandler.addActionButtons(context, extras, notificationId, builder)
     }
 
     @Suppress("LocalVariableName")
