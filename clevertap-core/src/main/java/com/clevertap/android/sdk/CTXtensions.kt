@@ -254,6 +254,15 @@ fun JSONObject.copyFrom(other: JSONObject) {
 }
 
 /**
+ * Copies all key-value pairs from this JSONObject to a new JSONObject.
+ */
+fun JSONObject.copy(): JSONObject {
+    val json = JSONObject()
+    json.copyFrom(this)
+    return json
+}
+
+/**
  * Checks if the JSONObject is not null and has at least one key-value pair.
  *
  * @return `true` if the JSONObject is not null and not empty, `false` otherwise.

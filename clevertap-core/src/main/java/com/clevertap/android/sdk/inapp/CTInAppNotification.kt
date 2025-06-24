@@ -6,6 +6,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.copy
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia.Companion.create
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
@@ -16,71 +17,25 @@ import kotlin.reflect.KClass
 
 class CTInAppNotification : Parcelable {
 
-    var actionExtras: JSONObject? = null
+    var id: String? = null
         private set
-
-    var backgroundColor: String = Constants.WHITE
-        private set
-
-    var buttonCount: Int = 0
-        private set
-
-    private var _buttons = ArrayList<CTInAppNotificationButton>()
-    val buttons: List<CTInAppNotificationButton>
-        get() = _buttons
 
     var campaignId: String? = null
-        private set
-
-    var customExtras: JSONObject? = null
-        private set
-
-    var customInAppUrl: String? = null
-        private set
-
-    var isDarkenScreen: Boolean = false
-        private set
-
-    var error: String? = null
-
-    var isExcludeFromCaps: Boolean = false
-        private set
-
-    var height: Int = 0
-        private set
-
-    var heightPercentage: Int = 0
-        private set
-
-    var aspectRatio: Double = HTML_DEFAULT_ASPECT_RATIO
-        private set
-
-    var isHideCloseButton: Boolean = false
-        private set
-
-    var html: String? = null
-        private set
-
-    var id: String? = null
         private set
 
     var inAppType: CTInAppType? = null
         private set
 
-    var isLandscape: Boolean = false
+    var isExcludeFromCaps: Boolean = false
         private set
 
-    var isPortrait: Boolean = false
-        private set
+    private var _actionExtras: JSONObject? = null
+    val actionExtras: JSONObject?
+        get() = _actionExtras?.copy()
 
-    var isTablet: Boolean = false
-        private set
-
-    var isJsEnabled: Boolean = false
-        private set
-
-    var jsonDescription: JSONObject
-        private set
+    private var _jsonDescription: JSONObject
+    val jsonDescription
+        get() = _jsonDescription.copy()
 
     var landscapeImageUrl: String? = null
         private set
@@ -88,47 +43,30 @@ class CTInAppNotification : Parcelable {
     var maxPerSession: Int = 0
         private set
 
-    private var _mediaList = ArrayList<CTInAppNotificationMedia>()
-    val mediaList: List<CTInAppNotificationMedia>
-        get() = _mediaList
+    private var _buttons = ArrayList<CTInAppNotificationButton>()
 
-    var message: String? = null
+    val buttons: List<CTInAppNotificationButton>
+        get() = _buttons
+
+    var isLandscape: Boolean = false
         private set
 
-    var messageColor: String = Constants.BLACK
-        private set
-
-    var position: Char = 0.toChar()
-        private set
-
-    var isShowClose: Boolean = false
-        private set
-
-    var timeToLive: Long = 0
+    var isPortrait: Boolean = false
         private set
 
     var title: String? = null
         private set
 
-    var titleColor: String = Constants.BLACK
+    var message: String? = null
+        private set
+
+    var timeToLive: Long = 0
         private set
 
     var totalDailyCount: Int = 0
         private set
 
     var totalLifetimeCount: Int = 0
-        private set
-
-    var type: String? = null
-        private set
-
-    var isVideoSupported: Boolean = false
-        private set
-
-    var width: Int = 0
-        private set
-
-    var widthPercentage: Int = 0
         private set
 
     var isLocalInApp: Boolean = false
@@ -140,12 +78,78 @@ class CTInAppNotification : Parcelable {
     var isRequestForPushPermission: Boolean = false
         private set
 
-    var customTemplateData: CustomTemplateInAppData? = null
+    internal var customTemplateData: CustomTemplateInAppData? = null
         private set
 
-    constructor(jsonObject: JSONObject, videoSupported: Boolean) {
+    internal var type: String? = null
+        private set
+
+    internal var backgroundColor: String = Constants.WHITE
+        private set
+
+    internal var buttonCount: Int = 0
+        private set
+
+    internal var customExtras: JSONObject? = null
+        private set
+
+    internal var customInAppUrl: String? = null
+        private set
+
+    internal var isDarkenScreen: Boolean = false
+        private set
+
+    internal var error: String? = null
+
+    internal var height: Int = 0
+        private set
+
+    internal var heightPercentage: Int = 0
+        private set
+
+    internal var aspectRatio: Double = HTML_DEFAULT_ASPECT_RATIO
+        private set
+    internal var isHideCloseButton: Boolean = false
+        private set
+
+    internal var html: String? = null
+        private set
+
+    internal var isTablet: Boolean = false
+        private set
+
+    internal var isJsEnabled: Boolean = false
+        private set
+
+    private var _mediaList = ArrayList<CTInAppNotificationMedia>()
+
+    internal val mediaList: List<CTInAppNotificationMedia>
+        get() = _mediaList
+
+    internal var messageColor: String = Constants.BLACK
+        private set
+
+    internal var position: Char = 0.toChar()
+        private set
+
+    internal var isShowClose: Boolean = false
+        private set
+
+    internal var titleColor: String = Constants.BLACK
+        private set
+
+    internal var isVideoSupported: Boolean = false
+        private set
+
+    internal var width: Int = 0
+        private set
+
+    internal var widthPercentage: Int = 0
+        private set
+
+    internal constructor(jsonObject: JSONObject, videoSupported: Boolean) {
         isVideoSupported = videoSupported
-        jsonDescription = jsonObject
+        _jsonDescription = jsonObject
         try {
             type = jsonObject.getStringOrNull(Constants.KEY_TYPE)
             if (type == null || type == Constants.KEY_CUSTOM_HTML) {
@@ -174,14 +178,14 @@ class CTInAppNotification : Parcelable {
         heightPercentage = parcel.readInt()
         width = parcel.readInt()
         widthPercentage = parcel.readInt()
-        jsonDescription = JSONObject(parcel.readString() ?: EMPTY_JSON)
+        _jsonDescription = JSONObject(parcel.readString() ?: EMPTY_JSON)
         error = parcel.readString()
         customExtras = if (parcel.readByte().toInt() == 0x00) {
             null
         } else {
             JSONObject(parcel.readString() ?: EMPTY_JSON)
         }
-        actionExtras = if (parcel.readByte().toInt() == 0x00) {
+        _actionExtras = if (parcel.readByte().toInt() == 0x00) {
             null
         } else {
             JSONObject(parcel.readString() ?: EMPTY_JSON)
@@ -243,7 +247,7 @@ class CTInAppNotification : Parcelable {
         dest.writeInt(heightPercentage)
         dest.writeInt(width)
         dest.writeInt(widthPercentage)
-        dest.writeString(jsonDescription.toString())
+        dest.writeString(_jsonDescription.toString())
         dest.writeString(error)
         if (customExtras == null) {
             dest.writeByte((0x00).toByte())
@@ -251,11 +255,11 @@ class CTInAppNotification : Parcelable {
             dest.writeByte((0x01).toByte())
             dest.writeString(customExtras.toString())
         }
-        if (actionExtras == null) {
+        if (_actionExtras == null) {
             dest.writeByte((0x00).toByte())
         } else {
             dest.writeByte((0x01).toByte())
-            dest.writeString(actionExtras.toString())
+            dest.writeString(_actionExtras.toString())
         }
         dest.writeString(type)
         dest.writeString(title)
@@ -281,11 +285,11 @@ class CTInAppNotification : Parcelable {
         dest.writeByte((if (isRequestForPushPermission) 0x01 else 0x00).toByte())
     }
 
-    fun fallBackToNotificationSettings(): Boolean {
-        return fallBackToNotificationSettings
+    fun hasStreamMedia(): Boolean {
+        return !_mediaList.isEmpty() && _mediaList[0].isMediaStreamable()
     }
 
-    fun getInAppMediaForOrientation(orientation: Int): CTInAppNotificationMedia? {
+    internal fun getInAppMediaForOrientation(orientation: Int): CTInAppNotificationMedia? {
         var returningMedia: CTInAppNotificationMedia? = null
         for (inAppNotificationMedia in _mediaList) {
             if (orientation == inAppNotificationMedia.orientation) {
@@ -296,7 +300,7 @@ class CTInAppNotification : Parcelable {
         return returningMedia
     }
 
-    fun createNotificationForAction(actionData: CustomTemplateInAppData?): CTInAppNotification? {
+    internal fun createNotificationForAction(actionData: CustomTemplateInAppData?): CTInAppNotification? {
         try {
             val notificationJson = JSONObject()
             notificationJson.put(Constants.INAPP_ID_IN_PAYLOAD, id)
@@ -305,16 +309,16 @@ class CTInAppNotification : Parcelable {
             notificationJson.put(Constants.KEY_EFC, 1)
             notificationJson.put(Constants.KEY_EXCLUDE_GLOBAL_CAPS, 1)
             notificationJson.put(Constants.KEY_WZRK_TTL, timeToLive)
-            if (jsonDescription.has(Constants.INAPP_WZRK_PIVOT)) {
+            if (_jsonDescription.has(Constants.INAPP_WZRK_PIVOT)) {
                 notificationJson.put(
-                    Constants.INAPP_WZRK_PIVOT, jsonDescription.optString(
+                    Constants.INAPP_WZRK_PIVOT, _jsonDescription.optString(
                         Constants.INAPP_WZRK_PIVOT
                     )
                 )
             }
-            if (jsonDescription.has(Constants.INAPP_WZRK_CGID)) {
+            if (_jsonDescription.has(Constants.INAPP_WZRK_CGID)) {
                 notificationJson.put(
-                    Constants.INAPP_WZRK_CGID, jsonDescription.optString(
+                    Constants.INAPP_WZRK_CGID, _jsonDescription.optString(
                         Constants.INAPP_WZRK_CGID
                     )
                 )
@@ -327,13 +331,9 @@ class CTInAppNotification : Parcelable {
         }
     }
 
-    fun setCustomTemplateData(inAppData: CustomTemplateInAppData?) {
+    internal fun setCustomTemplateData(inAppData: CustomTemplateInAppData?) {
         customTemplateData = inAppData
-        inAppData?.writeFieldsToJson(jsonDescription)
-    }
-
-    fun hasStreamMedia(): Boolean {
-        return !_mediaList.isEmpty() && _mediaList[0].isMediaStreamable()
+        inAppData?.writeFieldsToJson(_jsonDescription)
     }
 
     private fun configureWithJson(jsonObject: JSONObject) {
@@ -474,7 +474,7 @@ class CTInAppNotification : Parcelable {
                     isDarkenScreen =
                         displayParams.getBoolean(Constants.INAPP_NOTIF_DARKEN_SCREEN)
                     isShowClose = displayParams.getBoolean(Constants.INAPP_NOTIF_SHOW_CLOSE)
-                    position = displayParams.getString(Constants.INAPP_POSITION).get(0)
+                    position = displayParams.getString(Constants.INAPP_POSITION)[0]
                     width = displayParams.optInt(Constants.INAPP_X_DP, 0)
                     widthPercentage = displayParams.optInt(Constants.INAPP_X_PERCENT, 0)
                     height = displayParams.optInt(Constants.INAPP_Y_DP, 0)

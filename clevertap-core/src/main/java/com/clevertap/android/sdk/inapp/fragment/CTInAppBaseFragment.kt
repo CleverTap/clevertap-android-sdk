@@ -194,7 +194,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
 
             if (index == 0 && inAppNotification.isLocalInApp && didClickForHardPermissionListener != null) {
                 didClickForHardPermissionListener?.didClickForHardPermissionWithFallbackSettings(
-                    inAppNotification.fallBackToNotificationSettings()
+                    inAppNotification.fallBackToNotificationSettings
                 )
                 return
             }

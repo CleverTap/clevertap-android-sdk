@@ -143,7 +143,7 @@ class CTInAppBaseFragmentTest {
 
         verify(exactly = 1) {
             (contextMock as DidClickForHardPermissionListener).didClickForHardPermissionWithFallbackSettings(
-                inApp.fallBackToNotificationSettings()
+                inApp.fallBackToNotificationSettings
             )
         }
 
