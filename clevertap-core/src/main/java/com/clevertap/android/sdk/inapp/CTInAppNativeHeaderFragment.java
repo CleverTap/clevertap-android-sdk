@@ -50,7 +50,11 @@ public class CTInAppNativeHeaderFragment extends CTInAppBasePartialNativeFragmen
 
         ImageView imageView = linearLayout1.findViewById(R.id.header_icon);
         if (!inAppNotification.getMediaList().isEmpty()) {
-            Bitmap image = resourceProvider().cachedInAppImageV1(inAppNotification.getMediaList().get(0).getMediaUrl());
+            CTInAppNotificationMedia media = inAppNotification.getMediaList().get(0);
+            Bitmap image = resourceProvider().cachedInAppImageV1(media.getMediaUrl());
+            String contentDescription = media.getContentDescription();
+            if (!contentDescription.isEmpty())
+                imageView.setContentDescription(media.getContentDescription());
             if (image != null) {
                 imageView.setImageBitmap(image);
             } else {

@@ -176,10 +176,13 @@ import java.util.ArrayList;
     private void setMediaForInApp() {
         if (!inAppNotification.getMediaList().isEmpty()) {
             CTInAppNotificationMedia media = inAppNotification.getMediaList().get(0);
+            String contentDescription = media.getContentDescription();
             if (media.isImage()) {
                 Bitmap image = resourceProvider().cachedInAppImageV1(media.getMediaUrl());
                 if (image != null) {
                     ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
+                    if (!contentDescription.isEmpty())
+                        imageView.setContentDescription(media.getContentDescription());
                     imageView.setVisibility(View.VISIBLE);
                     imageView.setImageBitmap(image);
                 }
@@ -187,6 +190,9 @@ import java.util.ArrayList;
                 byte[] gifByteArray = resourceProvider().cachedInAppGifV1(media.getMediaUrl());
                 if (gifByteArray != null) {
                     gifImageView = relativeLayout.findViewById(R.id.gifImage);
+                    gifImageView.setContentDescription(media.getContentDescription());
+                    if (!contentDescription.isEmpty())
+                        gifImageView.setContentDescription(media.getContentDescription());
                     gifImageView.setVisibility(View.VISIBLE);
                     gifImageView.setBytes(gifByteArray);
                     gifImageView.startAnimation();

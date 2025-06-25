@@ -143,9 +143,12 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
 
         CTInAppNotificationMedia mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation);
         if (mediaForOrientation != null) {
+            ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
             Bitmap bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.getMediaUrl());
+            String contentDescription = mediaForOrientation.getContentDescription();
+            if (!contentDescription.isEmpty())
+                imageView.setContentDescription(mediaForOrientation.getContentDescription());
             if (bitmap != null) {
-                ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
                 imageView.setImageBitmap(bitmap);
             }
         }
