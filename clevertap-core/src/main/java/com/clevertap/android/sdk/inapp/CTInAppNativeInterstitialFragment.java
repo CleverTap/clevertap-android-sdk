@@ -191,7 +191,6 @@ import java.util.ArrayList;
                 byte[] gifByteArray = resourceProvider().cachedInAppGifV1(media.getMediaUrl());
                 if (gifByteArray != null) {
                     gifImageView = relativeLayout.findViewById(R.id.gifImage);
-                    gifImageView.setContentDescription(contentDescription);
                     if (!TextUtils.isEmpty(contentDescription))
                         gifImageView.setContentDescription(contentDescription);
                     gifImageView.setVisibility(View.VISIBLE);
