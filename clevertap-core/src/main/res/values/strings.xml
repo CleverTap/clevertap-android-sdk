@@ -4,5 +4,7 @@
     <string name="no_messages_to_show">No Message(s) to show</string>
     <string name="ct_inapp_close_btn">Close</string>
     <string name="ct_inapp_img">Inapp Image</string>
+    <string name="ct_inapp_video">Inapp Video</string>
+    <string name="ct_inapp_gif">Inapp Gif</string>
     <string name="ct_inapp_icon">Inapp Icon</string>
 </resources>

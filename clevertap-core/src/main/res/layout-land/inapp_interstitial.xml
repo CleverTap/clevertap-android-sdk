@@ -38,6 +38,7 @@
 
         <com.clevertap.android.sdk.gif.GifImageView
             android:id="@+id/gifImage"
+            android:contentDescription="@string/ct_inapp_gif"
             android:layout_width="214dp"
             android:layout_height="120dp"
             android:layout_below="@+id/interstitial_title"
@@ -48,6 +49,7 @@
 
         <FrameLayout
             android:id="@+id/video_frame"
+            android:contentDescription="@string/ct_inapp_video"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/interstitial_title"
