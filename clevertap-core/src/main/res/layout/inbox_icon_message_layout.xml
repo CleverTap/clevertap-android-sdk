@@ -29,6 +29,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:contentDescription="@string/ct_inbox_icon_content_description"
+                android:screenReaderFocusable="true"
                 android:scaleType="fitCenter" />
 
             <LinearLayout
@@ -74,6 +75,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/ct_inbox_media_content_description"
+                android:screenReaderFocusable="true"
                 android:visibility="gone" />
 
             <com.clevertap.android.sdk.customviews.SquareImageView
@@ -81,6 +83,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/ct_inbox_media_content_description"
+                android:screenReaderFocusable="true"
                 android:visibility="gone" />
 
             <FrameLayout
