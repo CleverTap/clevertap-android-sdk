@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
+        android:focusable="true"
         android:layout_margin="40dp">
 
         <TextView
@@ -34,6 +35,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="22dp"
             android:scaleType="centerCrop"
+            android:focusable="true"
             android:visibility="invisible" />
 
         <com.clevertap.android.sdk.gif.GifImageView
@@ -45,6 +47,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="22dp"
             android:scaleType="centerCrop"
+            android:focusable="true"
             android:visibility="gone" />
 
         <FrameLayout
@@ -54,7 +57,8 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/interstitial_title"
             android:layout_centerHorizontal="true"
-            android:visibility="gone"></FrameLayout>
+            android:focusable="true"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/interstitial_message"

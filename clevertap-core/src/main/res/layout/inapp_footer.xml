@@ -14,7 +14,8 @@
             android:id="@+id/footer_linear_layout_1"
             android:layout_width="match_parent"
             android:layout_height="118dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:focusable="true" >
 
             <ImageView
                 android:id="@+id/footer_icon"
@@ -23,7 +24,8 @@
                 android:layout_height="78dp"
                 android:layout_marginLeft="20dp"
                 android:layout_marginStart="20dp"
-                android:layout_marginTop="20dp" />
+                android:layout_marginTop="20dp"
+                android:focusable="true" />
 
             <LinearLayout
                 android:id="@+id/footer_linear_layout_2"
