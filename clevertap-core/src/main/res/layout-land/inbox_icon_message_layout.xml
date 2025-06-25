@@ -26,6 +26,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scaleType="fitCenter"
+                    android:contentDescription="@string/ct_inbox_media_content_description"
+                    android:screenReaderFocusable="true"
                     android:visibility="gone" />
 
                 <com.clevertap.android.sdk.customviews.HorizontalSquareImageView
@@ -34,6 +36,8 @@
                     android:layout_height="200dp"
                     android:layout_centerInParent="true"
                     android:scaleType="centerCrop"
+                    android:contentDescription="@string/ct_inbox_media_content_description"
+                    android:screenReaderFocusable="true"
                     android:visibility="gone" />
 
                 <FrameLayout
@@ -83,6 +87,8 @@
                         android:layout_marginRight="8dp"
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
+                        android:contentDescription="@string/ct_inbox_icon_content_description"
+                        android:screenReaderFocusable="true"
                         android:scaleType="fitCenter" />
 
                     <TextView
@@ -95,6 +101,7 @@
                         android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
                         android:maxLines="2"
+                        android:focusable="true"
                         android:textColor="@android:color/black"
                         android:textStyle="bold" />
 
@@ -110,6 +117,7 @@
                     android:layout_marginRight="20dp"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="5dp"
+                    android:focusable="true"
                     android:textColor="@android:color/darker_gray" />
             </RelativeLayout>
         </LinearLayout>
@@ -130,6 +138,7 @@
                 android:layout_marginEnd="10dp"
                 android:layout_marginRight="10dp"
                 android:gravity="end"
+                android:focusable="true"
                 android:textColor="@android:color/darker_gray" />
 
             <ImageView
