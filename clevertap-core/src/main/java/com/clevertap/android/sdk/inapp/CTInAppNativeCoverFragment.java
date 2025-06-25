@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,8 +56,8 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
         if (mediaForOrientation != null) {
             Bitmap bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.getMediaUrl());
             String contentDescription = mediaForOrientation.getContentDescription();
-            if (!contentDescription.isEmpty())
-                imageView.setContentDescription(mediaForOrientation.getContentDescription());
+            if (!TextUtils.isEmpty(contentDescription))
+                imageView.setContentDescription(contentDescription);
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap);
                 imageView.setTag(0);

@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -181,8 +182,8 @@ import java.util.ArrayList;
                 Bitmap image = resourceProvider().cachedInAppImageV1(media.getMediaUrl());
                 if (image != null) {
                     ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-                    if (!contentDescription.isEmpty())
-                        imageView.setContentDescription(media.getContentDescription());
+                    if (!TextUtils.isEmpty(contentDescription))
+                        imageView.setContentDescription(contentDescription);
                     imageView.setVisibility(View.VISIBLE);
                     imageView.setImageBitmap(image);
                 }
@@ -190,9 +191,9 @@ import java.util.ArrayList;
                 byte[] gifByteArray = resourceProvider().cachedInAppGifV1(media.getMediaUrl());
                 if (gifByteArray != null) {
                     gifImageView = relativeLayout.findViewById(R.id.gifImage);
-                    gifImageView.setContentDescription(media.getContentDescription());
-                    if (!contentDescription.isEmpty())
-                        gifImageView.setContentDescription(media.getContentDescription());
+                    gifImageView.setContentDescription(contentDescription);
+                    if (!TextUtils.isEmpty(contentDescription))
+                        gifImageView.setContentDescription(contentDescription);
                     gifImageView.setVisibility(View.VISIBLE);
                     gifImageView.setBytes(gifByteArray);
                     gifImageView.startAnimation();

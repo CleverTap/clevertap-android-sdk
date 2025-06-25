@@ -103,7 +103,7 @@ public class CTInAppNotificationMedia implements Parcelable {
                 } else {
                     this.mediaUrl = mediaUrl;
                 }
-                this.contentDescription = "";
+                this.contentDescription = mediaObject.optString(Constants.KEY_ALT_TEXT, "");
             }
         } catch (JSONException e) {
             Logger.v("Error parsing Media JSONObject - " + e.getLocalizedMessage());
