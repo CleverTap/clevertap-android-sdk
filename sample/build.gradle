@@ -114,7 +114,7 @@ dependencies {
     localImplementation(implementation 'com.github.anrwatchdog:anrwatchdog:1.4.0')
 
     implementation("com.google.android.gms:play-services-location:21.3.0") // Needed for geofence
-    implementation("androidx.work:work-runtime:2.9.1") // Needed for geofence
+    implementation("androidx.work:work-runtime:2.10.1") // Needed for geofence
     implementation("androidx.concurrent:concurrent-futures:1.2.0") // Needed for geofence
 
     implementation("com.google.firebase:firebase-messaging:24.0.0") //Needed for FCM
