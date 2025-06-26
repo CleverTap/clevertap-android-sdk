@@ -94,7 +94,7 @@ fun OpenUrlConfirmDialog(
                     ) {
                         // Cancel/No Button
                         Button(
-                            onClick = { state.onCancel() },
+                            onClick = state.onCancel,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(48.dp),
@@ -113,7 +113,7 @@ fun OpenUrlConfirmDialog(
                         
                         // Confirm/Yes Button
                         Button(
-                            onClick = { state.onConfirm() },
+                            onClick = state.onConfirm,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(48.dp),

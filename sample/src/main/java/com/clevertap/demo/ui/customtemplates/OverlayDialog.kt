@@ -155,9 +155,7 @@ fun OverlayDialog(
                 ) {
                     if(config.secondaryButtonText.isNotEmpty()) {
                         OutlinedButton(
-                            onClick = {
-                                config.onSecondaryClick()
-                            },
+                            onClick = config.onSecondaryClick,
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = Color.Gray
@@ -169,9 +167,7 @@ fun OverlayDialog(
                     }
 
                     Button(
-                        onClick = {
-                            config.onPrimaryClick()
-                        },
+                        onClick = config.onPrimaryClick,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF6200EA)
