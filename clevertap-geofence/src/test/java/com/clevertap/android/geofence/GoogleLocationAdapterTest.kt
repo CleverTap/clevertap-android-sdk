@@ -188,7 +188,7 @@ class GoogleLocationAdapterTest : BaseTestCase() {
         // Get WorkInfo and outputData
         val workInfo = workManager.getWorkInfoById(locationRequest.id).get()
         // Assert work is cancelled by locationAdapter.requestLocationUpdates()
-        assertEquals(WorkInfo.State.CANCELLED, workInfo.state)
+        assertEquals(WorkInfo.State.CANCELLED, workInfo?.state)
 
         verify { providerClient.requestLocationUpdates(any(), any()) }
         verify { Tasks.await(any()) }
