@@ -182,8 +182,7 @@ import java.util.ArrayList;
                 Bitmap image = resourceProvider().cachedInAppImageV1(media.getMediaUrl());
                 if (image != null) {
                     ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-                    if (!TextUtils.isEmpty(contentDescription))
-                        imageView.setContentDescription(contentDescription);
+                    setContentDescriptionForView(imageView, contentDescription);
                     imageView.setVisibility(View.VISIBLE);
                     imageView.setImageBitmap(image);
                 }
@@ -191,8 +190,7 @@ import java.util.ArrayList;
                 byte[] gifByteArray = resourceProvider().cachedInAppGifV1(media.getMediaUrl());
                 if (gifByteArray != null) {
                     gifImageView = relativeLayout.findViewById(R.id.gifImage);
-                    if (!TextUtils.isEmpty(contentDescription))
-                        gifImageView.setContentDescription(contentDescription);
+                    setContentDescriptionForView(gifImageView, contentDescription);
                     gifImageView.setVisibility(View.VISIBLE);
                     gifImageView.setBytes(gifByteArray);
                     gifImageView.startAnimation();
@@ -201,11 +199,13 @@ import java.util.ArrayList;
                 initFullScreenIconForStream();
                 prepareMedia();
                 playMedia();
+                setContentDescriptionForView(videoFrameLayout, contentDescription);
             } else if (media.isAudio()) {
                 initFullScreenIconForStream();
                 prepareMedia();
                 playMedia();
                 disableFullScreenButton();
+                setContentDescriptionForView(videoFrameLayout, contentDescription);
             }
         }
     }
@@ -435,5 +435,10 @@ import java.util.ArrayList;
             //noop
             Logger.d("Video views and controls are already added, not re-attaching");
         }
+    }
+
+    private void setContentDescriptionForView(View layout, String contentDescription) {
+        if (!TextUtils.isEmpty(contentDescription))
+            layout.setContentDescription(contentDescription);
     }
 }
