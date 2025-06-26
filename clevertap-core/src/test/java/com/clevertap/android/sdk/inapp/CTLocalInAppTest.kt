@@ -64,6 +64,7 @@ class CTLocalInAppTest : BaseTestCase() {
             val mediaObject = JSONObject().apply {
                 put("url", "https://abc.com/xyz.jpg")
                 put("content_type", "image")
+                put("alt_text", "Alt Text")
             }
 
             put("media", mediaObject)
