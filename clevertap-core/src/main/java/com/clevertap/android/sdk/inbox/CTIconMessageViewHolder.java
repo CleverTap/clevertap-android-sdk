@@ -170,7 +170,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         try {
             switch (inboxMessage.getOrientation()) {
                 case "l":
-                    if (TextUtils.isEmpty(content.getMediaContentDescription())) {
+                    if (!TextUtils.isEmpty(content.getMediaContentDescription())) {
                         this.mediaImage.setContentDescription(content.getMediaContentDescription());
                     }
                     if (content.mediaIsImage()) {
@@ -261,7 +261,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }
                     break;
                 case "p":
-                    if (TextUtils.isEmpty(content.getMediaContentDescription())) {
+                    if (!TextUtils.isEmpty(content.getMediaContentDescription())) {
                         this.squareImage.setContentDescription(content.getMediaContentDescription());
                     }
                     if (content.mediaIsImage()) {
