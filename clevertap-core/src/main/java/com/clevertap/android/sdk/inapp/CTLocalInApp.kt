@@ -114,6 +114,21 @@ class CTLocalInApp private constructor() {
                     }
                 }
 
+            fun setImageUrl(imageUrl: String, contentDescription: String) =
+                apply {
+                    val mediaObject = JSONObject().apply {
+                        put(Constants.KEY_URL, imageUrl)
+                        put(Constants.KEY_CONTENT_TYPE, "image")
+                        put(Constants.KEY_ALT_TEXT, contentDescription)
+                    }
+                    jsonObject.apply {
+                        put(Constants.KEY_MEDIA, mediaObject)
+                        if (getBoolean(Constants.KEY_LANDSCAPE)) {
+                            put(Constants.KEY_MEDIA_LANDSCAPE, mediaObject)
+                        }
+                    }
+                }
+
             fun setTitleTextColor(titleTextColor: String) =
                 apply { jsonObject.getJSONObject(Constants.KEY_TITLE).put(Constants.KEY_COLOR, titleTextColor) }
 

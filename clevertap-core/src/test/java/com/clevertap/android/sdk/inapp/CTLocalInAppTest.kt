@@ -16,7 +16,7 @@ class CTLocalInAppTest : BaseTestCase() {
                 .followDeviceOrientation(true).setPositiveBtnText("Agree").setNegativeBtnText("Decline")
                 .setBackgroundColor("#FF0000").setBtnBackgroundColor("#00FF00").setBtnBorderColor("#000000")
                 .setBtnBorderRadius("#FFFFFF").setBtnTextColor("#FFFF00").setFallbackToSettings(true)
-                .setTitleTextColor("#F0F000").setMessageTextColor("#F000F0").setImageUrl("https://abc.com/xyz.jpg")
+                .setTitleTextColor("#F0F000").setMessageTextColor("#F000F0").setImageUrl("https://abc.com/xyz.jpg", "Alt Text")
                 .build()
 
         // Arrange: Create the expected JSON object
