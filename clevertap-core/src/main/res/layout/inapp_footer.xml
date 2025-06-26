@@ -19,7 +19,7 @@
 
             <ImageView
                 android:id="@+id/footer_icon"
-                android:contentDescription="@string/ct_inapp_icon"
+                android:contentDescription="@string/ct_inapp_img"
                 android:layout_width="78dp"
                 android:layout_height="78dp"
                 android:layout_marginLeft="20dp"
