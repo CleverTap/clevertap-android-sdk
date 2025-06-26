@@ -13,6 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignBottom="@+id/big_image_configurable"
+        android:importantForAccessibility="no"
         android:background="@drawable/pt_scrim" />
 
     <RelativeLayout
