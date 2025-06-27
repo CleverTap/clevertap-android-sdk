@@ -110,6 +110,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             drawable.setColorFilter(Color.parseColor(styleConfig.getBackButtonColor()), PorterDuff.Mode.SRC_IN);
         }
         toolbar.setNavigationIcon(drawable);
+        toolbar.setNavigationContentDescription(getString(R.string.ct_inbox_back_button_content_description));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

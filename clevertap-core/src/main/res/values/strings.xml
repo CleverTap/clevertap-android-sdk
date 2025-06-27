@@ -2,6 +2,12 @@
 <resources>
     <string name="ct_fcm_fallback_notification_channel_label">Miscellaneous</string>
     <string name="no_messages_to_show">No Message(s) to show</string>
+    <string name="ct_inbox_back_button_content_description">Back</string>
+    <string name="ct_inbox_mute_button_content_description">Mute</string>
+    <string name="ct_inbox_unmute_button_content_description">Unmute</string>
+    <string name="ct_inbox_media_content_description">Message Media</string>
+    <string name="ct_inbox_image_content_description">Message Image</string>
+    <string name="ct_inbox_icon_content_description">Message Icon</string>
     <string name="ct_notification_big_picture_alt_text">Notification Big Picture</string>
     <string name="ct_inapp_close_btn">Close</string>
     <string name="ct_inapp_img">Inapp Image</string>

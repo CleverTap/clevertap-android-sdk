@@ -26,7 +26,7 @@ import java.util.ArrayList;
 @RestrictTo(Scope.LIBRARY)
 public class CTCarouselViewPagerAdapter extends PagerAdapter {
 
-    private final ArrayList<String> carouselImages;
+    private final ArrayList<CTInboxImageData> carouselImagesData;
 
     private final Context context;
 
@@ -46,7 +46,7 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
             LinearLayout.LayoutParams layoutParams, int row) {
         this.context = context;
         this.parentWeakReference = new WeakReference<>(parent);
-        this.carouselImages = inboxMessage.getCarouselImages();
+        this.carouselImagesData = inboxMessage.getCarouselImagesData();
         this.layoutParams = layoutParams;
         this.inboxMessage = inboxMessage;
         this.row = row;
@@ -60,7 +60,7 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
 
     @Override
     public int getCount() {
-        return carouselImages.size();
+        return carouselImagesData.size();
     }
 
     @NonNull
@@ -90,9 +90,14 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
 
     void addImageAndSetClick(ImageView imageView, View view, final int position, ViewGroup container) {
         imageView.setVisibility(View.VISIBLE);
+        String contentDescription = carouselImagesData.get(position).getContentDescription();
+        if (contentDescription.isEmpty()) {
+            contentDescription = context.getString(R.string.ct_inbox_image_content_description) + (position + 1);
+        }
+        imageView.setContentDescription(contentDescription);
         try {
             Glide.with(imageView.getContext())
-                    .load(carouselImages.get(position))
+                    .load(carouselImagesData.get(position).getUrl())
                     .apply(new RequestOptions()
                             .placeholder(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
                             .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
@@ -101,7 +106,7 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
             Logger.d(
                     "CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
             Glide.with(imageView.getContext())
-                    .load(carouselImages.get(position))
+                    .load(carouselImagesData.get(position).getUrl())
                     .into(imageView);
         }
 
