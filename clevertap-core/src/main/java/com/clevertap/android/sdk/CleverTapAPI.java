@@ -1,14 +1,12 @@
 package com.clevertap.android.sdk;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
-import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
 import static com.clevertap.android.sdk.Utils.getSCDomain;
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -1187,7 +1185,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             // getCleverTapID is executed on the main thread
             Task<Void> task = CTExecutorFactory.executors(getConfig()).postAsyncSafelyTask();
             task.execute("DefineTemplates", () -> {
-                networkManager.defineTemplates(context, templatesManager.getAllRegisteredTemplates());
+                networkManager.defineTemplates(templatesManager.getAllRegisteredTemplates());
                 return null;
             });
         });

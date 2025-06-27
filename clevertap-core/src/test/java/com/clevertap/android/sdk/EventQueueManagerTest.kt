@@ -68,7 +68,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 loginInfoProvider
             )
         )
-            json = JSONObject()
+        json = JSONObject()
     }
 
     @Test
@@ -764,8 +764,8 @@ class EventQueueManagerTest : BaseTestCase() {
                 //Assert
                 verify {
                     loginInfoProvider.removeValueFromCachedGUIDForIdentifier(
-                    expectedDeviceID,
-                    "Email"
+                        expectedDeviceID,
+                        "Email"
                     )
                 }
                 verify {

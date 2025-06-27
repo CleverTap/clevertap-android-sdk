@@ -9,6 +9,5 @@ import org.json.JSONObject;
  */
 abstract class CleverTapResponseDecorator extends CleverTapResponse {
 
-    public abstract void processResponse(JSONObject jsonBody, String stringBody,
-            Context context);
+    public abstract void processResponse(JSONObject jsonBody, String stringBody, Context context);
 }

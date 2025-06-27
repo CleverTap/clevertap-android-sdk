@@ -1,11 +1,10 @@
 package com.clevertap.android.sdk.network.api
 
-import android.content.Context
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DeviceInfo
-import com.clevertap.android.sdk.StorageHelper
+import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient
 
 /**
@@ -14,12 +13,12 @@ import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient
  * This class provides lazy initialization of the [CtApi] instance, ensuring that it is only
  * initialized when accessed.
  *
- * @param context The application context.
+ * @param networkRepo The application context.
  * @param config The configuration for the CleverTap instance.
  * @param deviceInfo The device information required for CleverTap initialization.
  */
 internal class CtApiWrapper(
-    private val context: Context,
+    private val networkRepo: NetworkRepo,
     private val config: CleverTapInstanceConfig,
     private val deviceInfo: DeviceInfo
 ) {
@@ -27,7 +26,7 @@ internal class CtApiWrapper(
     @get:WorkerThread
     val ctApi: CtApi by lazy {
         CtApiProvider.provideDefaultCtApi(
-            context = context,
+            networkRepo = networkRepo,
             config = config,
             deviceInfo = deviceInfo
         )
@@ -45,7 +44,7 @@ internal object CtApiProvider {
 
     @WorkerThread
     internal fun provideDefaultCtApi(
-        context: Context,
+        networkRepo: NetworkRepo,
         config: CleverTapInstanceConfig,
         deviceInfo: DeviceInfo
     ): CtApi {
@@ -58,8 +57,8 @@ internal object CtApiProvider {
         return CtApi(
             httpClient = httpClient,
             defaultDomain = Constants.PRIMARY_DOMAIN,
-            cachedDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null),
-            cachedSpikyDomain = StorageHelper.getStringFromPrefs(context, config, Constants.SPIKY_KEY_DOMAIN_NAME, null),
+            cachedDomain = networkRepo.getDomain(),
+            cachedSpikyDomain = networkRepo.getSpikyDomain(),
             region = config.accountRegion,
             proxyDomain = config.proxyDomain,
             spikyProxyDomain = config.spikyProxyDomain,

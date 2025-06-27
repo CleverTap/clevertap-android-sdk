@@ -49,6 +49,7 @@ public class SessionManager extends BaseSessionManager {
     @Override
     public void destroySession() {
         cleverTapMetaData.setCurrentSessionId(0);
+        cleverTapMetaData.setRelaxNetwork(false);
         cleverTapMetaData.setAppLaunchPushed(false);
         if (cleverTapMetaData.isFirstSession()) {
             cleverTapMetaData.setFirstSession(false);
