@@ -18,6 +18,7 @@ import androidx.core.app.NotificationCompat.Builder;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
 
@@ -78,15 +79,16 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
 
                 extras.putString(Constants.WZRK_BPDS,downloadedBitmap.getStatus().getStatusValue());
 
-                if (extras.containsKey(Constants.WZRK_MSG_SUMMARY)) {
-                    String summaryText = extras.getString(Constants.WZRK_MSG_SUMMARY);
-                    style = new NotificationCompat.BigPictureStyle()
-                            .setSummaryText(summaryText)
-                            .bigPicture(bpMap);
-                } else {
-                    style = new NotificationCompat.BigPictureStyle()
-                            .setSummaryText(notifMessage)
-                            .bigPicture(bpMap);
+                String summaryText = extras.getString(Constants.WZRK_MSG_SUMMARY, notifMessage);
+
+                style = new NotificationCompat.BigPictureStyle()
+                        .setSummaryText(summaryText)
+                        .bigPicture(bpMap);
+
+                if (VERSION.SDK_INT >= VERSION_CODES.S) {
+                    String bigPictureContentDesc = extras.getString(Constants.WZRK_BIG_PICTURE_ALT_TEXT_KEY);
+                    String contentDesc = bigPictureContentDesc != null ? bigPictureContentDesc : context.getString(R.string.ct_notification_big_picture_alt_text);
+                    ((NotificationCompat.BigPictureStyle) style).setContentDescription(contentDesc);
                 }
             } catch (Throwable t) {
                 style = new NotificationCompat.BigTextStyle()

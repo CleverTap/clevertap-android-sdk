@@ -8,6 +8,7 @@ import static com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -169,6 +170,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         try {
             switch (inboxMessage.getOrientation()) {
                 case "l":
+                    if (!TextUtils.isEmpty(content.getMediaContentDescription())) {
+                        this.mediaImage.setContentDescription(content.getMediaContentDescription());
+                    }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.mediaImage.setVisibility(View.VISIBLE);
@@ -257,6 +261,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }
                     break;
                 case "p":
+                    if (!TextUtils.isEmpty(content.getMediaContentDescription())) {
+                        this.squareImage.setContentDescription(content.getMediaContentDescription());
+                    }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);
@@ -377,6 +384,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         try {
             if (!content.getIcon().isEmpty()) {
                 iconImage.setVisibility(View.VISIBLE);
+                if (!content.getIconContentDescription().isEmpty()) {
+                    iconImage.setContentDescription(content.getIconContentDescription());
+                }
                 try {
                     Glide.with(iconImage.getContext())
                             .load(content.getIcon())

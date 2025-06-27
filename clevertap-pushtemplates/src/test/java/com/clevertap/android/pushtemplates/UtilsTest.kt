@@ -893,40 +893,91 @@ class UtilsTest {
         assertFalse(resetResult)
     }
 
-    // Tests for getImageListFromExtras method
+    // Tests for getImageDataListFromExtras method
 
     @Test
-    fun `getImageListFromExtras should return list of image URLs`() {
+    fun `getImageDataListFromExtras should return list of ImageData objects`() {
         // Given
-        val keys = setOf("pt_img1", "pt_img2", "other_key", "pt_img_large")
+        val keys = setOf("pt_img1", "pt_img2", "other_key", "pt_img")
+        val defaultAltText = "Default Image "
         every { mockBundle.keySet() } returns keys
         every { mockBundle.getString("pt_img1") } returns "https://example.com/img1.jpg"
         every { mockBundle.getString("pt_img2") } returns "https://example.com/img2.jpg"
-        every { mockBundle.getString("pt_img_large") } returns "https://example.com/large.jpg"
+        every { mockBundle.getString("pt_img") } returns "https://example.com/large.jpg"
         every { mockBundle.getString("other_key") } returns "not_an_image"
+        every { mockBundle.getString("pt_img1${PTConstants.ALT_TEXT_SUFFIX}", "${defaultAltText}1") } returns "${defaultAltText}1"
+        every { mockBundle.getString("pt_img2${PTConstants.ALT_TEXT_SUFFIX}", "${defaultAltText}2") } returns "${defaultAltText}2"
 
         // When
-        val result = Utils.getImageListFromExtras(mockBundle)
+        val result = Utils.getImageDataListFromExtras(mockBundle, defaultAltText)
 
         // Then
         assertEquals(3, result.size)
-        assertTrue(result.contains("https://example.com/img1.jpg"))
-        assertTrue(result.contains("https://example.com/img2.jpg"))
-        assertTrue(result.contains("https://example.com/large.jpg"))
-        assertFalse(result.contains("not_an_image"))
+        
+        // Find items by URL to verify they exist
+        val img1Data = result.find { it.url == "https://example.com/img1.jpg" }
+        val img2Data = result.find { it.url == "https://example.com/img2.jpg" }
+
+        assertNotNull(img1Data)
+        assertNotNull(img2Data)
+
+        assertEquals("${defaultAltText}1", img1Data!!.altText)
+        assertEquals("${defaultAltText}2", img2Data!!.altText)
+
+        // Verify no data for non-image key
+        val nonImageData = result.find { it.url == "not_an_image" }
+        assertNull(nonImageData)
     }
 
     @Test
-    fun `getImageListFromExtras should return empty list when no image keys exist`() {
+    fun `getImageDataListFromExtras should return empty list when no image keys exist`() {
         // Given
         val keys = setOf("other_key1", "other_key2")
+        val defaultAltText = "Default Image "
         every { mockBundle.keySet() } returns keys
 
         // When
-        val result = Utils.getImageListFromExtras(mockBundle)
+        val result = Utils.getImageDataListFromExtras(mockBundle, defaultAltText)
 
         // Then
         assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `getImageDataListFromExtras should use default alt text when specific alt text not provided`() {
+        // Given
+        val keys = setOf("pt_img1")
+        val defaultAltText = "Default Image "
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString("pt_img1") } returns "https://example.com/img1.jpg"
+        every { mockBundle.getString("pt_img1${PTConstants.ALT_TEXT_SUFFIX}", "${defaultAltText}1") } returns "${defaultAltText}1"
+
+        // When
+        val result = Utils.getImageDataListFromExtras(mockBundle, defaultAltText)
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("https://example.com/img1.jpg", result[0].url)
+        assertEquals("${defaultAltText}1", result[0].altText)
+    }
+
+    @Test
+    fun `getImageDataListFromExtras should use custom alt text when provided`() {
+        // Given
+        val keys = setOf("pt_img1")
+        val defaultAltText = "Default Image "
+        val customAltText = "Custom Alt Text"
+        every { mockBundle.keySet() } returns keys
+        every { mockBundle.getString("pt_img1") } returns "https://example.com/img1.jpg"
+        every { mockBundle.getString("pt_img1${PTConstants.ALT_TEXT_SUFFIX}", "${defaultAltText}1") } returns customAltText
+
+        // When
+        val result = Utils.getImageDataListFromExtras(mockBundle, defaultAltText)
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals("https://example.com/img1.jpg", result[0].url)
+        assertEquals(customAltText, result[0].altText)
     }
 
     // Tests for _getManifestStringValueForKey method

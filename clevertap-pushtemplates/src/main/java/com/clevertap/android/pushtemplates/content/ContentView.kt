@@ -90,7 +90,7 @@ internal open class ContentView(
 
     fun setCustomContentViewLargeIcon(pt_large_icon: String?) {
         if (pt_large_icon.isNotNullAndEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView,context)
+            Utils.loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView, context)
         } else {
             remoteView.setViewVisibility(R.id.large_icon, View.GONE)
         }
@@ -119,13 +119,13 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType) {
+    fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType, altText: String) {
         if (pt_big_img.isNotNullAndEmpty()) {
             val imageViewId = when (scaleType) {
                 PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
                 PTScaleType.CENTER_CROP -> R.id.big_image
             }
-            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context)
+            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context, altText)
             if (!Utils.getFallback()) {
                 remoteView.setViewVisibility(imageViewId, View.VISIBLE)
             }

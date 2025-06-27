@@ -2,6 +2,7 @@ package com.clevertap.android.pushtemplates;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 
+import static com.clevertap.android.pushtemplates.PTConstants.ALT_TEXT_SUFFIX;
 import static com.clevertap.android.pushtemplates.PTConstants.COLOR_KEYS;
 import static com.clevertap.android.pushtemplates.PTConstants.PT_DARK_MODE_SUFFIX;
 
@@ -138,11 +139,15 @@ public class Utils {
         return ai.icon;
     }
 
-    static ArrayList<String> getImageListFromExtras(Bundle extras) {
-        ArrayList<String> imageList = new ArrayList<>();
+    static ArrayList<ImageData> getImageDataListFromExtras(Bundle extras, String defaultAltText) {
+        ArrayList<ImageData> imageList = new ArrayList<>();
+        int counter = 1;
         for (String key : extras.keySet()) {
-            if (key.contains("pt_img")) {
-                imageList.add(extras.getString(key));
+            if (key.contains("pt_img") && !key.endsWith(ALT_TEXT_SUFFIX)) {
+                String imageUrl = extras.getString(key);
+                String altText = extras.getString(key + ALT_TEXT_SUFFIX, defaultAltText + counter);
+                imageList.add(new ImageData(imageUrl, altText));
+                counter++;
             }
         }
         return imageList;
@@ -243,22 +248,28 @@ public class Utils {
     }
 
     public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
-            RemoteViews remoteViews,Context context) {
+                                                  RemoteViews remoteViews, Context context) {
+        loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, context, null);
+    }
+    public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
+                                                  RemoteViews remoteViews, Context context, String altText) {
 
         long bmpDownloadStartTimeInMillis = System.currentTimeMillis();
-        Bitmap image = getBitmapFromURL(imageUrl,context);
+        Bitmap image = getBitmapFromURL(imageUrl, context);
         setFallback(false);
 
         if (image != null) {
             remoteViews.setImageViewBitmap(imageViewID, image);
+            if (!TextUtils.isEmpty(altText)) {
+                remoteViews.setContentDescription(imageViewID, altText);
+            }
             long bmpDownloadEndTimeInMillis = System.currentTimeMillis();
             long pift = bmpDownloadEndTimeInMillis - bmpDownloadStartTimeInMillis;
-            PTLog.verbose("Fetched IMAGE "+imageUrl+" in "+pift+" millis");
+            PTLog.verbose("Fetched IMAGE " + imageUrl + " in " + pift + " millis");
         } else {
             PTLog.debug("Image was not perfect. URL:" + imageUrl + " hiding image view");
             setFallback(true);
         }
-
     }
 
     public static void loadImageRidIntoRemoteView(int imageViewID, int resourceID,

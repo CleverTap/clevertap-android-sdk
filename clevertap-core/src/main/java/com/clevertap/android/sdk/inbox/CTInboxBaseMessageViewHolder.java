@@ -107,15 +107,12 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         if (progressBarFrameLayout != null) {
             progressBarFrameLayout.setVisibility(View.VISIBLE);
         }
-
         if (firstContentItem.mediaIsVideo()) {
             muteIcon = new ImageView(context);
             muteIcon.setVisibility(View.GONE);
-            if (currentVolume > 0) {
-                muteIcon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_on, null));
-            } else {
-                muteIcon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_off, null));
-            }
+
+            // Initial state setup
+            setMuteIconState(muteIcon, context, currentVolume);
 
             int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
             int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
@@ -126,20 +123,26 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             layoutParams.gravity = Gravity.END;
             muteIcon.setLayoutParams(layoutParams);
 
-            muteIcon.setOnClickListener(v -> {
-                float currentVolume1 = muteClick.invoke();
-
-                if (currentVolume1 > 0) {
-                    muteIcon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_off, null));
-                } else if (currentVolume1 == 0) {
-                    muteIcon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_volume_on, null));
-                }
-            });
+            View.OnClickListener updateMuteIcon = v -> {
+                float volume = muteClick.invoke();
+                setMuteIconState(muteIcon, context, volume);
+            };
+            muteIcon.setOnClickListener(updateMuteIcon);
             frameLayout.addView(muteIcon);
         }
 
         playMedia.invoke(firstContentItem.getMedia(), firstContentItem.mediaIsAudio(), firstContentItem.mediaIsVideo());
         return true;
+    }
+
+    private void setMuteIconState(ImageView icon, Context context, float volume) {
+        boolean isMuted = volume <= 0;
+        int drawableRes = isMuted ? R.drawable.ct_volume_off : R.drawable.ct_volume_on;
+        int contentDescRes = isMuted ? R.string.ct_inbox_mute_button_content_description
+                : R.string.ct_inbox_unmute_button_content_description;
+
+        icon.setContentDescription(context.getString(contentDescRes));
+        icon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), drawableRes, null));
     }
 
     /**

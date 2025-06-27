@@ -219,8 +219,6 @@ public class InAppController implements InAppListener {
 
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
 
-    public final static String IS_HARD_PERMISSION_REQUEST = "isHardPermissionRequest";
-
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
 
     public InAppController(
@@ -288,13 +286,12 @@ public class InAppController implements InAppListener {
             // should not happen, nothing to do
         }
         boolean fallbackToSettings = jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false);
-        if (jsonObject.optBoolean(IS_HARD_PERMISSION_REQUEST, false)) {
-            inAppActionHandler.launchPushPermissionPrompt(fallbackToSettings);
-        } else {
-            inAppActionHandler.launchPushPermissionPrompt(
-                    fallbackToSettings,
-                    activity -> prepareNotificationForDisplay(jsonObject));
-        }
+        // always show the primer when fallback to settings is enabled
+        inAppActionHandler.launchPushPermissionPrompt(
+                fallbackToSettings,
+                fallbackToSettings, //alwaysRequestIfNotGranted
+                activity -> prepareNotificationForDisplay(jsonObject));
+
     }
 
     public void promptPermission(boolean showFallbackSettings) {

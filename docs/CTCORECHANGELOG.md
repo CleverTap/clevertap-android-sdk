@@ -1,4 +1,14 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 7.4.1 (June 27, 2025)
+
+#### New Features
+* Adds [accessibility support](https://support.google.com/accessibility/android/answer/6006564?hl=en) for the `Push Notifications`, `App-Inbox` and `In-app messages` channels.
+* Adds an overloaded API to support setting a contentDescription for the image in a PushPrimer.
+  * `setImageUrl(imageUrl: String, contentDescription: String?)`: Sets the content description for the image to improve accessibility.
+
+#### Bug Fixes
+* Fixes the `PushPrimer` flow with `fallbackToSettings` enabled.
+
 ### Version 7.4.0 (May 8, 2025)
 
 #### New Features

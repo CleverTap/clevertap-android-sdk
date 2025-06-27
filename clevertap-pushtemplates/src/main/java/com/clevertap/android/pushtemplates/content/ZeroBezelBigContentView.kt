@@ -18,7 +18,7 @@ internal class ZeroBezelBigContentView(context: Context, renderer: TemplateRende
         setCustomTextColour(renderer.pt_title_clr, R.id.title)
         setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
         setCustomTextColour(renderer.pt_msg_clr, R.id.msg)
-        setCustomContentViewBigImage(renderer.pt_big_img, renderer.pt_scale_type)
+        setCustomContentViewBigImage(renderer.pt_big_img, renderer.pt_scale_type, renderer.pt_big_img_alt_text)
         setCustomContentViewSmallIcon()
     }
 
