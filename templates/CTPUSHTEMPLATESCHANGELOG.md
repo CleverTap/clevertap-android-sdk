@@ -2,7 +2,7 @@
 ### Version 2.1.0 (June 27, 2025)
 
 #### New features
-* Adds accessibility support for all `Push Templates`, making them compliant with the European Accessibility Act (EAA).
+* Adds accessibility support for all `Push Templates`.
 * Improves readability of text inside the `Zero Bezel` template.
 
 ### Version 2.0.0 (June 5, 2025)

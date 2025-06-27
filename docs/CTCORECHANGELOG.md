@@ -2,7 +2,7 @@
 ### Version 7.4.1 (June 27, 2025)
 
 #### New Features
-* Adds accessibility support for the `Push Notifications`, `App-Inbox` and `In-app messages` channels, making them compliant with the European Accessibility Act (EAA).
+* Adds accessibility support for the `Push Notifications`, `App-Inbox` and `In-app messages` channels.
 * Adds an overloaded API to support setting a contentDescription for the image in a PushPrimer.
   * `setImageUrl(imageUrl: String, contentDescription: String?)`: Sets the content description for the image to improve accessibility.
 
