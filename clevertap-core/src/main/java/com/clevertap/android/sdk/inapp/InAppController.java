@@ -794,6 +794,21 @@ public class InAppController implements InAppListener {
 
         currentlyDisplayingInApp = inAppNotification;
 
+        // When the current activity is not a FragmentActivity,
+        // fallback to CTInAppHtmlBannerOverlay for supported notification types
+        if (!(CoreMetaData.getCurrentActivity() instanceof FragmentActivity)) {
+            try {
+                if (CTInAppHtmlBannerOverlay.canDisplay(inAppNotification)) {
+                    CTInAppHtmlBannerOverlay.display(inAppNotification, config,
+                            CoreMetaData.getCurrentActivity(), this);
+                    return;
+                }
+            } catch (Throwable t) {
+                Logger.d(config.getAccountId(), "InAppHtmlBannerOverlay failed to display: ", t);
+                // fall through to regular path
+            }
+        }
+
         CTInAppBaseFragment inAppFragment = null;
         CTInAppType type = inAppNotification.getInAppType();
         switch (type) {
