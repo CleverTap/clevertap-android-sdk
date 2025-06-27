@@ -13,15 +13,17 @@
             android:id="@+id/header_linear_layout_1"
             android:layout_width="match_parent"
             android:layout_height="118dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:focusable="true">
 
             <ImageView
                 android:id="@+id/header_icon"
-                android:contentDescription="inapp_icon"
+                android:contentDescription="@string/ct_inapp_img"
                 android:layout_width="78dp"
                 android:layout_height="78dp"
                 android:layout_marginLeft="20dp"
                 android:layout_marginTop="20dp"
+                android:focusable="true"
                 android:scaleType="fitCenter" />
 
             <LinearLayout
@@ -32,7 +34,6 @@
 
                 <TextView
                     android:id="@+id/header_title"
-                    android:contentDescription="inapp_title"
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="20dp"
@@ -43,7 +44,6 @@
 
                 <TextView
                     android:id="@+id/header_message"
-                    android:contentDescription="inapp_message"
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="20dp"
@@ -64,7 +64,6 @@
 
             <Button
                 android:id="@+id/header_button_1"
-                android:contentDescription="inapp_btn1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -74,7 +73,6 @@
 
             <Button
                 android:id="@+id/header_button_2"
-                android:contentDescription="inapp_btn2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"

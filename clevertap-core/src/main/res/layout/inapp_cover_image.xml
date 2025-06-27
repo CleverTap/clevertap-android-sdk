@@ -12,6 +12,7 @@
 
         <ImageView
             android:id="@+id/cover_image"
+            android:contentDescription="@string/ct_inapp_img"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentLeft="true"
@@ -21,7 +22,7 @@
     </RelativeLayout>
 
     <com.clevertap.android.sdk.customviews.CloseImageView
-        android:contentDescription="inapp_close_btn"
+        android:contentDescription="@string/ct_inapp_close_btn"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
