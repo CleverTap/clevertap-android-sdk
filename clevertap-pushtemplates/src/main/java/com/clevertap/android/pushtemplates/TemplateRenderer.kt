@@ -34,8 +34,15 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
-class TemplateRenderer : INotificationRenderer, AudibleNotification {
+/**
+ * Data class representing image data with URL and alt text for better readability
+ */
+data class ImageData(
+    val url: String,
+    val altText: String
+)
 
+class TemplateRenderer : INotificationRenderer, AudibleNotification {
     private var pt_id: String? = null
     private var templateType: TemplateType? = null
     internal var pt_title: String? = null
@@ -43,10 +50,11 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     internal var pt_msg_summary: String? = null
     internal var pt_large_icon: String? = null
     internal var pt_big_img: String? = null
+    internal var pt_big_img_alt_text: String = ""
     internal var pt_title_clr: String? = null
     internal var pt_msg_clr: String? = null
     internal var pt_chrono_title_clr: String? = null
-    internal var imageList: ArrayList<String>? = null
+    internal var imageList: ArrayList<ImageData>? = null
     internal var deepLinkList: ArrayList<String>? = null
     internal var bigTextList: ArrayList<String>? = null
     internal var smallTextList: ArrayList<String>? = null
@@ -69,6 +77,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     private var pt_msg_alt: String? = null
     private var pt_msg_summary_alt: String? = null
     private var pt_big_img_alt: String? = null
+    private var pt_big_img_alt_alt_text: String? = null
     internal var pt_product_display_linear: String? = null
     internal var pt_meta_clr: String? = null
     internal var pt_product_display_action_text_clr: String? = null
@@ -274,6 +283,11 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                             PT_BIG_IMG,
                             pt_big_img_alt
                         )
+
+                        ptJsonObj?.put(PT_BIG_IMG_ALT_TEXT, pt_big_img_alt_alt_text) ?: basicTemplateBundle.putString(
+                            PT_BIG_IMG_ALT_TEXT,
+                            pt_big_img_alt_alt_text
+                        )
                     }
                     if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
                         ptJsonObj?.put(PT_MSG, pt_msg_alt) ?: basicTemplateBundle.putString(
@@ -388,6 +402,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         }
 
         val darkModeAdaptiveColors = Utils.createColorMap(extras, isDarkMode)
+        val altTextDefault = context.getString(R.string.pt_big_image_alt)
         pt_msg = extras.getString(PT_MSG)
         pt_msg_summary = extras.getString(PT_MSG_SUMMARY)
         pt_msg_clr = darkModeAdaptiveColors[PT_MSG_COLOR]
@@ -396,16 +411,17 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_meta_clr = darkModeAdaptiveColors[PT_META_CLR]
         pt_bg = darkModeAdaptiveColors[PT_BG]
         pt_big_img = extras.getString(PT_BIG_IMG)
+        pt_big_img_alt_text = extras.getString(PT_BIG_IMG_ALT_TEXT, altTextDefault)
         pt_large_icon = extras.getString(PT_NOTIF_ICON)
         pt_small_view = extras.getString(PT_SMALL_VIEW)
-        imageList = Utils.getImageListFromExtras(extras)
+        imageList = Utils.getImageDataListFromExtras(extras, altTextDefault)
         deepLinkList = Utils.getDeepLinkListFromExtras(extras)
         bigTextList = Utils.getBigTextFromExtras(extras)
         smallTextList = Utils.getSmallTextFromExtras(extras)
         priceList = Utils.getPriceFromExtras(extras)
         pt_rating_default_dl = extras.getString(PT_DEFAULT_DL)
         pt_timer_threshold = Utils.getTimerThreshold(extras)
-        
+
         // true by default if not present in extras
         pt_render_terminal = extras.getString(PT_RENDER_TERMINAL)?.equals("true", ignoreCase = true) ?: true
         pt_input_label = extras.getString(PT_INPUT_LABEL)
@@ -417,6 +433,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_product_display_action_clr = darkModeAdaptiveColors[PT_PRODUCT_DISPLAY_ACTION_COLOUR]
         pt_timer_end = Utils.getTimerEnd(extras, System.currentTimeMillis())
         pt_big_img_alt = extras.getString(PT_BIG_IMG_ALT)
+        pt_big_img_alt_alt_text = extras.getString(PT_BIG_IMG_ALT_ALT_TEXT, altTextDefault)
         pt_msg_alt = extras.getString(PT_MSG_ALT)
         pt_msg_summary_alt = extras.getString(PT_MSG_SUMMARY_ALT)
         pt_title_alt = extras.getString(PT_TITLE_ALT)
@@ -498,7 +515,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     val label = action.optString("l")
                     val ico = action.optString(actionButtonIconKey)
                     val id = action.optString("id")
-                    
+
                     if (label.isEmpty() || id.isEmpty()) {
                         Logger.d("not adding push notification action: action label or id missing")
                         continue
@@ -511,11 +528,11 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                             Logger.d("unable to add notification action icon: " + t.localizedMessage)
                         }
                     }
-                    
+
                     // Create the button object
                     val button = ActionButton(id, label, icon)
                     actionButtons.add(button)
-                    
+
                     // Create and store the pendingIntent
                     val pendingIntent = createActionButtonPendingIntent(context, action, extras, notificationId)
                     if (pendingIntent != null) {
@@ -528,7 +545,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         }
         return actionButtons
     }
-    
+
     private fun createActionButtonPendingIntent(
         context: Context,
         action: JSONObject,
@@ -540,7 +557,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
             val dl = action.optString("dl")
             val id = action.optString("id")
             val autoCancel = action.optBoolean("ac", true)
-            
+
             // Determine if the intent should be sent to CTIntentService
             val intentServiceName = ManifestInfo.getInstance(context).intentServiceName
             var clazz: Class<*>? = null
@@ -562,7 +579,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 }
             }
             val isCTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
-            
+
             var sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
                     && isCTIntentServiceAvailable)
             val dismissOnClick = extras.getString("pt_dismiss_on_click")
@@ -588,10 +605,10 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
             ) {
                 sendToCTIntentService = true
             }
-            
+
             // Create the appropriate intent
             var actionLaunchIntent: Intent? = null
-            
+
             if (sendToCTIntentService) {
                 actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
                 actionLaunchIntent.setPackage(context.packageName)
@@ -611,7 +628,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         .getLaunchIntentForPackage(context.packageName)
                 }
             }
-            
+
             // Configure intent extras
             if (actionLaunchIntent != null) {
                 actionLaunchIntent.putExtras(extras)
@@ -624,7 +641,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
             } else {
                 return null
             }
-            
+
             // Create and return the PendingIntent
             val requestCode = Random().nextInt()
             var flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
@@ -632,7 +649,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 flagsActionLaunchPendingIntent =
                     flagsActionLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
             }
-            
+
             return if (sendToCTIntentService) {
                 PendingIntent.getService(
                     context, requestCode,

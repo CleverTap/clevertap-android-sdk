@@ -103,14 +103,16 @@ internal open class ProductDisplayLinearBigContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        renderer.imageList?.forEachIndexed { index, imageUrl ->
+        renderer.imageList?.forEachIndexed { index, imageData ->
+            val imageUrl = imageData.url
+            val altText = imageData.altText
 
             Utils.loadImageURLIntoRemoteView(
-                smallImageLayoutIds[imageCounter], imageUrl, remoteView, context
+                smallImageLayoutIds[imageCounter], imageUrl, remoteView, context, altText
             )
 
             val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_flipper_dynamic)
-            Utils.loadImageURLIntoRemoteView(imageViewId, imageUrl, tempRemoteView, context)
+            Utils.loadImageURLIntoRemoteView(imageViewId, imageUrl, tempRemoteView, context, altText)
 
             if (!Utils.getFallback()) {
                 if (!isFirstImageOk) {

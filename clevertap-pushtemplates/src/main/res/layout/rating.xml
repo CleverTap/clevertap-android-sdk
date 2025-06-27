@@ -75,6 +75,7 @@
             android:paddingBottom="10dp"
             android:background="@color/customButtonBackground"
             android:text="@string/confirm_btn"
+            android:contentDescription="@string/confirm_btn_content_description"
             android:gravity="center"
             android:textAppearance="@style/PushTitle"
             android:visibility="gone"/>

@@ -8,7 +8,6 @@
         android:id="@+id/big_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:contentDescription="@string/notification_image"
         android:scaleType="centerCrop"
         android:visibility="gone" />
 
@@ -16,7 +15,6 @@
         android:id="@+id/big_image_fitCenter"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:contentDescription="@string/notification_image"
         android:scaleType="fitCenter"
         android:visibility="gone" />
 </LinearLayout>

@@ -24,62 +24,26 @@ internal class FiveIconBigContentView constructor(
             renderer.pt_title = Utils.getApplicationName(context)
         }
         setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
-        for (imageKey in renderer.imageList!!.indices) {
-            if (imageKey == 0) {
-                remoteView.setViewVisibility(R.id.cta1, View.VISIBLE)
-                Utils.loadImageURLIntoRemoteView(
-                    R.id.cta1,
-                    renderer.imageList!![imageKey],
-                    remoteView,context
-                )
-                if (Utils.getFallback()) {
-                    remoteView.setViewVisibility(R.id.cta1, View.GONE)
-                    imageCounter++
-                }
-            } else if (imageKey == 1) {
-                remoteView.setViewVisibility(R.id.cta2, View.VISIBLE)
-                Utils.loadImageURLIntoRemoteView(
-                    R.id.cta2,
-                    renderer.imageList!![imageKey],
-                    remoteView,context
-                )
-                if (Utils.getFallback()) {
-                    imageCounter++
-                    remoteView.setViewVisibility(R.id.cta2, View.GONE)
-                }
-            } else if (imageKey == 2) {
-                remoteView.setViewVisibility(R.id.cta3, View.VISIBLE)
-                Utils.loadImageURLIntoRemoteView(
-                    R.id.cta3,
-                    renderer.imageList!![imageKey],
-                    remoteView,context
-                )
-                if (Utils.getFallback()) {
-                    imageCounter++
-                    remoteView.setViewVisibility(R.id.cta3, View.GONE)
-                }
-            } else if (imageKey == 3) {
-                remoteView.setViewVisibility(R.id.cta4, View.VISIBLE)
-                Utils.loadImageURLIntoRemoteView(
-                    R.id.cta4,
-                    renderer.imageList!![imageKey],
-                    remoteView,context
-                )
-                if (Utils.getFallback()) {
-                    imageCounter++
-                    remoteView.setViewVisibility(R.id.cta4, View.GONE)
-                }
-            } else if (imageKey == 4) {
-                remoteView.setViewVisibility(R.id.cta5, View.VISIBLE)
-                Utils.loadImageURLIntoRemoteView(
-                    R.id.cta5,
-                    renderer.imageList!![imageKey],
-                    remoteView,context
-                )
-                if (Utils.getFallback()) {
-                    imageCounter++
-                    remoteView.setViewVisibility(R.id.cta5, View.GONE)
-                }
+        val ctaIds = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)
+        renderer.imageList?.forEachIndexed { index, imageData ->
+            val imageUrl = imageData.url
+            val altText = imageData.altText
+            if (index >= ctaIds.size) return@forEachIndexed
+
+            val viewId = ctaIds[index]
+            remoteView.setViewVisibility(viewId, View.VISIBLE)
+
+            Utils.loadImageURLIntoRemoteView(
+                viewId,
+                imageUrl,
+                remoteView,
+                context,
+                altText
+            )
+
+            if (Utils.getFallback()) {
+                remoteView.setViewVisibility(viewId, View.GONE)
+                imageCounter++
             }
         }
 

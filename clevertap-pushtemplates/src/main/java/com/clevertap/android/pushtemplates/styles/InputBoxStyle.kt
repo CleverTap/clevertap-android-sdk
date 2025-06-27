@@ -2,6 +2,8 @@ package com.clevertap.android.pushtemplates.styles
 
 import android.app.PendingIntent
 import android.content.Context
+import android.os.Build
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -52,10 +54,9 @@ internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(ren
         inputBoxNotificationBuilder = actionButtonsHandler.addActionButtons(
             context, extras, notificationId, inputBoxNotificationBuilder, true
         )
-        
+
         inputBoxNotificationBuilder = setStandardViewBigImageStyle(
-            renderer.pt_big_img, extras,
-            context, inputBoxNotificationBuilder
+            renderer.pt_big_img, context, inputBoxNotificationBuilder
         )
         if (renderer.pt_input_label != null && renderer.pt_input_label!!.isNotEmpty()) {
             //Initialise RemoteInput
@@ -87,7 +88,6 @@ internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(ren
 
     private fun setStandardViewBigImageStyle(
         pt_big_img: String?,
-        extras: Bundle,
         context: Context,
         notificationBuilder: NotificationCompat.Builder
     ): NotificationCompat.Builder {
@@ -96,15 +96,14 @@ internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(ren
             try {
                 val bpMap = Utils.getNotificationBitmap(pt_big_img, false, context)
                     ?: throw Exception("Failed to fetch big picture!")
-                bigPictureStyle = if (extras.containsKey(PTConstants.PT_MSG_SUMMARY)) {
-                    val summaryText = renderer.pt_msg_summary
-                    NotificationCompat.BigPictureStyle()
-                        .setSummaryText(summaryText)
-                        .bigPicture(bpMap)
-                } else {
-                    NotificationCompat.BigPictureStyle()
-                        .setSummaryText(renderer.pt_msg)
-                        .bigPicture(bpMap)
+
+                val summaryText = renderer.pt_msg_summary ?: renderer.pt_msg
+                bigPictureStyle = NotificationCompat.BigPictureStyle()
+                    .setSummaryText(summaryText)
+                    .bigPicture(bpMap)
+
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
+                    bigPictureStyle.setContentDescription(renderer.pt_big_img_alt_text)
                 }
             } catch (t: Throwable) {
                 bigPictureStyle = NotificationCompat.BigTextStyle()

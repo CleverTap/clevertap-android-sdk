@@ -57,11 +57,13 @@
 
         <ImageView
             android:id="@+id/leftArrowPos0"
+            android:contentDescription="@string/prev_btn_content_description"
             style="@style/ManualCarouselArrowRev"
             android:background="@drawable/pt_btn_ripple_background" />
 
         <ImageView
             android:id="@+id/rightArrowPos0"
+            android:contentDescription="@string/next_btn_content_description"
             style="@style/ManualCarouselArrowFwd"
             android:background="@drawable/pt_btn_ripple_background" />
     </RelativeLayout>
