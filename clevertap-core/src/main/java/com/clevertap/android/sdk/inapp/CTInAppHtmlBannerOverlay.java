@@ -167,7 +167,14 @@ class CTInAppHtmlBannerOverlay {
                             | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                     PixelFormat.TRANSLUCENT);
             wmlp.gravity = gravity(); // TOP or BOTTOM
-            wmlp.token = activity.getWindow().getDecorView().getWindowToken(); // tie to this activity
+            View decorView = activity.getWindow().getDecorView();
+            if (decorView == null || decorView.getWindowToken() == null) {
+                config.getLogger().debug(config.getAccountId(), 
+                    "CTInAppHtmlBannerOverlay: Window token not available");
+                listener.inAppNotificationDidDismiss(notification, null);
+                return;
+            }
+            wmlp.token = decorView.getWindowToken(); // tie to this activity
             wm = activity.getWindowManager();
             wm.addView(root, wmlp);
 
@@ -419,6 +426,9 @@ class CTInAppHtmlBannerOverlay {
 
         private boolean remove(boolean ltr) {
             Overlay overlay = overlayRef.get();
+            if (overlay == null || overlay.webView == null) {
+                return false;
+            }
             AnimationSet animSet = new AnimationSet(true);
             TranslateAnimation anim;
             if (ltr) {
