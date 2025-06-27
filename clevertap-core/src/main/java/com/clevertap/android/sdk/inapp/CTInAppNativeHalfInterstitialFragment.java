@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -143,9 +144,12 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
 
         CTInAppNotificationMedia mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation);
         if (mediaForOrientation != null) {
+            ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
             Bitmap bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.getMediaUrl());
+            String contentDescription = mediaForOrientation.getContentDescription();
+            if (!TextUtils.isEmpty(contentDescription))
+                imageView.setContentDescription(contentDescription);
             if (bitmap != null) {
-                ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
                 imageView.setImageBitmap(bitmap);
             }
         }
