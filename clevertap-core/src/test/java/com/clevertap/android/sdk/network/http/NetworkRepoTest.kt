@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.network.http
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.network.NetworkRepo
+import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Assert.*
 import org.junit.Before
@@ -23,13 +25,17 @@ class NetworkRepoTest : BaseTestCase() {
         // Create a real config instance - this will use actual SharedPreferences via Robolectric
         config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", accountRegion)
     }
+    
+    private fun createNetworkRepo(clock: Clock = Clock.SYSTEM): NetworkRepo {
+        return NetworkRepo(appCtx, config, clock = clock)
+    }
 
     // Test cases for getFirstRequestTs()
     @Test
     fun `getFirstRequestTs should return value from storage`() {
         // Given
         val expectedTimestamp = 1234567890
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // First set a value
         networkRepo.setFirstRequestTs(expectedTimestamp)
@@ -44,7 +50,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `clearFirstRequestTs should return 0 from storage`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // First set a value
         networkRepo.setFirstRequestTs(1234567890)
@@ -59,7 +65,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `clearLastRequestTs should return 0 from storage`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // First set a value
         networkRepo.setLastRequestTs(1234567890)
@@ -74,7 +80,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `getFirstRequestTs should return default value when no stored value`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         val result = networkRepo.getFirstRequestTs()
@@ -88,7 +94,7 @@ class NetworkRepoTest : BaseTestCase() {
     fun `setFirstRequestTs should store value successfully`() {
         // Given
         val timestamp = 1234567890
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         networkRepo.setFirstRequestTs(timestamp)
@@ -103,7 +109,7 @@ class NetworkRepoTest : BaseTestCase() {
     fun `getLastRequestTs should return value from storage`() {
         // Given
         val expectedTimestamp = 9876543210L.toInt()
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // First set a value
         networkRepo.setLastRequestTs(expectedTimestamp)
@@ -118,7 +124,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `getLastRequestTs should return default value when no stored value`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         val result = networkRepo.getLastRequestTs()
@@ -132,7 +138,7 @@ class NetworkRepoTest : BaseTestCase() {
     fun `setLastRequestTs should store value successfully`() {
         // Given
         val timestamp = 9876543210L.toInt()
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         networkRepo.setLastRequestTs(timestamp)
@@ -142,37 +148,148 @@ class NetworkRepoTest : BaseTestCase() {
         assertEquals(timestamp, result)
     }
 
-    // Test cases for setMuted()
+    // Test cases for setMuted(), getMuted(), and isMuted()
     @Test
-    fun `setMuted with true should store current timestamp`() {
+    fun `setMuted with true should store current timestamp and getMuted should return it`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
-        val beforeTime = (System.currentTimeMillis() / 1000).toInt()
+        val testClock = TestClock(1000000L * 1000) // Set fixed time
+        networkRepo = createNetworkRepo(testClock)
+        val expectedTimestamp = testClock.currentTimeSecondsInt()
 
         // When
         networkRepo.setMuted(true)
-        val afterTime = (System.currentTimeMillis() / 1000).toInt()
-
-        // Then - Verify by checking that a non-zero timestamp was stored
-        // We can't directly access the muted value, but we can verify the behavior
-        // by calling setMuted(false) and then setMuted(true) again
-        networkRepo.setMuted(false)
-        networkRepo.setMuted(true)
-
-        // The test passes if no exception is thrown and the method completes successfully
-        assertTrue("setMuted(true) should complete without error", true)
+        
+        // Then
+        assertEquals("getMuted should return the timestamp when muted", expectedTimestamp, networkRepo.getMuted())
+        assertTrue("Should be muted when setMuted(true) is called", networkRepo.isMuted())
     }
 
     @Test
-    fun `setMuted with false should store zero`() {
+    fun `setMuted with false should store zero and getMuted should return zero`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        val testClock = TestClock()
+        networkRepo = createNetworkRepo(testClock)
+        
+        // First set muted to true
+        networkRepo.setMuted(true)
+        assertTrue("Should be muted initially", networkRepo.isMuted())
 
         // When
         networkRepo.setMuted(false)
 
-        // Then - The test passes if no exception is thrown
-        assertTrue("setMuted(false) should complete without error", true)
+        // Then
+        assertEquals("getMuted should return 0 when setMuted(false)", 0, networkRepo.getMuted())
+        assertFalse("Should not be muted when setMuted(false)", networkRepo.isMuted())
+    }
+
+    @Test
+    fun `getMuted should return default value 0 when no mute value stored`() {
+        // Given
+        networkRepo = createNetworkRepo()
+
+        // When
+        val result = networkRepo.getMuted()
+
+        // Then
+        assertEquals("Default muted value should be 0", 0, result)
+    }
+
+    @Test
+    fun `isMuted should return false when no mute value stored`() {
+        // Given
+        networkRepo = createNetworkRepo()
+
+        // When
+        val result = networkRepo.isMuted()
+
+        // Then
+        assertFalse("Should not be muted when no mute value stored", result)
+    }
+
+    @Test
+    fun `isMuted should return true when muted within last 24 hours`() {
+        // Given
+        val testClock = TestClock(1000000L * 1000)
+        networkRepo = createNetworkRepo(testClock)
+        
+        // When - Set muted
+        networkRepo.setMuted(true)
+        // Advance time by 12 hours (still within 24 hours)
+        testClock.advanceTime(12 * 60 * 60 * 1000)
+        
+        // Then
+        assertTrue("Should be muted when set within last 24 hours", networkRepo.isMuted())
+    }
+
+    @Test
+    fun `isMuted should return false when muted more than 24 hours ago`() {
+        // Given
+        val testClock = TestClock(1000000L * 1000)
+        networkRepo = createNetworkRepo(testClock)
+        
+        // When - Set muted and advance time by more than 24 hours
+        networkRepo.setMuted(true)
+        testClock.advanceTime(25 * 60 * 60 * 1000) // 25 hours
+        
+        // Then
+        assertFalse("Should not be muted when set more than 24 hours ago", networkRepo.isMuted())
+    }
+
+    @Test
+    fun `isMuted should return true when muted exactly 23 hours and 59 minutes ago`() {
+        // Given
+        val testClock = TestClock(1000000L * 1000)
+        networkRepo = createNetworkRepo(testClock)
+        
+        // When - Set muted and advance time by just under 24 hours
+        networkRepo.setMuted(true)
+        testClock.advanceTime(23 * 60 * 60 * 1000 + 59 * 60 * 1000) // 23h 59m
+        
+        // Then
+        assertTrue("Should be muted when set just under 24 hours ago", networkRepo.isMuted())
+    }
+
+    @Test
+    fun `isMuted should return false when muted exactly 24 hours and 1 minute ago`() {
+        // Given
+        val testClock = TestClock(1000000L * 1000)
+        networkRepo = createNetworkRepo(testClock)
+        
+        // When - Set muted and advance time by just over 24 hours
+        networkRepo.setMuted(true)
+        testClock.advanceTime(24 * 60 * 60 * 1000 + 60 * 1000) // 24h 1m
+        
+        // Then
+        assertFalse("Should not be muted when set just over 24 hours ago", networkRepo.isMuted())
+    }
+
+    @Test
+    fun `mute methods should work independently with other storage operations`() {
+        // Given
+        val testClock = TestClock()
+        networkRepo = createNetworkRepo(testClock)
+        val domain = "test.domain.com"
+        val firstTs = 1234567890
+        
+        // When - Set other values and mute status
+        networkRepo.setDomain(domain)
+        networkRepo.setFirstRequestTs(firstTs)
+        networkRepo.setMuted(true)
+        
+        // Then - All should be stored independently
+        assertEquals("Domain should be stored independently", domain, networkRepo.getDomain())
+        assertEquals("First request timestamp should be stored independently", firstTs, networkRepo.getFirstRequestTs())
+        assertTrue("Should be muted", networkRepo.isMuted())
+        assertTrue("Muted timestamp should be non-zero", networkRepo.getMuted() > 0)
+        
+        // When - Unmute
+        networkRepo.setMuted(false)
+        
+        // Then - Other values should remain, mute should be cleared
+        assertEquals("Domain should still be stored", domain, networkRepo.getDomain())
+        assertEquals("First request timestamp should still be stored", firstTs, networkRepo.getFirstRequestTs())
+        assertFalse("Should not be muted", networkRepo.isMuted())
+        assertEquals("Muted timestamp should be zero", 0, networkRepo.getMuted())
     }
 
     // Test cases for setDomain()
@@ -180,7 +297,7 @@ class NetworkRepoTest : BaseTestCase() {
     fun `setDomain should store domain name`() {
         // Given
         val domainName = "test.clevertap.com"
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         networkRepo.setDomain(domainName)
@@ -193,7 +310,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `setDomain should handle null domain name`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         networkRepo.setDomain(null)
@@ -208,7 +325,7 @@ class NetworkRepoTest : BaseTestCase() {
     fun `getDomain should return domain name from storage`() {
         // Given
         val expectedDomain = "test.clevertap.com"
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // First set a value
         networkRepo.setDomain(expectedDomain)
@@ -223,7 +340,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `getDomain should return null when no stored domain`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         val result = networkRepo.getDomain()
@@ -237,7 +354,7 @@ class NetworkRepoTest : BaseTestCase() {
     fun `setSpikyDomain should store spiky domain name`() {
         // Given
         val spikyDomainName = "spiky.clevertap.com"
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         networkRepo.setSpikyDomain(spikyDomainName)
@@ -252,7 +369,7 @@ class NetworkRepoTest : BaseTestCase() {
     fun `getSpikyDomain should return spiky domain name from storage`() {
         // Given
         val expectedSpikyDomain = "spiky.clevertap.com"
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // First set a value
         networkRepo.setSpikyDomain(expectedSpikyDomain)
@@ -267,7 +384,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `getSpikyDomain should return null when no stored spiky domain`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         val result = networkRepo.getSpikyDomain()
@@ -279,7 +396,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `getSpikyDomain should work independently from regular domain`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
         val regularDomain = "regular.clevertap.com"
         val spikyDomain = "spiky.clevertap.com"
 
@@ -298,7 +415,7 @@ class NetworkRepoTest : BaseTestCase() {
         // Given
         val currentDelay = 5000
         val networkRetryCount = 5
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         val result = networkRepo.getMinDelayFrequency(currentDelay, networkRetryCount)
@@ -314,7 +431,7 @@ class NetworkRepoTest : BaseTestCase() {
         val networkRetryCount = 10
         // Create config with null region
         config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", null)
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         val result = networkRepo.getMinDelayFrequency(currentDelay, networkRetryCount)
@@ -399,7 +516,7 @@ class NetworkRepoTest : BaseTestCase() {
         // Given
         val currentDelay = 5000
         val networkRetryCount = -1
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When
         val result = networkRepo.getMinDelayFrequency(currentDelay, networkRetryCount)
@@ -412,7 +529,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `default generateRandomDelay should return value between 1000 and 10000`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
 
         // When - Test the randomness by calling the method multiple times
         val results = mutableListOf<Int>()
@@ -436,7 +553,7 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `storage operations should work independently`() {
         // Given
-        networkRepo = NetworkRepo(appCtx, config)
+        networkRepo = createNetworkRepo()
         val firstTs = 1111111111
         val lastTs = 2222222222L.toInt()
         val domain = "integration.test.com"
@@ -454,6 +571,7 @@ class NetworkRepoTest : BaseTestCase() {
         assertEquals(lastTs, networkRepo.getLastRequestTs())
         assertEquals(domain, networkRepo.getDomain())
         assertEquals(spikyDomain, networkRepo.getSpikyDomain())
+        assertTrue("Should be muted", networkRepo.isMuted())
     }
 
     // Test with different config instances

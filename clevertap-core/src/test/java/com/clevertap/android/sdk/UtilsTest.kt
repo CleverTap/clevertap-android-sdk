@@ -515,12 +515,6 @@ class UtilsTest : BaseTestCase() {
 
     //------------------------------------------------------------------------------------
 
-    @Test
-    fun test_getNow_when_ABC_should_XYZ() {
-        assertEquals(System.currentTimeMillis() / 1000, Utils.getNow().toLong())
-    }
-
-    //------------------------------------------------------------------------------------
 
     @Test
     fun test_getThumbnailImage_when_ContextAndStringIsPassed_should_Return() {

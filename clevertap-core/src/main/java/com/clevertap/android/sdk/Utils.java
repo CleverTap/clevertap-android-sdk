@@ -274,10 +274,6 @@ public final class Utils {
         return HttpBitmapLoader.getHttpBitmap(HttpBitmapOperation.DOWNLOAD_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,bitmapDownloadRequest);
     }
 
-    public static int getNow() {
-        return (int) (System.currentTimeMillis() / 1000);
-    }
-
     public static int getThumbnailImage(Context context, String image) {
         if (context != null) {
             return context.getResources().getIdentifier(image, "drawable", context.getPackageName());

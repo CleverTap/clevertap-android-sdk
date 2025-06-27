@@ -76,9 +76,6 @@ internal object CleverTapFactory {
             // todo this needs to be fixed with kotlin usage+using kotlin testing libs
             throw RuntimeException("This is invalid case and will not happen. Context/Config is null")
         }
-
-        val coreState = CoreState()
-
         // create storeRegistry, preferences for features
         val storeProvider = getInstance()
         val accountId = cleverTapInstanceConfig.accountId
@@ -91,29 +88,17 @@ internal object CleverTapFactory {
             filesStore = storeProvider.provideFileStore(context, accountId)
         )
 
-        coreState.storeRegistry = storeRegistry
-
         val coreMetaData = CoreMetaData()
-        coreState.coreMetaData = coreMetaData
-
         val validator = Validator()
-
         val validationResultStack = ValidationResultStack()
-        coreState.validationResultStack = validationResultStack
-
         val ctLockManager = CTLockManager()
-        coreState.ctLockManager = ctLockManager
-
         val mainLooperHandler = MainLooperHandler()
-        coreState.mainLooperHandler = mainLooperHandler
-
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
-        coreState.config = config
-
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
+        val executors = CTExecutorFactory.executors(config)
 
-        val fileResourceProviderInit = CTExecutorFactory.executors(config).ioTask<Unit>()
+        val fileResourceProviderInit = executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
             FileResourceProvider.getInstance(context, config.logger)
         }
@@ -125,8 +110,6 @@ internal object CleverTapFactory {
             clearFirstRequestTs = networkRepo::clearFirstRequestTs,
             clearLastRequestTs = networkRepo::clearLastRequestTs
         )
-        coreState.databaseManager = databaseManager
-
         val repository = CryptRepository(
             context = context,
             accountId = config.accountId
@@ -142,8 +125,7 @@ internal object CleverTapFactory {
             repository = repository,
             cryptFactory = cryptFactory
         )
-        coreState.cryptHandler = cryptHandler
-        val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Unit>()
+        val task = executors.postAsyncSafelyTask<Unit>()
         task.execute("migratingEncryption") {
 
             val dataMigrationRepository = DataMigrationRepository(
@@ -164,27 +146,21 @@ internal object CleverTapFactory {
         }
 
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
-        coreState.deviceInfo = deviceInfo
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
         val localDataStore =
             LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager)
-        coreState.localDataStore = localDataStore
 
         val profileValueHandler = ProfileValueHandler(validator, validationResultStack)
-        coreState.profileValueHandler = profileValueHandler
 
         val eventMediator =
-            EventMediator(context, config, coreMetaData, localDataStore, profileValueHandler)
-        coreState.eventMediator = eventMediator
+            EventMediator(config, coreMetaData, localDataStore, profileValueHandler, networkRepo)
 
         getInstance(context, config)
 
         val callbackManager: BaseCallbackManager = CallbackManager(config, deviceInfo)
-        coreState.callbackManager = callbackManager
 
         val sessionManager = SessionManager(config, coreMetaData, validator, localDataStore)
-        coreState.sessionManager = sessionManager
 
         val controllerManager = ControllerManager(
             context,
@@ -194,14 +170,12 @@ internal object CleverTapFactory {
             deviceInfo,
             databaseManager
         )
-        coreState.controllerManager = controllerManager
 
         val triggersMatcher = TriggersMatcher(localDataStore)
         val triggersManager = TriggerManager(context, config.accountId, deviceInfo)
         val impressionManager = ImpressionManager(storeRegistry)
         val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
 
-        coreState.impressionManager = impressionManager
 
         val inAppActionHandler = InAppActionHandler(
             context,
@@ -210,7 +184,6 @@ internal object CleverTapFactory {
         )
         val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
         val templatesManager = TemplatesManager.createInstance(config, systemTemplates)
-        coreState.templatesManager = templatesManager
 
         val evaluationManager = EvaluationManager(
             triggersMatcher = triggersMatcher,
@@ -219,11 +192,10 @@ internal object CleverTapFactory {
             storeRegistry = storeRegistry,
             templatesManager = templatesManager
         )
-        coreState.evaluationManager = evaluationManager
 
-        val taskInitStores = CTExecutorFactory.executors(config).ioTask<Unit>()
+        val taskInitStores = executors.ioTask<Unit>()
         taskInitStores.execute("initStores") {
-            if (coreState.deviceInfo != null && coreState.deviceInfo.getDeviceID() != null) {
+            if (deviceInfo.getDeviceID() != null) {
                 if (storeRegistry.inAppStore == null) {
                     val inAppStore: InAppStore = storeProvider.provideInAppStore(
                         context = context,
@@ -248,24 +220,23 @@ internal object CleverTapFactory {
         }
 
         //Get device id should be async to avoid strict mode policy.
-        val taskInitFCManager = CTExecutorFactory.executors(config).ioTask<Void>()
+        val taskInitFCManager = executors.ioTask<Unit>()
         taskInitFCManager.execute("initFCManager") {
-            if (coreState.deviceInfo != null && coreState.deviceInfo.deviceID != null && controllerManager.inAppFCManager == null) {
-                coreState.config.logger
+            val deviceId = deviceInfo.deviceID
+            if (deviceId != null && controllerManager.inAppFCManager == null) {
+                config.logger
                     .verbose(
                         config.accountId + ":async_deviceID",
-                        "Initializing InAppFC with device Id = " + coreState.deviceInfo
-                            .deviceID
+                        "Initializing InAppFC with device Id = $deviceId"
                     )
                 controllerManager.inAppFCManager = InAppFCManager(
                     context,
                     config,
-                    coreState.deviceInfo.deviceID,
+                    deviceId,
                     storeRegistry,
                     impressionManager
                 )
             }
-            null
         }
 
         val impl = createFileResourcesRepo(
@@ -279,19 +250,15 @@ internal object CleverTapFactory {
             context,
             impl
         )
-        coreState.varCache = varCache
 
         val ctVariables = CTVariables(varCache)
-        coreState.ctVariables = ctVariables
-        coreState.controllerManager.ctVariables = ctVariables
+        controllerManager.ctVariables = ctVariables
 
         val parser = Parser(ctVariables)
-        coreState.parser = parser
 
-        val taskVariablesInit = CTExecutorFactory.executors(config).ioTask<Void?>()
+        val taskVariablesInit = executors.ioTask<Unit>()
         taskVariablesInit.execute("initCTVariables") {
             ctVariables.init()
-            null
         }
 
         val inAppResponse = InAppResponse(
@@ -373,7 +340,6 @@ internal object CleverTapFactory {
             queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponses = cleverTapResponses
         )
-        coreState.networkManager = networkManager
 
         val loginInfoProvider = LoginInfoProvider(
             context,
@@ -398,7 +364,6 @@ internal object CleverTapFactory {
             controllerManager,
             loginInfoProvider
         )
-        coreState.baseEventQueueManager = baseEventQueueManager
 
         val inAppResponseForSendTestInApp = InAppResponse(
             config,
@@ -424,7 +389,6 @@ internal object CleverTapFactory {
             inAppResponseForSendTestInApp,
             SYSTEM
         )
-        coreState.analyticsManager = analyticsManager
 
         networkManager.addNetworkHeadersListener(evaluationManager)
         val inAppController = InAppController(
@@ -442,9 +406,7 @@ internal object CleverTapFactory {
             storeRegistry,
             inAppActionHandler
         )
-
-        coreState.inAppController = inAppController
-        coreState.controllerManager.inAppController = inAppController
+        controllerManager.inAppController = inAppController
 
         val appLaunchListener = AppLaunchListener()
         appLaunchListener.addListener(inAppController.onAppLaunchEventSent)
@@ -454,7 +416,7 @@ internal object CleverTapFactory {
         batchListener.addListener(FetchInAppListener(callbackManager))
         callbackManager.batchListener = batchListener
 
-        val taskInitFeatureFlags = CTExecutorFactory.executors(config).ioTask<Void>()
+        val taskInitFeatureFlags = executors.ioTask<Unit>()
         taskInitFeatureFlags.execute("initFeatureFlags") {
             initFeatureFlags(
                 context,
@@ -464,11 +426,9 @@ internal object CleverTapFactory {
                 callbackManager,
                 analyticsManager
             )
-            null
         }
 
         val locationManager = LocationManager(context, config, coreMetaData, baseEventQueueManager)
-        coreState.locationManager = locationManager
 
         val ctWorkManager = CTWorkManager(context, config)
 
@@ -477,7 +437,6 @@ internal object CleverTapFactory {
                 context, config, databaseManager, validationResultStack,
                 analyticsManager, controllerManager, ctWorkManager
             )
-        coreState.pushProviders = pushProviders
 
         val activityLifeCycleManager = ActivityLifeCycleManager(
             context,
@@ -490,7 +449,6 @@ internal object CleverTapFactory {
             inAppController,
             baseEventQueueManager
         )
-        coreState.activityLifeCycleManager = activityLifeCycleManager
 
         val loginController = LoginController(
             context, config, deviceInfo,
@@ -498,9 +456,39 @@ internal object CleverTapFactory {
             coreMetaData, controllerManager, sessionManager,
             localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider
         )
-        coreState.loginController = loginController
 
-        return coreState
+        return CoreState(
+            locationManager = locationManager,
+            config = config,
+            coreMetaData = coreMetaData,
+            databaseManager = databaseManager,
+            deviceInfo = deviceInfo,
+            eventMediator = eventMediator,
+            localDataStore = localDataStore,
+            activityLifeCycleManager = activityLifeCycleManager,
+            analyticsManager = analyticsManager,
+            baseEventQueueManager = baseEventQueueManager,
+            cTLockManager = ctLockManager,
+            callbackManager = callbackManager,
+            controllerManager = controllerManager,
+            inAppController = inAppController,
+            evaluationManager = evaluationManager,
+            impressionManager = impressionManager,
+            loginController = loginController,
+            sessionManager = sessionManager,
+            validationResultStack = validationResultStack,
+            mainLooperHandler = mainLooperHandler,
+            networkManager = networkManager,
+            pushProviders = pushProviders,
+            varCache = varCache,
+            parser = parser,
+            cryptHandler = cryptHandler,
+            storeRegistry = storeRegistry,
+            templatesManager = templatesManager,
+            profileValueHandler = profileValueHandler,
+            cTVariables = ctVariables,
+            executors = executors
+        )
     }
 
     private fun initFeatureFlags(
