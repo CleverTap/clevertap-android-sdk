@@ -121,7 +121,7 @@ public class LoginController {
                     // try and flush and then reset the queues
                     baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR);
                     baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
-                    contentFetchManager.completePendingContentFetch();
+                    contentFetchManager.cancelAllResponseJobs();
                     dbManager.clearQueues(context);
 
                     // clear out the old data
