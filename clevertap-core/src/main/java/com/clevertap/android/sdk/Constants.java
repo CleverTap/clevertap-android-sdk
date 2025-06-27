@@ -199,6 +199,7 @@ public interface Constants {
     String KEY_LANDSCAPE = "hasLandscape";
     String KEY_CONTENT_TYPE = "content_type";
     String KEY_URL = "url";
+    String KEY_ALT_TEXT= "alt_text";
     String KEY_BUTTONS = "buttons";
     String KEY_CUSTOM_HTML = "custom-html";
     String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";

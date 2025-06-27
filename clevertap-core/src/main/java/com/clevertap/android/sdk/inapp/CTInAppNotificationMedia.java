@@ -34,11 +34,14 @@ public class CTInAppNotificationMedia implements Parcelable {
 
     private String mediaUrl;
 
+    private String contentDescription;
+
     public CTInAppNotificationMedia() {
     }
 
     private CTInAppNotificationMedia(Parcel in) {
         mediaUrl = in.readString();
+        contentDescription = in.readString();
         contentType = in.readString();
         cacheKey = in.readString();
         orientation = in.readInt();
@@ -56,6 +59,7 @@ public class CTInAppNotificationMedia implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(mediaUrl);
+        dest.writeString(contentDescription);
         dest.writeString(contentType);
         dest.writeString(cacheKey);
         dest.writeInt(orientation);
@@ -71,6 +75,10 @@ public class CTInAppNotificationMedia implements Parcelable {
 
     public String getMediaUrl() {
         return mediaUrl;
+    }
+
+    public String getContentDescription() {
+        return contentDescription;
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -95,6 +103,7 @@ public class CTInAppNotificationMedia implements Parcelable {
                 } else {
                     this.mediaUrl = mediaUrl;
                 }
+                this.contentDescription = mediaObject.optString(Constants.KEY_ALT_TEXT, "");
             }
         } catch (JSONException e) {
             Logger.v("Error parsing Media JSONObject - " + e.getLocalizedMessage());
