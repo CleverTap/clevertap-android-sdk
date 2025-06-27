@@ -20,8 +20,8 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:2.0.0"
-implementation "com.clevertap.android:clevertap-android-sdk:7.4.0" // 4.4.0 and above
+implementation "com.clevertap.android:push-templates:2.1.0"
+implementation "com.clevertap.android:clevertap-android-sdk:7.4.1" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -310,6 +310,7 @@ pt_msg_summary | Required | Message line when Notification is expanded
 pt_subtitle | Optional  | Subtitle
 pt_bg | Optional | Background Color in HEX
 pt_big_img | Optional | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_ico | Optional | Large Icon
 pt_dl1 | Optional | One Deep Link (minimum)
@@ -329,9 +330,13 @@ pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_dl1 | Required | Deep Link (Max one)
 pt_img1 | Required | Image One
+pt_img1_alt_text | Optional | Alt Text for Image One
 pt_img2 | Required | Image Two
+pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required | Image Three
+pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
+pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
@@ -353,9 +358,13 @@ pt_dl1 | Required | Deep Link One
 pt_dl2 | Optional | Deep Link Two
 pt_dl`n` | Optional | Deep Link for the nth image
 pt_img1 | Required | Image One
+pt_img1_alt_text | Optional | Alt Text for Image One
 pt_img2 | Required | Image Two
+pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required | Image Three
+pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
+pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
@@ -373,6 +382,7 @@ pt_id | Required  | Value - `pt_rating`
 pt_title | Required  | Title
 pt_msg | Required  | Message
 pt_big_img | Optional | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
@@ -398,8 +408,11 @@ pt_title | Required  | Title
 pt_msg | Required  | Message
 pt_subtitle | Optional  | Subtitle
 pt_img1 | Required  | Image One
+pt_img1_alt_text | Optional | Alt Text for Image One
 pt_img2 | Required  | Image Two
+pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required  | Image Three
+pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_bt1 | Required  | Big text for first image
 pt_bt2 | Required  | Big text for second image
@@ -428,10 +441,15 @@ Five Icons Template Keys | Required | Description
   ---:|:---:|:--- 
 pt_id | Required  | Value - `pt_five_icons`
 pt_img1 | Required  | Icon One
+pt_img1_alt_text | Optional | Alt Text for Icon One
 pt_img2 | Required  | Icon Two
+pt_img2_alt_text | Optional | Alt Text for Icon Two
 pt_img3 | Required  | Icon Three
+pt_img3_alt_text | Optional | Alt Text for Icon Three
 pt_img4 | Optional  | Icon Four
+pt_img4_alt_text | Optional | Alt Text for Icon Four
 pt_img5 | Optional  | Icon Five
+pt_img5_alt_text | Optional | Alt Text for Icon Five
 pt_dl1 | Required  | Deep Link for first icon
 pt_dl2 | Required  | Deep Link for second icon
 pt_dl3 | Required  | Deep Link for third icon
@@ -455,8 +473,10 @@ pt_msg_summary_alt | Optional | Message summary to show after timer expires
 pt_subtitle | Optional | Subtitle
 pt_dl1 | Required | Deep Link
 pt_big_img | Optional | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_big_img_alt | Optional | Image to show when timer expires
+pt_big_img_alt_alt_text | Optional | Alt Text for Image to show when timer expires
 pt_bg | Optional | Background Color in HEX
 pt_chrono_title_clr | Optional | Color for timer text in HEX
 pt_timer_threshold | Required | Timer duration in seconds (minimum 10). Will be given higher priority. 
@@ -477,6 +497,7 @@ pt_msg | Required | Message
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_big_img | Required | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_small_view | Optional | Select text-only small view layout (`text_only`)
 pt_dl1 | Optional | Deep Link
@@ -496,7 +517,9 @@ pt_msg | Required | Message
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_big_img | Required | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
 pt_big_img_alt | Optional | Image to be shown after feedback is collected
+pt_big_img_alt_alt_text | Optional | Alt Text for Image to be shown after feedback is collected
 pt_event_name | Optional | Name of Event to be raised
 pt_event_property_<property_name_1> | Optional | Value for event property <property_name_1>
 pt_event_property_<property_name_2> | Optional | Value for event property <property_name_2>
