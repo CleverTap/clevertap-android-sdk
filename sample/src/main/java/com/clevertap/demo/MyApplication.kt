@@ -3,6 +3,7 @@ package com.clevertap.demo
 import android.app.Activity
 import android.app.Application.ActivityLifecycleCallbacks
 import android.app.NotificationManager
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -25,7 +26,11 @@ import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.PushType
+import com.clevertap.demo.ui.customtemplates.CopyToClipboardPresenter
+import com.clevertap.demo.ui.customtemplates.CustomInterstitialPresenter
+import com.clevertap.demo.ui.customtemplates.OpenURLConfirmPresenter
 import com.clevertap.demo.ui.main.NotificationUtils
+import com.clevertap.demo.ui.customtemplates.createCustomTemplates
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
@@ -67,10 +72,19 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     private fun cleverTapPreAppCreated() {
+        val clipboardManager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        CleverTapAPI.registerCustomInAppTemplates {
+            createCustomTemplates(
+                customInterPresenter = CustomInterstitialPresenter(),
+                openUrlConfirmPresenter = OpenURLConfirmPresenter(this),
+                copyToClipboardPresenter = CopyToClipboardPresenter(clipboardManager)
+            )
+        }
+
         CleverTapAPI.setDebugLevel(VERBOSE)
         //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
         //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
-        TemplateRenderer.debugLevel = 3;
+        TemplateRenderer.debugLevel = 3
         CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
 
         // this is for clevertap to start sending events => app launched => hence done in app create
@@ -133,7 +147,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         handshakeDomain: String? = null
     ): CleverTapAPI {
         val ctInstance = if (useDefaultInstance) {
-            
+
             // Different ways of creating default instance
             // Type 1
             val defaultConfig = CleverTapInstanceConfig.getDefaultInstance(this)
@@ -208,7 +222,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                     .penaltyLog()
                     //.penaltyDeath()
                     .build()
-            );
+            )
             StrictMode.setVmPolicy(
                 StrictMode.VmPolicy.Builder()
                     .detectAll()
@@ -242,11 +256,11 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     override fun onActivityResumed(activity: Activity) {
         val payload = activity.intent?.extras
         if (payload?.containsKey("pt_id") == true && payload["pt_id"] == "pt_rating") {
-            val nm = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val nm = activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.cancel(payload["notificationId"] as Int)
         }
         if (payload?.containsKey("pt_id") == true && payload["pt_id"] == "pt_product_display") {
-            val nm = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val nm = activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.cancel(payload["notificationId"] as Int)
         }
     }

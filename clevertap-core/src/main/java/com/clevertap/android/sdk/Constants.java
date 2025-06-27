@@ -199,6 +199,7 @@ public interface Constants {
     String KEY_LANDSCAPE = "hasLandscape";
     String KEY_CONTENT_TYPE = "content_type";
     String KEY_URL = "url";
+    String KEY_ALT_TEXT= "alt_text";
     String KEY_BUTTONS = "buttons";
     String KEY_CUSTOM_HTML = "custom-html";
     String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
@@ -212,6 +213,7 @@ public interface Constants {
     String NOTIF_HIDE_APP_LARGE_ICON = "wzrk_hide_large_icon";
     String WZRK_ACTIONS = "wzrk_acts";
     String WZRK_BIG_PICTURE = "wzrk_bp";
+    String WZRK_BIG_PICTURE_ALT_TEXT_KEY = "alt_text_wzrk_bp";
     String WZRK_MSG_SUMMARY = "wzrk_nms";
     String NOTIF_PRIORITY = "pr";
     String PRIORITY_HIGH = "high";

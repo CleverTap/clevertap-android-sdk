@@ -1,10 +1,13 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-// Apply the Crashlytics Gradle plugin
-apply plugin: 'com.google.firebase.crashlytics'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'com.google.firebase.crashlytics'
+    alias(libs.plugins.compose.compiler)
+}
+
 
 allprojects {
     repositories {
@@ -75,6 +78,7 @@ android {
         }
     }
     buildFeatures {
+        compose true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -131,6 +135,7 @@ dependencies {
     implementation("androidx.media3:media3-ui:1.4.0")
 
     implementation("com.github.bumptech.glide:glide:4.12.0")
+    implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
 
     //Mandatory if you are using Notification Inbox
     implementation("com.google.android.material:material:1.12.0")
@@ -143,6 +148,14 @@ dependencies {
     // Mandatory for v3.6.4 and above
 
     implementation("androidx.multidex:multidex:2.0.1")
+
+    // Compose dependencies
+    implementation platform("androidx.compose:compose-bom:2024.06.00")
+    implementation "androidx.compose.ui:ui"
+    implementation "androidx.compose.ui:ui-tooling-preview"
+    implementation "androidx.compose.material3:material3"
+    implementation "androidx.activity:activity-compose:1.9.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4"
 
     // Import the BoM for the Firebase platform
     implementation platform("com.google.firebase:firebase-bom:33.2.0")

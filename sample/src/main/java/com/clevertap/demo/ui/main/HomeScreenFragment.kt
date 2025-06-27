@@ -35,6 +35,7 @@ import com.clevertap.demo.ViewModelFactory
 import com.clevertap.demo.WebViewActivity
 import com.clevertap.demo.action
 import com.clevertap.demo.snack
+import com.clevertap.demo.ui.inbox.CustomInboxComposeActivity
 import org.json.JSONObject
 
 
@@ -104,6 +105,7 @@ class HomeScreenFragment : Fragment() {
                 }
 
                 "7-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
+                "2-16" -> startActivity(Intent(activity, CustomInboxComposeActivity::class.java)) // Launch Compose Inbox
             }
         }
     }

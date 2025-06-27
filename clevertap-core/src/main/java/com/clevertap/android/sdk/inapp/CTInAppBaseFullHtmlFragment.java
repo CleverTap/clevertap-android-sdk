@@ -114,6 +114,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                         didDismiss(null);
                     }
                 });
+                closeImageView.setContentDescription(context.getString(R.string.ct_inapp_close_btn));
                 rl.addView(closeImageView, closeIvLp);
             }
 

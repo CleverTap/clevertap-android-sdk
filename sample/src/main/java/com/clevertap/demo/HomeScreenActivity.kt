@@ -2,7 +2,6 @@ package com.clevertap.demo
 
 
 import android.app.NotificationManager
-import android.content.Context
 
 import android.content.Intent
 import android.os.Build
@@ -13,6 +12,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.activity.viewModels
+import com.clevertap.demo.ui.customtemplates.OverlayScreen
+import com.clevertap.demo.ui.customtemplates.CustomTemplateViewModel
+import com.clevertap.demo.ui.customtemplates.CustomTemplateManager
+import com.clevertap.demo.ui.customtemplates.OpenUrlConfirmDialog
+import com.clevertap.demo.ui.customtemplates.OpenUrlConfirmViewModel
+import com.clevertap.demo.ui.customtemplates.OpenUrlConfirmViewModelProvider
 import com.clevertap.android.sdk.*
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
@@ -42,6 +50,18 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     var cleverTapDefaultInstance: CleverTapAPI? = MyApplication.ctInstance // access singleton
 
+    // ViewModel for managing dialog state
+    private val customTemplateViewModel by viewModels<CustomTemplateViewModel> {
+        ViewModelFactory(cleverTapDefaultInstance)
+    }
+    
+    // ViewModel for managing OpenURL confirm dialog state
+    private val openUrlConfirmViewModel by viewModels<OpenUrlConfirmViewModel> {
+        ViewModelFactory(cleverTapDefaultInstance)
+    }
+    
+    private lateinit var overlayComposeView: ComposeView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.home_screen_activity)
@@ -55,6 +75,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
         fakeNotification(send = false)
         cleverTapListeners()
+        setupOverlayDialog()
 
         checkFirstTimePreferences { isReadPolicy, email ->
             if (!isReadPolicy) {
@@ -65,9 +86,32 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         }
     }
 
+    private fun setupOverlayDialog() {
+        CustomTemplateManager.setViewModel(customTemplateViewModel)
+        OpenUrlConfirmViewModelProvider.setViewModel(openUrlConfirmViewModel)
+        overlayComposeView = findViewById(R.id.overlay_compose_view)
+        overlayComposeView.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val dialogState = customTemplateViewModel.dialogState
+                val openUrlDialogState = openUrlConfirmViewModel.dialogState
+                
+                OverlayScreen(
+                    dialogConfig = dialogState.config,
+                    showDialog = dialogState.isVisible,
+                )
+                
+                // Add the OpenURL confirm dialog
+                OpenUrlConfirmDialog(
+                    state = openUrlDialogState
+                )
+            }
+        }
+    }
+
     private fun checkFirstTimePreferences(callback: (Boolean, String?) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {
-            val sharedPref = getPreferences(Context.MODE_PRIVATE)
+            val sharedPref = getPreferences(MODE_PRIVATE)
             val isReadPolicy = sharedPref.getBoolean("isReadPolicy", false)
             val email = sharedPref.getString("email", null)
 
@@ -95,7 +139,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
                 override fun onAccept(isFirstTime: Boolean) {
                     showLocationPermissionPolicyDialog {
                         lifecycleScope.launch(Dispatchers.IO) {
-                            getPreferences(Context.MODE_PRIVATE).edit().apply {
+                            getPreferences(MODE_PRIVATE).edit().apply {
                                 putBoolean("isReadPolicy", true)
                                 apply()
                             }
@@ -194,7 +238,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         Log.i(TAG, "onDisplayUnitsLoaded() called")
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         Log.i("Playground", "onNewIntent()")
 
@@ -202,7 +246,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
          * On Android 12, Raise notification clicked event when Activity is already running in activity backstack
          */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            cleverTapDefaultInstance?.pushNotificationClickedEvent(intent!!.extras)
+            cleverTapDefaultInstance?.pushNotificationClickedEvent(intent.extras)
         }
 
         /**

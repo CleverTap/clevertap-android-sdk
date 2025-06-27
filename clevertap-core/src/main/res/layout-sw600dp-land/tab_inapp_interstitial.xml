@@ -11,11 +11,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
+        android:focusable="true"
         android:layout_margin="40dp">
 
         <TextView
             android:id="@+id/interstitial_title"
-            android:contentDescription="inapp_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
@@ -28,36 +28,40 @@
 
         <ImageView
             android:id="@+id/backgroundImage"
-            android:contentDescription="inapp_bg_img"
+            android:contentDescription="@string/ct_inapp_img"
             android:layout_width="458dp"
             android:layout_height="256dp"
             android:layout_below="@+id/interstitial_title"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="22dp"
             android:scaleType="centerCrop"
+            android:focusable="true"
             android:visibility="invisible" />
 
         <com.clevertap.android.sdk.gif.GifImageView
             android:id="@+id/gifImage"
+            android:contentDescription="@string/ct_inapp_gif"
             android:layout_width="458dp"
             android:layout_height="256dp"
             android:layout_below="@+id/interstitial_title"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="22dp"
             android:scaleType="centerCrop"
+            android:focusable="true"
             android:visibility="gone" />
 
         <FrameLayout
             android:id="@+id/video_frame"
+            android:contentDescription="@string/ct_inapp_media"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/interstitial_title"
             android:layout_centerHorizontal="true"
-            android:visibility="gone"></FrameLayout>
+            android:focusable="true"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/interstitial_message"
-            android:contentDescription="inapp_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/backgroundImage"
@@ -89,7 +93,6 @@
 
             <Button
                 android:id="@+id/interstitial_button1"
-                android:contentDescription="inapp_btn1"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/inapp_button_height"
                 android:layout_weight="1"
@@ -98,7 +101,6 @@
 
             <Button
                 android:id="@+id/interstitial_button2"
-                android:contentDescription="inapp_btn2"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/inapp_button_height"
                 android:layout_marginLeft="25dp"
@@ -110,7 +112,7 @@
     </RelativeLayout>
 
     <com.clevertap.android.sdk.customviews.CloseImageView
-        android:contentDescription="inapp_close_btn"
+        android:contentDescription="@string/ct_inapp_close_btn"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"
