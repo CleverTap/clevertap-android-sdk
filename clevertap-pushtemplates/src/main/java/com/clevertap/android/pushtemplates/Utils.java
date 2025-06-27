@@ -143,7 +143,7 @@ public class Utils {
         ArrayList<ImageData> imageList = new ArrayList<>();
         int counter = 1;
         for (String key : extras.keySet()) {
-            if (key.contains("pt_img")) {
+            if (key.contains("pt_img") && !key.endsWith(ALT_TEXT_SUFFIX)) {
                 String imageUrl = extras.getString(key);
                 String altText = extras.getString(key + ALT_TEXT_SUFFIX, defaultAltText + counter);
                 imageList.add(new ImageData(imageUrl, altText));

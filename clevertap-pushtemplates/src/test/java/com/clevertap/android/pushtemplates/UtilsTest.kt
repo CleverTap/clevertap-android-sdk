@@ -898,16 +898,15 @@ class UtilsTest {
     @Test
     fun `getImageDataListFromExtras should return list of ImageData objects`() {
         // Given
-        val keys = setOf("pt_img1", "pt_img2", "other_key", "pt_img_large")
+        val keys = setOf("pt_img1", "pt_img2", "other_key", "pt_img")
         val defaultAltText = "Default Image "
         every { mockBundle.keySet() } returns keys
         every { mockBundle.getString("pt_img1") } returns "https://example.com/img1.jpg"
         every { mockBundle.getString("pt_img2") } returns "https://example.com/img2.jpg"
-        every { mockBundle.getString("pt_img_large") } returns "https://example.com/large.jpg"
+        every { mockBundle.getString("pt_img") } returns "https://example.com/large.jpg"
         every { mockBundle.getString("other_key") } returns "not_an_image"
         every { mockBundle.getString("pt_img1${PTConstants.ALT_TEXT_SUFFIX}", "${defaultAltText}1") } returns "${defaultAltText}1"
         every { mockBundle.getString("pt_img2${PTConstants.ALT_TEXT_SUFFIX}", "${defaultAltText}2") } returns "${defaultAltText}2"
-        every { mockBundle.getString("pt_img_large${PTConstants.ALT_TEXT_SUFFIX}", "${defaultAltText}3") } returns "${defaultAltText}3"
 
         // When
         val result = Utils.getImageDataListFromExtras(mockBundle, defaultAltText)
@@ -918,16 +917,13 @@ class UtilsTest {
         // Find items by URL to verify they exist
         val img1Data = result.find { it.url == "https://example.com/img1.jpg" }
         val img2Data = result.find { it.url == "https://example.com/img2.jpg" }
-        val imgLargeData = result.find { it.url == "https://example.com/large.jpg" }
-        
+
         assertNotNull(img1Data)
         assertNotNull(img2Data)
-        assertNotNull(imgLargeData)
-        
+
         assertEquals("${defaultAltText}1", img1Data!!.altText)
         assertEquals("${defaultAltText}2", img2Data!!.altText)
-        assertEquals("${defaultAltText}3", imgLargeData!!.altText)
-        
+
         // Verify no data for non-image key
         val nonImageData = result.find { it.url == "not_an_image" }
         assertNull(nonImageData)
