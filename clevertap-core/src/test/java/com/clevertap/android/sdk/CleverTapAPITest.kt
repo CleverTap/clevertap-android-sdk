@@ -2,6 +2,7 @@ package com.clevertap.android.sdk
 
 import android.location.Location
 import android.os.Bundle
+import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer
 import com.clevertap.android.sdk.usereventlogs.UserEventLogTestData
@@ -628,5 +629,531 @@ class CleverTapAPITest : BaseTestCase() {
             corestate.analyticsManager.pushProfile(expectedMap)
             corestate.deviceInfo.saveOptOutState(false)
         }
+    }
+
+    // =========================
+    // EVENT TRACKING TESTS
+    // =========================
+
+    @Test
+    fun test_pushEvent_withEventNameOnly() {
+        // Arrange
+        val eventName = "Custom event"
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushEvent(eventName)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushEvent(eventName, null)
+        }
+    }
+
+    @Test
+    fun test_pushEvent_withEventNameAndActions() {
+        // Arrange
+        val eventName = "custom name"
+        val eventData = mapOf<String, Any>(
+            "Product Name" to "iPhone 15",
+            "Price" to 999.99,
+            "Quantity" to 1,
+            "Category" to "Electronics"
+        )
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushEvent(eventName, eventData)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushEvent(eventName, eventData)
+        }
+    }
+
+    @Test
+    fun test_pushEvent_withInvalidNames() {
+        // Arrange
+        initializeCleverTapAPI()
+
+        // Act
+        cleverTapAPI.pushEvent("")
+        cleverTapAPI.pushEvent(null)
+        cleverTapAPI.pushEvent("    ")
+        cleverTapAPI.pushEvent("  ")
+
+        // Assert
+        verify(exactly = 0) {
+            corestate.analyticsManager.pushEvent(any(), null)
+        }
+    }
+
+    @Test
+    fun test_pushChargedEvent_withValidData() {
+        // Arrange
+        val chargeDetails = hashMapOf<String, Any>(
+            "Amount" to 299.99,
+            "Currency" to "USD",
+            "Payment Mode" to "Credit Card",
+            "Charged ID" to "order_12345"
+        )
+        val items = arrayListOf<HashMap<String, Any>>(
+            hashMapOf<String, Any>(
+                "Product Name" to "Wireless Headphones",
+                "Category" to "Electronics",
+                "Price" to 149.99,
+                "Quantity" to 1
+            ),
+            hashMapOf<String, Any>(
+                "Product Name" to "Phone Case",
+                "Category" to "Accessories",
+                "Price" to 29.99,
+                "Quantity" to 2
+            )
+        )
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushChargedEvent(chargeDetails, items)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushChargedEvent(chargeDetails, items)
+        }
+    }
+
+    @Test
+    fun test_pushError() {
+        // Arrange
+        val errorMessage = "Network connection failed"
+        val errorCode = 500
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushError(errorMessage, errorCode)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushError(errorMessage, errorCode)
+        }
+    }
+
+    @Test
+    fun test_pushInstallReferrer() {
+        // Arrange
+        val source = "google"
+        val medium = "cpc"
+        val campaign = "summer_sale_2024"
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushInstallReferrer(source, medium, campaign)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushInstallReferrer(source, medium, campaign)
+        }
+    }
+
+    // =========================
+    // USER PROFILE MANAGEMENT TESTS
+    // =========================
+
+    @Test
+    fun test_onUserLogin_withProfileOnly() {
+        // Arrange
+        val profile = mapOf<String, Any>(
+            "Name" to "John Doe",
+            "Email" to "john@example.com",
+            "Age" to 30
+        )
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.onUserLogin(profile)
+
+        // Assert
+        verify {
+            corestate.loginController.onUserLogin(profile, null)
+        }
+    }
+
+    @Test
+    fun test_onUserLogin_withProfileAndCleverTapID() {
+        // Arrange
+        val profile = mapOf<String, Any>(
+            "Identity" to "user123",
+            "Email" to "user@test.com"
+        )
+        val cleverTapID = "custom_id_12345"
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.onUserLogin(profile, cleverTapID)
+
+        // Assert
+        verify {
+            corestate.loginController.onUserLogin(profile, cleverTapID)
+        }
+    }
+
+    @Test
+    fun test_onUserLogin_withEmptyProfile() {
+        // Arrange
+        val profile = emptyMap<String, Any>()
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.onUserLogin(profile)
+
+        // Assert
+        verify {
+            corestate.loginController.onUserLogin(profile, null)
+        }
+    }
+
+    @Test
+    fun test_pushProfile() {
+        // Arrange
+        val profile = mapOf<String, Any>(
+            "Name" to "Jane Smith",
+            "Phone" to "+1234567890",
+            "Gender" to "Female",
+            "DOB" to "1990-05-15"
+        )
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.pushProfile(profile)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.pushProfile(profile)
+        }
+    }
+
+    @Test
+    fun test_addMultiValueForKey() {
+        // Arrange
+        val key = "Interests"
+        val value = "Technology"
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.addMultiValueForKey(key, value)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.addMultiValuesForKey(key, arrayListOf(value))
+        }
+    }
+
+    @Test
+    fun test_addMultiValueForKey_withEmptyValue() {
+        // Arrange
+        val key = "Tags"
+        val value = ""
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.addMultiValueForKey(key, value)
+
+        // Assert
+        verify {
+            corestate.analyticsManager._generateEmptyMultiValueError(key)
+        }
+    }
+
+    @Test
+    fun test_addMultiValueForKey_withNullValue() {
+        // Arrange
+        val key = "Categories"
+        val value: String? = null
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.addMultiValueForKey(key, value)
+
+        // Assert
+        verify {
+            corestate.analyticsManager._generateEmptyMultiValueError(key)
+        }
+    }
+
+    @Test
+    fun test_addMultiValuesForKey() {
+        // Arrange
+        val key = "Skills"
+        val values = arrayListOf("Java", "Kotlin", "Android", "Mobile Development")
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.addMultiValuesForKey(key, values)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.addMultiValuesForKey(key, values)
+        }
+    }
+
+    @Test
+    fun test_removeMultiValueForKey() {
+        // Arrange
+        val key = "Preferences"
+        val value = "Email Notifications"
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.removeMultiValueForKey(key, value)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.removeMultiValuesForKey(key, arrayListOf(value))
+        }
+    }
+
+    @Test
+    fun test_removeMultiValueForKey_withEmptyValue() {
+        // Arrange
+        val key = "Tags"
+        val value = ""
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.removeMultiValueForKey(key, value)
+
+        // Assert
+        verify {
+            corestate.analyticsManager._generateEmptyMultiValueError(key)
+        }
+        verify(exactly = 0) {
+            corestate.analyticsManager.removeMultiValuesForKey(any(), any())
+        }
+    }
+
+    @Test
+    fun test_removeMultiValueForKey_withNullValue() {
+        // Arrange
+        val key = "Categories"
+        val value: String? = null
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.removeMultiValueForKey(key, value)
+
+        // Assert
+        verify {
+            corestate.analyticsManager._generateEmptyMultiValueError(key)
+        }
+        verify(exactly = 0) {
+            corestate.analyticsManager.removeMultiValuesForKey(any(), any())
+        }
+    }
+
+    @Test
+    fun test_removeMultiValuesForKey() {
+        // Arrange
+        val key = "OldInterests"
+        val values = arrayListOf("Sports", "Movies", "Music")
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.removeMultiValuesForKey(key, values)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.removeMultiValuesForKey(key, values)
+        }
+    }
+
+    @Test
+    fun test_setMultiValuesForKey() {
+        // Arrange
+        val key = "Languages"
+        val values = arrayListOf("English", "Spanish", "French")
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.setMultiValuesForKey(key, values)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.setMultiValuesForKey(key, values)
+        }
+    }
+
+    @Test
+    fun test_incrementValue() {
+        // Arrange
+        val key = "LoginCount"
+        val value = 1
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.incrementValue(key, value)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.incrementValue(key, value)
+        }
+    }
+
+    @Test
+    fun test_incrementValue_withDouble() {
+        // Arrange
+        val key = "TotalSpent"
+        val value = 25.99
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.incrementValue(key, value)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.incrementValue(key, value)
+        }
+    }
+
+    @Test
+    fun test_decrementValue() {
+        // Arrange
+        val key = "Credits"
+        val value = 5
+
+        // Act
+        initializeCleverTapAPI()
+        cleverTapAPI.decrementValue(key, value)
+
+        // Assert
+        verify {
+            corestate.analyticsManager.decrementValue(key, value)
+        }
+    }
+
+    @Test
+    fun test_getProperty_whenPersonalizationEnabled() {
+        // Arrange
+        val propertyName = "UserType"
+        val expectedValue = "Premium"
+        corestate.config.enablePersonalization(true)
+        every { corestate.localDataStore.getProfileProperty(propertyName) } returns expectedValue
+
+        // Act
+        initializeCleverTapAPI()
+        val actualValue = cleverTapAPI.getProperty(propertyName)
+
+        // Assert
+        assertEquals(expectedValue, actualValue)
+        verify { corestate.localDataStore.getProfileProperty(propertyName) }
+    }
+
+    @Test
+    fun test_getProperty_whenPersonalizationDisabled() {
+        // Arrange
+        val propertyName = "UserLevel"
+        corestate.config.enablePersonalization(false)
+
+        // Act
+        initializeCleverTapAPI()
+        val actualValue = cleverTapAPI.getProperty(propertyName)
+
+        // Assert
+        assertEquals(null, actualValue)
+        verify(exactly = 0) { corestate.localDataStore.getProfileProperty(any()) }
+    }
+
+    // =========================
+    // IN-APP NOTIFICATION MANAGEMENT TESTS
+    // =========================
+
+    @Test
+    fun test_discardInAppNotifications() {
+
+        initializeCleverTapAPI()
+        // Arrange
+        corestate.config.isAnalyticsOnly = true
+
+        // Act
+        cleverTapAPI.discardInAppNotifications()
+
+        // Assert
+        verify(exactly = 0) { corestate.inAppController.discardInApps() }
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = false
+
+        // Act
+        cleverTapAPI.discardInAppNotifications()
+
+        // Assert
+        verify{ corestate.inAppController.discardInApps() }
+    }
+
+    @Test
+    fun test_resumeInAppNotifications() {
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = true
+        initializeCleverTapAPI()
+
+        // Act
+        cleverTapAPI.resumeInAppNotifications()
+
+        // Assert
+        verify(exactly = 0) { corestate.inAppController.resumeInApps() }
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = false
+
+        // Act
+        cleverTapAPI.resumeInAppNotifications()
+
+        // Assert
+        verify { corestate.inAppController.resumeInApps() }
+    }
+
+    @Test
+    fun test_suspendInAppNotifications() {
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = true
+        initializeCleverTapAPI()
+
+        // Act
+        cleverTapAPI.suspendInAppNotifications()
+
+        // Assert
+        verify(exactly = 0) { corestate.inAppController.suspendInApps() }
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = false
+
+        // Act
+        cleverTapAPI.suspendInAppNotifications()
+
+        // Assert
+        verify { corestate.inAppController.suspendInApps() }
+    }
+
+    @Test
+    fun test_fetchInApps_analyticsOnly_false() {
+
+        // Arrange
+        corestate.config.isAnalyticsOnly = false
+        initializeCleverTapAPI()
+        val expectedJson = cleverTapAPI.getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS)
+
+        val callback = mockk<FetchInAppsCallback>()
+
+        // Act
+        cleverTapAPI.fetchInApps(callback)
+
+        // Assert
+        val jsonSlot = slot<JSONObject>()
+        verifyOrder {
+            corestate.callbackManager.fetchInAppsCallback = callback
+            corestate.analyticsManager.sendFetchEvent(capture(jsonSlot))
+        }
+        assertEquals(expectedJson.toString(), jsonSlot.captured.toString())
     }
 }

@@ -3544,7 +3544,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @NonNull
-    private JSONObject getFetchRequestAsJson(int fetchType) {
+    JSONObject getFetchRequestAsJson(int fetchType) {
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();
         try {
