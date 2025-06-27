@@ -169,7 +169,7 @@ class CTInAppHtmlBannerOverlay {
             wmlp.gravity = gravity(); // TOP or BOTTOM
             View decorView = activity.getWindow().getDecorView();
             if (decorView == null || decorView.getWindowToken() == null) {
-                config.getLogger().debug(config.getAccountId(), 
+                config.getLogger().debug(config.getAccountId(),
                     "CTInAppHtmlBannerOverlay: Window token not available");
                 listener.inAppNotificationDidDismiss(notification, null);
                 return;
