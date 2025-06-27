@@ -8,4 +8,9 @@
     <string name="ct_inbox_media_content_description">Message Media</string>
     <string name="ct_inbox_image_content_description">Message Image</string>
     <string name="ct_inbox_icon_content_description">Message Icon</string>
+    <string name="ct_notification_big_picture_alt_text">Notification Big Picture</string>
+    <string name="ct_inapp_close_btn">Close</string>
+    <string name="ct_inapp_img">Inapp Image</string>
+    <string name="ct_inapp_media">Inapp Media</string>
+    <string name="ct_inapp_gif">Inapp Gif</string>
 </resources>

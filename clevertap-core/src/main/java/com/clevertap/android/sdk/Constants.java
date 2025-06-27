@@ -213,6 +213,7 @@ public interface Constants {
     String NOTIF_HIDE_APP_LARGE_ICON = "wzrk_hide_large_icon";
     String WZRK_ACTIONS = "wzrk_acts";
     String WZRK_BIG_PICTURE = "wzrk_bp";
+    String WZRK_BIG_PICTURE_ALT_TEXT_KEY = "alt_text_wzrk_bp";
     String WZRK_MSG_SUMMARY = "wzrk_nms";
     String NOTIF_PRIORITY = "pr";
     String PRIORITY_HIGH = "high";
