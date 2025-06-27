@@ -800,8 +800,7 @@ public class InAppController implements InAppListener {
             Activity currentActivity = CoreMetaData.getCurrentActivity();
             if( currentActivity != null && !(currentActivity instanceof FragmentActivity)) {
                 if (CTInAppHtmlBannerOverlay.canDisplay(inAppNotification)) {
-                    CTInAppHtmlBannerOverlay.display(inAppNotification, config,
-                            CoreMetaData.getCurrentActivity(), this);
+                    CTInAppHtmlBannerOverlay.display(inAppNotification, config, currentActivity, this);
                     return;
                 }
             }
