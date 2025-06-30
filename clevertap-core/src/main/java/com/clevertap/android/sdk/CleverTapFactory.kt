@@ -359,7 +359,6 @@ internal object CleverTapFactory {
             storeRegistry,
             templatesManager,
             executors,
-            mainLooperHandler,
             FileResourceProvider.getInstance(context, config.logger)
         )
 
@@ -367,7 +366,6 @@ internal object CleverTapFactory {
         val inAppController = InAppController(
             context,
             config,
-            mainLooperHandler,
             executors,
             controllerManager,
             callbackManager,

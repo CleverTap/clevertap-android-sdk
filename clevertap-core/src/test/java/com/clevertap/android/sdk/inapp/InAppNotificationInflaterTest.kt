@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
 import android.graphics.Bitmap
-import android.os.Handler
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgument
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType
@@ -10,7 +9,6 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.task.MockCTExecutors
-import com.clevertap.android.sdk.utils.handlerMock
 import io.mockk.Runs
 import io.mockk.confirmVerified
 import io.mockk.every
@@ -36,7 +34,6 @@ class InAppNotificationInflaterTest {
 
     private lateinit var mockStoreRegistry: StoreRegistry
     private lateinit var mockFileResourceProvider: FileResourceProvider
-    private lateinit var mockHandler: Handler
     private lateinit var mockTemplateManager: TemplatesManager
 
 
@@ -48,8 +45,6 @@ class InAppNotificationInflaterTest {
 
         mockFileResourceProvider = mockk<FileResourceProvider>()
         mockTemplateManager = mockk<TemplatesManager>()
-
-        mockHandler = handlerMock()
 
         mockkObject(FileResourcesRepoImpl)
         every { FileResourcesRepoImpl.saveUrlExpiryToStore(any(), any()) } just Runs
@@ -215,7 +210,7 @@ class InAppNotificationInflaterTest {
 
     private fun setupCustomTemplateWithFileArgs(): JSONObject {
         val mockTemplate = mockk<CustomTemplate>()
-        val fileArgs = listOf<TemplateArgument>(
+        val fileArgs = listOf(
             TemplateArgument("file1", TemplateArgumentType.FILE, null),
             TemplateArgument("file2", TemplateArgumentType.FILE, null)
         )
@@ -257,7 +252,6 @@ class InAppNotificationInflaterTest {
             mockStoreRegistry,
             mockTemplateManager,
             MockCTExecutors(),
-            mockHandler,
             mockFileResourceProvider,
             isVideoSupported
         )

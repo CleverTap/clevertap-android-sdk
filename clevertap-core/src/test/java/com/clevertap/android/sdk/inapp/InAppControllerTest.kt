@@ -23,7 +23,6 @@ import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FakeClock
 import com.clevertap.android.sdk.utils.configMock
-import com.clevertap.android.sdk.utils.mainHandlerMock
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -131,7 +130,13 @@ class InAppControllerTest {
         val primerJson = JSONObject().put(CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS, true)
         inAppController.promptPushPrimer(primerJson)
 
-        verify(exactly = 1) { mockInAppActionHandler.launchPushPermissionPrompt(true, true, any()) }
+        verify(exactly = 1) {
+            mockInAppActionHandler.launchPushPermissionPrompt(
+                fallbackToSettings = true,
+                alwaysRequestIfNotGranted = true,
+                any()
+            )
+        }
     }
 
     @Test
@@ -322,7 +327,6 @@ class InAppControllerTest {
         assertEquals(Constants.KEY_CUSTOM_HTML, currentInApp.type)
         inAppController.inAppNotificationDidDismiss(currentInApp, null)
 
-        currentInApp = InAppController.getCurrentlyDisplayingInApp()
         assertNull(InAppController.getCurrentlyDisplayingInApp())
     }
 
@@ -689,7 +693,6 @@ class InAppControllerTest {
         return InAppController(
             mockk(relaxed = true),
             mockConfig,
-            mainHandlerMock(),
             MockCTExecutors(),
             mockControllerManager,
             mockCallbackManager,

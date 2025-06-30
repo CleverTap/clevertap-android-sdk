@@ -1,13 +1,10 @@
 package com.clevertap.android.sdk.inapp
 
-import android.os.Handler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
-import com.clevertap.android.sdk.inapp.store.preference.FileStore
-import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.task.Task
@@ -19,7 +16,6 @@ internal class InAppNotificationInflater(
     private val storeRegistry: StoreRegistry,
     private val templatesManager: TemplatesManager,
     private val executors: CTExecutors,
-    private val listenerHandler: Handler,
     private val fileResourceProvider: FileResourceProvider,
     private val isVideoSupported: Boolean = VideoLibChecker.haveVideoPlayerSupport
 ) {
@@ -33,7 +29,7 @@ internal class InAppNotificationInflater(
         taskLogTag: String,
         listener: InAppNotificationReadyListener
     ) {
-        val listenerWeakReference = WeakReference<InAppNotificationReadyListener>(listener)
+        val listenerWeakReference = WeakReference(listener)
         val task: Task<Unit> = executors.postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS)
         task.execute(taskLogTag) {
 
@@ -61,16 +57,14 @@ internal class InAppNotificationInflater(
     private fun processCustomTemplate(inApp: CTInAppNotification) {
         val customTemplateData = inApp.customTemplateData
         val fileUrls = customTemplateData?.getFileArgsUrls(templatesManager) ?: emptyList()
-        val storePair = Pair<FileStore, InAppAssetsStore>(
+        val storePair = Pair(
             storeRegistry.filesStore, storeRegistry.inAppAssetsStore
         )
 
         for (url in fileUrls) {
             val bytes = fileResourceProvider.fetchFile(url)
             if (bytes != null && bytes.isNotEmpty()) {
-                FileResourcesRepoImpl.saveUrlExpiryToStore(
-                    Pair<String, CtCacheType>(url, CtCacheType.FILES), storePair
-                )
+                FileResourcesRepoImpl.saveUrlExpiryToStore(Pair(url, CtCacheType.FILES), storePair)
             } else {
                 // download fail
                 inApp.error =
@@ -115,7 +109,9 @@ internal class InAppNotificationInflater(
     ) {
         val listener = listenerWeakReference.get()
         if (listener != null) {
-            listenerHandler.post(Runnable { listener.onNotificationReady(inApp) })
+            executors.mainTask<Unit>().execute("InAppNotificationInflater:onNotificationReady") {
+                listener.onNotificationReady(inApp)
+            }
         }
     }
 }

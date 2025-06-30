@@ -37,7 +37,6 @@ import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.task.CTExecutors;
-import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.JsonUtilsKt;
@@ -110,8 +109,6 @@ public class InAppController implements InAppListener {
 
     private final String defaultLogTag;
 
-    private final MainLooperHandler mainLooperHandler;
-
     private final CTExecutors executors;
 
     private final InAppQueue inAppQueue;
@@ -131,7 +128,6 @@ public class InAppController implements InAppListener {
     public InAppController(
             Context context,
             CleverTapInstanceConfig config,
-            MainLooperHandler mainLooperHandler,
             CTExecutors executors,
             ControllerManager controllerManager,
             BaseCallbackManager callbackManager,
@@ -149,7 +145,6 @@ public class InAppController implements InAppListener {
         this.config = config;
         this.logger = config.getLogger();
         this.defaultLogTag = config.getAccountId();
-        this.mainLooperHandler = mainLooperHandler;
         this.executors = executors;
         this.controllerManager = controllerManager;
         this.callbackManager = callbackManager;
@@ -485,7 +480,10 @@ public class InAppController implements InAppListener {
     private void displayNotification(final CTInAppNotification inAppNotification) {
 
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainLooperHandler.post(() -> displayNotification(inAppNotification));
+            executors.mainTask().execute("InAppController:displayNotification", () -> {
+                displayNotification(inAppNotification);
+                return null;
+            });
             return;
         }
 
