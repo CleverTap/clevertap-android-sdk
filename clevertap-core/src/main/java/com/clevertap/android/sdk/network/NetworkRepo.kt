@@ -80,15 +80,13 @@ internal class NetworkRepo(
      */
     fun isMuted() : Boolean {
         val now = clock.currentTimeSecondsInt()
-        val muteTS = StorageHelper.getIntFromPrefs(
-            context,
-            config,
-            Constants.KEY_MUTED,
-            0
-        )
+        val muteTS = getMuted()
         return now - muteTS < 24 * 60 * 60
     }
 
+    /**
+     * @return timestamp from epoch since SDK was muted in seconds.
+     */
     fun getMuted() : Int {
         return StorageHelper.getIntFromPrefs(
             context,
