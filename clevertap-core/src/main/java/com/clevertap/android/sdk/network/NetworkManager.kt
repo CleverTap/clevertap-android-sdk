@@ -31,7 +31,6 @@ import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import com.clevertap.android.sdk.response.ARPResponse
-import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
 import org.json.JSONArray
@@ -41,6 +40,7 @@ import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.EncryptionFailure
+import com.clevertap.android.sdk.response.ClevertapResponseHandler
 
 internal class NetworkManager constructor(
     private val context: Context,
@@ -55,7 +55,7 @@ internal class NetworkManager constructor(
     private val arpResponse: ARPResponse,
     private val networkRepo: NetworkRepo,
     private val queueHeaderBuilder: QueueHeaderBuilder,
-    val cleverTapResponses: MutableList<CleverTapResponse>,
+    private val cleverTapResponseHandler: ClevertapResponseHandler,
     private val logger: ILogger = config.logger
 ) {
 
@@ -565,12 +565,7 @@ internal class NetworkManager constructor(
                 }
             }
         }
-
-        for (processor: CleverTapResponse in cleverTapResponses) {
-            processor.isFullResponse = isFullResponse
-            processor.processResponse(bodyJson, bodyString, context)
-        }
-
+        cleverTapResponseHandler.handleResponse(isFullResponse, bodyJson, bodyString, isUserSwitchFlush)
         return true
     }
 

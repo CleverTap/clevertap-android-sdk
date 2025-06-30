@@ -10,13 +10,13 @@ internal class ClevertapResponseHandler(
 
     fun handleResponse(
         isFullResponse: Boolean,
-        bodyJson: JSONObject,
+        bodyJson: JSONObject?,
         bodyString: String,
         isUserSwitching: Boolean
     ) {
         if (isUserSwitching) {
             responses
-                .filter { decorator ->
+                .filterNot { decorator ->
                     decorator is InboxResponse || decorator is DisplayUnitResponse || decorator is FetchVariablesResponse
                 }
                 .forEach { decorator ->

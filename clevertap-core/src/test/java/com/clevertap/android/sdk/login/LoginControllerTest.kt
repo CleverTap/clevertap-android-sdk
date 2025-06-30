@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
+import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
@@ -27,7 +28,6 @@ import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.verify
 import io.mockk.verifyOrder
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
@@ -52,6 +52,7 @@ class LoginControllerTest : BaseTestCase() {
     private lateinit var pushProviders: PushProviders
     private lateinit var loginController: LoginController
     private lateinit var loginInfoProvider: LoginInfoProvider
+    private lateinit var contentFetchManager: ContentFetchManager
 
     override fun setUp() {
         super.setUp()
@@ -70,6 +71,7 @@ class LoginControllerTest : BaseTestCase() {
         ctLockManager = mockk(relaxed = true)
         cryptHandler = mockk(relaxed = true)
         pushProviders = mockk(relaxed = true)
+        contentFetchManager = mockk(relaxed = true)
 
         every { controllerManager.pushProviders } returns pushProviders
 
@@ -90,7 +92,8 @@ class LoginControllerTest : BaseTestCase() {
             callbackManager,
             dbManager,
             ctLockManager,
-            loginInfoProvider
+            loginInfoProvider,
+            contentFetchManager
         )
     }
 
@@ -260,7 +263,8 @@ class LoginControllerTest : BaseTestCase() {
             cm,
             dbManager,
             ctLockManager,
-            loginInfoProvider
+            loginInfoProvider,
+            contentFetchManager
         )
         //Act
         loginController.notifyChangeUserCallback()
@@ -294,7 +298,8 @@ class LoginControllerTest : BaseTestCase() {
             cm,
             dbManager,
             ctLockManager,
-            loginInfoProvider
+            loginInfoProvider,
+            contentFetchManager
         )
 
         var isPassed = true

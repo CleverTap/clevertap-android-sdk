@@ -339,7 +339,7 @@ internal object CleverTapFactory {
         val arpResponse = ARPResponse(config, validator, controllerManager, arpRepo)
         val displayUnitResponse = DisplayUnitResponse(config, callbackManager, controllerManager)
         val contentFetchManager = ContentFetchManager(config, context, coreMetaData, queueHeaderBuilder, ctApiWrapper, displayUnitResponse)
-        val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
+        val cleverTapResponses = listOf(
             inAppResponse,
             MetadataResponse(config, deviceInfo, ijRepo),
             arpResponse,
@@ -363,7 +363,6 @@ internal object CleverTapFactory {
             GeofenceResponse(config, callbackManager),
             ContentFetchResponse(config, contentFetchManager)
         )
-        // todo use this in network manager
         val responseHandler = ClevertapResponseHandler(context, cleverTapResponses)
 
         val networkManager = NetworkManager(
@@ -379,7 +378,7 @@ internal object CleverTapFactory {
             arpResponse = arpResponse,
             networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
-            cleverTapResponses = cleverTapResponses
+            cleverTapResponseHandler = responseHandler
         )
         coreState.networkManager = networkManager
 
