@@ -5,14 +5,13 @@ import static com.clevertap.android.sdk.Constants.KEY_NEW_VALUE;
 import static com.clevertap.android.sdk.Constants.KEY_OLD_VALUE;
 import static com.clevertap.android.sdk.Constants.keysToSkipForUserAttributesEvaluation;
 
-import android.content.Context;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ProfileValueHandler;
-import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.network.NetworkRepo;
 import com.clevertap.android.sdk.validation.Validator;
 import com.clevertap.android.sdk.variables.JsonUtil;
 import java.util.ArrayList;
@@ -31,17 +30,17 @@ public class EventMediator {
 
     private final CleverTapInstanceConfig config;
 
-    private final Context context;
-
     private final LocalDataStore localDataStore;
+
+    private final NetworkRepo networkRepo;
 
     private final ProfileValueHandler profileValueHandler;
 
-    public EventMediator(Context context, CleverTapInstanceConfig config, CoreMetaData coreMetaData,
-            LocalDataStore localDataStore, ProfileValueHandler profileValueHandler) {
-        this.context = context;
+    public EventMediator(CleverTapInstanceConfig config, CoreMetaData coreMetaData,
+                         LocalDataStore localDataStore, ProfileValueHandler profileValueHandler, NetworkRepo networkRepo) {
         this.config = config;
         this.localDataStore = localDataStore;
+        this.networkRepo = networkRepo;
         this.profileValueHandler = profileValueHandler;
         cleverTapMetaData = coreMetaData;
     }
@@ -72,7 +71,7 @@ public class EventMediator {
             return false;
         }
 
-        if (isMuted()) {
+        if (networkRepo.isMuted()) {
             config.getLogger()
                     .verbose(config.getAccountId(), "CleverTap is muted, dropping event - " + event.toString());
             return true;
@@ -248,15 +247,5 @@ public class EventMediator {
 
         localDataStore.updateProfileFields(fieldsToPersistLocally);
         return userAttributesChangeProperties;
-    }
-
-    /**
-     * @return true if the mute command was sent anytime between now and now - 24 hours.
-     */
-    private boolean isMuted() {
-        final int now = (int) (System.currentTimeMillis() / 1000);
-        final int muteTS = StorageHelper.getIntFromPrefs(context, config, Constants.KEY_MUTED, 0);
-
-        return now - muteTS < 24 * 60 * 60;
     }
 }

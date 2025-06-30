@@ -60,9 +60,9 @@ class EventQueueManagerTest : BaseTestCase() {
                 corestate.mainLooperHandler,
                 corestate.deviceInfo,
                 corestate.validationResultStack,
-                corestate.networkManager as NetworkManager,
+                corestate.networkManager,
                 corestate.coreMetaData,
-                corestate.ctLockManager,
+                corestate.cTLockManager,
                 corestate.localDataStore,
                 corestate.controllerManager,
                 loginInfoProvider
