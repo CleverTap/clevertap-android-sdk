@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp
 
-import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
@@ -13,13 +12,13 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.*
+import org.junit.Before
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class InAppQueueTest {
+class StoreRegistryInAppQueueTest {
 
-    private lateinit var mockConfig: CleverTapInstanceConfig
     private lateinit var storeRegistry: StoreRegistry
     private lateinit var mockInAppStore: InAppStore
     private lateinit var mockImpressionStore: ImpressionStore
@@ -27,11 +26,10 @@ class InAppQueueTest {
     private lateinit var mockFileStore: FileStore
     private lateinit var mockInAppAssetsStore: InAppAssetsStore
 
-    private lateinit var inAppQueue: InAppQueue
+    private lateinit var inAppQueue: StoreRegistryInAppQueue
 
     @Before
     fun setup() {
-        mockConfig = mockk(relaxed = true)
         mockInAppStore = mockk(relaxed = true)
         mockImpressionStore = mockk(relaxed = true)
         mockLegacyInAppStore = mockk(relaxed = true)
@@ -44,7 +42,7 @@ class InAppQueueTest {
             mockInAppAssetsStore,
             mockFileStore
         )
-        inAppQueue = InAppQueue(mockConfig, storeRegistry)
+        inAppQueue = StoreRegistryInAppQueue(storeRegistry, "Test")
     }
 
     @Test
@@ -70,7 +68,7 @@ class InAppQueueTest {
             mockInAppAssetsStore,
             mockFileStore
         )
-        val inAppQueue = InAppQueue(mockConfig, storeRegistry)
+        val inAppQueue = StoreRegistryInAppQueue(storeRegistry, "Test")
 
         inAppQueue.enqueue(jsonObject)
 

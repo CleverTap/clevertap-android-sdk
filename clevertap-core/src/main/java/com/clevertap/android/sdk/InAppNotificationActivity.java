@@ -174,10 +174,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         if (savedInstanceState == null) {
             contentFragment = createContentFragment();
             if (contentFragment != null) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable("inApp", inAppNotification);
-                bundle.putParcelable("config", config);
-                contentFragment.setArguments(bundle);
+                contentFragment.setArguments(inAppNotification, config);
                 getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
                         .add(android.R.id.content, contentFragment, getFragmentTag())
