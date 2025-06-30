@@ -1,10 +1,9 @@
 package com.clevertap.android.sdk.inapp
 
-import io.mockk.mockk
 import org.json.JSONArray
 import org.json.JSONObject
 
-internal class FakeInAppQueue : InAppQueue(mockk(), mockk()) {
+internal class FakeInAppQueue : InAppQueue {
 
     private val queue = mutableListOf<JSONObject>()
 
