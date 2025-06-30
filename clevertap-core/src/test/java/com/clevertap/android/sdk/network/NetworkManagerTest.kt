@@ -24,6 +24,7 @@ import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.http.MockHttpClient
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
+import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
@@ -50,8 +51,8 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var mockHttpClient: MockHttpClient
     private lateinit var ctApiWrapper: CtApiWrapper
     private val networkEncryptionManager: NetworkEncryptionManager = mockk(relaxed = true)
-    //private val networkRepo = NetworkRepo(appCtx, cleverTapInstanceConfig)
     private val networkRepo = mockk<NetworkRepo>(relaxed = true)
+    private val clevertapResponseHandler = mockk<ClevertapResponseHandler>(relaxed = true)
 
     @Before
     fun setUpNetworkManager() {
@@ -135,9 +136,7 @@ class NetworkManagerTest : BaseTestCase() {
 
         // verify we do not process body
         verify(exactly = 0) { networkEncryptionManager.decryptResponse(any()) }
-        for (processor in networkManager.cleverTapResponses) {
-            verify(exactly = 0) { processor.processResponse(any(), any(), any()) }
-        }
+        verify(exactly = 0) { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
     }
 
     @Test
@@ -335,10 +334,7 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(result)
 
         // Verify that isFullResponse is set to true for all processors
-        for (processor in networkManager.cleverTapResponses) {
-            assertTrue(processor.isFullResponse)
-            verify { processor.processResponse(any(), any(), any()) }
-        }
+        verify { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
     }
 
     /**
@@ -369,10 +365,7 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(result)
 
         // Verify that isFullResponse is set to true for all processors
-        for (processor in networkManager.cleverTapResponses) {
-            assertTrue(processor.isFullResponse)
-            verify { processor.processResponse(any(), any(), any()) }
-        }
+        verify { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
     }
 
     /**
@@ -404,10 +397,7 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(result)
 
         // Verify that isFullResponse is set to false for all processors
-        for (processor in networkManager.cleverTapResponses) {
-            assertFalse(processor.isFullResponse)
-            verify { processor.processResponse(any(), any(), any()) }
-        }
+        verify { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
     }
 
     /**
@@ -441,9 +431,7 @@ class NetworkManagerTest : BaseTestCase() {
         verify { networkEncryptionManager.decryptResponse(any<String>()) }
 
         // Verify that the decrypted data was passed to all processors
-        for (processor in networkManager.cleverTapResponses) {
-            verify { processor.processResponse(any(), eq("{}"), any()) }
-        }
+        verify { clevertapResponseHandler.handleResponse(eq(false), any(), eq("{}"), any()) }
     }
 
     /**
@@ -609,7 +597,7 @@ class NetworkManagerTest : BaseTestCase() {
             arpResponse = mockk<ARPResponse>(relaxed =  true),
             networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
-            cleverTapResponses = responses,
+            cleverTapResponseHandler = clevertapResponseHandler,
             logger = TestLogger()
         )
     }

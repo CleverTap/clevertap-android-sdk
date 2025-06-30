@@ -31,20 +31,16 @@ import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import com.clevertap.android.sdk.response.ARPResponse
-import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import com.clevertap.android.sdk.isNotNullAndBlank
-import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.EncryptionFailure
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
+import com.clevertap.android.sdk.response.ClevertapResponseHandler
 
 internal class NetworkManager constructor(
     private val context: Context,
@@ -59,7 +55,7 @@ internal class NetworkManager constructor(
     private val arpResponse: ARPResponse,
     private val networkRepo: NetworkRepo,
     private val queueHeaderBuilder: QueueHeaderBuilder,
-    val cleverTapResponses: MutableList<CleverTapResponse>,
+    private val cleverTapResponseHandler: ClevertapResponseHandler,
     private val logger: ILogger = config.logger
 ) {
 
@@ -85,8 +81,9 @@ internal class NetworkManager constructor(
      * @param context    The Context object.
      * @param eventGroup The EventGroup indicating the type of events to be flushed.
      * @param caller     The optional caller identifier.
+     * @param isUserSwitchFlush     True when user is switching.
      */
-    fun flushDBQueue(context: Context, eventGroup: EventGroup, caller: String?) {
+    fun flushDBQueue(context: Context, eventGroup: EventGroup, caller: String?, isUserSwitchFlush: Boolean) {
         config.logger
             .verbose(
                 config.accountId,
@@ -131,7 +128,7 @@ internal class NetworkManager constructor(
             }
 
             // Send the events queue to CleverTap servers
-            loadMore = sendQueue(context, eventGroup, queue, caller)
+            loadMore = sendQueue(context, eventGroup, queue, caller, isUserSwitchFlush)
             if (!loadMore) {
                 // network error
                 controllerManager.invokeCallbacksForNetworkError()
@@ -278,7 +275,8 @@ internal class NetworkManager constructor(
         context: Context,
         eventGroup: EventGroup,
         queue: JSONArray?,
-        caller: String?
+        caller: String?,
+        isUserSwitchFlush: Boolean = false
     ): Boolean {
         if (queue == null || queue.length() <= 0) {
             // Empty queue, no need to send
@@ -303,7 +301,7 @@ internal class NetworkManager constructor(
                     endpointId
                 )
             }
-            return networkCall(eventGroup, requestBody, headersDoneListener)
+            return networkCall(eventGroup, requestBody, headersDoneListener, isUserSwitchFlush)
         } catch (e: Exception) {
             networkRetryCount++
             responseFailureCount++
@@ -322,7 +320,8 @@ internal class NetworkManager constructor(
     private fun networkCall(
         eventGroup: EventGroup,
         requestBody: SendQueueRequestBody,
-        notifyNetworkHeaderListeners: () -> Unit
+        notifyNetworkHeaderListeners: () -> Unit,
+        isUserSwitchFlush: Boolean
     ): Boolean = callApiForEventGroup(eventGroup, requestBody).use { response ->
         networkRetryCount = 0
         return when (eventGroup) {
@@ -334,7 +333,8 @@ internal class NetworkManager constructor(
                 handleSendQueueResponse(
                     response = response,
                     isFullResponse = doesBodyContainAppLaunchedOrFetchEvents(requestBody),
-                    notifyNetworkHeaderListeners = notifyNetworkHeaderListeners
+                    notifyNetworkHeaderListeners = notifyNetworkHeaderListeners,
+                    isUserSwitchFlush = isUserSwitchFlush
                 ).also { isProcessed ->
                     responseFailureCount = if (isProcessed) 0 else responseFailureCount + 1
                 }
@@ -345,37 +345,6 @@ internal class NetworkManager constructor(
                     responseFailureCount = if (isProcessed) 0 else responseFailureCount + 1
                 }
             }
-        }
-    }
-
-
-    /**
-     * Handles the response from content fetch requests
-     * Processes through normal ResponseDecorator route
-     */
-    private fun handleContentFetchResponse(response: Response): Boolean {
-        if (response.isSuccess()) {
-            val bodyString = response.readBody()
-            val bodyJson = bodyString.toJsonOrNull()
-
-            logger.info(config.accountId, "Content fetch response received successfully")
-
-            // Process through normal response decorators
-            for (processor: CleverTapResponse in cleverTapResponses) {
-                processor.processResponse(bodyJson, bodyString, this.context)
-            }
-            return true
-        } else {
-            when (response.code) {
-                429 -> {
-                    logger.info(
-                        config.accountId, "Content fetch request was rate limited (429). Consider reducing request frequency."
-                    )
-                }
-
-                else -> logger.info(config.accountId, "Content fetch request failed with response code: ${response.code}")
-            }
-            return false
         }
     }
 
@@ -415,26 +384,6 @@ internal class NetworkManager constructor(
             }
         } catch (e: Exception) {
             logger.debug(config.accountId, "An exception occurred while defining templates.", e)
-            return false
-        }
-    }
-
-    @WorkerThread
-    suspend fun sendContentFetchRequest(content: JSONArray): Boolean {
-        val header = getQueueHeader(null) ?: return false
-        val body = ContentFetchRequestBody(header, content)
-        logger.debug(config.accountId, "Fetching Content: $body")
-
-        try {
-            ctApiWrapper.ctApi.sendContentFetch(body).use { response ->
-                currentCoroutineContext().ensureActive()
-                return handleContentFetchResponse(response)
-            }
-        } catch (_: CancellationException) {
-            logger.verbose(config.accountId, "Fetch job was cancelled.")
-            return false
-        } catch (e: Exception) {
-            logger.debug(config.accountId, "An exception occurred while fetching content.", e)
             return false
         }
     }
@@ -574,7 +523,8 @@ internal class NetworkManager constructor(
     private fun handleSendQueueResponse(
         response: Response,
         isFullResponse: Boolean,
-        notifyNetworkHeaderListeners: () -> Unit
+        notifyNetworkHeaderListeners: () -> Unit,
+        isUserSwitchFlush: Boolean
     ): Boolean {
         if (!response.isSuccess()) {
             handleSendQueueResponseError(response)
@@ -615,12 +565,7 @@ internal class NetworkManager constructor(
                 }
             }
         }
-
-        for (processor: CleverTapResponse in cleverTapResponses) {
-            processor.isFullResponse = isFullResponse
-            processor.processResponse(bodyJson, bodyString, context)
-        }
-
+        cleverTapResponseHandler.handleResponse(isFullResponse, bodyJson, bodyString, isUserSwitchFlush)
         return true
     }
 

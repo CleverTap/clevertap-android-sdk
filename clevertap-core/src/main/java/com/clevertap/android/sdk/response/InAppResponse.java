@@ -54,7 +54,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             CoreMetaData coreMetaData
     ) {
         this.config = config;
-        logger = this.config.getLogger();
+        this.logger = this.config.getLogger();
         this.controllerManager = controllerManager;
         this.isSendTest = isSendTest;
         this.storeRegistry = storeRegistry;
@@ -69,7 +69,31 @@ public class InAppResponse extends CleverTapResponseDecorator {
             final String stringBody,
             final Context context
     ) {
+        processResponse(response, stringBody, context, false);
+    }
+
+    public void processResponse(
+            final JSONObject response,
+            final String stringBody,
+            final Context context,
+            final boolean isUserSwitching
+    ) {
         try {
+
+            if (config.isAnalyticsOnly()) {
+                logger.verbose(config.getAccountId(),
+                        "CleverTap instance is configured to analytics only, not processing inapp messages");
+                // process metadata response
+                return;
+            }
+
+            if (response == null || response.length() == 0) {
+                logger.verbose(
+                        config.getAccountId(),
+                        "There is no inapps data to handle"
+                );
+                return;
+            }
 
             InAppResponseAdapter res = new InAppResponseAdapter(response, templatesManager);
             final ImpressionStore impressionStore = storeRegistry.getImpressionStore();
@@ -80,13 +104,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null || fileStore == null) {
                 logger.verbose(config.getAccountId(), "Stores are not initialised, ignoring inapps!!!!");
-                return;
-            }
-
-            if (config.isAnalyticsOnly()) {
-                logger.verbose(config.getAccountId(),
-                        "CleverTap instance is configured to analytics only, not processing inapp messages");
-                // process metadata response
                 return;
             }
 
@@ -107,6 +124,15 @@ public class InAppResponse extends CleverTapResponseDecorator {
             Pair<Boolean, JSONArray> inappStaleList = res.getStaleInApps();
             if (inappStaleList.getFirst()) {
                 clearStaleInAppCache(inappStaleList.getSecond(), impressionStore, triggerManager);
+            }
+
+            String mode = res.getInAppMode();
+            if (!mode.isEmpty()) {
+                inAppStore.setMode(mode);
+            }
+
+            if (isUserSwitching) {
+                return;
             }
 
             Pair<Boolean, JSONArray> legacyInApps = res.getLegacyInApps();
@@ -142,11 +168,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 assetRepo.cleanupStaleFiles(res.getPreloadAssets());
             } else {
                 logger.verbose(config.getAccountId(), "Ignoring cache eviction");
-            }
-
-            String mode = res.getInAppMode();
-            if (!mode.isEmpty()) {
-                inAppStore.setMode(mode);
             }
 
         } catch (Throwable t) {
