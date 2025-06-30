@@ -252,7 +252,7 @@ class InAppNotificationInflaterTest {
             mockStoreRegistry,
             mockTemplateManager,
             MockCTExecutors(),
-            mockFileResourceProvider,
+            { mockFileResourceProvider },
             isVideoSupported
         )
     }

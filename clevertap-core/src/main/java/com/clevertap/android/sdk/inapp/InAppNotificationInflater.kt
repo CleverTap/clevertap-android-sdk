@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
+import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.data.CtCacheType
@@ -16,9 +17,12 @@ internal class InAppNotificationInflater(
     private val storeRegistry: StoreRegistry,
     private val templatesManager: TemplatesManager,
     private val executors: CTExecutors,
-    private val fileResourceProvider: FileResourceProvider,
+    fileResourceProvider: () -> FileResourceProvider,
     private val isVideoSupported: Boolean = VideoLibChecker.haveVideoPlayerSupport
 ) {
+
+    @get:WorkerThread
+    private val fileResourceProvider: FileResourceProvider by lazy(fileResourceProvider)
 
     fun interface InAppNotificationReadyListener {
         fun onNotificationReady(notification: CTInAppNotification)

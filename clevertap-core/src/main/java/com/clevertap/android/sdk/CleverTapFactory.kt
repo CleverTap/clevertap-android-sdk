@@ -359,7 +359,7 @@ internal object CleverTapFactory {
             storeRegistry,
             templatesManager,
             executors,
-            FileResourceProvider.getInstance(context, config.logger)
+            { FileResourceProvider.getInstance(context, config.logger) }
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)
