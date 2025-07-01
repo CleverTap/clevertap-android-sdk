@@ -313,12 +313,7 @@ public class CleverTapInstanceConfig implements Parcelable {
                     }
                 }
             }
-            if (configJsonObject.has(KEY_ENCRYPTION_IN_TRANSIT)) { // You'll need a KEY_ENCRYPTION_IN_TRANSIT constant
-                this.encryptionInTransit = configJsonObject.optString(KEY_ENCRYPTION_IN_TRANSIT, "0");
-            } else {
-                // Encryption is disabled by default.
-                this.encryptionInTransit = "0";
-            }
+            this.encryptionInTransit = configJsonObject.optString(KEY_ENCRYPTION_IN_TRANSIT, "0");
         } catch (Throwable t) {
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
             throw (t);

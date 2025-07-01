@@ -8,6 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 @RunWith(RobolectricTestRunner::class)
 class IJRepoTest : BaseTestCase() {
@@ -648,10 +649,5 @@ class IJRepoTest : BaseTestCase() {
         // Assert I remains unchanged
         assertEquals(updatedIValue, ijRepo.getI(appCtx), "I value should remain unchanged when J is updated")
         assertEquals(updatedJValue, ijRepo.getJ(appCtx), "J value should be updated")
-    }
-    
-    // Helper function to check if a key exists in SharedPreferences
-    private fun assertFalse(condition: Boolean, message: String) {
-        assert(!condition) { message }
     }
 }
