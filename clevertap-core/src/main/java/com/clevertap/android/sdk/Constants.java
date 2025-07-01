@@ -95,6 +95,7 @@ public interface Constants {
 
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
+    String CONTENT_FETCH_JSON_RESPONSE_KEY = "content_fetch";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     String REQUEST_VARIABLES_JSON_RESPONSE_KEY = "vars";
     String REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY = "pc_notifs";

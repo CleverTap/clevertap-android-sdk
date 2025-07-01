@@ -34,6 +34,7 @@ import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.AppLaunchListener
 import com.clevertap.android.sdk.network.ArpRepo
 import com.clevertap.android.sdk.network.CompositeBatchListener
+import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.network.FetchInAppListener
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
@@ -45,7 +46,9 @@ import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
+import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.response.ConsoleResponse
+import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.response.FeatureFlagResponse
 import com.clevertap.android.sdk.response.FetchVariablesResponse
@@ -301,7 +304,14 @@ internal object CleverTapFactory {
         )
 
         val arpResponse = ARPResponse(config, validator, controllerManager, arpRepo)
-        val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
+        val contentFetchManager = ContentFetchManager(
+            config,
+            coreMetaData,
+            queueHeaderBuilder,
+            ctApiWrapper
+        )
+        val contentFetchResponse = ContentFetchResponse(config, contentFetchManager)
+        val cleverTapResponses = listOf<CleverTapResponse>(
             inAppResponse,
             MetadataResponse(config, deviceInfo, ijRepo),
             arpResponse,
@@ -322,8 +332,12 @@ internal object CleverTapFactory {
             DisplayUnitResponse(config, callbackManager, controllerManager),
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),
-            GeofenceResponse(config, callbackManager)
+            GeofenceResponse(config, callbackManager),
+            contentFetchResponse
         )
+
+        val responseHandler = ClevertapResponseHandler(context, cleverTapResponses)
+        contentFetchManager.clevertapResponseHandler = responseHandler
 
         val networkManager = NetworkManager(
             context = context,
@@ -338,7 +352,7 @@ internal object CleverTapFactory {
             arpResponse = arpResponse,
             networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
-            cleverTapResponses = cleverTapResponses
+            cleverTapResponseHandler = responseHandler
         )
 
         val loginInfoProvider = LoginInfoProvider(
@@ -454,7 +468,7 @@ internal object CleverTapFactory {
             context, config, deviceInfo,
             validationResultStack, baseEventQueueManager, analyticsManager,
             coreMetaData, controllerManager, sessionManager,
-            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider
+            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager
         )
 
         return CoreState(
