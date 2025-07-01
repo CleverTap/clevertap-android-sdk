@@ -48,7 +48,6 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.CTExecutors
-import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.filterObjects
 import com.clevertap.android.sdk.variables.JsonUtil
@@ -59,7 +58,6 @@ import java.util.Collections
 internal class InAppController(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
-    private val mainLooperHandler: MainLooperHandler,
     private val executors: CTExecutors,
     private val controllerManager: ControllerManager,
     private val callbackManager: BaseCallbackManager,
@@ -454,7 +452,9 @@ internal class InAppController(
     private fun displayNotification(inAppNotification: CTInAppNotification) {
 
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainLooperHandler.post { displayNotification(inAppNotification) }
+            executors.mainTask<Unit>().execute("InAppController:displayNotification") {
+                displayNotification(inAppNotification)
+            }
             return
         }
 
@@ -481,7 +481,7 @@ internal class InAppController(
             return
         }
         val templateData = inAppNotification.customTemplateData
-        var template = templateData?.templateName?.let { templatesManager.getTemplate(it) }
+        val template = templateData?.templateName?.let { templatesManager.getTemplate(it) }
 
         logger.debug(defaultLogTag, "Notification ready: ${inAppNotification.jsonDescription}")
         if (template != null && !template.isVisual) {
