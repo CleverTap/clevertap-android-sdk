@@ -140,9 +140,13 @@ public class LoginController {
 
                     localDataStore.changeUser();
                     callbackManager.notifyUserProfileInitialized(deviceInfo.getDeviceID());
-                    deviceInfo
-                            .setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
-                    resetVariables(); // variables for new user are fetched with App Launched
+
+                    // Restore state of opt out and system events from storage
+                    deviceInfo.setCurrentUserOptOutStateFromStorage();
+                    deviceInfo.setSystemEventsAllowedStateFromStorage();
+
+                    // variables for new user are fetched with App Launched
+                    resetVariables();
                     analyticsManager.forcePushAppLaunchedEvent();
                     if (profile != null) {
                         analyticsManager.pushProfile(profile);

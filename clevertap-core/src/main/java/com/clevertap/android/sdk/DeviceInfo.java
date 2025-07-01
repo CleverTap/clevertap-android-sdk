@@ -696,19 +696,6 @@ public class DeviceInfo {
         return ret;
     }
 
-    public void setCurrentUserOptOutStateFromStorage() {
-        String key = optOutKey();
-        if (key == null) {
-            config.getLogger().verbose(config.getAccountId(),
-                    "Unable to set current user OptOut state from storage: storage key is null");
-            return;
-        }
-        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
-        mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
-        config.getLogger().verbose(config.getAccountId(),
-                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
-    }
-
     void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;
         StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
@@ -739,15 +726,12 @@ public class DeviceInfo {
         });
 
         Task<String> task = CTExecutorFactory.executors(config).ioTask();
-        task.addOnSuccessListener(new OnSuccessListener<String>() {
-            // callback on main thread
-            @Override
-            public void onSuccess(final String deviceId) {
-                getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
-                        "DeviceID initialized successfully!" + Thread.currentThread());
-                // No need to put getDeviceID() on background thread because prefs already loaded
-                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(deviceId);
-            }
+        // callback on main thread
+        task.addOnSuccessListener(deviceId -> {
+            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
+                    "DeviceID initialized successfully!" + Thread.currentThread());
+            // No need to put getDeviceID() on background thread because prefs already loaded
+            CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(deviceId);
         });
         task.execute("initDeviceID", new Callable<String>() {
             @Override
@@ -758,12 +742,69 @@ public class DeviceInfo {
 
     }
 
-    String optOutKey() {
+    public void setCurrentUserOptOutStateFromStorage() {
+        String key = optOutKey();
+        if (key == null) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Unable to set current user OptOut state from storage: storage key is null");
+            return;
+        }
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
+        mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
+        config.getLogger().verbose(config.getAccountId(),
+                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
+    }
+
+    void saveOptOutState(boolean userOptOut) {
+        // persist the new optOut state
+        String key = optOutKey();
+        if (key == null) {
+            getConfigLogger()
+                    .verbose(config.getAccountId(), "Unable to persist user OptOut state, storage key is null");
+            return;
+        }
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), key), userOptOut);
+        getConfigLogger().verbose(config.getAccountId(), "Set current user OptOut state to: " + userOptOut);
+    }
+
+    public void setSystemEventsAllowedStateFromStorage() {
+        String key = allowedSystemEventsKey();
+        if (key == null) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Unable to set current user allowed system events and communications flag from storage: storage key is null");
+            return;
+        }
+        boolean storedAllowedSystemEvents = StorageHelper.getBooleanFromPrefs(context, config, key);
+        mCoreMetaData.setEnabledSystemEvents(storedAllowedSystemEvents);
+        config.getLogger().verbose(config.getAccountId(),
+                "Set current user allowed system events and communications flag state from storage to: " + storedAllowedSystemEvents + " for key: " + key);
+    }
+
+    void saveAllowedSystemEventsState(boolean allowedSystemEvents) {
+        String key = allowedSystemEventsKey();
+        if (key == null) {
+            getConfigLogger()
+                    .verbose(config.getAccountId(), "Unable to persist user allowed system events and communications flag state, storage key is null");
+            return;
+        }
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), key), allowedSystemEvents);
+        getConfigLogger().verbose(config.getAccountId(), "Set current user allowed system events and communications flag state to: " + allowedSystemEvents);
+    }
+
+    private String optOutKey() {
         String guid = getDeviceID();
         if (guid == null) {
             return null;
         }
         return "OptOut:" + guid;
+    }
+
+    private String allowedSystemEventsKey() {
+        String guid = getDeviceID();
+        if (guid == null) {
+            return null;
+        }
+        return "allowSystemEvents:" + guid;
     }
 
     void setDeviceNetworkInfoReportingFromStorage() {
