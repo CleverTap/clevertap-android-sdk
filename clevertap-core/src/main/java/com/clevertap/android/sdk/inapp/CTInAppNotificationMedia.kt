@@ -10,17 +10,20 @@ internal class CTInAppNotificationMedia : Parcelable {
 
     var mediaUrl: String
     val contentType: String
+    val contentDescription: String
     val cacheKey: String?
     val orientation: Int
 
     constructor(
         mediaUrl: String,
         contentType: String,
+        contentDescription: String,
         cacheKey: String?,
         orientation: Int
     ) {
         this.mediaUrl = mediaUrl
         this.contentType = contentType
+        this.contentDescription = contentDescription
         this.cacheKey = cacheKey
         this.orientation = orientation
     }
@@ -28,6 +31,7 @@ internal class CTInAppNotificationMedia : Parcelable {
     private constructor(parcel: Parcel) {
         mediaUrl = parcel.readString() ?: ""
         contentType = parcel.readString() ?: ""
+        contentDescription = parcel.readString() ?: ""
         cacheKey = parcel.readString()
         orientation = parcel.readInt()
     }
@@ -39,6 +43,7 @@ internal class CTInAppNotificationMedia : Parcelable {
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeString(mediaUrl)
         dest.writeString(contentType)
+        dest.writeString(contentDescription)
         dest.writeString(cacheKey)
         dest.writeInt(orientation)
     }
@@ -94,7 +99,7 @@ internal class CTInAppNotificationMedia : Parcelable {
             }
 
             override fun newArray(size: Int): Array<CTInAppNotificationMedia?> {
-                return arrayOfNulls<CTInAppNotificationMedia>(size)
+                return arrayOfNulls(size)
             }
         }
 
@@ -112,7 +117,14 @@ internal class CTInAppNotificationMedia : Parcelable {
                     cacheKey = UUID.randomUUID().toString() + json.optString(Constants.KEY_KEY)
                 }
             }
-            return CTInAppNotificationMedia(mediaUrl, contentType, cacheKey, orientation)
+            val contentDescription = json.optString(Constants.KEY_ALT_TEXT)
+            return CTInAppNotificationMedia(
+                mediaUrl,
+                contentType,
+                contentDescription,
+                cacheKey,
+                orientation
+            )
         }
     }
 }

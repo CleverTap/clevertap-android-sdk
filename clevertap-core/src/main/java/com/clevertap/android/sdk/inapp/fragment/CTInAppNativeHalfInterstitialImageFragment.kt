@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.inapp.fragment
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.os.Handler
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -85,37 +84,31 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
                                 layoutParams.gravity = Gravity.CENTER
                                 relativeLayout.setLayoutParams(layoutParams)
 
-                                Handler().post(object : Runnable {
-                                    override fun run() {
-                                        val margin = closeImageView.measuredWidth / 2
-                                        closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                        closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                    }
-                                })
+                                relativeLayout.post {
+                                    val margin = closeImageView.measuredWidth / 2
+                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
+                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
+                                }
                             } else {
                                 layoutParams.width =
                                     (relativeLayout.measuredHeight * 1.3f).toInt()
                                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL
                                 relativeLayout.setLayoutParams(layoutParams)
-                                Handler().post(object : Runnable {
-                                    override fun run() {
-                                        val margin = closeImageView.measuredWidth / 2
-                                        closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                        closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                    }
-                                })
+                                relativeLayout.post {
+                                    val margin = closeImageView.measuredWidth / 2
+                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
+                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
+                                }
                             }
                         } else {
                             layoutParams.width = (relativeLayout.measuredHeight * 1.3f).toInt()
                             layoutParams.gravity = Gravity.CENTER
                             relativeLayout.setLayoutParams(layoutParams)
-                            Handler().post(object : Runnable {
-                                override fun run() {
-                                    val margin = closeImageView.measuredWidth / 2
-                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                }
-                            })
+                            relativeLayout.post {
+                                val margin = closeImageView.measuredWidth / 2
+                                closeImageView.x = (relativeLayout.right - margin).toFloat()
+                                closeImageView.y = (relativeLayout.top - margin).toFloat()
+                            }
                         }
 
                         relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
@@ -124,6 +117,9 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
         }
         val mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation)
         if (mediaForOrientation != null) {
+            if (mediaForOrientation.contentDescription.isNotBlank()) {
+                imageView.contentDescription = mediaForOrientation.contentDescription
+            }
             val bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.mediaUrl)
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap)
@@ -132,12 +128,10 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
             }
         }
 
-        closeImageView.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                didDismiss(null)
-                activity?.finish()
-            }
-        })
+        closeImageView.setOnClickListener {
+            didDismiss(null)
+            activity?.finish()
+        }
 
         if (!inAppNotification.isHideCloseButton) {
             closeImageView.setVisibility(View.GONE)

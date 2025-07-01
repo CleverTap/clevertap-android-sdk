@@ -88,36 +88,30 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
                                 layoutParams.gravity = Gravity.CENTER
                                 relativeLayout.setLayoutParams(layoutParams)
 
-                                relativeLayout.post(object : Runnable {
-                                    override fun run() {
-                                        val margin = closeImageView.measuredWidth / 2
-                                        closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                        closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                    }
-                                })
+                                relativeLayout.post {
+                                    val margin = closeImageView.measuredWidth / 2
+                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
+                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
+                                }
                             } else {
                                 layoutParams.width = (relativeLayout.measuredHeight * 1.3f).toInt()
                                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL
                                 relativeLayout.setLayoutParams(layoutParams)
-                                relativeLayout.post(object : Runnable {
-                                    override fun run() {
-                                        val margin = closeImageView.measuredWidth / 2
-                                        closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                        closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                    }
-                                })
+                                relativeLayout.post {
+                                    val margin = closeImageView.measuredWidth / 2
+                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
+                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
+                                }
                             }
                         } else {
                             layoutParams.width = (relativeLayout.measuredHeight * 1.3f).toInt()
                             layoutParams.gravity = Gravity.CENTER
                             relativeLayout.setLayoutParams(layoutParams)
-                            relativeLayout.post(object : Runnable {
-                                override fun run() {
-                                    val margin = closeImageView.measuredWidth / 2
-                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                }
-                            })
+                            relativeLayout.post {
+                                val margin = closeImageView.measuredWidth / 2
+                                closeImageView.x = (relativeLayout.right - margin).toFloat()
+                                closeImageView.y = (relativeLayout.top - margin).toFloat()
+                            }
                         }
 
                         relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
@@ -127,9 +121,12 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
 
         val mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation)
         if (mediaForOrientation != null) {
+            val imageView = relativeLayout.findViewById<ImageView>(R.id.backgroundImage)
+            if (mediaForOrientation.contentDescription.isNotBlank()) {
+                imageView.contentDescription = mediaForOrientation.contentDescription
+            }
             val bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.mediaUrl)
             if (bitmap != null) {
-                val imageView = relativeLayout.findViewById<ImageView>(R.id.backgroundImage)
                 imageView.setImageBitmap(bitmap)
             }
         }
@@ -156,26 +153,24 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
             } else if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
                 mainButton.visibility = View.INVISIBLE
             }
-            setupInAppButton(secondaryButton, buttons.get(0), 0)
+            setupInAppButton(secondaryButton, buttons[0], 0)
         } else if (!buttons.isEmpty()) {
             for (i in buttons.indices) {
                 if (i >= 2) {
                     continue  // only show 2 buttons
                 }
-                val inAppNotificationButton = buttons.get(i)
-                val button = inAppButtons.get(i)
+                val inAppNotificationButton = buttons[i]
+                val button = inAppButtons[i]
                 setupInAppButton(button, inAppNotificationButton, i)
             }
         }
 
         fl.background = ColorDrawable(-0x45000000)
 
-        closeImageView.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                didDismiss(null)
-                activity?.finish()
-            }
-        })
+        closeImageView.setOnClickListener {
+            didDismiss(null)
+            activity?.finish()
+        }
 
         if (!inAppNotification.isHideCloseButton) {
             closeImageView.setVisibility(View.GONE)

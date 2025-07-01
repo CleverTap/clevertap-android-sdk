@@ -30,7 +30,7 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
         fl.background = ColorDrawable(-0x45000000)
 
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
-        val relativeLayout: RelativeLayout =
+        val relativeLayout =
             fl.findViewById<RelativeLayout>(R.id.interstitial_image_relative_layout)
 
         relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
@@ -102,6 +102,9 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
 
         val mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation)
         if (mediaForOrientation != null) {
+            if (mediaForOrientation.contentDescription.isNotBlank()) {
+                imageView.contentDescription = mediaForOrientation.contentDescription
+            }
             val bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.mediaUrl)
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap)
@@ -109,12 +112,10 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
                 imageView.setOnClickListener(CTInAppNativeButtonClickListener())
             }
         }
-        closeImageView.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                didDismiss(null)
-                activity?.finish()
-            }
-        })
+        closeImageView.setOnClickListener {
+            didDismiss(null)
+            activity?.finish()
+        }
 
         if (!inAppNotification.isHideCloseButton) {
             closeImageView.setVisibility(View.GONE)

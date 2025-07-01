@@ -3,9 +3,7 @@ package com.clevertap.android.sdk.inapp.fragment
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
-import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
@@ -42,9 +40,11 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
 
         val imageView = linearLayout1.findViewById<ImageView>(R.id.footer_icon)
         if (!inAppNotification.mediaList.isEmpty()) {
-            val image = resourceProvider().cachedInAppImageV1(
-                inAppNotification.mediaList[0].mediaUrl
-            )
+            val media = inAppNotification.mediaList[0]
+            if (media.contentDescription.isNotBlank()) {
+                imageView.contentDescription = media.contentDescription
+            }
+            val image = resourceProvider().cachedInAppImageV1(media.mediaUrl)
             if (image != null) {
                 imageView.setImageBitmap(image)
             } else {
@@ -63,7 +63,7 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         textView2.setTextColor(inAppNotification.messageColor.toColorInt())
 
         val buttons = inAppNotification.buttons
-        if (buttons != null && !buttons.isEmpty()) {
+        if (!buttons.isEmpty()) {
             for (i in buttons.indices) {
                 if (i >= 2) {
                     break  // only show 2 buttons
@@ -78,13 +78,11 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
             hideSecondaryButton(mainButton, secondaryButton)
         }
 
-        inAppView.setOnTouchListener(object : OnTouchListener {
-            @SuppressLint("ClickableViewAccessibility")
-            override fun onTouch(v: View?, event: MotionEvent): Boolean {
-                gd.onTouchEvent(event)
-                return true
-            }
-        })
+        @SuppressLint("ClickableViewAccessibility")
+        inAppView.setOnTouchListener { v, event ->
+            gd.onTouchEvent(event)
+            true
+        }
         inAppView.applyInsetsWithMarginAdjustment { insets, mlp ->
             mlp.leftMargin = insets.left
             mlp.rightMargin = insets.right

@@ -35,6 +35,9 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
 
         val mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation)
         if (mediaForOrientation != null) {
+            if (mediaForOrientation.contentDescription.isNotBlank()) {
+                imageView.contentDescription = mediaForOrientation.contentDescription
+            }
             val bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.mediaUrl)
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap)
@@ -45,12 +48,10 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
 
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
 
-        closeImageView.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                didDismiss(null)
-                activity?.finish()
-            }
-        })
+        closeImageView.setOnClickListener {
+            didDismiss(null)
+            activity?.finish()
+        }
 
         if (!inAppNotification.isHideCloseButton) {
             closeImageView.setVisibility(View.GONE)

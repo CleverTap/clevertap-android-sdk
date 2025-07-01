@@ -100,9 +100,11 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
             rl.addView(webView, webViewLp)
 
             if (isCloseButtonEnabled()) {
-                val closeImageView = CloseImageView(requireContext())
+                val context = inflater.context
+                val closeImageView = CloseImageView(context)
                 val closeIvLp = getLayoutParamsForCloseButton(webView.id)
                 closeImageView.setOnClickListener { didDismiss(null) }
+                closeImageView.contentDescription = context.getString(R.string.ct_inapp_close_btn)
                 this.closeImageView = closeImageView
                 rl.addView(closeImageView, closeIvLp)
             }

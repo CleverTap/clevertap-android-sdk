@@ -203,6 +203,7 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
                 val image = resourceProvider().cachedInAppImageV1(media.mediaUrl)
                 if (image != null) {
                     val imageView = relativeLayout?.findViewById<ImageView>(R.id.backgroundImage)
+                    imageView?.setContentDescriptionIfNotBlank(media.contentDescription)
                     imageView?.setVisibility(View.VISIBLE)
                     imageView?.setImageBitmap(image)
                 }
@@ -210,6 +211,7 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
                 val gifByteArray = resourceProvider().cachedInAppGifV1(media.mediaUrl)
                 if (gifByteArray != null) {
                     gifImageView = relativeLayout?.findViewById(R.id.gifImage)
+                    gifImageView?.setContentDescriptionIfNotBlank(media.contentDescription)
                     gifImageView?.setVisibility(View.VISIBLE)
                     gifImageView?.setBytes(gifByteArray)
                     gifImageView?.startAnimation()
@@ -218,11 +220,13 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
                 initFullScreenIconForStream()
                 prepareMedia()
                 playMedia()
+                videoFrameLayout?.setContentDescriptionIfNotBlank(media.contentDescription)
             } else if (media.isAudio()) {
                 initFullScreenIconForStream()
                 prepareMedia()
                 playMedia()
                 disableFullScreenButton()
+                videoFrameLayout?.setContentDescriptionIfNotBlank(media.contentDescription)
             }
         }
     }
@@ -406,6 +410,12 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
         } else {
             //noop
             Logger.d("Video views and controls are already added, not re-attaching")
+        }
+    }
+
+    private fun View.setContentDescriptionIfNotBlank(contentDescription: String) {
+        if (contentDescription.isNotBlank()) {
+            this.contentDescription = contentDescription
         }
     }
 }
