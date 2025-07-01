@@ -119,8 +119,8 @@ public class LoginController {
                     pushProviders.forcePushDeviceToken(false);
 
                     // try and flush and then reset the queues
-                    baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR);
-                    baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
+                    baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true);
+                    baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true);
                     contentFetchManager.cancelAllResponseJobs();
                     dbManager.clearQueues(context);
 
