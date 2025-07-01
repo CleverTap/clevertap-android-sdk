@@ -305,7 +305,9 @@ public class CoreMetaData extends CleverTapMetaData {
     }
 
     public boolean getEnabledSystemEvents() {
-        return allowSystemEvents;
+        synchronized (optOutFlagLock) {
+            return allowSystemEvents;
+        }
     }
 
     public boolean isFirstRequestInSession() {
