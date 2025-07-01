@@ -83,6 +83,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private String pt_big_img_alt;
 
+    private String pt_big_img_alt_alt_text;
+
     private String pt_small_icon_clr;
 
     private String pt_big_img;
@@ -111,7 +113,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             pt_msg_summary = extras.getString(PTConstants.PT_MSG_SUMMARY);
             pt_title = extras.getString(PTConstants.PT_TITLE);
             pt_rating_default_dl = extras.getString(PTConstants.PT_DEFAULT_DL);
-            imageList = Utils.getImageListFromExtras(extras);
             deepLinkList = Utils.getDeepLinkListFromExtras(extras);
             bigTextList = Utils.getBigTextFromExtras(extras);
             smallTextList = Utils.getSmallTextFromExtras(extras);
@@ -119,6 +120,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             pt_product_display_linear = extras.getString(PTConstants.PT_PRODUCT_DISPLAY_LINEAR);
             notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
             pt_big_img_alt = extras.getString(PTConstants.PT_BIG_IMG_ALT);
+            pt_big_img_alt_alt_text = extras.getString(PTConstants.PT_BIG_IMG_ALT_ALT_TEXT, context.getString(R.string.pt_big_image_alt));
             pt_small_icon_clr = extras.getString(PTConstants.PT_SMALL_ICON_COLOUR);
             requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
             pt_dismiss_intent = extras.getBoolean(PTConstants.PT_DISMISS_INTENT, false);
@@ -319,7 +321,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                         .setWhen(System.currentTimeMillis())
                         .setAutoCancel(true);
 
-                setStandardViewBigImageStyle(pt_big_img_alt, extras, context, repliedNotification);
+                setStandardViewBigImageStyle(pt_big_img_alt, extras, context, repliedNotification, pt_big_img_alt_alt_text);
 
                 Notification notification = repliedNotification.build();
                 notificationManager.notify(notificationId, notification);
@@ -713,7 +715,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private void setCustomContentViewBasicKeys(RemoteViews contentView, Context context) {
         contentView.setTextViewText(R.id.app_name, Utils.getApplicationName(context));
-        contentView.setTextViewText(R.id.timestamp, Utils.getTimeStamp(context));
+        contentView.setTextViewText(R.id.timestamp, Utils.getTimeStamp(context, System.currentTimeMillis()));
         if (pt_subtitle != null && !pt_subtitle.isEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 contentView.setTextViewText(R.id.subtitle, Html.fromHtml(pt_subtitle, Html.FROM_HTML_MODE_LEGACY));
@@ -732,8 +734,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     }
 
     private void setStandardViewBigImageStyle(String imgUrl, Bundle extras, Context context,
-            NotificationCompat.Builder notificationBuilder) {
-        NotificationCompat.Style bigPictureStyle;
+                                              NotificationCompat.Builder notificationBuilder, String altText) {
         if (imgUrl != null && imgUrl.startsWith("http")) {
             try {
                 Bitmap bpMap = Utils.getNotificationBitmap(imgUrl, false, context);
@@ -742,23 +743,27 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     throw new Exception("Failed to fetch big picture!");
                 }
 
-                bigPictureStyle = new NotificationCompat.BigPictureStyle()
+                NotificationCompat.BigPictureStyle bigPictureStyle = new NotificationCompat.BigPictureStyle()
                         .setSummaryText(extras.getString(PTConstants.PT_INPUT_FEEDBACK))
                         .bigPicture(bpMap);
 
+                if (VERSION.SDK_INT >= VERSION_CODES.S) {
+                    bigPictureStyle.setContentDescription(altText);
+                }
+
+                notificationBuilder.setStyle(bigPictureStyle);
+                return;
+
             } catch (Throwable t) {
-                bigPictureStyle = new NotificationCompat.BigTextStyle()
-                        .bigText(extras.getString(PTConstants.PT_INPUT_FEEDBACK));
                 PTLog.verbose("Falling back to big text notification, couldn't fetch big picture", t);
             }
-        } else {
-            bigPictureStyle = new NotificationCompat.BigTextStyle()
-                    .bigText(extras.getString(PTConstants.PT_INPUT_FEEDBACK));
         }
 
-        notificationBuilder.setStyle(bigPictureStyle);
-
+        NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle()
+                .bigText(extras.getString(PTConstants.PT_INPUT_FEEDBACK));
+        notificationBuilder.setStyle(bigTextStyle);
     }
+
 
     private void setSmallIcon(Context context) {
         Bundle metaData;
@@ -804,9 +809,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         }
         if (pt_subtitle == null || pt_subtitle.isEmpty()) {
             pt_subtitle = extras.getString(Constants.WZRK_SUBTITLE);
-        }
-        if (pt_small_icon_clr == null || pt_small_icon_clr.isEmpty()) {
-            pt_small_icon_clr = extras.getString(Constants.WZRK_COLOR);
         }
     }
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="titleColor">#C9C9C9</color>
+    <color name="metaColor">#C9C9C9</color>
+    <color name="messageColor">#A0A0A0</color>
+    <color name="actionButtonBackground">#000000</color>
+    <color name="buttonClicked">#121314</color>
+    <color name="customButtonBackground">#404040</color>
+</resources>

@@ -149,11 +149,11 @@ internal class CustomTemplateInAppData private constructor(parcel: Parcel?) : Pa
 
     companion object CREATOR : Creator<CustomTemplateInAppData> {
 
+        internal const val KEY_TEMPLATE_NAME = "templateName"
+        internal const val KEY_VARS = "vars"
         private const val KEY_IS_ACTION = "isAction"
-        private const val KEY_TEMPLATE_NAME = "templateName"
         private const val KEY_TEMPLATE_ID = "templateId"
         private const val KEY_TEMPLATE_DESCRIPTION = "templateDescription"
-        private const val KEY_VARS = "vars"
 
         override fun createFromParcel(parcel: Parcel): CustomTemplateInAppData {
             return CustomTemplateInAppData(parcel)

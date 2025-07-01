@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -51,7 +52,11 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
 
         ImageView imageView = linearLayout1.findViewById(R.id.footer_icon);
         if (!inAppNotification.getMediaList().isEmpty()) {
-            Bitmap image = resourceProvider().cachedInAppImageV1(inAppNotification.getMediaList().get(0).getMediaUrl());
+            CTInAppNotificationMedia media = inAppNotification.getMediaList().get(0);
+            Bitmap image = resourceProvider().cachedInAppImageV1(media.getMediaUrl());
+            String contentDescription = media.getContentDescription();
+            if (!TextUtils.isEmpty(contentDescription))
+                imageView.setContentDescription(contentDescription);
             if (image != null) {
                 imageView.setImageBitmap(image);
             } else {

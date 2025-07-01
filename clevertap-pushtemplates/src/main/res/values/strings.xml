@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">PushTemplates</string>
+    <string name="confirm_btn">Confirm</string>
+    <string name="confirm_btn_content_description">Confirm Button</string>
+    <string name="next_btn_content_description">Next Image</string>
+    <string name="prev_btn_content_description">Previous Image</string>
+    <string name="rating_star_1">Rating One Star</string>
+    <string name="rating_star_2">Rating Two Star</string>
+    <string name="rating_star_3">Rating Three Star</string>
+    <string name="rating_star_4">Rating Four Star</string>
+    <string name="rating_star_5">Rating Five Star</string>
+    <string name="pt_big_image_alt">Notification Image</string>
 </resources>

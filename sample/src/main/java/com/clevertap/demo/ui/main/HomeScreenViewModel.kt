@@ -29,8 +29,8 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
         when (commandPosition) {
             "0-0" -> {
-                cleverTapAPI?.pushEvent("testEventPushAmp")
-                cleverTapAPI?.pushEvent("BlockBRTesting")
+                cleverTapAPI?.pushEvent("Product viewed")
+//                cleverTapAPI?.pushEvent("BlockBRTesting")
             }
 
             "0-1" -> {
@@ -476,7 +476,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     .setTitleTextColor(Constants.BLUE)
                     .setMessageTextColor(Constants.BLACK)
                     .setBtnTextColor(Constants.WHITE)
-                    .setImageUrl("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png")
+                    .setImageUrl("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png", "Clevertap Camera")
                     .setBtnBackgroundColor(Constants.BLUE)
                     .build()
                 cleverTapAPI?.promptPushPrimer(builder)
@@ -754,6 +754,10 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
             "15-0" -> {
                 cleverTapAPI?.locale = "en_IN"
+            }
+
+            "16-0" -> {
+                cleverTapAPI?.syncRegisteredInAppTemplates()
             }
             //"60" -> webViewClickListener?.onWebViewClick()
 

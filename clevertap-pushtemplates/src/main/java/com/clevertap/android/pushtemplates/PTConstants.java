@@ -1,5 +1,7 @@
 package com.clevertap.android.pushtemplates;
 
+import java.util.Set;
+
 @SuppressWarnings("WeakerAccess")
 //Using common keys from core-sdk constants
 public class PTConstants {
@@ -56,11 +58,17 @@ public class PTConstants {
 
     public static final String PT_TITLE_COLOR = "pt_title_clr";
 
+    public static final String PT_DARK_MODE_SUFFIX = "_dark";
+
     public static final String PT_MSG_COLOR = "pt_msg_clr";
 
     public static final String PT_BG = "pt_bg";
 
+    public static final String ALT_TEXT_SUFFIX = "_alt_text";
+
     public static final String PT_BIG_IMG = "pt_big_img";
+
+    public static final String PT_BIG_IMG_ALT_TEXT = "pt_big_img_alt_text";
 
     public static final String PT_SMALL_IMG = "pt_small_img";
 
@@ -73,6 +81,8 @@ public class PTConstants {
     public static final String PT_SMALL_VIEW = "pt_small_view";
 
     public static final String PT_TIMER_THRESHOLD = "pt_timer_threshold";
+
+    public static final String PT_RENDER_TERMINAL = "pt_render_terminal";
 
     public static final String PT_INPUT_LABEL = "pt_input_label";
 
@@ -107,10 +117,13 @@ public class PTConstants {
     public static final int PT_TIMER_MIN_THRESHOLD = 10;
 
     public static final String PT_BIG_IMG_ALT = "pt_big_img_alt";
+    public static final String PT_BIG_IMG_ALT_ALT_TEXT = "pt_big_img_alt_alt_text";
 
     public static final String PT_TITLE_ALT = "pt_title_alt";
 
     public static final String PT_MSG_ALT = "pt_msg_alt";
+
+    public static final String PT_MSG_SUMMARY_ALT = "pt_msg_summary_alt";
 
     public static final String PT_PRODUCT_DISPLAY_LINEAR = "pt_product_display_linear";
 
@@ -134,6 +147,8 @@ public class PTConstants {
 
     public static final String PT_BUY_NOW = "buynow";
 
+    public static final String PT_SCALE_TYPE = "pt_scale_type";
+
     public static final String TEXT_ONLY = "text_only";
 
     public static final String PT_SUBTITLE = "pt_subtitle";
@@ -150,21 +165,24 @@ public class PTConstants {
 
     public static final String PT_DOT_SEP = "pt_dot_sep";
 
-    public static final String PT_COLOUR_WHITE = "#FFFFFF";
-
     public static final String PT_COLOUR_GREY = "#A6A6A6";
 
-    public static final String PT_COLOUR_BLACK = "#000000";
-
     public static final String PT_META_CLR_DEFAULTS = PT_COLOUR_GREY;
-
-    public static final String PT_PRODUCT_DISPLAY_ACTION_CLR_DEFAULTS = "#FFBB33";
-
-    public static final String PT_PRODUCT_DISPLAY_ACTION_TEXT_CLR_DEFAULT = PT_COLOUR_WHITE;
 
     public static final int PT_FLIP_INTERVAL_TIME = 4 * ONE_SECOND;
 
     public static final String KEY_CLICKED_STAR = "clickedStar";
 
     public static final String KEY_REQUEST_CODES = "requestCodes";
+
+    public static final Set<String> COLOR_KEYS = Set.of(
+            PT_TITLE_COLOR,
+            PT_MSG_COLOR,
+            PT_BG,
+            PT_META_CLR,
+            PT_SMALL_ICON_COLOUR,
+            PT_CHRONO_TITLE_COLOUR,
+            PT_PRODUCT_DISPLAY_ACTION_COLOUR,
+            PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR);
+
 }

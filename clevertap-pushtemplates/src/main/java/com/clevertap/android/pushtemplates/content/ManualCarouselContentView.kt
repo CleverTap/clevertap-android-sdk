@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.R.id
 import com.clevertap.android.pushtemplates.TemplateRenderer
@@ -16,44 +17,62 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory.getPendi
 import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
 
-class ManualCarouselContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
+internal class ManualCarouselContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
     BigImageContentView(context, renderer, R.layout.manual_carousel) {
 
     init {
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
 
+        val scaleType = renderer.pt_scale_type
+
         remoteView.setViewVisibility(R.id.leftArrowPos0, View.VISIBLE)
         remoteView.setViewVisibility(R.id.rightArrowPos0, View.VISIBLE)
         var imageCounter = 0
         var isFirstImageOk = false
-        val dl = renderer.deepLinkList!![0]
         var currentPosition = 0
         val tempImageList = ArrayList<String>()
-        for (index in renderer.imageList!!.indices) {
-            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_rounded)
+        val imageViewId = when (scaleType) {
+            PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+            PTScaleType.CENTER_CROP -> R.id.big_image
+        }
+        renderer.imageList?.forEachIndexed { index, imageData ->
+            val imageUrl = imageData.url
+            val altText = imageData.altText
+            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_flipper_dynamic)
+
             Utils.loadImageURLIntoRemoteView(
-                R.id.flipper_img,
-                renderer.imageList!![index],
+                imageViewId,
+                imageUrl,
                 tempRemoteView,
-                context
+                context,
+                ""
             )
             if (!Utils.getFallback()) {
                 if (!isFirstImageOk) {
                     currentPosition = index
                     isFirstImageOk = true
                 }
-                remoteView.addView(R.id.carousel_image, tempRemoteView)
+
+                tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
+                val centerRemoteView = tempRemoteView.clone()
+
+                // For filmstrip variant, only set the altText for the central image
                 remoteView.addView(R.id.carousel_image_right, tempRemoteView)
                 remoteView.addView(R.id.carousel_image_left, tempRemoteView)
+                centerRemoteView.setContentDescription(imageViewId, altText)
+                remoteView.addView(R.id.carousel_image, centerRemoteView)
+
                 imageCounter++
-                tempImageList.add(renderer.imageList!![index])
+                tempImageList.add(imageUrl)
             } else {
-                if (renderer.deepLinkList != null && renderer.deepLinkList!!.size == renderer.imageList!!.size) {
-                    renderer.deepLinkList!!.removeAt(index)
+                val deepLinkList = renderer.deepLinkList
+                if (deepLinkList != null && imageCounter < deepLinkList.size) {
+                    deepLinkList.removeAt(imageCounter)
                 }
                 PTLog.debug("Skipping Image in Manual Carousel.")
             }
         }
+
         if (renderer.pt_manual_carousel_type == null || !renderer.pt_manual_carousel_type.equals(
                 PTConstants.PT_MANUAL_CAROUSEL_FILMSTRIP,
                 ignoreCase = true

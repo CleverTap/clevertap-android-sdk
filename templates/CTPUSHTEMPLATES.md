@@ -192,7 +192,7 @@ If user clicks on any notification area except the five icons, then by default i
 
 This template features a live countdown timer. You can even choose to show different title, message, and background image after the timer expires.
 
-Timer notification is only supported for Android N (7) and above. For OS versions below N, the library falls back to the Basic Template.
+Timer notification is only supported for Android O (8) and above. For OS versions below O, the library falls back to the Basic Template.
 
 ![Timer](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/timer.gif)
 
@@ -308,8 +308,10 @@ pt_title | Required | Title
 pt_msg | Required | Message
 pt_msg_summary | Required | Message line when Notification is expanded
 pt_subtitle | Optional  | Subtitle
-pt_bg | Required | Background Color in HEX
+pt_bg | Optional | Background Color in HEX
 pt_big_img | Optional | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
+pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_ico | Optional | Large Icon
 pt_dl1 | Optional | One Deep Link (minimum)
 pt_title_clr | Optional | Title Color in HEX
@@ -328,10 +330,15 @@ pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_dl1 | Required | Deep Link (Max one)
 pt_img1 | Required | Image One
+pt_img1_alt_text | Optional | Alt Text for Image One
 pt_img2 | Required | Image Two
+pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required | Image Three
+pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
-pt_bg | Required | Background Color in HEX
+pt_img`n`_alt_text | Optional | Alt Text for Image `N`
+pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
@@ -351,10 +358,15 @@ pt_dl1 | Required | Deep Link One
 pt_dl2 | Optional | Deep Link Two
 pt_dl`n` | Optional | Deep Link for the nth image
 pt_img1 | Required | Image One
+pt_img1_alt_text | Optional | Alt Text for Image One
 pt_img2 | Required | Image Two
+pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required | Image Three
+pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
-pt_bg | Required | Background Color in HEX
+pt_img`n`_alt_text | Optional | Alt Text for Image `N`
+pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
@@ -370,6 +382,8 @@ pt_id | Required  | Value - `pt_rating`
 pt_title | Required  | Title
 pt_msg | Required  | Message
 pt_big_img | Optional | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
+pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_default_dl | Required  | Default Deep Link for Push Notification
@@ -378,7 +392,7 @@ pt_dl2 | Optional | Deep Link for second star
 pt_dl3 | Optional | Deep Link for third star
 pt_dl4 | Optional | Deep Link for fourth star
 pt_dl5 | Optional | Deep Link for fifth star
-pt_bg | Required  | Background Color in HEX
+pt_bg | Optional  | Background Color in HEX
 pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
@@ -394,8 +408,12 @@ pt_title | Required  | Title
 pt_msg | Required  | Message
 pt_subtitle | Optional  | Subtitle
 pt_img1 | Required  | Image One
+pt_img1_alt_text | Optional | Alt Text for Image One
 pt_img2 | Required  | Image Two
+pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required  | Image Three
+pt_img3_alt_text | Optional | Alt Text for Image Three
+pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_bt1 | Required  | Big text for first image
 pt_bt2 | Required  | Big text for second image
 pt_bt3 | Required  | Big text for third image
@@ -408,7 +426,7 @@ pt_dl3 | Required  | Deep Link for third image
 pt_price1 | Required  | Price for first image
 pt_price2 | Required  | Price for second image
 pt_price3 | Required  | Price for third image
-pt_bg | Required  | Background Color in HEX
+pt_bg | Optional  | Background Color in HEX
 pt_product_display_action | Required  | Action Button Label Text
 pt_product_display_linear | Optional  | Linear Layout Template ("true"/"false")
 pt_product_display_action_clr | Required  | Action Button Background Color in HEX
@@ -423,16 +441,21 @@ Five Icons Template Keys | Required | Description
   ---:|:---:|:--- 
 pt_id | Required  | Value - `pt_five_icons`
 pt_img1 | Required  | Icon One
+pt_img1_alt_text | Optional | Alt Text for Icon One
 pt_img2 | Required  | Icon Two
+pt_img2_alt_text | Optional | Alt Text for Icon Two
 pt_img3 | Required  | Icon Three
+pt_img3_alt_text | Optional | Alt Text for Icon Three
 pt_img4 | Optional  | Icon Four
+pt_img4_alt_text | Optional | Alt Text for Icon Four
 pt_img5 | Optional  | Icon Five
+pt_img5_alt_text | Optional | Alt Text for Icon Five
 pt_dl1 | Required  | Deep Link for first icon
 pt_dl2 | Required  | Deep Link for second icon
 pt_dl3 | Required  | Deep Link for third icon
 pt_dl4 | Optional  | Deep Link for fourth icon
 pt_dl5 | Optional  | Deep Link for fifth icon
-pt_bg | Required  | Background Color in HEX
+pt_bg | Optional  | Background Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
 pt_json | Optional | Above keys in JSON format
 
@@ -446,14 +469,19 @@ pt_title_alt | Optional | Title to show after timer expires
 pt_msg | Required | Message
 pt_msg_alt | Optional | Message to show after timer expires
 pt_msg_summary | Optional | Message line when Notification is expanded
+pt_msg_summary_alt | Optional | Message summary to show after timer expires
 pt_subtitle | Optional | Subtitle
 pt_dl1 | Required | Deep Link
 pt_big_img | Optional | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
+pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_big_img_alt | Optional | Image to show when timer expires
-pt_bg | Required | Background Color in HEX
+pt_big_img_alt_alt_text | Optional | Alt Text for Image to show when timer expires
+pt_bg | Optional | Background Color in HEX
 pt_chrono_title_clr | Optional | Color for timer text in HEX
 pt_timer_threshold | Required | Timer duration in seconds (minimum 10). Will be given higher priority. 
 pt_timer_end | Optional | Epoch Timestamp to countdown to (for example, \$D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
+pt_render_terminal | Optional | Should terminal notification be rendered? ("true"/"false")
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
@@ -469,6 +497,8 @@ pt_msg | Required | Message
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_big_img | Required | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
+pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_small_view | Optional | Select text-only small view layout (`text_only`)
 pt_dl1 | Optional | Deep Link
 pt_title_clr | Optional | Title Color in HEX
@@ -487,7 +517,9 @@ pt_msg | Required | Message
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_big_img | Required | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
 pt_big_img_alt | Optional | Image to be shown after feedback is collected
+pt_big_img_alt_alt_text | Optional | Alt Text for Image to be shown after feedback is collected
 pt_event_name | Optional | Name of Event to be raised
 pt_event_property_<property_name_1> | Optional | Value for event property <property_name_1>
 pt_event_property_<property_name_2> | Optional | Value for event property <property_name_2>

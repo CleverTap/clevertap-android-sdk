@@ -2,6 +2,10 @@ package com.clevertap.android.pushtemplates;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 
+import static com.clevertap.android.pushtemplates.PTConstants.ALT_TEXT_SUFFIX;
+import static com.clevertap.android.pushtemplates.PTConstants.COLOR_KEYS;
+import static com.clevertap.android.pushtemplates.PTConstants.PT_DARK_MODE_SUFFIX;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -49,7 +53,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("WeakerAccess")
@@ -135,11 +139,15 @@ public class Utils {
         return ai.icon;
     }
 
-    static ArrayList<String> getImageListFromExtras(Bundle extras) {
-        ArrayList<String> imageList = new ArrayList<>();
+    static ArrayList<ImageData> getImageDataListFromExtras(Bundle extras, String defaultAltText) {
+        ArrayList<ImageData> imageList = new ArrayList<>();
+        int counter = 1;
         for (String key : extras.keySet()) {
-            if (key.contains("pt_img")) {
-                imageList.add(extras.getString(key));
+            if (key.contains("pt_img") && !key.endsWith(ALT_TEXT_SUFFIX)) {
+                String imageUrl = extras.getString(key);
+                String altText = extras.getString(key + ALT_TEXT_SUFFIX, defaultAltText + counter);
+                imageList.add(new ImageData(imageUrl, altText));
+                counter++;
             }
         }
         return imageList;
@@ -196,28 +204,72 @@ public class Utils {
         return stList;
     }
 
+    /**
+     * Creates a map of colors for the specified display mode (dark/light)
+     * @param extras The original extras bundle containing all color values
+     * @param isDarkMode Whether to use dark mode colors
+     * @return A map containing appropriate colors for the specified mode
+     */
+    public static Map<String, String> createColorMap(Bundle extras, boolean isDarkMode) {
+        Map<String, String> colorMap = new HashMap<>();
+
+        // Process each color key
+        for (String key : COLOR_KEYS) {
+            String color = getDarkModeAdaptiveColor(extras, isDarkMode, key);
+            colorMap.put(key, color);
+        }
+        
+        return colorMap;
+    }
+
+    /**
+     * Gets color value based on dark mode preference
+     * @param extras The extras bundle containing color values
+     * @param isDarkMode Whether to use dark mode colors
+     * @param key The color key to retrieve
+     * @return The appropriate color for the specified mode
+     */
+    static String getDarkModeAdaptiveColor(Bundle extras, boolean isDarkMode, String key) {
+        String colorDark = extras.getString(key + PT_DARK_MODE_SUFFIX);
+        String color = extras.getString(key);
+
+        if (isDarkMode && colorDark != null) {
+            return colorDark;
+        } else {
+            return color;
+        }
+    }
+
+
+
     public static void loadImageBitmapIntoRemoteView(int imageViewID, Bitmap image,
             RemoteViews remoteViews) {
         remoteViews.setImageViewBitmap(imageViewID, image);
     }
 
     public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
-            RemoteViews remoteViews,Context context) {
+                                                  RemoteViews remoteViews, Context context) {
+        loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, context, null);
+    }
+    public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
+                                                  RemoteViews remoteViews, Context context, String altText) {
 
         long bmpDownloadStartTimeInMillis = System.currentTimeMillis();
-        Bitmap image = getBitmapFromURL(imageUrl,context);
+        Bitmap image = getBitmapFromURL(imageUrl, context);
         setFallback(false);
 
         if (image != null) {
             remoteViews.setImageViewBitmap(imageViewID, image);
+            if (!TextUtils.isEmpty(altText)) {
+                remoteViews.setContentDescription(imageViewID, altText);
+            }
             long bmpDownloadEndTimeInMillis = System.currentTimeMillis();
             long pift = bmpDownloadEndTimeInMillis - bmpDownloadStartTimeInMillis;
-            PTLog.verbose("Fetched IMAGE "+imageUrl+" in "+pift+" millis");
+            PTLog.verbose("Fetched IMAGE " + imageUrl + " in " + pift + " millis");
         } else {
             PTLog.debug("Image was not perfect. URL:" + imageUrl + " hiding image view");
             setFallback(true);
         }
-
     }
 
     public static void loadImageRidIntoRemoteView(int imageViewID, int resourceID,
@@ -225,8 +277,8 @@ public class Utils {
         remoteViews.setImageViewResource(imageViewID, resourceID);
     }
 
-    public static String getTimeStamp(Context context) {
-        return DateUtils.formatDateTime(context, System.currentTimeMillis(),
+    public static String getTimeStamp(Context context, long timeMillis) {
+        return DateUtils.formatDateTime(context, timeMillis,
                 DateUtils.FORMAT_SHOW_TIME);
     }
 
@@ -437,7 +489,7 @@ public class Utils {
         return eProps;
     }
 
-    public static int getTimerEnd(Bundle extras) {
+    public static int getTimerEnd(Bundle extras, long currentTs) {
         String val = "-1";
         for (String key : extras.keySet()) {
             if (key.contains(PTConstants.PT_TIMER_END)) {
@@ -448,8 +500,7 @@ public class Utils {
             String[] temp = val.split(PTConstants.PT_TIMER_SPLIT);
             val = temp[1];
         }
-        long currentts = System.currentTimeMillis();
-        int diff = (int) (Long.parseLong(val) - (currentts / 1000));
+        int diff = (int) (Long.parseLong(val) - (currentTs / 1000));
         if (val.equals("-1")){
             return Integer.MIN_VALUE;
         }//For empty check in timer_end
@@ -592,16 +643,21 @@ public class Utils {
         return false;
     }
 
-    public static Bitmap setBitMapColour(Context context, int resourceID, String clr)
-            throws NullPointerException {
-        if (clr != null && !clr.isEmpty()) {
-            int color = getColour(clr, PTConstants.PT_COLOUR_GREY);
+    public static Bitmap setBitMapColour(Context context, int resourceID, String clr, String defaultClr) {
+        int color = getColour(clr, defaultClr);
 
-            Drawable mDrawable = Objects.requireNonNull(ContextCompat.getDrawable(context, resourceID)).mutate();
+        try {
+            Drawable mDrawable = ContextCompat.getDrawable(context, resourceID);
+            if (mDrawable == null) {
+                return null;
+            }
+
+            mDrawable = mDrawable.mutate();
             mDrawable.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
-            return Utils.drawableToBitmap(mDrawable);
+            return drawableToBitmap(mDrawable);
+        } catch (Exception e) {
+            return null;
         }
-        return null;
     }
 
     public static int getColour(String clr, String default_clr) {
@@ -610,6 +666,25 @@ public class Utils {
         } catch (Exception e) {
             PTLog.debug("Can not parse colour value: " + clr + " Switching to default colour: " + default_clr);
             return Color.parseColor(default_clr);
+        }
+    }
+
+    /**
+     * Safely parses a color string (e.g., "#RRGGBB" or "#AARRGGBB") into an integer color value.
+     * <p>
+     * If the input is null, empty, or an invalid color format, this method returns {@code null} instead of throwing an exception.
+     * </p>
+     *
+     * @param clr the color string to parse (e.g., "#FF0000" for red)
+     * @return the parsed color as an {@link Integer}, or {@code null} if parsing fails
+     */
+    @Nullable
+    public static Integer getColourOrNull(String clr) {
+        try {
+            return Color.parseColor(clr);
+        } catch (Exception e) {
+            PTLog.debug("Can not parse colour value: " + clr);
+            return null;
         }
     }
 

@@ -1,4 +1,24 @@
 ## CleverTap Push Templates SDK CHANGE LOG
+### Version 2.1.0 (June 27, 2025)
+
+#### New features
+* Adds [accessibility support](https://support.google.com/accessibility/android/answer/6006564?hl=en) for all `Push Templates`.
+* Improves readability of text inside the `Zero Bezel` template.
+
+### Version 2.0.0 (June 5, 2025)
+
+#### New features
+* Adds comprehensive dark mode support for all push templates based on the device mode. 
+* Adds support for Action Buttons on for `Basic`, `Timer`, `Zero Bezel`, `Manual-Carousel` and `Auto-Carousel` templates.
+* Adds support for configurable image scaling for `Basic`, `Timer`, `Zero Bezel`, `Rating`, `Product Catalogue`, `Manual-Carousel` and `Auto-Carousel` templates. Introduces `pt_scale_type` key for the same.
+* Adds support to make the terminal notification for `Timer` template optional. Introduces `pt_render_terminal` key for the same. 
+* Adds support in `Timer` template to show alternate message summary after the timer expires.
+* Increases minimum API level required for `Timer` template to 26 (Android 8.0+). For API levels 25 and below, a `Basic` template is rendered.
+
+#### Bug Fixes
+* Improves margins and padding consistency across all templates.
+* Fixes negative timer issue on Android 7.0 and below.
+* Renames resource files with `pt_` prefix to avoid resource name conflicts.
 
 ### Version 1.4.0 (March 11, 2025)
 

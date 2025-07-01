@@ -94,7 +94,7 @@ internal class InAppActionHandler(
     }
 
     fun launchPushPermissionPrompt(
-        fallbackToSettings: Boolean,
+        fallbackToSettings: Boolean, alwaysRequestIfNotGranted: Boolean = false,
         presenter: PushPermissionPromptPresenter
     ): Boolean {
         val currentActivity = CoreMetaData.getCurrentActivity()
@@ -115,6 +115,7 @@ internal class InAppActionHandler(
                 override fun onRequestPermission() {
                     presenter.showPrompt(currentActivity)
                 }
-            })
+            }, alwaysRequestIfNotGranted
+        )
     }
 }

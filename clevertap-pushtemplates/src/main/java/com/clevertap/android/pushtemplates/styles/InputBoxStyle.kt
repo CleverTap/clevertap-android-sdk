@@ -2,6 +2,8 @@ package com.clevertap.android.pushtemplates.styles
 
 import android.app.PendingIntent
 import android.content.Context
+import android.os.Build
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -14,7 +16,9 @@ import com.clevertap.android.pushtemplates.content.INPUT_BOX_CONTENT_PENDING_INT
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_REPLY_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
-class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+
+    private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
     override fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,
@@ -45,9 +49,14 @@ class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
         nb: NotificationCompat.Builder
     ): NotificationCompat.Builder {
         var inputBoxNotificationBuilder = super.builderFromStyle(context, extras, notificationId, nb)
+        
+        // Apply action buttons with special flag for InputBoxStyle
+        inputBoxNotificationBuilder = actionButtonsHandler.addActionButtons(
+            context, extras, notificationId, inputBoxNotificationBuilder, true
+        )
+
         inputBoxNotificationBuilder = setStandardViewBigImageStyle(
-            renderer.pt_big_img, extras,
-            context, inputBoxNotificationBuilder
+            renderer.pt_big_img, context, inputBoxNotificationBuilder
         )
         if (renderer.pt_input_label != null && renderer.pt_input_label!!.isNotEmpty()) {
             //Initialise RemoteInput
@@ -74,13 +83,11 @@ class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
         if (renderer.pt_dismiss_on_click != null && renderer.pt_dismiss_on_click!!.isNotEmpty()) {
             extras.putString(PTConstants.PT_DISMISS_ON_CLICK, renderer.pt_dismiss_on_click)
         }
-        renderer.setActionButtons(context, extras, notificationId, inputBoxNotificationBuilder, renderer.actions)
         return inputBoxNotificationBuilder
     }
 
     private fun setStandardViewBigImageStyle(
         pt_big_img: String?,
-        extras: Bundle,
         context: Context,
         notificationBuilder: NotificationCompat.Builder
     ): NotificationCompat.Builder {
@@ -89,15 +96,14 @@ class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
             try {
                 val bpMap = Utils.getNotificationBitmap(pt_big_img, false, context)
                     ?: throw Exception("Failed to fetch big picture!")
-                bigPictureStyle = if (extras.containsKey(PTConstants.PT_MSG_SUMMARY)) {
-                    val summaryText = renderer.pt_msg_summary
-                    NotificationCompat.BigPictureStyle()
-                        .setSummaryText(summaryText)
-                        .bigPicture(bpMap)
-                } else {
-                    NotificationCompat.BigPictureStyle()
-                        .setSummaryText(renderer.pt_msg)
-                        .bigPicture(bpMap)
+
+                val summaryText = renderer.pt_msg_summary ?: renderer.pt_msg
+                bigPictureStyle = NotificationCompat.BigPictureStyle()
+                    .setSummaryText(summaryText)
+                    .bigPicture(bpMap)
+
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
+                    bigPictureStyle.setContentDescription(renderer.pt_big_img_alt_text)
                 }
             } catch (t: Throwable) {
                 bigPictureStyle = NotificationCompat.BigTextStyle()

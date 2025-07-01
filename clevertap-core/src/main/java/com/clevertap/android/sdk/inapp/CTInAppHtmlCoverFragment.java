@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 
@@ -34,7 +35,7 @@ public class CTInAppHtmlCoverFragment extends CTInAppBaseFullHtmlFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View inAppView = super.onCreateView(inflater, container, savedInstanceState);
-        if (inAppView != null) {
+        if (!isFullscreen && inAppView != null) {
             applyInsetsWithMarginAdjustment(inAppView, (insets, mlp) -> {
                 mlp.leftMargin = insets.left;
                 mlp.rightMargin = insets.right;

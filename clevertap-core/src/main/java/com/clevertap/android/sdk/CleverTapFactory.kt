@@ -16,7 +16,9 @@ import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
+import com.clevertap.android.sdk.inapp.InAppNotificationInflater
 import com.clevertap.android.sdk.inapp.InAppQueue
+import com.clevertap.android.sdk.inapp.StoreRegistryInAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
@@ -351,21 +353,32 @@ internal object CleverTapFactory {
         )
         coreState.analyticsManager = analyticsManager
 
+        val executors = CTExecutorFactory.executors(config)
+
+        val inAppNotificationInflater = InAppNotificationInflater(
+            storeRegistry,
+            templatesManager,
+            executors,
+            { FileResourceProvider.getInstance(context, config.logger) }
+        )
+
         networkManager.addNetworkHeadersListener(evaluationManager)
         val inAppController = InAppController(
             context,
             config,
-            mainLooperHandler,
+            executors,
             controllerManager,
             callbackManager,
             analyticsManager,
             coreMetaData,
+            ManifestInfo.getInstance(context),
             deviceInfo,
-            InAppQueue(config, storeRegistry),
+            StoreRegistryInAppQueue(storeRegistry, config.accountId),
             evaluationManager,
             templatesManager,
-            storeRegistry,
-            inAppActionHandler
+            inAppActionHandler,
+            inAppNotificationInflater,
+            SYSTEM
         )
 
         coreState.inAppController = inAppController

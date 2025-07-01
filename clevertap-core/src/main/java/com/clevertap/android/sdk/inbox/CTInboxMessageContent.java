@@ -3,8 +3,6 @@ package com.clevertap.android.sdk.inbox;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import java.util.HashMap;
@@ -43,9 +41,13 @@ public class CTInboxMessageContent implements Parcelable {
 
     private String icon;
 
+    private String iconContentDescription;
+
     private JSONArray links;
 
     private String media;
+
+    private String mediaContentDescription;
 
     private String message;
 
@@ -66,10 +68,12 @@ public class CTInboxMessageContent implements Parcelable {
         message = in.readString();
         messageColor = in.readString();
         media = in.readString();
+        mediaContentDescription = in.readString();
         hasUrl = in.readByte() != 0x00;
         hasLinks = in.readByte() != 0x00;
         actionUrl = in.readString();
         icon = in.readString();
+        iconContentDescription = in.readString();
         try {
             links = in.readByte() == 0x00 ? null : new JSONArray(in.readString());
         } catch (JSONException e) {
@@ -117,6 +121,18 @@ public class CTInboxMessageContent implements Parcelable {
 
     void setIcon(String icon) {
         this.icon = icon;
+    }
+
+
+    /**
+     * Returns the content description for the icon in case of an Icon Message template.
+     */
+    public String getIconContentDescription() {
+        return iconContentDescription;
+    }
+
+    void setIconContentDescription(String contentDescription) {
+        this.iconContentDescription = contentDescription;
     }
 
     /**
@@ -308,8 +324,19 @@ public class CTInboxMessageContent implements Parcelable {
         return media;
     }
 
+    /**
+     * Returns the content description of the media in the inbox message.
+     */
+    public String getMediaContentDescription() {
+        return mediaContentDescription;
+    }
+
     void setMedia(String media) {
         this.media = media;
+    }
+
+    void setMediaContentDescription(String contentDescription) {
+        this.mediaContentDescription = contentDescription;
     }
 
     /**
@@ -433,10 +460,12 @@ public class CTInboxMessageContent implements Parcelable {
         dest.writeString(message);
         dest.writeString(messageColor);
         dest.writeString(media);
+        dest.writeString(mediaContentDescription);
         dest.writeByte((byte) (hasUrl ? 0x01 : 0x00));
         dest.writeByte((byte) (hasLinks ? 0x01 : 0x00));
         dest.writeString(actionUrl);
         dest.writeString(icon);
+        dest.writeString(iconContentDescription);
         if (links == null) {
             dest.writeByte((byte) (0x00));
         } else {
@@ -467,11 +496,13 @@ public class CTInboxMessageContent implements Parcelable {
                     .getJSONObject(Constants.KEY_ICON) : null;
             if (iconObject != null) {
                 this.icon = iconObject.has(Constants.KEY_URL) ? iconObject.getString(Constants.KEY_URL) : "";
+                this.iconContentDescription = iconObject.optString(Constants.KEY_ALT_TEXT, "");
             }
             JSONObject mediaObject = contentObject.has(Constants.KEY_MEDIA) ? contentObject
                     .getJSONObject(Constants.KEY_MEDIA) : null;
             if (mediaObject != null) {
                 this.media = mediaObject.has(Constants.KEY_URL) ? mediaObject.getString(Constants.KEY_URL) : "";
+                this.mediaContentDescription = mediaObject.optString(Constants.KEY_ALT_TEXT, "");
                 this.contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject
                         .getString(Constants.KEY_CONTENT_TYPE) : "";
                 this.posterUrl = mediaObject.has(Constants.KEY_POSTER_URL) ? mediaObject
