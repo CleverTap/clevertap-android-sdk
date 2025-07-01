@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Utils.getNow
 import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
@@ -71,7 +72,7 @@ internal class ContentFetchManager(
             val item = contentFetchItems.opt(i) ?: continue
             try {
                 val event = getMetaData(packageName).apply {
-                    put("evtData", item)
+                    put(Constants.KEY_EVT_DATA, item)
                 }
                 payload.put(event)
                 logger.verbose(TAG, "Added content fetch item: $item")
@@ -85,8 +86,8 @@ internal class ContentFetchManager(
 
     private fun getMetaData(packageName: String): JSONObject {
         return JSONObject().apply {
-            put("type", "event")
-            put("evtName", "content_fetch")
+            put(Constants.KEY_TYPE, "event")
+            put(Constants.KEY_EVT_NAME, "content_fetch")
             put("s", coreMetaData.currentSessionId)
             put("pg", CoreMetaData.getActivityCount())
             put("ep", getNow())

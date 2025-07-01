@@ -98,7 +98,7 @@ internal class CtApi(
     fun sendContentFetch(body: ContentFetchRequestBody): Response =
         httpClient.execute(
             createRequest(
-                baseUrl = getActualDomain(isViewedEvent = false, true) ?: defaultDomain,
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
                 relativeUrl = "content",
                 body = body.toString()
             )
@@ -144,12 +144,7 @@ internal class CtApi(
             )
         )
 
-    fun getActualDomain(isViewedEvent: Boolean, contentFetch: Boolean = false): String? {
-
-        // todo remove this
-        if (contentFetch) {
-            return "sk1-content-staging.clevertap-prod.com"
-        }
+    fun getActualDomain(isViewedEvent: Boolean): String? {
         if (region.isNotNullAndBlank()) {
             return buildString {
                 append(region)
