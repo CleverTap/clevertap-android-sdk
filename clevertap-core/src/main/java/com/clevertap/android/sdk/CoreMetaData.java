@@ -35,6 +35,8 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private boolean currentUserOptedOut = false;
 
+    private boolean allowSystemEvents = true;
+
     private boolean firstRequestInSession = false;
 
     private boolean firstSession = false;
@@ -293,6 +295,18 @@ public class CoreMetaData extends CleverTapMetaData {
     public boolean isCurrentUserOptedOut() {
         synchronized (optOutFlagLock) {
             return currentUserOptedOut;
+        }
+    }
+
+    public void setEnabledSystemEvents(boolean enable) {
+        synchronized (optOutFlagLock) {
+            allowSystemEvents = enable;
+        }
+    }
+
+    public boolean getEnabledSystemEvents() {
+        synchronized (optOutFlagLock) {
+            return allowSystemEvents;
         }
     }
 
