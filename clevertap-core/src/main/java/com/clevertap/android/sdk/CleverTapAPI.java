@@ -1256,6 +1256,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             coreState.getSessionManager().setUserLastVisitTs();
             coreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
             coreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
+            coreState.getDeviceInfo().setSystemEventsAllowedStateFromStorage();
             return null;
         });
 
@@ -2847,6 +2848,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public void setOptOut(boolean userOptOut) {
         // this is legacy behavior, on opt out we should not allow system events
+        // The second flag is ignored in this case so we always default it to false.
         setOptOut(userOptOut, false);
     }
 
@@ -2871,6 +2873,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
             // persist the new optOut state
             coreState.getDeviceInfo().saveOptOutState(userOptOut);
+            coreState.getDeviceInfo().saveAllowedSystemEventsState(allowSystemEvents);
             return null;
         });
     }

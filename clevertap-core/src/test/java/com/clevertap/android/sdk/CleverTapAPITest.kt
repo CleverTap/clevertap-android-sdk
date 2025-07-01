@@ -55,10 +55,14 @@ class CleverTapAPITest : BaseTestCase() {
     }
 
     private fun verifyCommonConstructorBehavior() {
-        verify { corestate.sessionManager.setLastVisitTime() }
-        verify { corestate.sessionManager.setUserLastVisitTs() }
-        verify { corestate.deviceInfo.setDeviceNetworkInfoReportingFromStorage() }
-        verify { corestate.deviceInfo.setCurrentUserOptOutStateFromStorage() }
+        verifyOrder {
+            corestate.sessionManager.setLastVisitTime()
+            corestate.sessionManager.setUserLastVisitTs()
+            corestate.deviceInfo.setDeviceNetworkInfoReportingFromStorage()
+            corestate.deviceInfo.setCurrentUserOptOutStateFromStorage()
+            corestate.deviceInfo.setSystemEventsAllowedStateFromStorage()
+        }
+
         val actualConfig = StorageHelper.getString(
             application,
             "instance:" + cleverTapInstanceConfig.accountId,
@@ -513,6 +517,7 @@ class CleverTapAPITest : BaseTestCase() {
             corestate.coreMetaData.isCurrentUserOptedOut = true
             corestate.coreMetaData.enabledSystemEvents = false
             corestate.deviceInfo.saveOptOutState(true)
+            corestate.deviceInfo.saveAllowedSystemEventsState(false)
         }
     }
 
@@ -536,6 +541,7 @@ class CleverTapAPITest : BaseTestCase() {
             corestate.coreMetaData.enabledSystemEvents = true
             corestate.analyticsManager.pushProfile(expectedMap)
             corestate.deviceInfo.saveOptOutState(false)
+            corestate.deviceInfo.saveAllowedSystemEventsState(false)
         }
     }
 
@@ -559,6 +565,7 @@ class CleverTapAPITest : BaseTestCase() {
             corestate.coreMetaData.enabledSystemEvents = false
             corestate.analyticsManager.pushProfile(expectedMap)
             corestate.deviceInfo.saveOptOutState(true)
+            corestate.deviceInfo.saveAllowedSystemEventsState(false)
         }
     }
 
@@ -582,6 +589,7 @@ class CleverTapAPITest : BaseTestCase() {
             corestate.coreMetaData.enabledSystemEvents = true
             corestate.analyticsManager.pushProfile(expectedMap)
             corestate.deviceInfo.saveOptOutState(true)
+            corestate.deviceInfo.saveAllowedSystemEventsState(true)
         }
     }
 
@@ -605,6 +613,7 @@ class CleverTapAPITest : BaseTestCase() {
             corestate.coreMetaData.enabledSystemEvents = true
             corestate.analyticsManager.pushProfile(expectedMap)
             corestate.deviceInfo.saveOptOutState(false)
+            corestate.deviceInfo.saveAllowedSystemEventsState(false)
         }
     }
 
@@ -628,6 +637,7 @@ class CleverTapAPITest : BaseTestCase() {
             corestate.coreMetaData.enabledSystemEvents = true
             corestate.analyticsManager.pushProfile(expectedMap)
             corestate.deviceInfo.saveOptOutState(false)
+            corestate.deviceInfo.saveAllowedSystemEventsState(true)
         }
     }
 
