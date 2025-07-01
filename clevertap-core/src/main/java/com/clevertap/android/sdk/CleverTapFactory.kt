@@ -46,6 +46,7 @@ import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
+import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.response.ConsoleResponse
 import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
@@ -336,8 +337,14 @@ internal object CleverTapFactory {
         )
 
         val arpResponse = ARPResponse(config, validator, controllerManager, arpRepo)
-        val contentFetchManager = ContentFetchManager(config, coreMetaData)
-        val cleverTapResponses: MutableList<CleverTapResponse> = mutableListOf(
+        val contentFetchManager = ContentFetchManager(
+            config,
+            coreMetaData,
+            queueHeaderBuilder,
+            ctApiWrapper
+        )
+        val contentFetchResponse = ContentFetchResponse(config, contentFetchManager)
+        val cleverTapResponses = listOf<CleverTapResponse>(
             inAppResponse,
             MetadataResponse(config, deviceInfo, ijRepo),
             arpResponse,
@@ -359,8 +366,11 @@ internal object CleverTapFactory {
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),
             GeofenceResponse(config, callbackManager),
-            ContentFetchResponse(config, contentFetchManager)
+            contentFetchResponse
         )
+
+        val responseHandler = ClevertapResponseHandler(context, cleverTapResponses)
+        contentFetchManager.clevertapResponseHandler = responseHandler
 
         val networkManager = NetworkManager(
             context = context,
@@ -375,10 +385,9 @@ internal object CleverTapFactory {
             arpResponse = arpResponse,
             networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
-            cleverTapResponses = cleverTapResponses
+            cleverTapResponseHandler = responseHandler
         )
         coreState.networkManager = networkManager
-        contentFetchManager.setNetworkManager(networkManager)
 
         val loginInfoProvider = LoginInfoProvider(
             context,

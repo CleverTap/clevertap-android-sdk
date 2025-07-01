@@ -27,6 +27,9 @@ public abstract class BaseEventQueueManager {
     public abstract void flushQueueSync(final Context context, final EventGroup eventGroup,final String caller);
 
     @WorkerThread
+    public abstract void flushQueueSync(final Context context, final EventGroup eventGroup,final String caller, boolean isUserSwitchFlush);
+
+    @WorkerThread
     public abstract void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData);
 
     public abstract void scheduleQueueFlush(final Context context);

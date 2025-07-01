@@ -2,17 +2,22 @@ package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils.getNow
+import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
+import com.clevertap.android.sdk.network.api.CtApiWrapper
+import com.clevertap.android.sdk.network.http.Response
+import com.clevertap.android.sdk.response.ClevertapResponseHandler
+import com.clevertap.android.sdk.toJsonOrNull
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -20,34 +25,31 @@ import org.json.JSONObject
 internal class ContentFetchManager(
     config: CleverTapInstanceConfig,
     private val coreMetaData: CoreMetaData,
-    private val deviceIdChangeTimeout: Long = TIMEOUT_DELAY_MS,
+    private val queueHeaderBuilder: QueueHeaderBuilder,
+    private val ctApiWrapper: CtApiWrapper,
     private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS
 ) {
     companion object {
         private const val DEFAULT_PARALLEL_REQUESTS = 5
         private const val TAG = "ContentFetch"
-        //todo fix this value
-        private const val TIMEOUT_DELAY_MS = 2 * 60L
     }
+
+    var clevertapResponseHandler: ClevertapResponseHandler? = null
 
     var parentJob = SupervisorJob()
 
     private var scope = CoroutineScope(
         parentJob + CtDefaultDispatchers().io().limitedParallelism(parallelRequests)
     )
-    private val logger: Logger = config.logger
-    private var networkManager: NetworkManager? = null
-
-    fun setNetworkManager(manager: NetworkManager) {
-        this.networkManager = manager
-    }
+    private val logger = config.logger
+    private val accountId = config.accountId
 
     fun handleContentFetch(contentFetchItems: JSONArray, packageName: String) {
         scope.launch {
             try {
                 val payload = getContentFetchPayload(contentFetchItems, packageName)
                 if (payload.length() > 0) {
-                    fetchContent(payload)
+                    sendContentFetchRequest(payload)
                 } else {
                     logger.verbose(TAG, "No valid content fetch items to send.")
                 }
@@ -95,30 +97,57 @@ internal class ContentFetchManager(
         }
     }
 
-    private suspend fun fetchContent(payload: JSONArray) {
+    private suspend fun sendContentFetchRequest(content: JSONArray): Boolean {
+        val header = queueHeaderBuilder.buildHeader(null) ?: return false
+        val body = ContentFetchRequestBody(header, content)
+        logger.debug(accountId, "Fetching Content: $body")
+
         try {
-            networkManager?.sendContentFetchRequest(payload)
-                ?: logger.verbose(TAG, "NetworkManager not set, cannot send content fetch request.")
+            ctApiWrapper.ctApi.sendContentFetch(body).use { response ->
+                return handleContentFetchResponse(response, !currentCoroutineContext().isActive)
+            }
         } catch (e: Exception) {
-            logger.verbose(TAG, "Failed to send content fetch request", e)
+            logger.debug(accountId, "An exception occurred while fetching content.", e)
+            return false
         }
     }
 
-    fun completePendingContentFetch() = runBlocking {
-        logger.verbose(TAG, "Waiting up to ${deviceIdChangeTimeout}ms to cancel running jobs")
+    /**
+     * Handles the response from content fetch requests
+     * Processes through normal ResponseDecorator route
+     */
+    private fun handleContentFetchResponse(response: Response, isUserSwitching: Boolean): Boolean {
+        if (response.isSuccess()) {
+            val bodyString = response.readBody()
+            val bodyJson = bodyString.toJsonOrNull()
 
-        val allJobsCompleted = withTimeoutOrNull(deviceIdChangeTimeout) {
-            parentJob.join()
-            true
-        }
+            logger.info(accountId, "Content fetch response received successfully")
 
-        if (allJobsCompleted != true) {
-            logger.verbose(TAG, "Timeout reached. Cancelling remaining jobs...")
-            parentJob.cancelAndJoin()
+            if (bodyString == null || bodyJson == null) {
+                // B.E error; should never happen but consider this as success.
+                return true
+            }
+
+            clevertapResponseHandler?.handleResponse(false, bodyJson, bodyString, isUserSwitching)
+            return true
         } else {
-            logger.verbose(TAG, "All content fetch jobs completed successfully.")
-        }
+            when (response.code) {
+                429 -> {
+                    logger.info(accountId, "Content fetch request was rate limited (429). Consider reducing request frequency.")
+                }
 
+                else -> logger.info(accountId, "Content fetch request failed with response code: ${response.code}")
+            }
+            return false
+        }
+    }
+
+    fun cancelAllResponseJobs() {
+        parentJob.cancel()
+        runBlocking {
+            parentJob.children.forEach { it.join() }
+        }
+        scope.cancel()
         resetScope()
     }
 

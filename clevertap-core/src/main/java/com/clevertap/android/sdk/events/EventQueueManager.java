@@ -179,8 +179,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      */
     @Override
     public void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final String caller) {
-        /*if (caller == null && eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED)
-            return;*/
+        flushQueueSync(context,eventGroup,caller, false);
+    }
+
+    @Override
+    public void flushQueueSync(final Context context, final EventGroup eventGroup,final String caller, final boolean isUserSwitchFlush) {
         // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
@@ -201,17 +204,12 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         // Check if handshake is required for the domain associated with the event group
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
             // Perform handshake and then flush the DB queue
-            networkManager.initHandshake(eventGroup, new Runnable() {
-                @Override
-                public void run() {
-                    networkManager.flushDBQueue(context, eventGroup,caller);
-                }
-            });
+            networkManager.initHandshake(eventGroup, () -> networkManager.flushDBQueue(context, eventGroup,caller, isUserSwitchFlush));
         } else {
             logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
 
             // No handshake required, directly flush the DB queue
-            networkManager.flushDBQueue(context, eventGroup,caller);
+            networkManager.flushDBQueue(context, eventGroup,caller, isUserSwitchFlush);
         }
     }
 
@@ -238,10 +236,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
             networkManager.initHandshake(
                     eventGroup,
-                    () -> networkManager.sendQueue(context, eventGroup, singleEventQueue, null)
+                    () -> networkManager.sendQueue(context, eventGroup, singleEventQueue, null, false)
             );
         } else {
-            networkManager.sendQueue(context, eventGroup, singleEventQueue, null);
+            networkManager.sendQueue(context, eventGroup, singleEventQueue, null, false);
         }
     }
 
