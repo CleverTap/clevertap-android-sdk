@@ -77,6 +77,7 @@ internal class CTInAppNotificationMedia : Parcelable {
         if (orientation != other.orientation) return false
         if (mediaUrl != other.mediaUrl) return false
         if (contentType != other.contentType) return false
+        if (contentDescription != other.contentDescription) return false
         if (cacheKey != other.cacheKey) return false
 
         return true
@@ -86,6 +87,7 @@ internal class CTInAppNotificationMedia : Parcelable {
         var result = orientation
         result = 31 * result + mediaUrl.hashCode()
         result = 31 * result + contentType.hashCode()
+        result = 31 * result + contentDescription.hashCode()
         result = 31 * result + (cacheKey?.hashCode() ?: 0)
         return result
     }
