@@ -45,7 +45,6 @@ import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
-import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.response.ConsoleResponse
 import com.clevertap.android.sdk.response.ContentFetchResponse
@@ -338,7 +337,14 @@ internal object CleverTapFactory {
 
         val arpResponse = ARPResponse(config, validator, controllerManager, arpRepo)
         val displayUnitResponse = DisplayUnitResponse(config, callbackManager, controllerManager)
-        val contentFetchManager = ContentFetchManager(config, context, coreMetaData, queueHeaderBuilder, ctApiWrapper, displayUnitResponse)
+        val contentFetchManager = ContentFetchManager(
+            config,
+            context,
+            coreMetaData,
+            queueHeaderBuilder,
+            ctApiWrapper
+        )
+        val contentFetchResponse = ContentFetchResponse(config, contentFetchManager)
         val cleverTapResponses = listOf(
             inAppResponse,
             MetadataResponse(config, deviceInfo, ijRepo),
@@ -361,9 +367,11 @@ internal object CleverTapFactory {
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),
             GeofenceResponse(config, callbackManager),
-            ContentFetchResponse(config, contentFetchManager)
+            contentFetchResponse
         )
+
         val responseHandler = ClevertapResponseHandler(context, cleverTapResponses)
+        contentFetchManager.clevertapResponseHandler = responseHandler
 
         val networkManager = NetworkManager(
             context = context,

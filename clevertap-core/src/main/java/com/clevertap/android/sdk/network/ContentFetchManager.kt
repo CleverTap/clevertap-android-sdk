@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.Utils.getNow
 import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.Response
-import com.clevertap.android.sdk.response.DisplayUnitResponse
+import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.toJsonOrNull
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import kotlinx.coroutines.CancellationException
@@ -32,7 +32,6 @@ internal class ContentFetchManager(
     private val coreMetaData: CoreMetaData,
     private val queueHeaderBuilder: QueueHeaderBuilder,
     private val ctApiWrapper: CtApiWrapper,
-    private val displayUnitResponse: DisplayUnitResponse,
     private val deviceIdChangeTimeout: Long = TIMEOUT_DELAY_MS,
     private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS
 ) {
@@ -41,6 +40,8 @@ internal class ContentFetchManager(
         private const val TAG = "ContentFetch"
         private const val TIMEOUT_DELAY_MS = 2 * 60L //todo fix this value
     }
+
+    var clevertapResponseHandler: ClevertapResponseHandler? = null
 
     var parentJob = SupervisorJob()
 
@@ -145,7 +146,12 @@ internal class ContentFetchManager(
 
             logger.info(accountId, "Content fetch response received successfully")
 
-            displayUnitResponse.processResponse(bodyJson, bodyString, this.context)
+            if (bodyString == null || bodyJson == null) {
+                // B.E error; should never happen but consider this as success.
+                return true
+            }
+
+            clevertapResponseHandler?.handleResponse(false, bodyJson, bodyString, false)
             return true
         } else {
             when (response.code) {
