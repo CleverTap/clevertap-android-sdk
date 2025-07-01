@@ -14,11 +14,13 @@ internal class CTInAppHtmlHalfInterstitialFragment : CTInAppBaseFullHtmlFragment
         savedInstanceState: Bundle?
     ): View? {
         val inAppView = super.onCreateView(inflater, container, savedInstanceState)
-        inAppView?.applyInsetsWithMarginAdjustment { insets, mlp ->
-            mlp.leftMargin = insets.left
-            mlp.rightMargin = insets.right
-            mlp.topMargin = insets.top
-            mlp.bottomMargin = insets.bottom
+        if (!isFullscreen) {
+            inAppView?.applyInsetsWithMarginAdjustment { insets, mlp ->
+                mlp.leftMargin = insets.left
+                mlp.rightMargin = insets.right
+                mlp.topMargin = insets.top
+                mlp.bottomMargin = insets.bottom
+            }
         }
         return inAppView
     }

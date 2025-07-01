@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN
 import android.webkit.WebViewClient
 import android.widget.RelativeLayout
 import com.clevertap.android.sdk.CTWebInterface
@@ -21,10 +22,13 @@ import com.clevertap.android.sdk.inapp.InAppWebViewClient
 internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() {
 
     protected var webView: CTInAppWebView? = null
+    protected var isFullscreen = false
+        private set
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
+        updateFullscreenInfo()
         return displayHTMLView(inflater, container)
     }
 
@@ -40,6 +44,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        updateFullscreenInfo()
         reDrawInApp()
     }
 
@@ -75,6 +80,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
                 inAppNotification.widthPercentage,
                 inAppNotification.heightPercentage
             )
+            webView.isFullscreen = isFullscreen
             this.webView = webView
             val webViewClient = InAppWebViewClient(this)
             webView.setWebViewClient(webViewClient)
@@ -94,14 +100,10 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
             rl.addView(webView, webViewLp)
 
             if (isCloseButtonEnabled()) {
-                closeImageView = CloseImageView(requireContext())
+                val closeImageView = CloseImageView(requireContext())
                 val closeIvLp = getLayoutParamsForCloseButton(webView.id)
-
-                closeImageView!!.setOnClickListener(object : View.OnClickListener {
-                    override fun onClick(v: View?) {
-                        didDismiss(null)
-                    }
-                })
+                closeImageView.setOnClickListener { didDismiss(null) }
+                this.closeImageView = closeImageView
                 rl.addView(closeImageView, closeIvLp)
             }
         } catch (t: Throwable) {
@@ -133,6 +135,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
 
     private fun reDrawInApp() {
         val webView = this.webView ?: return
+        webView.isFullscreen = isFullscreen
         webView.updateDimension()
 
         val customUrl = inAppNotification.customInAppUrl
@@ -167,5 +170,9 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
             config.getLogger().verbose("cleanupWebView -> there was a crash in cleanup", e)
             //no-op; we are anyway destroying everything. This is just for safety.
         }
+    }
+
+    private fun updateFullscreenInfo() {
+        isFullscreen = (activity?.window?.attributes?.flags?.and(FLAG_FULLSCREEN) ?: 0) != 0
     }
 }
