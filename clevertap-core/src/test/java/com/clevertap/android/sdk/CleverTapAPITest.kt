@@ -529,7 +529,7 @@ class CleverTapAPITest : BaseTestCase() {
         // generate the data for a profile push to alert the server to the optOut state change
         val expectedMap = hashMapOf<String, Any>().apply {
             put(Constants.CLEVERTAP_OPTOUT, false)
-            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, false)
+            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, true)
         }
 
         // Act
@@ -541,7 +541,7 @@ class CleverTapAPITest : BaseTestCase() {
             corestate.coreMetaData.enabledSystemEvents = true
             corestate.analyticsManager.pushProfile(expectedMap)
             corestate.deviceInfo.saveOptOutState(false)
-            corestate.deviceInfo.saveAllowedSystemEventsState(false)
+            corestate.deviceInfo.saveAllowedSystemEventsState(true)
         }
     }
 

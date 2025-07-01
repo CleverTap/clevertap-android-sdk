@@ -784,11 +784,11 @@ public class DeviceInfo {
         String key = allowedSystemEventsKey();
         if (key == null) {
             getConfigLogger()
-                    .verbose(config.getAccountId(), "Unable to persist user OptOut state, storage key is null");
+                    .verbose(config.getAccountId(), "Unable to persist user allowed system events and communications flag state, storage key is null");
             return;
         }
         StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), key), allowedSystemEvents);
-        getConfigLogger().verbose(config.getAccountId(), "Set current user OptOut state to: " + allowedSystemEvents);
+        getConfigLogger().verbose(config.getAccountId(), "Set current user allowed system events and communications flag state to: " + allowedSystemEvents);
     }
 
     private String optOutKey() {
