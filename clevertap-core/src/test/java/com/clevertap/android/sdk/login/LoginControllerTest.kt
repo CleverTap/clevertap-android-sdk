@@ -114,8 +114,9 @@ class LoginControllerTest : BaseTestCase() {
         verifyOrder {
             coreMetaData.isCurrentUserOptedOut = false
             pushProviders.forcePushDeviceToken(false)
-            baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR)
-            baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED)
+            baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
+            baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
+            contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
             sessionManager.destroySession()
@@ -151,8 +152,9 @@ class LoginControllerTest : BaseTestCase() {
         verifyOrder {
             coreMetaData.isCurrentUserOptedOut = false
             pushProviders.forcePushDeviceToken(false)
-            baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR)
-            baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED)
+            baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
+            baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
+            contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
             sessionManager.destroySession()
@@ -185,8 +187,9 @@ class LoginControllerTest : BaseTestCase() {
         verifyOrder {
             coreMetaData.setCurrentUserOptedOut(false)
             pushProviders.forcePushDeviceToken(false)
-            baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR)
-            baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED)
+            baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
+            baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
+            contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
             sessionManager.destroySession()
@@ -221,8 +224,9 @@ class LoginControllerTest : BaseTestCase() {
         verifyOrder {
             coreMetaData.isCurrentUserOptedOut = false
             pushProviders.forcePushDeviceToken(false)
-            baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR)
-            baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED)
+            baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
+            baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
+            contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
             sessionManager.destroySession()

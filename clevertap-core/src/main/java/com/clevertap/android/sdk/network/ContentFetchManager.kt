@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.toJsonOrNull
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
+import com.clevertap.android.sdk.utils.DispatcherProvider
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,7 +30,8 @@ internal class ContentFetchManager(
     private val queueHeaderBuilder: QueueHeaderBuilder,
     private val ctApiWrapper: CtApiWrapper,
     private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS,
-    private val clock: Clock = Clock.SYSTEM
+    private val clock: Clock = Clock.SYSTEM,
+    private val dispatchers: DispatcherProvider = CtDefaultDispatchers()
 ) {
     companion object {
         private const val DEFAULT_PARALLEL_REQUESTS = 5
@@ -41,7 +43,7 @@ internal class ContentFetchManager(
     var parentJob = SupervisorJob()
 
     private var scope = CoroutineScope(
-        parentJob + CtDefaultDispatchers().io().limitedParallelism(parallelRequests)
+        parentJob + dispatchers.io().limitedParallelism(parallelRequests)
     )
     private val logger = config.logger
     private val accountId = config.accountId
@@ -156,7 +158,7 @@ internal class ContentFetchManager(
     private fun resetScope() {
         parentJob = SupervisorJob()
         scope = CoroutineScope(
-            parentJob + CtDefaultDispatchers().io().limitedParallelism(parallelRequests)
+            parentJob + dispatchers.io().limitedParallelism(parallelRequests)
         )
     }
 }
