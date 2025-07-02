@@ -10,12 +10,15 @@ import android.content.res.Configuration;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.view.Window;
 import android.view.WindowManager;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.clevertap.android.sdk.inapp.CTInAppAction;
@@ -92,9 +95,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             }
         });
 
-        int orientation = this.getResources().getConfiguration().orientation;
+        int orientation = getResources().getConfiguration().orientation;
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            Window window = getWindow();
+            if (window != null) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                WindowInsetsControllerCompat insetsController = new WindowInsetsControllerCompat(window, window.getDecorView());
+                insetsController.hide(WindowInsetsCompat.Type.systemBars());
+            }
         }
         try {
             Bundle intentExtras = getIntent().getExtras();
@@ -166,10 +174,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         if (savedInstanceState == null) {
             contentFragment = createContentFragment();
             if (contentFragment != null) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable("inApp", inAppNotification);
-                bundle.putParcelable("config", config);
-                contentFragment.setArguments(bundle);
+                contentFragment.setArguments(inAppNotification, config);
                 getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
                         .add(android.R.id.content, contentFragment, getFragmentTag())

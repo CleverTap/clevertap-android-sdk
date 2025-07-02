@@ -1,24 +1,188 @@
 package com.clevertap.android.sdk.inapp
 
+import android.app.Activity
+import android.content.Context
+import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.DidClickForHardPermissionListener
+import com.clevertap.android.sdk.utils.configMock
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import io.mockk.unmockkAll
 import io.mockk.verify
+import org.json.JSONObject
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CTInAppBaseFragmentTest {
 
+    private lateinit var mockInAppListener: InAppListener
+
+    @Before
+    fun setUp() {
+        mockInAppListener = mockk(relaxed = true)
+    }
+
+    @After
+    fun cleanUp() {
+        unmockkAll()
+    }
+
+    @Test
+    fun `showOnActivity should trigger fragment transaction and set inApp and config fields`() {
+        val fragment = createFragmentSpy()
+        val mockActivity = mockk<FragmentActivity>()
+        val mockFragmentManager = mockk<FragmentManager>()
+        val mockFragmentTransaction = mockk<FragmentTransaction>(relaxed = true)
+        every { mockFragmentManager.beginTransaction() } returns mockFragmentTransaction
+        every { mockActivity.supportFragmentManager } returns mockFragmentManager
+
+        val inApp = CTInAppNotification().initWithJSON(
+            JSONObject(InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA),
+            true
+        )
+        val mockConfig = configMock()
+        assertTrue(
+            CTInAppBaseFragment.showOnActivity(
+                fragment,
+                mockActivity,
+                inApp,
+                mockConfig,
+                "Test"
+            )
+        )
+
+        verify(exactly = 1) { mockFragmentTransaction.commitNow() }
+
+        val contextMock = mockk<Context>()
+        fragment.onAttach(contextMock)
+
+        assertEquals(inApp.campaignId, fragment.inAppNotification.campaignId)
+        assertEquals(mockConfig.accountId, fragment.config.accountId)
+    }
+
+    @Test
+    fun `showOnActivity should return false when activity is not FragmentActivity`() {
+        val fragment = createFragmentSpy()
+        val mockActivity = mockk<Activity>()
+
+        assertFalse(
+            CTInAppBaseFragment.showOnActivity(
+                fragment,
+                mockActivity,
+                mockk(relaxed = true),
+                mockk(relaxed = true),
+                "Test",
+            )
+        )
+    }
+
+    @Test
+    fun `showOnActivity should return false when the fragment cannot be displayed`() {
+        val fragment = createFragmentSpy()
+        val mockActivity = mockk<FragmentActivity>()
+        val mockFragmentManager = mockk<FragmentManager>()
+        val mockFragmentTransaction = mockk<FragmentTransaction>(relaxed = true)
+
+        every { mockFragmentTransaction.commitNow() } throws IllegalStateException()
+        every { mockFragmentManager.beginTransaction() } returns mockFragmentTransaction
+        every { mockActivity.supportFragmentManager } returns mockFragmentManager
+
+        val inApp = CTInAppNotification().initWithJSON(
+            JSONObject(InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA),
+            true
+        )
+        val mockConfig = configMock()
+        assertFalse(
+            CTInAppBaseFragment.showOnActivity(
+                fragment,
+                mockActivity,
+                inApp,
+                mockConfig,
+                "Test"
+            )
+        )
+    }
+
+    @Test
+    fun `handleButtonClickAtIndex should trigger permission listener for localInApps and dismiss the inApp`() {
+        val fragment = createFragmentSpy()
+
+        val localInAppJson = CTLocalInApp.builder()
+            .setInAppType(CTLocalInApp.InAppType.ALERT)
+            .setTitleText("Title")
+            .setMessageText("Message")
+            .followDeviceOrientation(false)
+            .setPositiveBtnText("Positive Button")
+            .setNegativeBtnText("Negative Button")
+            .build()
+        val inApp = CTInAppNotification().initWithJSON(localInAppJson, true)
+        val mockConfig = configMock()
+        fragment.setArguments(inApp, mockConfig)
+
+        val contextMock =
+            mockk<Context>(moreInterfaces = arrayOf(DidClickForHardPermissionListener::class))
+        fragment.onAttach(contextMock)
+
+        // should trigger permission listener
+        fragment.handleButtonClickAtIndex(0)
+
+        verify(exactly = 1) {
+            (contextMock as DidClickForHardPermissionListener).didClickForHardPermissionWithFallbackSettings(
+                inApp.fallBackToNotificationSettings()
+            )
+        }
+
+        verify(exactly = 1) { fragment.didDismiss(any()) }
+
+        // should not trigger permission listener
+        fragment.handleButtonClickAtIndex(1)
+        confirmVerified(contextMock)
+    }
+
+    @Test
+    fun `handleButtonClickAtIndex should trigger permission listener for rfp actions and dismiss the inApp`() {
+        val fragment = createFragmentSpy()
+
+        val inApp = CTInAppNotification().initWithJSON(
+            JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL_WITH_BUTTON_ACTION_RFP),
+            true
+        )
+        val mockConfig = configMock()
+        fragment.setArguments(inApp, mockConfig)
+
+        val contextMock =
+            mockk<Context>(moreInterfaces = arrayOf(DidClickForHardPermissionListener::class))
+        fragment.onAttach(contextMock)
+
+        fragment.handleButtonClickAtIndex(0)
+
+        verify(exactly = 1) {
+            (contextMock as DidClickForHardPermissionListener).didClickForHardPermissionWithFallbackSettings(
+                true
+            )
+        }
+
+        verify(exactly = 1) { fragment.didDismiss(any()) }
+    }
+
     @Test
     fun `triggerAction should parse url parameters as additionalData`() {
-        val fragment = spyk<CTInAppBaseFragment>()
-        val inAppListener = mockk<InAppListener>(relaxed = true)
-        every { fragment.listener } returns inAppListener
+        val fragment = createFragmentSpy()
 
         val param1 = "value"
         val param2 = "value 2"
@@ -32,7 +196,7 @@ class CTInAppBaseFragmentTest {
 
         fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
         verify {
-            inAppListener.inAppNotificationActionTriggered(
+            mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
                 action = match { action ->
                     action.type == InAppActionType.OPEN_URL
@@ -51,9 +215,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `triggerAction should merge url parameters with provided additionalData `() {
-        val fragment = spyk<CTInAppBaseFragment>()
-        val inAppListener = mockk<InAppListener>(relaxed = true)
-        every { fragment.listener } returns inAppListener
+        val fragment = createFragmentSpy()
 
         val urlParam1 = "value"
         val urlParam2 = "value 2"
@@ -74,7 +236,7 @@ class CTInAppBaseFragmentTest {
 
         fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, data)
         verify {
-            inAppListener.inAppNotificationActionTriggered(
+            mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
                 action = any(),
                 callToAction = any(),
@@ -90,9 +252,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `triggerAction should use callToAction argument or c2a url param`() {
-        val fragment = spyk<CTInAppBaseFragment>()
-        val inAppListener = mockk<InAppListener>(relaxed = true)
-        every { fragment.listener } returns inAppListener
+        val fragment = createFragmentSpy()
 
         val callToActionParam = "c2aParam"
         val url = Uri.parse("https://clevertap.com")
@@ -102,7 +262,7 @@ class CTInAppBaseFragmentTest {
 
         fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
         verify {
-            inAppListener.inAppNotificationActionTriggered(
+            mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
                 action = any(),
                 callToAction = callToActionParam,
@@ -114,7 +274,7 @@ class CTInAppBaseFragmentTest {
         val callToActionArgument = "argument"
         fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), callToActionArgument, null)
         verify {
-            inAppListener.inAppNotificationActionTriggered(
+            mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
                 action = any(),
                 callToAction = callToActionArgument,
@@ -126,9 +286,7 @@ class CTInAppBaseFragmentTest {
 
     @Test
     fun `triggerAction should parse c2a url param with __dl__ data`() {
-        val fragment = spyk<CTInAppBaseFragment>()
-        val inAppListener = mockk<InAppListener>(relaxed = true)
-        every { fragment.listener } returns inAppListener
+        val fragment = createFragmentSpy()
 
         val dl = "https://deeplink.com?param1=asd&param2=value2"
         val callToActionParam = "c2aParam"
@@ -141,7 +299,7 @@ class CTInAppBaseFragmentTest {
 
         fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), null, null)
         verify {
-            inAppListener.inAppNotificationActionTriggered(
+            mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
                 action = match { action ->
                     // the open-url action should be performed with the url after __dl__
@@ -160,7 +318,7 @@ class CTInAppBaseFragmentTest {
         val callToActionArgument = "argument"
         fragment.triggerAction(CTInAppAction.createOpenUrlAction(url), callToActionArgument, null)
         verify {
-            inAppListener.inAppNotificationActionTriggered(
+            mockInAppListener.inAppNotificationActionTriggered(
                 inAppNotification = any(),
                 action = match { action ->
                     // the open-url action should be performed with the url after __dl__
@@ -175,5 +333,15 @@ class CTInAppBaseFragmentTest {
                 activityContext = any()
             )
         }
+    }
+
+    private fun createFragmentSpy(): CTInAppBaseFragment {
+        val fragmentSpy = spyk<CTInAppBaseFragment>()
+        every { fragmentSpy.listener } returns mockInAppListener
+        val mockResources = mockk<Resources>(relaxed = true)
+        every { mockResources.configuration } returns mockk(relaxed = true)
+        every { fragmentSpy.resources } returns mockResources
+
+        return fragmentSpy
     }
 }

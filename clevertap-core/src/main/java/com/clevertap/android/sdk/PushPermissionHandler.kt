@@ -75,14 +75,24 @@ internal class PushPermissionHandler @JvmOverloads constructor(
      * Attempt to request a push permission. Checks if the permission is already given and does not
      * initiate the flow in this case. When the result of the permission check is known without
      * initiation of the permission flow - notifies the attached [ctListeners] and the
-     * [PushPermissionResultCallback].
+     * [PushPermissionResultCallback]. By default the request is only triggered if the system
+     * prompt can be shown.
+     *
+     * @param activity An activity for context of the request. It is also used to navigate to
+     * settings if needed.
+     * @param fallbackToSettings Whether to navigate to the system settings screen to allow the
+     * push notification permission manually in case the system prompt cannot be shown.
+     * @param requestCallback Callback for when the push permission request should be triggered
+     * @param alwaysRequestIfNotGranted Always trigger the request regardless of whether the system prompt
+     * can be shown
      *
      * @return Whether the permission flow was initiated.
      */
     fun requestPermission(
         activity: Activity,
         fallbackToSettings: Boolean,
-        requestCallback: PushPermissionRequestCallback
+        requestCallback: PushPermissionRequestCallback,
+        alwaysRequestIfNotGranted: Boolean = false
     ): Boolean {
         if (isPushPermissionGranted(activity)) {
             notifyListeners(isPermissionGranted = true)
@@ -92,7 +102,7 @@ internal class PushPermissionHandler @JvmOverloads constructor(
         val isFirstTimeRequest = cacheProvider(activity).isFirstTimeRequest()
         val showRationale = systemPermissionInterface.shouldShowRequestPermissionRationale(activity)
 
-        if (isFirstTimeRequest || showRationale) {
+        if (alwaysRequestIfNotGranted || isFirstTimeRequest || showRationale) {
             requestCallback.onRequestPermission()
             return true
         }

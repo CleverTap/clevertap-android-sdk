@@ -21,6 +21,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scaleType="centerCrop"
+                android:contentDescription="@string/ct_inbox_media_content_description"
+                android:focusable="true"
                 android:visibility="gone" />
 
             <com.clevertap.android.sdk.customviews.SquareImageView
@@ -28,6 +30,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scaleType="centerCrop"
+                android:contentDescription="@string/ct_inbox_media_content_description"
+                android:focusable="true"
                 android:visibility="gone" />
 
             <FrameLayout

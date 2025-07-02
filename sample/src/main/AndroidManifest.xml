@@ -168,6 +168,11 @@
                     android:scheme="https" />
             </intent-filter>
         </activity>
+        
+        <activity
+            android:name=".ui.inbox.CustomInboxComposeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
     </application>
 
 </manifest>

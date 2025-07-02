@@ -523,7 +523,7 @@ JSONObject jsonObject = CTLocalInApp.builder()
         .setTitleTextColor(Constants.BLUE)
         .setMessageTextColor(Constants.BLACK)
         .setBtnTextColor(Constants.WHITE)
-        .setImageUrl("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png")
+        .setImageUrl("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png", "Alt Text")
         .setBtnBackgroundColor(Constants.BLUE)
         .build();
 cleverTapAPI.promptPushPrimer(jsonObject);

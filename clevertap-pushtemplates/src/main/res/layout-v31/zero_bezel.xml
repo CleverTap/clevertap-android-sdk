@@ -10,6 +10,13 @@
     <include layout="@layout/image_view_flipper_dynamic"
         android:id="@+id/big_image_configurable"/>
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignBottom="@+id/big_image_configurable"
+        android:importantForAccessibility="no"
+        android:background="@drawable/pt_scrim" />
+
     <RelativeLayout
         android:id="@+id/rel_lyt"
         android:layout_width="match_parent"

@@ -8,6 +8,7 @@ import static com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -164,6 +165,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         try {
             switch (inboxMessage.getOrientation()) {
                 case "l":
+                    if(!TextUtils.isEmpty(content.getMediaContentDescription())) {
+                        this.mediaImage.setContentDescription(content.getMediaContentDescription());
+                    }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.mediaImage.setVisibility(View.VISIBLE);
@@ -251,6 +255,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }
                     break;
                 case "p":
+                    if(!TextUtils.isEmpty(content.getMediaContentDescription())) {
+                        this.squareImage.setContentDescription(content.getMediaContentDescription());
+                    }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);

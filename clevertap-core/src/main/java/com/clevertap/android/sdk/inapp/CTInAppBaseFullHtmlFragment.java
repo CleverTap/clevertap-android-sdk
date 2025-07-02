@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.inapp;
 
+import static android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN;
+
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
@@ -8,11 +11,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.CTWebInterface;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Constants;
@@ -23,6 +29,7 @@ import com.clevertap.android.sdk.customviews.CloseImageView;
 public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragment {
 
     protected CTInAppWebView webView;
+    protected boolean isFullscreen = false;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -38,6 +45,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             Bundle savedInstanceState) {
+        updateFullscreenInfo();
         return displayHTMLView(inflater, container);
     }
 
@@ -56,6 +64,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        updateFullscreenInfo();
         reDrawInApp();
     }
 
@@ -87,6 +96,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             webView = new CTInAppWebView(this.context, inAppNotification.getWidth(),
                     inAppNotification.getHeight(), inAppNotification.getWidthPercentage(),
                     inAppNotification.getHeightPercentage());
+            webView.setFullscreen(isFullscreen);
             InAppWebViewClient webViewClient = new InAppWebViewClient(this);
             webView.setWebViewClient(webViewClient);
 
@@ -114,6 +124,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                         didDismiss(null);
                     }
                 });
+                closeImageView.setContentDescription(context.getString(R.string.ct_inapp_close_btn));
                 rl.addView(closeImageView, closeIvLp);
             }
 
@@ -155,6 +166,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     }
 
     private void reDrawInApp() {
+        webView.setFullscreen(isFullscreen);
         webView.updateDimension();
 
         if (inAppNotification.getCustomInAppUrl().isEmpty()) {
@@ -190,6 +202,16 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
         } catch (Exception e) {
             config.getLogger().verbose("cleanupWebView -> there was some crash in cleanup", e);
             //no-op; we are anyway destroying everything. This is just for safety.
+        }
+    }
+
+    private void updateFullscreenInfo() {
+        Activity activity = getActivity();
+        if (activity != null) {
+            Window window = activity.getWindow();
+            if (window != null) {
+                isFullscreen = (window.getAttributes().flags & FLAG_FULLSCREEN) != 0;
+            }
         }
     }
 }
