@@ -53,8 +53,7 @@ public class CallbackManager extends BaseCallbackManager {
 
     private NotificationRenderedListener notificationRenderedListener;
 
-    //TODO this list could be a synchronized set
-    private final List<OnInitCleverTapIDListener> onInitCleverTapIDListeners = new ArrayList<>();
+    private final List<OnInitCleverTapIDListener> onInitCleverTapIDListeners =  Collections.synchronizedList(new ArrayList<>());
 
     @Deprecated
     private WeakReference<CTProductConfigListener> productConfigListener;
@@ -282,9 +281,11 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public void notifyCleverTapIDChanged(final String id) {
         Handler mainHandler = new Handler(Looper.getMainLooper());
-        for (final OnInitCleverTapIDListener listener : onInitCleverTapIDListeners) {
-            if (listener != null) {
-                mainHandler.post(() -> listener.onInitCleverTapID(id));
+        synchronized (onInitCleverTapIDListeners) {
+            for (final OnInitCleverTapIDListener listener : onInitCleverTapIDListeners) {
+                if (listener != null) {
+                    mainHandler.post(() -> listener.onInitCleverTapID(id));
+                }
             }
         }
     }

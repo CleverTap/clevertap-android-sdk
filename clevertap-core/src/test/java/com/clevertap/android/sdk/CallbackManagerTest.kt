@@ -12,10 +12,15 @@ import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowLooper
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -168,7 +173,75 @@ class CallbackManagerTest : BaseTestCase() {
 
         callbackManager.removeOnInitCleverTapIDListener(listener2)
     }
+    @Test
+    fun test_OnInitListenersThreadSafety_ReproduceCME() {
 
+        val testListener = mockk<OnInitCleverTapIDListener>(relaxed = true)
+        var concurrentModificationOccurred = false
+        var otherExceptionOccurred = false
+        var caughtException: Exception? = null
+
+        // Add initial listeners
+        repeat(5) {
+            callbackManager.addOnInitCleverTapIDListener(mockk(relaxed = true))
+        }
+
+        val barrier = CyclicBarrier(2)
+
+        // Thread 1: Continuously modify the list (add/remove)
+        val modificationThread = Thread {
+            try {
+                barrier.await() // Synchronize start
+                repeat(10000) {
+                    callbackManager.addOnInitCleverTapIDListener(testListener)
+                    callbackManager.removeOnInitCleverTapIDListener(testListener)
+                }
+            } catch (e: Exception) {
+                caughtException = e
+                otherExceptionOccurred = true
+            }
+        }
+
+        // Thread 2: Continuously notify (iterate through list)
+        val notificationThread = Thread {
+            try {
+                barrier.await() // Synchronize start
+                repeat(5000) { index ->
+                    callbackManager.notifyCleverTapIDChanged("testId_$index")
+                }
+            } catch (e: ConcurrentModificationException) {
+                caughtException = e
+                concurrentModificationOccurred = true
+            } catch (e: Exception) {
+                caughtException = e
+                otherExceptionOccurred = true
+            }
+        }
+
+        // Start both threads
+        modificationThread.start()
+        notificationThread.start()
+
+        // Wait for completion
+        modificationThread.join(30000) // 30 second timeout
+        notificationThread.join(30000)
+
+        caughtException?.printStackTrace()
+
+        // Assertions
+        assertFalse(
+            "ConcurrentModificationException should not occur with thread-safe implementation. " +
+                    "Exception: $caughtException",
+            concurrentModificationOccurred
+        )
+
+        assertFalse(
+            "No other exceptions should occur. Exception: $caughtException",
+            otherExceptionOccurred
+        )
+
+        println("Thread safety test completed successfully - no ConcurrentModificationException occurred")
+    }
     @Test
     fun test_notifyUserProfileInitialized_when_FunctionIsCalledWithDeviceID_ShouldCallSyncListenerWithDeviceID() {
 
