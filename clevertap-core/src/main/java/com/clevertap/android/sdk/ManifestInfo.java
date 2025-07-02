@@ -40,6 +40,8 @@ public class ManifestInfo {
     private static final String LABEL_PUSH_PROVIDER_1 = "CLEVERTAP_PROVIDER_1";
     private static final String LABEL_PUSH_PROVIDER_2 = "CLEVERTAP_PROVIDER_2";
 
+    private static final String LABEL_ENCRYPTION_IN_TRANSIT = "CLEVERTAP_ENCRYPTION_IN_TRANSIT";
+
     private static ManifestInfo instance; // singleton
 
     public synchronized static ManifestInfo getInstance(Context context) {
@@ -94,7 +96,7 @@ public class ManifestInfo {
     private final int encryptionLevel;
     private final String provider1;
     private final String provider2;
-
+    private final String encryptionInTransit;
 
     private ManifestInfo(Context context) {
         Bundle metaData = null;
@@ -168,6 +170,7 @@ public class ManifestInfo {
         profileKeys = parseProfileKeys(metaData);
         provider1 = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PUSH_PROVIDER_1);
         provider2 = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PUSH_PROVIDER_2);
+        encryptionInTransit = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_ENCRYPTION_IN_TRANSIT);
     }
 
     ManifestInfo(
@@ -192,7 +195,8 @@ public class ManifestInfo {
             String[] profileKeys,
             int encryptionLevel,
             String provider1,
-            String provider2
+            String provider2,
+            String encryptionInTransit
     ) {
 
         // assign these if they did not happen in change creds
@@ -231,6 +235,7 @@ public class ManifestInfo {
         this.encryptionLevel = encryptionLevel;
         this.provider1 = provider1;
         this.provider2 = provider2;
+        this.encryptionInTransit = encryptionInTransit;
     }
 
     public String getAccountId() {
@@ -343,12 +348,15 @@ public class ManifestInfo {
         }
     }
 
-
     public String getVendorOneProvider() {
         return provider1;
     }
 
     public String getVendorTwoProvider() {
         return provider2;
+    }
+
+    public String getEncryptionInTransit() {
+        return encryptionInTransit;
     }
 }

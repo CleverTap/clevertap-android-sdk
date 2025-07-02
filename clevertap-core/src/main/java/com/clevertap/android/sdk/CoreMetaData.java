@@ -35,6 +35,8 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private boolean currentUserOptedOut = false;
 
+    private boolean allowSystemEvents = true;
+
     private boolean firstRequestInSession = false;
 
     private boolean firstSession = false;
@@ -76,6 +78,8 @@ public class CoreMetaData extends CleverTapMetaData {
     private String source = null, medium = null, campaign = null;
 
     private JSONObject wzrkParams = null;
+
+    private boolean relaxNetwork = false;
 
     private static int initialAppEnteredForegroundTime = 0;
 
@@ -294,6 +298,18 @@ public class CoreMetaData extends CleverTapMetaData {
         }
     }
 
+    public void setEnabledSystemEvents(boolean enable) {
+        synchronized (optOutFlagLock) {
+            allowSystemEvents = enable;
+        }
+    }
+
+    public boolean getEnabledSystemEvents() {
+        synchronized (optOutFlagLock) {
+            return allowSystemEvents;
+        }
+    }
+
     public boolean isFirstRequestInSession() {
         return firstRequestInSession;
     }
@@ -353,5 +369,13 @@ public class CoreMetaData extends CleverTapMetaData {
 
     static void incrementActivityCount() {
         activityCount++;
+    }
+
+    public boolean isRelaxNetwork() {
+        return relaxNetwork;
+    }
+
+    public void setRelaxNetwork(boolean relaxNetwork) {
+        this.relaxNetwork = relaxNetwork;
     }
 }

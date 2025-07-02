@@ -15,7 +15,6 @@ import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.ILogger;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.validation.ValidationResult;
@@ -179,8 +178,7 @@ public class CTJsonConverter {
         return error;
     }
 
-    public static JSONArray getRenderedTargetList(DBAdapter dbAdapter) {
-        String[] pushIds = dbAdapter.fetchPushNotificationIds();
+    public static JSONArray pushIdsToJSONArray(String[] pushIds) {
         JSONArray renderedTargets = new JSONArray();
         for (String pushId : pushIds) {
             Logger.v("RTL IDs -" + pushId);

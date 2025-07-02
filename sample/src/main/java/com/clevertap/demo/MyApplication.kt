@@ -132,6 +132,10 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                     .setUserProperty("ct_objectId", ctId)
             }
 
+            setInAppNotificationButtonListener { data ->
+                Log.i(TAG, "in app notification button clicked, data = $data")
+            }
+
             // FileVarsData.defineFileVars(cleverTapAPI = this) // uncomment to define file vars before app launch
         }
 

@@ -27,6 +27,7 @@ public interface Constants {
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_ID = "fcm_fallback_notification_channel";
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Misc";
     String CLEVERTAP_OPTOUT = "ct_optout";
+    String CLEVERTAP_ALLOW_SYSTEM_EVENTS = "ct_allow_sys_events_and_communication";
     String CLEVERTAP_STORAGE_TAG = "WizRocket";
     String CLEVERTAP_LOG_TAG = "CleverTap";
     int SESSION_LENGTH_MINS = 20;
@@ -52,7 +53,6 @@ public interface Constants {
     String GEOFENCE_EXITED_EVENT_NAME = "Geocluster Exited";
     String APP_LAUNCHED_EVENT = "App Launched";
     String ERROR_KEY = "wzrk_error";
-    int PUSH_DELAY_MS = 1000;
     String WZRK_URL_SCHEMA = "wzrk://";
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
@@ -95,6 +95,7 @@ public interface Constants {
 
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
+    String CONTENT_FETCH_JSON_RESPONSE_KEY = "content_fetch";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     String REQUEST_VARIABLES_JSON_RESPONSE_KEY = "vars";
     String REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY = "pc_notifs";
@@ -125,16 +126,6 @@ public interface Constants {
     String WZRK_FROM = "CTPushNotificationReceiver";
     String NETWORK_INFO = "NetworkInfo";
     String PRIMARY_DOMAIN = "clevertap-prod.com";
-    String KEY_DOMAIN_NAME = "comms_dmn";
-    String SPIKY_KEY_DOMAIN_NAME = "comms_dmn_spiky";
-    String HEADER_DOMAIN_NAME = "X-WZRK-RD";
-    String SPIKY_HEADER_DOMAIN_NAME = "X-WZRK-SPIKY-RD";
-    String HEADER_MUTE = "X-WZRK-MUTE";
-    String NAMESPACE_IJ = "IJ";
-    String KEY_LAST_TS = "comms_last_ts";
-    String KEY_FIRST_TS = "comms_first_ts";
-    String KEY_I = "comms_i";
-    String KEY_J = "comms_j";
     String CACHED_GUIDS_KEY = "cachedGUIDsKey";
     String CACHED_GUIDS_LENGTH_KEY = "cachedGUIDsLengthKey";
     String CACHED_VARIABLES_KEY = "variablesKey";
@@ -364,9 +355,6 @@ public interface Constants {
     HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
 
     HashSet<String> keysToSkipForUserAttributesEvaluation = new HashSet<>(Arrays.asList("cc", "tz", "Carrier"));
-
-
-    int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
 
     /**
      * Valid indexes for the App Inbox item and buttons.

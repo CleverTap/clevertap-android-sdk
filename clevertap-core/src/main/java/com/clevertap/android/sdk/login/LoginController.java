@@ -20,6 +20,7 @@ import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.network.ContentFetchManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -66,6 +67,8 @@ public class LoginController {
 
     private final LoginInfoProvider loginInfoProvider;
 
+    private final ContentFetchManager contentFetchManager;
+
     public LoginController(Context context,
             CleverTapInstanceConfig config,
             DeviceInfo deviceInfo,
@@ -79,7 +82,9 @@ public class LoginController {
             BaseCallbackManager callbackManager,
             DBManager dbManager,
             CTLockManager ctLockManager,
-            LoginInfoProvider loginInfoProvider) {
+            LoginInfoProvider loginInfoProvider,
+            ContentFetchManager contentFetchManager
+    ) {
         this.config = config;
         this.context = context;
         this.deviceInfo = deviceInfo;
@@ -95,6 +100,7 @@ public class LoginController {
         this.controllerManager = controllerManager;
         this.ctLockManager = ctLockManager;
         this.loginInfoProvider = loginInfoProvider;
+        this.contentFetchManager = contentFetchManager;
     }
 
     public void asyncProfileSwitchUser(final Map<String, Object> profile, final String cacheGuid,
@@ -113,8 +119,9 @@ public class LoginController {
                     pushProviders.forcePushDeviceToken(false);
 
                     // try and flush and then reset the queues
-                    baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR);
-                    baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
+                    baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true);
+                    baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true);
+                    contentFetchManager.cancelAllResponseJobs();
                     dbManager.clearQueues(context);
 
                     // clear out the old data
@@ -133,9 +140,13 @@ public class LoginController {
 
                     localDataStore.changeUser();
                     callbackManager.notifyUserProfileInitialized(deviceInfo.getDeviceID());
-                    deviceInfo
-                            .setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
-                    resetVariables(); // variables for new user are fetched with App Launched
+
+                    // Restore state of opt out and system events from storage
+                    deviceInfo.setCurrentUserOptOutStateFromStorage();
+                    deviceInfo.setSystemEventsAllowedStateFromStorage();
+
+                    // variables for new user are fetched with App Launched
+                    resetVariables();
                     analyticsManager.forcePushAppLaunchedEvent();
                     if (profile != null) {
                         analyticsManager.pushProfile(profile);

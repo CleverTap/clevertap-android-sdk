@@ -5,16 +5,19 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.Table.EVENTS
 import com.clevertap.android.sdk.db.Table.PROFILE_EVENTS
 import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup
+import com.clevertap.android.sdk.network.IJRepo
 import org.json.JSONObject
 
 internal class DBManager(
     private val config: CleverTapInstanceConfig,
-    private val ctLockManager: CTLockManager
+    private val ctLockManager: CTLockManager,
+    private val ijRepo: IJRepo,
+    private val clearFirstRequestTs: () -> Unit = {},
+    private val clearLastRequestTs: () -> Unit = {}
 ) : BaseDatabaseManager {
 
     private companion object {
@@ -120,26 +123,24 @@ internal class DBManager(
 
     //Session
     private fun clearIJ(context: Context) {
-        val editor = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ).edit()
-        editor.clear()
-        StorageHelper.persist(editor)
+        ijRepo.clearIJ(context)
     }
 
     //Session
-    private fun clearLastRequestTimestamp(context: Context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_LAST_TS), 0)
+    private fun clearLastRequestTimestamp() {
+        clearLastRequestTs()
     }
 
     //Session
     private fun clearUserContext(context: Context) {
         clearIJ(context)
-        clearFirstRequestTimestampIfNeeded(context)
-        clearLastRequestTimestamp(context)
+        clearFirstRequestTimestamp()
+        clearLastRequestTimestamp()
     }
 
     //Session
-    private fun clearFirstRequestTimestampIfNeeded(context: Context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS), 0)
+    private fun clearFirstRequestTimestamp() {
+        clearFirstRequestTs()
     }
 
     @WorkerThread

@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.response;
 
-import static com.clevertap.android.sdk.utils.CTJsonConverter.getRenderedTargetList;
+import static com.clevertap.android.sdk.utils.CTJsonConverter.pushIdsToJSONArray;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -76,7 +76,8 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                     boolean ack = pushAmpObject.getBoolean("ack");
                     logger.verbose("Received ACK -" + ack);
                     if (ack) {
-                        JSONArray rtlArray = getRenderedTargetList(baseDatabaseManager.loadDBAdapter(context));
+                        String[] pushIds = baseDatabaseManager.loadDBAdapter(context).fetchPushNotificationIds();
+                        JSONArray rtlArray = pushIdsToJSONArray(pushIds);
                         String[] rtlStringArray = new String[0];
                         if (rtlArray != null) {
                             rtlStringArray = new String[rtlArray.length()];
