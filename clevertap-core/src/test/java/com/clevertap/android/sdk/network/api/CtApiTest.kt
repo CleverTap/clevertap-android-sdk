@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.network.api
 
 import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
@@ -41,6 +42,9 @@ class CtApiTest {
 
         val sendVarsResponse = ctApi.defineVars(getEmptyQueueBody())
         assertEquals(expectedHeaders, sendVarsResponse.request.headers)
+
+        val sendContentFetch = ctApi.sendContentFetch(getEmptyContentFetchBody())
+        assertEquals(expectedHeaders, sendContentFetch.request.headers)
     }
 
     @Test
@@ -131,6 +135,24 @@ class CtApiTest {
         assertContains(urlString, "t=${CtApiTestProvider.SDK_VERSION}")
         assertContains(urlString, "z=${CtApiTestProvider.ACCOUNT_ID}")
         assertContains(urlString, "ts=${ctApi.currentRequestTimestampSeconds}")
+    }
+
+    @Test
+    fun test_sendContentFetch_attachDefaultQueryParams() {
+        val request = ctApi.sendContentFetch(getEmptyContentFetchBody()).request
+        val urlString = request.url.toString()
+        assertContains(urlString, "os=Android")
+        assertContains(urlString, "t=${CtApiTestProvider.SDK_VERSION}")
+        assertContains(urlString, "z=${CtApiTestProvider.ACCOUNT_ID}")
+        assertContains(urlString, "ts=${ctApi.currentRequestTimestampSeconds}")
+    }
+
+
+    @Test
+    fun test_sendContentFetch_attachEndpoint() {
+        val request = ctApi.sendContentFetch(getEmptyContentFetchBody()).request
+        val urlString = request.url.toString()
+        assertContains(urlString, "/content")
     }
 
     @Test
@@ -344,5 +366,9 @@ class CtApiTest {
 
     private fun getEmptyQueueBody(): SendQueueRequestBody {
         return SendQueueRequestBody(null, JSONArray())
+    }
+
+    private fun getEmptyContentFetchBody(): ContentFetchRequestBody {
+        return ContentFetchRequestBody(JSONObject(), JSONArray())
     }
 }

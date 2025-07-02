@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.toJsonOrNull
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
+import com.clevertap.android.sdk.utils.DispatcherProvider
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,7 +30,8 @@ internal class ContentFetchManager(
     private val queueHeaderBuilder: QueueHeaderBuilder,
     private val ctApiWrapper: CtApiWrapper,
     private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS,
-    private val clock: Clock = Clock.SYSTEM
+    private val clock: Clock = Clock.SYSTEM,
+    private val dispatchers: DispatcherProvider = CtDefaultDispatchers()
 ) {
     companion object {
         private const val DEFAULT_PARALLEL_REQUESTS = 5
@@ -41,10 +43,9 @@ internal class ContentFetchManager(
     var parentJob = SupervisorJob()
 
     private var scope = CoroutineScope(
-        parentJob + CtDefaultDispatchers().io().limitedParallelism(parallelRequests)
+        parentJob + dispatchers.io().limitedParallelism(parallelRequests)
     )
     private val logger = config.logger
-    private val accountId = config.accountId
 
     fun handleContentFetch(contentFetchItems: JSONArray, packageName: String) {
         scope.launch {
@@ -102,14 +103,14 @@ internal class ContentFetchManager(
     private suspend fun sendContentFetchRequest(content: JSONArray): Boolean {
         val header = queueHeaderBuilder.buildHeader(null) ?: return false
         val body = ContentFetchRequestBody(header, content)
-        logger.debug(accountId, "Fetching Content: $body")
+        logger.debug(TAG, "Fetching Content: $body")
 
         try {
             ctApiWrapper.ctApi.sendContentFetch(body).use { response ->
                 return handleContentFetchResponse(response, !currentCoroutineContext().isActive)
             }
         } catch (e: Exception) {
-            logger.debug(accountId, "An exception occurred while fetching content.", e)
+            logger.debug(TAG, "An exception occurred while fetching content.", e)
             return false
         }
     }
@@ -123,7 +124,7 @@ internal class ContentFetchManager(
             val bodyString = response.readBody()
             val bodyJson = bodyString.toJsonOrNull()
 
-            logger.info(accountId, "Content fetch response received successfully")
+            logger.info(TAG, "Content fetch response received successfully with isUserSwitching = $isUserSwitching")
 
             if (bodyString == null || bodyJson == null) {
                 // B.E error; should never happen but consider this as success.
@@ -135,16 +136,17 @@ internal class ContentFetchManager(
         } else {
             when (response.code) {
                 429 -> {
-                    logger.info(accountId, "Content fetch request was rate limited (429). Consider reducing request frequency.")
+                    logger.info(TAG, "Content fetch request was rate limited (429). Consider reducing request frequency.")
                 }
 
-                else -> logger.info(accountId, "Content fetch request failed with response code: ${response.code}")
+                else -> logger.info(TAG, "Content fetch request failed with response code: ${response.code}")
             }
             return false
         }
     }
 
     fun cancelAllResponseJobs() {
+        logger.info(TAG, "Cancelling pending content fetch jobs")
         parentJob.cancel()
         runBlocking {
             parentJob.children.forEach { it.join() }
@@ -156,7 +158,7 @@ internal class ContentFetchManager(
     private fun resetScope() {
         parentJob = SupervisorJob()
         scope = CoroutineScope(
-            parentJob + CtDefaultDispatchers().io().limitedParallelism(parallelRequests)
+            parentJob + dispatchers.io().limitedParallelism(parallelRequests)
         )
     }
 }
