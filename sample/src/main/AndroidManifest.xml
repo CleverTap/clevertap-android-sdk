@@ -70,7 +70,7 @@
         <!-- To enable encryption in transit in network calls set this to 1, otherwise keep it as 0 -->
         <meta-data
             android:name="CLEVERTAP_ENCRYPTION_IN_TRANSIT"
-            android:value="1" />
+            android:value="0" />
         <!--<meta-data
             android:name="CLEVERTAP_PROXY_DOMAIN"
             android:value="analytics.sdktesting.xyz"/>-->
