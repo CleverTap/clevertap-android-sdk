@@ -79,6 +79,7 @@ class InAppControllerTest {
         every { CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any()) } returns true
 
         mockkStatic(NetworkManager::class)
+        mockkObject(NetworkManager)
         every { NetworkManager.isNetworkOnline(any()) } returns true
 
         mockInAppActionHandler = mockk(relaxed = true)
