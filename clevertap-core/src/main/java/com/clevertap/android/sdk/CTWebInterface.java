@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.webkit.JavascriptInterface;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.inapp.CTInAppAction;
-import com.clevertap.android.sdk.inapp.CTInAppBaseFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;

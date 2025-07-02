@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk
 
-import com.clevertap.android.sdk.inapp.CTInAppBaseFragment
+import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.inapp.InAppActionType.CLOSE
 import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.shared.test.BaseTestCase

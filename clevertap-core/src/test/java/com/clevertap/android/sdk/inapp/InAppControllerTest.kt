@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.function
 import com.clevertap.android.sdk.inapp.customtemplates.template
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FakeClock
@@ -26,6 +27,7 @@ import com.clevertap.android.sdk.utils.configMock
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkAll
@@ -73,7 +75,7 @@ class InAppControllerTest {
             )
         } just runs
 
-        mockkStatic(CTInAppBaseFragment::class)
+        mockkObject(CTInAppBaseFragment.Companion)
         every { CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any()) } returns true
 
         mockkStatic(NetworkManager::class)
@@ -112,7 +114,7 @@ class InAppControllerTest {
         mockInAppInflater = mockk()
         every { mockInAppInflater.inflate(any(), any(), any()) } answers {
             (args[2] as InAppNotificationReadyListener).onNotificationReady(
-                CTInAppNotification().initWithJSON(args[0] as JSONObject, true)
+                CTInAppNotification(args[0] as JSONObject, true)
             )
         }
         fakeInAppQueue = FakeInAppQueue()
@@ -145,7 +147,7 @@ class InAppControllerTest {
         every { mockInAppActionHandler.launchPushPermissionPrompt(any()) } returns true
 
         val inAppController = createInAppController()
-        assertTrue(inAppController.isPushPermissionGranted)
+        assertTrue(inAppController.isPushPermissionGranted())
         verify(exactly = 1) { mockInAppActionHandler.arePushNotificationsEnabled() }
 
         inAppController.promptPermission(true)
@@ -156,7 +158,7 @@ class InAppControllerTest {
     fun `inAppActionTriggered should raise notification clicked event`() {
         val inAppController = createInAppController()
         val campaignId = "test-campaign"
-        val inApp = CTInAppNotification().initWithJSON(
+        val inApp = CTInAppNotification(
             JSONObject(
                 """{
             "${Constants.KEY_TYPE}": "${CTInAppType.CTInAppTypeInterstitial}",
@@ -204,7 +206,7 @@ class InAppControllerTest {
         every { mockTemplatesManager.isTemplateRegistered(testTemplate.name) } returns true
 
         val inAppJson = getCustomTemplateInAppJson(testTemplate.name)
-        val inApp = CTInAppNotification().initWithJSON(JSONObject(inAppJson), false)
+        val inApp = CTInAppNotification(JSONObject(inAppJson), false)
 
         val inAppController = createInAppController()
         inAppController.inAppNotificationActionTriggered(
@@ -277,7 +279,7 @@ class InAppControllerTest {
     @Test
     fun `inAppNotificationDidDismiss should trigger InAppNotificationListener`() {
         val inApp =
-            CTInAppNotification().initWithJSON(
+            CTInAppNotification(
                 JSONObject(InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV),
                 false
             )
@@ -290,7 +292,7 @@ class InAppControllerTest {
     @Test
     fun `inAppNotificationDidShow should track NotificationViewed event and trigger InAppNotificationListener`() {
         val inApp =
-            CTInAppNotification().initWithJSON(
+            CTInAppNotification(
                 JSONObject(InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV),
                 false
             )
@@ -316,18 +318,18 @@ class InAppControllerTest {
         val inAppController = createInAppController()
         inAppController.addInAppNotificationsToQueue(inApps)
 
-        var currentInApp = InAppController.getCurrentlyDisplayingInApp()
+        var currentInApp = InAppController.currentlyDisplayingInApp!!
         assertEquals(
             CTInAppType.CTInAppTypeHalfInterstitial.toString(),
             currentInApp.type
         )
         inAppController.inAppNotificationDidDismiss(currentInApp, null)
 
-        currentInApp = InAppController.getCurrentlyDisplayingInApp()
+        currentInApp = InAppController.currentlyDisplayingInApp!!
         assertEquals(Constants.KEY_CUSTOM_HTML, currentInApp.type)
         inAppController.inAppNotificationDidDismiss(currentInApp, null)
 
-        assertNull(InAppController.getCurrentlyDisplayingInApp())
+        assertNull(InAppController.currentlyDisplayingInApp)
     }
 
     @Test
@@ -338,7 +340,7 @@ class InAppControllerTest {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
         inAppController.addInAppNotificationsToQueue(inApps)
-        assertNull(InAppController.getCurrentlyDisplayingInApp())
+        assertNull(InAppController.currentlyDisplayingInApp)
 
         inAppController.resumeInApps()
 
@@ -359,10 +361,10 @@ class InAppControllerTest {
 //            JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
         val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
         inAppController.addInAppNotificationsToQueue(inApps)
-        assertNull(InAppController.getCurrentlyDisplayingInApp())
+        assertNull(InAppController.currentlyDisplayingInApp)
 
         inAppController.resumeInApps()
-        assertNull(InAppController.getCurrentlyDisplayingInApp())
+        assertNull(InAppController.currentlyDisplayingInApp)
     }
 
     @Test
@@ -467,7 +469,7 @@ class InAppControllerTest {
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
 
-        assertNull(InAppController.getCurrentlyDisplayingInApp())
+        assertNull(InAppController.currentlyDisplayingInApp)
     }
 
     @Test
@@ -495,7 +497,7 @@ class InAppControllerTest {
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
-        assertNull(InAppController.getCurrentlyDisplayingInApp())
+        assertNull(InAppController.currentlyDisplayingInApp)
 
         // after becoming foreground again, the in-apps should be displayed
         every { CoreMetaData.isAppForeground() } returns true
@@ -536,7 +538,7 @@ class InAppControllerTest {
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
-        val currentInApp = InAppController.getCurrentlyDisplayingInApp()
+        val currentInApp = InAppController.currentlyDisplayingInApp!!
         assertEquals(CTInAppType.CTInAppTypeInterstitial.toString(), currentInApp.type)
 
         // show again without dismissing, the current in-app should remain the same
@@ -560,7 +562,7 @@ class InAppControllerTest {
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
-        assertNull(InAppController.getCurrentlyDisplayingInApp())
+        assertNull(InAppController.currentlyDisplayingInApp)
 
         // after the activity changes, the in-apps should be displayed
         every { mockActivity.localClassName } returns "NotExcluded"
@@ -577,7 +579,7 @@ class InAppControllerTest {
     fun `showNotificationIfAvailable should drop expired in-apps`() {
         //TODO verify next in-apps will not be shown after a ttl expired in-app
         val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
-        val ttl = CTInAppNotification().initWithJSON(
+        val ttl = CTInAppNotification(
             JSONObject(InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA),
             false
         ).timeToLive
@@ -587,7 +589,7 @@ class InAppControllerTest {
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
-        assertNull(InAppController.getCurrentlyDisplayingInApp())
+        assertNull(InAppController.currentlyDisplayingInApp)
     }
 
     @Test
@@ -621,14 +623,13 @@ class InAppControllerTest {
     }
 
     private fun verifyInAppsDisplayed(inAppController: InAppController, vararg inAppTypes: String) {
-        var currentInApp: CTInAppNotification?
+        var currentInApp: CTInAppNotification
         for (inAppType in inAppTypes) {
-            currentInApp = InAppController.getCurrentlyDisplayingInApp()
+            currentInApp = InAppController.currentlyDisplayingInApp!!
             assertEquals(inAppType, currentInApp.type)
             inAppController.inAppNotificationDidDismiss(currentInApp, null)
         }
-        currentInApp = InAppController.getCurrentlyDisplayingInApp()
-        assertNull(currentInApp)
+        assertNull(InAppController.currentlyDisplayingInApp)
     }
 
     private fun verifyCustomFunctionActionTriggered(isVisual: Boolean) {
@@ -649,20 +650,20 @@ class InAppControllerTest {
 
         verify(exactly = 1) {
             mockTemplatesManager.presentTemplate(match { inApp ->
-                inApp.customTemplateData.templateName == testTemplate.name
+                inApp.customTemplateData?.templateName == testTemplate.name
             }, any(), any())
         }
 
-        val currentInApp = InAppController.getCurrentlyDisplayingInApp()
+        val currentInApp = InAppController.currentlyDisplayingInApp
         if (isVisual) {
-            assertEquals(testTemplate.name, currentInApp.customTemplateData.templateName)
+            assertEquals(testTemplate.name, currentInApp?.customTemplateData?.templateName)
         } else {
             assertNull(currentInApp)
         }
     }
 
     private fun getInAppWithAction(actionJsonString: String): CTInAppNotification {
-        return CTInAppNotification().initWithJSON(
+        return CTInAppNotification(
             JSONObject(
                 """{
             "${Constants.KEY_TYPE}": "${CTInAppType.CTInAppTypeCover}",
@@ -691,21 +692,21 @@ class InAppControllerTest {
 
     private fun createInAppController(): InAppController {
         return InAppController(
-            mockk(relaxed = true),
-            mockConfig,
-            MockCTExecutors(),
-            mockControllerManager,
-            mockCallbackManager,
-            mockAnalyticsManager,
-            mockk(relaxed = true),
-            mockManifestInfo,
-            mockk(relaxed = true),
-            fakeInAppQueue,
-            mockEvaluationManager,
-            mockTemplatesManager,
-            mockInAppActionHandler,
-            mockInAppInflater,
-            fakeClock
+            context = mockk(relaxed = true),
+            config = mockConfig,
+            executors = MockCTExecutors(),
+            controllerManager = mockControllerManager,
+            callbackManager = mockCallbackManager,
+            analyticsManager = mockAnalyticsManager,
+            coreMetaData = mockk(relaxed = true),
+            manifestInfo = mockManifestInfo,
+            deviceInfo = mockk(relaxed = true),
+            inAppQueue = fakeInAppQueue,
+            evaluationManager = mockEvaluationManager,
+            templatesManager = mockTemplatesManager,
+            inAppActionHandler = mockInAppActionHandler,
+            inAppNotificationInflater = mockInAppInflater,
+            clock = fakeClock
         )
     }
 
