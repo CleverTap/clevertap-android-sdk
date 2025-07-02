@@ -90,21 +90,65 @@ class ContentFetchManagerTest {
             mockResponse
         }
 
-
         // Act
         contentFetchManager.clevertapResponseHandler = mockClevertapResponseHandler
         contentFetchManager.handleContentFetch(contentFetchItems, packageName)
 
         advanceUntilIdle()
 
+        // Assert
+        assertNotNull(capturedRequestBody)
         val requestBodyString = capturedRequestBody!!.toString()
         val parsedArray = JSONArray(requestBodyString)
 
-        // Verify content fetch event data
-        val contentEvent = parsedArray.getJSONObject(1)
-        val evtData = contentEvent.getJSONObject("evtData")
+        // Should have header + 2 content fetch events
+        assertEquals(3, parsedArray.length())
 
-        // Assert
+        // Verify header
+        val header = parsedArray.getJSONObject(0)
+        assertEquals("__d2", header.getString("g"))
+        assertEquals("meta", header.getString("type"))
+        assertEquals("test-account-id", header.getString("id"))
+        assertEquals(1234567890, header.getInt("ts"))
+
+        // Verify first content fetch event
+        val firstContentEvent = parsedArray.getJSONObject(1)
+        assertEquals("event", firstContentEvent.getString("type"))
+        assertEquals("content_fetch", firstContentEvent.getString("evtName"))
+        assertEquals(12345, firstContentEvent.getInt("s"))
+        assertEquals(1, firstContentEvent.getInt("pg"))
+        assertEquals(1234567890, firstContentEvent.getInt("ep"))
+        assertFalse(firstContentEvent.getBoolean("f"))
+        assertEquals(300, firstContentEvent.getInt("lsl"))
+        assertEquals(packageName, firstContentEvent.getString("pai"))
+        assertEquals("HomeScreen", firstContentEvent.getString("n"))
+
+        // Verify first evtData
+        val firstEvtData = firstContentEvent.getJSONObject("evtData")
+        assertEquals("banner_target_1", firstEvtData.getString("tgtId"))
+        assertEquals("banner_key_1", firstEvtData.getString("key"))
+        assertTrue(firstEvtData.has("eventProperties"))
+        val firstEventProperties = firstEvtData.getJSONObject("eventProperties")
+        assertEquals("app_launch", firstEventProperties.getString("source"))
+
+        // Verify second content fetch event
+        val secondContentEvent = parsedArray.getJSONObject(2)
+        assertEquals("event", secondContentEvent.getString("type"))
+        assertEquals("content_fetch", secondContentEvent.getString("evtName"))
+        assertEquals(12345, secondContentEvent.getInt("s"))
+        assertEquals(1, secondContentEvent.getInt("pg"))
+        assertEquals(1234567890, secondContentEvent.getInt("ep"))
+        assertFalse(secondContentEvent.getBoolean("f"))
+        assertEquals(300, secondContentEvent.getInt("lsl"))
+        assertEquals(packageName, secondContentEvent.getString("pai"))
+        assertEquals("HomeScreen", secondContentEvent.getString("n"))
+
+        // Verify second evtData
+        val secondEvtData = secondContentEvent.getJSONObject("evtData")
+        assertEquals("popup_target_1", secondEvtData.getString("tgtId"))
+        assertEquals("welcome_popup", secondEvtData.getString("messageKey"))
+        assertEquals(1234567890, secondEvtData.getInt("ts"))
+
         verify { mockQueueHeaderBuilder.buildHeader(null) }
         verify { mockCtApi.sendContentFetch(any()) }
         verify { mockClevertapResponseHandler.handleResponse(false, any(), any(), any()) }
@@ -258,52 +302,6 @@ class ContentFetchManagerTest {
         verify { mockCtApi.sendContentFetch(any()) }
         verify(exactly = 0) { mockClevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
     }
-
-    @Test
-    fun `handleContentFetch should create proper metadata for content fetch events`() = testScheduler.run {
-        // Arrange
-        val contentFetchItems = createValidContentFetchItems()
-        val packageName = "com.test.app"
-        val mockHeader = createMockHeader()
-        val mockResponse = createMockSuccessResponse()
-        var capturedRequestBody: ContentFetchRequestBody? = null
-
-        every { mockQueueHeaderBuilder.buildHeader(null) } returns mockHeader
-        every { mockCtApi.sendContentFetch(capture(slot<ContentFetchRequestBody>())) } answers {
-            capturedRequestBody = firstArg()
-            mockResponse
-        }
-
-        // Act
-        contentFetchManager.clevertapResponseHandler = mockClevertapResponseHandler
-        contentFetchManager.handleContentFetch(contentFetchItems, packageName)
-
-        advanceUntilIdle()
-
-        // Assert
-        assertNotNull(capturedRequestBody)
-
-        // Verify the request body structure
-        val requestBodyString = capturedRequestBody!!.toString()
-        val parsedArray = JSONArray(requestBodyString)
-
-        // Should have header + content items
-        assertTrue(parsedArray.length() >= 2)
-
-        // Verify content fetch event metadata
-        val contentEvent = parsedArray.getJSONObject(1)
-        assertEquals("event", contentEvent.getString("type"))
-        assertEquals("content_fetch", contentEvent.getString("evtName"))
-        assertEquals(12345, contentEvent.getInt("s")) // session id
-        assertEquals(1, contentEvent.getInt("pg")) // page/activity count
-        assertEquals(1234567890, contentEvent.getInt("ep")) // epoch time
-        assertFalse(contentEvent.getBoolean("f")) // is first session
-        assertEquals(300, contentEvent.getInt("lsl")) // last session length
-        assertEquals(packageName, contentEvent.getString("pai")) // package name
-        assertEquals("HomeScreen", contentEvent.getString("n")) // screen name
-    }
-
-
 
     // Helper methods
     private fun createValidContentFetchItems(): JSONArray {
