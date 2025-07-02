@@ -26,7 +26,6 @@ public class CTExecutorFactory {
         if (executorForAccount == null) {
             CTExecutors newExecutor = new CTExecutors(config);
             executorForAccount = executorMap.putIfAbsent(accountId, newExecutor);
-            executorMap.putIfAbsent(accountId, newExecutor);
             if (executorForAccount == null) {
                 executorForAccount = newExecutor;
             }
