@@ -406,8 +406,6 @@ internal object CleverTapFactory {
             SYSTEM
         )
 
-        val executors = CTExecutorFactory.executors(config)
-
         val inAppNotificationInflater = InAppNotificationInflater(
             storeRegistry,
             templatesManager,

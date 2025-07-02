@@ -3,12 +3,12 @@ package com.clevertap.android.sdk.network
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.Utils.getNow
 import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.toJsonOrNull
+import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +28,8 @@ internal class ContentFetchManager(
     private val coreMetaData: CoreMetaData,
     private val queueHeaderBuilder: QueueHeaderBuilder,
     private val ctApiWrapper: CtApiWrapper,
-    private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS
+    private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS,
+    private val clock: Clock = Clock.SYSTEM
 ) {
     companion object {
         private const val DEFAULT_PARALLEL_REQUESTS = 5
@@ -90,7 +91,7 @@ internal class ContentFetchManager(
             put(Constants.KEY_EVT_NAME, "content_fetch")
             put("s", coreMetaData.currentSessionId)
             put("pg", CoreMetaData.getActivityCount())
-            put("ep", getNow())
+            put("ep", clock.currentTimeSecondsInt())
             put("f", coreMetaData.isFirstSession)
             put("lsl", coreMetaData.lastSessionLength)
             put("pai", packageName)
