@@ -40,7 +40,8 @@ internal class FileResourceProvider(
         ctCaches,
         logger
     ),
-    private val fileMAO: FileMemoryAccessObject = FileMemoryAccessObject(ctCaches, logger)
+    private val fileMAO: FileMemoryAccessObject = FileMemoryAccessObject(ctCaches, logger),
+    private val deepLogging: Boolean = false
 ) {
     private val mapOfMAO: Map<CtCacheType, List<MemoryAccessObject<*>>> =
         mapOf<CtCacheType, List<MemoryAccessObject<*>>>(
@@ -176,18 +177,12 @@ internal class FileResourceProvider(
             }
             val pair = mao.removeInMemory(cacheKey)
             if (pair != null) {
-                logger?.verbose(
-                    TAG_FILE_DOWNLOAD,
-                    "$cacheKey was present in $cacheType in-memory cache is successfully removed"
-                )
+                log("$cacheKey was present in $cacheType in-memory cache is successfully removed")
             }
 
             val b = mao.removeDiskMemory(cacheKey)
             if (b) {
-                logger?.verbose(
-                    TAG_FILE_DOWNLOAD,
-                    "$cacheKey was present in $cacheType disk-memory cache is successfully removed"
-                )
+                log("$cacheKey was present in $cacheType disk-memory cache is successfully removed")
             }
         }
     }
@@ -196,10 +191,10 @@ internal class FileResourceProvider(
     private fun <T> fetchCachedData(cacheKeyAndType: Pair<String?,CtCacheType>, transformationType: MemoryDataTransformationType<T>): T? {
         val cacheKey = cacheKeyAndType.first
         val cacheType = cacheKeyAndType.second
-        logger?.verbose(TAG_FILE_DOWNLOAD,"${cacheType.name} data for key $cacheKey requested")
+        log("${cacheType.name} data for key $cacheKey requested")
 
         if (cacheKey == null) {
-            logger?.verbose(TAG_FILE_DOWNLOAD,"${cacheType.name} data for null key requested")
+            log("${cacheType.name} data for null key requested")
             return null
         }
 
@@ -221,7 +216,7 @@ internal class FileResourceProvider(
         val cachedData = cachedDataFetcherBlock(urlMeta.first)
 
         if (cachedData != null) {
-            logger?.verbose(TAG_FILE_DOWNLOAD,"Returning requested ${urlMeta.first} ${urlMeta.second.name} from cache")
+            log("Returning requested ${urlMeta.first} ${urlMeta.second.name} from cache")
             return cachedData
         }
 
@@ -234,13 +229,19 @@ internal class FileResourceProvider(
                     data = dataToSave,
                     mao = mao
                 )
-                logger?.verbose(TAG_FILE_DOWNLOAD,"Returning requested ${urlMeta.first} ${urlMeta.second.name} with network, saved in cache")
+                log("Returning requested ${urlMeta.first} ${urlMeta.second.name} with network, saved in cache")
                 dataToSave.first
             }
             else -> {
-                logger?.verbose(TAG_FILE_DOWNLOAD,"There was a problem fetching data for ${urlMeta.second.name}, status: ${downloadedData.status}")
+                log("There was a problem fetching data for ${urlMeta.second.name}, status: ${downloadedData.status}")
                 null
             }
+        }
+    }
+
+    private fun log(message: String) {
+        if (deepLogging) {
+            logger?.verbose(TAG_FILE_DOWNLOAD, message)
         }
     }
 }

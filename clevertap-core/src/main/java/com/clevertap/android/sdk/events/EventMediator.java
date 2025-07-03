@@ -89,6 +89,7 @@ public class EventMediator {
 
         if (eventType != Constants.RAISED_EVENT && eventType != Constants.NV_EVENT) {
             // opted-out and system events enabled
+            config.getLogger().debug(config.getAccountId(), "This is a system event, not dropping event: " + event);
             return false;
         }
 
@@ -99,6 +100,8 @@ public class EventMediator {
         boolean dropEvent = !isSystemEvent;
         if (dropEvent) {
             config.getLogger().debug(config.getAccountId(), "Current user is opted out dropping event: " + event);
+        } else {
+            config.getLogger().debug(config.getAccountId(), "This is a system event, not dropping event: " + event);
         }
         return dropEvent;
     }

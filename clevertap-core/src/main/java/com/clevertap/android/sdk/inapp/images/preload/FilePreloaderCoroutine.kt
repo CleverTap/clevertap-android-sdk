@@ -23,7 +23,8 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
     override val logger: ILogger? = null,
     dispatchers: DispatcherProvider = CtDefaultDispatchers(),
     override val config: FilePreloadConfig = FilePreloadConfig.default(),
-    override val timeoutForPreload: Long = 5.minutes.inWholeMilliseconds
+    override val timeoutForPreload: Long = 5.minutes.inWholeMilliseconds,
+    private val deepLogging: Boolean = false
 ) : FilePreloaderStrategy {
 
     private val jobs: MutableList<Job> = mutableListOf()
@@ -75,7 +76,9 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
 
             urlMetas.forEach { meta: Pair<String, CtCacheType> ->
                 val deferred: Deferred<Pair<String, Boolean>> = async {
-                    logger?.verbose("started asset url fetch $meta")
+                    if (deepLogging) {
+                        logger?.verbose("started asset url fetch $meta")
+                    }
 
                     startedBlock.invoke(meta)
                     val success: Boolean
@@ -89,7 +92,9 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
                             success = false
                         }
                     }
-                    logger?.verbose("finished asset url fetch $meta in $mils ms")
+                    if (deepLogging) {
+                        logger?.verbose("finished asset url fetch $meta in $mils ms")
+                    }
 
                     results[meta.first] = success
                     return@async meta.first to success
