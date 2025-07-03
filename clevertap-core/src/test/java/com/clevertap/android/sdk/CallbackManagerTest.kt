@@ -13,14 +13,12 @@ import io.mockk.*
 import org.json.JSONObject
 import org.junit.*
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowLooper
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.CyclicBarrier
-import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -192,9 +190,13 @@ class CallbackManagerTest : BaseTestCase() {
         val modificationThread = Thread {
             try {
                 barrier.await() // Synchronize start
-                repeat(10000) {
+                repeat(10000) { iterationIndex ->
                     callbackManager.addOnInitCleverTapIDListener(testListener)
-                    callbackManager.removeOnInitCleverTapIDListener(testListener)
+                    // Occasionally remove listeners
+                    val randomAction = Random.nextInt(100)
+                    if (randomAction < 50) {
+                        callbackManager.removeOnInitCleverTapIDListener(testListener)
+                    }
                 }
             } catch (e: Exception) {
                 caughtException = e
@@ -223,8 +225,8 @@ class CallbackManagerTest : BaseTestCase() {
         notificationThread.start()
 
         // Wait for completion
-        modificationThread.join(30000) // 30 second timeout
-        notificationThread.join(30000)
+        modificationThread.join(7000) // 7 second timeout
+        notificationThread.join(7000)
 
         caughtException?.printStackTrace()
 
