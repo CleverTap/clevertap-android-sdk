@@ -280,11 +280,10 @@ public class CallbackManager extends BaseCallbackManager {
 
     @Override
     public void notifyCleverTapIDChanged(final String id) {
-        Handler mainHandler = new Handler(Looper.getMainLooper());
         synchronized (onInitCleverTapIDListeners) {
             for (final OnInitCleverTapIDListener listener : onInitCleverTapIDListeners) {
                 if (listener != null) {
-                    mainHandler.post(() -> listener.onInitCleverTapID(id));
+                    listener.onInitCleverTapID(id);
                 }
             }
         }
