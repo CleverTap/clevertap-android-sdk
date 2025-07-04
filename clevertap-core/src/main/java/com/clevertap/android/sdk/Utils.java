@@ -31,17 +31,21 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest;
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader;
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation;
 import com.clevertap.android.sdk.network.DownloadedBitmap;
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
 import com.google.firebase.messaging.RemoteMessage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -273,6 +277,105 @@ public final class Utils {
                 context, config, timeoutMillis);
         return HttpBitmapLoader.getHttpBitmap(HttpBitmapOperation.DOWNLOAD_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,bitmapDownloadRequest);
     }
+
+    /**
+     * Saves an animated image from URL to a file and returns a content URI
+     */
+    @Nullable
+    @RequiresApi(26)
+    public static Uri saveNotificationGif(String url, Context context, CleverTapInstanceConfig config) {
+        try {
+            if (url == null || !url.toLowerCase().endsWith(".gif")) {
+                return null;
+            }
+
+            BitmapDownloadRequest downloadRequest = new BitmapDownloadRequest(
+                    url,
+                    false,
+                    context,
+                    config,
+                    Constants.PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS, // downloadTimeLimitInMillis
+                    -1
+            );
+
+            DownloadedBitmap downloadedBitmap = HttpBitmapLoader.getHttpBitmap(
+                    HttpBitmapOperation.DOWNLOAD_BYTES,
+                    downloadRequest
+            );
+
+            if (downloadedBitmap.getStatus() == DownloadedBitmap.Status.SUCCESS && downloadedBitmap.getBytes() != null) {
+                // Write bytes to file
+                try {
+                    File pushDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
+                    if (pushDir == null) {
+                        config.getLogger().debug(config.getAccountId(),
+                                "CleverTap.Push dir not available for gif");
+                        return null;
+                    }
+
+                    File file = new File(pushDir, System.currentTimeMillis() + ".gif");
+                    Files.write(file.toPath(), downloadedBitmap.getBytes());
+
+                    // Return content URI using FileProvider with CleverTap authority
+                    return FileProvider.getUriForFile(context,
+                            context.getPackageName() + ".clevertap.fileprovider", file);
+
+                } catch (Exception e) {
+                    config.getLogger().debug(config.getAccountId(),
+                            "Failed to write gif to file: " + e);
+                }
+            } else {
+                config.getLogger().debug(config.getAccountId(),
+                        "Failed to download gif " + downloadedBitmap.getStatus().getStatusValue());
+            }
+
+        } catch (Exception e) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Couldn't download gif for notification: " + e.getMessage());
+        }
+        return null;
+    }
+
+
+    /**
+     * Cleans up old animated notification image files from the cache directory
+     *
+     */
+    public static void cleanupOldAnimatedImages(Context context, CleverTapInstanceConfig config) {
+        File cacheDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
+        try {
+            if (cacheDir == null || !cacheDir.exists()) {
+                return;
+            }
+
+            File[] files = cacheDir.listFiles();
+            if (files == null) {
+                return;
+            }
+
+            int deletedCount = 0;
+            for (File file : files) {
+                if (file.isFile()) {
+                    if (file.delete()) {
+                        deletedCount++;
+                    } else {
+                        config.getLogger().debug(config.getAccountId(),
+                                "Failed to delete old animated image file: " + file.getName());
+                    }
+                }
+            }
+
+            if (deletedCount > 0) {
+                config.getLogger().debug(config.getAccountId(),
+                        "Cleaned up " + deletedCount + " old animated notification files");
+            }
+
+        } catch (Exception e) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Error during animated image cleanup: " + e.getMessage());
+        }
+    }
+
 
     public static int getThumbnailImage(Context context, String image) {
         if (context != null) {
