@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.Clock;
@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,6 +49,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final Validator validator;
     private final InAppResponse inAppResponse;
     private final Clock currentTimeProvider;
+    private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
 
     private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
@@ -66,7 +66,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             BaseCallbackManager callbackManager, ControllerManager controllerManager,
             final CTLockManager ctLockManager,
             InAppResponse inAppResponse,
-            Clock currentTimeProvider
+            Clock currentTimeProvider,
+            CTExecutors executors
     ) {
         this.context = context;
         this.config = config;
@@ -80,18 +81,16 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.controllerManager = controllerManager;
         this.inAppResponse = inAppResponse;
         this.currentTimeProvider = currentTimeProvider;
+        this.executors = executors;
     }
 
     @Override
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("addMultiValuesForKey", new Callable<Void>() {
-            @Override
-            public Void call() {
-                final String command = Constants.COMMAND_ADD;
-                _handleMultiValues(values, key, command);
-                return null;
-            }
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("addMultiValuesForKey", () -> {
+            final String command = Constants.COMMAND_ADD;
+            _handleMultiValues(values, key, command);
+            return null;
         });
     }
 
@@ -121,7 +120,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.WZRK_FETCH);
             event.put("evtData", notif);
         } catch (JSONException e) {
-            e.printStackTrace();
+            // should not happen
         }
         sendFetchEvent(event);
     }
@@ -517,58 +516,52 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     private void handleInboxPreview(Bundle extras) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("testInboxNotification",new Callable<Void>() {
-            @Override
-            public Void call() {
-                try {
-                    Logger.v("Received inbox via push payload: " + extras
-                            .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                    JSONObject r = new JSONObject();
-                    JSONArray inboxNotifs = new JSONArray();
-                    r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs);
-                    JSONObject testPushObject = new JSONObject(
-                            extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                    testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
-                    inboxNotifs.put(testPushObject);
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("testInboxNotification", () -> {
+            try {
+                Logger.v("Received inbox via push payload: " + extras
+                        .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                JSONObject r = new JSONObject();
+                JSONArray inboxNotifs = new JSONArray();
+                r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs);
+                JSONObject testPushObject = new JSONObject(
+                        extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
+                inboxNotifs.put(testPushObject);
 
-                    CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
-                    cleverTapResponse.processResponse(r, null, context);
-                } catch (Throwable t) {
-                    Logger.v("Failed to process inbox message from push notification payload", t);
-                }
-                return null;
+                CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
+                cleverTapResponse.processResponse(r, null, context);
+            } catch (Throwable t) {
+                Logger.v("Failed to process inbox message from push notification payload", t);
             }
+            return null;
         });
     }
 
     private void handleInAppPreview(Bundle extras) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("testInappNotification",new Callable<Void>() {
-            @Override
-            public Void call() {
-                try {
-                    String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
-                    String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
-                    JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("testInappNotification", () -> {
+            try {
+                String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
+                String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
+                JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
 
-                    JSONArray inappNotifs = new JSONArray();
-                    if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
-                            || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
-                        inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
-                    } else {
-                        inappNotifs.put(inappPreviewPayload);
-                    }
-
-                    JSONObject inAppResponseJson = new JSONObject();
-                    inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
-
-                    inAppResponse.processResponse(inAppResponseJson, null, context);
-                } catch (Throwable t) {
-                    Logger.v("Failed to display inapp notification from push notification payload", t);
+                JSONArray inappNotifs = new JSONArray();
+                if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
+                        || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
+                    inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
+                } else {
+                    inappNotifs.put(inappPreviewPayload);
                 }
-                return null;
+
+                JSONObject inAppResponseJson = new JSONObject();
+                inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
+
+                inAppResponse.processResponse(inAppResponseJson, null, context);
+            } catch (Throwable t) {
+                Logger.v("Failed to display inapp notification from push notification payload", t);
             }
+            return null;
         });
     }
 
@@ -669,37 +662,28 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         if (profile == null || profile.isEmpty() || deviceInfo.getDeviceID() == null) {
             return;
         }
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("profilePush",new Callable<Void>() {
-            @Override
-            public Void call() {
-                _push(profile);
-                return null;
-            }
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("profilePush", () -> {
+            _push(profile);
+            return null;
         });
     }
 
     @Override
     public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("removeMultiValuesForKey", new Callable<Void>() {
-            @Override
-            public Void call() {
-                _handleMultiValues(values, key, Constants.COMMAND_REMOVE);
-                return null;
-            }
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("removeMultiValuesForKey", () -> {
+            _handleMultiValues(values, key, Constants.COMMAND_REMOVE);
+            return null;
         });
     }
 
     @Override
     public void removeValueForKey(final String key) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("removeValueForKey", new Callable<Void>() {
-            @Override
-            public Void call() {
-                _removeValueForKey(key);
-                return null;
-            }
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("removeValueForKey", () -> {
+            _removeValueForKey(key);
+            return null;
         });
     }
 
@@ -903,13 +887,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     void setMultiValuesForKey(final String key, final ArrayList<String> values) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("setMultiValuesForKey", new Callable<Void>() {
-            @Override
-            public Void call() {
-                _handleMultiValues(values, key, Constants.COMMAND_SET);
-                return null;
-            }
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("setMultiValuesForKey", () -> {
+            _handleMultiValues(values, key, Constants.COMMAND_SET);
+            return null;
         });
     }
 

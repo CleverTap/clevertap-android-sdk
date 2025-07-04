@@ -404,7 +404,8 @@ internal object CleverTapFactory {
             controllerManager,
             ctLockManager,
             inAppResponseForSendTestInApp,
-            SYSTEM
+            SYSTEM,
+            executors
         )
 
         val inAppNotificationInflater = InAppNotificationInflater(
