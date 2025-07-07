@@ -886,15 +886,21 @@ class AnalyticsManagerTest {
 
     @Test
     fun test_pushProfile_when_nonPrimitiveValue_pushesPartialProfile() {
-        val profile = mapOf("key1" to Validator(), "key2" to "value2")
+        val nonPrimitiveValue = Any()
+        val profile = mapOf("key1" to nonPrimitiveValue, "key2" to "value2")
 
         mockCleanObjectKey("key1")
         mockCleanObjectKey("key2")
+        mockCleanObjectValue("value2", Profile)
 
         every { coreState.deviceInfo.deviceID } returns "1234"
 
-        every { validator.cleanObjectValue(any(), any()) } throws IllegalArgumentException()
-        mockCleanObjectValue("value2", Profile)
+        every {
+            validator.cleanObjectValue(
+                nonPrimitiveValue,
+                any()
+            )
+        } throws IllegalArgumentException()
 
         // Act
         analyticsManagerSUT.pushProfile(profile)
@@ -1210,7 +1216,7 @@ class AnalyticsManagerTest {
         val actionValue = "value"
         val eventActions = mapOf(actionKey to actionValue)
         mockCleanEventName(eventName)
-        mockCleanObjectKey(actionValue)
+        mockCleanObjectKey(actionKey)
         mockCleanObjectValue(actionValue, Validator.ValidationContext.Event, 512)
 
         analyticsManagerSUT.pushEvent(eventName, eventActions)
