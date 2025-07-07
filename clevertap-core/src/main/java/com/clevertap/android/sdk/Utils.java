@@ -315,7 +315,7 @@ public final class Utils {
                         return null;
                     }
 
-                    File file = new File(pushDir, System.currentTimeMillis() + ".gif");
+                    File file = new File(pushDir, getNowInMillis() + ".gif");
                     Files.write(file.toPath(), downloadedBitmap.getBytes());
 
                     // Return content URI using FileProvider with CleverTap authority
