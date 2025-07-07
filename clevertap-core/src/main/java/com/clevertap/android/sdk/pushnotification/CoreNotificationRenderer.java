@@ -108,6 +108,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
                             .setSummaryText(summaryText)
                             .bigPicture(Icon.createWithContentUri(gifUri));
                     addContentDescriptionIfNeeded(style, extras, context);
+                    extras.putString(Constants.WZRK_BPDS, Status.GIF_SUCCESS.getStatusValue());
                     return style;
                 }
             }

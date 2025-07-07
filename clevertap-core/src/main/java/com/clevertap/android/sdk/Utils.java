@@ -339,10 +339,7 @@ public final class Utils {
     }
 
 
-    /**
-     * Cleans up old animated notification image files from the cache directory
-     *
-     */
+    // todo use this
     public static void cleanupOldGIFImages(Context context, CleverTapInstanceConfig config) {
         File cacheDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
         try {
