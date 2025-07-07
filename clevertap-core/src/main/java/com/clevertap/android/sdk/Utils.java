@@ -41,6 +41,7 @@ import com.clevertap.android.sdk.bitmap.HttpBitmapLoader;
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation;
 import com.clevertap.android.sdk.network.DownloadedBitmap;
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
+import com.clevertap.android.sdk.utils.Clock;
 import com.google.firebase.messaging.RemoteMessage;
 import java.io.File;
 import java.io.IOException;
@@ -283,7 +284,7 @@ public final class Utils {
      */
     @Nullable
     @RequiresApi(26)
-    public static Uri saveNotificationGif(String url, Context context, CleverTapInstanceConfig config) {
+    public static Uri saveNotificationGif(String url, Context context, CleverTapInstanceConfig config, Clock clock) {
         try {
             if (url == null || !url.toLowerCase().endsWith(".gif")) {
                 return null;
@@ -315,7 +316,7 @@ public final class Utils {
                         return null;
                     }
 
-                    File file = new File(pushDir, getNowInMillis() + ".gif");
+                    File file = new File(pushDir, clock.currentTimeMillis() + ".gif");
                     Files.write(file.toPath(), downloadedBitmap.getBytes());
 
                     // Return content URI using FileProvider with CleverTap authority
@@ -350,7 +351,7 @@ public final class Utils {
      * @param context The application context used to access the cache directory
      * @param config The CleverTap instance configuration containing logger and account information
      */
-    public static void cleanupOldGIFs(Context context, CleverTapInstanceConfig config) {
+    public static void cleanupOldGIFs(Context context, CleverTapInstanceConfig config, Clock clock) {
         File cacheDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
         try {
             if (cacheDir == null || !cacheDir.exists()) {
@@ -362,7 +363,7 @@ public final class Utils {
                 return;
             }
 
-            long currentTimeMillis = getNowInMillis();
+            long currentTimeMillis = clock.currentTimeMillis();
             int deletedCount = 0;
             for (File file : files) {
                 if (file.isFile() && file.getName().endsWith(".gif")) {

@@ -14,6 +14,7 @@ import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.Clock;
 
 import java.util.concurrent.Callable;
 
@@ -108,7 +109,7 @@ class ActivityLifeCycleManager {
 
             Task<Void> cleanUpTask = CTExecutorFactory.executors(config).ioTask();
             cleanUpTask.execute("CleanUpOldGIFs", () -> {
-                Utils.cleanupOldGIFs(context, config);
+                Utils.cleanupOldGIFs(context, config, Clock.SYSTEM);
                 return null;
             });
 

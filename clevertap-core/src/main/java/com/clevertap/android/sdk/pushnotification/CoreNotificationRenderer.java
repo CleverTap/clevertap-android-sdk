@@ -28,6 +28,8 @@ import com.clevertap.android.sdk.interfaces.AudibleNotification;
 import com.clevertap.android.sdk.network.DownloadedBitmap;
 import com.clevertap.android.sdk.network.DownloadedBitmap.Status;
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
+import com.clevertap.android.sdk.utils.Clock;
+
 import org.json.JSONArray;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -59,7 +61,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
 
     @RequiresApi(34)
     private Uri getNotificationGifUri(String gif, Context context, CleverTapInstanceConfig config) {
-        return Utils.saveNotificationGif(gif, context, config);
+        return Utils.saveNotificationGif(gif, context, config, Clock.SYSTEM);
     }
 
     private DownloadedBitmap getNotificationImageBitmap(String bigPictureUrl, Context context, CleverTapInstanceConfig config) {
