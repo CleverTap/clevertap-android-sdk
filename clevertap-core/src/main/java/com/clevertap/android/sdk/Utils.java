@@ -299,9 +299,11 @@ public final class Utils {
             );
 
             DownloadedBitmap downloadedBitmap = HttpBitmapLoader.getHttpBitmap(
-                    HttpBitmapOperation.DOWNLOAD_BYTES,
+                    HttpBitmapOperation.DOWNLOAD_BYTES_WITH_TIME_LIMIT,
                     downloadRequest
             );
+
+            config.getLogger().debug(config.getAccountId(), "Downloaded GIF in : " + downloadedBitmap.getDownloadTime());
 
             if (downloadedBitmap.getStatus() == DownloadedBitmap.Status.SUCCESS && downloadedBitmap.getBytes() != null) {
                 // Write bytes to file
@@ -341,7 +343,7 @@ public final class Utils {
      * Cleans up old animated notification image files from the cache directory
      *
      */
-    public static void cleanupOldAnimatedImages(Context context, CleverTapInstanceConfig config) {
+    public static void cleanupOldGIFImages(Context context, CleverTapInstanceConfig config) {
         File cacheDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
         try {
             if (cacheDir == null || !cacheDir.exists()) {

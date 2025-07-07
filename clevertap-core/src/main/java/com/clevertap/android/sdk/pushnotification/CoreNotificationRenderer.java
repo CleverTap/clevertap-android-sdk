@@ -133,6 +133,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
             config.getLogger().verbose(config.getAccountId(), "Failed to load Big Picture, falling back to text notification", e);
         }
 
+        // Fallback to message only
         style = new NotificationCompat.BigTextStyle().bigText(notifMessage);
         return style;
     }
