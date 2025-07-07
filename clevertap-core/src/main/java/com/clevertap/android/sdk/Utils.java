@@ -338,9 +338,19 @@ public final class Utils {
         return null;
     }
 
-
-    // todo use this
-    public static void cleanupOldGIFImages(Context context, CleverTapInstanceConfig config) {
+    /**
+     * Cleans up old GIF image files from the push notification cache directory.
+     * Only removes GIF files that are one day (24 hours) or older, based on the timestamp
+     * embedded in their filename.
+     *
+     * <p>This method expects GIF files to be named in the format "timestamp.gif" where
+     * timestamp is the creation time in milliseconds (e.g., "1234567890123.gif").
+     * Files that don't match this naming convention will be skipped.</p>
+     *
+     * @param context The application context used to access the cache directory
+     * @param config The CleverTap instance configuration containing logger and account information
+     */
+    public static void cleanupOldGIFs(Context context, CleverTapInstanceConfig config) {
         File cacheDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
         try {
             if (cacheDir == null || !cacheDir.exists()) {
@@ -352,14 +362,22 @@ public final class Utils {
                 return;
             }
 
+            long currentTimeMillis = getNowInMillis();
             int deletedCount = 0;
             for (File file : files) {
-                if (file.isFile()) {
-                    if (file.delete()) {
-                        deletedCount++;
-                    } else {
-                        config.getLogger().debug(config.getAccountId(),
-                                "Failed to delete old animated image file: " + file.getName());
+                if (file.isFile() && file.getName().endsWith(".gif")) {
+                    String fileName = file.getName();
+                    String timestampStr = fileName.substring(0, fileName.lastIndexOf(".gif"));
+                    long fileTimestamp = Long.parseLong(timestampStr);
+
+                    // Check if file is one day or older
+                    if (currentTimeMillis - fileTimestamp >= Constants.ONE_DAY_IN_MILLIS) {
+                        if (file.delete()) {
+                            deletedCount++;
+                        } else {
+                            config.getLogger().debug(config.getAccountId(),
+                                    "Failed to delete old GIF file: " + file.getName());
+                        }
                     }
                 }
             }

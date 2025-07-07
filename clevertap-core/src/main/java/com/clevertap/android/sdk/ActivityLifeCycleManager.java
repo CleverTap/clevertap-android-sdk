@@ -106,6 +106,12 @@ class ActivityLifeCycleManager {
                 }
             });
 
+            Task<Void> cleanUpTask = CTExecutorFactory.executors(config).ioTask();
+            cleanUpTask.execute("CleanUpOldGIFs", () -> {
+                Utils.cleanupOldGIFs(context, config);
+                return null;
+            });
+
             try {
                 if (callbackManager.getGeofenceCallback() != null) {
                     callbackManager.getGeofenceCallback().triggerLocation();
