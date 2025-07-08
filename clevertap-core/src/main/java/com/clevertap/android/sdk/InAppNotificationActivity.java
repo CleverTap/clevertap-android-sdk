@@ -458,9 +458,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     private void onAlertButtonClick(CTInAppNotificationButton button, boolean isPositive) {
         Bundle clickData = didClick(button);
 
-        if (isPositive && inAppNotification.isLocalInApp()) {
-            showPushPermissionPrompt(inAppNotification.getFallBackToNotificationSettings());
-            return;
+        if (inAppNotification.isLocalInApp()) {
+            if(isPositive) {
+                showPushPermissionPrompt(inAppNotification.getFallBackToNotificationSettings());
+                return;
+            } else {
+                pushPermissionHandler.notifyPushPermissionListeners(this);
+            }
         }
 
         CTInAppAction action = button.action;
