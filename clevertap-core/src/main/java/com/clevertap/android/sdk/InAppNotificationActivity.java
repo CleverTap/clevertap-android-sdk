@@ -259,6 +259,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         showPushPermissionPrompt(fallbackToSettings);
     }
 
+    @Override
+    public void didCancelPermissionRequest() {
+        pushPermissionHandler.notifyPushPermissionExternalListeners(this);
+    }
+
     public void showPushPermissionPrompt(boolean isFallbackSettingsEnabled) {
         pushPermissionHandler.requestPermission(this, isFallbackSettingsEnabled);
     }
@@ -463,7 +468,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 showPushPermissionPrompt(inAppNotification.getFallBackToNotificationSettings());
                 return;
             } else {
-                pushPermissionHandler.notifyPushPermissionListeners(this);
+                didCancelPermissionRequest();
             }
         }
 

@@ -206,6 +206,13 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     @Override
+    public void didCancelPermissionRequest() {
+        if (pushPermissionHandler != null) {
+            pushPermissionHandler.notifyPushPermissionExternalListeners(this);
+        }
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
             @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

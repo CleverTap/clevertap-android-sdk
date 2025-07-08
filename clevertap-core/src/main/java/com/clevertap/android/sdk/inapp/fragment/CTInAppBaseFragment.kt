@@ -192,11 +192,18 @@ internal abstract class CTInAppBaseFragment : Fragment() {
             val button = inAppNotification.buttons[index]
             val clickData = didClick(button)
 
-            if (index == 0 && inAppNotification.isLocalInApp && didClickForHardPermissionListener != null) {
-                didClickForHardPermissionListener?.didClickForHardPermissionWithFallbackSettings(
-                    inAppNotification.fallBackToNotificationSettings
-                )
-                return
+            if (inAppNotification.isLocalInApp && didClickForHardPermissionListener != null) {
+                when (index) {
+                    0 -> {
+                        didClickForHardPermissionListener?.didClickForHardPermissionWithFallbackSettings(
+                            inAppNotification.fallBackToNotificationSettings
+                        )
+                        return
+                    }
+                    1 -> {
+                        didClickForHardPermissionListener?.didCancelPermissionRequest()
+                    }
+                }
             }
 
             val action = button.action
