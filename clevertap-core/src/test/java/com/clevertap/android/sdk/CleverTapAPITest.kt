@@ -513,6 +513,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verifyOrder {
+            corestate.coreMetaData.isCurrentUserOptedOut = false
             corestate.analyticsManager.pushProfile(expectedMap)
             corestate.coreMetaData.isCurrentUserOptedOut = true
             corestate.coreMetaData.enabledSystemEvents = false
@@ -538,8 +539,9 @@ class CleverTapAPITest : BaseTestCase() {
         // Assert
         verifyOrder {
             corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.coreMetaData.enabledSystemEvents = true
             corestate.analyticsManager.pushProfile(expectedMap)
+            corestate.coreMetaData.isCurrentUserOptedOut = false
+            corestate.coreMetaData.enabledSystemEvents = true
             corestate.deviceInfo.saveOptOutState(false)
             corestate.deviceInfo.saveAllowedSystemEventsState(true)
         }
@@ -561,9 +563,10 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verifyOrder {
+            corestate.coreMetaData.isCurrentUserOptedOut = false
+            corestate.analyticsManager.pushProfile(expectedMap)
             corestate.coreMetaData.isCurrentUserOptedOut = true
             corestate.coreMetaData.enabledSystemEvents = false
-            corestate.analyticsManager.pushProfile(expectedMap)
             corestate.deviceInfo.saveOptOutState(true)
             corestate.deviceInfo.saveAllowedSystemEventsState(false)
         }
@@ -585,9 +588,10 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verifyOrder {
+            corestate.coreMetaData.isCurrentUserOptedOut = false
+            corestate.analyticsManager.pushProfile(expectedMap)
             corestate.coreMetaData.isCurrentUserOptedOut = true
             corestate.coreMetaData.enabledSystemEvents = true
-            corestate.analyticsManager.pushProfile(expectedMap)
             corestate.deviceInfo.saveOptOutState(true)
             corestate.deviceInfo.saveAllowedSystemEventsState(true)
         }
@@ -610,10 +614,11 @@ class CleverTapAPITest : BaseTestCase() {
         // Assert
         verifyOrder {
             corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.coreMetaData.enabledSystemEvents = true
             corestate.analyticsManager.pushProfile(expectedMap)
+            corestate.coreMetaData.isCurrentUserOptedOut = false
+            corestate.coreMetaData.enabledSystemEvents = true
             corestate.deviceInfo.saveOptOutState(false)
-            corestate.deviceInfo.saveAllowedSystemEventsState(false)
+            corestate.deviceInfo.saveAllowedSystemEventsState(true)
         }
     }
 
@@ -634,8 +639,9 @@ class CleverTapAPITest : BaseTestCase() {
         // Assert
         verifyOrder {
             corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.coreMetaData.enabledSystemEvents = true
             corestate.analyticsManager.pushProfile(expectedMap)
+            corestate.coreMetaData.isCurrentUserOptedOut = false
+            corestate.coreMetaData.enabledSystemEvents = true
             corestate.deviceInfo.saveOptOutState(false)
             corestate.deviceInfo.saveAllowedSystemEventsState(true)
         }

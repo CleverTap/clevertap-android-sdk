@@ -113,6 +113,14 @@ object HomeScreenModel {
             ),
             "LOCALE" to listOf("Set Locale"),
             "CUSTOM TEMPLATES" to listOf("Sync Registered Custom Templates", "Test Custom Template Dialog"),
+            "OPT OUT" to listOf(
+                "Opt Out - userOptOut: true, allowSystemEvents: true",
+                "Opt Out - userOptOut: true, allowSystemEvents: false",
+                "Opt Out - userOptOut: false, allowSystemEvents: true",
+                "Opt Out - userOptOut: false, allowSystemEvents: false",
+                "Opt Out - userOptOut: true (single param)",
+                "Opt Out - userOptOut: false (single param)"
+            ),
         )
     }
 }

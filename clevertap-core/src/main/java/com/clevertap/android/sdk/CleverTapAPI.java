@@ -2885,25 +2885,21 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void setOptOut(final boolean userOptOut, final boolean allowSystemEvents) {
         Task<Void> task = coreState.getExecutors().postAsyncSafelyTask();
         task.execute("setOptOut", () -> {
+            // Handle case with userOptOut = false, allowSystemEvents = false
+            boolean resolvedAllowSystemEvents = !userOptOut || allowSystemEvents;
+
             // generate the data for a profile push to alert the server to the optOut state change
             HashMap<String, Object> optOutMap = new HashMap<>();
             optOutMap.put(Constants.CLEVERTAP_OPTOUT, userOptOut);
-            optOutMap.put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, allowSystemEvents);
+            optOutMap.put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, resolvedAllowSystemEvents);
 
-            // determine order of operations depending on enabled/disabled
-            if (userOptOut) {  // if opting out first push profile event then set the flag
-                coreState.getAnalyticsManager().pushProfile(optOutMap);
-                coreState.getCoreMetaData().setCurrentUserOptedOut(true);
-                coreState.getCoreMetaData().setEnabledSystemEvents(allowSystemEvents);
-            } else {  // if opting back in first reset the flag to false then push the profile event
-                coreState.getCoreMetaData().setCurrentUserOptedOut(false);
-                // if opt-out is false, we should always allow system events
-                coreState.getCoreMetaData().setEnabledSystemEvents(true);
-                coreState.getAnalyticsManager().pushProfile(optOutMap);
-            }
+            coreState.getCoreMetaData().setCurrentUserOptedOut(false);
+            coreState.getAnalyticsManager().pushProfile(optOutMap);
+            coreState.getCoreMetaData().setCurrentUserOptedOut(userOptOut);
+            coreState.getCoreMetaData().setEnabledSystemEvents(resolvedAllowSystemEvents);
             // persist the new optOut state
             coreState.getDeviceInfo().saveOptOutState(userOptOut);
-            coreState.getDeviceInfo().saveAllowedSystemEventsState(allowSystemEvents);
+            coreState.getDeviceInfo().saveAllowedSystemEventsState(resolvedAllowSystemEvents);
             return null;
         });
     }
