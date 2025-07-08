@@ -274,7 +274,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     @Override
     public void onPushPermissionResult(boolean isGranted) {
-        didDismiss(null);
+        Bundle data = null;
+        if(inAppNotification != null && inAppNotification.isLocalInApp()) {
+            data = new Bundle();
+            data.putString(Constants.KEY_C2A, inAppNotification.getButtons().get(0).getText());
+            data.putString(Constants.NOTIFICATION_ID_TAG, "");
+        }
+        didDismiss(data);
     }
 
     void didDismiss(Bundle data) {
