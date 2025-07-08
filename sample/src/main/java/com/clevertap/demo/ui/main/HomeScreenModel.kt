@@ -119,8 +119,7 @@ object HomeScreenModel {
                 "Opt Out - userOptOut: false, allowSystemEvents: true",
                 "Opt Out - userOptOut: false, allowSystemEvents: false",
                 "Opt Out - userOptOut: true (single param)",
-                "Opt Out - userOptOut: false (single param)",
-                "Get Opt Out Status"
+                "Opt Out - userOptOut: false (single param)"
             ),
         )
     }

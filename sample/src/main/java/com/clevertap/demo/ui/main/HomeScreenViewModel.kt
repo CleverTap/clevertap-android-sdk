@@ -789,11 +789,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.setOptOut(false)
                 Log.i(TAG, "Set Opt Out: userOptOut = false (single parameter method)")
             }
-            "17-6" -> {
-                // Get Opt Out Status
-            }
             //"60" -> webViewClickListener?.onWebViewClick()
-
         }
     }
 }
