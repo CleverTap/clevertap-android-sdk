@@ -125,7 +125,6 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         try {
             Bitmap bitmap = downloadedBitmap.getBitmap();
             if (bitmap != null) {
-                extras.putString(Constants.WZRK_BPDS, downloadedBitmap.getStatus().getStatusValue());
                 style = new NotificationCompat.BigPictureStyle()
                         .setSummaryText(summaryText)
                         .bigPicture(bitmap);

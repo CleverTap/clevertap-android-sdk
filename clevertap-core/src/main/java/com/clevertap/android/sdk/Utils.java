@@ -367,27 +367,30 @@ public final class Utils {
             int deletedCount = 0;
             for (File file : files) {
                 if (file.isFile() && file.getName().endsWith(".gif")) {
-                    String fileName = file.getName();
-                    String timestampStr = fileName.substring(0, fileName.lastIndexOf(".gif"));
-                    long fileTimestamp = Long.parseLong(timestampStr);
+                    try {
+                        String fileName = file.getName();
+                        String timestampStr = fileName.substring(0, fileName.lastIndexOf(".gif"));
+                        long fileTimestamp = Long.parseLong(timestampStr);
 
-                    // Check if file is one day or older
-                    if (currentTimeMillis - fileTimestamp >= Constants.ONE_DAY_IN_MILLIS) {
-                        if (file.delete()) {
-                            deletedCount++;
-                        } else {
-                            config.getLogger().debug(config.getAccountId(),
-                                    "Failed to delete old GIF file: " + file.getName());
+                        // Check if file is one day or older
+                        if (currentTimeMillis - fileTimestamp >= Constants.ONE_DAY_IN_MILLIS) {
+                            if (file.delete()) {
+                                deletedCount++;
+                            } else {
+                                config.getLogger().debug(config.getAccountId(),
+                                        "Failed to delete old GIF file: " + file.getName());
+                            }
                         }
+                    } catch (Exception e) {
+                        config.getLogger().debug(config.getAccountId(),
+                                "Skipping file with invalid file name format: " + file.getName());
                     }
                 }
             }
-
             if (deletedCount > 0) {
                 config.getLogger().debug(config.getAccountId(),
                         "Cleaned up " + deletedCount + " old animated notification files");
             }
-
         } catch (Exception e) {
             config.getLogger().debug(config.getAccountId(),
                     "Error during animated image cleanup: " + e.getMessage());
