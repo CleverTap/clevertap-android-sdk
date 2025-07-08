@@ -2885,18 +2885,21 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void setOptOut(final boolean userOptOut, final boolean allowSystemEvents) {
         Task<Void> task = coreState.getExecutors().postAsyncSafelyTask();
         task.execute("setOptOut", () -> {
+            // Handle case with userOptOut = false, allowSystemEvents = false
+            boolean resolvedAllowSystemEvents = !userOptOut || allowSystemEvents;
+
             // generate the data for a profile push to alert the server to the optOut state change
             HashMap<String, Object> optOutMap = new HashMap<>();
             optOutMap.put(Constants.CLEVERTAP_OPTOUT, userOptOut);
-            optOutMap.put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, allowSystemEvents);
+            optOutMap.put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, resolvedAllowSystemEvents);
 
             coreState.getCoreMetaData().setCurrentUserOptedOut(false);
             coreState.getAnalyticsManager().pushProfile(optOutMap);
             coreState.getCoreMetaData().setCurrentUserOptedOut(userOptOut);
-            coreState.getCoreMetaData().setEnabledSystemEvents(!userOptOut || allowSystemEvents);
+            coreState.getCoreMetaData().setEnabledSystemEvents(resolvedAllowSystemEvents);
             // persist the new optOut state
             coreState.getDeviceInfo().saveOptOutState(userOptOut);
-            coreState.getDeviceInfo().saveAllowedSystemEventsState(!userOptOut || allowSystemEvents);
+            coreState.getDeviceInfo().saveAllowedSystemEventsState(resolvedAllowSystemEvents);
             return null;
         });
     }
