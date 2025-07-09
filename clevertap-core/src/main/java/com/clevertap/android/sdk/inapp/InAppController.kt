@@ -149,7 +149,9 @@ internal class InAppController(
         data.putString(Constants.KEY_C2A, callToAction)
 
         // send clicked event
-        analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, data)
+        if (!inAppNotification.isLocalInApp) {
+            analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, data)
+        }
 
         val type = action.type
         if (type == null) {

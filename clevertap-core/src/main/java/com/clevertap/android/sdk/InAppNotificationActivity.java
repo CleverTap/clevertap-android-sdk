@@ -259,6 +259,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         showPushPermissionPrompt(fallbackToSettings);
     }
 
+    @Override
+    public void didCancelPermissionRequest() {
+        pushPermissionHandler.notifyPushPermissionExternalListeners(this);
+    }
+
     public void showPushPermissionPrompt(boolean isFallbackSettingsEnabled) {
         pushPermissionHandler.requestPermission(this, isFallbackSettingsEnabled);
     }
@@ -274,7 +279,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     @Override
     public void onPushPermissionResult(boolean isGranted) {
-        didDismiss(null);
+        Bundle data = null;
+        if (inAppNotification != null && inAppNotification.isLocalInApp()) {
+            data = new Bundle();
+            data.putString(Constants.KEY_C2A, inAppNotification.getButtons().get(0).getText());
+            data.putString(Constants.NOTIFICATION_ID_TAG, "");
+        }
+        didDismiss(data);
     }
 
     void didDismiss(Bundle data) {
@@ -452,9 +463,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     private void onAlertButtonClick(CTInAppNotificationButton button, boolean isPositive) {
         Bundle clickData = didClick(button);
 
-        if (isPositive && inAppNotification.isLocalInApp()) {
-            showPushPermissionPrompt(inAppNotification.getFallBackToNotificationSettings());
-            return;
+        if (inAppNotification.isLocalInApp()) {
+            if(isPositive) {
+                showPushPermissionPrompt(inAppNotification.getFallBackToNotificationSettings());
+                return;
+            } else {
+                didCancelPermissionRequest();
+            }
         }
 
         CTInAppAction action = button.action;
