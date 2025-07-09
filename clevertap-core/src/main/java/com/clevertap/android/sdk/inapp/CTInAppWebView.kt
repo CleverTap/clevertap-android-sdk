@@ -1,16 +1,22 @@
 package com.clevertap.android.sdk.inapp
 
 import android.annotation.SuppressLint
+import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.Point
 import android.os.Build
 import android.util.TypedValue
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.annotation.Px
 import androidx.annotation.RequiresApi
 import com.clevertap.android.sdk.CTWebInterface
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.Logger
+import java.lang.ref.WeakReference
 
 @SuppressLint("ViewConstructor")
 internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
@@ -19,7 +25,8 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
     private val heightDp: Int,
     private val widthPercentage: Int,
     private val heightPercentage: Int,
-    private val aspectRatio: Double
+    private val aspectRatio: Double,
+    host: CTInAppHost
 ) : WebView(context) {
 
     companion object {
@@ -29,6 +36,7 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
 
     @JvmField
     val dim: Point = Point()
+    val hostWr: WeakReference<CTInAppHost>
 
     var isFullscreen = false
 
@@ -38,8 +46,17 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
         widthDp: Int,
         heightDp: Int,
         widthPercentage: Int,
-        heightPercentage: Int
-    ) : this(context, widthDp, heightDp, widthPercentage, heightPercentage, DEFAULT_ASPECT_RATIO)
+        heightPercentage: Int,
+        host: CTInAppHost
+    ) : this(
+        context,
+        widthDp,
+        heightDp,
+        widthPercentage,
+        heightPercentage,
+        DEFAULT_ASPECT_RATIO,
+        host
+    )
 
     init {
         isHorizontalScrollBarEnabled = false
@@ -51,6 +68,26 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
         // set the text zoom in order to ignore device font size changes
         settings.textZoom = 100
         id = 188293
+        hostWr = WeakReference(host)
+        setWebViewClient(InAppWebViewClient())
+    }
+
+    fun loadInAppHtml(html: String) {
+        var mHeight = dim.y
+        var mWidth = dim.x
+
+        val d = resources.displayMetrics.density
+        mHeight = (mHeight / d).toInt()
+        mWidth = (mWidth / d).toInt()
+
+
+        val style =
+            "<style>body{width: ${mWidth}px; height: ${mHeight}px; margin: 0; padding:0;}</style>"
+        val inAppHtml = html.replaceFirst("<head>".toRegex(), "<head>$style")
+        Logger.v("Density appears to be $d")
+
+        setInitialScale((d * 100).toInt())
+        loadDataWithBaseURL(null, inAppHtml, "text/html", "utf-8", null)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -155,7 +192,8 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    fun setJavaScriptInterface(webInterface: CTWebInterface) {
+    fun enableCTJavaScriptInterface(ctInstance: CleverTapAPI) {
+        val host = hostWr.get() ?: return
         getSettings().apply {
             javaScriptEnabled = true
             javaScriptCanOpenWindowsAutomatically = false
@@ -165,7 +203,7 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
         }
 
         addJavascriptInterface(
-            webInterface,
+            CTWebInterface(ctInstance, host),
             JAVASCRIPT_INTERFACE_NAME
         )
     }
@@ -179,5 +217,25 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
         }
         clearHistory()
         destroy()
+    }
+
+    private inner class InAppWebViewClient() : WebViewClient() {
+
+        @Deprecated("Deprecated in Java")
+        override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+            hostWr.get()?.openUrl(url)
+                ?: Logger.v("InAppWebViewClient : Android view is gone, not opening url")
+            return true
+        }
+
+        @SuppressLint("UseRequiresApi")
+        @TargetApi(Build.VERSION_CODES.N)
+        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+            request.url?.toString()?.let { url ->
+                hostWr.get()?.openUrl(url)
+                    ?: Logger.v("InAppWebViewClient : Android view is gone, not opening url")
+            } ?: Logger.v("InAppWebViewClient : Url to open is null; not processing")
+            return true
+        }
     }
 }
