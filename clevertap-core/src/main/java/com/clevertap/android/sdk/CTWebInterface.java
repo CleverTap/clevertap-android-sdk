@@ -2,9 +2,11 @@ package com.clevertap.android.sdk;
 
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
+
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.inapp.CTInAppAction;
-import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment;
+import com.clevertap.android.sdk.inapp.CTInAppHost;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,12 +20,13 @@ import org.json.JSONObject;
 @SuppressWarnings("WeakerAccess")
 public class CTWebInterface {
 
-    private WeakReference<CleverTapAPI> cleverTapWr = new WeakReference<>(null);
+    private final WeakReference<CleverTapAPI> cleverTapWr;
 
-    private WeakReference<CTInAppBaseFragment> fragmentWr = new WeakReference<>(null);
+    private final WeakReference<CTInAppHost> hostWr;
 
     public CTWebInterface(CleverTapAPI instance) {
-        this.cleverTapWr = new WeakReference<>(instance);
+        cleverTapWr = new WeakReference<>(instance);
+        hostWr = new WeakReference<>(null);
         CleverTapAPI cleverTapAPI = cleverTapWr.get();
         if (cleverTapAPI != null) {
             CoreState coreState = cleverTapAPI.getCoreState();
@@ -34,9 +37,9 @@ public class CTWebInterface {
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public CTWebInterface(CleverTapAPI instance, CTInAppBaseFragment inAppBaseFragment) {
-        this.cleverTapWr = new WeakReference<>(instance);
-        this.fragmentWr = new WeakReference<>(inAppBaseFragment);
+    public CTWebInterface(CleverTapAPI instance, CTInAppHost host) {
+        cleverTapWr = new WeakReference<>(instance);
+        hostWr = new WeakReference<>(host);
     }
 
     /**
@@ -65,9 +68,9 @@ public class CTWebInterface {
             Logger.d("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
-            CTInAppBaseFragment fragment = fragmentWr.get();
-            if (fragment != null) {
-                fragment.didDismiss(null);
+            CTInAppHost host = hostWr.get();
+            if (host != null) {
+                host.didDismissInApp(null);
             }
         }
     }
@@ -404,9 +407,9 @@ public class CTWebInterface {
             return;
         }
 
-        CTInAppBaseFragment fragment = fragmentWr.get();
-        if (fragment == null) {
-            Logger.d("CTWebInterface Fragment is null");
+        CTInAppHost host = hostWr.get();
+        if (host == null) {
+            Logger.d("CTWebInterface host is null");
             return;
         }
 
@@ -427,7 +430,7 @@ public class CTWebInterface {
                 actionData.putString("button_id", buttonId);
             }
 
-            fragment.triggerAction(action, callToAction, actionData);
+            host.triggerAction(action, callToAction, actionData);
         } catch (JSONException je) {
             Logger.d("CTWebInterface invalid action JSON: " + actionJson);
         }

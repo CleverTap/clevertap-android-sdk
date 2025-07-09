@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Looper
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.fragment.app.FragmentActivity
 import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -613,7 +614,6 @@ internal class InAppController(
     }
 
     private fun showInApp(inAppNotification: CTInAppNotification) {
-        val activity = CoreMetaData.getCurrentActivity()
         val goFromListener = checkBeforeShowApprovalBeforeDisplay(inAppNotification)
         if (!goFromListener) {
             logger.verbose(
@@ -635,6 +635,13 @@ internal class InAppController(
         if (currentlyDisplayingInApp != null) {
             pendingNotifications.add(inAppNotification)
             Logger.v(defaultLogTag, "In App already displaying, queueing this In App")
+            return
+        }
+
+        val activity = CoreMetaData.getCurrentActivity()
+        if (activity == null) {
+            Logger.v("Current activity reference not found.")
+            Logger.v("Please verify the integration of your app. It is not setup to support in-app notifications yet.")
             return
         }
 
@@ -664,7 +671,6 @@ internal class InAppController(
 
         currentlyDisplayingInApp = inAppNotification
 
-        var inAppFragment: CTInAppBaseFragment? = null
         val type = inAppNotification.inAppType
         when (type) {
             CTInAppTypeCoverHTML,
@@ -677,65 +683,51 @@ internal class InAppController(
             CTInAppTypeInterstitialImageOnly,
             CTInAppTypeHalfInterstitialImageOnly,
             CTInAppTypeCoverImageOnly -> {
+                Logger.d("Displaying In-App: ${inAppNotification.jsonDescription}")
+                InAppNotificationActivity.launchForInAppNotification(
+                    activity,
+                    inAppNotification,
+                    config
+                )
+            }
 
-                try {
-                    if (activity == null) {
-                        throw IllegalStateException("Current activity reference not found")
+            CTInAppTypeFooterHTML,
+            CTInAppTypeHeaderHTML,
+            CTInAppTypeFooter,
+            CTInAppTypeHeader -> {
+                if (activity is FragmentActivity) {
+                    val inAppFragment: CTInAppBaseFragment = when (type) {
+                        CTInAppTypeFooterHTML -> CTInAppHtmlFooterFragment()
+                        CTInAppTypeHeaderHTML -> CTInAppHtmlHeaderFragment()
+                        CTInAppTypeFooter -> CTInAppNativeFooterFragment()
+                        CTInAppTypeHeader -> CTInAppNativeHeaderFragment()
+                        else -> return // unreachable
                     }
                     Logger.d("Displaying In-App: ${inAppNotification.jsonDescription}")
-                    InAppNotificationActivity.launchForInAppNotification(
+                    val showFragmentSuccess = CTInAppBaseFragment.showOnActivity(
+                        inAppFragment,
                         activity,
                         inAppNotification,
-                        config
+                        config,
+                        defaultLogTag
                     )
-                } catch (t: Throwable) {
-                    Logger.v(
-                        "Please verify the integration of your app. It is not setup to support in-app notifications yet.",
-                        t
-                    )
+                    if (!showFragmentSuccess) {
+                        currentlyDisplayingInApp = null
+                    }
+                } else if (CTInAppHtmlBannerOverlay.canDisplay(type)) {
+                    Logger.d("Displaying In-App: ${inAppNotification.jsonDescription}")
+                    CTInAppHtmlBannerOverlay.show(inAppNotification, config, this, activity)
+                } else {
                     currentlyDisplayingInApp = null
-                    return
                 }
-            }
-
-            CTInAppTypeFooterHTML -> {
-                inAppFragment = CTInAppHtmlFooterFragment()
-            }
-
-            CTInAppTypeHeaderHTML -> {
-                inAppFragment = CTInAppHtmlHeaderFragment()
-            }
-
-            CTInAppTypeFooter -> {
-                inAppFragment = CTInAppNativeFooterFragment()
-            }
-
-            CTInAppTypeHeader -> {
-                inAppFragment = CTInAppNativeHeaderFragment()
             }
 
             CTInAppTypeCustomCodeTemplate -> {
                 presentTemplate(inAppNotification)
-                return
             }
 
             else -> {
                 Logger.d(defaultLogTag, "Unknown InApp Type found: $type")
-                currentlyDisplayingInApp = null
-                return
-            }
-        }
-
-        if (inAppFragment != null) {
-            Logger.d("Displaying In-App: ${inAppNotification.jsonDescription}")
-            val showFragmentSuccess = CTInAppBaseFragment.showOnActivity(
-                inAppFragment,
-                activity,
-                inAppNotification,
-                config,
-                defaultLogTag
-            )
-            if (!showFragmentSuccess) {
                 currentlyDisplayingInApp = null
             }
         }

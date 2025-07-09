@@ -3,29 +3,24 @@ package com.clevertap.android.sdk.inapp.fragment
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.View
-
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DidClickForHardPermissionListener
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.inapp.CTInAppAction
+import com.clevertap.android.sdk.inapp.CTInAppHost
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
 import com.clevertap.android.sdk.inapp.InAppActionType
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
-import com.clevertap.android.sdk.utils.UriHelper
-
 import java.lang.ref.WeakReference
-import java.net.URLDecoder
 
-internal abstract class CTInAppBaseFragment : Fragment() {
+internal abstract class CTInAppBaseFragment : Fragment(), CTInAppHost.Callbacks {
 
     companion object {
         fun showOnActivity(
@@ -74,8 +69,8 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     protected lateinit var config: CleverTapInstanceConfig
     protected var currentOrientation: Int = 0
     protected var closeImageView: CloseImageView? = null
-    private var listenerWeakReference: WeakReference<InAppListener>? = null
     private var didClickForHardPermissionListener: DidClickForHardPermissionListener? = null
+    internal lateinit var inAppHost: CTInAppHost
 
     protected abstract fun cleanup()
     protected abstract fun generateListener()
@@ -84,10 +79,12 @@ internal abstract class CTInAppBaseFragment : Fragment() {
         super.onAttach(context)
         val bundle = arguments
         if (bundle != null) {
-            inAppNotification = bundle.getParcelable<CTInAppNotification>(Constants.INAPP_KEY)!!
-            config = bundle.getParcelable<CleverTapInstanceConfig>(Constants.KEY_CONFIG)!!
+            inAppNotification = bundle.getParcelable(Constants.INAPP_KEY)!!
+            config = bundle.getParcelable(Constants.KEY_CONFIG)!!
             currentOrientation = resources.configuration.orientation
-            generateListener()/*Initialize the below listener only when in app has InAppNotification activity as their host activity
+            inAppHost = CTInAppHost(null, config, inAppNotification, this, context)
+            generateListener()
+            /*Initialize the below listener only when in app has InAppNotification activity as their host activity
             when requesting permission for notification.*/
             if (context is DidClickForHardPermissionListener) {
                 didClickForHardPermissionListener = context
@@ -97,7 +94,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        didShow(null)
+        inAppHost.didShowInApp(null)
     }
 
     fun setArguments(inAppNotification: CTInAppNotification, config: CleverTapInstanceConfig) {
@@ -107,84 +104,20 @@ internal abstract class CTInAppBaseFragment : Fragment() {
         setArguments(bundle)
     }
 
-    fun triggerAction(
-        action: CTInAppAction, callToAction: String?, additionalData: Bundle?
-    ) {
-        var additionalData = additionalData
-        var action = action
-        var callToAction = callToAction
-        if (action.type == InAppActionType.OPEN_URL) {
-            //All URL parameters should be tracked as additional data
-            val urlActionData = UriHelper.getAllKeyValuePairs(action.actionUrl, false)
-
-            // callToAction is handled as a parameter
-            var callToActionUrlParam = urlActionData.getString(Constants.KEY_C2A)
-            // no need to keep it in the data bundle
-            urlActionData.remove(Constants.KEY_C2A)
-
-            // add all additional params, overriding the url params if there is a collision
-            if (additionalData != null) {
-                urlActionData.putAll(additionalData)
-            }
-            // Use the merged data for the action
-            additionalData = urlActionData
-            if (callToActionUrlParam != null) {
-                // check if there is a deeplink within the callToAction param
-                val parts = callToActionUrlParam.split(Constants.URL_PARAM_DL_SEPARATOR)
-                if (parts.size == 2) {
-                    // Decode it here as it is not decoded by UriHelper
-                    try {
-                        // Extract the actual callToAction value
-                        callToActionUrlParam = URLDecoder.decode(parts[0], "UTF-8")
-                    } catch (e: Exception) {
-                        config.logger.debug("Error parsing c2a param", e)
-                    }
-                    // use the url from the callToAction param
-                    action = CTInAppAction.CREATOR.createOpenUrlAction(parts[1])
-                }
-            }
-            if (callToAction == null) {
-                // Use the url param value only if no other value is passed
-                callToAction = callToActionUrlParam
-            }
-        }
-        val actionData = notifyActionTriggered(action, callToAction ?: "", additionalData)
-        didDismiss(actionData)
-    }
-
-    fun openActionUrl(url: String) {
-        triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
-    }
-
     fun didDismiss(data: Bundle?) {
+        inAppHost.didDismissInApp(data)
+    }
+
+    override fun onDismissInApp() {
         cleanup()
-        getListener()?.inAppNotificationDidDismiss(inAppNotification, data)
-    }
-
-    fun didShow(data: Bundle?) {
-        getListener()?.inAppNotificationDidShow(inAppNotification, data)
-    }
-
-
-    fun getListener(): InAppListener? {
-        val listener = listenerWeakReference?.get()
-        if (listener == null) {
-            config.logger.verbose(
-                config.accountId,
-                "InAppListener is null for notification: ${inAppNotification.jsonDescription}"
-            )
-        }
-        return listener
     }
 
     fun setListener(listener: InAppListener) {
-        listenerWeakReference = WeakReference<InAppListener>(listener)
+        inAppHost.setInAppListener(listener)
     }
 
     fun getScaledPixels(raw: Int): Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, raw.toFloat(), resources.displayMetrics
-        ).toInt()
+        return inAppHost.getScaledPixels(raw)
     }
 
     fun handleButtonClickAtIndex(index: Int) {
@@ -223,14 +156,6 @@ internal abstract class CTInAppBaseFragment : Fragment() {
         if (action == null) {
             action = CTInAppAction.CREATOR.createCloseAction()
         }
-        return notifyActionTriggered(action, button.text, null)
-    }
-
-    private fun notifyActionTriggered(
-        action: CTInAppAction, callToAction: String, additionalData: Bundle?
-    ): Bundle? {
-        return getListener()?.inAppNotificationActionTriggered(
-            inAppNotification, action, callToAction, additionalData, activity
-        )
+        return inAppHost.notifyActionTriggered(action, button.text, null)
     }
 }
