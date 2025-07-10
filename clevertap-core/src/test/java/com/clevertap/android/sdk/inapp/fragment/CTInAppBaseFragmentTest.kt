@@ -18,7 +18,6 @@ import com.clevertap.android.sdk.inapp.InAppActionType
 import com.clevertap.android.sdk.inapp.InAppFixtures
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.utils.configMock
-import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -124,7 +123,7 @@ class CTInAppBaseFragmentTest {
     @Test
     fun `handleButtonClickAtIndex should trigger permission listener for localInApps and dismiss the inApp`() {
         val localInAppJson = CTLocalInApp.Companion.builder()
-            .setInAppType(CTLocalInApp.InAppType.ALERT)
+            .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
             .setTitleText("Title")
             .setMessageText("Message")
             .followDeviceOrientation(false)
@@ -134,7 +133,7 @@ class CTInAppBaseFragmentTest {
         val inApp = CTInAppNotification(localInAppJson, true)
         val mockConfig = configMock()
         val contextMock =
-            mockk<Context>(moreInterfaces = arrayOf(DidClickForHardPermissionListener::class))
+            mockk<Context>(moreInterfaces = arrayOf(DidClickForHardPermissionListener::class), relaxed = true)
 
         val fragment = createAndAttachFragmentSpy(inApp, mockConfig, contextMock)
 
@@ -147,11 +146,34 @@ class CTInAppBaseFragmentTest {
             )
         }
 
-        verify(exactly = 1) { fragment.didDismiss(any()) }
+        verify(exactly = 0) { fragment.didDismiss(any()) }
+    }
 
-        // should not trigger permission listener
+    @Test
+    fun `handleButtonClickAtIndex should trigger cancel permission request for localInApps and dismiss the inApp`() {
+        val localInAppJson = CTLocalInApp.Companion.builder()
+            .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
+            .setTitleText("Title")
+            .setMessageText("Message")
+            .followDeviceOrientation(false)
+            .setPositiveBtnText("Positive Button")
+            .setNegativeBtnText("Negative Button")
+            .build()
+        val inApp = CTInAppNotification(localInAppJson, true)
+        val mockConfig = configMock()
+        val contextMock =
+            mockk<Context>(moreInterfaces = arrayOf(DidClickForHardPermissionListener::class), relaxed = true)
+
+        val fragment = createAndAttachFragmentSpy(inApp, mockConfig, contextMock)
+
+        // should trigger cancel listener
         fragment.handleButtonClickAtIndex(1)
-        confirmVerified(contextMock)
+
+        verify(exactly = 1) {
+            (contextMock as DidClickForHardPermissionListener).didCancelPermissionRequest()
+        }
+
+        verify(exactly = 1) { fragment.didDismiss(any()) }
     }
 
     @Test

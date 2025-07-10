@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.InAppNotificationActivity
 import com.clevertap.android.sdk.InAppNotificationButtonListener
 import com.clevertap.android.sdk.InAppNotificationListener
 import com.clevertap.android.sdk.ManifestInfo
+import com.clevertap.android.sdk.inapp.CTLocalInApp.InAppType.ALERT
 import com.clevertap.android.sdk.inapp.InAppNotificationInflater.InAppNotificationReadyListener
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
@@ -156,7 +157,7 @@ class InAppControllerTest {
     }
 
     @Test
-    fun `inAppActionTriggered should raise notification clicked event`() {
+    fun `inAppActionTriggered should raise notification clicked event for non-local inapp`() {
         val inAppController = createInAppController()
         val campaignId = "test-campaign"
         val inApp = CTInAppNotification(
@@ -184,6 +185,47 @@ class InAppControllerTest {
                     ) == callToAction && data.getString(additionalDataEntry.first) == additionalDataEntry.second
                 })
         }
+    }
+
+    @Test
+    fun `inAppActionTriggered should not raise notification clicked event`() {
+        val inAppController = createInAppController()
+        val inApp = CTInAppNotification(
+            CTLocalInApp.builder().setInAppType(ALERT).setTitleText("titleText").setMessageText("messageText")
+                .followDeviceOrientation(true).setPositiveBtnText("Agree").setNegativeBtnText("Decline")
+                .build(), false
+        )
+        val callToAction = "test-c2a"
+        val additionalDataEntry = Pair("testKey", "testData")
+        val additionalData = Bundle().apply {
+            putString(additionalDataEntry.first, additionalDataEntry.second)
+        }
+        inAppController.inAppNotificationActionTriggered(
+            inApp, CTInAppAction.createCloseAction(), callToAction, additionalData, null
+        )
+
+        verify(exactly = 0) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent( any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `inAppActionTriggered returns correct data for local inapp`() {
+        val inAppController = createInAppController()
+        val inApp = CTInAppNotification(
+            CTLocalInApp.builder().setInAppType(ALERT).setTitleText("titleText").setMessageText("messageText")
+                .followDeviceOrientation(true).setPositiveBtnText("Agree").setNegativeBtnText("Decline")
+                .build(), false
+        )
+        val callToAction = "Allow"
+        val additionalData = null
+
+        val result = inAppController.inAppNotificationActionTriggered(
+            inApp, CTInAppAction.createCloseAction(), callToAction, additionalData, null
+        )
+
+        assertEquals(callToAction, result.getString(Constants.KEY_C2A))
+        assert(result.getString(Constants.NOTIFICATION_ID_TAG)!!.isEmpty())
     }
 
     @Test
