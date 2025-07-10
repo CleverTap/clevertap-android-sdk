@@ -61,7 +61,7 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
 
     @RequiresApi(34)
     private Uri getNotificationGifUri(String gif, Context context, CleverTapInstanceConfig config) {
-        return Utils.saveNotificationGif(gif, context, config, Clock.SYSTEM);
+        return Utils.getNotificationGifURI(gif, context, config, Clock.SYSTEM);
     }
 
     private DownloadedBitmap getNotificationImageBitmap(String bigPictureUrl, Context context, CleverTapInstanceConfig config) {

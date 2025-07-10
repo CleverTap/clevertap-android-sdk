@@ -850,36 +850,36 @@ class UtilsTest : BaseTestCase() {
     //------------------------------------------------------------------------------------
 
     @Test
-    fun test_saveNotificationGif_when_urlIsNull_should_ReturnNull() {
+    fun test_getNotificationGifURI_when_urlIsNull_should_ReturnNull() {
         val clock = mockk<Clock>()
         
-        val result = Utils.saveNotificationGif(null, application, cleverTapInstanceConfig, clock)
+        val result = Utils.getNotificationGifURI(null, application, cleverTapInstanceConfig, clock)
         
         assertNull(result)
     }
 
     @Test
-    fun test_saveNotificationGif_when_urlIsNotGif_should_ReturnNull() {
+    fun test_getNotificationGifURI_when_urlIsNotGif_should_ReturnNull() {
         val clock = mockk<Clock>()
         
-        val result = Utils.saveNotificationGif("https://example.com/image.png", application, cleverTapInstanceConfig, clock)
+        val result = Utils.getNotificationGifURI("https://example.com/image.png", application, cleverTapInstanceConfig, clock)
         
         assertNull(result)
     }
 
     @Test
-    fun test_saveNotificationGif_when_urlIsEmptyString_should_ReturnNull() {
+    fun test_getNotificationGifURI_when_urlIsEmptyString_should_ReturnNull() {
         val config = mockk<CleverTapInstanceConfig>()
         val clock = mockk<Clock>()
         
-        val result = Utils.saveNotificationGif("", application, cleverTapInstanceConfig, clock)
+        val result = Utils.getNotificationGifURI("", application, cleverTapInstanceConfig, clock)
         
         assertNull(result)
     }
 
 
     @Test
-    fun test_saveNotificationGif_when_downloadFails_should_ReturnNull() {
+    fun test_getNotificationGifURI_when_downloadFails_should_ReturnNull() {
         val clock = TestClock()
 
         // Mock HttpBitmapLoader to return failed download
@@ -891,7 +891,7 @@ class UtilsTest : BaseTestCase() {
         
         every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns failedDownload
         
-        val result = Utils.saveNotificationGif("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
         
         assertNull(result)
 
@@ -899,7 +899,7 @@ class UtilsTest : BaseTestCase() {
     }
 
     @Test
-    fun test_saveNotificationGif_when_downloadSucceedsButBytesAreNull_should_ReturnNull() {
+    fun test_getNotificationGifURI_when_downloadSucceedsButBytesAreNull_should_ReturnNull() {
         val clock = TestClock()
 
 
@@ -912,7 +912,7 @@ class UtilsTest : BaseTestCase() {
 
         every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns successfulDownload
 
-        val result = Utils.saveNotificationGif("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
 
         assertNull(result)
 
@@ -920,7 +920,7 @@ class UtilsTest : BaseTestCase() {
     }
 
     @Test
-    fun test_saveNotificationGif_when_pushDirectoryIsNull_should_ReturnNull() {
+    fun test_getNotificationGifURI_when_pushDirectoryIsNull_should_ReturnNull() {
 
         val context = mockk<Context>()
         val clock = TestClock()
@@ -937,7 +937,7 @@ class UtilsTest : BaseTestCase() {
 
         every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns successfulDownload
 
-        val result = Utils.saveNotificationGif("https://example.com/image.gif", context, cleverTapInstanceConfig, clock)
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", context, cleverTapInstanceConfig, clock)
 
         assertNull(result)
 
@@ -945,7 +945,7 @@ class UtilsTest : BaseTestCase() {
     }
 
     @Test
-    fun test_saveNotificationGif_when_fileWriteFails_should_ReturnNull() {
+    fun test_getNotificationGifURI_when_fileWriteFails_should_ReturnNull() {
         val clock = TestClock(1234567890L)
         val context = mockk<Context>()
         val pushDir = mockk<File>()
@@ -966,7 +966,7 @@ class UtilsTest : BaseTestCase() {
         mockkStatic(Files::class)
         every { Files.write(any(Path::class), any(ByteArray::class)) } throws IOException("Write failed")
 
-        val result = Utils.saveNotificationGif("https://example.com/image.gif", context, cleverTapInstanceConfig, clock)
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", context, cleverTapInstanceConfig, clock)
 
         assertNull(result)
 
@@ -977,7 +977,7 @@ class UtilsTest : BaseTestCase() {
 
 //
     @Test
-    fun test_saveNotificationGif_when_exceptionOccurs_should_ReturnNull() {
+    fun test_getNotificationGifURI_when_exceptionOccurs_should_ReturnNull() {
         val clock = TestClock()
 
 
@@ -985,7 +985,7 @@ class UtilsTest : BaseTestCase() {
         mockkStatic(HttpBitmapLoader::class)
         every { HttpBitmapLoader.getHttpBitmap(any(), any()) } throws RuntimeException("Network error")
 
-        val result = Utils.saveNotificationGif("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
 
         assertNull(result)
 

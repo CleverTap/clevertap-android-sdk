@@ -280,11 +280,10 @@ public final class Utils {
     }
 
     /**
-     * Saves an animated image from URL to a file and returns a content URI
+     * Downloads an animated GIF from URL and returns the downloaded bytes
      */
     @Nullable
-    @RequiresApi(26)
-    public static Uri saveNotificationGif(String url, Context context, CleverTapInstanceConfig config, Clock clock) {
+    private static DownloadedBitmap downloadGif(String url, Context context, CleverTapInstanceConfig config) {
         try {
             if (url == null || !url.toLowerCase().endsWith(".gif")) {
                 return null;
@@ -307,36 +306,61 @@ public final class Utils {
             config.getLogger().debug(config.getAccountId(), "Downloaded GIF in : " + downloadedBitmap.getDownloadTime());
 
             if (downloadedBitmap.getStatus() == DownloadedBitmap.Status.SUCCESS && downloadedBitmap.getBytes() != null) {
-                // Write bytes to file
-                try {
-                    File pushDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
-                    if (pushDir == null) {
-                        config.getLogger().debug(config.getAccountId(),
-                                "CleverTap.Push dir not available for gif");
-                        return null;
-                    }
-
-                    File file = new File(pushDir, clock.currentTimeMillis() + ".gif");
-                    Files.write(file.toPath(), downloadedBitmap.getBytes());
-
-                    // Return content URI using FileProvider with CleverTap authority
-                    return FileProvider.getUriForFile(context,
-                            context.getPackageName() + ".clevertap.fileprovider", file);
-
-                } catch (Exception e) {
-                    config.getLogger().debug(config.getAccountId(),
-                            "Failed to write gif to file: " + e);
-                }
+                return downloadedBitmap;
             } else {
                 config.getLogger().debug(config.getAccountId(),
                         "Failed to download gif " + downloadedBitmap.getStatus().getStatusValue());
+                return null;
             }
-
         } catch (Exception e) {
             config.getLogger().debug(config.getAccountId(),
                     "Couldn't download gif for notification: " + e.getMessage());
+            return null;
         }
-        return null;
+    }
+
+    /**
+     * Saves GIF bytes to a file and returns a content URI
+     */
+    @Nullable
+    @RequiresApi(26)
+    private static Uri saveGifToFileAndGetUri(byte[] gifBytes, Context context, CleverTapInstanceConfig config, Clock clock) {
+        try {
+            File pushDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
+            if (pushDir == null) {
+                config.getLogger().debug(config.getAccountId(),
+                        "CleverTap.Push dir not available for gif");
+                return null;
+            }
+
+            File file = new File(pushDir, clock.currentTimeMillis() + ".gif");
+            Files.write(file.toPath(), gifBytes);
+
+            // Return content URI using FileProvider
+            return FileProvider.getUriForFile(context,
+                    context.getPackageName() + ".clevertap.fileprovider", file);
+        } catch (Exception e) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Failed to write gif to file or create URI: " + e);
+            return null;
+        }
+    }
+
+    /**
+     * Saves an animated image from URL to a file and returns a content URI
+     * This is the main function that orchestrates the two operations
+     */
+    @Nullable
+    @RequiresApi(26)
+    public static Uri getNotificationGifURI(String url, Context context, CleverTapInstanceConfig config, Clock clock) {
+        // Download the GIF
+        DownloadedBitmap downloadedBitmap = downloadGif(url, context, config);
+        if (downloadedBitmap == null) {
+            return null;
+        }
+
+        // Save to file and get URI
+        return saveGifToFileAndGetUri(downloadedBitmap.getBytes(), context, config, clock);
     }
 
     /**
