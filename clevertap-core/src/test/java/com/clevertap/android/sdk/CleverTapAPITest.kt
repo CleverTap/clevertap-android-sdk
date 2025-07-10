@@ -605,7 +605,7 @@ class CleverTapAPITest : BaseTestCase() {
         // generate the data for a profile push to alert the server to the optOut state change
         val expectedMap = hashMapOf<String, Any>().apply {
             put(Constants.CLEVERTAP_OPTOUT, false)
-            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, false)
+            put(Constants.CLEVERTAP_ALLOW_SYSTEM_EVENTS, true)
         }
 
         // Act

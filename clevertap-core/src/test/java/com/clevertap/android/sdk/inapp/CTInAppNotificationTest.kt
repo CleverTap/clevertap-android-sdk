@@ -282,7 +282,7 @@ class CTInAppNotificationTest {
         }
         // Assert
         assertInAppNotificationsAreEqual(notification, createdFromParcel)
-        assertEquals(eop, parcel.dataPosition());
+        assertEquals(eop, parcel.dataPosition())
 
         return parcelizeTime
     }
