@@ -2,18 +2,18 @@
 ### Version 7.5.0 (July 10, 2025)
 
 #### New Features
-* Adds support for linked content for `Native Display`.
-* Adds support for encryption in transit.
-* Enhances the `GDPR` opt-out handling by introducing an option to permit system events.
-* Adds support to show a `GIF` in Android Standard Push Notifications on API 34 (Android 14) and above.
-* Adds support for tracking Push Primer local In-App button interactions with additional parameters:
-    * `onDismissed` will be called with `actionExtras -> {wzrk_c2a = "<your_button_text>", wzrk_id = ""}`
-* Triggers an additional callback, `onPushPermissionResponse(false)`, to capture negative button interactions in the Push Primer local In-App.
+* Introduces support for linked content within `Native Display` units, enabling richer interactive experiences.
+* Enhances security by implementing encryption in transit for all SDK network communications.
+* Improves `GDPR` opt-out functionality by adding an option to allow critical system events while respecting user privacy choices.
+* Enables `GIF` display in Android Standard Push Notifications for devices running Android 14 (API 34) and higher.
+* Introduces enhanced tracking for Push Primer local In-App button interactions, providing additional parameters in callbacks:
+    * The `onDismissed` callback now includes `actionExtras` with `wzrk_c2a` (button text) and `wzrk_id` when a button is interacted with.
+* Fires the `onPushPermissionResponse(false)` callback for negative button interactions (e.g., 'No Thanks', 'Later') within the Push Primer local In-App, allowing for more granular response handling.
 
 #### Bug Fixes
-* Fixes an issue where the Push Primer local In-App incorrectly triggered a `Notification Clicked` event.
-* Fixes a `ConcurrentModificationException` in `notifyCleverTapIDChanged`.
-* Fixes [#810](https://github.com/CleverTap/clevertap-android-sdk/issues/810) - `TooManyRequestsException` by upgrading `androidx.work:work-runtime` to `2.10.2`
+* Resolves an issue where interactions with the Push Primer local In-App could mistakenly trigger a `Notification Clicked` event.
+* Addresses a `ConcurrentModificationException` that could occur within the `notifyCleverTapIDChanged` method.
+* Fixes a `TooManyRequestsException` (GitHub Issue [#810](https://github.com/CleverTap/clevertap-android-sdk/issues/810)) by upgrading the `androidx.work:work-runtime` dependency to version `2.10.2`.
 
 ### Version 7.4.1 (June 27, 2025)
 

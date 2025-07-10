@@ -746,7 +746,37 @@ val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
 )
 
 clevertapAdditionalInstanceConfig.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
-val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext ,clevertapAdditionalInstanceConfig)
+val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext, clevertapAdditionalInstanceConfig)
+```
+
+#### Encryption over Network
+
+Clevertap send data over the network in encrypted form instead of plain text.
+From CleverTap SDK v7.5.0 onwards, you can enable encryption in transit for all the events data that is sent over the network.
+
+To enable encryption in transit, add the following to `AndroidManifest.xml`
+
+* Add the following to `AndroidManifest.xml` file
+```xml
+<meta-data
+    android:name="CLEVERTAP_ENCRYPTION_IN_TRANSIT"
+    android:value="1" />
+```
+
+* Different instances can have different encryption over network settings. To enable encryption for an additional instance
+* ```kotlin
+// 1. Create a configuration object for your additional instance
+val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
+applicationContext,
+"YOUR_ADDITIONAL_ACCOUNT_ID", // Replace with your actual Account ID
+"YOUR_ADDITIONAL_ACCOUNT_TOKEN" // Replace with your actual Account Token
+)
+
+// 2. Enable encryption in transit for this specific instance
+clevertapAdditionalInstanceConfig.setEncryptionInTransit(true)
+
+// 3. Get the CleverTapAPI instance using the configured settings
+val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext, clevertapAdditionalInstanceConfig)
 ```
 
 ### User event logging APIs
