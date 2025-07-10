@@ -49,7 +49,6 @@ import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_NOTIFICATION_BITMAP
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP
 import com.clevertap.android.sdk.network.DownloadedBitmap
-import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import java.io.File
@@ -59,8 +58,6 @@ import com.google.firebase.messaging.RemoteMessage
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
-import org.junit.runner.*
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowNetworkInfo
 import org.robolectric.shadows.ShadowPackageManager
@@ -73,7 +70,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import com.clevertap.android.sdk.R as R1
 
-@RunWith(RobolectricTestRunner::class)
 class UtilsTest : BaseTestCase() {
 
     @Test
@@ -483,8 +479,6 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getNotificationBitmapWithSizeConstraints_when_BitmapSizeIsLargerThanGivenSize_should_ReturnNull() {
-        val context = application.applicationContext
-
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
             DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP,
@@ -503,8 +497,6 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getNotificationBitmapWithSizeConstraints_when_BitmapSizeIsSamllerThanGivenSize_should_ReturnBitmap() {
-        val context = application.applicationContext
-
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
             DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP,
@@ -851,7 +843,7 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getNotificationGifURI_when_urlIsNull_should_ReturnNull() {
-        val clock = mockk<Clock>()
+        val clock = TestClock()
         
         val result = Utils.getNotificationGifURI(null, application, cleverTapInstanceConfig, clock)
         
@@ -860,7 +852,7 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getNotificationGifURI_when_urlIsNotGif_should_ReturnNull() {
-        val clock = mockk<Clock>()
+        val clock = TestClock()
         
         val result = Utils.getNotificationGifURI("https://example.com/image.png", application, cleverTapInstanceConfig, clock)
         
@@ -869,8 +861,7 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getNotificationGifURI_when_urlIsEmptyString_should_ReturnNull() {
-        val config = mockk<CleverTapInstanceConfig>()
-        val clock = mockk<Clock>()
+        val clock = TestClock()
         
         val result = Utils.getNotificationGifURI("", application, cleverTapInstanceConfig, clock)
         
@@ -975,7 +966,6 @@ class UtilsTest : BaseTestCase() {
     }
 
 
-//
     @Test
     fun test_getNotificationGifURI_when_exceptionOccurs_should_ReturnNull() {
         val clock = TestClock()
@@ -990,6 +980,71 @@ class UtilsTest : BaseTestCase() {
         assertNull(result)
 
         unmockkStatic(HttpBitmapLoader::class)
+    }
+
+    @Test
+    fun test_getNotificationGifURI_when_successfulDownloadAndFileSave_should_ReturnUri() {
+        val clock = TestClock(1234567890L)
+        val gifBytes = "fake gif bytes".toByteArray()
+        val expectedFileName = "1234567890.gif"
+        val expectedUri = mockk<android.net.Uri>()
+
+        // Mock HttpBitmapLoader to return successful download
+        mockkStatic(HttpBitmapLoader::class)
+        val successfulDownload = mockk<DownloadedBitmap>()
+        every { successfulDownload.status } returns DownloadedBitmap.Status.SUCCESS
+        every { successfulDownload.bytes } returns gifBytes
+        every { successfulDownload.downloadTime } returns 1000L
+
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns successfulDownload
+
+        // Mock Files.write to succeed
+        mockkStatic(Files::class)
+        every { Files.write(any(Path::class), any(ByteArray::class)) } returns mockk()
+
+        // Mock FileProvider.getUriForFile to return expected URI
+        mockkStatic(FileProvider::class)
+        every { 
+            FileProvider.getUriForFile(
+                application,
+                "${application.packageName}.clevertap.fileprovider",
+                any(File::class)
+            ) 
+        } returns expectedUri
+
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
+
+        assertNotNull(result)
+        assertEquals(expectedUri, result)
+
+        // Verify that the correct download request was made
+        verify { 
+            HttpBitmapLoader.getHttpBitmap(
+                HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_BYTES_WITH_TIME_LIMIT,
+                any()
+            )
+        }
+
+        // Verify that Files.write was called with correct parameters
+        verify { 
+            Files.write(
+                any(Path::class),
+                gifBytes
+            )
+        }
+
+        // Verify that FileProvider.getUriForFile was called with correct authority and filename
+        verify { 
+            FileProvider.getUriForFile(
+                application,
+                "${application.packageName}.clevertap.fileprovider",
+                match<File> { file -> file.name == expectedFileName }
+            )
+        }
+
+        unmockkStatic(HttpBitmapLoader::class)
+        unmockkStatic(Files::class)
+        unmockkStatic(FileProvider::class)
     }
 
     //------------------------------------------------------------------------------------
