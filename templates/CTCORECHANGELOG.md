@@ -13,6 +13,7 @@
 #### Bug Fixes
 * Fixes an issue where the Push Primer local In-App incorrectly triggered a `Notification Clicked` event.
 * Fixes a `ConcurrentModificationException` in `notifyCleverTapIDChanged`.
+* Fixes [#810](https://github.com/CleverTap/clevertap-android-sdk/issues/810) - `TooManyRequestsException` by upgrading `androidx.work:work-runtime` to `2.10.2`
 
 ### Version 7.4.1 (June 27, 2025)
 
