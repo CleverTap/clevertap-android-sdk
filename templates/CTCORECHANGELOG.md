@@ -1,4 +1,19 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 7.5.0 (July 10, 2025)
+
+#### New Features
+* Adds support for linked content for `Native Display`.
+* Adds support for encryption in transit.
+* Enhances the `GDPR` opt-out handling by introducing an option to permit system events.
+* Adds support to show a `GIF` in Android Standard Push Notifications on API 34 (Android 14) and above.
+* Adds support for tracking Push Primer local In-App button interactions with additional parameters:
+    * `onDismissed` will be called with `actionExtras -> {wzrk_c2a = "<your_button_text>", wzrk_id = ""}`
+* Triggers an additional callback, `onPushPermissionResponse(false)`, to capture negative button interactions in the Push Primer local In-App.
+
+#### Bug Fixes
+* Fixes an issue where the Push Primer local In-App incorrectly triggered a `Notification Clicked` event.
+* Fixes a `ConcurrentModificationException` in `notifyCleverTapIDChanged`.
+
 ### Version 7.4.1 (June 27, 2025)
 
 #### New Features
