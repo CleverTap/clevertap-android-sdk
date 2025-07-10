@@ -65,7 +65,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean sslPinning;
     private boolean useGoogleAdId;
     private int encryptionLevel;
-    private final String encryptionInTransit;
+    private String encryptionInTransit;
 
     /**
      * Creates a CleverTapInstanceConfig with meta data from manifest file
@@ -576,6 +576,10 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
     public int getEncryptionLevel() {
         return encryptionLevel;
+    }
+
+    public void setEncryptionInTransit(String encryptionInTransit) {
+        this.encryptionInTransit = encryptionInTransit;
     }
 
     public boolean isEncryptionInTransitEnabled() {
