@@ -5,8 +5,8 @@ import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
-import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
+import com.clevertap.android.sdk.utils.FakeClock
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
@@ -43,7 +43,9 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         activityLifeCycleManager = ActivityLifeCycleManager(
             appCtx, cleverTapInstanceConfig, coreState.analyticsManager, coreState.coreMetaData,
             coreState.sessionManager, coreState.pushProviders, coreState.callbackManager, coreState.inAppController,
-            coreState.baseEventQueueManager
+            coreState.baseEventQueueManager,
+            MockCTExecutors(),
+            FakeClock()
         )
     }
 
@@ -114,38 +116,43 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         coreState.coreMetaData.isInstallReferrerDataSent = false
         coreState.callbackManager.geofenceCallback = geofenceCallbackSpy
 
-        mockkStatic(CTExecutorFactory::class) {
-            every { CTExecutorFactory.executors(cleverTapInstanceConfig) } returns MockCTExecutors(
-                cleverTapInstanceConfig
-            )
-            mockkStatic(InstallReferrerClient::class) {
-                val referrerDetails = mockk<ReferrerDetails>(relaxed = true)
-                val listenerSlot = slot<InstallReferrerStateListener>()
-                every { InstallReferrerClient.newBuilder(appCtx) } returns installReferrerClientBuilder
-                every { installReferrerClientBuilder.build() } returns installReferrerClient
-                every { installReferrerClient.installReferrer } returns referrerDetails
-                val installReferrer = "https://play.google.com/com.company"
-                every { referrerDetails.installReferrer } returns installReferrer
+        mockkStatic(InstallReferrerClient::class) {
+            val referrerDetails = mockk<ReferrerDetails>(relaxed = true)
+            val listenerSlot = slot<InstallReferrerStateListener>()
+            every { InstallReferrerClient.newBuilder(appCtx) } returns installReferrerClientBuilder
+            every { installReferrerClientBuilder.build() } returns installReferrerClient
+            every { installReferrerClient.installReferrer } returns referrerDetails
+            val installReferrer = "https://play.google.com/com.company"
+            every { referrerDetails.installReferrer } returns installReferrer
 
-                 activityLifeCycleManager.activityResumed(mockActivity)
-
-                verify { installReferrerClient.startConnection(capture(listenerSlot)) }
-                val installReferrerStateListener: InstallReferrerStateListener =
-                    listenerSlot.captured
-                installReferrerStateListener.onInstallReferrerSetupFinished(InstallReferrerClient.InstallReferrerResponse.OK)
-
-                verify { installReferrerClient.installReferrer }
-                verify { coreState.analyticsManager.pushInstallReferrer(installReferrer) }
-                assertTrue(coreState.coreMetaData.isInstallReferrerDataSent)
-
-                verify { coreState.sessionManager.checkTimeoutSession() }
-                verify { coreState.analyticsManager.pushAppLaunchedEvent() }
-                verify { coreState.analyticsManager.fetchFeatureFlags() }
-                verify { coreState.pushProviders.onTokenRefresh() }
-                verify { geofenceCallbackSpy.triggerLocation() }
-                verify { coreState.baseEventQueueManager.pushInitialEventsAsync() }
-                verify { coreState.inAppController.showNotificationIfAvailable() }
+            mockkStatic(Utils::class) {
+                every {
+                    Utils.cleanupOldGIFs(
+                        appCtx,
+                        cleverTapInstanceConfig,
+                        FakeClock()
+                    )
+                } returns Unit
+                activityLifeCycleManager.activityResumed(mockActivity)
+                verify { Utils.cleanupOldGIFs(any(), any(), any()) }
             }
+
+            verify { installReferrerClient.startConnection(capture(listenerSlot)) }
+            val installReferrerStateListener: InstallReferrerStateListener =
+                listenerSlot.captured
+            installReferrerStateListener.onInstallReferrerSetupFinished(InstallReferrerClient.InstallReferrerResponse.OK)
+
+            verify { installReferrerClient.installReferrer }
+            verify { coreState.analyticsManager.pushInstallReferrer(installReferrer) }
+            assertTrue(coreState.coreMetaData.isInstallReferrerDataSent)
+
+            verify { coreState.sessionManager.checkTimeoutSession() }
+            verify { coreState.analyticsManager.pushAppLaunchedEvent() }
+            verify { coreState.analyticsManager.fetchFeatureFlags() }
+            verify { coreState.pushProviders.onTokenRefresh() }
+            verify { geofenceCallbackSpy.triggerLocation() }
+            verify { coreState.baseEventQueueManager.pushInitialEventsAsync() }
+            verify { coreState.inAppController.showNotificationIfAvailable() }
         }
     }
 }

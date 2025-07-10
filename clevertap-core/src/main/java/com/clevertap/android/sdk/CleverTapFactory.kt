@@ -474,7 +474,9 @@ internal object CleverTapFactory {
             pushProviders,
             callbackManager,
             inAppController,
-            baseEventQueueManager
+            baseEventQueueManager,
+            executors,
+            SYSTEM
         )
 
         val loginController = LoginController(
