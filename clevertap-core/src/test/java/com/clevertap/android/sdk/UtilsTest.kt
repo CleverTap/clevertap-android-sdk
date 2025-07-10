@@ -1049,6 +1049,223 @@ class UtilsTest : BaseTestCase() {
 
     //------------------------------------------------------------------------------------
 
+
+    @Test
+    fun test_cleanupOldGIFs_when_cacheDirIsNull_should_ReturnEarly() {
+        val context = mockk<Context>()
+        val clock = TestClock()
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns null
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 1) { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_cacheDirDoesNotExist_should_ReturnEarly() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val clock = TestClock()
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns false
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 1) { cacheDir.exists() }
+        verify(exactly = 0) { cacheDir.listFiles() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_listFilesReturnsNull_should_ReturnEarly() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val clock = TestClock()
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns null
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 1) { cacheDir.listFiles() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_noGifFiles_should_NotDeleteAnything() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val clock = TestClock()
+
+        val nonGifFile = mockk<File>()
+        every { nonGifFile.isFile() } returns true
+        every { nonGifFile.getName() } returns "somefile.png"
+
+        val files = arrayOf(nonGifFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 0) { nonGifFile.delete() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_gifFilesAreNew_should_NotDeleteThem() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val currentTime = 123456789L
+        val clock = TestClock(currentTime)
+
+        // Create a new GIF file (created 1 hour ago)
+        val newGifFile = mockk<File>()
+        val newTimestamp = currentTime - (60 * 60 * 1000) // 1 hour ago
+        every { newGifFile.isFile() } returns true
+        every { newGifFile.getName() } returns "$newTimestamp.gif"
+
+        val files = arrayOf(newGifFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 0) { newGifFile.delete() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_gifFilesAreOld_should_DeleteThem() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val currentTime = 123456789123L
+        val clock = TestClock(currentTime)
+
+        // Create an old GIF file (created 2 days ago)
+        val oldGifFile = mockk<File>()
+        val oldTimestamp = currentTime - (2 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile.isFile() } returns true
+        every { oldGifFile.getName() } returns "$oldTimestamp.gif"
+        every { oldGifFile.delete() } returns true
+
+        val files = arrayOf(oldGifFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 1) { oldGifFile.delete() }
+    }
+
+
+    @Test
+    fun test_cleanupOldGIFs_when_fileNameHasInvalidFormat_should_SkipFile() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val clock = TestClock()
+
+        // Create a GIF file with invalid filename format
+        val invalidGifFile = mockk<File>()
+        every { invalidGifFile.isFile() } returns true
+        every { invalidGifFile.getName() } returns "invalid_name.gif" // Not a timestamp
+
+        val files = arrayOf(invalidGifFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 0) { invalidGifFile.delete() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_mixedFiles_should_DeleteOnlyOldGifs() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val currentTime = 123456789123L
+        val clock = TestClock(currentTime)
+
+        // Create various types of files
+        val oldGifFile = mockk<File>()
+        val oldTimestamp = currentTime - (2 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile.isFile() } returns true
+        every { oldGifFile.getName() } returns "$oldTimestamp.gif"
+        every { oldGifFile.delete() } returns true
+
+        val newGifFile = mockk<File>()
+        val newTimestamp = currentTime - (60 * 60 * 1000) // 1 hour ago
+        every { newGifFile.isFile() } returns true
+        every { newGifFile.getName() } returns "$newTimestamp.gif"
+
+        val nonGifFile = mockk<File>()
+        every { nonGifFile.isFile() } returns true
+        every { nonGifFile.getName() } returns "somefile.png"
+
+        val directoryFile = mockk<File>()
+        every { directoryFile.isFile() } returns false
+
+        val files = arrayOf(oldGifFile, newGifFile, nonGifFile, directoryFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        // Only old GIF should be deleted
+        verify(exactly = 1) { oldGifFile.delete() }
+        verify(exactly = 0) { newGifFile.delete() }
+        verify(exactly = 0) { nonGifFile.delete() }
+        verify(exactly = 0) { directoryFile.delete() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_multipleOldGifFiles_should_DeleteAll() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val currentTime = 123456789123L
+        val clock = TestClock(currentTime)
+
+        // Create 3 old GIF files
+        val oldGifFile1 = mockk<File>()
+        val oldTimestamp1 = currentTime - (2 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile1.isFile() } returns true
+        every { oldGifFile1.getName() } returns "$oldTimestamp1.gif"
+        every { oldGifFile1.delete() } returns true
+
+        val oldGifFile2 = mockk<File>()
+        val oldTimestamp2 = currentTime - (3 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile2.isFile() } returns true
+        every { oldGifFile2.getName() } returns "$oldTimestamp2.gif"
+        every { oldGifFile2.delete() } returns true
+
+        val oldGifFile3 = mockk<File>()
+        val oldTimestamp3 = currentTime - (5 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile3.isFile() } returns true
+        every { oldGifFile3.getName() } returns "$oldTimestamp3.gif"
+        every { oldGifFile3.delete() } returns true
+
+        val files = arrayOf(oldGifFile1, oldGifFile2, oldGifFile3)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        // All 3 old GIF files should be deleted
+        verify(exactly = 1) { oldGifFile1.delete() }
+        verify(exactly = 1) { oldGifFile2.delete() }
+        verify(exactly = 1) { oldGifFile3.delete() }
+    }
+
     private fun prepareForWifiConnectivityTest(
         isConnected: Boolean,
         networkType: Int = ConnectivityManager.TYPE_WIFI
