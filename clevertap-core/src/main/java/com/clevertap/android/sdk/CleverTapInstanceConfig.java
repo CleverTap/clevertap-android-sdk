@@ -209,7 +209,9 @@ public class CleverTapInstanceConfig implements Parcelable {
             this.encryptionLevel = 0;
         }
         buildPushProvidersFromManifest(manifest);
-        this.encryptionInTransit = manifest.getEncryptionInTransit();
+
+        String fromManifest = manifest.getEncryptionInTransit();
+        this.encryptionInTransit = fromManifest != null ? fromManifest : "0";
     }
 
     private void buildPushProvidersFromManifest(ManifestInfo manifest) {
@@ -578,8 +580,8 @@ public class CleverTapInstanceConfig implements Parcelable {
         return encryptionLevel;
     }
 
-    public void setEncryptionInTransit(String encryptionInTransit) {
-        this.encryptionInTransit = encryptionInTransit;
+    public void setEncryptionInTransit(boolean encryptionInTransit) {
+        this.encryptionInTransit = encryptionInTransit ? "1" : "0";
     }
 
     public boolean isEncryptionInTransitEnabled() {

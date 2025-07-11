@@ -56,7 +56,7 @@ class CleverTapFixtures {
             encryptionLevel: Int = 0,
             provider1: String = "hps,hps_token,com.clevertap.android.hms.HmsPushProvider,com.huawei.hms.push.HmsMessageService",
             provider2: String? = null,
-            encryptionInTransit: String = "0"
+            encryptionInTransit: String? = "0"
         ): ManifestInfo {
             return ManifestInfo(
                 accountId,
