@@ -108,6 +108,31 @@ class CleverTapInstanceConfigTest {
     }
 
     @Test
+    fun `test encryption in transit not added use case`() {
+        val encryptionInvalid = CleverTapInstanceConfig.createInstanceWithManifest(
+            CleverTapFixtures.createManifestInfo(encryptionInTransit = null),
+            ACCOUNT_ID,
+            ACCOUNT_TOKEN,
+            ACCOUNT_REGION,
+            true
+        )
+        assertFalse(encryptionInvalid.isEncryptionInTransitEnabled)
+    }
+
+    @Test
+    fun `test setter for encryption in transit for multi instance`() {
+        val config = CleverTapInstanceConfig.createInstanceWithManifest(
+            CleverTapFixtures.createManifestInfo(encryptionInTransit = null),
+            ACCOUNT_ID,
+            ACCOUNT_TOKEN,
+            ACCOUNT_REGION,
+            true
+        )
+        config.setEncryptionInTransit(true)
+        assertTrue(config.isEncryptionInTransitEnabled)
+    }
+
+    @Test
     fun `test clevertap instance config data is preserved after json serialization and deserialization`() {
         val originalConfig = CleverTapInstanceConfig.createInstanceWithManifest(
             CleverTapFixtures.createManifestInfo(encryptionInTransit = "1"),
