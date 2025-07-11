@@ -1,5 +1,5 @@
 ## CleverTap Android SDK CHANGE LOG
-### Version 7.5.0 (July 10, 2025)
+### Version 7.5.0 (July 11, 2025)
 
 #### New Features
 * Introduces support for linked content within `Native Display` units, enabling richer interactive experiences.
