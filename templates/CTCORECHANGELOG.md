@@ -3,7 +3,7 @@
 
 #### New Features
 * Introduces support for linked content within `Native Display` units, enabling richer interactive experiences.
-* Enhances security by implementing encryption in transit for all SDK network communications.
+* Enhances security by implementing encryption in transit for all SDK network communications. Please refer [here](EXAMPLES.md#encryption-over-network) for further details.
 * Improves `GDPR` opt-out functionality by adding an option to allow critical system events while respecting user privacy choices.
 * Enables `GIF` display in Android Standard Push Notifications for devices running Android 14 (API 34) and higher.
 * Introduces enhanced tracking for Push Primer local In-App button interactions, providing additional parameters in callbacks:
@@ -286,7 +286,7 @@ Please update to 6.1.1 and above
 #### New Features
 
 * Adds support for encryption of PII data wiz. Email, Identity, Name and Phone. 
-  Please refer to [EXAMPLES.md](EXAMPLES.md#encryption-of-pii-data) file to read more on how to
+  Please refer to [EXAMPLES.md](EXAMPLES.md#encryption-of-pii-data-) file to read more on how to
   enable/disable encryption.
 * Adds support for custom KV pairs common to all inbox messages in AppInbox.
 
