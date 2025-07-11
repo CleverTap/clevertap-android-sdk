@@ -5,6 +5,16 @@
 
     <application>
 
+        <provider
+            android:name="com.clevertap.android.sdk.CleverTapFileProvider"
+            android:authorities="${applicationId}.clevertap.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/clevertap_notification_file_paths" />
+        </provider>
+
         <activity
             android:name="com.clevertap.android.sdk.InAppNotificationActivity"
             android:configChanges="keyboardHidden"

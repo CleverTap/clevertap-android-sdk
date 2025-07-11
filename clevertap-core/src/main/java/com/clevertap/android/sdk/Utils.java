@@ -31,17 +31,22 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest;
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader;
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation;
 import com.clevertap.android.sdk.network.DownloadedBitmap;
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory;
+import com.clevertap.android.sdk.utils.Clock;
 import com.google.firebase.messaging.RemoteMessage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -273,6 +278,149 @@ public final class Utils {
                 context, config, timeoutMillis);
         return HttpBitmapLoader.getHttpBitmap(HttpBitmapOperation.DOWNLOAD_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,bitmapDownloadRequest);
     }
+
+    /**
+     * Downloads an animated GIF from URL and returns the downloaded bytes
+     */
+    @Nullable
+    private static DownloadedBitmap downloadGif(String url, Context context, CleverTapInstanceConfig config) {
+        try {
+            if (url == null || !url.toLowerCase().endsWith(".gif")) {
+                return null;
+            }
+
+            BitmapDownloadRequest downloadRequest = new BitmapDownloadRequest(
+                    url,
+                    false,
+                    context,
+                    config,
+                    Constants.PN_IMAGE_DOWNLOAD_TIMEOUT_IN_MILLIS, // downloadTimeLimitInMillis
+                    -1
+            );
+
+            DownloadedBitmap downloadedBitmap = HttpBitmapLoader.getHttpBitmap(
+                    HttpBitmapOperation.DOWNLOAD_BYTES_WITH_TIME_LIMIT,
+                    downloadRequest
+            );
+
+            config.getLogger().debug(config.getAccountId(), "Downloaded GIF in : " + downloadedBitmap.getDownloadTime());
+
+            if (downloadedBitmap.getStatus() == DownloadedBitmap.Status.SUCCESS && downloadedBitmap.getBytes() != null) {
+                return downloadedBitmap;
+            } else {
+                config.getLogger().debug(config.getAccountId(),
+                        "Failed to download gif " + downloadedBitmap.getStatus().getStatusValue());
+                return null;
+            }
+        } catch (Exception e) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Couldn't download gif for notification: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Saves GIF bytes to a file and returns a content URI
+     */
+    @Nullable
+    @RequiresApi(26)
+    private static Uri saveGifToFileAndGetUri(byte[] gifBytes, Context context, CleverTapInstanceConfig config, Clock clock) {
+        try {
+            File pushDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
+            if (pushDir == null) {
+                config.getLogger().debug(config.getAccountId(),
+                        "CleverTap.Push dir not available for gif");
+                return null;
+            }
+
+            File file = new File(pushDir, clock.currentTimeMillis() + ".gif");
+            Files.write(file.toPath(), gifBytes);
+
+            // Return content URI using FileProvider
+            return FileProvider.getUriForFile(context,
+                    context.getPackageName() + ".clevertap.fileprovider", file);
+        } catch (Exception e) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Failed to write gif to file or create URI: " + e);
+            return null;
+        }
+    }
+
+    /**
+     * Saves an animated image from URL to a file and returns a content URI
+     * This is the main function that orchestrates the two operations
+     */
+    @Nullable
+    @RequiresApi(26)
+    public static Uri getNotificationGifURI(String url, Context context, CleverTapInstanceConfig config, Clock clock) {
+        // Download the GIF
+        DownloadedBitmap downloadedBitmap = downloadGif(url, context, config);
+        if (downloadedBitmap == null) {
+            return null;
+        }
+
+        // Save to file and get URI
+        return saveGifToFileAndGetUri(downloadedBitmap.getBytes(), context, config, clock);
+    }
+
+    /**
+     * Cleans up old GIF image files from the push notification cache directory.
+     * Only removes GIF files that are one day (24 hours) or older, based on the timestamp
+     * embedded in their filename.
+     *
+     * <p>This method expects GIF files to be named in the format "timestamp.gif" where
+     * timestamp is the creation time in milliseconds (e.g., "1234567890123.gif").
+     * Files that don't match this naming convention will be skipped.</p>
+     *
+     * @param context The application context used to access the cache directory
+     * @param config The CleverTap instance configuration containing logger and account information
+     */
+    public static void cleanupOldGIFs(Context context, CleverTapInstanceConfig config, Clock clock) {
+        File cacheDir = context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE);
+        try {
+            if (cacheDir == null || !cacheDir.exists()) {
+                return;
+            }
+
+            File[] files = cacheDir.listFiles();
+            if (files == null) {
+                return;
+            }
+
+            long currentTimeMillis = clock.currentTimeMillis();
+            int deletedCount = 0;
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(".gif")) {
+                    try {
+                        String fileName = file.getName();
+                        String timestampStr = fileName.substring(0, fileName.lastIndexOf(".gif"));
+                        long fileTimestamp = Long.parseLong(timestampStr);
+
+                        // Check if file is one day or older
+                        if (currentTimeMillis - fileTimestamp >= Constants.ONE_DAY_IN_MILLIS) {
+                            if (file.delete()) {
+                                deletedCount++;
+                            } else {
+                                config.getLogger().debug(config.getAccountId(),
+                                        "Failed to delete old GIF file: " + file.getName());
+                            }
+                        }
+                    } catch (Exception e) {
+                        config.getLogger().debug(config.getAccountId(),
+                                "Skipping file with invalid file name format: " + file.getName());
+                    }
+                }
+            }
+            if (deletedCount > 0) {
+                config.getLogger().debug(config.getAccountId(),
+                        "Cleaned up " + deletedCount + " old animated notification files");
+            }
+        } catch (Exception e) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Error during animated image cleanup: " + e.getMessage());
+        }
+    }
+
 
     public static int getThumbnailImage(Context context, String image) {
         if (context != null) {

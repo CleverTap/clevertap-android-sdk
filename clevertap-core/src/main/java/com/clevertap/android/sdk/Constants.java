@@ -205,6 +205,8 @@ public interface Constants {
     String WZRK_ACTIONS = "wzrk_acts";
     String WZRK_BIG_PICTURE = "wzrk_bp";
     String WZRK_BIG_PICTURE_ALT_TEXT_KEY = "alt_text_wzrk_bp";
+    String WZRK_GIF = "wzrk_gif";
+    String PUSH_DIRECTORY_NAME = "CleverTap.Push";
     String WZRK_MSG_SUMMARY = "wzrk_nms";
     String NOTIF_PRIORITY = "pr";
     String PRIORITY_HIGH = "high";

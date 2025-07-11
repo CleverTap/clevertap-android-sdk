@@ -12,8 +12,9 @@ import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.Clock;
 
 import java.util.concurrent.Callable;
 
@@ -37,6 +38,10 @@ class ActivityLifeCycleManager {
 
     private final SessionManager sessionManager;
 
+    private final CTExecutors executors;
+
+    private final Clock clock;
+
     ActivityLifeCycleManager(Context context,
             CleverTapInstanceConfig config,
             AnalyticsManager analyticsManager,
@@ -45,7 +50,9 @@ class ActivityLifeCycleManager {
             PushProviders pushProviders,
             BaseCallbackManager callbackManager,
             InAppController inAppController,
-            BaseEventQueueManager baseEventQueueManager) {
+            BaseEventQueueManager baseEventQueueManager,
+            CTExecutors executors,
+            Clock clock) {
         this.context = context;
         this.config = config;
         this.analyticsManager = analyticsManager;
@@ -55,6 +62,8 @@ class ActivityLifeCycleManager {
         this.callbackManager = callbackManager;
         this.inAppController = inAppController;
         this.baseEventQueueManager = baseEventQueueManager;
+        this.executors = executors;
+        this.clock = clock;
     }
 
     //Lifecycle
@@ -62,7 +71,7 @@ class ActivityLifeCycleManager {
         CoreMetaData.setAppForeground(false);
         sessionManager.setAppLastSeen(System.currentTimeMillis());
         config.getLogger().verbose(config.getAccountId(), "App in background");
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        Task<Void> task = executors.postAsyncSafelyTask();
         task.execute(
                 "activityPaused",
                 new Callable<Void>() {
@@ -94,7 +103,7 @@ class ActivityLifeCycleManager {
             analyticsManager.pushAppLaunchedEvent();
             analyticsManager.fetchFeatureFlags();
             pushProviders.onTokenRefresh();
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+            Task<Void> task = executors.postAsyncSafelyTask();
             task.execute("HandlingInstallReferrer",new Callable<Void>() {
                 @Override
                 public Void call() {
@@ -104,6 +113,12 @@ class ActivityLifeCycleManager {
                     }
                     return null;
                 }
+            });
+
+            Task<Void> cleanUpTask = executors.ioTask();
+            cleanUpTask.execute("CleanUpOldGIFs", () -> {
+                Utils.cleanupOldGIFs(context, config, clock);
+                return null;
             });
 
             try {
@@ -160,7 +175,7 @@ class ActivityLifeCycleManager {
                     switch (responseCode) {
                         case InstallReferrerClient.InstallReferrerResponse.OK:
                             // Connection established
-                            Task<ReferrerDetails> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+                            Task<ReferrerDetails> task = executors.postAsyncSafelyTask();
 
                             task.addOnSuccessListener(response -> {
                                 try {

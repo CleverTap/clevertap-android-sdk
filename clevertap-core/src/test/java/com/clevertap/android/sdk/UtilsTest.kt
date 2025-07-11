@@ -43,22 +43,26 @@ import android.telephony.TelephonyManager.NETWORK_TYPE_IDEN
 import android.telephony.TelephonyManager.NETWORK_TYPE_LTE
 import android.telephony.TelephonyManager.NETWORK_TYPE_NR
 import android.telephony.TelephonyManager.NETWORK_TYPE_UMTS
+import androidx.core.content.FileProvider
 import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_NOTIFICATION_BITMAP
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.*
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
 import com.google.firebase.messaging.RemoteMessage
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
-import org.junit.runner.*
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowNetworkInfo
 import org.robolectric.shadows.ShadowPackageManager
 import org.robolectric.util.ReflectionHelpers
+import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -66,7 +70,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import com.clevertap.android.sdk.R as R1
 
-@RunWith(RobolectricTestRunner::class)
 class UtilsTest : BaseTestCase() {
 
     @Test
@@ -476,8 +479,6 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getNotificationBitmapWithSizeConstraints_when_BitmapSizeIsLargerThanGivenSize_should_ReturnNull() {
-        val context = application.applicationContext
-
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
             DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP,
@@ -496,8 +497,6 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getNotificationBitmapWithSizeConstraints_when_BitmapSizeIsSamllerThanGivenSize_should_ReturnBitmap() {
-        val context = application.applicationContext
-
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
             DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP,
@@ -841,6 +840,431 @@ class UtilsTest : BaseTestCase() {
     }
 
     //------------------------------------------------------------------------------------
+
+    @Test
+    fun test_getNotificationGifURI_when_urlIsNull_should_ReturnNull() {
+        val clock = TestClock()
+        
+        val result = Utils.getNotificationGifURI(null, application, cleverTapInstanceConfig, clock)
+        
+        assertNull(result)
+    }
+
+    @Test
+    fun test_getNotificationGifURI_when_urlIsNotGif_should_ReturnNull() {
+        val clock = TestClock()
+        
+        val result = Utils.getNotificationGifURI("https://example.com/image.png", application, cleverTapInstanceConfig, clock)
+        
+        assertNull(result)
+    }
+
+    @Test
+    fun test_getNotificationGifURI_when_urlIsEmptyString_should_ReturnNull() {
+        val clock = TestClock()
+        
+        val result = Utils.getNotificationGifURI("", application, cleverTapInstanceConfig, clock)
+        
+        assertNull(result)
+    }
+
+
+    @Test
+    fun test_getNotificationGifURI_when_downloadFails_should_ReturnNull() {
+        val clock = TestClock()
+
+        // Mock HttpBitmapLoader to return failed download
+        mockkStatic(HttpBitmapLoader::class)
+        val failedDownload = mockk<DownloadedBitmap>()
+        every { failedDownload.status } returns DownloadedBitmap.Status.DOWNLOAD_FAILED
+        every { failedDownload.bytes } returns null
+        every { failedDownload.downloadTime } returns 1000L
+        
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns failedDownload
+        
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
+        
+        assertNull(result)
+
+        unmockkStatic(HttpBitmapLoader::class)
+    }
+
+    @Test
+    fun test_getNotificationGifURI_when_downloadSucceedsButBytesAreNull_should_ReturnNull() {
+        val clock = TestClock()
+
+
+        // Mock HttpBitmapLoader to return successful download but null bytes
+        mockkStatic(HttpBitmapLoader::class)
+        val successfulDownload = mockk<DownloadedBitmap>()
+        every { successfulDownload.status } returns DownloadedBitmap.Status.SUCCESS
+        every { successfulDownload.bytes } returns null
+        every { successfulDownload.downloadTime } returns 1000L
+
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns successfulDownload
+
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
+
+        assertNull(result)
+
+        unmockkStatic(HttpBitmapLoader::class)
+    }
+
+    @Test
+    fun test_getNotificationGifURI_when_pushDirectoryIsNull_should_ReturnNull() {
+
+        val context = mockk<Context>()
+        val clock = TestClock()
+
+        // Mock context.getDir to return null
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns null
+
+        // Mock HttpBitmapLoader to return successful download
+        mockkStatic(HttpBitmapLoader::class)
+        val successfulDownload = mockk<DownloadedBitmap>()
+        every { successfulDownload.status } returns DownloadedBitmap.Status.SUCCESS
+        every { successfulDownload.bytes } returns "fake gif bytes".toByteArray()
+        every { successfulDownload.downloadTime } returns 1000L
+
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns successfulDownload
+
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", context, cleverTapInstanceConfig, clock)
+
+        assertNull(result)
+
+        unmockkStatic(HttpBitmapLoader::class)
+    }
+
+    @Test
+    fun test_getNotificationGifURI_when_fileWriteFails_should_ReturnNull() {
+        val clock = TestClock(1234567890L)
+        val context = mockk<Context>()
+        val pushDir = mockk<File>()
+
+        // Mock context.getDir to return push directory
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns pushDir
+
+        // Mock HttpBitmapLoader to return successful download
+        mockkStatic(HttpBitmapLoader::class)
+        val successfulDownload = mockk<DownloadedBitmap>()
+        every { successfulDownload.status } returns DownloadedBitmap.Status.SUCCESS
+        every { successfulDownload.bytes } returns "fake gif bytes".toByteArray()
+        every { successfulDownload.downloadTime } returns 1000L
+
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns successfulDownload
+
+        // Mock Files.write to throw exception
+        mockkStatic(Files::class)
+        every { Files.write(any(Path::class), any(ByteArray::class)) } throws IOException("Write failed")
+
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", context, cleverTapInstanceConfig, clock)
+
+        assertNull(result)
+
+        unmockkStatic(HttpBitmapLoader::class)
+        unmockkStatic(Files::class)
+    }
+
+
+    @Test
+    fun test_getNotificationGifURI_when_exceptionOccurs_should_ReturnNull() {
+        val clock = TestClock()
+
+
+        // Mock HttpBitmapLoader to throw exception
+        mockkStatic(HttpBitmapLoader::class)
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } throws RuntimeException("Network error")
+
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
+
+        assertNull(result)
+
+        unmockkStatic(HttpBitmapLoader::class)
+    }
+
+    @Test
+    fun test_getNotificationGifURI_when_successfulDownloadAndFileSave_should_ReturnUri() {
+        val clock = TestClock(1234567890L)
+        val gifBytes = "fake gif bytes".toByteArray()
+        val expectedFileName = "1234567890.gif"
+        val expectedUri = mockk<android.net.Uri>()
+
+        // Mock HttpBitmapLoader to return successful download
+        mockkStatic(HttpBitmapLoader::class)
+        val successfulDownload = mockk<DownloadedBitmap>()
+        every { successfulDownload.status } returns DownloadedBitmap.Status.SUCCESS
+        every { successfulDownload.bytes } returns gifBytes
+        every { successfulDownload.downloadTime } returns 1000L
+
+        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns successfulDownload
+
+        // Mock Files.write to succeed
+        mockkStatic(Files::class)
+        every { Files.write(any(Path::class), any(ByteArray::class)) } returns mockk()
+
+        // Mock FileProvider.getUriForFile to return expected URI
+        mockkStatic(FileProvider::class)
+        every { 
+            FileProvider.getUriForFile(
+                application,
+                "${application.packageName}.clevertap.fileprovider",
+                any(File::class)
+            ) 
+        } returns expectedUri
+
+        val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
+
+        assertNotNull(result)
+        assertEquals(expectedUri, result)
+
+        // Verify that the correct download request was made
+        verify { 
+            HttpBitmapLoader.getHttpBitmap(
+                HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_BYTES_WITH_TIME_LIMIT,
+                any()
+            )
+        }
+
+        // Verify that Files.write was called with correct parameters
+        verify { 
+            Files.write(
+                any(Path::class),
+                gifBytes
+            )
+        }
+
+        // Verify that FileProvider.getUriForFile was called with correct authority and filename
+        verify { 
+            FileProvider.getUriForFile(
+                application,
+                "${application.packageName}.clevertap.fileprovider",
+                match<File> { file -> file.name == expectedFileName }
+            )
+        }
+
+        unmockkStatic(HttpBitmapLoader::class)
+        unmockkStatic(Files::class)
+        unmockkStatic(FileProvider::class)
+    }
+
+    //------------------------------------------------------------------------------------
+
+
+    @Test
+    fun test_cleanupOldGIFs_when_cacheDirIsNull_should_ReturnEarly() {
+        val context = mockk<Context>()
+        val clock = TestClock()
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns null
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 1) { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_cacheDirDoesNotExist_should_ReturnEarly() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val clock = TestClock()
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns false
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 1) { cacheDir.exists() }
+        verify(exactly = 0) { cacheDir.listFiles() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_listFilesReturnsNull_should_ReturnEarly() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val clock = TestClock()
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns null
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 1) { cacheDir.listFiles() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_noGifFiles_should_NotDeleteAnything() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val clock = TestClock()
+
+        val nonGifFile = mockk<File>()
+        every { nonGifFile.isFile() } returns true
+        every { nonGifFile.getName() } returns "somefile.png"
+
+        val files = arrayOf(nonGifFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 0) { nonGifFile.delete() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_gifFilesAreNew_should_NotDeleteThem() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val currentTime = 123456789L
+        val clock = TestClock(currentTime)
+
+        // Create a new GIF file (created 1 hour ago)
+        val newGifFile = mockk<File>()
+        val newTimestamp = currentTime - (60 * 60 * 1000) // 1 hour ago
+        every { newGifFile.isFile() } returns true
+        every { newGifFile.getName() } returns "$newTimestamp.gif"
+
+        val files = arrayOf(newGifFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 0) { newGifFile.delete() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_gifFilesAreOld_should_DeleteThem() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val currentTime = 123456789123L
+        val clock = TestClock(currentTime)
+
+        // Create an old GIF file (created 2 days ago)
+        val oldGifFile = mockk<File>()
+        val oldTimestamp = currentTime - (2 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile.isFile() } returns true
+        every { oldGifFile.getName() } returns "$oldTimestamp.gif"
+        every { oldGifFile.delete() } returns true
+
+        val files = arrayOf(oldGifFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 1) { oldGifFile.delete() }
+    }
+
+
+    @Test
+    fun test_cleanupOldGIFs_when_fileNameHasInvalidFormat_should_SkipFile() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val clock = TestClock()
+
+        // Create a GIF file with invalid filename format
+        val invalidGifFile = mockk<File>()
+        every { invalidGifFile.isFile() } returns true
+        every { invalidGifFile.getName() } returns "invalid_name.gif" // Not a timestamp
+
+        val files = arrayOf(invalidGifFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        verify(exactly = 0) { invalidGifFile.delete() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_mixedFiles_should_DeleteOnlyOldGifs() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val currentTime = 123456789123L
+        val clock = TestClock(currentTime)
+
+        // Create various types of files
+        val oldGifFile = mockk<File>()
+        val oldTimestamp = currentTime - (2 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile.isFile() } returns true
+        every { oldGifFile.getName() } returns "$oldTimestamp.gif"
+        every { oldGifFile.delete() } returns true
+
+        val newGifFile = mockk<File>()
+        val newTimestamp = currentTime - (60 * 60 * 1000) // 1 hour ago
+        every { newGifFile.isFile() } returns true
+        every { newGifFile.getName() } returns "$newTimestamp.gif"
+
+        val nonGifFile = mockk<File>()
+        every { nonGifFile.isFile() } returns true
+        every { nonGifFile.getName() } returns "somefile.png"
+
+        val directoryFile = mockk<File>()
+        every { directoryFile.isFile() } returns false
+
+        val files = arrayOf(oldGifFile, newGifFile, nonGifFile, directoryFile)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        // Only old GIF should be deleted
+        verify(exactly = 1) { oldGifFile.delete() }
+        verify(exactly = 0) { newGifFile.delete() }
+        verify(exactly = 0) { nonGifFile.delete() }
+        verify(exactly = 0) { directoryFile.delete() }
+    }
+
+    @Test
+    fun test_cleanupOldGIFs_when_multipleOldGifFiles_should_DeleteAll() {
+        val context = mockk<Context>()
+        val cacheDir = mockk<File>()
+        val currentTime = 123456789123L
+        val clock = TestClock(currentTime)
+
+        // Create 3 old GIF files
+        val oldGifFile1 = mockk<File>()
+        val oldTimestamp1 = currentTime - (2 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile1.isFile() } returns true
+        every { oldGifFile1.getName() } returns "$oldTimestamp1.gif"
+        every { oldGifFile1.delete() } returns true
+
+        val oldGifFile2 = mockk<File>()
+        val oldTimestamp2 = currentTime - (3 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile2.isFile() } returns true
+        every { oldGifFile2.getName() } returns "$oldTimestamp2.gif"
+        every { oldGifFile2.delete() } returns true
+
+        val oldGifFile3 = mockk<File>()
+        val oldTimestamp3 = currentTime - (5 * Constants.ONE_DAY_IN_MILLIS)
+        every { oldGifFile3.isFile() } returns true
+        every { oldGifFile3.getName() } returns "$oldTimestamp3.gif"
+        every { oldGifFile3.delete() } returns true
+
+        val files = arrayOf(oldGifFile1, oldGifFile2, oldGifFile3)
+
+        every { context.getDir(Constants.PUSH_DIRECTORY_NAME, Context.MODE_PRIVATE) } returns cacheDir
+        every { cacheDir.exists() } returns true
+        every { cacheDir.listFiles() } returns files
+
+        Utils.cleanupOldGIFs(context, cleverTapInstanceConfig, clock)
+
+        // All 3 old GIF files should be deleted
+        verify(exactly = 1) { oldGifFile1.delete() }
+        verify(exactly = 1) { oldGifFile2.delete() }
+        verify(exactly = 1) { oldGifFile3.delete() }
+    }
 
     private fun prepareForWifiConnectivityTest(
         isConnected: Boolean,

@@ -36,7 +36,8 @@ object HttpBitmapLoader {
         DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT,
         DOWNLOAD_INAPP_BITMAP,
         DOWNLOAD_ANY_BITMAP,
-        DOWNLOAD_BYTES
+        DOWNLOAD_BYTES,
+        DOWNLOAD_BYTES_WITH_TIME_LIMIT
     }
 
     @JvmStatic
@@ -131,6 +132,19 @@ object HttpBitmapLoader {
                     bitmapDownloader = BitmapDownloader(
                         httpUrlConnectionParams = inAppStandardHttpUrlConnectionParams,
                         bitmapInputStreamReader = BitmapInputStreamDecoder(saveBitmap = false, saveBytes = true)
+                    )
+                ).handleRequest(
+                    bitmapDownloadRequest = bitmapDownloadRequest
+                )
+            }
+
+            HttpBitmapOperation.DOWNLOAD_BYTES_WITH_TIME_LIMIT -> {
+                BitmapDownloadRequestHandlerWithTimeLimit(
+                    BitmapDownloadRequestHandler(
+                        bitmapDownloader = BitmapDownloader(
+                            httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
+                            bitmapInputStreamReader = BitmapInputStreamDecoder(saveBitmap = false, saveBytes = true)
+                        )
                     )
                 ).handleRequest(
                     bitmapDownloadRequest = bitmapDownloadRequest

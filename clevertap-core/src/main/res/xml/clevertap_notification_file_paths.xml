@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- For the custom directory created with context.getDir() -->
+    <files-path name="notification_images" path="../app_CleverTap.Push" />
+</paths>
