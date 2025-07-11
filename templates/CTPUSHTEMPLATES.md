@@ -553,10 +553,10 @@ pt_json | Optional | Above keys in JSON format
 
 The following are the image specifications and guidelines for the Push Templates:
 
-| Template           | Aspect Ratios (Approx.)                                                                                                                                       | Maximum File Size (OS version 12 and above) |
-|--------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------|
+| Template            | Aspect Ratios (Approx.)                                                                                                                                       | Maximum File Size (OS version 12 and above) |
+|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------|
 | **Standard**        | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      |                                             |
-| **Advanced**        | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 500 KB                                      |
+| **Basic**           | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 500 KB                                      |
 | **Auto Carousel**   | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
 | **Manual Carousel** | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
 | **Five Icon**       | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **1:1**                                                                                      | 50 KB                                       |
