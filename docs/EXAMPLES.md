@@ -751,10 +751,10 @@ val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationCon
 
 #### Encryption over Network
 
-Clevertap send data over the network in encrypted form instead of plain text.
-From CleverTap SDK v7.5.0 onwards, you can enable encryption in transit for all the events data that is sent over the network.
+Clevertap can send data over the network in encrypted form instead of plain text.
+From CleverTap SDK v7.5.0 onwards, you can enable encryption in transit for all eventd data that is sent over the network.
 
-To enable encryption in transit, add the following to `AndroidManifest.xml`
+To enable encryption in transit, add the following to your `AndroidManifest.xml`
 
 * Add the following to `AndroidManifest.xml` file
 ```xml
