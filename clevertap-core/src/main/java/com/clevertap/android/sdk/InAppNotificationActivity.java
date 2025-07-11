@@ -10,25 +10,28 @@ import android.content.res.Configuration;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.view.Window;
 import android.view.WindowManager;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.clevertap.android.sdk.inapp.CTInAppAction;
-import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
-import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
-import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
-import com.clevertap.android.sdk.inapp.CTInAppHtmlInterstitialFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeCoverFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeCoverImageFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
-import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFullFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlCoverFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHalfInterstitialFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlInterstitialFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeCoverFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeCoverImageFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHalfInterstitialFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHalfInterstitialImageFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeInterstitialFragment;
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton;
 import com.clevertap.android.sdk.inapp.CTInAppType;
@@ -36,7 +39,7 @@ import com.clevertap.android.sdk.inapp.InAppActionType;
 import com.clevertap.android.sdk.inapp.InAppListener;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
+import java.util.List;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
         DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback {
@@ -92,9 +95,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             }
         });
 
-        int orientation = this.getResources().getConfiguration().orientation;
+        int orientation = getResources().getConfiguration().orientation;
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            Window window = getWindow();
+            if (window != null) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                WindowInsetsControllerCompat insetsController = new WindowInsetsControllerCompat(window, window.getDecorView());
+                insetsController.hide(WindowInsetsCompat.Type.systemBars());
+            }
         }
         try {
             Bundle intentExtras = getIntent().getExtras();
@@ -166,10 +174,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         if (savedInstanceState == null) {
             contentFragment = createContentFragment();
             if (contentFragment != null) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable("inApp", inAppNotification);
-                bundle.putParcelable("config", config);
-                contentFragment.setArguments(bundle);
+                contentFragment.setArguments(inAppNotification, config);
                 getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
                         .add(android.R.id.content, contentFragment, getFragmentTag())
@@ -254,6 +259,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         showPushPermissionPrompt(fallbackToSettings);
     }
 
+    @Override
+    public void didCancelPermissionRequest() {
+        pushPermissionHandler.notifyPushPermissionExternalListeners(this);
+    }
+
     public void showPushPermissionPrompt(boolean isFallbackSettingsEnabled) {
         pushPermissionHandler.requestPermission(this, isFallbackSettingsEnabled);
     }
@@ -269,7 +279,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     @Override
     public void onPushPermissionResult(boolean isGranted) {
-        didDismiss(null);
+        Bundle data = null;
+        if (inAppNotification != null && inAppNotification.isLocalInApp()) {
+            data = new Bundle();
+            data.putString(Constants.KEY_C2A, inAppNotification.getButtons().get(0).getText());
+            data.putString(Constants.NOTIFICATION_ID_TAG, "");
+        }
+        didDismiss(data);
     }
 
     void didDismiss(Bundle data) {
@@ -385,7 +401,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     private void showAlertDialogForInApp() {
-        ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
+        List<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
         if (buttons.isEmpty()) {
             config.getLogger()
                     .debug("InAppNotificationActivity: Notification has no buttons, not showing Alert InApp");
@@ -447,12 +463,16 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     private void onAlertButtonClick(CTInAppNotificationButton button, boolean isPositive) {
         Bundle clickData = didClick(button);
 
-        if (isPositive && inAppNotification.isLocalInApp()) {
-            showPushPermissionPrompt(inAppNotification.fallBackToNotificationSettings());
-            return;
+        if (inAppNotification.isLocalInApp()) {
+            if(isPositive) {
+                showPushPermissionPrompt(inAppNotification.getFallBackToNotificationSettings());
+                return;
+            } else {
+                didCancelPermissionRequest();
+            }
         }
 
-        CTInAppAction action = button.getAction();
+        CTInAppAction action = button.action;
         if (action != null && InAppActionType.REQUEST_FOR_PERMISSIONS == action.getType()) {
             showPushPermissionPrompt(action.shouldFallbackToSettings());
             return;

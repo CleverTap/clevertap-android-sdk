@@ -96,107 +96,7 @@
           <option name="INCLUDE" value="false" />
         </pattern>
         <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppHtmlFooterFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppHtmlHeaderFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppHtmlInterstitialFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppBasePartialFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppNativeCoverFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppBaseFullNativeFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppBasePartialNativeFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppNativeHeaderFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppNativeFooterFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppNativeCoverFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppBasePartialHtmlFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppBaseFullHtmlFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
           <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppWebView" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppNativeCoverImageFragment" />
           <option name="ENABLED" value="true" />
           <option name="INCLUDE" value="false" />
         </pattern>
@@ -252,6 +152,11 @@
         </pattern>
         <pattern>
           <option name="PATTERN" value="com.clevertap.android.hms.CTHmsMessageService" />
+          <option name="ENABLED" value="true" />
+          <option name="INCLUDE" value="false" />
+        </pattern>
+        <pattern>
+          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.fragment.*" />
           <option name="ENABLED" value="true" />
           <option name="INCLUDE" value="false" />
         </pattern>

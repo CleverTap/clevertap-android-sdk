@@ -30,6 +30,8 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
     @JvmField
     val dim: Point = Point()
 
+    var isFullscreen = false
+
     @SuppressLint("ResourceType")
     constructor(
         context: Context,
@@ -110,12 +112,14 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
                 ?: return calculateWidthWithDisplayMetrics()
 
         val metrics = windowManager.currentWindowMetrics
-        val insets = metrics.windowInsets.getInsetsIgnoringVisibility(
-            WindowInsets.Type.systemBars() or
-                    WindowInsets.Type.displayCutout()
-        )
-
-        val availableWidth = metrics.bounds.width() - insets.left - insets.right
+        val availableWidth = if (isFullscreen) {
+            metrics.bounds.width()
+        } else {
+            val insets = metrics.windowInsets.getInsetsIgnoringVisibility(
+                WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+            )
+            metrics.bounds.width() - insets.left - insets.right
+        }
         return (availableWidth * widthPercentage / 100f).toInt()
     }
 
@@ -127,12 +131,14 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
                 ?: return calculateHeightWithDisplayMetrics()
 
         val metrics = windowManager.currentWindowMetrics
-        val insets = metrics.windowInsets.getInsetsIgnoringVisibility(
-            WindowInsets.Type.systemBars() or
-                    WindowInsets.Type.displayCutout()
-        )
-
-        val availableHeight = metrics.bounds.height() - insets.top - insets.bottom
+        val availableHeight = if (isFullscreen) {
+            metrics.bounds.height()
+        } else {
+            val insets = metrics.windowInsets.getInsetsIgnoringVisibility(
+                WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+            )
+            metrics.bounds.height() - insets.top - insets.bottom
+        }
         return (availableHeight * heightPercentage / 100f).toInt()
     }
 

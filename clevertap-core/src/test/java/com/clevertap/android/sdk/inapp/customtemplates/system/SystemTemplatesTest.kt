@@ -17,10 +17,13 @@ class SystemTemplatesTest {
     fun `system functions should always call context setDismissed()`() {
         val mockInAppActionHandler = mockk<InAppActionHandler>(relaxed = true)
         val onComplete = slot<() -> Unit>()
+        val onError: (e: Exception?) -> Unit = { e ->
+            //no-op
+        }
         every {
             mockInAppActionHandler.launchPlayStoreReviewFlow(
                 capture(onComplete),
-                any()
+                onError
             )
         } answers {
             onComplete.captured()

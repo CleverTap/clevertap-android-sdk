@@ -21,7 +21,7 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 
 ```groovy
 implementation "com.clevertap.android:push-templates:2.1.0"
-implementation "com.clevertap.android:clevertap-android-sdk:7.4.1" // 4.4.0 and above
+implementation "com.clevertap.android:clevertap-android-sdk:7.5.0" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -551,25 +551,40 @@ pt_json | Optional | Above keys in JSON format
 
 ## Image Specifications
 
-Template | Aspect Ratios | File Type
-  ---:|:---:|:--- 
-Basic | 4:3 or 3:2 or 2:1 | .JPG
-Auto Carousel | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
-Manual Carousel | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
-Manual Carousel-FilmStrip| 1:1 | .JPG
-Rating | 4:3 | .JPG
-Five Icon | 1:1 | .JPG or .PNG
-Zero Bezel | 4:3 or 3:2 or 2:1 | .JPG
-Timer | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
-Input Box | 4:3 or 2:1 | .JPG
-Product Catalog | 1:1 | .JPG
+The following are the image specifications and guidelines for the Push Templates:
 
-* For Auto and Manual Carousel the image dimensions should not exceed more than 840x560 for Android 11 and Android 12 devices and with 3:2 image aspect ratio
-* For images in Basic, Auto/Manual Carousel templates the image dimensions should not exceed more than 400x200 for only Android 13+ devices.
-* For images in Five Icons template the image dimensions should not exceed more than 300x300 for only Android 13+ devices.
-* For Product Catalog image aspect ratio should be 1:1 and image size should be less than 80kb for Android 11 and Android 12 devices
-* For Zero Bezel it's recommended that if your image has any text it should be present in the middle of the image for Android 12+ devices. 
-* For Android 12+ devices it's recommended that if your image has any text it should be present in the middle of the image.
+| Template            | Aspect Ratios (Approx.)                                                                                                                                       | Maximum File Size (OS version 12 and above) |
+|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------|
+| **Standard**        | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      |                                             |
+| **Basic**           | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 500 KB                                      |
+| **Auto Carousel**   | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
+| **Manual Carousel** | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
+| **Five Icon**       | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **1:1**                                                                                      | 50 KB                                       |
+| **Text over Image** | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **2:1**                                                                                      | 500 KB                                      |
+| **Timer**           | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 326 KB                                      |
+
+## Image Guidelines
+
+Ensure images for the following templates meet the specified size guidelines:
+
+| Template Name              | Recommended Resolution |
+|:---------------------------|:-----------------------|
+| Auto Carousel Template     | 400 x 300 px           |
+| Manual Carousel Template   | 240 x 180 px           |
+| Five Icon Template         | 300 x 300 px           |
+| Product Catalogue Template | 225 x 225 px           |
+
+- For Text over Image Template, ensure the text is center-aligned within the image for devices running OS version 12 and above.
+
+## Dark Mode
+To use the Dark mode feature, ensure you are using Push Templates SDK version 2.1.0 and above.
+Push templates automatically adapt to the device's theme settings, rendering notifications in dark or light mode. 
+Templates support **custom color definitions** that adapt to both themes for visual consistency. Refer [here](https://developer.clevertap.com/docs/android-push-templates#dark-mode) for more details 
+
+##  Image Scaling
+To use the Image scaling feature, ensure you are using Push Templates SDK version 2.1.0 and above.
+Android supports various image scaling options to control how images appear in push notifications. CleverTap optimizes image rendering to maintain visual consistency across devices while leveraging Android native scaling behavior. 
+To handle scaling in a Push template, you must add the key `pt_scale_type` key and the value is set as `fit_center` or `center_crop` based on the requirement. Refer [here](https://developer.clevertap.com/docs/android-push-templates#image-scaling) for more details
 
 ## Android 12 Trampoline restrictions
 

@@ -52,6 +52,9 @@ class CTLocalInAppTest : BaseTestCase() {
                 put(JSONObject().apply {
                     put("text", "Decline")
                     put("radius", "#FFFFFF")
+                    put("actions", JSONObject().apply {
+                        put("type", "close")
+                    })
                     put("bg", "#00FF00")
                     put("border", "#000000")
                     put("color", "#FFFF00")
