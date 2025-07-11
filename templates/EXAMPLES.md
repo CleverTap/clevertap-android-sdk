@@ -719,9 +719,9 @@ Please note if using Google Ad Id for apps targeting Android 13+, will have to d
 
 From CleverTap SDK v5.0.0 onwards, you can use Remote Config Variables in your app. Please refer to the [Remote Config Variables doc](Variables.md) to read more on how to integrate this to your app.
 
-## User Privacy & Opt-Out
+#### User Privacy & Opt-Out
 
-### setOptOut(boolean userOptOut)
+##### setOptOut(boolean userOptOut)
 
 Use this method to opt the user out of all event tracking, or opt them back in.
 When a user is opted out, no events (including user actions and system events) are sent to CleverTap.
@@ -745,7 +745,7 @@ clevertap.setOptOut(true)
 clevertap.setOptOut(false)
 ```
 
-### setOptOut(boolean userOptOut, boolean allowSystemEvents)
+##### setOptOut(boolean userOptOut, boolean allowSystemEvents)
 This overload improves GDPR opt-out functionality by allowing you to control whether critical system events (such as app installs, uninstalls, and push notification registration) are still sent to CleverTap, even when a user has opted out of tracking.
 This helps you respect user privacy choices while still maintaining essential app functionality and compliance with regulations.
 
@@ -824,7 +824,7 @@ To enable encryption in transit, add the following to your `AndroidManifest.xml`
 ```
 
 * Different instances can have different encryption over network settings. To enable encryption for an additional instance
-* ```kotlin
+```kotlin
 // 1. Create a configuration object for your additional instance
 val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
 applicationContext,
