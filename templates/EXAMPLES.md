@@ -719,6 +719,66 @@ Please note if using Google Ad Id for apps targeting Android 13+, will have to d
 
 From CleverTap SDK v5.0.0 onwards, you can use Remote Config Variables in your app. Please refer to the [Remote Config Variables doc](Variables.md) to read more on how to integrate this to your app.
 
+#### User Privacy & Opt-Out
+
+##### setOptOut(boolean userOptOut)
+
+Use this method to opt the user out of all event tracking, or opt them back in.
+When a user is opted out, no events (including user actions and system events) are sent to CleverTap.
+
+**Java**
+```java
+CleverTapAPI clevertap = CleverTapAPI.getDefaultInstance(this);
+// Opt the user out of tracking
+clevertap.setOptOut(true);
+
+// Opt the user back in
+clevertap.setOptOut(false);
+```
+
+**Kotlin**
+```kotlin
+val clevertap = CleverTapAPI.getDefaultInstance(this)
+// Opt the user out of tracking
+clevertap.setOptOut(true)
+// Opt the user back in
+clevertap.setOptOut(false)
+```
+
+##### setOptOut(boolean userOptOut, boolean allowSystemEvents)
+This overload improves GDPR opt-out functionality by allowing you to control whether critical system events (such as app installs, uninstalls, and push notification registration) are still sent to CleverTap, even when a user has opted out of tracking.
+This helps you respect user privacy choices while still maintaining essential app functionality and compliance with regulations.
+
+* If userOptOut is true and allowSystemEvents is true, the user is opted out of tracking, but critical system events will still be sent.
+* If userOptOut is true and allowSystemEvents is false, the user is fully opted out, and even critical system events will not be sent.
+* If userOptOut is false, the user is opted back in, and all events (including system events) will be sent.
+
+**Java**
+```java
+CleverTapAPI clevertap = CleverTapAPI.getDefaultInstance(this);
+// Opt the user out, but allow critical system events (GDPR compliant)
+clevertap.setOptOut(true, true);
+
+// Opt the user out, do not allow any events (full opt-out)
+clevertap.setOptOut(true, false);
+
+// Opt the user back in, allow all events
+clevertap.setOptOut(false, true);
+```
+
+**Kotlin**
+```kotlin
+val clevertap = CleverTapAPI.getDefaultInstance(this)
+// Opt the user out, but allow critical system events (GDPR compliant)
+clevertap.setOptOut(true, true)
+
+// Opt the user out, do not allow any events (full opt-out)
+clevertap.setOptOut(true, false)
+
+// Opt the user back in, allow all events
+clevertap.setOptOut(false, true)
+```
+
 #### Encryption of PII data 
 
 PII data is stored across the SDK and could be sensitive information. 
@@ -746,7 +806,37 @@ val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
 )
 
 clevertapAdditionalInstanceConfig.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
-val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext ,clevertapAdditionalInstanceConfig)
+val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext, clevertapAdditionalInstanceConfig)
+```
+
+#### Encryption over Network
+
+Clevertap can send data over the network in encrypted form instead of plain text.
+From CleverTap SDK v7.5.0 onwards, you can enable encryption in transit for all eventd data that is sent over the network.
+
+To enable encryption in transit, add the following to your `AndroidManifest.xml`
+
+* Add the following to `AndroidManifest.xml` file
+```xml
+<meta-data
+    android:name="CLEVERTAP_ENCRYPTION_IN_TRANSIT"
+    android:value="1" />
+```
+
+* Different instances can have different encryption over network settings. To enable encryption for an additional instance
+```kotlin
+// 1. Create a configuration object for your additional instance
+val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
+applicationContext,
+"YOUR_ADDITIONAL_ACCOUNT_ID", // Replace with your actual Account ID
+"YOUR_ADDITIONAL_ACCOUNT_TOKEN" // Replace with your actual Account Token
+)
+
+// 2. Enable encryption in transit for this specific instance
+clevertapAdditionalInstanceConfig.setEncryptionInTransit(true)
+
+// 3. Get the CleverTapAPI instance using the configured settings
+val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext, clevertapAdditionalInstanceConfig)
 ```
 
 ### User event logging APIs

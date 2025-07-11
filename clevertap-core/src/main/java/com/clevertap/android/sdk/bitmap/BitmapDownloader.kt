@@ -59,7 +59,7 @@ class BitmapDownloader(
                 )
             }
         } catch (e: Throwable) {
-            Logger.v("Couldn't download the notification icon. URL was: $srcUrl")
+            Logger.v("Couldn't download the notification media. URL was: $srcUrl")
             e.printStackTrace()
             return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
         } finally {

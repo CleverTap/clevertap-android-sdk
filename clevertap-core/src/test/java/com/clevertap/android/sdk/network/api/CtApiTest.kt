@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.network.api
 
 import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
@@ -30,14 +31,49 @@ class CtApiTest {
             "X-CleverTap-Token" to CtApiTestProvider.ACCOUNT_TOKEN
         )
 
-        val sendQueueResponse = ctApi.sendQueue(false, getEmptyQueueBody())
+        val sendQueueResponse = ctApi.sendQueue(getEmptyQueueBody().toString())
         assertEquals(expectedHeaders, sendQueueResponse.request.headers)
+
+        val sendImpressionsResponse = ctApi.sendImpressions(getEmptyQueueBody().toString())
+        assertEquals(expectedHeaders, sendImpressionsResponse.request.headers)
 
         val handshakeResponse = ctApi.performHandshakeForDomain(false)
         assertEquals(expectedHeaders, handshakeResponse.request.headers)
 
         val sendVarsResponse = ctApi.defineVars(getEmptyQueueBody())
         assertEquals(expectedHeaders, sendVarsResponse.request.headers)
+
+        val sendContentFetch = ctApi.sendContentFetch(getEmptyContentFetchBody())
+        assertEquals(expectedHeaders, sendContentFetch.request.headers)
+    }
+
+    @Test
+    fun test_encryption_headers_are_set_for_sendQueue_with_encryption_opt_in() {
+        val expectedHeaders = mapOf(
+            "Content-Type" to "application/json; charset=utf-8",
+            CtApi.HEADER_ACCOUNT_ID to CtApiTestProvider.ACCOUNT_ID,
+            CtApi.HEADER_ACCOUNT_TOKEN to CtApiTestProvider.ACCOUNT_TOKEN,
+            CtApi.HEADER_ENCRYPTION_ENABLED to "true"
+        )
+        val sendQueueResponse = ctApi.sendQueue(
+            body = getEmptyQueueBody().toString(),
+            isEncrypted = true
+        )
+        assertEquals(expectedHeaders, sendQueueResponse.request.headers)
+    }
+
+    @Test
+    fun test_encryption_headers_are_not_set_for_sendQueue_with_encryption_opt_out() {
+        val expectedHeaders = mapOf(
+            "Content-Type" to "application/json; charset=utf-8",
+            CtApi.HEADER_ACCOUNT_ID to CtApiTestProvider.ACCOUNT_ID,
+            CtApi.HEADER_ACCOUNT_TOKEN to CtApiTestProvider.ACCOUNT_TOKEN
+        )
+        val sendQueueResponse = ctApi.sendQueue(
+            body = getEmptyQueueBody().toString(),
+            isEncrypted = false // opt-out
+        )
+        assertEquals(expectedHeaders, sendQueueResponse.request.headers)
     }
 
     @Test
@@ -84,7 +120,7 @@ class CtApiTest {
 
     @Test
     fun test_sendQueueAndVariables_updateCurrentRequestTimestamp() {
-        ctApi.sendQueue(true, getEmptyQueueBody())
+        ctApi.sendQueue(getEmptyQueueBody().toString())
         val timestamp = ctApi.currentRequestTimestampSeconds
         Thread.sleep(1000)
         ctApi.defineVars(getEmptyQueueBody())
@@ -93,12 +129,30 @@ class CtApiTest {
 
     @Test
     fun test_sendQueue_attachDefaultQueryParams() {
-        val request = ctApi.sendQueue(false, getEmptyQueueBody()).request
+        val request = ctApi.sendQueue(getEmptyQueueBody().toString()).request
         val urlString = request.url.toString()
         assertContains(urlString, "os=Android")
         assertContains(urlString, "t=${CtApiTestProvider.SDK_VERSION}")
         assertContains(urlString, "z=${CtApiTestProvider.ACCOUNT_ID}")
         assertContains(urlString, "ts=${ctApi.currentRequestTimestampSeconds}")
+    }
+
+    @Test
+    fun test_sendContentFetch_attachDefaultQueryParams() {
+        val request = ctApi.sendContentFetch(getEmptyContentFetchBody()).request
+        val urlString = request.url.toString()
+        assertContains(urlString, "os=Android")
+        assertContains(urlString, "t=${CtApiTestProvider.SDK_VERSION}")
+        assertContains(urlString, "z=${CtApiTestProvider.ACCOUNT_ID}")
+        assertContains(urlString, "ts=${ctApi.currentRequestTimestampSeconds}")
+    }
+
+
+    @Test
+    fun test_sendContentFetch_attachEndpoint() {
+        val request = ctApi.sendContentFetch(getEmptyContentFetchBody()).request
+        val urlString = request.url.toString()
+        assertContains(urlString, "/content")
     }
 
     @Test
@@ -312,5 +366,9 @@ class CtApiTest {
 
     private fun getEmptyQueueBody(): SendQueueRequestBody {
         return SendQueueRequestBody(null, JSONArray())
+    }
+
+    private fun getEmptyContentFetchBody(): ContentFetchRequestBody {
+        return ContentFetchRequestBody(JSONObject(), JSONArray())
     }
 }

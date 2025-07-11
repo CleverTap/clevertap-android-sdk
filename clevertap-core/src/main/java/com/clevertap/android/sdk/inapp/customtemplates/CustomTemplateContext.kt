@@ -24,7 +24,7 @@ import java.lang.ref.WeakReference
  */
 sealed class CustomTemplateContext private constructor(
     template: CustomTemplate,
-    protected val notification: CTInAppNotification,
+    internal val notification: CTInAppNotification,
     inAppListener: InAppListener,
     private val resourceProvider: FileResourceProvider,
     private var dismissListener: ContextDismissListener?,

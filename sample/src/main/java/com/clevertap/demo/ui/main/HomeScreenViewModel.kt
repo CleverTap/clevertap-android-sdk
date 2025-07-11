@@ -759,8 +759,37 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "16-0" -> {
                 cleverTapAPI?.syncRegisteredInAppTemplates()
             }
+            "17-0" -> {
+                // Opt Out - userOptOut: true, allowSystemEvents: true
+                cleverTapAPI?.setOptOut(true, true)
+                Log.i(TAG, "Set Opt Out: userOptOut = true, allowSystemEvents = true")
+            }
+            "17-1" -> {
+                // Opt Out - userOptOut: true, allowSystemEvents: false
+                cleverTapAPI?.setOptOut(true, false)
+                Log.i(TAG, "Set Opt Out: userOptOut = true, allowSystemEvents = false")
+            }
+            "17-2" -> {
+                // Opt Out - userOptOut: false, allowSystemEvents: true
+                cleverTapAPI?.setOptOut(false, true)
+                Log.i(TAG, "Set Opt Out: userOptOut = false, allowSystemEvents = true")
+            }
+            "17-3" -> {
+                // Opt Out - userOptOut: false, allowSystemEvents: false
+                cleverTapAPI?.setOptOut(false, false)
+                Log.i(TAG, "Set Opt Out: userOptOut = false, allowSystemEvents = false")
+            }
+            "17-4" -> {
+                // Opt Out - userOptOut: true (single param)
+                cleverTapAPI?.setOptOut(true)
+                Log.i(TAG, "Set Opt Out: userOptOut = true (single parameter method)")
+            }
+            "17-5" -> {
+                // Opt Out - userOptOut: false (single param)
+                cleverTapAPI?.setOptOut(false)
+                Log.i(TAG, "Set Opt Out: userOptOut = false (single parameter method)")
+            }
             //"60" -> webViewClickListener?.onWebViewClick()
-
         }
     }
 }

@@ -42,7 +42,7 @@ class CleverTapFactoryTest : BaseTestCase() {
     @Test
     fun test_getCoreState_ReturnedObjectMustHaveNonNullCTLockManager(){
         val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
-        assertNotNull(coreState.ctLockManager)
+        assertNotNull(coreState.cTLockManager)
     }
 
     @Test

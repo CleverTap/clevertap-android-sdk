@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.network.IJRepo;
 import org.json.JSONObject;
 
 public class MetadataResponse extends CleverTapResponseDecorator {
@@ -14,18 +15,17 @@ public class MetadataResponse extends CleverTapResponseDecorator {
     private final DeviceInfo deviceInfo;
 
     private final Logger logger;
-
-    private final NetworkManager networkManager;
+    private final IJRepo ijRepo;
 
     public MetadataResponse(
             CleverTapInstanceConfig config,
             DeviceInfo deviceInfo,
-            NetworkManager networkManager
+            IJRepo ijRepo
     ) {
         this.config = config;
         logger = this.config.getLogger();
         this.deviceInfo = deviceInfo;
-        this.networkManager = networkManager;
+        this.ijRepo = ijRepo;
     }
 
 
@@ -46,7 +46,7 @@ public class MetadataResponse extends CleverTapResponseDecorator {
         try {
             if (response.has("_i")) {
                 final long i = response.getLong("_i");
-                networkManager.setI(context, i);
+                ijRepo.setI(context, i);
             }
         } catch (Throwable t) {
             // Ignore
@@ -56,7 +56,7 @@ public class MetadataResponse extends CleverTapResponseDecorator {
         try {
             if (response.has("_j")) {
                 final long j = response.getLong("_j");
-                networkManager.setJ(context, j);
+                ijRepo.setJ(context, j);
             }
         } catch (Throwable t) {
             // Ignore

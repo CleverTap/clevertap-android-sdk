@@ -4,25 +4,29 @@ import static com.clevertap.android.sdk.StorageHelper.getPreferences;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.ImpressionManager;
 import com.clevertap.android.sdk.inapp.SharedPreferencesMigration;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import kotlin.jvm.functions.Function1;
-import kotlin.jvm.functions.Function2;
+import com.clevertap.android.sdk.utils.Clock;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.Map;
+
+import kotlin.jvm.functions.Function1;
+import kotlin.jvm.functions.Function2;
 
 @RestrictTo(Scope.LIBRARY)
 public class InAppFCManager {
@@ -35,25 +39,31 @@ public class InAppFCManager {
 
     private String deviceId;
 
-    private ImpressionManager impressionManager;
+    private final ImpressionManager impressionManager;
 
     private final StoreRegistry storeRegistry;
+    private final CTExecutors executors;
+    private final Clock clock;
 
-    InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId,
-            StoreRegistry storeRegistry, ImpressionManager impressionManager) {
+    InAppFCManager(Context context,
+                   CleverTapInstanceConfig config,
+                   String deviceId,
+                   StoreRegistry storeRegistry,
+                   ImpressionManager impressionManager,
+                   CTExecutors executors,
+                   Clock clock) {
         this.config = config;
         this.context = context;
         this.deviceId = deviceId;
         this.storeRegistry = storeRegistry;
         this.impressionManager = impressionManager;
+        this.executors = executors;
+        this.clock = clock;
 
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("initInAppFCManager", new Callable<Void>() {
-            @Override
-            public Void call() {
-                init(InAppFCManager.this.deviceId);
-                return null;
-            }
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("initInAppFCManager", () -> {
+            init(deviceId);
+            return null;
         });
     }
 
@@ -108,7 +118,7 @@ public class InAppFCManager {
             return;
         }
 
-        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        Task<Void> task = executors.ioTask();
         task.execute("recordInAppImpressionsAndCounts", () -> {
             impressionManager.recordImpression(id);
 
@@ -354,28 +364,8 @@ public class InAppFCManager {
         getConfigLogger()
                 .verbose(config.getAccountId() + ":async_deviceID", "InAppFCManager init() called");
         try {
-            //================= Testing START==================TODO: remove after testing
-
-            /*SharedPreferences spCountsPerInAppV3 = getPreferences(context,
-                    storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId)));
-
-            spCountsPerInAppV3.edit().clear().commit();
-
-            *//*SharedPreferences spCountsPerInAppV1 = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
-            SharedPreferences.Editor edit = spCountsPerInAppV1.edit();*//*
-            SharedPreferences spCountsPerInAppV2 = getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP,deviceId));
-            SharedPreferences.Editor edit = spCountsPerInAppV2.edit();
-            edit.putString("inapp1","1,1");
-            edit.putString("inapp2","1");
-            edit.putString("inapp3","1,1");
-            edit.putString("inapp4","hello");
-            edit.putInt("inapp5",10);
-            edit.putBoolean("inapp6",true);
-            edit.commit();*/
-
-            //================= Testing END==================TODO: remove after testing
             migrateToNewPrefsKey(deviceId);
-            final String today = ddMMyyyy.format(new Date());
+            final String today = ddMMyyyy.format(clock.newDate());
             final String lastUpdated = getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), "20140428");
             if (!today.equals(lastUpdated)) {
                 StorageHelper

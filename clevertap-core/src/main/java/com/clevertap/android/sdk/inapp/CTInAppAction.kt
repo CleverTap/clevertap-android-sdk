@@ -34,6 +34,7 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
         actionUrl = parcel?.readString()
         keyValues = parcel?.readHashMap(null) as? HashMap<String, String>
         customTemplateInAppData = parcel?.readParcelable(CustomTemplateInAppData::class.java.getClassLoader())
+        shouldFallbackToSettings = parcel?.readByte()?.toInt() != 0x00
     }
 
     private constructor(json: JSONObject) : this(null) {
@@ -45,6 +46,7 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
         dest.writeString(actionUrl)
         dest.writeMap(keyValues)
         dest.writeParcelable(customTemplateInAppData, flags)
+        dest.writeByte((if (shouldFallbackToSettings) 0x01 else 0x00).toByte())
     }
 
     override fun describeContents(): Int {
@@ -74,6 +76,31 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
             }
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CTInAppAction
+
+        if (shouldFallbackToSettings != other.shouldFallbackToSettings) return false
+        if (type != other.type) return false
+        if (actionUrl != other.actionUrl) return false
+        if (keyValues != other.keyValues) return false
+        if (customTemplateInAppData != other.customTemplateInAppData) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = shouldFallbackToSettings.hashCode()
+        result = 31 * result + (type?.hashCode() ?: 0)
+        result = 31 * result + (actionUrl?.hashCode() ?: 0)
+        result = 31 * result + (keyValues?.hashCode() ?: 0)
+        result = 31 * result + (customTemplateInAppData?.hashCode() ?: 0)
+        return result
+    }
+
 
     companion object CREATOR : Creator<CTInAppAction> {
 
@@ -110,7 +137,7 @@ internal class CTInAppAction private constructor(parcel: Parcel?) : Parcelable {
     }
 }
 
-internal enum class InAppActionType(private val stringValue: String) {
+enum class InAppActionType(private val stringValue: String) {
     CLOSE("close"),
     OPEN_URL("url"),
     KEY_VALUES("kv"),

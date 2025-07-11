@@ -60,15 +60,15 @@ class EventQueueManagerTest : BaseTestCase() {
                 corestate.mainLooperHandler,
                 corestate.deviceInfo,
                 corestate.validationResultStack,
-                corestate.networkManager as NetworkManager,
+                corestate.networkManager,
                 corestate.coreMetaData,
-                corestate.ctLockManager,
+                corestate.cTLockManager,
                 corestate.localDataStore,
                 corestate.controllerManager,
                 loginInfoProvider
             )
         )
-            json = JSONObject()
+        json = JSONObject()
     }
 
     @Test
@@ -487,7 +487,7 @@ class EventQueueManagerTest : BaseTestCase() {
             verify(exactly = 0) { corestate.networkManager.initHandshake(any(), any()) }
             verify {
                 corestate.networkManager.flushDBQueue(
-                    application, PUSH_NOTIFICATION_VIEWED, null
+                    application, PUSH_NOTIFICATION_VIEWED, null, false
                 )
             }
         }
@@ -514,7 +514,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             verify {
                 corestate.networkManager.flushDBQueue(
-                    application, PUSH_NOTIFICATION_VIEWED, null
+                    application, PUSH_NOTIFICATION_VIEWED, null, false
                 )
             }
         }
@@ -764,8 +764,8 @@ class EventQueueManagerTest : BaseTestCase() {
                 //Assert
                 verify {
                     loginInfoProvider.removeValueFromCachedGUIDForIdentifier(
-                    expectedDeviceID,
-                    "Email"
+                        expectedDeviceID,
+                        "Email"
                     )
                 }
                 verify {

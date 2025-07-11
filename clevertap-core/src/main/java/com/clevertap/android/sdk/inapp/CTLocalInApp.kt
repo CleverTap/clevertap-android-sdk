@@ -86,6 +86,9 @@ class CTLocalInApp private constructor() {
                     val negativeButtonObject = JSONObject().apply {
                         put(Constants.KEY_TEXT, negativeBtnText)
                         put(Constants.KEY_RADIUS, "2")
+                        put(Constants.KEY_ACTIONS, JSONObject().apply {
+                            put(Constants.KEY_TYPE, InAppActionType.CLOSE)
+                        })
                     }
                     getJSONArray(Constants.KEY_BUTTONS).put(1, negativeButtonObject)
                     Builder6(this)

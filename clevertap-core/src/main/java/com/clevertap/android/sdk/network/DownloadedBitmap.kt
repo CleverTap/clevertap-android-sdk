@@ -27,7 +27,8 @@ data class DownloadedBitmap constructor(
         DOWNLOAD_FAILED("DOWNLOAD_FAILED"),
         NO_NETWORK("NO_NETWORK"),
         INIT_ERROR("INIT_ERROR"),
-        SIZE_LIMIT_EXCEEDED("SIZE_LIMIT_EXCEEDED")
+        SIZE_LIMIT_EXCEEDED("SIZE_LIMIT_EXCEEDED"),
+        GIF_SUCCESS("GIF_SUCCESS")
     }
 
     override fun equals(other: Any?): Boolean {

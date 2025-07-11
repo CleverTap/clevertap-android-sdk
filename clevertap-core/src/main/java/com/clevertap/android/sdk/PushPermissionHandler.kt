@@ -71,6 +71,10 @@ internal class PushPermissionHandler @JvmOverloads constructor(
         notifyListeners(isPushPermissionGranted(context))
     }
 
+    fun notifyPushPermissionExternalListeners(context: Context) {
+        notifyExternalListeners(isPushPermissionGranted(context))
+    }
+
     /**
      * Attempt to request a push permission. Checks if the permission is already given and does not
      * initiate the flow in this case. When the result of the permission check is known without
@@ -159,7 +163,11 @@ internal class PushPermissionHandler @JvmOverloads constructor(
     }
 
     private fun notifyListeners(isPermissionGranted: Boolean) {
+        notifyExternalListeners(isPermissionGranted)
         pushPermissionCallback.get()?.onPushPermissionResult(isPermissionGranted)
+    }
+
+    private fun notifyExternalListeners(isPermissionGranted: Boolean) {
         if (ctListeners != null) {
             for (listener in ctListeners) {
                 listener?.onPushPermissionResponse(isPermissionGranted)
