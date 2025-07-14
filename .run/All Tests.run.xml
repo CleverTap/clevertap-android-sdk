@@ -91,11 +91,6 @@
           <option name="INCLUDE" value="false" />
         </pattern>
         <pattern>
-          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.InAppWebViewClient" />
-          <option name="ENABLED" value="true" />
-          <option name="INCLUDE" value="false" />
-        </pattern>
-        <pattern>
           <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppWebView" />
           <option name="ENABLED" value="true" />
           <option name="INCLUDE" value="false" />
@@ -157,6 +152,11 @@
         </pattern>
         <pattern>
           <option name="PATTERN" value="com.clevertap.android.sdk.inapp.fragment.*" />
+          <option name="ENABLED" value="true" />
+          <option name="INCLUDE" value="false" />
+        </pattern>
+        <pattern>
+          <option name="PATTERN" value="com.clevertap.android.sdk.inapp.CTInAppHtmlBannerOverlay" />
           <option name="ENABLED" value="true" />
           <option name="INCLUDE" value="false" />
         </pattern>
