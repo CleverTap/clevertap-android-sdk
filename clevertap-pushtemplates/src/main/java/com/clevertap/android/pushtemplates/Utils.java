@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -52,9 +53,15 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import pl.droidsonroids.gif.GifDrawable;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.net.URL;
 
 @SuppressWarnings("WeakerAccess")
 public class Utils {
@@ -100,6 +107,70 @@ public class Utils {
 
         return bitmap;
     }
+
+    public static boolean loadGifIntoRemoteView(RemoteViews remoteView, String url, Context context, int imageViewId, int viewFlipperID, String altText) {
+        try {
+            List<Bitmap> frames = extractOptimizedFrames(url, 5);
+            if (frames.isEmpty()) {
+                return false;
+            }
+
+            for (Bitmap bitmap : frames) {
+                RemoteViews tempRemoteViews = new RemoteViews(context.getPackageName(), R.layout.image_view_flipper_dynamic);
+                tempRemoteViews.setImageViewBitmap(imageViewId, bitmap);
+                tempRemoteViews.setViewVisibility(imageViewId, View.VISIBLE);
+                remoteView.addView(R.id.view_flipper, tempRemoteViews);
+            }
+            if (!TextUtils.isEmpty(altText)) {
+                remoteView.setContentDescription(viewFlipperID, altText);
+            }
+
+            remoteView.setViewVisibility(viewFlipperID, View.VISIBLE);
+            return true;
+        } catch (Exception e) {
+            PTLog.debug("GIF loading failed", e);
+            return false;
+        }
+    }
+
+    public static List<Bitmap> extractOptimizedFrames(String gifUrl, int maxFrames) {
+        List<Bitmap> frames = new ArrayList<>();
+
+        try (InputStream inputStream = new BufferedInputStream(new URL(gifUrl).openStream())) {
+            GifDrawable gifDrawable = new GifDrawable(inputStream);
+//        try {
+//            byte[] rawGifBytes = com.clevertap.android.sdk.Utils.downloadGif(gifUrl, context, null).getBytes();
+//            GifDrawable gifDrawable = new GifDrawable(rawGifBytes);
+            int total = gifDrawable.getNumberOfFrames();
+            PTLog.debug("Total frames in gif: " + total);
+
+            Set<Integer> indices = new LinkedHashSet<>();
+            if (total <= maxFrames) {
+                for (int i = 1; i < total; i += 2) indices.add(i);
+                if ((total - 1) % 2 == 0) indices.add(total - 1);
+            } else {
+                indices.add(0);
+                indices.add(total - 1);
+                int step = (total - 2) / (maxFrames - 2);
+                for (int i = 1; i < maxFrames - 1; i++) {
+                    indices.add(i * step);
+                }
+            }
+
+            for (int index : indices) {
+                Bitmap frame = gifDrawable.seekToFrameAndGet(index);
+                frames.add(frame);
+            }
+
+            PTLog.debug("Total selected frames: " + frames.size());
+
+        } catch (Exception e) {
+            PTLog.debug("Frame extraction failed: " + e.getMessage());
+        }
+
+        return frames;
+    }
+
 
     private static Bitmap getBitmapFromURL(String srcUrl, @Nullable Context context) {
 

@@ -21,7 +21,7 @@ internal open class BigImageContentView(
         setCustomTextColour(renderer.pt_msg_clr, R.id.msg)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
         setCustomContentViewSmallIcon()
-        setCustomContentViewBigImage(renderer.pt_big_img, renderer.pt_scale_type, renderer.pt_big_img_alt_text)
+        setCustomContentViewMedia()
         setCustomContentViewLargeIcon(renderer.pt_large_icon)
     }
 
