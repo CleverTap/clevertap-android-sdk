@@ -119,6 +119,23 @@ internal open class ContentView(
         }
     }
 
+    fun setCustomContentViewMedia() {
+        val gifSuccess = setCustomContentViewGIF(
+            renderer.pt_gif,
+            renderer.pt_big_img_alt_text,
+            renderer.pt_scale_type
+        )
+        if (!gifSuccess) {
+            PTLog.debug("Couldn't load GIF. Falling back to static image")
+            setCustomContentViewBigImage(
+                renderer.pt_big_img,
+                renderer.pt_scale_type,
+                renderer.pt_big_img_alt_text
+            )
+        }
+    }
+
+    // todo - check which templates need gif support
     fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType, altText: String) {
         if (pt_big_img.isNotNullAndEmpty()) {
             val imageViewId = when (scaleType) {
@@ -128,7 +145,19 @@ internal open class ContentView(
             Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context, altText)
             if (!Utils.getFallback()) {
                 remoteView.setViewVisibility(imageViewId, View.VISIBLE)
+                remoteView.setViewVisibility(R.id.big_image_configurable, View.VISIBLE)
             }
         }
+    }
+
+    fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType): Boolean {
+        if (gifUrl == null || !gifUrl.lowercase().endsWith(".gif") || !gifUrl.startsWith("https")) {
+            return false
+        }
+        val imageViewId = when (scaleType) {
+            PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+            PTScaleType.CENTER_CROP -> R.id.big_image
+        }
+        return Utils.loadGifIntoRemoteView(remoteView, gifUrl, context, imageViewId, R.id.view_flipper, altText)
     }
 }

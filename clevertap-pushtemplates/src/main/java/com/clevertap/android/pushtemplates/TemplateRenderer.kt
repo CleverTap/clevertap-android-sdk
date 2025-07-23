@@ -49,6 +49,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     internal var pt_msg: String? = null
     internal var pt_msg_summary: String? = null
     internal var pt_large_icon: String? = null
+    internal var pt_gif: String? = null
     internal var pt_big_img: String? = null
     internal var pt_big_img_alt_text: String = ""
     internal var pt_title_clr: String? = null
@@ -411,6 +412,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_meta_clr = darkModeAdaptiveColors[PT_META_CLR]
         pt_bg = darkModeAdaptiveColors[PT_BG]
         pt_big_img = extras.getString(PT_BIG_IMG)
+        pt_gif = extras.getString(PT_GIF)
         pt_big_img_alt_text = extras.getString(PT_BIG_IMG_ALT_TEXT, altTextDefault)
         pt_large_icon = extras.getString(PT_NOTIF_ICON)
         pt_small_view = extras.getString(PT_SMALL_VIEW)
