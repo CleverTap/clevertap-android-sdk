@@ -122,7 +122,7 @@ public class SessionManager extends BaseSessionManager {
         }
 
         final SharedPreferences.Editor editor = prefs.edit()
-                .putInt(StorageHelper.storageKeyWithSuffix(config, Constants.SESSION_ID_LAST),
+                .putInt(StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.SESSION_ID_LAST),
                         cleverTapMetaData.getCurrentSessionId());
         StorageHelper.persist(editor);
     }

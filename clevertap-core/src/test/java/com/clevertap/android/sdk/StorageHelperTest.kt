@@ -268,17 +268,6 @@ class StorageHelperTest: BaseTestCase() {
 
     //=====================================================================================================================================
 
-    @Test
-    fun test_storageKeyWithSuffix_when_ConfigAndKeyIsPassed_should_ReturnAConcatenatedStringOfKeyAndAccountID() {
-        val result = StorageHelper.storageKeyWithSuffix(
-            CleverTapInstanceConfig.createInstance(application,"id","token"),
-            "key"
-        )
-        assertEquals("key:id",result)
-    }
-
-    //=====================================================================================================================================
-
 
     @Test
     fun test_putString_when_ABC_should_XYZ() {

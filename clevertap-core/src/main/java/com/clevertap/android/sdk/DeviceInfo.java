@@ -698,7 +698,7 @@ public class DeviceInfo {
 
     void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.NETWORK_INFO),
                 enableNetworkInfoReporting);
         config.getLogger()
                 .verbose(config.getAccountId(),
