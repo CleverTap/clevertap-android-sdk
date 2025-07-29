@@ -34,20 +34,12 @@ public final class StorageHelper {
      *      1. we search for the value for key "[rawKey]:[account_id]" and return it
      *      2. if no value is found for key "[rawKey]:[account_id]", we search for just key "[rawKey]" and return it
      *      3. if no value is found for key "[rawKey]", we return default value
-     *
      * B) When config is NOT default instance:
      *      1. we search for the value for key "[rawKey]:[account_id]" and return it
      *      2. if no value is found for key "[rawKey]:[account_id]", we return default value
      */
-    public static String getStringFromPrefs(@NonNull Context context,@NonNull CleverTapInstanceConfig config, String rawKey,
-            String defaultValue) {
-        if (config.isDefaultInstance()) {
-            String _new = getString(context, storageKeyWithSuffix(config, rawKey), defaultValue);
-
-            return _new != null ? _new : getString(context, rawKey, defaultValue);
-        } else {
-            return getString(context, storageKeyWithSuffix(config, rawKey), defaultValue);
-        }
+    public static String getStringFromPrefs(@NonNull Context context,@NonNull CleverTapInstanceConfig config, String rawKey, String defaultValue) {
+        return getString(context, storageKeyWithSuffix(config.getAccountId(), rawKey), defaultValue);
     }
 
     public static void persist(final SharedPreferences.Editor editor) {
@@ -78,7 +70,7 @@ public final class StorageHelper {
 
     public static void putString(Context context, CleverTapInstanceConfig config, String key, String value) {
         SharedPreferences prefs = getPreferences(context);
-        SharedPreferences.Editor editor = prefs.edit().putString(storageKeyWithSuffix(config, key), value);
+        SharedPreferences.Editor editor = prefs.edit().putString(storageKeyWithSuffix(config.getAccountId(), key), value);
         persist(editor);
     }
 
@@ -122,13 +114,7 @@ public final class StorageHelper {
     }
 
     static boolean getBooleanFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey) {
-        if (config.isDefaultInstance()) {
-            boolean _new = getBoolean(context, storageKeyWithSuffix(config, rawKey), false);
-            //noinspection Constant Conditions
-            return !_new ? getBoolean(context, rawKey, false) : _new;
-        } else {
-            return getBoolean(context, storageKeyWithSuffix(config, rawKey), false);
-        }
+        return getBoolean(context, storageKeyWithSuffix(config.getAccountId(), rawKey), false);
     }
 
     public static int getInt(Context context, String key, int defaultValue) {
@@ -136,15 +122,8 @@ public final class StorageHelper {
     }
 
     @SuppressWarnings("SameParameterValue")
-    public static int getIntFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey,
-            int defaultValue) {
-        if (config.isDefaultInstance()) {
-            int dummy = -1000;
-            int _new = getInt(context, storageKeyWithSuffix(config, rawKey), dummy);
-            return _new != dummy ? _new : getInt(context, rawKey, defaultValue);
-        } else {
-            return getInt(context, storageKeyWithSuffix(config, rawKey), defaultValue);
-        }
+    public static int getIntFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey, int defaultValue) {
+        return getInt(context, storageKeyWithSuffix(config.getAccountId(), rawKey), defaultValue);
     }
 
     static long getLong(Context context, String key, long defaultValue) {
@@ -163,13 +142,7 @@ public final class StorageHelper {
             int defaultValue,
             String nameSpace
     ) {
-        if (config.isDefaultInstance()) {
-            long dummy = -1000;
-            long _new = getLong(context, nameSpace, storageKeyWithSuffix(config, rawKey), dummy);
-            return _new != dummy ? _new : getLong(context, nameSpace, rawKey, defaultValue);
-        } else {
-            return getLong(context, nameSpace, storageKeyWithSuffix(config, rawKey), defaultValue);
-        }
+        return getLong(context, nameSpace, storageKeyWithSuffix(config.getAccountId(), rawKey), defaultValue);
     }
 
     static String getString(Context context, String nameSpace, String key, String defaultValue) {

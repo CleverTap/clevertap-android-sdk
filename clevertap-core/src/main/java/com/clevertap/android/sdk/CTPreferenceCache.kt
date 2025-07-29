@@ -35,12 +35,12 @@ class CTPreferenceCache {
             }
 
         private fun buildCache(context: Context, config: CleverTapInstanceConfig): CTPreferenceCache {
-            CTExecutorFactory.executors(config).ioTask<Void>().execute("buildCache") {
+            CTExecutorFactory.executors(config).ioTask<Unit>().execute("buildCache") {
                 firstTimeRequest = StorageHelper.getBoolean(
                     context,
-                    InAppController.IS_FIRST_TIME_PERMISSION_REQUEST, true
+                    InAppController.IS_FIRST_TIME_PERMISSION_REQUEST,
+                    true
                 )
-                null
             }
             return CTPreferenceCache()
         }
