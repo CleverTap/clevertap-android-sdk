@@ -749,7 +749,7 @@ public class DeviceInfo {
                     "Unable to set current user OptOut state from storage: storage key is null");
             return;
         }
-        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config.getAccountId(), key);
         mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
         config.getLogger().verbose(config.getAccountId(),
                 "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
@@ -774,7 +774,7 @@ public class DeviceInfo {
                     "Unable to set current user allowed system events and communications flag from storage: storage key is null");
             return;
         }
-        boolean storedAllowedSystemEvents = StorageHelper.getBooleanFromPrefs(context, config, key);
+        boolean storedAllowedSystemEvents = StorageHelper.getBooleanFromPrefs(context, config.getAccountId(), key);
         mCoreMetaData.setEnabledSystemEvents(storedAllowedSystemEvents);
         config.getLogger().verbose(config.getAccountId(),
                 "Set current user allowed system events and communications flag state from storage to: " + storedAllowedSystemEvents + " for key: " + key);
@@ -808,7 +808,7 @@ public class DeviceInfo {
     }
 
     void setDeviceNetworkInfoReportingFromStorage() {
-        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
+        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config.getAccountId(), Constants.NETWORK_INFO);
         config.getLogger()
                 .verbose(config.getAccountId(),
                         "Setting device network info reporting state from storage to " + enabled);

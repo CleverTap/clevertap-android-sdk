@@ -30,7 +30,7 @@ internal class IJRepo(private val config: CleverTapInstanceConfig) {
     fun getI(context: Context): Long {
         return StorageHelper.getLongFromPrefs(
             context,
-            config,
+            config.accountId,
             KEY_I,
             0,
             NAMESPACE_IJ
@@ -40,7 +40,7 @@ internal class IJRepo(private val config: CleverTapInstanceConfig) {
     fun getJ(context: Context): Long {
         return StorageHelper.getLongFromPrefs(
             context,
-            config,
+            config.accountId,
             KEY_J,
             0,
             NAMESPACE_IJ

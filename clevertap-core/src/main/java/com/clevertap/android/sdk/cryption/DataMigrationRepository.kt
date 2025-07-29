@@ -29,7 +29,7 @@ internal class DataMigrationRepository(
 ) : IDataMigrationRepository {
 
     override fun cachedGuidString(): String? {
-        return StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)
+        return StorageHelper.getStringFromPrefs(context, config.accountId, CACHED_GUIDS_KEY, null)
     }
     override fun cachedGuidJsonObject(): JSONObject {
         val json = cachedGuidString()
