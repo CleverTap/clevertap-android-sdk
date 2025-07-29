@@ -14,7 +14,8 @@ class CTPreferenceCache {
     fun updateCacheToDisk(context: Context, config: CleverTapInstanceConfig) {
         CTExecutorFactory.executors(config).ioTask<Void>().execute("updateCacheToDisk") {
             StorageHelper.putBooleanImmediate(
-                context, InAppController.IS_FIRST_TIME_PERMISSION_REQUEST,
+                context,
+                InAppController.IS_FIRST_TIME_PERMISSION_REQUEST,
                 firstTimeRequest
             )
             null
