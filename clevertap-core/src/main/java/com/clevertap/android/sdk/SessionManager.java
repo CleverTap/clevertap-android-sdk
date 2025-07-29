@@ -106,8 +106,6 @@ public class SessionManager extends BaseSessionManager {
         config.getLogger().verbose(config.getAccountId(),
                 "Session created with ID: " + cleverTapMetaData.getCurrentSessionId());
 
-        SharedPreferences prefs = StorageHelper.getPreferences(context);
-
         final int lastSessionID = StorageHelper.getIntFromPrefs(context, config.getAccountId(), Constants.SESSION_ID_LAST, 0);
         final int lastSessionTime = StorageHelper.getIntFromPrefs(context, config.getAccountId(), Constants.LAST_SESSION_EPOCH, 0);
         if (lastSessionTime > 0) {
@@ -120,11 +118,12 @@ public class SessionManager extends BaseSessionManager {
         if (lastSessionID == 0) {
             cleverTapMetaData.setFirstSession(true);
         }
-
-        final SharedPreferences.Editor editor = prefs.edit()
-                .putInt(StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.SESSION_ID_LAST),
-                        cleverTapMetaData.getCurrentSessionId());
-        StorageHelper.persist(editor);
+        StorageHelper.putInt(
+                context,
+                config.getAccountId(),
+                Constants.SESSION_ID_LAST,
+                cleverTapMetaData.getCurrentSessionId()
+        );
     }
 
     int getNow() {

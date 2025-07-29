@@ -120,6 +120,11 @@ public final class StorageHelper {
         persist(editor);
     }
 
+    public static void putInt(Context context, String key, String accountId, int value) {
+        String prefKey = storageKeyWithSuffix(accountId, key);
+        putInt(context, prefKey, value);
+    }
+
     public static void putIntImmediate(Context context, String key, int value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putInt(key, value);
