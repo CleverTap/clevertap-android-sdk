@@ -148,20 +148,19 @@ public class LoginInfoProvider {
             removeCachedGuidFromSharedPrefs();
             return;
         }
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_KEY),
-                cachedGUIDs);
+        StorageHelper.putString(context, config.getAccountId(), Constants.CACHED_GUIDS_KEY, cachedGUIDs);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "setCachedGUIDs:[" + cachedGUIDs + "]");
     }
 
     private void storeCachedGuidsLength(int length) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY), length);
+        StorageHelper.putInt(context, config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY, length);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "Storing size of cachedGUIDs: " + length);
     }
 
     private int getCachedGuidsLength() {
-        int cgkLength = StorageHelper.getInt(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY), 0);
+        int cgkLength = StorageHelper.getIntFromPrefs(context, config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY, 0);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "Retrieved size of cachedGUIDs: " + cgkLength);
         return cgkLength;
@@ -169,9 +168,8 @@ public class LoginInfoProvider {
 
     public void removeCachedGuidFromSharedPrefs() {
         try {
-            StorageHelper.remove(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_KEY));
-            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                "removeCachedGUIDs:[]");
+            StorageHelper.remove(context, config.getAccountId(), Constants.CACHED_GUIDS_KEY);
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "removeCachedGUIDs:[]");
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error removing guid cache: " + t);
         }

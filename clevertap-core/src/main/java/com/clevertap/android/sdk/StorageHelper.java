@@ -34,7 +34,7 @@ public final class StorageHelper {
      *      1. we search for the value for key "[rawKey]:[account_id]" and return it
      *      2. if no value is found for key "[rawKey]:[account_id]", we return default value
      */
-    public static String getStringFromPrefs(@NonNull Context context,@NonNull String accountId, String rawKey, String defaultValue) {
+    public static String getStringFromPrefs(@NonNull Context context, @NonNull String accountId, String rawKey, String defaultValue) {
         return getString(context, storageKeyWithSuffix(accountId, rawKey), defaultValue);
     }
 
@@ -63,12 +63,16 @@ public final class StorageHelper {
         persistImmediately(editor);
     }
 
+    public static void putStringImmediate(Context context, String accountId, String key, String value) {
+        putStringImmediate(context, storageKeyWithSuffix(accountId, key), value);
+    }
+
     @SuppressWarnings("SameParameterValue")
     public static boolean getBoolean(Context context, String key, boolean defaultValue) {
         return getPreferences(context).getBoolean(key, defaultValue);
     }
 
-    static boolean getBooleanFromPrefs(Context context, String accountId, String rawKey) {
+    public static boolean getBooleanFromPrefs(Context context, String accountId, String rawKey) {
         return getBoolean(context, storageKeyWithSuffix(accountId, rawKey), false);
     }
 
@@ -102,6 +106,10 @@ public final class StorageHelper {
         return getLong(context, nameSpace, key, defaultValue);
     }
 
+    public static void putBoolean(Context context, String accountId, String key, boolean value) {
+        putBoolean(context, storageKeyWithSuffix(accountId, key), value);
+    }
+
     public static void putBoolean(Context context, String key, boolean value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putBoolean(key, value);
@@ -120,7 +128,7 @@ public final class StorageHelper {
         persist(editor);
     }
 
-    public static void putInt(Context context, String key, String accountId, int value) {
+    public static void putInt(Context context, String accountId, String key, int value) {
         String prefKey = storageKeyWithSuffix(accountId, key);
         putInt(context, prefKey, value);
     }
@@ -135,6 +143,10 @@ public final class StorageHelper {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putLong(key, value);
         persist(editor);
+    }
+
+    public static void remove(Context context, String accountId, String key) {
+        remove(context, storageKeyWithSuffix(accountId, key));
     }
 
     public static void remove(Context context, String key) {
@@ -169,7 +181,7 @@ public final class StorageHelper {
         }
     }
 
-    public static String storageKeyWithSuffix(String accountID, @NonNull String key) {
+    private static String storageKeyWithSuffix(String accountID, @NonNull String key) {
         return key + ":" + accountID;
     }
 }
