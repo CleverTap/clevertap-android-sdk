@@ -231,7 +231,7 @@ public class PushProviders implements CTPushProviderListener {
                         return null;
                     }
                     StorageHelper
-                            .putStringImmediate(context, StorageHelper.storageKeyWithSuffix(config, key), token);
+                            .putStringImmediate(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), key), token);
                     config.log(PushConstants.LOG_TAG, pushType + "Cached New Token successfully " + token);
                     return null;
                 }

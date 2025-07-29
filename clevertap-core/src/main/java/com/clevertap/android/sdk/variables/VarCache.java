@@ -64,7 +64,7 @@ public class VarCache {
 
     private void storeDataInCache(@NonNull String data) {
         log("storeDataInCache() called with: data = [" + data + "]");
-        String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
+        String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig.getAccountId(), Constants.CACHED_VARIABLES_KEY);
         try {
             StorageHelper.putString(variablesCtx, cacheKey, data);
         } catch (Throwable t) {
@@ -73,7 +73,7 @@ public class VarCache {
     }
 
     private String loadDataFromCache() {
-        String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
+        String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig.getAccountId(), Constants.CACHED_VARIABLES_KEY);
         String cache = StorageHelper.getString(variablesCtx, cacheKey, "{}");
         log("VarCache loaded cache data:\n" + cache);
         return cache;

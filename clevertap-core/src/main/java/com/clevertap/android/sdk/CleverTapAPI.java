@@ -1267,7 +1267,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.v("Unable to save config to SharedPrefs, config Json is null");
                 return null;
             }
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(getConfig(), "instance"), configJson);
+            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(getConfig().getAccountId(), "instance"), configJson);
             return null;
         });
         task = coreState.getExecutors().postAsyncSafelyTask();
