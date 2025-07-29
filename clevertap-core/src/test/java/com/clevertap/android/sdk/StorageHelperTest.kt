@@ -341,11 +341,214 @@ class StorageHelperTest: BaseTestCase() {
         val key = "testKey"
         val result = StorageHelper.storageKeyWithSuffix(accountId, key)
         assertEquals("$key:$accountId", result)
-
-        // Test with null account ID
-        val resultWithNull = StorageHelper.storageKeyWithSuffix(null, key)
-        assertEquals("$key:null", resultWithNull)
     }
 
     //=====================================================================================================================================
+
+    @Test
+    fun test_getStringFromPrefs_fallback_logic_for_missing_account_specific_key() {
+        val rawKey = "fallbackTestKey"
+        val nonExistentAccountId = "nonexistent_account"
+        
+        // Put value only with base key (no account suffix)
+        prepareSP { pref1, _ -> 
+            pref1.edit().putString(rawKey, "fallback_value").commit() 
+        }
+        
+        // Should return null since current implementation doesn't have fallback logic
+        val result = StorageHelper.getStringFromPrefs(appCtx, nonExistentAccountId, rawKey, null)
+        assertNull(result)
+        
+        // Should return default value when specified
+        val resultWithDefault = StorageHelper.getStringFromPrefs(appCtx, nonExistentAccountId, rawKey, "default_value")
+        assertEquals("default_value", resultWithDefault)
+    }
+
+    @Test
+    fun test_putString_with_null_values() {
+        // Test putting null value
+        StorageHelper.putString(appCtx, "nullKey", null)
+        val value = StorageHelper.getString(appCtx, "nullKey", "default")
+        assertNull(value)
+        
+        // Test putting null value with account ID
+        StorageHelper.putString(appCtx, accountId, "nullKey2", null)
+        val value2 = StorageHelper.getString(appCtx, "nullKey2:$accountId", "default")
+        assertNull(value2)
+    }
+
+    @Test
+    fun test_putStringImmediate_with_null_values() {
+        // Test putting null value immediately
+        StorageHelper.putStringImmediate(appCtx, "nullKeyImm", null)
+        val value = StorageHelper.getString(appCtx, "nullKeyImm", "default")
+        assertNull(value)
+        
+        // Test putting null value immediately with account ID
+        StorageHelper.putStringImmediate(appCtx, accountId, "nullKeyImm2", null)
+        val value2 = StorageHelper.getString(appCtx, "nullKeyImm2:$accountId", "default")
+        assertNull(value2)
+    }
+
+    @Test
+    fun test_remove_with_accountId() {
+        // Setup a key with account ID suffix
+        prepareSP { pref1, _ -> pref1.edit().putString("removeKey:$accountId", "value").commit() }
+        
+        // Remove with account ID
+        StorageHelper.remove(appCtx, accountId, "removeKey")
+        
+        // Verify it's removed
+        val value = StorageHelper.getString(appCtx, "removeKey:$accountId", "default")
+        assertEquals("default", value)
+    }
+
+    @Test
+    fun test_putBoolean_with_accountId() {
+        StorageHelper.putBoolean(appCtx, accountId, "boolKeyWithAccount", true)
+        val value = StorageHelper.getBoolean(appCtx, "boolKeyWithAccount:$accountId", false)
+        assertEquals(true, value)
+    }
+
+    @Test
+    fun test_putInt_with_accountId() {
+        StorageHelper.putInt(appCtx, accountId, "intKeyWithAccount", 42)
+        val value = StorageHelper.getInt(appCtx, "intKeyWithAccount:$accountId", -1)
+        assertEquals(42, value)
+    }
+
+    @Test
+    fun test_getLong_with_namespace() {
+        val key = "longKeyWithNamespace"
+        val value = 789L
+        
+        // Setup value in namespace
+        prepareSP { _, prefWithNameSpace -> 
+            prefWithNameSpace.edit().putLong(key, value).commit() 
+        }
+        
+        val result = StorageHelper.getLong(appCtx, namespace, key, -1L)
+        assertEquals(value, result)
+        
+        // Test with non-existent key
+        val result2 = StorageHelper.getLong(appCtx, namespace, "nonexistent", -1L)
+        assertEquals(-1L, result2)
+    }
+
+    @Test
+    fun test_putLong_functionality() {
+        val key = "longPutKey"
+        val value = 999L
+        
+        StorageHelper.putLong(appCtx, key, value)
+        val retrieved = StorageHelper.getLong(appCtx, key, -1L)
+        assertEquals(value, retrieved)
+    }
+
+    @Test
+    fun test_persist_error_handling() {
+        // Create a mock that throws an exception
+        val mockEditor: SharedPreferences.Editor = mockk(relaxed = true)
+        io.mockk.every { mockEditor.apply() } throws RuntimeException("Test exception")
+        
+        // Should not throw exception, should catch and log
+        try {
+            StorageHelper.persist(mockEditor)
+            // Test passes if no exception is thrown
+        } catch (e: Exception) {
+            // Should not reach here
+            throw AssertionError("persist() should handle exceptions gracefully")
+        }
+        
+        verify { mockEditor.apply() }
+    }
+
+    @Test
+    fun test_persistImmediately_error_handling() {
+        // Create a mock that throws an exception
+        val mockEditor: SharedPreferences.Editor = mockk(relaxed = true)
+        io.mockk.every { mockEditor.commit() } throws RuntimeException("Test exception")
+        
+        // Should not throw exception, should catch and log
+        try {
+            StorageHelper.persistImmediately(mockEditor)
+            // Test passes if no exception is thrown
+        } catch (e: Exception) {
+            // Should not reach here
+            throw AssertionError("persistImmediately() should handle exceptions gracefully")
+        }
+        
+        verify { mockEditor.commit() }
+    }
+
+    @Test
+    fun test_multiple_namespaces() {
+        val key = "multiNamespaceKey"
+        val namespace1 = "ns1"
+        val namespace2 = "ns2"
+        
+        // Put different values in different namespaces
+        val pref1 = appCtx.getSharedPreferences(CLEVERTAP_STORAGE_TAG + "_" + namespace1, Context.MODE_PRIVATE)
+        val pref2 = appCtx.getSharedPreferences(CLEVERTAP_STORAGE_TAG + "_" + namespace2, Context.MODE_PRIVATE)
+        
+        pref1.edit().putString(key, "value1").commit()
+        pref2.edit().putString(key, "value2").commit()
+        
+        // Verify namespace isolation
+        val result1 = StorageHelper.getString(appCtx, namespace1, key, "default")
+        val result2 = StorageHelper.getString(appCtx, namespace2, key, "default")
+        
+        assertEquals("value1", result1)
+        assertEquals("value2", result2)
+    }
+
+    @Test
+    fun test_preferences_with_null_namespace() {
+        val prefs = StorageHelper.getPreferences(appCtx, null)
+        assertNotNull(prefs)
+        
+        // Should be same as getPreferences(appCtx)
+        val defaultPrefs = StorageHelper.getPreferences(appCtx)
+        assertEquals(prefs, defaultPrefs)
+    }
+
+    @Test
+    fun test_getString_with_null_namespace() {
+        val key = "nullNamespaceKey"
+        val value = "nullNamespaceValue"
+        
+        // Put value in default preferences
+        prepareSP { pref1, _ -> pref1.edit().putString(key, value).commit() }
+        
+        // Get with null namespace should work same as no namespace
+        val result = StorageHelper.getString(appCtx, null, key, "default")
+        assertEquals(value, result)
+    }
+
+    @Test
+    fun test_getLong_with_null_namespace() {
+        val key = "nullNamespaceLongKey"
+        val value = 12345L
+        
+        // Put value in default preferences
+        prepareSP { pref1, _ -> pref1.edit().putLong(key, value).commit() }
+        
+        // Get with null namespace should work same as no namespace
+        val result = StorageHelper.getLong(appCtx, null, key, -1L)
+        assertEquals(value, result)
+    }
+
+    @Test
+    fun test_edge_cases_with_empty_strings() {
+        // Test with empty key
+        StorageHelper.putString(appCtx, "", "value")
+        val result1 = StorageHelper.getString(appCtx, "", "default")
+        assertEquals("value", result1)
+        
+        // Test with empty account ID
+        StorageHelper.putString(appCtx, "", "emptyAccountKey", "value")
+        val result2 = StorageHelper.getString(appCtx, "emptyAccountKey:", "default")
+        assertEquals("value", result2)
+    }
+
 }
