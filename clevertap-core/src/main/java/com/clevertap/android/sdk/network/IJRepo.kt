@@ -9,13 +9,14 @@ private const val NAMESPACE_IJ = "IJ"
 private const val KEY_I = "comms_i"
 private const val KEY_J = "comms_j"
 
+// TODO lp fix shared prefs stuff
 internal class IJRepo(private val config: CleverTapInstanceConfig) {
 
     @SuppressLint("CommitPrefEdits")
     fun setI(context: Context, i: Long) {
         val prefs = StorageHelper.getPreferences(context, NAMESPACE_IJ)
         val editor = prefs.edit()
-        editor.putLong(StorageHelper.storageKeyWithSuffix(config.accountId, KEY_I), i)
+        editor.putLong("$KEY_I:${config.accountId}", i)
         StorageHelper.persist(editor)
     }
 
@@ -23,7 +24,7 @@ internal class IJRepo(private val config: CleverTapInstanceConfig) {
     fun setJ(context: Context, j: Long) {
         val prefs = StorageHelper.getPreferences(context, NAMESPACE_IJ)
         val editor = prefs.edit()
-        editor.putLong(StorageHelper.storageKeyWithSuffix(config.accountId, KEY_J), j)
+        editor.putLong("$KEY_J:${config.accountId}", j)
         StorageHelper.persist(editor)
     }
 

@@ -698,8 +698,7 @@ public class DeviceInfo {
 
     void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.NETWORK_INFO),
-                enableNetworkInfoReporting);
+        StorageHelper.putBoolean(context, config.getAccountId(), Constants.NETWORK_INFO, enableNetworkInfoReporting);
         config.getLogger()
                 .verbose(config.getAccountId(),
                         "Device Network Information reporting set to " + enableNetworkInfoReporting);
@@ -763,7 +762,7 @@ public class DeviceInfo {
                     .verbose(config.getAccountId(), "Unable to persist user OptOut state, storage key is null");
             return;
         }
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), key), userOptOut);
+        StorageHelper.putBoolean(context, config.getAccountId(), key, userOptOut);
         getConfigLogger().verbose(config.getAccountId(), "Set current user OptOut state to: " + userOptOut);
     }
 
@@ -787,7 +786,7 @@ public class DeviceInfo {
                     .verbose(config.getAccountId(), "Unable to persist user allowed system events and communications flag state, storage key is null");
             return;
         }
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), key), allowedSystemEvents);
+        StorageHelper.putBoolean(context, config.getAccountId(), key, allowedSystemEvents);
         getConfigLogger().verbose(config.getAccountId(), "Set current user allowed system events and communications flag state to: " + allowedSystemEvents);
     }
 

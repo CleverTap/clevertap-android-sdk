@@ -37,7 +37,8 @@ internal class NetworkRepo(
     fun setFirstRequestTs(firstRequestTs: Int) {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_FIRST_TS),
+            config.accountId,
+            KEY_FIRST_TS,
             firstRequestTs
         )
     }
@@ -45,7 +46,8 @@ internal class NetworkRepo(
     fun clearFirstRequestTs() {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_FIRST_TS),
+            config.accountId,
+            KEY_FIRST_TS,
             0
         )
     }
@@ -53,7 +55,8 @@ internal class NetworkRepo(
     fun setLastRequestTs(lastRequestTs: Int) {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_LAST_TS),
+            config.accountId,
+            KEY_LAST_TS,
             lastRequestTs
         )
     }
@@ -61,7 +64,8 @@ internal class NetworkRepo(
     fun clearLastRequestTs() {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_LAST_TS),
+            config.accountId,
+            KEY_LAST_TS,
             0
         )
     }
@@ -101,13 +105,15 @@ internal class NetworkRepo(
             val now = clock.currentTimeSecondsInt()
             StorageHelper.putInt(
                 context,
-                StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_MUTED),
+                config.accountId,
+                Constants.KEY_MUTED,
                 now
             )
         } else {
             StorageHelper.putInt(
                 context,
-                StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_MUTED),
+                config.accountId,
+                Constants.KEY_MUTED,
                 0
             )
         }
@@ -116,7 +122,8 @@ internal class NetworkRepo(
     fun setDomain(domainName: String?) {
         StorageHelper.putString(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, KEY_DOMAIN_NAME),
+            config.accountId,
+            KEY_DOMAIN_NAME,
             domainName
         )
     }
@@ -142,7 +149,8 @@ internal class NetworkRepo(
     fun setSpikyDomain(spikyDomainName: String) {
         StorageHelper.putString(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, SPIKY_KEY_DOMAIN_NAME),
+            config.accountId,
+            SPIKY_KEY_DOMAIN_NAME,
             spikyDomainName
         )
     }
