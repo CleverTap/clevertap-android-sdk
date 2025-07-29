@@ -51,14 +51,14 @@ internal object StorageHelper {
     fun getString(
         context: Context,
         nameSpace: String?,
-        key: String?,
+        key: String,
         defaultValue: String?
     ): String? {
         return getPreferences(context, nameSpace).getString(key, defaultValue)
     }
 
     @JvmStatic
-    fun putString(context: Context, key: String?, value: String?) {
+    fun putString(context: Context, key: String, value: String?) {
         val prefs = getPreferences(context)
         val editor = prefs.edit().putString(key, value)
         persist(editor)
@@ -70,7 +70,7 @@ internal object StorageHelper {
         putString(context, prefKey, value)
     }
 
-    fun putStringImmediate(context: Context, key: String?, value: String?) {
+    fun putStringImmediate(context: Context, key: String, value: String?) {
         val prefs = getPreferences(context)
         val editor = prefs.edit().putString(key, value)
         persistImmediately(editor)
@@ -81,7 +81,7 @@ internal object StorageHelper {
         putStringImmediate(context, storageKeyWithSuffix(accountId, key), value)
     }
 
-    fun getBoolean(context: Context, key: String?, defaultValue: Boolean): Boolean {
+    fun getBoolean(context: Context, key: String, defaultValue: Boolean): Boolean {
         return getPreferences(context).getBoolean(key, defaultValue)
     }
 
@@ -91,7 +91,7 @@ internal object StorageHelper {
     }
 
     @JvmStatic
-    fun getInt(context: Context, key: String?, defaultValue: Int): Int {
+    fun getInt(context: Context, key: String, defaultValue: Int): Int {
         return getPreferences(context).getInt(key, defaultValue)
     }
 
@@ -106,11 +106,11 @@ internal object StorageHelper {
         return getInt(context, key, defaultValue)
     }
 
-    fun getLong(context: Context, key: String?, defaultValue: Long): Long {
+    fun getLong(context: Context, key: String, defaultValue: Long): Long {
         return getPreferences(context).getLong(key, defaultValue)
     }
 
-    fun getLong(context: Context, nameSpace: String?, key: String?, defaultValue: Long): Long {
+    fun getLong(context: Context, nameSpace: String?, key: String, defaultValue: Long): Long {
         return getPreferences(context, nameSpace).getLong(key, defaultValue)
     }
 
@@ -130,20 +130,20 @@ internal object StorageHelper {
         putBoolean(context, storageKeyWithSuffix(accountId, key), value)
     }
 
-    fun putBoolean(context: Context, key: String?, value: Boolean) {
+    fun putBoolean(context: Context, key: String, value: Boolean) {
         val prefs = getPreferences(context)
         val editor = prefs.edit().putBoolean(key, value)
         persist(editor)
     }
 
-    fun putBooleanImmediate(context: Context, key: String?, value: Boolean) {
+    fun putBooleanImmediate(context: Context, key: String, value: Boolean) {
         val prefs = getPreferences(context)
         val editor = prefs.edit().putBoolean(key, value)
         persistImmediately(editor)
     }
 
     @JvmStatic
-    fun putInt(context: Context, key: String?, value: Int) {
+    fun putInt(context: Context, key: String, value: Int) {
         val prefs = getPreferences(context)
         val editor = prefs.edit().putInt(key, value)
         persist(editor)
@@ -155,13 +155,13 @@ internal object StorageHelper {
         putInt(context, prefKey, value)
     }
 
-    fun putIntImmediate(context: Context, key: String?, value: Int) {
+    fun putIntImmediate(context: Context, key: String, value: Int) {
         val prefs = getPreferences(context)
         val editor = prefs.edit().putInt(key, value)
         persistImmediately(editor)
     }
 
-    fun putLong(context: Context, key: String?, value: Long) {
+    fun putLong(context: Context, key: String, value: Long) {
         val prefs = getPreferences(context)
         val editor = prefs.edit().putLong(key, value)
         persist(editor)
@@ -173,13 +173,13 @@ internal object StorageHelper {
     }
 
     @JvmStatic
-    fun remove(context: Context, key: String?) {
+    fun remove(context: Context, key: String) {
         val prefs = getPreferences(context)
         val editor = prefs.edit().remove(key)
         persist(editor)
     }
 
-    fun removeImmediate(context: Context, key: String?) {
+    fun removeImmediate(context: Context, key: String) {
         val prefs = getPreferences(context)
         val editor = prefs.edit().remove(key)
         persistImmediately(editor)
