@@ -108,8 +108,8 @@ public class SessionManager extends BaseSessionManager {
 
         SharedPreferences prefs = StorageHelper.getPreferences(context);
 
-        final int lastSessionID = StorageHelper.getIntFromPrefs(context, config, Constants.SESSION_ID_LAST, 0);
-        final int lastSessionTime = StorageHelper.getIntFromPrefs(context, config, Constants.LAST_SESSION_EPOCH, 0);
+        final int lastSessionID = StorageHelper.getIntFromPrefs(context, config.getAccountId(), Constants.SESSION_ID_LAST, 0);
+        final int lastSessionTime = StorageHelper.getIntFromPrefs(context, config.getAccountId(), Constants.LAST_SESSION_EPOCH, 0);
         if (lastSessionTime > 0) {
             cleverTapMetaData.setLastSessionLength(lastSessionTime - lastSessionID);
         }

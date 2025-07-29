@@ -29,7 +29,7 @@ internal class NetworkRepo(
     fun getFirstRequestTs() : Int {
         return StorageHelper.getIntFromPrefs(
             context,
-            config,
+            config.accountId,
             KEY_FIRST_TS,
             0
         )
@@ -69,7 +69,7 @@ internal class NetworkRepo(
     fun getLastRequestTs() : Int {
         return StorageHelper.getIntFromPrefs(
             context,
-            config,
+            config.accountId,
             KEY_LAST_TS,
             0
         )
@@ -90,7 +90,7 @@ internal class NetworkRepo(
     fun getMuted() : Int {
         return StorageHelper.getIntFromPrefs(
             context,
-            config,
+            config.accountId,
             Constants.KEY_MUTED,
             0
         )
@@ -124,7 +124,7 @@ internal class NetworkRepo(
     fun getDomain() : String? {
         return StorageHelper.getStringFromPrefs(
             context,
-            config,
+            config.accountId,
             KEY_DOMAIN_NAME,
             null
         )
@@ -133,7 +133,7 @@ internal class NetworkRepo(
     fun getSpikyDomain() : String? {
         return StorageHelper.getStringFromPrefs(
             context,
-            config,
+            config.accountId,
             SPIKY_KEY_DOMAIN_NAME,
             null
         )

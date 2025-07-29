@@ -38,8 +38,8 @@ public final class StorageHelper {
      *      1. we search for the value for key "[rawKey]:[account_id]" and return it
      *      2. if no value is found for key "[rawKey]:[account_id]", we return default value
      */
-    public static String getStringFromPrefs(@NonNull Context context,@NonNull CleverTapInstanceConfig config, String rawKey, String defaultValue) {
-        return getString(context, storageKeyWithSuffix(config.getAccountId(), rawKey), defaultValue);
+    public static String getStringFromPrefs(@NonNull Context context,@NonNull String accountId, String rawKey, String defaultValue) {
+        return getString(context, storageKeyWithSuffix(accountId, rawKey), defaultValue);
     }
 
     public static void persist(final SharedPreferences.Editor editor) {
@@ -68,9 +68,9 @@ public final class StorageHelper {
         persist(editor);
     }
 
-    public static void putString(Context context, CleverTapInstanceConfig config, String key, String value) {
+    public static void putString(Context context, String accountId, String key, String value) {
         SharedPreferences prefs = getPreferences(context);
-        SharedPreferences.Editor editor = prefs.edit().putString(storageKeyWithSuffix(config.getAccountId(), key), value);
+        SharedPreferences.Editor editor = prefs.edit().putString(storageKeyWithSuffix(accountId, key), value);
         persist(editor);
     }
 
@@ -104,8 +104,8 @@ public final class StorageHelper {
         return getPreferences(context).getBoolean(key, defaultValue);
     }
 
-    static boolean getBooleanFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey) {
-        return getBoolean(context, storageKeyWithSuffix(config.getAccountId(), rawKey), false);
+    static boolean getBooleanFromPrefs(Context context, String accountId, String rawKey) {
+        return getBoolean(context, storageKeyWithSuffix(accountId, rawKey), false);
     }
 
     public static int getInt(Context context, String key, int defaultValue) {
@@ -113,8 +113,8 @@ public final class StorageHelper {
     }
 
     @SuppressWarnings("SameParameterValue")
-    public static int getIntFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey, int defaultValue) {
-        return getInt(context, storageKeyWithSuffix(config.getAccountId(), rawKey), defaultValue);
+    public static int getIntFromPrefs(Context context, String accountId, String rawKey, int defaultValue) {
+        return getInt(context, storageKeyWithSuffix(accountId, rawKey), defaultValue);
     }
 
     static long getLong(Context context, String key, long defaultValue) {
@@ -128,12 +128,12 @@ public final class StorageHelper {
     @SuppressWarnings("SameParameterValue")
     public static long getLongFromPrefs(
             Context context,
-            CleverTapInstanceConfig config,
+            String accountId,
             String rawKey,
             int defaultValue,
             String nameSpace
     ) {
-        return getLong(context, nameSpace, storageKeyWithSuffix(config.getAccountId(), rawKey), defaultValue);
+        return getLong(context, nameSpace, storageKeyWithSuffix(accountId, rawKey), defaultValue);
     }
 
     static String getString(Context context, String nameSpace, String key, String defaultValue) {
