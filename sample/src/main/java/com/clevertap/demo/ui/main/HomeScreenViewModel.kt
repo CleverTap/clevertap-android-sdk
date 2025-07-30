@@ -29,7 +29,9 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
         when (commandPosition) {
             "0-0" -> {
-                cleverTapAPI?.pushEvent("Product viewed")
+                cleverTapAPI?.pushEvent("Add Inbox message with links")
+                cleverTapAPI?.pushEvent("App Inbox Carousel")
+                cleverTapAPI?.pushEvent("Header-77")
 //                cleverTapAPI?.pushEvent("BlockBRTesting")
             }
 
