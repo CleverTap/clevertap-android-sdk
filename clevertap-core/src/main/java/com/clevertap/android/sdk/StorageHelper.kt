@@ -65,7 +65,7 @@ internal object StorageHelper {
     }
 
     @JvmStatic
-    fun putString(context: Context, accountId: String?, key: String, value: String?) {
+    fun putString(context: Context, accountId: String, key: String, value: String?) {
         val prefKey = storageKeyWithSuffix(accountId, key)
         putString(context, prefKey, value)
     }
@@ -77,7 +77,7 @@ internal object StorageHelper {
     }
 
     @JvmStatic
-    fun putStringImmediate(context: Context, accountId: String?, key: String, value: String?) {
+    fun putStringImmediate(context: Context, accountId: String, key: String, value: String?) {
         putStringImmediate(context, storageKeyWithSuffix(accountId, key), value)
     }
 
@@ -86,7 +86,7 @@ internal object StorageHelper {
     }
 
     @JvmStatic
-    fun getBooleanFromPrefs(context: Context, accountId: String?, rawKey: String): Boolean {
+    fun getBooleanFromPrefs(context: Context, accountId: String, rawKey: String): Boolean {
         return getBoolean(context, storageKeyWithSuffix(accountId, rawKey), false)
     }
 
@@ -98,7 +98,7 @@ internal object StorageHelper {
     @JvmStatic
     fun getIntFromPrefs(
         context: Context,
-        accountId: String?,
+        accountId: String,
         rawKey: String,
         defaultValue: Int
     ): Int {
@@ -116,7 +116,7 @@ internal object StorageHelper {
 
     fun getLongFromPrefs(
         context: Context,
-        accountId: String?,
+        accountId: String,
         rawKey: String,
         defaultValue: Int,
         nameSpace: String?
@@ -126,7 +126,7 @@ internal object StorageHelper {
     }
 
     @JvmStatic
-    fun putBoolean(context: Context, accountId: String?, key: String, value: Boolean) {
+    fun putBoolean(context: Context, accountId: String, key: String, value: Boolean) {
         putBoolean(context, storageKeyWithSuffix(accountId, key), value)
     }
 
@@ -150,7 +150,7 @@ internal object StorageHelper {
     }
 
     @JvmStatic
-    fun putInt(context: Context, accountId: String?, key: String, value: Int) {
+    fun putInt(context: Context, accountId: String, key: String, value: Int) {
         val prefKey = storageKeyWithSuffix(accountId, key)
         putInt(context, prefKey, value)
     }
@@ -168,7 +168,7 @@ internal object StorageHelper {
     }
 
     @JvmStatic
-    fun remove(context: Context, accountId: String?, key: String) {
+    fun remove(context: Context, accountId: String, key: String) {
         remove(context, storageKeyWithSuffix(accountId, key))
     }
 
@@ -206,7 +206,7 @@ internal object StorageHelper {
         }
     }
 
-    fun storageKeyWithSuffix(accountID: String?, key: String): String {
+    fun storageKeyWithSuffix(accountID: String, key: String): String {
         return "$key:$accountID"
     }
 }
