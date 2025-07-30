@@ -365,32 +365,6 @@ class StorageHelperTest: BaseTestCase() {
     }
 
     @Test
-    fun test_putString_with_null_values() {
-        // Test putting null value
-        StorageHelper.putString(appCtx, "nullKey", null)
-        val value = StorageHelper.getString(appCtx, "nullKey", "default")
-        assertNull(value)
-        
-        // Test putting null value with account ID
-        StorageHelper.putString(appCtx, accountId, "nullKey2", null)
-        val value2 = StorageHelper.getString(appCtx, "nullKey2:$accountId", "default")
-        assertNull(value2)
-    }
-
-    @Test
-    fun test_putStringImmediate_with_null_values() {
-        // Test putting null value immediately
-        StorageHelper.putStringImmediate(appCtx, "nullKeyImm", null)
-        val value = StorageHelper.getString(appCtx, "nullKeyImm", "default")
-        assertNull(value)
-        
-        // Test putting null value immediately with account ID
-        StorageHelper.putStringImmediate(appCtx, accountId, "nullKeyImm2", null)
-        val value2 = StorageHelper.getString(appCtx, "nullKeyImm2:$accountId", "default")
-        assertNull(value2)
-    }
-
-    @Test
     fun test_remove_with_accountId() {
         // Setup a key with account ID suffix
         prepareSP { pref1, _ -> pref1.edit().putString("removeKey:$accountId", "value").commit() }

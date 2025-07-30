@@ -229,7 +229,10 @@ class CleverTapAPITest : BaseTestCase() {
         val expectedAccountId = "acct123"
         val expectedToken = "token123"
         val expectedRegion = "eu"
+
+        // reset needed due to the fact we init CleverTapAPI in base test class
         CleverTapAPI.defaultConfig = null
+        ManifestInfo.clearPreloadedManifestInfo()
 
         // Act
         CleverTapAPI.changeCredentials(expectedAccountId, expectedToken, expectedRegion)

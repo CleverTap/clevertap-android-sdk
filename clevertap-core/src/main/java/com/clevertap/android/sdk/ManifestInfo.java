@@ -51,6 +51,11 @@ public class ManifestInfo {
         return instance;
     }
 
+    // Only added for testing
+    static void clearPreloadedManifestInfo() {
+        instance = null;
+    }
+
     static void changeCredentials(String id, String token, String region) {
         ccAccountId = id;
         ccAccountToken = token;
