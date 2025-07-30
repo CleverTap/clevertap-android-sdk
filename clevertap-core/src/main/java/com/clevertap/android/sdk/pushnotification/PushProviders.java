@@ -230,8 +230,7 @@ public class PushProviders implements CTPushProviderListener {
                     if (TextUtils.isEmpty(key)) {
                         return null;
                     }
-                    StorageHelper
-                            .putStringImmediate(context, StorageHelper.storageKeyWithSuffix(config, key), token);
+                    StorageHelper.putStringImmediate(context, config.getAccountId(), key, token);
                     config.log(PushConstants.LOG_TAG, pushType + "Cached New Token successfully " + token);
                     return null;
                 }
@@ -281,7 +280,7 @@ public class PushProviders implements CTPushProviderListener {
         if (pushType != null) {
             String key = pushType.getTokenPrefKey();
             if (!TextUtils.isEmpty(key)) {
-                String cachedToken = StorageHelper.getStringFromPrefs(context, config, key, null);
+                String cachedToken = StorageHelper.getStringFromPrefs(context, config.getAccountId(), key, null);
                 config.log(PushConstants.LOG_TAG, pushType + "getting Cached Token - " + cachedToken);
                 return cachedToken;
             }
