@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.usereventlogs
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.db.Column
@@ -15,7 +16,7 @@ import com.clevertap.android.sdk.db.Table.USER_EVENT_LOGS_TABLE
 
 internal class UserEventLogDAOImpl(
     private val db: DatabaseHelper,
-    private val logger: Logger,
+    private val logger: ILogger,
     private val table: Table = USER_EVENT_LOGS_TABLE
 ) : UserEventLogDAO {
 

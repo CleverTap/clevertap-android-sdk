@@ -4,12 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.COMMAND_ADD
 import com.clevertap.android.sdk.Constants.COMMAND_SET
 import com.clevertap.android.sdk.Constants.DATE_PREFIX
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.Table.EVENTS
 import com.clevertap.android.sdk.db.Table.INBOX_MESSAGES
@@ -23,8 +22,12 @@ import org.json.JSONObject
 import java.io.File
 import kotlin.math.max
 
-class DatabaseHelper internal constructor(val context: Context, val config: CleverTapInstanceConfig, dbName: String?, private val logger: Logger) :
-    SQLiteOpenHelper(context, dbName, null, DATABASE_VERSION) {
+class DatabaseHelper internal constructor(
+    val context: Context,
+    val accountId: String,
+    dbName: String?,
+    private val logger: ILogger,
+) : SQLiteOpenHelper(context, dbName, null, DATABASE_VERSION) {
 
     companion object {
 
@@ -112,7 +115,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
     private fun migrateUserProfilesTable(db: SQLiteDatabase) {
         executeStatement(db, CREATE_TEMP_USER_PROFILES_TABLE)
 
-        val deviceId = getDeviceIdForAccountIdFromPrefs(config.accountId)
+        val deviceId = getDeviceIdForAccountIdFromPrefs(accountId)
 
         // Query to select all data from the old user profiles table
         val selectQuery = "SELECT ${Column.ID}, ${Column.DATA} FROM ${USER_PROFILES.tableName};"
