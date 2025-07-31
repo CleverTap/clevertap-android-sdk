@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
@@ -14,6 +15,7 @@ class UninstallTimestampDAOImplTest : BaseTestCase() {
     private lateinit var uninstallTimestampDAO: UninstallTimestampDAO
     private lateinit var instanceConfig: CleverTapInstanceConfig
     private lateinit var dbHelper: DatabaseHelper
+    private lateinit var testClock: TestClock
 
     private val accID = "accountID"
     private val accToken = "token"
@@ -23,7 +25,8 @@ class UninstallTimestampDAOImplTest : BaseTestCase() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
         dbHelper = DatabaseHelper(appCtx, instanceConfig.accountId, "test_db", instanceConfig.logger)
-        uninstallTimestampDAO = UninstallTimestampDAOImpl(dbHelper, instanceConfig.logger)
+        testClock = TestClock()
+        uninstallTimestampDAO = UninstallTimestampDAOImpl(dbHelper, instanceConfig.logger, testClock)
     }
 
     @After
@@ -36,12 +39,15 @@ class UninstallTimestampDAOImplTest : BaseTestCase() {
         // When no uninstall time is stored, should return 0
         assertEquals(0, uninstallTimestampDAO.getLastUninstallTimestamp())
 
-        // Store current time as uninstall time
-        val currentTime = System.currentTimeMillis()
+        // Set a specific time on the test clock
+        val expectedTime = 1609459200000L // January 1, 2021 00:00:00 UTC
+        testClock.setCurrentTime(expectedTime)
+        
+        // Store timestamp using the test clock
         uninstallTimestampDAO.storeUninstallTimestamp()
-        // TODO: This could be tested in a better way when DBAdapter can be provided with a test clock
-        // Validation: the last uninstall timestamp is returned (can differ by 1-2 seconds based on processor speed, so taking a range in here of max 2 seconds)
-        assertTrue(uninstallTimestampDAO.getLastUninstallTimestamp() in currentTime..(currentTime + 2000))
+        
+        // Validation: the exact timestamp should be returned
+        assertEquals(expectedTime, uninstallTimestampDAO.getLastUninstallTimestamp())
     }
 
     @Test
@@ -52,25 +58,34 @@ class UninstallTimestampDAOImplTest : BaseTestCase() {
 
     @Test
     fun test_storeUninstallTimestamp_and_getLastUninstallTimestamp_should_work() {
-        val currentTime = System.currentTimeMillis()
+        val expectedTime = 1609459200000L // January 1, 2021 00:00:00 UTC
+        testClock.setCurrentTime(expectedTime)
+        
         uninstallTimestampDAO.storeUninstallTimestamp()
         val result = uninstallTimestampDAO.getLastUninstallTimestamp()
 
-        // Validation - allowing for small time differences during test execution
-        assertTrue(result >= currentTime)
-        assertTrue(result <= currentTime + 2000) // Within 2 seconds
+        // Validation - exact timestamp should be returned
+        assertEquals(expectedTime, result)
     }
 
     @Test
     fun test_getLastUninstallTimestamp_when_multipleTimestamps_should_returnLatest() {
+        val firstTime = 1609459200000L // January 1, 2021 00:00:00 UTC
+        val secondTime = 1609545600000L // January 2, 2021 00:00:00 UTC
+        
+        // Store first timestamp
+        testClock.setCurrentTime(firstTime)
         uninstallTimestampDAO.storeUninstallTimestamp()
         val firstTimestamp = uninstallTimestampDAO.getLastUninstallTimestamp()
+        assertEquals(firstTime, firstTimestamp)
         
-        Thread.sleep(10) // Small delay to ensure different timestamps
-        
+        // Store second timestamp with later time
+        testClock.setCurrentTime(secondTime)
         uninstallTimestampDAO.storeUninstallTimestamp()
         val secondTimestamp = uninstallTimestampDAO.getLastUninstallTimestamp()
-
-        assertTrue(secondTimestamp >= firstTimestamp)
+        
+        // Should return the latest timestamp
+        assertEquals(secondTime, secondTimestamp)
+        assertTrue(secondTimestamp > firstTimestamp)
     }
 }
