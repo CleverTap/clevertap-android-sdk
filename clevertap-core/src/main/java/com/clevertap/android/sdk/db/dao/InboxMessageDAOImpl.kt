@@ -4,7 +4,7 @@ import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DatabaseHelper
@@ -14,7 +14,7 @@ import org.json.JSONObject
 
 internal class InboxMessageDAOImpl(
     private val dbHelper: DatabaseHelper,
-    private val logger: Logger
+    private val logger: ILogger
 ) : InboxMessageDAO {
 
     @WorkerThread

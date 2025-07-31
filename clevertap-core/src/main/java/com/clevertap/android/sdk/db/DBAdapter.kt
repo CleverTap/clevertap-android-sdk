@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.dao.*
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
@@ -14,7 +15,12 @@ import org.json.JSONObject
  * Refactored DBAdapter following Single Responsibility Principle
  * Each table now has its own dedicated DAO for better maintainability
  */
-internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
+internal class DBAdapter(
+    context: Context,
+    databaseName: String,
+    private val accountId: String,
+    private val logger: ILogger
+) {
 
     companion object {
         internal const val DB_UPDATE_ERROR = -1L
@@ -22,10 +28,18 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         internal const val NOT_ENOUGH_SPACE_LOG =
             "There is not enough space left on the device to store data, data discarded"
         private const val DATABASE_NAME = "clevertap"
+
+        fun getDatabaseName(config: CleverTapInstanceConfig): String {
+            return if (config.isDefaultInstance) DATABASE_NAME else DATABASE_NAME + "_" + config.accountId
+        }
     }
 
-    private val logger = config.logger
-    private val dbHelper: DatabaseHelper = DatabaseHelper(context, config, getDatabaseName(config), logger)
+    private val dbHelper: DatabaseHelper = DatabaseHelper(
+        context = context,
+        accountId = accountId,
+        dbName = databaseName,
+        logger = logger
+    )
 
     // DAO instances - lazy initialization for better performance
     private val eventDAO: EventDAO by lazy { EventDAOImpl(dbHelper, logger) }
@@ -195,9 +209,5 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     @VisibleForTesting
     internal fun deleteDB() {
         dbHelper.deleteDatabase()
-    }
-
-    private fun getDatabaseName(config: CleverTapInstanceConfig): String {
-        return if (config.isDefaultInstance) DATABASE_NAME else DATABASE_NAME + "_" + config.accountId
     }
 }

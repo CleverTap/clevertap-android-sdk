@@ -3,15 +3,17 @@ package com.clevertap.android.sdk.db.dao
 import android.content.ContentValues
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table.UNINSTALL_TS
+import com.clevertap.android.sdk.utils.Clock
 
 internal class UninstallTimestampDAOImpl(
     private val dbHelper: DatabaseHelper,
-    private val logger: Logger
+    private val logger: ILogger,
+    private val clock: Clock = Clock.SYSTEM
 ) : UninstallTimestampDAO {
 
     @WorkerThread
@@ -23,7 +25,7 @@ internal class UninstallTimestampDAOImpl(
         
         val tableName = UNINSTALL_TS.tableName
         val cv = ContentValues().apply {
-            put(Column.CREATED_AT, System.currentTimeMillis())
+            put(Column.CREATED_AT, clock.currentTimeMillis())
         }
         
         try {

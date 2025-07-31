@@ -23,7 +23,12 @@ class DBAdapterTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
-        dbAdapter = DBAdapter(appCtx, instanceConfig)
+        dbAdapter = DBAdapter(
+            context = appCtx,
+            databaseName = DBAdapter.getDatabaseName(instanceConfig),
+            accountId = instanceConfig.accountId,
+            logger = instanceConfig.logger
+        )
     }
 
     @After

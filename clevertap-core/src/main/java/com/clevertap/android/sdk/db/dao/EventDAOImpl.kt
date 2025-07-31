@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
 import androidx.annotation.WorkerThread
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBAdapter.Companion.DB_OUT_OF_MEMORY_ERROR
 import com.clevertap.android.sdk.db.DBAdapter.Companion.DB_UPDATE_ERROR
@@ -15,7 +15,7 @@ import org.json.JSONObject
 
 internal class EventDAOImpl(
     private val dbHelper: DatabaseHelper,
-    private val logger: Logger
+    private val logger: ILogger
 ) : EventDAO {
 
     companion object {

@@ -22,7 +22,7 @@ class UninstallTimestampDAOImplTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
-        dbHelper = DatabaseHelper(appCtx, instanceConfig, "test_db", instanceConfig.logger)
+        dbHelper = DatabaseHelper(appCtx, instanceConfig.accountId, "test_db", instanceConfig.logger)
         uninstallTimestampDAO = UninstallTimestampDAOImpl(dbHelper, instanceConfig.logger)
     }
 

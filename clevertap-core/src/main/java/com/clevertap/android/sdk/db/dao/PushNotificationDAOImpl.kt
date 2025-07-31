@@ -4,7 +4,7 @@ import android.content.ContentValues
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DatabaseHelper
@@ -12,7 +12,7 @@ import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATIONS
 
 internal class PushNotificationDAOImpl(
     private val dbHelper: DatabaseHelper,
-    private val logger: Logger
+    private val logger: ILogger
 ) : PushNotificationDAO {
 
     @Volatile
