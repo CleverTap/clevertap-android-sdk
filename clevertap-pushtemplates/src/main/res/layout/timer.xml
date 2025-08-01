@@ -28,9 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/metadata"
             android:layout_marginEnd="@dimen/padding_vertical"
-            android:layout_marginRight="@dimen/padding_vertical"
-            android:layout_toStartOf="@+id/chronometer"
-            android:layout_toLeftOf="@id/chronometer">
+            android:layout_toStartOf="@+id/chronometer" >
 
 
             <TextView
@@ -46,7 +44,6 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/title"
                 android:layout_alignStart="@+id/title"
-                android:layout_alignLeft="@id/title"
                 tools:text="message"
                 android:textAppearance="@style/PushMessageMultiLine" />
 
@@ -59,7 +56,6 @@
             android:background="@android:color/transparent"
             android:textColor="@color/titleColor"
             android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:textAlignment="center"
             android:textSize="@dimen/chronometer_font_size"
@@ -68,7 +64,7 @@
     </RelativeLayout>
 
     <include layout="@layout/image_view_dynamic"
-        android:id="@+id/big_image_configurable"/>
+        android:id="@+id/big_media_configurable"/>
 
     <include
         android:id="@+id/action_buttons"
