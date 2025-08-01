@@ -56,6 +56,6 @@
     </RelativeLayout>
 
     <include layout="@layout/image_view_dynamic"
-        android:id="@+id/big_image_configurable"/>
+        android:id="@+id/big_media_configurable"/>
 
 </LinearLayout>

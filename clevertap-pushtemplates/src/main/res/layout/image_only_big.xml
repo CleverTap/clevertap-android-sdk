@@ -11,8 +11,9 @@
         layout="@layout/content_view_small_multi_line_msg" />
 
 
-    <include layout="@layout/image_view_dynamic"
-        android:id="@+id/big_image_configurable"/>
+    <include
+        android:id="@+id/big_media_configurable"
+        layout="@layout/image_media_dynamic" />
 
     <include
         android:id="@+id/action_buttons"
