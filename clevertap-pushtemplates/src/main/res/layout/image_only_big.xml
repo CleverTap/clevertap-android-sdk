@@ -11,22 +11,9 @@
         layout="@layout/content_view_small_multi_line_msg" />
 
 
-    <include layout="@layout/image_view_dynamic"
+    <include
         android:id="@+id/big_image_configurable"
-        android:visibility="gone"/>
-
-    <ViewFlipper
-        android:id="@+id/view_flipper"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:minHeight="196dp"
-        android:autoStart="true"
-        android:flipInterval="150">
-<!--        todo - fix flip interval-->
-<!--        todo test for view-flipper height and width-->
-    </ViewFlipper>
+        layout="@layout/image_view_dynamic" />
 
     <include
         android:id="@+id/action_buttons"
