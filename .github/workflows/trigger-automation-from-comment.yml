@@ -199,65 +199,65 @@ jobs:
         run: |
           # Post a comment back to the PR confirming the trigger
           COMMENT_BODY="🚀 **Automation Triggered Successfully!**
-          
-            **Parameters Extracted:**
+
+          **Parameters Extracted:**
           - **SDK Branch**: \`${{ steps.pr_info.outputs.pr_branch }}\`
           - **Build Type**: \`${{ steps.parse_comment.outputs.build_type }}\`
           - **Test Suite**: \`${{ steps.parse_comment.outputs.test_suite }}\`
           - **QA Version**: \`${{ github.event.comment.id }}\`
-          
-            **Next Steps:**
-            1. 🏗️ [Bearded Robot build](https://github.com/CleverTap/BeardedRobot/actions) will start with your SDK branch
-            2. 📱 APK will be uploaded to BrowserStack
-            3. 🧪 Automation tests will run on specified devices (controlled by TestNG XML files)
-          
-            **Monitor Progress:**
-          - [Build Workflow](https://github.com/CleverTap/BeardedRobot/actions)
+
+          **Next Steps:**
+          1. 🏗️ [Bearded Robot build](https://github.com/CleverTap/CT-Apps/actions) will start with your SDK branch
+          2. 📱 APK will be uploaded to BrowserStack
+          3. 🧪 Automation tests will run on specified devices (controlled by TestNG XML files)
+
+          **Monitor Progress:**
+          - [Build Workflow](https://github.com/CleverTap/CT-Apps/actions)
           - [Automation Workflow](https://github.com/CleverTap-SDK/CleverTap-SDK-Automation/actions)
-          
+
           _Triggered by: @${{ github.event.comment.user.login }}_"
-            
-            curl -s \
+
+          curl -s \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" \
             -d "{\"body\": $(echo "$COMMENT_BODY" | jq -Rs .)}"
           
-            echo "💬 Posted confirmation comment to PR"
+          echo "💬 Posted confirmation comment to PR"
+
+      - name: Handle invalid comment format
+        if: steps.parse_comment.outputs.valid_comment == 'false'
+        run: |
+          # Only respond if the comment contained "run test automation" but was malformed
+          if echo "${{ github.event.comment.body }}" | grep -qi "run test automation"; then
           
-            - name: Handle invalid comment format
-              if: steps.parse_comment.outputs.valid_comment == 'false'
-              run: |
-                # Only respond if the comment contained "run test automation" but was malformed
-                if echo "${{ github.event.comment.body }}" | grep -qi "run test automation"; then
-                
-                  HELP_COMMENT="❌ **Invalid automation trigger format**
-          
+            HELP_COMMENT="❌ **Invalid automation trigger format**
+
             **Expected format:**
             \`\`\`
             run test automation on {buildType} build, {testSuite} tests
             \`\`\`
-          
+
             **Valid options:**
-          - **buildType**: \`debug\` or \`release\`
-          - **testSuite**: \`all\`, \`variables\`, \`push-notifications\`, or \`app-inbox\`
-          
+            - **buildType**: \`debug\` or \`release\`
+            - **testSuite**: \`all\`, \`variables\`, \`push-notifications\`, or \`app-inbox\`
+
             **Examples:**
-          - \`run test automation on debug build, variables tests\`
-          - \`run test automation on release build, all tests\`
-          - \`run test automation on debug build, push-notifications tests\`
+            - \`run test automation on debug build, variables tests\`
+            - \`run test automation on release build, all tests\`
+            - \`run test automation on debug build, push-notifications tests\`
             
             Please correct your comment format and try again.
-          
-          _Note: Comment parsing is case-insensitive_"
-            
+
+            _Note: Comment parsing is case-insensitive_"
+
             curl -s \
-            -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" \
-            -d "{\"body\": $(echo "$HELP_COMMENT" | jq -Rs .)}"
+              -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" \
+              -d "{\"body\": $(echo "$HELP_COMMENT" | jq -Rs .)}"
           
             echo "💬 Posted help comment for invalid format"
-            fi
+          fi
