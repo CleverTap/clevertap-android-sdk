@@ -146,8 +146,8 @@ jobs:
         if: steps.validate_params.outputs.valid_params == 'true'
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.PAT_FOR_AUTOMATION }}  # Need PAT with repo access
-          repository: CleverTap/BeardedRobot  # Update with actual BR app repo name
+          token: ${{ secrets.PAT_CTApps }}  # Need PAT with repo access
+          repository: CleverTap/CT-Apps
           event-type: trigger-from-sdk-comment
           client-payload: |
             {
