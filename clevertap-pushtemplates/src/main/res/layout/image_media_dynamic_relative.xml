@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/big_image_configurable"
+        layout="@layout/image_view_dynamic_relative"
+        android:visibility="gone" />
+
+    <ViewFlipper
+        android:id="@+id/view_flipper"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:autoStart="true">
+        <!--        todo - fix flip interval-->
+        <!--        todo test for view-flipper height and width-->
+    </ViewFlipper>
+</LinearLayout>
