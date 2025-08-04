@@ -16,7 +16,6 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:autoStart="true"
-        android:flipInterval="115"
         android:minHeight="196dp"
         android:visibility="gone">
         <!--        todo - fix flip interval-->

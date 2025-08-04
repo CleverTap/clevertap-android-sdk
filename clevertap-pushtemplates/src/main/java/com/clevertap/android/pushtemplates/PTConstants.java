@@ -70,6 +70,10 @@ public class PTConstants {
 
     public static final String PT_GIF = "pt_gif";
 
+    public static final String PT_GIF_ALT = "pt_gif_alt";
+
+    public static final String PT_GIF_FRAMES = "pt_gif_frames";
+
     public static final String PT_BIG_IMG_ALT_TEXT = "pt_big_img_alt_text";
 
     public static final String PT_SMALL_IMG = "pt_small_img";
