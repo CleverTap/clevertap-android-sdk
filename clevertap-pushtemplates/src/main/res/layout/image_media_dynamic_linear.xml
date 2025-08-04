@@ -7,7 +7,7 @@
 
     <include
         android:id="@+id/big_image_configurable"
-        layout="@layout/image_view_dynamic"
+        layout="@layout/image_view_dynamic_linear"
         android:visibility="gone" />
 
     <ViewFlipper

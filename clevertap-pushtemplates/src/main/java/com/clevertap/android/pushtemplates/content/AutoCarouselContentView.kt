@@ -46,7 +46,7 @@ internal class AutoCarouselContentView(context: Context, renderer: TemplateRende
         renderer.imageList?.forEach { imageData ->
             val imageUrl = imageData.url
             val altText = imageData.altText
-            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_flipper_dynamic)
+            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_dynamic_relative)
 
             Utils.loadImageURLIntoRemoteView(
                 imageViewId,

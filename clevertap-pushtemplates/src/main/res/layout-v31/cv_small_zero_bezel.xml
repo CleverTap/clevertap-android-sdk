@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <include layout="@layout/image_view_flipper_dynamic"
+    <!--    todo remove if not needed-->
+    <include layout="@layout/image_media_dynamic_relative"
         android:id="@+id/big_image_configurable"/>
 
     <ImageView

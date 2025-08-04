@@ -63,7 +63,7 @@
 
     </RelativeLayout>
 
-    <include layout="@layout/image_media_dynamic"
+    <include layout="@layout/image_media_dynamic_linear"
         android:id="@+id/big_media_configurable"/>
 
     <include

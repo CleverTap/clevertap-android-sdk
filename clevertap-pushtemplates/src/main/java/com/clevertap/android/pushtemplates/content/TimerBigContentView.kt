@@ -12,7 +12,7 @@ internal class TimerBigContentView(context: Context, timer_end: Int?, renderer: 
     init {
         setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
-        setCustomContentViewMedia()
+        setCustomContentViewMedia(R.layout.image_view_dynamic_linear)
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {

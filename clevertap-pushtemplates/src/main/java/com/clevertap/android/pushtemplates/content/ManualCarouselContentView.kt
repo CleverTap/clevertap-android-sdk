@@ -38,7 +38,7 @@ internal class ManualCarouselContentView(context: Context, renderer: TemplateRen
         renderer.imageList?.forEachIndexed { index, imageData ->
             val imageUrl = imageData.url
             val altText = imageData.altText
-            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_flipper_dynamic)
+            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_dynamic_relative)
 
             Utils.loadImageURLIntoRemoteView(
                 imageViewId,
