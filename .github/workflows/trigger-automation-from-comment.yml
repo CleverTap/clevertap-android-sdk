@@ -1,0 +1,359 @@
+name: Trigger Automation from PR Comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  parse-and-trigger:
+    # Only run on PR comments (not regular issues)
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'run test automation')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check comment format and extract parameters
+        id: parse_comment
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          echo "📝 Processing comment (length: ${#COMMENT_BODY})"
+          
+          # Sanitize input - only allow alphanumeric, spaces, hyphens, and basic punctuation
+          if echo "$COMMENT_BODY" | grep -q '[^a-zA-Z0-9 \-,.]'; then
+            echo "❌ Comment contains invalid characters"
+            echo "valid_comment=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Parse comment using regex pattern: "run test automation on {buildType} build, {testSuite} tests"
+          # Use printf to safely handle the string and avoid command injection
+          if printf '%s\n' "$COMMENT_BODY" | grep -qiE "run test automation on (debug|release) build, (all|variables|push-notifications|app-inbox) tests"; then
+          
+            # Extract buildType (debug or release) - use printf for safety
+            BUILD_TYPE=$(printf '%s\n' "$COMMENT_BODY" | grep -oiE "(debug|release)" | tr '[:upper:]' '[:lower:]' | head -1)
+          
+            # Extract testSuite - use printf for safety
+            TEST_SUITE=$(printf '%s\n' "$COMMENT_BODY" | grep -oiE "(all|variables|push-notifications|app-inbox)" | tr '[:upper:]' '[:lower:]' | head -1)
+          
+            # Additional validation - ensure extracted values are exactly what we expect
+            case "$BUILD_TYPE" in
+              "debug"|"release")
+                echo "✅ Valid build type extracted: $BUILD_TYPE"
+                ;;
+              *)
+                echo "❌ Invalid build type extracted: $BUILD_TYPE"
+                echo "valid_comment=false" >> $GITHUB_OUTPUT
+                exit 0
+                ;;
+            esac
+            
+            case "$TEST_SUITE" in
+              "all"|"variables"|"push-notifications"|"app-inbox")
+                echo "✅ Valid test suite extracted: $TEST_SUITE"
+                ;;
+              *)
+                echo "❌ Invalid test suite extracted: $TEST_SUITE"
+                echo "valid_comment=false" >> $GITHUB_OUTPUT
+                exit 0
+                ;;
+            esac
+          
+            if [ -n "$BUILD_TYPE" ] && [ -n "$TEST_SUITE" ]; then
+              echo "✅ Valid automation trigger comment detected!"
+              echo "🔧 Build Type: $BUILD_TYPE"
+              echo "🧪 Test Suite: $TEST_SUITE"
+          
+              echo "valid_comment=true" >> $GITHUB_OUTPUT
+              echo "build_type=$BUILD_TYPE" >> $GITHUB_OUTPUT
+              echo "test_suite=$TEST_SUITE" >> $GITHUB_OUTPUT
+            else
+              echo "❌ Could not extract buildType or testSuite from comment"
+              echo "valid_comment=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "ℹ️ Comment does not match automation trigger pattern"
+            echo "Expected format: 'run test automation on {debug|release} build, {all|variables|push-notifications|app-inbox} tests'"
+            echo "valid_comment=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get PR information
+        id: pr_info
+        if: steps.parse_comment.outputs.valid_comment == 'true'
+        run: |
+          # Get PR details using GitHub API
+          PR_NUMBER="${{ github.event.issue.number }}"
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          
+          echo "📋 Fetching PR #$PR_NUMBER details..."
+          
+          # Get PR information
+          PR_DATA=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER")
+          
+          # Extract branch name
+          BRANCH_NAME=$(echo "$PR_DATA" | jq -r '.head.ref')
+          PR_TITLE=$(echo "$PR_DATA" | jq -r '.title')
+          PR_AUTHOR=$(echo "$PR_DATA" | jq -r '.user.login')
+          
+          if [ "$BRANCH_NAME" == "null" ] || [ -z "$BRANCH_NAME" ]; then
+            echo "❌ Could not extract branch name from PR"
+            exit 1
+          fi
+          
+          echo "pr_branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "pr_author=$PR_AUTHOR" >> $GITHUB_OUTPUT
+          echo "comment_id=${{ github.event.comment.id }}" >> $GITHUB_OUTPUT
+          
+          echo "✅ PR Information extracted:"
+          echo "🌿 Branch: $BRANCH_NAME"
+          echo "📝 Title: $PR_TITLE" 
+          echo "👤 Author: $PR_AUTHOR"
+          echo "💬 Comment ID: ${{ github.event.comment.id }}"
+
+      - name: Validate build parameters
+        id: validate_params
+        if: steps.parse_comment.outputs.valid_comment == 'true'
+        run: |
+          BUILD_TYPE="${{ steps.parse_comment.outputs.build_type }}"
+          TEST_SUITE="${{ steps.parse_comment.outputs.test_suite }}"
+          BRANCH_NAME="${{ steps.pr_info.outputs.pr_branch }}"
+          
+          echo "🔍 Validating extracted parameters..."
+          
+          # Validate buildType
+          case $BUILD_TYPE in
+            "debug"|"release")
+              echo "✅ Valid build type: $BUILD_TYPE"
+              ;;
+            *)
+              echo "❌ Invalid build type: $BUILD_TYPE"
+              echo "valid_params=false" >> $GITHUB_OUTPUT
+              exit 1
+              ;;
+          esac
+          
+          # Validate testSuite
+          case $TEST_SUITE in
+            "all"|"variables"|"push-notifications"|"app-inbox")
+              echo "✅ Valid test suite: $TEST_SUITE"
+              ;;
+            *)
+              echo "❌ Invalid test suite: $TEST_SUITE"
+              echo "valid_params=false" >> $GITHUB_OUTPUT
+              exit 1
+              ;;
+          esac
+          
+          # Validate branch name
+          if [ -n "$BRANCH_NAME" ] && [ "$BRANCH_NAME" != "null" ]; then
+            echo "✅ Valid branch name: $BRANCH_NAME"
+          else
+            echo "❌ Invalid branch name: $BRANCH_NAME"
+            echo "valid_params=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          echo "valid_params=true" >> $GITHUB_OUTPUT
+          echo "🎯 All parameters validated successfully!"
+
+      - name: Add reaction to comment
+        if: steps.parse_comment.outputs.valid_comment == 'true'
+        run: |
+          # Add 🚀 reaction to indicate we're processing the comment
+          curl -s \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ steps.pr_info.outputs.comment_id }}/reactions" \
+            -d '{"content":"rocket"}'
+          
+          echo "🚀 Added rocket reaction to comment"
+
+      - name: Prepare repository dispatch payload
+        if: steps.validate_params.outputs.valid_params == 'true'
+        id: prepare_payload
+        env:
+          PR_BRANCH: ${{ steps.pr_info.outputs.pr_branch }}
+          PR_TITLE: ${{ steps.pr_info.outputs.pr_title }}
+          PR_AUTHOR: ${{ steps.pr_info.outputs.pr_author }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+          COMMENT_URL: ${{ github.event.comment.html_url }}
+          BUILD_TYPE: ${{ steps.parse_comment.outputs.build_type }}
+          TEST_SUITE: ${{ steps.parse_comment.outputs.test_suite }}
+          SOURCE_REPO: ${{ github.repository }}
+          TRIGGERED_AT: ${{ github.event.comment.created_at }}
+        run: |
+          # Construct JSON payload safely using jq to handle escaping
+          PAYLOAD=$(jq -n \
+            --arg sdkRepoBranch "$PR_BRANCH" \
+            --arg buildOutput "apk" \
+            --arg buildType "$BUILD_TYPE" \
+            --argjson qaVersion "${{ github.event.comment.id }}" \
+            --argjson triggerAutomation true \
+            --arg testSuite "$TEST_SUITE" \
+            --arg sourceRepo "$SOURCE_REPO" \
+            --argjson prNumber "${{ github.event.issue.number }}" \
+            --arg prTitle "$PR_TITLE" \
+            --arg prAuthor "$PR_AUTHOR" \
+            --arg commentAuthor "$COMMENT_AUTHOR" \
+            --argjson commentId "${{ github.event.comment.id }}" \
+            --arg commentUrl "$COMMENT_URL" \
+            --arg triggeredAt "$TRIGGERED_AT" \
+            '{
+              "workflow_inputs": {
+                "sdkRepoBranch": $sdkRepoBranch,
+                "buildOutput": $buildOutput,
+                "buildType": $buildType,
+                "qaVersion": $qaVersion,
+                "triggerAutomation": $triggerAutomation,
+                "testSuite": $testSuite
+              },
+              "trigger_info": {
+                "source_repo": $sourceRepo,
+                "pr_number": $prNumber,
+                "pr_title": $prTitle,
+                "pr_author": $prAuthor,
+                "comment_author": $commentAuthor,
+                "comment_id": $commentId,
+                "comment_url": $commentUrl,
+                "triggered_at": $triggeredAt
+              }
+            }')
+          
+          echo "📋 Generated safely escaped JSON payload:"
+          echo "$PAYLOAD" | jq '.'
+          
+          # Save the payload for the next step
+          echo "payload<<EOF" >> $GITHUB_OUTPUT
+          echo "$PAYLOAD" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Trigger Bearded Robot Build
+        if: steps.validate_params.outputs.valid_params == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PAT_CTApps }}
+          repository: CleverTap/CT-Apps
+          event-type: trigger-from-sdk-comment
+          client-payload: ${{ steps.prepare_payload.outputs.payload }}
+
+      - name: Create workflow summary
+        if: steps.validate_params.outputs.valid_params == 'true'
+        run: |
+          echo "## 🚀 Automation Triggered from SDK PR Comment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **PR Number** | #${{ github.event.issue.number }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **PR Branch** | \`${{ steps.pr_info.outputs.pr_branch }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **PR Author** | ${{ steps.pr_info.outputs.pr_author }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Comment Author** | ${{ github.event.comment.user.login }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Build Type** | ${{ steps.parse_comment.outputs.build_type }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Test Suite** | ${{ steps.parse_comment.outputs.test_suite }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **QA Version** | ${{ github.event.comment.id }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Build Output** | apk |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Trigger Automation** | true |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Successfully triggered Bearded Robot build workflow!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 Monitor the build progress in the [Bearded Robot repository](https://github.com/CleverTap/BeardedRobot/actions)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Original Comment:** ${{ github.event.comment.html_url }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR with trigger confirmation
+        if: steps.validate_params.outputs.valid_params == 'true'
+        env:
+          PR_BRANCH: ${{ steps.pr_info.outputs.pr_branch }}
+          BUILD_TYPE: ${{ steps.parse_comment.outputs.build_type }}
+          TEST_SUITE: ${{ steps.parse_comment.outputs.test_suite }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+        run: |
+          # Create comment body safely
+          COMMENT_BODY="🚀 **Automation Triggered Successfully!**
+
+          **Parameters Extracted:**
+          - **SDK Branch**: \`$PR_BRANCH\`
+          - **Build Type**: \`$BUILD_TYPE\`
+          - **Test Suite**: \`$TEST_SUITE\`
+          - **QA Version**: \`${{ github.event.comment.id }}\`
+
+          **Next Steps:**
+          1. 🏗️ [Bearded Robot build](https://github.com/CleverTap/CT-Apps/actions) will start with your SDK branch
+          2. 📱 APK will be uploaded to BrowserStack
+          3. 🧪 Automation tests will run on specified devices (controlled by TestNG XML files)
+
+          **Monitor Progress:**
+          - [Build Workflow](https://github.com/CleverTap/CT-Apps/actions)
+          - [Automation Workflow](https://github.com/CleverTap-SDK/CleverTap-SDK-Automation/actions)
+
+          _Triggered by: @$COMMENT_AUTHOR_"
+
+          # Use jq to safely construct JSON payload
+          COMMENT_PAYLOAD=$(jq -n --arg body "$COMMENT_BODY" '{"body": $body}')
+          
+          curl -s \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" \
+            -d "$COMMENT_PAYLOAD" \
+            --fail-with-body
+          
+          if [ $? -eq 0 ]; then
+            echo "💬 Posted confirmation comment to PR"
+          else
+            echo "❌ Failed to post confirmation comment"
+          fi
+
+      - name: Handle invalid comment format
+        if: steps.parse_comment.outputs.valid_comment == 'false'
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          # Only respond if the comment contained "run test automation" but was malformed
+          # Use printf for safe string handling
+          if printf '%s\n' "$COMMENT_BODY" | grep -qi "run test automation"; then
+          
+            HELP_COMMENT="❌ **Invalid automation trigger format**
+
+            **Expected format:**
+            \`\`\`
+            run test automation on {buildType} build, {testSuite} tests
+            \`\`\`
+
+            **Valid options:**
+            - **buildType**: \`debug\` or \`release\`
+            - **testSuite**: \`all\`, \`variables\`, \`push-notifications\`, or \`app-inbox\`
+
+            **Examples:**
+            - \`run test automation on debug build, variables tests\`
+            - \`run test automation on release build, all tests\`
+            - \`run test automation on debug build, push-notifications tests\`
+            
+            Please correct your comment format and try again.
+
+            _Note: Comment parsing is case-insensitive_"
+
+            # Use jq to safely construct JSON payload
+            HELP_PAYLOAD=$(jq -n --arg body "$HELP_COMMENT" '{"body": $body}')
+            
+            curl -s \
+              -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "Content-Type: application/json" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" \
+              -d "$HELP_PAYLOAD" \
+              --fail-with-body
+          
+            if [ $? -eq 0 ]; then
+              echo "💬 Posted help comment for invalid format"
+            else
+              echo "❌ Failed to post help comment"
+            fi
+          fi
