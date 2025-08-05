@@ -3,8 +3,8 @@ package com.clevertap.android.sdk.db
 import android.content.Context
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CTLockManager
-import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.Table.EVENTS
 import com.clevertap.android.sdk.db.Table.PROFILE_EVENTS
 import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATION_VIEWED
@@ -13,7 +13,9 @@ import com.clevertap.android.sdk.network.IJRepo
 import org.json.JSONObject
 
 internal class DBManager(
-    private val config: CleverTapInstanceConfig,
+    private val accountId: String,
+    private val logger: ILogger,
+    private val databaseName: String,
     private val ctLockManager: CTLockManager,
     private val ijRepo: IJRepo,
     private val clearFirstRequestTs: () -> Unit = {},
@@ -32,7 +34,7 @@ internal class DBManager(
     override fun loadDBAdapter(context: Context): DBAdapter {
         var dbAdapter = this.dbAdapter
         if (dbAdapter == null) {
-            dbAdapter = DBAdapter(context, config)
+            dbAdapter = DBAdapter(context, databaseName, accountId, logger)
             this.dbAdapter = dbAdapter
             dbAdapter.cleanupStaleEvents(EVENTS)
             dbAdapter.cleanupStaleEvents(PROFILE_EVENTS)
@@ -63,10 +65,10 @@ internal class DBManager(
         eventGroup: EventGroup
     ): QueueData {
         return if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-            config.logger.verbose(config.accountId, "Returning Queued Notification Viewed events")
+            logger.verbose(accountId, "Returning Queued Notification Viewed events")
             getPushNotificationViewedQueuedEvents(context, batchSize, previousQueue)
         } else {
-            config.logger.verbose(config.accountId, "Returning Queued events")
+            logger.verbose(accountId, "Returning Queued events")
             getQueuedDBEvents(context, batchSize, previousQueue)
         }
     }
@@ -149,8 +151,8 @@ internal class DBManager(
             val adapter = loadDBAdapter(context)
             val returnCode = adapter.storeObject(event, table)
             if (returnCode > 0) {
-                config.logger.debug(config.accountId, "Queued event: $event")
-                config.logger.verbose(config.accountId, "Queued event to DB table $table: $event")
+                logger.debug(accountId, "Queued event: $event")
+                logger.verbose(accountId, "Queued event to DB table $table: $event")
             }
         }
     }

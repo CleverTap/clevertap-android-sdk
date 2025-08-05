@@ -59,7 +59,7 @@ class UserEventLogDAOImplTest {
         config = CleverTapInstanceConfig.createInstance(context, accID, accToken, accRegion)
         table = Table.USER_EVENT_LOGS_TABLE
 
-        databaseHelper = DatabaseHelper(context, config, TEST_DB_NAME, logger)
+        databaseHelper = DatabaseHelper(context, config.accountId, TEST_DB_NAME, logger)
         userEventLogDAO = UserEventLogDAOImpl(databaseHelper, logger, table)
 
         mockkStatic(Utils::class)

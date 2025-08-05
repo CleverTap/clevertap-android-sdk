@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.cryption.CryptMigrator
 import com.clevertap.android.sdk.cryption.CryptRepository
 import com.clevertap.android.sdk.cryption.DataMigrationRepository
 import com.clevertap.android.sdk.cryption.EncryptionLevel.Companion.fromInt
+import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.events.EventQueueManager
@@ -107,8 +108,12 @@ internal object CleverTapFactory {
             FileResourceProvider.getInstance(context, config.logger)
         }
 
+        val databaseName = DBAdapter.getDatabaseName(config)
+
         val databaseManager = DBManager(
-            config = config,
+            accountId = config.accountId,
+            logger = config.logger,
+            databaseName = databaseName,
             ctLockManager = ctLockManager,
             ijRepo = ijRepo,
             clearFirstRequestTs = networkRepo::clearFirstRequestTs,

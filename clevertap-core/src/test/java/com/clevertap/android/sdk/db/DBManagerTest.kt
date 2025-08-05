@@ -30,9 +30,20 @@ class DBManagerTest : BaseTestCase() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, "accountId", "accountToken")
         lockManager = CTLockManager()
-        dbManager = DBManager(instanceConfig, lockManager, IJRepo(config = instanceConfig))
+        dbManager = DBManager(
+            accountId = instanceConfig.accountId,
+            logger = instanceConfig.logger,
+            databaseName = DBAdapter.getDatabaseName(instanceConfig),
+            ctLockManager = lockManager,
+            ijRepo = IJRepo(config = instanceConfig)
+        )
         dbManagerSpy = spyk(dbManager)
-        dbAdapter = DBAdapter(appCtx, instanceConfig)
+        dbAdapter = DBAdapter(
+            context = appCtx,
+            databaseName = DBAdapter.getDatabaseName(instanceConfig),
+            accountId = instanceConfig.accountId,
+            logger = instanceConfig.logger
+        )
     }
 
     @After
