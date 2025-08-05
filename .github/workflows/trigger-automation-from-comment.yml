@@ -20,7 +20,7 @@ jobs:
           
           # Sanitize input - only allow alphanumeric, spaces, hyphens, and basic punctuation
           if echo "$COMMENT_BODY" | grep -q '[^a-zA-Z0-9 \-,.]'; then
-            echo "❌ Comment contains invalid characters"
+            echo "❌ Comment contains invalid characters."
             echo "valid_comment=false" >> $GITHUB_OUTPUT
             exit 0
           fi
