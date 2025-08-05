@@ -70,6 +70,7 @@ public class PTConstants {
 
     public static final String PT_GIF = "pt_gif";
 
+    // GIF key for terminal notification of timer template
     public static final String PT_GIF_ALT = "pt_gif_alt";
 
     public static final String PT_GIF_FRAMES = "pt_gif_frames";
