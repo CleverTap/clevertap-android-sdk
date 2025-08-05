@@ -28,6 +28,9 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
     }
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
     namespace 'com.clevertap.android.sdk'
     testNamespace 'com.clevertap.demo'
 }
@@ -58,6 +61,13 @@ dependencies {
     testImplementation(project(":test_shared"))
     testImplementation(libs.firebase.messaging)
     testImplementation(libs.test.coroutines)
+
+    // Instrumentation testing dependencies
+    androidTestImplementation(libs.test.ext.junit)
+    androidTestImplementation(libs.runner)
+    androidTestImplementation(libs.rules)
+    androidTestImplementation(libs.test.espresso.core)
+    androidTestImplementation(libs.test.work.testing)
 }
 
 sonarqube {
