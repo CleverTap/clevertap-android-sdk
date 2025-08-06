@@ -3,6 +3,12 @@ name: Trigger Automation from PR Comment
 on:
   issue_comment:
     types: [created]
+  push:
+    branches:
+      - 'test/**'
+      - 'action/**'
+    paths:
+      - '.github/workflows/trigger-automation-from-comment.yml'
 
 jobs:
   parse-and-trigger:
@@ -17,7 +23,7 @@ jobs:
       - name: Check comment format and extract parameters
         id: parse_comment
         env:
-          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_BODY: run test automation on debug build, variables tests
         run: |
           echo "📝 Processing comment (length: ${#COMMENT_BODY})"
           
