@@ -9,6 +9,9 @@ jobs:
     # Only run on PR comments (not regular issues)
     if: github.event.issue.pull_request && contains(github.event.comment.body, 'run test automation')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Check comment format and extract parameters
