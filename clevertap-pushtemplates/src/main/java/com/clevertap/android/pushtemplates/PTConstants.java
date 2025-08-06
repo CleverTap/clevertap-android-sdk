@@ -77,6 +77,13 @@ public class PTConstants {
 
     public static final String PT_BIG_IMG_ALT_TEXT = "pt_big_img_alt_text";
 
+    // Keys for collapsed media in zero bezel
+    public static final String PT_GIF_COLLAPSED = "pt_gif_collapsed";
+    public static final String PT_GIF_FRAMES_COLLAPSED = "pt_gif_frames_collapsed";
+    public static final String PT_SCALE_TYPE_COLLAPSED = "pt_scale_type_collapsed";
+    public static final String PT_BIG_IMG_COLLAPSED = "pt_big_img_collapsed";
+    public static final String PT_BIG_IMG_COLLAPSED_ALT_TEXT = "pt_big_img_collapsed_alt_text";
+
     public static final String PT_SMALL_IMG = "pt_small_img";
 
     public static final String PT_JSON = "pt_json";

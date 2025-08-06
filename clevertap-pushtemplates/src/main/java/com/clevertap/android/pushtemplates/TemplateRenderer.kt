@@ -100,6 +100,12 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     internal var config: CleverTapInstanceConfig? = null
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
+    internal var pt_gif_collapsed: String? = null
+    internal var pt_big_img_collapsed: String? = null
+    internal var pt_gif_frames_collapsed: Int = 10
+    internal var pt_scale_type_collapsed: PTScaleType = PTScaleType.FIT_CENTER
+    internal var pt_big_img_collapsed_alt_text: String = ""
+
     enum class LogLevel(private val value: Int) {
         OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
 
@@ -419,7 +425,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_bg = darkModeAdaptiveColors[PT_BG]
         pt_big_img = extras.getString(PT_BIG_IMG)
         pt_gif = extras.getString(PT_GIF)
-        pt_gif_frames = Integer.parseInt(extras.getString(PT_GIF_FRAMES, "10"))
+        pt_gif_frames = extras.getString(PT_GIF_FRAMES)?.toIntOrNull() ?: 10
         pt_big_img_alt_text = extras.getString(PT_BIG_IMG_ALT_TEXT, altTextDefault)
         pt_large_icon = extras.getString(PT_NOTIF_ICON)
         pt_small_view = extras.getString(PT_SMALL_VIEW)
@@ -457,6 +463,13 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_collapse_key = extras[PT_COLLAPSE_KEY]
         pt_flip_interval = Utils.getFlipInterval(extras)
         pt_scale_type = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE))
+
+        pt_gif_collapsed = extras.getString(PT_GIF_COLLAPSED, pt_gif)
+        pt_big_img_collapsed = extras.getString(PT_BIG_IMG_COLLAPSED, pt_big_img)
+        pt_gif_frames_collapsed = extras.getString(PT_GIF_FRAMES_COLLAPSED)?.toIntOrNull() ?: pt_gif_frames
+        pt_scale_type_collapsed = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE_COLLAPSED, pt_scale_type.name))
+        pt_big_img_collapsed_alt_text = extras.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, pt_big_img_alt_text)
+
         pID = extras.getString(Constants.WZRK_PUSH_ID)
         pt_manual_carousel_type = extras.getString(PT_MANUAL_CAROUSEL_TYPE)
         if (config != null) {

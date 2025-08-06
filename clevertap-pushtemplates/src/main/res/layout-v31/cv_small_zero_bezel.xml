@@ -6,14 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <!--    todo remove if not needed-->
     <include layout="@layout/image_media_dynamic_relative"
-        android:id="@+id/big_image_configurable"/>
+        android:id="@+id/big_media_configurable"/>
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignBottom="@+id/big_image_configurable"
+        android:layout_alignBottom="@+id/big_media_configurable"
         android:importantForAccessibility="no"
         android:background="@drawable/pt_scrim" />
 

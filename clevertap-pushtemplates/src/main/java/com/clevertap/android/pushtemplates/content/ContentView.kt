@@ -119,25 +119,31 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewMedia(layoutId: Int) {
+    fun setCustomContentViewMedia(
+        layoutId: Int,
+        gifUrl: String? = renderer.pt_gif,
+        bigImageUrl: String? = renderer.pt_big_img,
+        scaleType: PTScaleType = renderer.pt_scale_type,
+        altText: String = renderer.pt_big_img_collapsed_alt_text,
+        gifFrames: Int = renderer.pt_gif_frames
+    ) {
         val gifSuccess = setCustomContentViewGIF(
-            renderer.pt_gif,
-            renderer.pt_big_img_alt_text,
-            renderer.pt_scale_type,
-            renderer.pt_gif_frames,
+            gifUrl,
+            altText,
+            scaleType,
+            gifFrames,
             layoutId
         )
         if (!gifSuccess) {
             PTLog.debug("Couldn't load GIF. Falling back to static image")
             setCustomContentViewBigImage(
-                renderer.pt_big_img,
-                renderer.pt_scale_type,
-                renderer.pt_big_img_alt_text
+                bigImageUrl,
+                scaleType,
+                altText
             )
         }
     }
 
-    // todo - check which templates need gif support
     fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType, altText: String) {
         if (pt_big_img.isNotNullAndEmpty()) {
             val imageViewId = when (scaleType) {
