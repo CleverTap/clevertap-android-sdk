@@ -40,7 +40,15 @@ jobs:
             echo "PR_BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV  # Use actual push branch
             echo "PR_TITLE=Test PR from push trigger - ${{ github.ref_name }}" >> $GITHUB_ENV
             echo "PR_AUTHOR=${{ github.actor }}" >> $GITHUB_ENV
-            echo "COMMENT_ID=${{ github.run_number }}999" >> $GITHUB_ENV  # Use run number for uniqueness
+            # Create a long comment ID for testing (simulating real GitHub comment ID)
+            LONG_COMMENT_ID="${{ github.run_id }}${{ github.run_number }}999"
+            echo "COMMENT_ID=$LONG_COMMENT_ID" >> $GITHUB_ENV
+
+            # Derive QA_VERSION from comment ID using same logic as production
+            QA_VERSION_INT="${LONG_COMMENT_ID: -6}"  # Last 6 digits
+            echo "QA_VERSION=$QA_VERSION_INT" >> $GITHUB_ENV
+
+            echo "🔢 Testing conversion: COMMENT_ID $LONG_COMMENT_ID → QA_VERSION $QA_VERSION_INT"
             echo "COMMENT_AUTHOR=${{ github.actor }}" >> $GITHUB_ENV
             echo "COMMENT_URL=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
             echo "TRIGGERED_AT=${{ github.event.head_commit.timestamp }}" >> $GITHUB_ENV
@@ -50,7 +58,8 @@ jobs:
             echo "  PR Number: 999 (test)"
             echo "  PR Branch: ${{ github.ref_name }}"
             echo "  PR Author: ${{ github.actor }}"
-            echo "  Comment ID: ${{ github.run_number }}999"
+            echo "  Comment ID: $LONG_COMMENT_ID"
+            echo "  QA Version: $QA_VERSION_INT (derived from comment ID)"
             
           else
             echo "🚀 PRODUCTION MODE: PR comment trigger"
@@ -58,14 +67,20 @@ jobs:
             echo "trigger_type=pr_comment" >> $GITHUB_OUTPUT
             
             # Use actual PR comment data - safer approach with printf
-            
+            # Convert long comment ID to 6-digit QA version
+            COMMENT_ID_LONG='${{ github.event.comment.id }}'
+            QA_VERSION_INT="${COMMENT_ID_LONG: -6}"  # Last 6 digits
+          
             # Use printf for safer handling of user input
             printf "COMMENT_BODY=%s\n" '${{ github.event.comment.body }}' >> $GITHUB_ENV
             printf "PR_NUMBER=%s\n" '${{ github.event.issue.number }}' >> $GITHUB_ENV
-            printf "COMMENT_ID=%s\n" '${{ github.event.comment.id }}' >> $GITHUB_ENV
+            printf "COMMENT_ID=%s\n" "$COMMENT_ID_LONG" >> $GITHUB_ENV
+            printf "QA_VERSION=%s\n" "$QA_VERSION_INT" >> $GITHUB_ENV
             printf "COMMENT_AUTHOR=%s\n" '${{ github.event.comment.user.login }}' >> $GITHUB_ENV
             printf "COMMENT_URL=%s\n" '${{ github.event.comment.html_url }}' >> $GITHUB_ENV
             printf "TRIGGERED_AT=%s\n" '${{ github.event.comment.created_at }}' >> $GITHUB_ENV
+            
+            echo "🔢 Converted COMMENT_ID $COMMENT_ID_LONG to QA_VERSION: $QA_VERSION_INT"
           fi
           
           echo "📋 Context: ${{ github.event_name }} trigger"
@@ -193,6 +208,7 @@ jobs:
           echo "📝 Title: $PR_TITLE" 
           echo "👤 Author: $PR_AUTHOR"
           echo "💬 Comment ID: ${{ env.COMMENT_ID }}"
+          echo "🔢 QA Version: ${{ env.QA_VERSION }}"
           
           # Add testing context
           if [ "${{ steps.set_context.outputs.testing_mode }}" == "true" ]; then
@@ -259,7 +275,7 @@ jobs:
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ steps.pr_info.outputs.comment_id }}/reactions" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ env.COMMENT_ID }}/reactions" \
             -d '{"content":"rocket"}'
           
           echo "🚀 Added rocket reaction to comment"
@@ -293,7 +309,7 @@ jobs:
             --arg sdkRepoBranch "$PR_BRANCH" \
             --arg buildOutput "apk" \
             --arg buildType "$BUILD_TYPE" \
-            --argjson qaVersion "${{ env.COMMENT_ID }}" \
+            --argjson qaVersion "${{ env.QA_VERSION }}" \
             --argjson triggerAutomation true \
             --arg testSuite "$TEST_SUITE" \
             --arg sourceRepo "$SOURCE_REPO" \
@@ -370,7 +386,8 @@ jobs:
           echo "| **Comment Author** | ${{ env.COMMENT_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Build Type** | ${{ steps.parse_comment.outputs.build_type }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Test Suite** | ${{ steps.parse_comment.outputs.test_suite }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **QA Version** | ${{ env.COMMENT_ID }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **QA Version** | ${{ env.QA_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Comment ID** | ${{ env.COMMENT_ID }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Build Output** | apk |" >> $GITHUB_STEP_SUMMARY
           echo "| **Trigger Automation** | true |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -382,7 +399,7 @@ jobs:
           if [ "${{ steps.set_context.outputs.testing_mode }}" == "true" ]; then
             echo "**Testing Context:** This was a simulated trigger using test data" >> $GITHUB_STEP_SUMMARY
           else
-            echo "**Original Comment:** ${{ github.event.comment.html_url }}" >> $GITHUB_STEP_SUMMARY
+            echo "**Original Comment:** ${{ env.COMMENT_URL }}" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Comment on PR with trigger confirmation (skip in testing mode)
@@ -400,7 +417,7 @@ jobs:
           - **SDK Branch**: \`$PR_BRANCH\`
           - **Build Type**: \`$BUILD_TYPE\`
           - **Test Suite**: \`$TEST_SUITE\`
-          - **QA Version**: \`${{ env.COMMENT_ID }}\`
+          - **QA Version**: \`${{ env.QA_VERSION }}\`
 
           **Next Steps:**
           1. 🏗️ [Bearded Robot build](https://github.com/CleverTap/CT-Apps/actions) will start with your SDK branch
@@ -490,8 +507,10 @@ jobs:
           echo "|----------------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| **Trigger Type** | ${{ steps.set_context.outputs.trigger_type }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Branch** | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Simulated Comment** | \`${{ env.COMMENT_BODY }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Simulated PR** | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Comment** | \`${{ env.COMMENT_BODY }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **PR Number** | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **QA Version** | ${{ env.QA_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Comment ID** | ${{ env.COMMENT_ID }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next Steps for Production:**" >> $GITHUB_STEP_SUMMARY
