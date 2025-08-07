@@ -6,7 +6,7 @@ import android.text.Html
 import android.text.TextUtils
 import android.view.View
 import android.widget.RemoteViews
-import com.clevertap.android.pushtemplates.GIFProcessor
+import com.clevertap.android.pushtemplates.TemplateMediaManager
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
@@ -162,7 +162,7 @@ internal open class ContentView(
     }
 
     fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int): Boolean {
-        val gifResult = GIFProcessor(TemplateRepository(context, renderer.config)).getGifFrames(gifUrl, numberOfFrames)
+        val gifResult = TemplateMediaManager(TemplateRepository(context, renderer.config)).getGifFrames(gifUrl, numberOfFrames)
         val frames = gifResult.frames
         val duration = gifResult.duration
 

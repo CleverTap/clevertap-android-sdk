@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import pl.droidsonroids.gif.GifDrawable
 import kotlin.math.roundToInt
 
-class GIFProcessor(private val templateRepository: TemplateRepository) {
+class TemplateMediaManager(private val templateRepository: TemplateRepository) {
     companion object {
         private const val INVALID_DURATION = -1
     }
