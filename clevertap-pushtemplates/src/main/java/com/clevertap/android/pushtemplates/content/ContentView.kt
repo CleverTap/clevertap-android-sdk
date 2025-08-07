@@ -3,13 +3,16 @@ package com.clevertap.android.pushtemplates.content
 import android.content.Context
 import android.os.Build
 import android.text.Html
+import android.text.TextUtils
 import android.view.View
 import android.widget.RemoteViews
+import com.clevertap.android.pushtemplates.GIFProcessor
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.TemplateRepository
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
@@ -159,14 +162,41 @@ internal open class ContentView(
     }
 
     fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int): Boolean {
-        if (gifUrl.isNullOrEmpty() || !gifUrl.startsWith("https") || !gifUrl.lowercase().endsWith(".gif")) {
-            PTLog.debug("Invalid GIF $gifUrl")
+        val gifResult = GIFProcessor(TemplateRepository(context, renderer.config)).getGifFrames(gifUrl, numberOfFrames)
+        val frames = gifResult.frames
+        val duration = gifResult.duration
+
+        if (frames.isNullOrEmpty()) {
+            PTLog.debug("No frames extracted from GIF")
             return false
         }
+
+        // Calculate timing for frame flipping
+        val extractedFramesSize = frames.size
+        val flipInterval = duration / extractedFramesSize
+        PTLog.debug("Total duration: " + duration + "ms")
+        PTLog.debug("Flip interval: " + flipInterval + "ms")
+
         val imageViewId = when (scaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
-        return Utils.loadGifIntoRemoteView(remoteView, gifUrl, context, imageViewId, altText, numberOfFrames, layoutId)
+
+        // Add each frame to the ViewFlipper
+        for (frame in frames) {
+            val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
+            frameRemoteViews.setImageViewBitmap(imageViewId, frame)
+            frameRemoteViews.setViewVisibility(imageViewId, View.VISIBLE)
+            remoteView.addView(R.id.view_flipper, frameRemoteViews)
+        }
+
+        if (!TextUtils.isEmpty(altText)) {
+            remoteView.setContentDescription(R.id.view_flipper, altText)
+        }
+
+        remoteView.setInt(R.id.view_flipper, "setFlipInterval", flipInterval)
+        remoteView.setViewVisibility(R.id.view_flipper, View.VISIBLE)
+
+        return true
     }
 }

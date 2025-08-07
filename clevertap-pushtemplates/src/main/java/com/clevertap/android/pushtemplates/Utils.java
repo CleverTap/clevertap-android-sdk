@@ -51,16 +51,11 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
-import pl.droidsonroids.gif.GifDrawable;
-
 
 @SuppressWarnings("WeakerAccess")
 public class Utils {
@@ -105,170 +100,6 @@ public class Utils {
         drawable.draw(canvas);
 
         return bitmap;
-    }
-
-    /**
-     * Downloads GIF data from a URL and returns the raw bytes.
-     *
-     * @param srcUrl The URL to download the GIF from
-     * @param context Android context for the download request (can be null)
-     * @return Raw GIF bytes if successful, null if download fails
-     */
-    private static byte[] getGifFromURL(String srcUrl, @Nullable Context context) {
-        if (TextUtils.isEmpty(srcUrl)) {
-            Logger.v("Cannot download GIF: URL is null or empty");
-            return null;
-        }
-
-        BitmapDownloadRequest request = new BitmapDownloadRequest(
-                srcUrl,
-                false,
-                context,
-                null,
-                5,
-                -1
-        );
-
-        DownloadedBitmap downloadedBitmap = HttpBitmapLoader.getHttpBitmap(
-                HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_BYTES_WITH_TIME_LIMIT,
-                request
-        );
-
-        if (downloadedBitmap.getStatus() == DownloadedBitmap.Status.SUCCESS) {
-            return downloadedBitmap.getBytes();
-        } else {
-            Logger.v("Network call for bitmap download failed with URL: " + srcUrl +
-                    ", HTTP status: " + downloadedBitmap.getStatus());
-            return null;
-        }
-    }
-
-    /**
-     * Loads a GIF from URL into a RemoteViews widget using frame animation.
-     * Downloads the GIF, extracts optimized frames, and sets up a ViewFlipper for animation.
-     *
-     * @param remoteView The RemoteViews to add the GIF animation to
-     * @param gifUrl The URL of the GIF to load
-     * @param context Android context for operations
-     * @param imageViewId Resource ID of the ImageView within the layout
-     * @param altText Accessibility description for the GIF (can be null/empty)
-     * @param numberOfFrames Maximum number of frames to extract from the GIF
-     * @param layoutId Resource ID of the layout containing the ImageView
-     * @return true if GIF was successfully loaded and configured, false otherwise
-     */
-    public static boolean loadGifIntoRemoteView(RemoteViews remoteView, String gifUrl,
-                                                Context context, int imageViewId, String altText,
-                                                int numberOfFrames, int layoutId) {
-        try {
-            // Download GIF data
-            byte[] rawGifBytes = getGifFromURL(gifUrl, context);
-            if (rawGifBytes == null) {
-                PTLog.debug("Failed to download GIF from URL: " + gifUrl);
-                return false;
-            }
-
-            // Create GifDrawable from downloaded bytes
-            GifDrawable gifDrawable = new GifDrawable(rawGifBytes);
-
-            int totalFrames = gifDrawable.getNumberOfFrames();
-            int duration = gifDrawable.getDuration();
-
-
-            List<Bitmap> frames = getOptimizedFrames(gifDrawable, numberOfFrames, totalFrames);
-
-            if (frames.isEmpty()) {
-                PTLog.debug("No frames extracted from GIF");
-                return false;
-            }
-
-            // Calculate timing for frame flipping
-            int extractedFramesSize = frames.size();
-            int flipInterval = duration / extractedFramesSize;
-
-
-            PTLog.debug("Total frames in GIF: " + totalFrames);
-            PTLog.debug("Total duration: " + duration + "ms");
-            PTLog.debug("Flip interval: " + flipInterval + "ms");
-
-            // Add each frame to the ViewFlipper
-            for (Bitmap frame : frames) {
-                RemoteViews frameRemoteViews = new RemoteViews(context.getPackageName(), layoutId);
-                frameRemoteViews.setImageViewBitmap(imageViewId, frame);
-                frameRemoteViews.setViewVisibility(imageViewId, View.VISIBLE);
-                remoteView.addView(R.id.view_flipper, frameRemoteViews);
-            }
-
-            if (!TextUtils.isEmpty(altText)) {
-                remoteView.setContentDescription(R.id.view_flipper, altText);
-            }
-
-            remoteView.setInt(R.id.view_flipper, "setFlipInterval", flipInterval);
-            remoteView.setViewVisibility(R.id.view_flipper, View.VISIBLE);
-
-            return true;
-
-        } catch (Exception e) {
-            PTLog.debug("GIF loading failed for URL: " + gifUrl, e);
-            return false;
-        }
-    }
-
-    /**
-     * Extracts an optimized subset of frames from a GIF to ensure GIF can be rendered in a remote view
-     * while maintaining smooth animation appearance.
-     * Uses evenly distributed sampling to select representative frames across
-     * the entire GIF duration.
-     *
-     * @param gifDrawable The GifDrawable to extract frames from
-     * @param maxFrames Maximum number of frames to extract
-     * @param totalFrames Total number of frames available in the GIF
-     * @return List of extracted Bitmap frames, empty if extraction fails
-     */
-    public static List<Bitmap> getOptimizedFrames(GifDrawable gifDrawable, int maxFrames, int totalFrames) {
-        if (gifDrawable == null) {
-            PTLog.debug("GifDrawable is null");
-            return Collections.emptyList();
-        }
-
-        if (totalFrames <= 0 || maxFrames <= 0) {
-            PTLog.debug("Invalid frame counts - totalFrames: " + totalFrames + ", maxFrames: " + maxFrames);
-            return Collections.emptyList();
-        }
-
-        // Use LinkedHashSet to maintain order and avoid duplicates
-        Set<Integer> selectedIndices = new LinkedHashSet<>();
-
-        if (maxFrames >= totalFrames) {
-            // Extract all frames if we want more frames than available
-            for (int i = 0; i < totalFrames; i++) {
-                selectedIndices.add(i);
-            }
-        } else {
-            // Use evenly distributed sampling
-            double step = (double) (totalFrames - 1) / (maxFrames - 1);
-            for (int i = 0; i < maxFrames; i++) {
-                int frameIndex = (int) Math.round(i * step);
-                selectedIndices.add(frameIndex);
-            }
-        }
-
-        // Extract the selected frames
-        List<Bitmap> frames = new ArrayList<>(selectedIndices.size());
-        for (int index : selectedIndices) {
-            try {
-                Bitmap frame = gifDrawable.seekToFrameAndGet(index);
-                if (frame != null) {
-                    frames.add(frame);
-                } else {
-                    PTLog.debug("Failed to extract frame at index: " + index);
-                }
-            } catch (Exception e) {
-                PTLog.debug("Exception while extracting frame at index: " + index, e);
-                // Continue with other frames rather than failing completely
-            }
-        }
-
-        return frames;
     }
 
     private static Bitmap getBitmapFromURL(String srcUrl, @Nullable Context context) {

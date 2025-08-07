@@ -118,7 +118,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         setUp(context, extras, null)
     }
 
-    private constructor(context: Context, extras: Bundle, config: CleverTapInstanceConfig) {
+    internal constructor(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) {
         setUp(context, extras, config)
     }
 
@@ -328,7 +328,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
                     basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
                     val templateRenderer: INotificationRenderer =
-                        TemplateRenderer(applicationContext, basicTemplateBundle)
+                        TemplateRenderer(applicationContext, basicTemplateBundle, config)
                     val cleverTapAPI = CleverTapAPI
                         .getGlobalInstance(
                             applicationContext,
