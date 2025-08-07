@@ -3,13 +3,16 @@ package com.clevertap.android.pushtemplates.content
 import android.content.Context
 import android.os.Build
 import android.text.Html
+import android.text.TextUtils
 import android.view.View
 import android.widget.RemoteViews
+import com.clevertap.android.pushtemplates.TemplateMediaManager
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.TemplateRepository
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
@@ -119,6 +122,31 @@ internal open class ContentView(
         }
     }
 
+    fun setCustomContentViewMedia(
+        layoutId: Int,
+        gifUrl: String? = renderer.pt_gif,
+        bigImageUrl: String? = renderer.pt_big_img,
+        scaleType: PTScaleType = renderer.pt_scale_type,
+        altText: String = renderer.pt_big_img_collapsed_alt_text,
+        gifFrames: Int = renderer.pt_gif_frames
+    ) {
+        val gifSuccess = setCustomContentViewGIF(
+            gifUrl,
+            altText,
+            scaleType,
+            gifFrames,
+            layoutId
+        )
+        if (!gifSuccess) {
+            PTLog.debug("Couldn't load GIF. Falling back to static image")
+            setCustomContentViewBigImage(
+                bigImageUrl,
+                scaleType,
+                altText
+            )
+        }
+    }
+
     fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType, altText: String) {
         if (pt_big_img.isNotNullAndEmpty()) {
             val imageViewId = when (scaleType) {
@@ -128,7 +156,47 @@ internal open class ContentView(
             Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context, altText)
             if (!Utils.getFallback()) {
                 remoteView.setViewVisibility(imageViewId, View.VISIBLE)
+                remoteView.setViewVisibility(R.id.big_image_configurable, View.VISIBLE)
             }
         }
+    }
+
+    fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int): Boolean {
+        val gifResult = TemplateMediaManager(TemplateRepository(context, renderer.config)).getGifFrames(gifUrl, numberOfFrames)
+        val frames = gifResult.frames
+        val duration = gifResult.duration
+
+        if (frames.isNullOrEmpty()) {
+            PTLog.debug("No frames extracted from GIF")
+            return false
+        }
+
+        // Calculate timing for frame flipping
+        val extractedFramesSize = frames.size
+        val flipInterval = duration / extractedFramesSize
+        PTLog.debug("Total duration: " + duration + "ms")
+        PTLog.debug("Flip interval: " + flipInterval + "ms")
+
+        val imageViewId = when (scaleType) {
+            PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+            PTScaleType.CENTER_CROP -> R.id.big_image
+        }
+
+        // Add each frame to the ViewFlipper
+        for (frame in frames) {
+            val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
+            frameRemoteViews.setImageViewBitmap(imageViewId, frame)
+            frameRemoteViews.setViewVisibility(imageViewId, View.VISIBLE)
+            remoteView.addView(R.id.view_flipper, frameRemoteViews)
+        }
+
+        if (!TextUtils.isEmpty(altText)) {
+            remoteView.setContentDescription(R.id.view_flipper, altText)
+        }
+
+        remoteView.setInt(R.id.view_flipper, "setFlipInterval", flipInterval)
+        remoteView.setViewVisibility(R.id.view_flipper, View.VISIBLE)
+
+        return true
     }
 }

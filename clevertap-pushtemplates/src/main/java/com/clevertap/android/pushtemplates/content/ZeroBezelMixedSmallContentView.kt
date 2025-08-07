@@ -9,6 +9,13 @@ internal class ZeroBezelMixedSmallContentView(context: Context, renderer: Templa
 
     init {
         setCustomContentViewMessage(renderer.pt_msg)
-        setCustomContentViewBigImage(renderer.pt_big_img, renderer.pt_scale_type, renderer.pt_big_img_alt_text)
+        setCustomContentViewMedia(
+            R.layout.image_view_dynamic_relative,
+            renderer.pt_gif_collapsed,
+            renderer.pt_big_img_collapsed,
+            renderer.pt_scale_type_collapsed,
+            renderer.pt_big_img_collapsed_alt_text,
+            renderer.pt_gif_frames_collapsed
+        )
     }
 }

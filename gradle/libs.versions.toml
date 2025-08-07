@@ -25,6 +25,7 @@ work_runtime = "2.10.2"
 
 #UI
 material = "1.12.0"
+android_gif_drawable = "1.2.29"
 
 #Test
 espresso_core = "3.6.1"
@@ -79,6 +80,7 @@ push = "6.11.0.300"
 
 [libraries]
 # Project
+android-gif-drawable = { module = "pl.droidsonroids.gif:android-gif-drawable", version.ref = "android_gif_drawable" }
 android_gradle_plugin = { module = "com.android.tools.build:gradle", version.ref = "android_gradle_plugin" }
 kotlin_gradle_plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin_plugin" }
 detekt_gradle_plugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin" , version.ref= "detekt_gradle_plugin"}

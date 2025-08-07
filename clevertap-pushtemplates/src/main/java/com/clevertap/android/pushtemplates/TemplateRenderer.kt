@@ -49,6 +49,8 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     internal var pt_msg: String? = null
     internal var pt_msg_summary: String? = null
     internal var pt_large_icon: String? = null
+    internal var pt_gif: String? = null
+    internal var pt_gif_frames: Int = 10
     internal var pt_big_img: String? = null
     internal var pt_big_img_alt_text: String = ""
     internal var pt_title_clr: String? = null
@@ -76,6 +78,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     private var pt_title_alt: String? = null
     private var pt_msg_alt: String? = null
     private var pt_msg_summary_alt: String? = null
+    private var pt_gif_alt: String? = null
     private var pt_big_img_alt: String? = null
     private var pt_big_img_alt_alt_text: String? = null
     internal var pt_product_display_linear: String? = null
@@ -97,6 +100,12 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     internal var config: CleverTapInstanceConfig? = null
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
+    internal var pt_gif_collapsed: String? = null
+    internal var pt_big_img_collapsed: String? = null
+    internal var pt_gif_frames_collapsed: Int = 10
+    internal var pt_scale_type_collapsed: PTScaleType = PTScaleType.FIT_CENTER
+    internal var pt_big_img_collapsed_alt_text: String = ""
+
     enum class LogLevel(private val value: Int) {
         OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
 
@@ -109,7 +118,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         setUp(context, extras, null)
     }
 
-    private constructor(context: Context, extras: Bundle, config: CleverTapInstanceConfig) {
+    internal constructor(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) {
         setUp(context, extras, config)
     }
 
@@ -303,6 +312,10 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                         )
                     }
 
+                    ptJsonObj?.put(PT_GIF, pt_gif_alt) ?: basicTemplateBundle.putString(
+                        PT_GIF,
+                        pt_gif_alt
+                    )
 
                     if (ptJsonObj != null) {
                         basicTemplateBundle.putString(
@@ -315,7 +328,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                     basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
                     basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
                     val templateRenderer: INotificationRenderer =
-                        TemplateRenderer(applicationContext, basicTemplateBundle)
+                        TemplateRenderer(applicationContext, basicTemplateBundle, config)
                     val cleverTapAPI = CleverTapAPI
                         .getGlobalInstance(
                             applicationContext,
@@ -411,6 +424,8 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_meta_clr = darkModeAdaptiveColors[PT_META_CLR]
         pt_bg = darkModeAdaptiveColors[PT_BG]
         pt_big_img = extras.getString(PT_BIG_IMG)
+        pt_gif = extras.getString(PT_GIF)
+        pt_gif_frames = extras.getString(PT_GIF_FRAMES)?.toIntOrNull() ?: 10
         pt_big_img_alt_text = extras.getString(PT_BIG_IMG_ALT_TEXT, altTextDefault)
         pt_large_icon = extras.getString(PT_NOTIF_ICON)
         pt_small_view = extras.getString(PT_SMALL_VIEW)
@@ -436,6 +451,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_big_img_alt_alt_text = extras.getString(PT_BIG_IMG_ALT_ALT_TEXT, altTextDefault)
         pt_msg_alt = extras.getString(PT_MSG_ALT)
         pt_msg_summary_alt = extras.getString(PT_MSG_SUMMARY_ALT)
+        pt_gif_alt = extras.getString(PT_GIF_ALT)
         pt_title_alt = extras.getString(PT_TITLE_ALT)
         pt_product_display_linear = extras.getString(PT_PRODUCT_DISPLAY_LINEAR)
         pt_product_display_action_text_clr = darkModeAdaptiveColors[PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR]
@@ -447,6 +463,13 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         pt_collapse_key = extras[PT_COLLAPSE_KEY]
         pt_flip_interval = Utils.getFlipInterval(extras)
         pt_scale_type = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE))
+
+        pt_gif_collapsed = extras.getString(PT_GIF_COLLAPSED, pt_gif)
+        pt_big_img_collapsed = extras.getString(PT_BIG_IMG_COLLAPSED, pt_big_img)
+        pt_gif_frames_collapsed = extras.getString(PT_GIF_FRAMES_COLLAPSED)?.toIntOrNull() ?: pt_gif_frames
+        pt_scale_type_collapsed = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE_COLLAPSED, pt_scale_type.name))
+        pt_big_img_collapsed_alt_text = extras.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, pt_big_img_alt_text)
+
         pID = extras.getString(Constants.WZRK_PUSH_ID)
         pt_manual_carousel_type = extras.getString(PT_MANUAL_CAROUSEL_TYPE)
         if (config != null) {

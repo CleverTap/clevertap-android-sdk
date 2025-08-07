@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 

@@ -111,7 +111,7 @@ internal open class ProductDisplayLinearBigContentView(
                 smallImageLayoutIds[imageCounter], imageUrl, remoteView, context, altText
             )
 
-            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_flipper_dynamic)
+            val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_dynamic_relative)
             Utils.loadImageURLIntoRemoteView(imageViewId, imageUrl, tempRemoteView, context, altText)
 
             if (!Utils.getFallback()) {
