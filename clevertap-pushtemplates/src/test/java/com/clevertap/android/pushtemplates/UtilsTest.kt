@@ -1598,6 +1598,394 @@ class UtilsTest {
 
     // Tests for raiseCleverTapEvent method
 
+    // Tests for raiseCleverTapEvent(Context, CleverTapInstanceConfig, Bundle) method
+    @Test
+    fun `raiseCleverTapEvent with Bundle with null instance`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val eventName = "test_event"
+
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with Bundle should use instanceWithConfig when config is provided`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "value1")
+
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with Bundle should use getDefaultInstance when config is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "value1")
+
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, null, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.getDefaultInstance(mockContext) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with Bundle should not push event when eventName is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+
+        every { mockBundle.keySet() } returns setOf("pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with Bundle should not push event when eventName is empty`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns ""
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+        }
+    }
+
+// Tests for raiseCleverTapEvent(Context, CleverTapInstanceConfig, Bundle, String) method
+    @Test
+    fun `raiseCleverTapEvent with key when instance is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "test_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "test_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+            verify { mockBundle.getString(key) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should use instanceWithConfig when config is provided`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "test_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "test_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+            verify { mockBundle.getString(key) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should use getDefaultInstance when config is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "test_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "test_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, null, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.getDefaultInstance(mockContext) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+            verify { mockBundle.getString(key) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should not push event when eventName is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should not push event when eventName is empty`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns ""
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should handle null value from bundle`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "original_value")
+
+        every { mockBundle.getString(key) } returns null
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "original_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify { mockBundle.getString(key) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should replace matching property value when pkey matches`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "replacement_value"
+        val eventName = "test_event"
+        val expectedProps = hashMapOf<String, Any>("prop1" to "replacement_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "replacement_value" // Case insensitive match
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, expectedProps) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should use original value when no pkey match found`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "no_match_value"
+        val eventName = "test_event"
+        val expectedProps = hashMapOf<String, Any>("prop1" to "original_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "original_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, expectedProps) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should handle multiple event properties correctly`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "replacement_value"
+        val eventName = "test_event"
+        val expectedProps = hashMapOf<String, Any>(
+            "user_id" to "replacement_value",
+            "session_id" to "session_123"
+        )
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf(
+            "pt_event_name",
+            "pt_event_property_user_id",
+            "pt_event_property_session_id"
+        )
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_user_id") } returns "replacement_value"
+        every { mockBundle.getString("pt_event_property_session_id") } returns "session_123"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, null, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.getDefaultInstance(mockContext) }
+            verify { mockInstance.pushEvent(eventName, expectedProps) }
+        }
+    }
+
     @Test
     fun `raiseCleverTapEvent should use instanceWithConfig when config is provided`() {
         // Given
