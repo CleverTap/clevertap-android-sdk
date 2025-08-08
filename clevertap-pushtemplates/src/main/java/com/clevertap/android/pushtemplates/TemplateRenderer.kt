@@ -17,6 +17,8 @@ import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
+import com.clevertap.android.pushtemplates.media.TemplateMediaManager
+import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.pushtemplates.styles.*
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI

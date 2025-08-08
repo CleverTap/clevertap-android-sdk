@@ -55,7 +55,7 @@ import java.util.concurrent.Callable;
 public class Utils {
 
 
-    static Bitmap getAppIcon(final Context context) throws NullPointerException {
+    public static Bitmap getAppIcon(final Context context) throws NullPointerException {
         // Try to get the app logo first
         try {
             Drawable logo =

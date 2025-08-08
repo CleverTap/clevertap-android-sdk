@@ -1,13 +1,16 @@
-package com.clevertap.android.pushtemplates
+package com.clevertap.android.pushtemplates.media
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import kotlin.system.measureTimeMillis
 
 internal class TemplateMediaManager(
     private val templateRepository: TemplateRepository,
-    private val gifDecoder: GifDecoderImpl = GifDecoderImpl())
+    private val gifDecoder: GifDecoderImpl = GifDecoderImpl()
+)
 {
     fun getGifFrames(gifUrl: String?, maxFrames: Int): GifResult {
         if (gifUrl.isNullOrBlank() || !gifUrl.startsWith("https") || !gifUrl.lowercase().endsWith(".gif")) {

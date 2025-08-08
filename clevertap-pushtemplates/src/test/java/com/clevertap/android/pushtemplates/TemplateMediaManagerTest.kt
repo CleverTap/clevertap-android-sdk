@@ -2,6 +2,10 @@ package com.clevertap.android.pushtemplates
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.clevertap.android.pushtemplates.media.GifDecoderImpl
+import com.clevertap.android.pushtemplates.media.GifResult
+import com.clevertap.android.pushtemplates.media.TemplateMediaManager
+import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import io.mockk.*
 import org.junit.After

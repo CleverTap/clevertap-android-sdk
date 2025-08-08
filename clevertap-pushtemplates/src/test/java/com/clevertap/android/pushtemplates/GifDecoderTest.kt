@@ -1,6 +1,9 @@
 package com.clevertap.android.pushtemplates
 
 import android.graphics.Bitmap
+import com.clevertap.android.pushtemplates.media.GifDecoderImpl
+import com.clevertap.android.pushtemplates.media.GifDrawableAdapter
+import com.clevertap.android.pushtemplates.media.GifResult
 import io.mockk.*
 import org.junit.After
 import org.junit.Assert.*

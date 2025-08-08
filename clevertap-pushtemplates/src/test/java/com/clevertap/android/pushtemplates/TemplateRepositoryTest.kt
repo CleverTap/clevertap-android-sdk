@@ -1,6 +1,7 @@
 package com.clevertap.android.pushtemplates
 
 import android.content.Context
+import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
 import com.clevertap.android.sdk.network.DownloadedBitmap

@@ -1,4 +1,4 @@
-package com.clevertap.android.pushtemplates
+package com.clevertap.android.pushtemplates.media
 
 import android.graphics.Bitmap
 
