@@ -11,7 +11,6 @@ import androidx.core.app.RemoteInput
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_REPLY_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
@@ -94,7 +93,7 @@ internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(ren
         var bigPictureStyle: NotificationCompat.Style
         if (pt_big_img != null && pt_big_img.startsWith("http")) {
             try {
-                val bpMap = Utils.getNotificationBitmap(pt_big_img, false, context)
+                val bpMap = renderer.templateMediaManager.getNotificationBitmap(pt_big_img, false, context)
                     ?: throw Exception("Failed to fetch big picture!")
 
                 val summaryText = renderer.pt_msg_summary ?: renderer.pt_msg
