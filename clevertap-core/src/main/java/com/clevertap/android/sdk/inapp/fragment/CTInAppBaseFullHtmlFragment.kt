@@ -10,14 +10,11 @@ import android.view.ViewGroup
 import android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN
 import android.webkit.WebViewClient
 import android.widget.RelativeLayout
-import com.clevertap.android.sdk.CTWebInterface
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.inapp.CTInAppWebView
-import com.clevertap.android.sdk.inapp.InAppWebViewClient
 
 internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() {
 
@@ -78,17 +75,15 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
                 inAppNotification.width,
                 inAppNotification.height,
                 inAppNotification.widthPercentage,
-                inAppNotification.heightPercentage
+                inAppNotification.heightPercentage,
+                inAppHost
             )
             webView.isFullscreen = isFullscreen
             this.webView = webView
-            val webViewClient = InAppWebViewClient(this)
-            webView.setWebViewClient(webViewClient)
 
             if (inAppNotification.isJsEnabled) {
                 val instance = CleverTapAPI.instanceWithConfig(activity, config)
-                val ctWebInterface = CTWebInterface(instance, this)
-                webView.setJavaScriptInterface(ctWebInterface)
+                webView.enableCTJavaScriptInterface(instance)
             }
 
             if (isDarkenEnabled()) {
@@ -142,22 +137,8 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
 
         val customUrl = inAppNotification.customInAppUrl
         if (customUrl.isNullOrEmpty()) {
-            var mHeight = webView.dim.y
-            var mWidth = webView.dim.x
-
-            val d = resources.displayMetrics.density
-            mHeight = (mHeight / d).toInt()
-            mWidth = (mWidth / d).toInt()
-
-            var html = inAppNotification.html ?: return
-
-            val style =
-                "<style>body{width: ${mWidth}px; height: ${mHeight}px; margin: 0; padding:0;}</style>"
-            html = html.replaceFirst("<head>".toRegex(), "<head>$style")
-            Logger.v("Density appears to be $d")
-
-            webView.setInitialScale((d * 100).toInt())
-            webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null)
+            val html = inAppNotification.html ?: return
+            webView.loadInAppHtml(html)
         } else {
             webView.setWebViewClient(WebViewClient())
             webView.loadUrl(customUrl)
