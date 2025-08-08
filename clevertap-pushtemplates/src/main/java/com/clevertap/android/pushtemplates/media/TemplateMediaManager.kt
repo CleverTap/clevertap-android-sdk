@@ -10,10 +10,11 @@ import kotlin.system.measureTimeMillis
 internal class TemplateMediaManager(
     private val templateRepository: TemplateRepository,
     private val gifDecoder: GifDecoderImpl = GifDecoderImpl()
-)
-{
+) {
     fun getGifFrames(gifUrl: String?, maxFrames: Int): GifResult {
-        if (gifUrl.isNullOrBlank() || !gifUrl.startsWith("https") || !gifUrl.lowercase().endsWith(".gif")) {
+        if (gifUrl.isNullOrBlank() || !gifUrl.startsWith("https") || !gifUrl.lowercase()
+                .endsWith(".gif")
+        ) {
             PTLog.verbose("Invalid GIF URL: $gifUrl")
             return GifResult.failure()
         }
