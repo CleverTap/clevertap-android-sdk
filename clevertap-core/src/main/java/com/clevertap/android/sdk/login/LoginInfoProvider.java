@@ -115,7 +115,7 @@ public class LoginInfoProvider {
      * @return - All pairs of cached <Identity_Value, Guid> for this account in String format.
      */
     private String getCachedGUIDStringFromPrefs() {
-        String json = StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null);
+        String json = StorageHelper.getStringFromPrefs(context, config.getAccountId(), Constants.CACHED_GUIDS_KEY, null);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "getCachedGUIDs:[" + json + "]");
         return json;
@@ -148,20 +148,19 @@ public class LoginInfoProvider {
             removeCachedGuidFromSharedPrefs();
             return;
         }
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_KEY),
-                cachedGUIDs);
+        StorageHelper.putString(context, config.getAccountId(), Constants.CACHED_GUIDS_KEY, cachedGUIDs);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "setCachedGUIDs:[" + cachedGUIDs + "]");
     }
 
     private void storeCachedGuidsLength(int length) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY), length);
+        StorageHelper.putInt(context, config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY, length);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "Storing size of cachedGUIDs: " + length);
     }
 
     private int getCachedGuidsLength() {
-        int cgkLength = StorageHelper.getInt(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY), 0);
+        int cgkLength = StorageHelper.getIntFromPrefs(context, config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY, 0);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "Retrieved size of cachedGUIDs: " + cgkLength);
         return cgkLength;
@@ -169,9 +168,8 @@ public class LoginInfoProvider {
 
     public void removeCachedGuidFromSharedPrefs() {
         try {
-            StorageHelper.remove(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), Constants.CACHED_GUIDS_KEY));
-            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                "removeCachedGUIDs:[]");
+            StorageHelper.remove(context, config.getAccountId(), Constants.CACHED_GUIDS_KEY);
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "removeCachedGUIDs:[]");
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error removing guid cache: " + t);
         }
@@ -181,7 +179,7 @@ public class LoginInfoProvider {
      * @return - Cached Identity Keys for the account
      */
     public String getCachedIdentityKeysForAccount() {
-        String cachedKeys = StorageHelper.getStringFromPrefs(context, config, Constants.SP_KEY_PROFILE_IDENTITIES, "");
+        String cachedKeys = StorageHelper.getStringFromPrefs(context, config.getAccountId(), Constants.SP_KEY_PROFILE_IDENTITIES, "");
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "getCachedIdentityKeysForAccount:" + cachedKeys);
         return cachedKeys;
     }
@@ -236,7 +234,7 @@ public class LoginInfoProvider {
      * @param valueCommaSeparated - identity keys in comma separated format e.g. (Email,Phone)
      */
     public void saveIdentityKeysForAccount(final String valueCommaSeparated) {
-        StorageHelper.putString(context, config, Constants.SP_KEY_PROFILE_IDENTITIES,
+        StorageHelper.putString(context, config.getAccountId(), Constants.SP_KEY_PROFILE_IDENTITIES,
                 valueCommaSeparated);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "saveIdentityKeysForAccount:" + valueCommaSeparated);
     }

@@ -99,8 +99,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
         val fallbackKey = Constants.FALLBACK_ID_TAG + ":" + accountId
 
         return StorageHelper.getString(context, baseKey, null)
-            ?: if (config.isDefaultInstance) StorageHelper.getString(context, baseKey, null) else null
-                ?: StorageHelper.getString(context, fallbackKey, "")
+            ?: StorageHelper.getString(context, fallbackKey, "") ?: ""
     }
 
     /**
