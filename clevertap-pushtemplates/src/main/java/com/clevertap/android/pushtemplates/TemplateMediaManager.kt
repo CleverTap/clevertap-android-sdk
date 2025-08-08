@@ -1,80 +1,71 @@
 package com.clevertap.android.pushtemplates
 
+import android.content.Context
 import android.graphics.Bitmap
-import pl.droidsonroids.gif.GifDrawable
-import kotlin.math.roundToInt
+import com.clevertap.android.sdk.network.DownloadedBitmap
+import kotlin.system.measureTimeMillis
 
-class TemplateMediaManager(private val templateRepository: TemplateRepository) {
-    companion object {
-        private const val INVALID_DURATION = -1
-    }
-
-    data class GifResult(
-        val frames: List<Bitmap>?,
-        val duration: Int
-    ) {
-        companion object {
-            fun failure(): GifResult {
-                return GifResult(null, INVALID_DURATION)
-            }
-        }
-    }
-
-
+internal class TemplateMediaManager(
+    private val templateRepository: TemplateRepository,
+    private val gifDecoder: GifDecoderImpl = GifDecoderImpl())
+{
     fun getGifFrames(gifUrl: String?, maxFrames: Int): GifResult {
         if (gifUrl.isNullOrBlank() || !gifUrl.startsWith("https") || !gifUrl.lowercase().endsWith(".gif")) {
-            PTLog.debug("Invalid GIF URL: $gifUrl")
+            PTLog.verbose("Invalid GIF URL: $gifUrl")
             return GifResult.failure()
         }
+        val downloadedBitmap = templateRepository.getBytes(gifUrl)
 
-        val rawBytes = templateRepository.getGifBytes(gifUrl)
-        if (rawBytes == null) {
-            PTLog.debug("Failed to download GIF from URL: $gifUrl")
-            return GifResult.failure()
+        val rawBytes = if (downloadedBitmap.status == DownloadedBitmap.Status.SUCCESS) {
+            downloadedBitmap.bytes
+        } else {
+            PTLog.verbose("Network call for GIF failed with URL: $gifUrl, HTTP status: ${downloadedBitmap.status}")
+            null
         }
 
-        return runCatching {
-            val gifDrawable = GifDrawable(rawBytes)
-            val totalFrames = gifDrawable.numberOfFrames
-            val frames = getOptimizedFrames(gifDrawable, maxFrames, totalFrames)
-            GifResult(frames, gifDrawable.duration)
-        }.getOrElse { e ->
-            PTLog.debug("GIF decoding failed for URL: $gifUrl", e)
+        return if (rawBytes != null) {
+            gifDecoder.decode(rawBytes, maxFrames)
+        } else {
             GifResult.failure()
         }
     }
 
 
-    private fun getOptimizedFrames(
-        gifDrawable: GifDrawable?,
-        maxFrames: Int,
-        totalFrames: Int
-    ): List<Bitmap>? {
-        if (gifDrawable == null) {
-            PTLog.debug("GifDrawable is null")
+    @Throws(NullPointerException::class)
+    fun getNotificationBitmap(
+        icoPath: String?, fallbackToAppIcon: Boolean,
+        context: Context?
+    ): Bitmap? {
+        if (icoPath.isNullOrEmpty())
+            return if (fallbackToAppIcon)
+                Utils.getAppIcon(context)
+            else null
+
+        return getImageBitmap(icoPath)
+            ?: if (fallbackToAppIcon)
+                Utils.getAppIcon(context)
+            else null
+    }
+
+    fun getImageBitmap(imageUrl: String?): Bitmap? {
+        if (imageUrl.isNullOrBlank() || !imageUrl.startsWith("https")) {
+            PTLog.debug("Invalid IMAGE URL: $imageUrl")
             return null
         }
 
-        if (totalFrames <= 0 || maxFrames <= 0) {
-            PTLog.debug("Invalid frame counts - totalFrames: $totalFrames, maxFrames: $maxFrames")
-            return null
+        var downloadedBitmap: DownloadedBitmap
+        val downloadTime = measureTimeMillis {
+            downloadedBitmap = templateRepository.getBitmap(imageUrl)
         }
 
-        val selectedIndices = if (maxFrames >= totalFrames) {
-            (0 until totalFrames).toList()
-        } else {
-            val step = (totalFrames - 1).toDouble() / (maxFrames - 1)
-            (0 until maxFrames).map { (it * step).roundToInt() }.distinct()
-        }
+        PTLog.verbose("Fetched IMAGE $imageUrl in $downloadTime ms")
 
-        val frames = selectedIndices.mapNotNull { index ->
-            runCatching { gifDrawable.seekToFrameAndGet(index) }
-                .getOrElse {
-                    PTLog.debug("Exception while extracting frame at index: $index", it)
-                    null
-                }
+        return when (downloadedBitmap.status) {
+            DownloadedBitmap.Status.SUCCESS -> downloadedBitmap.bitmap
+            else -> {
+                PTLog.verbose("Bitmap download failed. URL: $imageUrl, Status: ${downloadedBitmap.status}")
+                null
+            }
         }
-
-        return frames
     }
 }

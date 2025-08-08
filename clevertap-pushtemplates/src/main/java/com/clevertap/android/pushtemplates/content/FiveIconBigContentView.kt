@@ -33,15 +33,14 @@ internal class FiveIconBigContentView constructor(
             val viewId = ctaIds[index]
             remoteView.setViewVisibility(viewId, View.VISIBLE)
 
-            Utils.loadImageURLIntoRemoteView(
+            val fallback = loadImageURLIntoRemoteView(
                 viewId,
                 imageUrl,
                 remoteView,
-                context,
                 altText
             )
 
-            if (Utils.getFallback()) {
+            if (!fallback) {
                 remoteView.setViewVisibility(viewId, View.GONE)
                 imageCounter++
             }

@@ -28,8 +28,6 @@ import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.view.View;
-import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -39,10 +37,6 @@ import androidx.core.content.ContextCompat;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest;
-import com.clevertap.android.sdk.bitmap.HttpBitmapLoader;
-import com.clevertap.android.sdk.network.DownloadedBitmap;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 
@@ -60,20 +54,8 @@ import java.util.concurrent.Callable;
 @SuppressWarnings("WeakerAccess")
 public class Utils {
 
-    @SuppressWarnings("unused")
-    public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon,
-            final Context context)
-            throws NullPointerException {
-        // If the icon path is not specified
-        if (icoPath == null || icoPath.equals("")) {
-            return fallbackToAppIcon ? getAppIcon(context) : null;
-        }
 
-        Bitmap ic = getBitmapFromURL(icoPath,context);
-        return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
-    }
-
-    private static Bitmap getAppIcon(final Context context) throws NullPointerException {
+    static Bitmap getAppIcon(final Context context) throws NullPointerException {
         // Try to get the app logo first
         try {
             Drawable logo =
@@ -100,29 +82,6 @@ public class Utils {
         drawable.draw(canvas);
 
         return bitmap;
-    }
-
-    private static Bitmap getBitmapFromURL(String srcUrl, @Nullable Context context) {
-
-        BitmapDownloadRequest request = new BitmapDownloadRequest(srcUrl,
-                false,
-                context,
-                null,
-                -1,
-                -1
-        );
-
-        DownloadedBitmap db = HttpBitmapLoader.getHttpBitmap(
-                HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
-                request
-        );
-
-        if (db.getStatus() == DownloadedBitmap.Status.SUCCESS) {
-            return db.getBitmap();
-        } else {
-            Logger.v("network call for bitmap download failed with url : " + srcUrl + " http status: " + db.getStatus());
-            return null;
-        }
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -239,43 +198,6 @@ public class Utils {
         } else {
             return color;
         }
-    }
-
-
-
-    public static void loadImageBitmapIntoRemoteView(int imageViewID, Bitmap image,
-            RemoteViews remoteViews) {
-        remoteViews.setImageViewBitmap(imageViewID, image);
-    }
-
-    public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
-                                                  RemoteViews remoteViews, Context context) {
-        loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, context, null);
-    }
-    public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
-                                                  RemoteViews remoteViews, Context context, String altText) {
-
-        long bmpDownloadStartTimeInMillis = System.currentTimeMillis();
-        Bitmap image = getBitmapFromURL(imageUrl, context);
-        setFallback(false);
-
-        if (image != null) {
-            remoteViews.setImageViewBitmap(imageViewID, image);
-            if (!TextUtils.isEmpty(altText)) {
-                remoteViews.setContentDescription(imageViewID, altText);
-            }
-            long bmpDownloadEndTimeInMillis = System.currentTimeMillis();
-            long pift = bmpDownloadEndTimeInMillis - bmpDownloadStartTimeInMillis;
-            PTLog.verbose("Fetched IMAGE " + imageUrl + " in " + pift + " millis");
-        } else {
-            PTLog.debug("Image was not perfect. URL:" + imageUrl + " hiding image view");
-            setFallback(true);
-        }
-    }
-
-    public static void loadImageRidIntoRemoteView(int imageViewID, int resourceID,
-            RemoteViews remoteViews) {
-        remoteViews.setImageViewResource(imageViewID, resourceID);
     }
 
     public static String getTimeStamp(Context context, long timeMillis) {
@@ -687,14 +609,6 @@ public class Utils {
             PTLog.debug("Can not parse colour value: " + clr);
             return null;
         }
-    }
-
-    static void setFallback(Boolean val) {
-        PTConstants.PT_FALLBACK = val;
-    }
-
-    public static boolean getFallback() {
-        return PTConstants.PT_FALLBACK;
     }
 
     public static int getFlipInterval(Bundle extras) {

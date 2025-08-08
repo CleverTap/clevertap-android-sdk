@@ -12,7 +12,6 @@ import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.R.id
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory.getPendingIntent
 import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
@@ -40,14 +39,13 @@ internal class ManualCarouselContentView(context: Context, renderer: TemplateRen
             val altText = imageData.altText
             val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_dynamic_relative)
 
-            Utils.loadImageURLIntoRemoteView(
+            val fallback = loadImageURLIntoRemoteView(
                 imageViewId,
                 imageUrl,
-                tempRemoteView,
-                context,
-                ""
+                tempRemoteView
             )
-            if (!Utils.getFallback()) {
+
+            if (!fallback) {
                 if (!isFirstImageOk) {
                     currentPosition = index
                     isFirstImageOk = true

@@ -96,7 +96,7 @@ class TemplateRendererTest {
         mockNotificationManager = mockk(relaxed = true)
 
         // Create TemplateRenderer instance with the mock context
-        templateRenderer = TemplateRenderer(context, testBundle)
+        templateRenderer = TemplateRenderer(context, testBundle, mockConfig)
     }
 
     @After
@@ -159,7 +159,7 @@ class TemplateRendererTest {
         val basicBundle = Bundle(testBundle)
         basicBundle.putString(PTConstants.PT_ID, "pt_basic")
 
-        val templateRendererLocal = TemplateRenderer(context, basicBundle)
+        val templateRendererLocal = TemplateRenderer(context, basicBundle, mockConfig)
 
         // Arrange
         every {
@@ -231,7 +231,7 @@ class TemplateRendererTest {
         val carouselBundle = Bundle(testBundle)
         carouselBundle.putString(PTConstants.PT_ID, "pt_carousel")
 
-        val templateRendererLocal = TemplateRenderer(context, testBundle)
+        val templateRendererLocal = TemplateRenderer(context, testBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -278,7 +278,7 @@ class TemplateRendererTest {
         val ratingBundle = Bundle(testBundle)
         ratingBundle.putString(PTConstants.PT_ID, "pt_rating")
 
-        val templateRendererLocal = TemplateRenderer(context, ratingBundle)
+        val templateRendererLocal = TemplateRenderer(context, ratingBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -326,7 +326,7 @@ class TemplateRendererTest {
         val carouselBundle = Bundle(testBundle)
         carouselBundle.putString(PTConstants.PT_ID, "pt_manual_carousel")
 
-        val templateRendererLocal = TemplateRenderer(context, carouselBundle)
+        val templateRendererLocal = TemplateRenderer(context, carouselBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -374,7 +374,7 @@ class TemplateRendererTest {
         val fiveIconsBundle = Bundle(testBundle)
         fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
 
-        val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle)
+        val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -428,7 +428,7 @@ class TemplateRendererTest {
         val fiveIconsBundle = Bundle(testBundle)
         fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
 
-        val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle)
+        val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -482,7 +482,7 @@ class TemplateRendererTest {
         val productBundle = Bundle(testBundle)
         productBundle.putString(PTConstants.PT_ID, "pt_product_display")
 
-        val templateRendererLocal = TemplateRenderer(context, productBundle)
+        val templateRendererLocal = TemplateRenderer(context, productBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -529,7 +529,7 @@ class TemplateRendererTest {
         val zeroBezelBundle = Bundle(testBundle)
         zeroBezelBundle.putString(PTConstants.PT_ID, "pt_zero_bezel")
 
-        val templateRendererLocal = TemplateRenderer(context, zeroBezelBundle)
+        val templateRendererLocal = TemplateRenderer(context, zeroBezelBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -580,7 +580,7 @@ class TemplateRendererTest {
 
         every { Utils.getTimerEnd(timerBundle, any()) } returns 10
 
-        val templateRendererLocal = TemplateRenderer(context, timerBundle)
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -631,7 +631,7 @@ class TemplateRendererTest {
         val timerBundle = Bundle(testBundle)
         timerBundle.putString(PTConstants.PT_ID, "pt_timer")
 
-        val templateRendererLocal = TemplateRenderer(context, timerBundle)
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -684,7 +684,7 @@ class TemplateRendererTest {
         val inputBoxBundle = Bundle(testBundle)
         inputBoxBundle.putString(PTConstants.PT_ID, "pt_input")
 
-        val templateRendererLocal = TemplateRenderer(context, inputBoxBundle)
+        val templateRendererLocal = TemplateRenderer(context, inputBoxBundle, mockConfig)
 
         every {
             ValidatorFactory.getValidator(
@@ -732,7 +732,7 @@ class TemplateRendererTest {
         val unknownBundle = Bundle(testBundle)
         unknownBundle.putString(PTConstants.PT_ID, "pt_unknown")
 
-        val templateRendererLocal = TemplateRenderer(context, unknownBundle)
+        val templateRendererLocal = TemplateRenderer(context, unknownBundle, mockConfig)
 
         // Act
         val result = templateRendererLocal.renderNotification(

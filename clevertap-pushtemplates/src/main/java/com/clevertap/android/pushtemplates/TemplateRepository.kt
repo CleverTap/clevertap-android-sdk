@@ -4,18 +4,22 @@ import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest
+import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
+import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.getHttpBitmap
 import com.clevertap.android.sdk.network.DownloadedBitmap
+import com.clevertap.android.sdk.network.DownloadedBitmap.Status
+import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 
-class TemplateRepository(val context: Context, val config: CleverTapInstanceConfig?) {
+internal class TemplateRepository(val context: Context, val config: CleverTapInstanceConfig?) {
 
     companion object {
-        private const val GIF_DOWNLOAD_TIMEOUT_MS = 5000L
+        private const val BYTES_DOWNLOAD_TIMEOUT_MS = 5000L
     }
 
-    fun getGifBytes(url: String): ByteArray? {
+    internal fun getBytes(url: String): DownloadedBitmap {
         if (url.isBlank()) {
-            Logger.v("Cannot download GIF: URL is null or empty")
-            return null
+            Logger.v("Cannot download GIF: URL is empty")
+            return DownloadedBitmapFactory.nullBitmapWithStatus(Status.NO_IMAGE)
         }
 
         val request = BitmapDownloadRequest(
@@ -23,19 +27,31 @@ class TemplateRepository(val context: Context, val config: CleverTapInstanceConf
             false,
             context,
             config,
-            GIF_DOWNLOAD_TIMEOUT_MS
+            BYTES_DOWNLOAD_TIMEOUT_MS
         )
 
-        val downloadedBitmap = PTHttpBitmapLoader.getHttpBitmap(
+        return PTHttpBitmapLoader.getHttpBitmap(
             PTHttpBitmapLoader.PTHttpBitmapOperation.DOWNLOAD_GIF_BYTES_WITH_TIME_LIMIT,
             request
         )
+    }
 
-        return if (downloadedBitmap.status == DownloadedBitmap.Status.SUCCESS) {
-            downloadedBitmap.bytes
-        } else {
-            Logger.v("Network call for bitmap download failed with URL: $url, HTTP status: ${downloadedBitmap.status}")
-            null
+    internal fun getBitmap(url: String): DownloadedBitmap {
+        if (url.isBlank()) {
+            Logger.v("Cannot download Bitmap: URL is empty")
+            return DownloadedBitmapFactory.nullBitmapWithStatus(Status.NO_IMAGE)
         }
+
+        val request = BitmapDownloadRequest(
+            url,
+            false,
+            context,
+            null,
+        )
+
+        return getHttpBitmap(
+            HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
+            request
+        )
     }
 }

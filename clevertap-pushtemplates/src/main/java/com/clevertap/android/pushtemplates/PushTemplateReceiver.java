@@ -737,7 +737,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                                               NotificationCompat.Builder notificationBuilder, String altText) {
         if (imgUrl != null && imgUrl.startsWith("http")) {
             try {
-                Bitmap bpMap = Utils.getNotificationBitmap(imgUrl, false, context);
+                TemplateMediaManager templateMediaManager = new TemplateMediaManager(new TemplateRepository(context, config), new GifDecoderImpl());
+                Bitmap bpMap = templateMediaManager.getNotificationBitmap(imgUrl, false, context);
 
                 if (bpMap == null) {
                     throw new Exception("Failed to fetch big picture!");
