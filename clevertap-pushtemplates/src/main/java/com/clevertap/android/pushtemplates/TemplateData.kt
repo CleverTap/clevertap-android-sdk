@@ -15,7 +15,7 @@ data class GifData(
     val numberOfFrames: Int = 10,
 )
 
-data class ActionButtonData(
+data class ActionButton(
     val id: String,
     val label: String,
     val icon: Int
@@ -47,16 +47,16 @@ data class BaseColorData(
     val smallIconColor: String? = null,
 )
 
-data class ActionButtonDataData(
+data class ActionButtonData(
     val actions: JSONArray? = null,
-    val actionButtons: List<ActionButtonData> = emptyList<ActionButtonData>(),
+    val actionButtons: List<ActionButton> = emptyList<ActionButton>(),
     val actionButtonPendingIntents: MutableMap<String, PendingIntent> = mutableMapOf<String, PendingIntent>()
 )
 
 data class CarouselData(
     val textData: BaseTextData,
     val colorData: BaseColorData,
-    val actions: ActionButtonDataData,
+    val actions: ActionButtonData,
     val mediaList: ArrayList<ImageData>? = null,
     val largeIcon: String? = null,
     val deepLinkList: ArrayList<String>? = null,
@@ -72,7 +72,7 @@ data class ProductTextData(
 data class BasicTemplateData(
     val textData: BaseTextData,
     val colorData: BaseColorData,
-    val actions: ActionButtonDataData,
+    val actions: ActionButtonData,
     val mediaData: MediaData? = null,
     val iconData: IconData? = null,
     val deepLinkList: ArrayList<String>? = null,
@@ -110,7 +110,7 @@ data class TimerTemplateData(
     val colorData: BaseColorData,
     val iconData: IconData? = null,
     val mediaData: MediaData? = null,
-    val actions: ActionButtonDataData,
+    val actions: ActionButtonData,
     val deepLinkList: ArrayList<String>? = null,
     val terminalTextData : BaseTextData,
     val terminalMediaData: MediaData? = null,
@@ -123,7 +123,7 @@ data class TimerTemplateData(
 data class ZeroBezelTemplateData(
     val textData: BaseTextData,
     val colorData: BaseColorData,
-    val actions: ActionButtonDataData,
+    val actions: ActionButtonData,
     val iconData: IconData? = null,
     val mediaData: MediaData? = null,
     val deepLinkList: ArrayList<String>? = null,
@@ -134,7 +134,7 @@ data class ZeroBezelTemplateData(
 data class ProductTemplateData(
     val textData: BaseTextData,
     val colorData: BaseColorData,
-    val actions: ActionButtonDataData,
+    val actions: ActionButtonData,
     val mediaData: MediaData? = null,
     val iconData: IconData? = null,
     val deepLinkList: ArrayList<String>? = null,
@@ -147,7 +147,7 @@ data class ProductTemplateData(
 
 data class InputBoxTemplateData(
     val textData: BaseTextData,
-    val actions: ActionButtonDataData,
+    val actions: ActionButtonData,
     val iconData: IconData? = null,
     val imageData: ImageData? = null,
     val inputLabel: String? = null,
