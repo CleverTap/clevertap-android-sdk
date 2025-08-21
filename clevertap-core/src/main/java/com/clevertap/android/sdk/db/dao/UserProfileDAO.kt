@@ -12,7 +12,4 @@ interface UserProfileDAO {
     
     @WorkerThread
     fun fetchUserProfile(accountId: String, deviceId: String): JSONObject?
-    
-    @WorkerThread
-    fun removeUserProfiles(accountId: String)
 }

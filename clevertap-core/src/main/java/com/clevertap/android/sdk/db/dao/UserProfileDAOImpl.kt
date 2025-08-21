@@ -113,15 +113,4 @@ internal class UserProfileDAOImpl(
             }
         }
     }
-
-    @WorkerThread
-    override fun removeUserProfiles(accountId: String) {
-        val tableName = USER_PROFILES.tableName
-        try {
-            dbHelper.writableDatabase.delete(tableName, "${Column.ID} = ?", arrayOf(accountId))
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing user profile from $tableName. Recreating DB", e)
-            dbHelper.deleteDatabase()
-        }
-    }
 }

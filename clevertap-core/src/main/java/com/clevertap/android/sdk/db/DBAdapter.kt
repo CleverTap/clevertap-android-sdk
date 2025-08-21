@@ -147,13 +147,6 @@ internal class DBAdapter(
             userProfileDAO.fetchUserProfile(accountId, deviceId)
         } else null
     }
-    
-    @Synchronized
-    fun removeUserProfilesForAccountId(id: String?) {
-        if (id != null) {
-            userProfileDAO.removeUserProfiles(id)
-        }
-    }
 
     // =====================================================
     // PUSH NOTIFICATION OPERATIONS
