@@ -13,15 +13,12 @@ import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.clevertap.android.sdk.AnalyticsManagerBundler.notificationViewedJson
-import com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.work.CTFlushPushImpressionsWork
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.*
-import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
 
@@ -110,6 +107,6 @@ class PIFlushWorkInstrumentationTest{
         val workInfo = workManager.getWorkInfoById(request.id).get()
         println("workInfo = $workInfo")
         // Assert
-        assertThat(workInfo.state, `is`(WorkInfo.State.SUCCEEDED))
+        assertThat(workInfo!!.state, `is`(WorkInfo.State.SUCCEEDED))
     }
 }

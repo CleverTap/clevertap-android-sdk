@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.MockCoreStateKotlin
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.TestLogger
+import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
@@ -570,7 +571,13 @@ class NetworkManagerTest : BaseTestCase() {
         val coreState = MockCoreStateKotlin(cleverTapInstanceConfig)
         val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         val lockManager = CTLockManager()
-        val dbManager = DBManager(cleverTapInstanceConfig, lockManager, IJRepo(cleverTapInstanceConfig))
+        val dbManager = DBManager(
+            accountId = cleverTapInstanceConfig.accountId,
+            logger = cleverTapInstanceConfig.logger,
+            databaseName = DBAdapter.getDatabaseName(cleverTapInstanceConfig),
+            ctLockManager = lockManager,
+            ijRepo = IJRepo(cleverTapInstanceConfig),
+        )
         val controllerManager =
             ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
         val queueHeaderBuilder = mockk<QueueHeaderBuilder>()
