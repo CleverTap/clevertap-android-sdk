@@ -59,6 +59,25 @@ internal class NetworkManager constructor(
     private val logger: ILogger = config.logger
 ) {
 
+    companion object {
+
+        private const val BATCH_SIZE = 50
+
+        @JvmStatic
+        fun isNetworkOnline(context: Context): Boolean {
+            try {
+                val cm =
+                    context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                        ?: return true // lets be optimistic, if we are truly offline we handle the exception
+                @SuppressLint("MissingPermission") val netInfo = cm.activeNetworkInfo
+                return netInfo != null && netInfo.isConnected
+            } catch (ignore: Exception) {
+                // lets be optimistic, if we are truly offline we handle the exception
+                return true
+            }
+        }
+    }
+
     private var responseFailureCount = 0
 
     private var networkRetryCount = 0
@@ -83,61 +102,106 @@ internal class NetworkManager constructor(
      * @param caller     The optional caller identifier.
      * @param isUserSwitchFlush     True when user is switching.
      */
-    fun flushDBQueue(context: Context, eventGroup: EventGroup, caller: String?, isUserSwitchFlush: Boolean) {
-        config.logger
-            .verbose(
-                config.accountId,
-                "Somebody has invoked me to send the queue to CleverTap servers"
+    fun flushDBQueue(
+        context: Context,
+        eventGroup: EventGroup,
+        caller: String?,
+        isUserSwitchFlush: Boolean
+    ) {
+        config.logger.verbose(
+            config.accountId,
+            "Starting queue flush to CleverTap servers"
+        )
+
+        var continueProcessing = true
+        var totalEventsSent = 0
+
+        while (continueProcessing) {
+            // Retrieve combined batch of events (events + profile events)
+            val queueData: QueueData = databaseManager.getQueuedEvents(
+                context,
+                BATCH_SIZE,
+                eventGroup
             )
 
-        var previousCursor: QueueData? = null
-        var loadMore = true
+            if (queueData.isEmpty) {
+                config.logger.verbose(config.accountId, "No more events in queue")
 
-        while (loadMore) {
-            // Retrieve queued events from the local database in batch size of 50
-
-            val cursor: QueueData = databaseManager.getQueuedEvents(context, 50, previousCursor, eventGroup)
-
-            if (cursor.isEmpty) {
-                // No events in the queue, log and break
-                config.logger.verbose(config.accountId, "No events in the queue, failing")
-
-                if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-                    // Notify listener for push impression sent to the server
-                    if (previousCursor?.data != null) {
-                        try {
-                            notifyListenersForPushImpressionSentToServer(previousCursor.data!!)
-                        } catch (e: Exception) {
-                            config.logger.verbose(
-                                config.accountId,
-                                "met with exception while notifying listeners for PushImpressionSentToServer event"
-                            )
-                        }
+                // Special handling for push notification viewed events
+                if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED && totalEventsSent > 0) {
+                    try {
+                        // Notify listeners if needed
+                        notifyListenersForPushImpressionSentToServer(queueData.data ?: JSONArray())
+                    } catch (e: Exception) {
+                        config.logger.verbose(
+                            config.accountId,
+                            "Error notifying push impression listeners",
+                            e
+                        )
                     }
                 }
                 break
             }
 
-            previousCursor = cursor
-            val queue = cursor.data
-
+            val queue = queueData.data
             if (queue == null || queue.length() <= 0) {
-                // No events in the queue, log and break
-                config.logger.verbose(config.accountId, "No events in the queue, failing")
+                config.logger.verbose(config.accountId, "Empty queue data received")
                 break
             }
 
-            // Send the events queue to CleverTap servers
-            loadMore = sendQueue(context, eventGroup, queue, caller, isUserSwitchFlush)
-            if (!loadMore) {
-                // network error
+            val batchSize = queue.length()
+            config.logger.verbose(
+                config.accountId,
+                "Processing batch of $batchSize events (${queueData.eventIds.size} from events, ${queueData.profileEventIds.size} from profile)"
+            )
+
+            // Send the combined batch to CleverTap servers
+            val sendSuccess = sendQueue(context, eventGroup, queue, caller, isUserSwitchFlush)
+
+            if (sendSuccess) {
+
+                // Successfully sent - cleanup the events from database
+                val successCleanup = when (eventGroup) {
+                    EventGroup.PUSH_NOTIFICATION_VIEWED -> {
+                        // we know queueData does not contain profile ids in this case.
+                        databaseManager.cleanupPushNotificationEvents(context, queueData.eventIds)
+                    }
+                    else -> {
+                        databaseManager.cleanupSentEvents(
+                            context,
+                            queueData.eventIds,
+                            queueData.profileEventIds
+                        )
+                    }
+                }
+
+                // Notify success listeners
+                controllerManager.invokeBatchListener(queue, true)
+                totalEventsSent += batchSize
+
+                // Continue if we got a full batch (might be more events)
+                // Stop if we got less than full batch (no more events)
+                continueProcessing = (batchSize == BATCH_SIZE)
+
+            } else {
+                // Network error - don't cleanup, events will be retried
+                config.logger.verbose(
+                    config.accountId,
+                    "Failed to send batch - will retry later"
+                )
+
                 controllerManager.invokeCallbacksForNetworkError()
                 controllerManager.invokeBatchListener(queue, false)
-            } else {
-                // response was successfully received
-                controllerManager.invokeBatchListener(queue, true)
+
+                // Stop processing on network error
+                continueProcessing = false
             }
         }
+
+        config.logger.verbose(
+            config.accountId,
+            "Queue flush completed. Total events sent: $totalEventsSent"
+        )
     }
 
     fun getDelayFrequency(): Int {
@@ -710,22 +774,6 @@ internal class NetworkManager constructor(
             }
         } else {
             networkRepo.setMuted(false)
-        }
-    }
-
-    companion object {
-        @JvmStatic
-        fun isNetworkOnline(context: Context): Boolean {
-            try {
-                val cm =
-                    context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-                        ?: return true // lets be optimistic, if we are truly offline we handle the exception
-                @SuppressLint("MissingPermission") val netInfo = cm.activeNetworkInfo
-                return netInfo != null && netInfo.isConnected
-            } catch (ignore: Exception) {
-                // lets be optimistic, if we are truly offline we handle the exception
-                return true
-            }
         }
     }
 }

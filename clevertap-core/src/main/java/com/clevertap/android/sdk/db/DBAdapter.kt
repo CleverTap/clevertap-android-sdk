@@ -517,39 +517,205 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
      * @return JSONObject containing the max row ID and a JSONArray of the JSONObject events or null
      */
     @Synchronized
-    fun fetchEvents(table: Table, limit: Int): JSONObject? {
-        val tName = table.tableName
-        var lastId: String? = null
+    fun fetchEvents(table: Table, limit: Int): QueueData {
+        val queueData = QueueData()
         val events = JSONArray()
+        val eventIds = mutableListOf<String>()
+
+        val tName = table.tableName
         try {
             dbHelper.readableDatabase.query(
-                tName, null, null, null, null, null, "${Column.CREATED_AT} ASC", limit.toString()
+                tName,
+                arrayOf(Column.ID, Column.DATA, Column.CREATED_AT),
+                null, null, null, null,
+                "${Column.CREATED_AT} ASC",
+                limit.toString()
             )?.use { cursor ->
                 while (cursor.moveToNext()) {
-                    if (cursor.isLast) {
-                        lastId = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
-                    }
+                    val id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
+                    val eventData = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
+
                     try {
-                        val j = JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)))
-                        events.put(j)
+                        val jsonEvent = JSONObject(eventData)
+                        events.put(jsonEvent)
+                        eventIds.add(id)
                     } catch (e: JSONException) {
-                        // Ignore
+                        logger.verbose("Error parsing event data for id: $id from table: $tName", e)
                     }
                 }
             }
-        } catch (e: Exception) { // SQLiteException | IllegalArgumentException
-            logger.verbose("Could not fetch records out of database $tName.", e)
-            lastId = null
+        } catch (e: Exception) {
+            logger.verbose("Could not fetch records from table $tName", e)
         }
 
-        return lastId?.let {
-            try {
-                val ret = JSONObject()
-                ret.put(it, events)
-                ret
-            } catch (e: JSONException) {
-                null
+        // Set the data and IDs in QueueData
+        queueData.data = if (events.length() > 0) events else null
+
+        // Determine which ID list to populate based on table type
+        when (table) {
+            Table.EVENTS -> {
+                queueData.eventIds = eventIds
+                queueData.profileEventIds = emptyList()
             }
+            Table.PROFILE_EVENTS -> {
+                queueData.eventIds = emptyList()
+                queueData.profileEventIds = eventIds
+            }
+            Table.PUSH_NOTIFICATION_VIEWED -> {
+                // For push notifications, we store IDs in eventIds for consistency
+                queueData.eventIds = eventIds
+                queueData.profileEventIds = emptyList()
+            }
+            else -> {
+                // For any other table, default to eventIds
+                queueData.eventIds = eventIds
+                queueData.profileEventIds = emptyList()
+            }
+        }
+
+        logger.verbose("Fetched ${eventIds.size} events from $tName")
+        return queueData
+    }
+
+    /**
+     * Fetches a combined batch of events from both events and profileEvents tables
+     * Prioritizes events table first, then fills remaining slots from profileEvents
+     *
+     * @param batchSize The maximum number of events to fetch (typically 50)
+     * @return QueueData containing the events and their IDs for cleanup
+     */
+    @Synchronized
+    fun fetchCombinedEvents(batchSize: Int): QueueData {
+        val combinedQueueData = QueueData()
+        val allEvents = JSONArray()
+        val eventIds = mutableListOf<String>()
+        val profileEventIds = mutableListOf<String>()
+
+        // First priority: Fetch from events table using the base fetchEvents method
+        val eventsData = fetchEvents(Table.EVENTS, batchSize)
+
+        // Add events to combined data
+        if (!eventsData.isEmpty && eventsData.data != null) {
+            for (i in 0 until eventsData.data!!.length()) {
+                allEvents.put(eventsData.data!!.getJSONObject(i))
+            }
+            eventIds.addAll(eventsData.eventIds)
+        }
+
+        // Calculate remaining slots for profile events
+        val profileEventsNeeded = batchSize - eventIds.size
+
+        // Second priority: Fill remaining slots from profileEvents table
+        if (profileEventsNeeded > 0) {
+            val profileData = fetchEvents(Table.PROFILE_EVENTS, profileEventsNeeded)
+
+            // Add profile events to combined data
+            if (!profileData.isEmpty && profileData.data != null) {
+                for (i in 0 until profileData.data!!.length()) {
+                    allEvents.put(profileData.data!!.getJSONObject(i))
+                }
+                // Profile events IDs are in eventIds from fetchEvents, move them to profileEventIds
+                profileEventIds.addAll(profileData.profileEventIds)
+            }
+        }
+
+        // Set combined data
+        combinedQueueData.data = if (allEvents.length() > 0) allEvents else null
+        combinedQueueData.eventIds = eventIds
+        combinedQueueData.profileEventIds = profileEventIds
+
+        logger.verbose("Fetched combined batch: ${eventIds.size} events, ${profileEventIds.size} profile events")
+
+        return combinedQueueData
+    }
+
+    /**
+     * Cleans up events from the events table by their IDs
+     *
+     * @param eventIds List of event IDs to delete
+     */
+    @WorkerThread
+    @Synchronized
+    fun cleanupEventsByIds(eventIds: List<String>) {
+        if (eventIds.isEmpty()) return
+
+        val tName = Table.EVENTS.tableName
+
+        try {
+            // Process in chunks if the list is too large (SQLite has a limit on query parameters)
+            val chunkSize = 100
+            eventIds.chunked(chunkSize).forEach { chunk ->
+                val placeholders = chunk.joinToString(",") { "?" }
+                val deletedCount = dbHelper.writableDatabase.delete(
+                    tName,
+                    "${Column.ID} IN ($placeholders)",
+                    chunk.toTypedArray()
+                )
+                logger.verbose("Deleted $deletedCount events from $tName")
+            }
+        } catch (e: SQLiteException) {
+            logger.verbose("Error removing events from $tName", e)
+            deleteDB()
+        }
+    }
+
+    /**
+     * Cleans up events from the profileEvents table by their IDs
+     *
+     * @param profileEventIds List of profile event IDs to delete
+     */
+    @WorkerThread
+    @Synchronized
+    fun cleanupProfileEventsByIds(profileEventIds: List<String>) {
+        if (profileEventIds.isEmpty()) return
+
+        val tName = Table.PROFILE_EVENTS.tableName
+
+        try {
+            // Process in chunks if the list is too large
+            val chunkSize = 100
+            profileEventIds.chunked(chunkSize).forEach { chunk ->
+                val placeholders = chunk.joinToString(",") { "?" }
+                val deletedCount = dbHelper.writableDatabase.delete(
+                    tName,
+                    "${Column.ID} IN ($placeholders)",
+                    chunk.toTypedArray()
+                )
+                logger.verbose("Deleted $deletedCount profile events from $tName")
+            }
+        } catch (e: SQLiteException) {
+            logger.verbose("Error removing profile events from $tName", e)
+            deleteDB()
+        }
+    }
+
+    /**
+     * Cleans up events from the events table by their IDs
+     *
+     * @param eventIds List of event IDs to delete
+     */
+    @WorkerThread
+    @Synchronized
+    fun cleanupPushNotificationEventsByIds(eventIds: List<String>) {
+        if (eventIds.isEmpty()) return
+
+        val tName = Table.PUSH_NOTIFICATION_VIEWED.tableName
+
+        try {
+            // Process in chunks if the list is too large (SQLite has a limit on query parameters)
+            val chunkSize = 100
+            eventIds.chunked(chunkSize).forEach { chunk ->
+                val placeholders = chunk.joinToString(",") { "?" }
+                val deletedCount = dbHelper.writableDatabase.delete(
+                    tName,
+                    "${Column.ID} IN ($placeholders)",
+                    chunk.toTypedArray()
+                )
+                logger.verbose("Deleted $deletedCount events from $tName")
+            }
+        } catch (e: SQLiteException) {
+            logger.verbose("Error removing events from $tName", e)
+            deleteDB()
         }
     }
 
