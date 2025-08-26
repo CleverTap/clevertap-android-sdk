@@ -5,22 +5,23 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import com.clevertap.android.pushtemplates.BasicTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.BASIC_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.BigImageContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.SmallContentView
 
-internal class BasicStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+internal class BasicStyle(private val data: BasicTemplateData, private var renderer: TemplateRenderer) : Style(renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        return SmallContentView(context, renderer).remoteView
+        return SmallContentView(context, renderer, data.baseContent).remoteView
     }
 
     override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        return BigImageContentView(context, renderer).remoteView
+        return BigImageContentView(context, renderer, data).remoteView
     }
 
     override fun makePendingIntent(context: Context, extras: Bundle, notificationId: Int): PendingIntent? {

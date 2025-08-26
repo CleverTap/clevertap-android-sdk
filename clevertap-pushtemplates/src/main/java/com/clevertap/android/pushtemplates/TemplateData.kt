@@ -5,41 +5,46 @@ import android.graphics.Bitmap
 import org.json.JSONArray
 import java.util.ArrayList
 
-data class ImageData(
-    val url: String,
+// Base sealed class for all template data types
+internal sealed class TemplateData {
+    abstract val templateType: TemplateType
+}
+
+internal data class ImageData(
+    val url: String? = null,
     val altText: String
 )
 
-data class GifData(
-    val gif: String? = null,
+internal data class GifData(
+    val url: String? = null,
     val numberOfFrames: Int = 10,
 )
 
-data class ActionButton(
+internal data class ActionButton(
     val id: String,
     val label: String,
     val icon: Int
 )
 
-data class BaseTextData(
+internal data class BaseTextData(
     val title: String? = null,
     val message: String? = null,
     val messageSummary: String? = null,
     val subtitle: String? = null,
 )
 
-data class MediaData(
-    val bigImage: ImageData? = null,
-    val gif: GifData? = null,
-    val scaleType: PTScaleType? = PTScaleType.CENTER_CROP,
+internal data class MediaData(
+    val bigImage: ImageData,
+    val gif: GifData,
+    val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
 )
 
-data class IconData(
+internal data class IconData(
     val largeIcon: String? = null,
-    val smallIcon: Bitmap? = null,
+    val smallIconBitmap: Bitmap? = null
 )
 
-data class BaseColorData(
+internal data class BaseColorData(
     val titleColor: String? = null,
     val messageColor: String? = null,
     val backgroundColor: String? = null,
@@ -47,116 +52,112 @@ data class BaseColorData(
     val smallIconColor: String? = null,
 )
 
-data class ActionButtonData(
+internal data class ActionButtonData(
     val actions: JSONArray? = null,
     val actionButtons: List<ActionButton> = emptyList<ActionButton>(),
     val actionButtonPendingIntents: MutableMap<String, PendingIntent> = mutableMapOf<String, PendingIntent>()
 )
 
-data class CarouselData(
+internal data class BaseContent(
     val textData: BaseTextData,
     val colorData: BaseColorData,
+    val iconData: IconData,
+    val deepLinkList: ArrayList<String>,
+)
+
+internal data class CarouselData(
+    val baseContent: BaseContent,
     val actions: ActionButtonData,
-    val mediaList: ArrayList<ImageData>? = null,
-    val largeIcon: String? = null,
-    val deepLinkList: ArrayList<String>? = null,
-    val scaleType: PTScaleType? = PTScaleType.CENTER_CROP,
+    val imageList: ArrayList<ImageData>,
+    val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
 )
 
-data class ProductTextData(
-    val bigTextList: ArrayList<String>? = null,
-    val smallTextList: ArrayList<String>? = null,
-    val priceList: ArrayList<String>? = null,
-)
-
-data class BasicTemplateData(
-    val textData: BaseTextData,
-    val colorData: BaseColorData,
+internal data class BasicTemplateData(
+    override val templateType: TemplateType = TemplateType.BASIC,
+    val baseContent: BaseContent,
+    val mediaData: MediaData,
     val actions: ActionButtonData,
-    val mediaData: MediaData? = null,
-    val iconData: IconData? = null,
-    val deepLinkList: ArrayList<String>? = null,
-)
+) : TemplateData()
 
-data class FiveIconsTemplateData(
-    val imageList: ArrayList<ImageData>? = null,
-    val deepLinkList: ArrayList<String>? = null,
+internal data class FiveIconsTemplateData(
+    override val templateType: TemplateType = TemplateType.FIVE_ICONS,
+    val imageList: ArrayList<ImageData>,
+    val deepLinkList: ArrayList<String>,
     val backgroundColor: String? = null,
     val smallIconColor: String? = null,
     val title: String? = null,
-)
+) : TemplateData()
 
-data class ManualCarouselTemplateData(
+internal data class ManualCarouselTemplateData(
+    override val templateType: TemplateType = TemplateType.MANUAL_CAROUSEL,
     val carouselData: CarouselData,
     val carouselType: String? = null,
-)
+) : TemplateData()
 
-data class AutoCarouselTemplateData(
+internal data class AutoCarouselTemplateData(
+    override val templateType: TemplateType = TemplateType.AUTO_CAROUSEL,
     val carouselData: CarouselData,
     val flipInterval: Int = 0,
-)
+) : TemplateData()
 
-data class RatingTemplateData(
-    val textData: BaseTextData,
-    val colorData: BaseColorData,
-    val iconData: IconData? = null,
-    val mediaData: MediaData? = null,
-    val deepLinkList: ArrayList<String>? = null,
-    val defaultDeepLink : String? = null,
-)
+internal data class RatingTemplateData(
+    override val templateType: TemplateType = TemplateType.RATING,
+    val baseContent: BaseContent,
+    val mediaData: MediaData,
+    val defaultDeepLink: String? = null,
+) : TemplateData()
 
-data class TimerTemplateData(
-    val textData: BaseTextData,
-    val colorData: BaseColorData,
-    val iconData: IconData? = null,
-    val mediaData: MediaData? = null,
+internal data class TimerTemplateData(
+    override val templateType: TemplateType = TemplateType.TIMER,
+    val baseContent: BaseContent,
+    val mediaData: MediaData,
     val actions: ActionButtonData,
-    val deepLinkList: ArrayList<String>? = null,
-    val terminalTextData : BaseTextData,
-    val terminalMediaData: MediaData? = null,
+    val terminalTextData: BaseTextData,
+    val terminalMediaData: MediaData,
     val chronometerTitleColor: String? = null,
     val timerEnd: Int = 0,
     val timerThreshold: Int = 0,
     val renderTerminal: Boolean = true,
-)
+) : TemplateData()
 
-data class ZeroBezelTemplateData(
-    val textData: BaseTextData,
-    val colorData: BaseColorData,
+internal data class ZeroBezelTemplateData(
+    override val templateType: TemplateType = TemplateType.ZERO_BEZEL,
+    val baseContent: BaseContent,
     val actions: ActionButtonData,
-    val iconData: IconData? = null,
-    val mediaData: MediaData? = null,
-    val deepLinkList: ArrayList<String>? = null,
-    val smallView : String? = null,
-    val collapsedMediaData: MediaData? = null,
-)
+    val mediaData: MediaData,
+    val smallView: String? = null,
+    val collapsedMediaData: MediaData
+) : TemplateData()
 
-data class ProductTemplateData(
-    val textData: BaseTextData,
-    val colorData: BaseColorData,
+internal data class ProductTemplateData(
+    override val templateType: TemplateType = TemplateType.PRODUCT_DISPLAY,
+    val baseContent: BaseContent,
     val actions: ActionButtonData,
-    val mediaData: MediaData? = null,
-    val iconData: IconData? = null,
-    val deepLinkList: ArrayList<String>? = null,
-    val productTextData: ProductTextData,
+    val imageList: ArrayList<ImageData>,
+    val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
+    val bigTextList: ArrayList<String>,
+    val smallTextList: ArrayList<String>,
+    val priceList: ArrayList<String>,
     val displayActionText: String? = null,
     val displayActionColor: String? = null,
     val displayActionTextColor: String? = null,
     val isLinear: Boolean = false,
-)
+) : TemplateData()
 
-data class InputBoxTemplateData(
+internal data class InputBoxTemplateData(
+    override val templateType: TemplateType = TemplateType.INPUT_BOX,
     val textData: BaseTextData,
     val actions: ActionButtonData,
-    val iconData: IconData? = null,
-    val imageData: ImageData? = null,
+    val iconData: IconData,
+    val imageData: ImageData,
     val inputLabel: String? = null,
     val inputFeedback: String? = null,
     val inputAutoOpen: String? = null,
-    val dismissOnClick : String? = null,
-)
+    val dismissOnClick: String? = null,
+) : TemplateData()
 
-data class CancelTemplateData(
+internal data class CancelTemplateData(
+    override val templateType: TemplateType = TemplateType.CANCEL,
     val cancelNotificationId: String? = null,
-    val cancelNotificationIds: ArrayList<Int>? = null,
-)
+    val cancelNotificationIds: ArrayList<Int>
+) : TemplateData()

@@ -1,21 +1,31 @@
 package com.clevertap.android.pushtemplates.content
+
 import android.app.PendingIntent
 import android.content.Context
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.view.View
 import com.clevertap.android.pushtemplates.ActionButton
+import com.clevertap.android.pushtemplates.ActionButtonData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Logger
 
-internal open class ActionButtonsContentView(context: Context, layoutId: Int, renderer: TemplateRenderer) :
-    ContentView(context, layoutId, renderer) {
+internal open class ActionButtonsContentView(
+    context: Context,
+    renderer: TemplateRenderer,
+    data: ActionButtonData,
+    layoutId: Int,
+) :
+    ContentView(context, layoutId, renderer.templateMediaManager) {
     init {
-        setActionButtons(renderer.actionButtons, renderer.actionButtonPendingIntents)
+        setActionButtons(data.actionButtons, data.actionButtonPendingIntents)
     }
 
-    private fun setActionButtons(actionButtons: List<ActionButton>, pendingIntentsMap: Map<String, PendingIntent>) {
+    private fun setActionButtons(
+        actionButtons: List<ActionButton>,
+        pendingIntentsMap: Map<String, PendingIntent>
+    ) {
         if (VERSION.SDK_INT >= VERSION_CODES.S) {
             // Action Buttons for API 31 and above are set using the OS API and not remote views
             return

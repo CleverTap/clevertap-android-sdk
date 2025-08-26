@@ -7,13 +7,14 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.ZeroBezelTemplateData
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.ZERO_BEZEL_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.ZeroBezelBigContentView
 import com.clevertap.android.pushtemplates.content.ZeroBezelMixedSmallContentView
 import com.clevertap.android.pushtemplates.content.ZeroBezelTextOnlySmallContentView
 
-internal class ZeroBezelStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+internal class ZeroBezelStyle(private val data: ZeroBezelTemplateData, private var renderer: TemplateRenderer) : Style(renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
@@ -21,12 +22,12 @@ internal class ZeroBezelStyle(private var renderer: TemplateRenderer) : Style(re
         context: Context,
         renderer: TemplateRenderer
     ): RemoteViews {
-        val textOnlySmallView = renderer.pt_small_view != null &&
-                renderer.pt_small_view == PTConstants.TEXT_ONLY
+        val textOnlySmallView = data.smallView != null &&
+                data.smallView == PTConstants.TEXT_ONLY
         return if (textOnlySmallView) {
-            ZeroBezelTextOnlySmallContentView(context, renderer).remoteView
+            ZeroBezelTextOnlySmallContentView(context, renderer, data).remoteView
         } else {
-            ZeroBezelMixedSmallContentView(context, renderer).remoteView
+            ZeroBezelMixedSmallContentView(context, renderer, data).remoteView
         }
     }
 
@@ -34,7 +35,7 @@ internal class ZeroBezelStyle(private var renderer: TemplateRenderer) : Style(re
         context: Context,
         renderer: TemplateRenderer
     ): RemoteViews {
-        return ZeroBezelBigContentView(context, renderer).remoteView
+        return ZeroBezelBigContentView(context, renderer, data).remoteView
     }
 
     override fun makePendingIntent(

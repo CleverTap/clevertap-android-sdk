@@ -1,39 +1,35 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
-import android.os.Build.VERSION
-import android.os.Build.VERSION_CODES
-import android.text.Html
+import com.clevertap.android.pushtemplates.BasicTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
 internal open class BigImageContentView(
-    context: Context, renderer: TemplateRenderer, layoutId: Int = R.layout.image_only_big
-) : ActionButtonsContentView(context, layoutId, renderer) {
+    context: Context, renderer: TemplateRenderer, data: BasicTemplateData,
+    layoutId: Int = R.layout.image_only_big,
+) : ActionButtonsContentView(context, renderer, data.actions, layoutId) {
 
     init {
-        setCustomContentViewBasicKeys()
-        setCustomContentViewTitle(renderer.pt_title)
-        setCustomContentViewMessage(renderer.pt_msg)
-        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
-        setCustomTextColour(renderer.pt_title_clr, R.id.title)
-        setCustomTextColour(renderer.pt_msg_clr, R.id.msg)
-        setCustomContentViewMessageSummary(renderer.pt_msg_summary)
-        setCustomContentViewSmallIcon()
-        setCustomContentViewMedia(R.layout.image_view_dynamic_linear)
-        setCustomContentViewLargeIcon(renderer.pt_large_icon)
-    }
-
-    private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
-        if (pt_msg_summary.isNotNullAndEmpty()) {
-            if (VERSION.SDK_INT >= VERSION_CODES.N) {
-                remoteView.setTextViewText(
-                    R.id.msg, Html.fromHtml(pt_msg_summary, Html.FROM_HTML_MODE_LEGACY)
-                )
-            } else {
-                remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg_summary))
-            }
-        }
+        setCustomContentViewBasicKeys(
+            data.baseContent.textData.subtitle,
+            data.baseContent.colorData.metaColor
+        )
+        setCustomContentViewTitle(data.baseContent.textData.title)
+        setCustomContentViewMessage(data.baseContent.textData.subtitle)
+        setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_big)
+        setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
+        setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
+        setCustomContentViewMessageSummary(data.baseContent.textData.messageSummary)
+        setCustomContentViewSmallIcon(data.baseContent.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewMedia(
+            R.layout.image_view_dynamic_linear,
+            data.mediaData.gif.url,
+            data.mediaData.bigImage.url,
+            data.mediaData.scaleType,
+            data.mediaData.bigImage.altText,
+            data.mediaData.gif.numberOfFrames
+        )
+        setCustomContentViewLargeIcon(data.baseContent.iconData.largeIcon)
     }
 }

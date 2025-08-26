@@ -4,20 +4,21 @@ import android.app.PendingIntent
 import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
+import com.clevertap.android.pushtemplates.RatingTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.RATING_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.RatingContentView
 import com.clevertap.android.pushtemplates.content.SmallContentView
 
-internal class RatingStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
+internal class RatingStyle(private val data: RatingTemplateData, private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        return SmallContentView(context, renderer).remoteView
+        return SmallContentView(context, renderer, data.baseContent).remoteView
     }
 
     override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        return RatingContentView(context, renderer, extras).remoteView
+        return RatingContentView(context, renderer, data, extras).remoteView
     }
 
     override fun makePendingIntent(

@@ -9,15 +9,43 @@ import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.R.drawable
 import com.clevertap.android.pushtemplates.R.id
+import com.clevertap.android.pushtemplates.RatingTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.*
 
-internal class RatingContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
-    BigImageContentView(context, renderer, R.layout.rating) {
+internal class RatingContentView(
+    context: Context,
+    renderer: TemplateRenderer,
+    data: RatingTemplateData,
+    extras: Bundle,
+) :
+    ContentView(context, R.layout.rating, renderer.templateMediaManager) {
 
     init {
+        val baseContent = data.baseContent
+        setCustomContentViewBasicKeys(
+            baseContent.textData.subtitle,
+            baseContent.colorData.metaColor
+        )
+        setCustomContentViewTitle(baseContent.textData.title)
+        setCustomContentViewMessage(baseContent.textData.subtitle)
+        setCustomBackgroundColour(baseContent.colorData.backgroundColor, R.id.content_view_big)
+        setCustomTextColour(baseContent.colorData.titleColor, R.id.title)
+        setCustomTextColour(baseContent.colorData.messageColor, R.id.msg)
+        setCustomContentViewMessageSummary(baseContent.textData.messageSummary)
+        setCustomContentViewSmallIcon(baseContent.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewMedia(
+            R.layout.image_view_dynamic_linear,
+            data.mediaData.gif.url,
+            data.mediaData.bigImage.url,
+            data.mediaData.scaleType,
+            data.mediaData.bigImage.altText,
+            data.mediaData.gif.numberOfFrames
+        )
+        setCustomContentViewLargeIcon(baseContent.iconData.largeIcon)
+
         //Set rating stars
         remoteView.setImageViewResource(R.id.star1, R.drawable.pt_star_outline)
         remoteView.setImageViewResource(R.id.star2, R.drawable.pt_star_outline)

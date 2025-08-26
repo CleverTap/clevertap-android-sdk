@@ -4,22 +4,23 @@ import android.app.PendingIntent
 import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
+import com.clevertap.android.pushtemplates.FiveIconsTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.*
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
-internal class FiveIconStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
+internal class FiveIconStyle(private val data: FiveIconsTemplateData, private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
 
     lateinit var fiveIconSmallContentView: ContentView
     lateinit var fiveIconBigContentView: ContentView
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        fiveIconSmallContentView = FiveIconSmallContentView(context, renderer, extras)
+        fiveIconSmallContentView = FiveIconSmallContentView(context, renderer, data, extras)
         return fiveIconSmallContentView.remoteView
     }
 
     override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        fiveIconBigContentView = FiveIconBigContentView(context, renderer, extras)
+        fiveIconBigContentView = FiveIconBigContentView(context, renderer, data, extras)
         return fiveIconBigContentView.remoteView
     }
 
