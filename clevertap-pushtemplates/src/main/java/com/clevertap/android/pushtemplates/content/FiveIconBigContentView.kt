@@ -40,7 +40,7 @@ internal class FiveIconBigContentView constructor(
                 altText
             )
 
-            if (!fallback) {
+            if (fallback) {
                 remoteView.setViewVisibility(viewId, View.GONE)
                 imageCounter++
             }
