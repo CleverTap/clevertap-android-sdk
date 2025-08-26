@@ -9,9 +9,7 @@ import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
-import com.clevertap.android.pushtemplates.R.id
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.content.PendingIntentFactory.getPendingIntent
 import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
 
@@ -24,7 +22,6 @@ internal class ManualCarouselContentView(
     ActionButtonsContentView(
         context,
         renderer,
-        data.carouselData.actions,
         R.layout.manual_carousel,
     ) {
 
@@ -128,14 +125,14 @@ internal class ManualCarouselContentView(
 
             if (rightSwipe) {
                 newPosition = nextPosition
-                remoteView.showNext(id.carousel_image)
-                remoteView.showNext(id.carousel_image_right)
-                remoteView.showNext(id.carousel_image_left)
+                remoteView.showNext(R.id.carousel_image)
+                remoteView.showNext(R.id.carousel_image_right)
+                remoteView.showNext(R.id.carousel_image_left)
             } else {
                 newPosition = prevPosition
-                remoteView.showPrevious(id.carousel_image)
-                remoteView.showPrevious(id.carousel_image_right)
-                remoteView.showPrevious(id.carousel_image_left)
+                remoteView.showPrevious(R.id.carousel_image)
+                remoteView.showPrevious(R.id.carousel_image_right)
+                remoteView.showPrevious(R.id.carousel_image_left)
             }
             var dl = ""
             if (deepLinkList.size == tempImageList.size) {
@@ -154,14 +151,14 @@ internal class ManualCarouselContentView(
             extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_FROM, currPosition)
 
             remoteView.setOnClickPendingIntent(
-                id.rightArrowPos0, getPendingIntent(
+                R.id.rightArrowPos0, PendingIntentFactory.getPendingIntent(
                     context, renderer.notificationId, extras, false,
                     MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT, null
                 )
             )
 
             remoteView.setOnClickPendingIntent(
-                id.leftArrowPos0, getPendingIntent(
+                R.id.leftArrowPos0, PendingIntentFactory.getPendingIntent(
                     context, renderer.notificationId, extras, false,
                     MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT, null
                 )

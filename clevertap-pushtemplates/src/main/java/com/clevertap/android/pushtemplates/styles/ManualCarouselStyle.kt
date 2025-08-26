@@ -14,15 +14,25 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.SmallContentView
 import com.clevertap.android.sdk.Constants
 
-internal class ManualCarouselStyle(private val data: ManualCarouselTemplateData, private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
+internal class ManualCarouselStyle(
+    private val data: ManualCarouselTemplateData,
+    private var renderer: TemplateRenderer,
+    private var extras: Bundle
+) : Style(data.carouselData.baseContent, renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
-    override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeSmallContentRemoteView(
+        context: Context,
+        renderer: TemplateRenderer
+    ): RemoteViews {
         return SmallContentView(context, renderer, data.carouselData.baseContent).remoteView
     }
 
-    override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeBigContentRemoteView(
+        context: Context,
+        renderer: TemplateRenderer
+    ): RemoteViews {
         return ManualCarouselContentView(context, renderer, data, extras).remoteView
     }
 
@@ -55,7 +65,7 @@ internal class ManualCarouselStyle(private val data: ManualCarouselTemplateData,
             MANUAL_CAROUSEL_DISMISS_PENDING_INTENT, renderer
         )
     }
-    
+
     override fun builderFromStyle(
         context: Context,
         extras: Bundle,

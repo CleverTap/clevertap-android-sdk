@@ -11,13 +11,14 @@ import androidx.core.app.RemoteInput
 import com.clevertap.android.pushtemplates.InputBoxTemplateData
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.TemplateDataFactory.toBaseContent
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_REPLY_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
-internal class InputBoxStyle(private val data: InputBoxTemplateData, private var renderer: TemplateRenderer) : Style(renderer) {
+internal class InputBoxStyle(private val data: InputBoxTemplateData, private var renderer: TemplateRenderer) : Style(data.toBaseContent(), renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 

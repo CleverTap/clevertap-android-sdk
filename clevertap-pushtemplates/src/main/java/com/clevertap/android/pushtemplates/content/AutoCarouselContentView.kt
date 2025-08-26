@@ -14,7 +14,7 @@ internal class AutoCarouselContentView(
     renderer: TemplateRenderer,
     internal val data: AutoCarouselTemplateData
 ) :
-    ActionButtonsContentView(context, renderer, data.carouselData.actions, R.layout.auto_carousel) {
+    ActionButtonsContentView(context, renderer, R.layout.auto_carousel) {
 
     init {
         val baseContent = data.carouselData.baseContent

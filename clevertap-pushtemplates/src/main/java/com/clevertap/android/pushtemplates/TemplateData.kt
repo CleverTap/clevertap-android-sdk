@@ -1,6 +1,5 @@
 package com.clevertap.android.pushtemplates
 
-import android.app.PendingIntent
 import android.graphics.Bitmap
 import org.json.JSONArray
 import java.util.ArrayList
@@ -52,12 +51,6 @@ internal data class BaseColorData(
     val smallIconColor: String? = null,
 )
 
-internal data class ActionButtonData(
-    val actions: JSONArray? = null,
-    val actionButtons: List<ActionButton> = emptyList<ActionButton>(),
-    val actionButtonPendingIntents: MutableMap<String, PendingIntent> = mutableMapOf<String, PendingIntent>()
-)
-
 internal data class BaseContent(
     val textData: BaseTextData,
     val colorData: BaseColorData,
@@ -67,7 +60,7 @@ internal data class BaseContent(
 
 internal data class CarouselData(
     val baseContent: BaseContent,
-    val actions: ActionButtonData,
+    val actions: JSONArray? = null,
     val imageList: ArrayList<ImageData>,
     val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
 )
@@ -76,7 +69,7 @@ internal data class BasicTemplateData(
     override val templateType: TemplateType = TemplateType.BASIC,
     val baseContent: BaseContent,
     val mediaData: MediaData,
-    val actions: ActionButtonData,
+    val actions: JSONArray? = null,
 ) : TemplateData()
 
 internal data class FiveIconsTemplateData(
@@ -86,6 +79,7 @@ internal data class FiveIconsTemplateData(
     val backgroundColor: String? = null,
     val smallIconColor: String? = null,
     val title: String? = null,
+    val subtitle: String? = null
 ) : TemplateData()
 
 internal data class ManualCarouselTemplateData(
@@ -111,7 +105,7 @@ internal data class TimerTemplateData(
     override val templateType: TemplateType = TemplateType.TIMER,
     val baseContent: BaseContent,
     val mediaData: MediaData,
-    val actions: ActionButtonData,
+    val actions: JSONArray? = null,
     val terminalTextData: BaseTextData,
     val terminalMediaData: MediaData,
     val chronometerTitleColor: String? = null,
@@ -123,7 +117,7 @@ internal data class TimerTemplateData(
 internal data class ZeroBezelTemplateData(
     override val templateType: TemplateType = TemplateType.ZERO_BEZEL,
     val baseContent: BaseContent,
-    val actions: ActionButtonData,
+    val actions: JSONArray? = null,
     val mediaData: MediaData,
     val smallView: String? = null,
     val collapsedMediaData: MediaData
@@ -132,7 +126,7 @@ internal data class ZeroBezelTemplateData(
 internal data class ProductTemplateData(
     override val templateType: TemplateType = TemplateType.PRODUCT_DISPLAY,
     val baseContent: BaseContent,
-    val actions: ActionButtonData,
+    val actions: JSONArray? = null,
     val imageList: ArrayList<ImageData>,
     val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
     val bigTextList: ArrayList<String>,
@@ -147,8 +141,8 @@ internal data class ProductTemplateData(
 internal data class InputBoxTemplateData(
     override val templateType: TemplateType = TemplateType.INPUT_BOX,
     val textData: BaseTextData,
-    val actions: ActionButtonData,
-    val iconData: IconData,
+    val actions: JSONArray? = null,
+    val deepLinkList: ArrayList<String>,
     val imageData: ImageData,
     val inputLabel: String? = null,
     val inputFeedback: String? = null,

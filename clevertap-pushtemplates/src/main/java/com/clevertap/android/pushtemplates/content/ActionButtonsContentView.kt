@@ -6,7 +6,6 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.view.View
 import com.clevertap.android.pushtemplates.ActionButton
-import com.clevertap.android.pushtemplates.ActionButtonData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Logger
@@ -14,12 +13,11 @@ import com.clevertap.android.sdk.Logger
 internal open class ActionButtonsContentView(
     context: Context,
     renderer: TemplateRenderer,
-    data: ActionButtonData,
     layoutId: Int,
 ) :
     ContentView(context, layoutId, renderer.templateMediaManager) {
     init {
-        setActionButtons(data.actionButtons, data.actionButtonPendingIntents)
+        setActionButtons(renderer.actionButtons, renderer.actionButtonPendingIntents)
     }
 
     private fun setActionButtons(

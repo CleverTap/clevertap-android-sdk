@@ -12,7 +12,7 @@ import com.clevertap.android.pushtemplates.content.BigImageContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.SmallContentView
 
-internal class BasicStyle(private val data: BasicTemplateData, private var renderer: TemplateRenderer) : Style(renderer) {
+internal class BasicStyle(private val data: BasicTemplateData, private var renderer: TemplateRenderer) : Style(data.baseContent, renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 

@@ -15,7 +15,7 @@ internal open class TimerSmallContentView(
     data: TimerTemplateData,
     layoutId: Int = R.layout.timer_collapsed
 ) :
-    ActionButtonsContentView(context, renderer, data.actions, layoutId) {
+    ActionButtonsContentView(context, renderer, layoutId) {
 
     init {
         setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)

@@ -14,7 +14,7 @@ import com.clevertap.android.pushtemplates.content.TIMER_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.TimerBigContentView
 import com.clevertap.android.pushtemplates.content.TimerSmallContentView
 
-internal class TimerStyle(private val data: TimerTemplateData, private var renderer: TemplateRenderer) : Style(renderer) {
+internal class TimerStyle(private val data: TimerTemplateData, private var renderer: TemplateRenderer) : Style(data.baseContent, renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 

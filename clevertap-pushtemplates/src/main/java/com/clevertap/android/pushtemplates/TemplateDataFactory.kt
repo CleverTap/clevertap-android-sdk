@@ -155,7 +155,7 @@ internal object TemplateDataFactory {
         return BasicTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             mediaData = createMediaData(extras, defaultAltText),
-            actions = createActionButtonData(extras)
+            actions = Utils.getActionKeys(extras)
         )
     }
 
@@ -206,7 +206,8 @@ internal object TemplateDataFactory {
             deepLinkList = Utils.getDeepLinkListFromExtras(extras),
             backgroundColor = colorMap[PT_BG],
             smallIconColor = colorMap[PT_SMALL_ICON_COLOUR],
-            title = getStringWithFallback(extras, PT_TITLE, Constants.NOTIF_TITLE)
+            title = getStringWithFallback(extras, PT_TITLE, Constants.NOTIF_TITLE),
+            subtitle = getStringWithFallback(extras, PT_SUBTITLE, Constants.WZRK_SUBTITLE)
         )
     }
 
@@ -217,7 +218,7 @@ internal object TemplateDataFactory {
     ): ProductTemplateData {
         return ProductTemplateData(
             baseContent = createBaseContent(extras, colorMap),
-            actions = createActionButtonData(extras),
+            actions = Utils.getActionKeys(extras),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
             scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE)),
             bigTextList = Utils.getBigTextFromExtras(extras),
@@ -239,7 +240,7 @@ internal object TemplateDataFactory {
         val mediaData = createMediaData(extras, defaultAltText)
         return ZeroBezelTemplateData(
             baseContent = createBaseContent(extras, colorMap),
-            actions = createActionButtonData(extras),
+            actions = Utils.getActionKeys(extras),
             mediaData = mediaData,
             smallView = extras.getString(PT_SMALL_VIEW),
             collapsedMediaData = createCollapsedMediaData(extras, mediaData)
@@ -256,7 +257,7 @@ internal object TemplateDataFactory {
         return TimerTemplateData(
             baseContent = baseContent,
             mediaData = mediaData,
-            actions = createActionButtonData(extras),
+            actions = Utils.getActionKeys(extras),
             terminalTextData = createTerminalTextData(extras, baseContent.textData),
             terminalMediaData = createTerminalMediaData(extras, defaultAltText, mediaData),
             chronometerTitleColor = colorMap[PT_CHRONO_TITLE_COLOUR],
@@ -273,8 +274,8 @@ internal object TemplateDataFactory {
     ): InputBoxTemplateData {
         return InputBoxTemplateData(
             textData = createBaseTextData(extras),
-            actions = createActionButtonData(extras),
-            iconData = createIconData(extras),
+            actions = Utils.getActionKeys(extras),
+            deepLinkList = Utils.getDeepLinkListFromExtras(extras),
             imageData = createSingleImageData(extras, defaultAltText),
             inputLabel = extras.getString(PT_INPUT_LABEL),
             inputFeedback = extras.getString(PT_INPUT_FEEDBACK),
@@ -323,16 +324,6 @@ internal object TemplateDataFactory {
             backgroundColor = colorMap[PT_BG],
             metaColor = colorMap[PT_META_CLR],
             smallIconColor = colorMap[PT_SMALL_ICON_COLOUR]
-        )
-    }
-
-    private fun createActionButtonData(extras: Bundle): ActionButtonData {
-        val actions = Utils.getActionKeys(extras)
-
-        return ActionButtonData(
-            actions = actions,
-            actionButtons = emptyList(), // Will be populated when rendering
-            actionButtonPendingIntents = mutableMapOf()
         )
     }
 
@@ -391,7 +382,7 @@ internal object TemplateDataFactory {
     ): CarouselData {
         return CarouselData(
             baseContent = createBaseContent(extras, colorMap),
-            actions = createActionButtonData(extras),
+            actions = Utils.getActionKeys(extras),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
             scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE))
         )
@@ -469,6 +460,28 @@ internal object TemplateDataFactory {
             baseContent = this.baseContent,
             mediaData = this.mediaData,
             actions = this.actions
+        )
+    }
+
+    internal fun FiveIconsTemplateData.toBaseContent(): BaseContent {
+        return BaseContent(
+            textData = BaseTextData(title = this.title, subtitle = this.subtitle),
+            colorData = BaseColorData(
+                backgroundColor = this.backgroundColor,
+                smallIconColor = this.smallIconColor
+            ),
+            iconData = IconData(),
+            deepLinkList = this.deepLinkList
+        )
+    }
+
+
+    internal fun InputBoxTemplateData.toBaseContent(): BaseContent {
+        return BaseContent(
+            textData = this.textData,
+            colorData = BaseColorData(),
+            iconData = IconData(),
+            deepLinkList = this.deepLinkList
         )
     }
 }

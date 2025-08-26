@@ -8,7 +8,7 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 internal open class BigImageContentView(
     context: Context, renderer: TemplateRenderer, data: BasicTemplateData,
     layoutId: Int = R.layout.image_only_big,
-) : ActionButtonsContentView(context, renderer, data.actions, layoutId) {
+) : ActionButtonsContentView(context, renderer, layoutId) {
 
     init {
         setCustomContentViewBasicKeys(

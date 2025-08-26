@@ -49,10 +49,10 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
     var pt_input_feedback: String? = null
     internal var pt_input_auto_open: String? = null
     internal var pt_small_icon_clr: String? = null
+
     var actions: JSONArray? = null
-    private var actionButtons = emptyList<ActionButton>()
-    private var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
-    internal var pt_subtitle: String? = null
+    internal var actionButtons = emptyList<ActionButton>()
+    internal var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
     private var pt_collapse_key: Any? = null
     internal var config: CleverTapInstanceConfig? = null
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
@@ -196,12 +196,12 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
 
     private fun getTimerEnd(data: TimerTemplateData): Int? {
         var timer_end: Int? = null
-        if (data.timerThreshold != -1 && data.timerThreshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end =data.timerThreshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
-        } else if (data.timerEnd >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end = data.timerEnd * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+        if (data.timerThreshold != -1 && data.timerThreshold >= PT_TIMER_MIN_THRESHOLD) {
+            timer_end =data.timerThreshold * ONE_SECOND + ONE_SECOND
+        } else if (data.timerEnd >= PT_TIMER_MIN_THRESHOLD) {
+            timer_end = data.timerEnd * ONE_SECOND + ONE_SECOND
         } else {
-            PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
+            PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: $PT_TIMER_END")
         }
         return timer_end
     }
@@ -232,7 +232,7 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
                     val ptJsonStr = basicTemplateBundle.getString(PT_JSON)
                     val ptJsonObj = try {
                         ptJsonStr?.let { JSONObject(it) }
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         Logger.v("Unable to convert JSON to String")
                         null
                     } ?: JSONObject()
@@ -272,7 +272,7 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
         this.smallIcon = smallIcon
         try {
             Utils.setBitMapColour(context, smallIcon, pt_small_icon_clr, PT_META_CLR_DEFAULTS)
-        } catch (e: NullPointerException) {
+        } catch (_: NullPointerException) {
             PTLog.debug("NPE while setting small icon color")
         }
     }
@@ -344,7 +344,6 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
         pt_input_feedback = extras.getString(PT_INPUT_FEEDBACK)
         pt_input_auto_open = extras.getString(PT_INPUT_AUTO_OPEN)
         actions = Utils.getActionKeys(extras)
-        pt_subtitle = extras.getString(PT_SUBTITLE)
         pt_collapse_key = extras[PT_COLLAPSE_KEY]
 
         if (config != null) {
@@ -462,17 +461,17 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
             if (intentServiceName != null) {
                 try {
                     clazz = Class.forName(intentServiceName)
-                } catch (e: ClassNotFoundException) {
+                } catch (_: ClassNotFoundException) {
                     try {
                         clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
-                    } catch (ex: ClassNotFoundException) {
+                    } catch (_: ClassNotFoundException) {
                         Logger.d("No Intent Service found")
                     }
                 }
             } else {
                 try {
                     clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
-                } catch (ex: ClassNotFoundException) {
+                } catch (_: ClassNotFoundException) {
                     Logger.d("No Intent Service found")
                 }
             }
@@ -575,7 +574,7 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
          * Enables or disables debugging. If enabled, see debug messages in Android's logcat utility.
          * Debug messages are tagged as PTLog.
          *
-         * @param level Can be one of the following:  -1 (disables all debugging), 0 (default, shows minimal SDK integration related logging),
+         * @param debugLevel Can be one of the following:  -1 (disables all debugging), 0 (default, shows minimal SDK integration related logging),
          * 2(shows debug output)
          */
         @JvmStatic

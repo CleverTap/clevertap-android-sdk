@@ -10,7 +10,7 @@ internal class ZeroBezelBigContentView(
     renderer: TemplateRenderer,
     data: ZeroBezelTemplateData
 ) :
-    ActionButtonsContentView(context, renderer, data.actions, R.layout.zero_bezel) {
+    ActionButtonsContentView(context, renderer, R.layout.zero_bezel) {
 
     init {
         setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)

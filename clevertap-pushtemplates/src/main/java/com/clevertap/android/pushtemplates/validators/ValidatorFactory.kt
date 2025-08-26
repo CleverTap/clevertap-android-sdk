@@ -306,7 +306,7 @@ internal class ValidatorFactory {
                             "Feedback Text or Actions is missing or empty"
                         )
                         .addJsonArrayValidation(
-                            templateData.actions.actions,
+                            templateData.actions,
                             PT_ACTIONS,
                             "Feedback Text or Actions is missing or empty"
                         )
