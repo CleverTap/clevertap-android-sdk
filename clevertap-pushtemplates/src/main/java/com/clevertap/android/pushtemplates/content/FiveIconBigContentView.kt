@@ -22,8 +22,9 @@ internal class FiveIconBigContentView constructor(
     private var imageCounter: Int = 0
 
     init {
+        var title = data.title
         if (data.title == null || data.title.isEmpty()) {
-            renderer.pt_title = Utils.getApplicationName(context)
+            title = Utils.getApplicationName(context)
         }
         setCustomBackgroundColour(data.backgroundColor, R.id.content_view_big)
         val ctaIds = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)

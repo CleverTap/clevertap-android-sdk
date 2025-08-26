@@ -64,7 +64,7 @@ internal open class ProductDisplayLinearBigContentView(
         remoteView.setOnClickPendingIntent(
             R.id.small_image1, PendingIntentFactory.getPendingIntent(
                 context,
-                renderer.notificationId, extras, false, PRODUCT_DISPLAY_DL1_PENDING_INTENT, renderer
+                renderer.notificationId, extras, false, PRODUCT_DISPLAY_DL1_PENDING_INTENT, data.baseContent.deepLinkList.getOrNull(0)
             )
         )
 
@@ -76,7 +76,7 @@ internal open class ProductDisplayLinearBigContentView(
                     extras,
                     false,
                     PRODUCT_DISPLAY_DL2_PENDING_INTENT,
-                    renderer
+                    data.baseContent.deepLinkList.getOrNull(1)
                 )
             )
         }
@@ -89,7 +89,7 @@ internal open class ProductDisplayLinearBigContentView(
                     extras,
                     false,
                     PRODUCT_DISPLAY_DL3_PENDING_INTENT,
-                    renderer
+                    data.baseContent.deepLinkList.getOrNull(2)
                 )
             )
         }

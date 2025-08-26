@@ -31,7 +31,7 @@ internal class AutoCarouselStyle(private val data: AutoCarouselTemplateData, pri
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            AUTO_CAROUSEL_CONTENT_PENDING_INTENT, renderer
+            AUTO_CAROUSEL_CONTENT_PENDING_INTENT, data.carouselData.baseContent.deepLinkList.getOrNull(0)
         )
     }
 

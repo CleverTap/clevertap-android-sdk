@@ -34,7 +34,7 @@ internal class ProductDisplayStyle(private val data: ProductTemplateData, privat
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            PRODUCT_DISPLAY_CONTENT_PENDING_INTENT, renderer
+            PRODUCT_DISPLAY_CONTENT_PENDING_INTENT, data.baseContent.deepLinkList.getOrNull(0)
         )
     }
 
@@ -45,7 +45,7 @@ internal class ProductDisplayStyle(private val data: ProductTemplateData, privat
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, false,
-            PRODUCT_DISPLAY_DISMISS_PENDING_INTENT, renderer
+            PRODUCT_DISPLAY_DISMISS_PENDING_INTENT
         )
     }
 }

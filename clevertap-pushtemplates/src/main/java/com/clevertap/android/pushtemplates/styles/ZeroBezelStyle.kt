@@ -45,7 +45,7 @@ internal class ZeroBezelStyle(private val data: ZeroBezelTemplateData, private v
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            ZERO_BEZEL_CONTENT_PENDING_INTENT, renderer
+            ZERO_BEZEL_CONTENT_PENDING_INTENT, data.baseContent.deepLinkList.getOrNull(0)
         )
     }
 

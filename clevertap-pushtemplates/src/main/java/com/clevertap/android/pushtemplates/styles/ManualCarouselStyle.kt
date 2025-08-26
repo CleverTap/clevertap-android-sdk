@@ -45,7 +45,7 @@ internal class ManualCarouselStyle(
         return if (extrasFrom == null || extrasFrom != "PTReceiver") {
             PendingIntentFactory.getPendingIntent(
                 context, notificationId, extras, true,
-                MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, renderer
+                MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, data.carouselData.baseContent.deepLinkList.getOrNull(0)
             )
         } else {
             PendingIntentFactory.getPendingIntent(
@@ -62,7 +62,7 @@ internal class ManualCarouselStyle(
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, false,
-            MANUAL_CAROUSEL_DISMISS_PENDING_INTENT, renderer
+            MANUAL_CAROUSEL_DISMISS_PENDING_INTENT
         )
     }
 

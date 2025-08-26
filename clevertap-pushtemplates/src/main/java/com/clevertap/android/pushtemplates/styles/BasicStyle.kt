@@ -27,7 +27,7 @@ internal class BasicStyle(private val data: BasicTemplateData, private var rende
     override fun makePendingIntent(context: Context, extras: Bundle, notificationId: Int): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            BASIC_CONTENT_PENDING_INTENT, renderer
+            BASIC_CONTENT_PENDING_INTENT, data.baseContent.deepLinkList.getOrNull(0)
         )
     }
 

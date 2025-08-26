@@ -28,7 +28,7 @@ internal class RatingStyle(private val data: RatingTemplateData, private var ren
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, false,
-            RATING_CONTENT_PENDING_INTENT, renderer
+            RATING_CONTENT_PENDING_INTENT, data.defaultDeepLink
         )
     }
 

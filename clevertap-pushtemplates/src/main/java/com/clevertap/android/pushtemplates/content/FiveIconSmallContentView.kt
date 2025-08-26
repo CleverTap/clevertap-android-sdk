@@ -22,8 +22,9 @@ internal class FiveIconSmallContentView(
     private var imageCounter: Int = 0
 
     init {
-        if (renderer.pt_title == null || renderer.pt_title!!.isEmpty()) {
-            renderer.pt_title = Utils.getApplicationName(context)
+        var title = data.title
+        if (title.isNullOrEmpty()) {
+            title = Utils.getApplicationName(context)
         }
         setCustomBackgroundColour(data.backgroundColor, R.id.content_view_big)
 

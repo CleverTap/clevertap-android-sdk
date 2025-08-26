@@ -61,31 +61,31 @@ internal class RatingContentView(
         remoteView.setOnClickPendingIntent(
             R.id.star1, PendingIntentFactory.getPendingIntent(
                 context,
-                renderer.notificationId, extras, false, RATING_CLICK1_PENDING_INTENT, renderer
+                renderer.notificationId, extras, false, RATING_CLICK1_PENDING_INTENT, config = renderer.config
             )
         )
         remoteView.setOnClickPendingIntent(
             R.id.star2, PendingIntentFactory.getPendingIntent(
                 context,
-                renderer.notificationId, extras, false, RATING_CLICK2_PENDING_INTENT, renderer
+                renderer.notificationId, extras, false, RATING_CLICK2_PENDING_INTENT, config = renderer.config
             )
         )
         remoteView.setOnClickPendingIntent(
             R.id.star3, PendingIntentFactory.getPendingIntent(
                 context,
-                renderer.notificationId, extras, false, RATING_CLICK3_PENDING_INTENT, renderer
+                renderer.notificationId, extras, false, RATING_CLICK3_PENDING_INTENT, config = renderer.config
             )
         )
         remoteView.setOnClickPendingIntent(
             R.id.star4, PendingIntentFactory.getPendingIntent(
                 context,
-                renderer.notificationId, extras, false, RATING_CLICK4_PENDING_INTENT, renderer
+                renderer.notificationId, extras, false, RATING_CLICK4_PENDING_INTENT, config = renderer.config
             )
         )
         remoteView.setOnClickPendingIntent(
             R.id.star5, PendingIntentFactory.getPendingIntent(
                 context,
-                renderer.notificationId, extras, false, RATING_CLICK5_PENDING_INTENT, renderer
+                renderer.notificationId, extras, false, RATING_CLICK5_PENDING_INTENT, config = renderer.config
             )
         )
 

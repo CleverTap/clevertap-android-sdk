@@ -32,7 +32,7 @@ internal class FiveIconStyle(private val data: FiveIconsTemplateData, private va
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            FIVE_ICON_CONTENT_PENDING_INTENT, renderer
+            FIVE_ICON_CONTENT_PENDING_INTENT, data.deepLinkList.getOrNull(0)
         )
     }
 

@@ -41,7 +41,7 @@ internal class TimerStyle(private val data: TimerTemplateData, private var rende
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            TIMER_CONTENT_PENDING_INTENT, renderer
+            TIMER_CONTENT_PENDING_INTENT, data.baseContent.deepLinkList.getOrNull(0)
         )
     }
 

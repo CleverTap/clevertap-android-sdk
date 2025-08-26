@@ -41,6 +41,7 @@ internal class ManualCarouselContentView(
         setCustomContentViewLargeIcon(baseContent.iconData.largeIcon)
 
         val scaleType = data.carouselData.scaleType
+        val deepLinkList = data.carouselData.baseContent.deepLinkList
 
         remoteView.setViewVisibility(R.id.leftArrowPos0, View.VISIBLE)
         remoteView.setViewVisibility(R.id.rightArrowPos0, View.VISIBLE)
@@ -82,7 +83,6 @@ internal class ManualCarouselContentView(
                 imageCounter++
                 tempImageList.add(imageUrl!!)
             } else {
-                val deepLinkList = data.carouselData.baseContent.deepLinkList
                 if (imageCounter < deepLinkList.size) {
                     deepLinkList.removeAt(imageCounter)
                 }
@@ -99,7 +99,6 @@ internal class ManualCarouselContentView(
             remoteView.setViewVisibility(R.id.carousel_image_left, View.GONE)
         }
 
-        val deepLinkList = data.carouselData.baseContent.deepLinkList
         if (extras.containsKey(PTConstants.PT_RIGHT_SWIPE)) {
             val rightSwipe = extras.getBoolean(PTConstants.PT_RIGHT_SWIPE)
             val currPosition = extras.getInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT)
@@ -153,14 +152,14 @@ internal class ManualCarouselContentView(
             remoteView.setOnClickPendingIntent(
                 R.id.rightArrowPos0, PendingIntentFactory.getPendingIntent(
                     context, renderer.notificationId, extras, false,
-                    MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT, null
+                    MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT
                 )
             )
 
             remoteView.setOnClickPendingIntent(
                 R.id.leftArrowPos0, PendingIntentFactory.getPendingIntent(
                     context, renderer.notificationId, extras, false,
-                    MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT, null
+                    MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT
                 )
             )
         } else {
@@ -184,7 +183,7 @@ internal class ManualCarouselContentView(
                 R.id.rightArrowPos0,
                 PendingIntentFactory.getPendingIntent(
                     context, renderer.notificationId, extras, false,
-                    MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT, renderer
+                    MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT
                 )
             )
 
@@ -192,7 +191,7 @@ internal class ManualCarouselContentView(
                 R.id.leftArrowPos0,
                 PendingIntentFactory.getPendingIntent(
                     context, renderer.notificationId, extras, false,
-                    MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT, renderer
+                    MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT
                 )
             )
 

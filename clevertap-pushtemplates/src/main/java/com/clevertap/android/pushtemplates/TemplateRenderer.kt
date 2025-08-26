@@ -19,10 +19,13 @@ import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
 import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.pushtemplates.styles.*
+import com.clevertap.android.pushtemplates.validators.PT_TITLE
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Constants.NOTIF_MSG
+import com.clevertap.android.sdk.Constants.NOTIF_TITLE
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.interfaces.AudibleNotification
@@ -31,7 +34,6 @@ import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
@@ -41,19 +43,12 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
     }
     private var pt_id: String? = null
     private var templateType: TemplateType? = null
-    internal var pt_title: String? = null
-    internal var pt_msg: String? = null
-    internal var deepLinkList: ArrayList<String>? = null
-    internal var pt_rating_default_dl: String? = null
     internal var smallIcon = 0
-    var pt_input_feedback: String? = null
-    internal var pt_input_auto_open: String? = null
     internal var pt_small_icon_clr: String? = null
 
     var actions: JSONArray? = null
     internal var actionButtons = emptyList<ActionButton>()
     internal var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
-    private var pt_collapse_key: Any? = null
     internal var config: CleverTapInstanceConfig? = null
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
@@ -71,13 +66,11 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
     }
 
     override fun getMessage(extras: Bundle): String? {
-        //todo
-        return "baddfa"
+        return extras.getString(PT_MSG).takeUnless { it.isNullOrEmpty() } ?: extras.getString(NOTIF_MSG)
     }
 
     override fun getTitle(extras: Bundle, context: Context): String? {
-        //todo
-        return "dasfas"
+        return extras.getString(PT_TITLE).takeUnless { it.isNullOrEmpty() } ?: extras.getString(NOTIF_TITLE)
     }
 
     override fun renderNotification(
@@ -282,7 +275,7 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
     }
 
     override fun getCollapseKey(extras: Bundle): Any? {
-        return pt_collapse_key
+        return extras[PT_COLLAPSE_KEY] ?: extras[Constants.WZRK_COLLAPSE]
     }
 
     override fun setSound(
@@ -321,35 +314,13 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
 
     private fun setUp(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) {
         pt_id = extras.getString(PT_ID)
-        val pt_json = extras.getString(PT_JSON)
-        if (pt_id != null) {
-            templateType = TemplateType.fromString(pt_id)
-            var newExtras: Bundle? = null
-            try {
-                if (pt_json.isNotNullAndEmpty()) {
-                    newExtras = Utils.fromJson(JSONObject(pt_json))
-                }
-            } catch (e: JSONException) {
-                e.printStackTrace()
-            }
-            if (newExtras != null) extras.putAll(newExtras)
-        }
+        templateType = TemplateType.fromString(pt_id)
 
-        pt_msg = extras.getString(PT_MSG)
-        pt_title = extras.getString(PT_TITLE)
-        deepLinkList = Utils.getDeepLinkListFromExtras(extras)
-        pt_rating_default_dl = extras.getString(PT_DEFAULT_DL)
-
-        // true by default if not present in extras
-        pt_input_feedback = extras.getString(PT_INPUT_FEEDBACK)
-        pt_input_auto_open = extras.getString(PT_INPUT_AUTO_OPEN)
         actions = Utils.getActionKeys(extras)
-        pt_collapse_key = extras[PT_COLLAPSE_KEY]
 
         if (config != null) {
             this.config = config
         }
-//        setKeysFromDashboard(extras)
     }
 
 //    private fun setKeysFromDashboard(extras: Bundle) {
