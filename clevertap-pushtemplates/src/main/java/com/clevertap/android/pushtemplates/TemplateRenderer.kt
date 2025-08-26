@@ -17,6 +17,8 @@ import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
+import com.clevertap.android.pushtemplates.media.TemplateMediaManager
+import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.pushtemplates.styles.*
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
@@ -42,7 +44,10 @@ data class ImageData(
     val altText: String
 )
 
-class TemplateRenderer : INotificationRenderer, AudibleNotification {
+class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) : INotificationRenderer, AudibleNotification {
+    internal val templateMediaManager: TemplateMediaManager by lazy {
+        TemplateMediaManager(templateRepository = TemplateRepository(context, config))
+    }
     private var pt_id: String? = null
     private var templateType: TemplateType? = null
     internal var pt_title: String? = null
@@ -114,11 +119,8 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
         }
     }
 
-    internal constructor(context: Context, extras: Bundle) {
-        setUp(context, extras, null)
-    }
 
-    internal constructor(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) {
+    init {
         setUp(context, extras, config)
     }
 

@@ -6,13 +6,11 @@ import android.text.Html
 import android.text.TextUtils
 import android.view.View
 import android.widget.RemoteViews
-import com.clevertap.android.pushtemplates.TemplateMediaManager
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.TemplateRepository
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
@@ -85,15 +83,15 @@ internal open class ContentView(
 
     fun setCustomContentViewSmallIcon() {
         if (renderer.pt_small_icon != null) {
-            Utils.loadImageBitmapIntoRemoteView(R.id.small_icon, renderer.pt_small_icon, remoteView)
+            remoteView.setImageViewBitmap(R.id.small_icon, renderer.pt_small_icon)
         } else {
-            Utils.loadImageRidIntoRemoteView(R.id.small_icon, renderer.smallIcon, remoteView)
+            remoteView.setImageViewResource(R.id.small_icon, renderer.smallIcon)
         }
     }
 
     fun setCustomContentViewLargeIcon(pt_large_icon: String?) {
         if (pt_large_icon.isNotNullAndEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView, context)
+            loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView)
         } else {
             remoteView.setViewVisibility(R.id.large_icon, View.GONE)
         }
@@ -138,7 +136,7 @@ internal open class ContentView(
             layoutId
         )
         if (!gifSuccess) {
-            PTLog.debug("Couldn't load GIF. Falling back to static image")
+            PTLog.debug("GIF missing or downloading failed. Falling back to static image")
             setCustomContentViewBigImage(
                 bigImageUrl,
                 scaleType,
@@ -153,8 +151,8 @@ internal open class ContentView(
                 PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
                 PTScaleType.CENTER_CROP -> R.id.big_image
             }
-            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context, altText)
-            if (!Utils.getFallback()) {
+            val fallback = loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, altText)
+            if (!fallback) {
                 remoteView.setViewVisibility(imageViewId, View.VISIBLE)
                 remoteView.setViewVisibility(R.id.big_image_configurable, View.VISIBLE)
             }
@@ -162,12 +160,11 @@ internal open class ContentView(
     }
 
     fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int): Boolean {
-        val gifResult = TemplateMediaManager(TemplateRepository(context, renderer.config)).getGifFrames(gifUrl, numberOfFrames)
+        val gifResult = renderer.templateMediaManager.getGifFrames(gifUrl, numberOfFrames)
         val frames = gifResult.frames
         val duration = gifResult.duration
 
         if (frames.isNullOrEmpty()) {
-            PTLog.debug("No frames extracted from GIF")
             return false
         }
 
@@ -198,5 +195,30 @@ internal open class ContentView(
         remoteView.setViewVisibility(R.id.view_flipper, View.VISIBLE)
 
         return true
+    }
+
+    fun loadImageURLIntoRemoteView(
+        imageViewID: Int, imageUrl: String?,
+        remoteViews: RemoteViews
+    ): Boolean {
+        return loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, null)
+    }
+
+    fun loadImageURLIntoRemoteView(
+        imageViewID: Int, imageUrl: String?,
+        remoteViews: RemoteViews, altText: String?
+    ): Boolean {
+        val image = renderer.templateMediaManager.getImageBitmap(imageUrl)
+
+        if (image != null) {
+            remoteViews.setImageViewBitmap(imageViewID, image)
+            if (!TextUtils.isEmpty(altText)) {
+                remoteViews.setContentDescription(imageViewID, altText)
+            }
+            return false
+        } else {
+            PTLog.debug("Image was not perfect. URL:$imageUrl hiding image view")
+            return true
+        }
     }
 }

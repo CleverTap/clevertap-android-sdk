@@ -9,7 +9,6 @@ import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 
 internal class AutoCarouselContentView(context: Context, renderer: TemplateRenderer) :
     BigImageContentView(context, renderer, R.layout.auto_carousel) {
@@ -48,15 +47,14 @@ internal class AutoCarouselContentView(context: Context, renderer: TemplateRende
             val altText = imageData.altText
             val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_dynamic_relative)
 
-            Utils.loadImageURLIntoRemoteView(
+            val fallback = loadImageURLIntoRemoteView(
                 imageViewId,
                 imageUrl,
                 tempRemoteView,
-                context,
                 altText
             )
 
-            if (!Utils.getFallback()) {
+            if (!fallback) {
                 tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
                 remoteView.addView(R.id.view_flipper, tempRemoteView)
             } else {

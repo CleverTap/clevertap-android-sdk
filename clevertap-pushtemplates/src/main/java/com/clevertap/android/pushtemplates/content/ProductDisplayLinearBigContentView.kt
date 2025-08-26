@@ -11,7 +11,6 @@ import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
 
@@ -107,14 +106,14 @@ internal open class ProductDisplayLinearBigContentView(
             val imageUrl = imageData.url
             val altText = imageData.altText
 
-            Utils.loadImageURLIntoRemoteView(
-                smallImageLayoutIds[imageCounter], imageUrl, remoteView, context, altText
+            loadImageURLIntoRemoteView(
+                smallImageLayoutIds[imageCounter], imageUrl, remoteView, altText
             )
 
             val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_dynamic_relative)
-            Utils.loadImageURLIntoRemoteView(imageViewId, imageUrl, tempRemoteView, context, altText)
+            val fallback = loadImageURLIntoRemoteView(imageViewId, imageUrl, tempRemoteView, altText)
 
-            if (!Utils.getFallback()) {
+            if (!fallback) {
                 if (!isFirstImageOk) {
                     isFirstImageOk = true
                 }
