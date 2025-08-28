@@ -13,6 +13,7 @@ import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.PTConstants.*
+import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
@@ -26,6 +27,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.NOTIF_MSG
 import com.clevertap.android.sdk.Constants.NOTIF_TITLE
+import com.clevertap.android.sdk.Constants.WZRK_COLOR
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.interfaces.AudibleNotification
@@ -37,19 +39,15 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
 
-class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) : INotificationRenderer, AudibleNotification {
+class TemplateRenderer(context: Context, extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
     internal val templateMediaManager: TemplateMediaManager by lazy {
         TemplateMediaManager(templateRepository = TemplateRepository(context, config))
     }
-    private var pt_id: String? = null
-    private var templateType: TemplateType? = null
     internal var smallIcon = 0
     internal var pt_small_icon_clr: String? = null
 
-    var actions: JSONArray? = null
     internal var actionButtons = emptyList<ActionButton>()
     internal var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
-    internal var config: CleverTapInstanceConfig? = null
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
     enum class LogLevel(private val value: Int) {
@@ -62,7 +60,7 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
 
 
     init {
-        setUp(context, extras, config)
+        setUp(context, extras)
     }
 
     override fun getMessage(extras: Bundle): String? {
@@ -73,19 +71,31 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
         return extras.getString(PT_TITLE).takeUnless { it.isNullOrEmpty() } ?: extras.getString(NOTIF_TITLE)
     }
 
+
     override fun renderNotification(
         extras: Bundle, context: Context, nb: Builder,
         config: CleverTapInstanceConfig,
         notificationId: Int
     ): Builder? {
-        if (pt_id == null) {
+        this.notificationId = notificationId
+
+        val id = extras.getString(PT_ID)
+        if (id == null) {
             PTLog.verbose("Template ID not provided. Cannot create the notification")
             return null
         }
-        this.notificationId = notificationId
-        this.actionButtons = getActionButtons(context, extras, notificationId, actions)
+        val templateType = TemplateType.fromString(id)
         val altTextDefault = context.getString(R.string.pt_big_image_alt)
-        val templateData = TemplateDataFactory.createTemplateData(templateType, extras, false, altTextDefault) { Utils.getNotificationIds(context) }
+
+        val templateData = TemplateDataFactory.createTemplateData(
+            templateType,
+            extras,
+            Utils.isDarkMode(context),
+            altTextDefault
+        ) { Utils.getNotificationIds(context) }
+
+        this.actionButtons = getActionButtons(context, extras, notificationId, templateData?.getActions())
+
         when (templateData) {
             is BasicTemplateData -> {
                 if (ValidatorFactory.getValidator(templateData)?.validate() == true) {
@@ -312,46 +322,11 @@ class TemplateRenderer(context: Context, extras: Bundle, config: CleverTapInstan
         return nb
     }
 
-    private fun setUp(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) {
-        pt_id = extras.getString(PT_ID)
-        templateType = TemplateType.fromString(pt_id)
-
-        actions = Utils.getActionKeys(extras)
-
-        if (config != null) {
-            this.config = config
-        }
+    private fun setUp(context: Context, extras: Bundle) {
+        pt_small_icon_clr =
+            Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR)
+                ?: extras.getString(WZRK_COLOR)
     }
-
-//    private fun setKeysFromDashboard(extras: Bundle) {
-//        if (pt_title == null || pt_title!!.isEmpty()) {
-//            pt_title = extras.getString(Constants.NOTIF_TITLE)
-//        }
-//        if (pt_msg == null || pt_msg!!.isEmpty()) {
-//            pt_msg = extras.getString(Constants.NOTIF_MSG)
-//        }
-//        if (pt_msg_summary == null || pt_msg_summary!!.isEmpty()) {
-//            pt_msg_summary = extras.getString(Constants.WZRK_MSG_SUMMARY)
-//        }
-//        if (pt_big_img == null || pt_big_img!!.isEmpty()) {
-//            pt_big_img = extras.getString(Constants.WZRK_BIG_PICTURE)
-//        }
-//        if (pt_rating_default_dl == null || pt_rating_default_dl!!.isEmpty()) {
-//            pt_rating_default_dl = extras.getString(Constants.DEEP_LINK_KEY)
-//        }
-//        if (pt_meta_clr == null || pt_meta_clr!!.isEmpty()) {
-//            pt_meta_clr = extras.getString(Constants.WZRK_COLOR)
-//        }
-//        if (pt_small_icon_clr == null || pt_small_icon_clr!!.isEmpty()) {
-//            pt_small_icon_clr = extras.getString(Constants.WZRK_COLOR)
-//        }
-//        if (pt_subtitle == null || pt_subtitle!!.isEmpty()) {
-//            pt_subtitle = extras.getString(Constants.WZRK_SUBTITLE)
-//        }
-//        if (pt_collapse_key == null) {
-//            pt_collapse_key = extras[Constants.WZRK_COLLAPSE]
-//        }
-//    }
 
     override fun setActionButtons(
         context: Context?,

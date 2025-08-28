@@ -126,7 +126,6 @@ internal data class ZeroBezelTemplateData(
 internal data class ProductTemplateData(
     override val templateType: TemplateType = TemplateType.PRODUCT_DISPLAY,
     val baseContent: BaseContent,
-    val actions: JSONArray? = null,
     val imageList: ArrayList<ImageData>,
     val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
     val bigTextList: ArrayList<String>,

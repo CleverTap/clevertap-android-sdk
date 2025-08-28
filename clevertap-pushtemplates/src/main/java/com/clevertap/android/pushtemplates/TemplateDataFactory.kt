@@ -44,6 +44,8 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_COLOR
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Constants.WZRK_COLOR
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -70,76 +72,72 @@ internal object TemplateDataFactory {
         defaultAltText: String,
         notificationIdsProvider: () -> ArrayList<Int>
     ): TemplateData? {
-        // Process pt_json if present (same logic as TemplateRenderer)
-        val ptJson = extras.getString(PT_JSON)
-        val processedExtras = if (!ptJson.isNullOrEmpty()) {
-            try {
-                val newExtras = Utils.fromJson(JSONObject(ptJson))
-                val combinedExtras = Bundle(extras)
-                combinedExtras.putAll(newExtras)
-                combinedExtras
-            } catch (_: JSONException) {
-                extras
+        val pt_json = extras.getString(PT_JSON)
+        var newExtras: Bundle? = null
+        try {
+            if (pt_json.isNotNullAndEmpty()) {
+                newExtras = Utils.fromJson(JSONObject(pt_json))
             }
-        } else {
-            extras
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
+        if (newExtras != null) extras.putAll(newExtras)
 
         // Handle dark mode colors (same logic as TemplateRenderer)
-        val darkModeAdaptiveColors = Utils.createColorMap(processedExtras, isDarkMode)
+        val darkModeAdaptiveColors = Utils.createColorMap(extras, isDarkMode)
 
         return when (templateType) {
             TemplateType.BASIC -> createBasicTemplateData(
-                processedExtras,
+                extras,
                 darkModeAdaptiveColors,
                 defaultAltText
             )
 
             TemplateType.AUTO_CAROUSEL -> createAutoCarouselTemplateData(
-                processedExtras,
+                extras,
                 darkModeAdaptiveColors,
                 defaultAltText
             )
 
             TemplateType.MANUAL_CAROUSEL -> createManualCarouselTemplateData(
-                processedExtras,
+                extras,
                 darkModeAdaptiveColors,
                 defaultAltText
             )
 
             TemplateType.RATING -> createRatingTemplateData(
-                processedExtras,
+                extras,
                 darkModeAdaptiveColors,
                 defaultAltText
             )
 
             TemplateType.FIVE_ICONS -> createFiveIconsTemplateData(
-                processedExtras,
+                extras,
                 darkModeAdaptiveColors,
                 defaultAltText
             )
 
             TemplateType.PRODUCT_DISPLAY -> createProductTemplateData(
-                processedExtras,
+                extras,
                 darkModeAdaptiveColors,
                 defaultAltText
             )
 
             TemplateType.ZERO_BEZEL -> createZeroBezelTemplateData(
-                processedExtras,
+                extras,
                 darkModeAdaptiveColors,
                 defaultAltText
             )
 
             TemplateType.TIMER -> createTimerTemplateData(
-                processedExtras,
+                extras,
                 darkModeAdaptiveColors,
                 defaultAltText
             )
 
-            TemplateType.INPUT_BOX -> createInputBoxTemplateData(processedExtras, defaultAltText)
+            TemplateType.INPUT_BOX -> createInputBoxTemplateData(extras, defaultAltText)
             TemplateType.CANCEL -> createCancelTemplateData(
-                processedExtras,
+                extras,
                 notificationIdsProvider
             )
 
@@ -187,7 +185,7 @@ internal object TemplateDataFactory {
         defaultAltText: String
     ): RatingTemplateData {
         val defaultDeepLink = extras.getString(PT_DEFAULT_DL)
-            ?: extras.getString(Constants.DEEP_LINK_KEY) // Fallback as in TemplateRenderer
+            ?: extras.getString(Constants.DEEP_LINK_KEY)
 
         return RatingTemplateData(
             baseContent = createBaseContent(extras, colorMap),
@@ -218,7 +216,6 @@ internal object TemplateDataFactory {
     ): ProductTemplateData {
         return ProductTemplateData(
             baseContent = createBaseContent(extras, colorMap),
-            actions = Utils.getActionKeys(extras),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
             scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE)),
             bigTextList = Utils.getBigTextFromExtras(extras),
@@ -298,7 +295,7 @@ internal object TemplateDataFactory {
     private fun createBaseContent(extras: Bundle, colorMap: Map<String, String>): BaseContent {
         return BaseContent(
             textData = createBaseTextData(extras),
-            colorData = createBaseColorData(colorMap),
+            colorData = createBaseColorData(colorMap, extras.getString(WZRK_COLOR)),
             iconData = createIconData(extras),
             deepLinkList = Utils.getDeepLinkListFromExtras(extras),
         )
@@ -317,13 +314,16 @@ internal object TemplateDataFactory {
         )
     }
 
-    private fun createBaseColorData(colorMap: Map<String, String>): BaseColorData {
+    private fun createBaseColorData(
+        colorMap: Map<String, String>,
+        defaultColor: String?
+    ): BaseColorData {
         return BaseColorData(
             titleColor = colorMap[PT_TITLE_COLOR],
             messageColor = colorMap[PT_MSG_COLOR],
             backgroundColor = colorMap[PT_BG],
-            metaColor = colorMap[PT_META_CLR],
-            smallIconColor = colorMap[PT_SMALL_ICON_COLOUR]
+            metaColor = colorMap[PT_META_CLR] ?: defaultColor,
+            smallIconColor = colorMap[PT_SMALL_ICON_COLOUR] ?: defaultColor,
         )
     }
 
@@ -483,6 +483,36 @@ internal object TemplateDataFactory {
             iconData = IconData(),
             deepLinkList = this.deepLinkList
         )
+    }
+
+    internal fun TemplateData.getActions(): JSONArray? {
+        return when (this) {
+            is BasicTemplateData -> {
+                this.actions
+            }
+
+            is AutoCarouselTemplateData -> {
+                this.carouselData.actions
+            }
+
+            is ManualCarouselTemplateData -> {
+                this.carouselData.actions
+            }
+
+            is ZeroBezelTemplateData -> {
+                this.actions
+            }
+
+            is TimerTemplateData -> {
+                this.actions
+            }
+
+            is InputBoxTemplateData -> {
+                this.actions
+            }
+
+            else -> null
+        }
     }
 }
 

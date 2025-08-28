@@ -15,6 +15,7 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -198,6 +199,12 @@ public class Utils {
         } else {
             return color;
         }
+    }
+
+    public static boolean isDarkMode(Context context) {
+        int nightModeFlags = context.getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK;
+        return nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
     }
 
     public static String getTimeStamp(Context context, long timeMillis) {
@@ -457,7 +464,7 @@ public class Utils {
     }
 
     public static ArrayList<Integer> getNotificationIds(Context context) {
-        ArrayList<Integer> ids = new ArrayList<Integer>();
+        ArrayList<Integer> ids = new ArrayList<>();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             NotificationManager mNotificationManager = (NotificationManager) context
                     .getSystemService(NOTIFICATION_SERVICE);
@@ -614,9 +621,8 @@ public class Utils {
     public static int getFlipInterval(Bundle extras) {
         String interval = extras.getString(PTConstants.PT_FLIP_INTERVAL);
         try {
-            int t = 0;
             if (interval != null) {
-                t = Integer.parseInt(interval);
+                int t = Integer.parseInt(interval);
                 return Math.max(t, PTConstants.PT_FLIP_INTERVAL_TIME);
             }
         } catch (Exception e) {
