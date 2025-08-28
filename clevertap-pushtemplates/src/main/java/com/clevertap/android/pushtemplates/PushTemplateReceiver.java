@@ -247,15 +247,14 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                 contentViewManualCarousel.setOnClickPendingIntent(R.id.rightArrowPos0, PendingIntentFactory
                         .getPendingIntent(context, notificationId, extras, false,
-                                MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT, null));
+                                MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT));
 
                 contentViewManualCarousel.setOnClickPendingIntent(R.id.leftArrowPos0, PendingIntentFactory
                         .getPendingIntent(context, notificationId, extras, false,
-                                MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT, null));
+                                MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT));
 
                 PendingIntent pIntent = PendingIntentFactory.getPendingIntent(context, notificationId, extras, true,
-                        MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, null
-                );
+                        MANUAL_CAROUSEL_CONTENT_PENDING_INTENT);
 
                 NotificationCompat.Builder notificationBuilder = new Builder(context, notification);
 
