@@ -1,4 +1,9 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 7.5.1 (August 28, 2025)
+
+#### Bug Fixes
+* Fixes an `OutOfMemoryError` that occurred when parsing large encrypted cipher text in `AESCrypt.parseCipherText()`. The issue was caused by using `Regex.split()` on large byte array string representations, which created excessive memory allocations. The data is recovered through apis eventually.
+
 ### Version 7.5.0 (July 11, 2025)
 
 #### New Features
