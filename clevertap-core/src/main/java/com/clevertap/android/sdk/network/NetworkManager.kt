@@ -126,20 +126,6 @@ internal class NetworkManager constructor(
 
             if (queueData.isEmpty) {
                 config.logger.verbose(config.accountId, "No more events in queue")
-
-                // Special handling for push notification viewed events
-                if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED && totalEventsSent > 0) {
-                    try {
-                        // Notify listeners if needed
-                        notifyListenersForPushImpressionSentToServer(queueData.data)
-                    } catch (e: Exception) {
-                        config.logger.verbose(
-                            config.accountId,
-                            "Error notifying push impression listeners",
-                            e
-                        )
-                    }
-                }
                 break
             }
 
@@ -151,7 +137,7 @@ internal class NetworkManager constructor(
             )
 
             // Send the combined batch to CleverTap servers
-            val sendSuccess = sendQueue(
+            val networkCallSuccess = sendQueue(
                 context = context,
                 eventGroup = eventGroup,
                 queue = queue,
@@ -159,44 +145,37 @@ internal class NetworkManager constructor(
                 isUserSwitchFlush = isUserSwitchFlush
             )
 
-            if (sendSuccess) {
-
-                // Successfully sent - cleanup the events from database
-                val successCleanup = when (eventGroup) {
-                    EventGroup.PUSH_NOTIFICATION_VIEWED -> {
-                        // we know queueData does not contain profile ids in this case.
-                        databaseManager.cleanupPushNotificationEvents(context, queueData.eventIds)
-                    }
-                    else -> {
-                        databaseManager.cleanupSentEvents(
-                            context,
-                            queueData.eventIds,
-                            queueData.profileEventIds
-                        )
-                    }
-                }
-
-                // Notify success listeners
-                controllerManager.invokeBatchListener(queue, true)
-                totalEventsSent += batchSize
-
-                // Continue if we got a full batch (might be more events)
-                // Stop if we got less than full batch (no more events)
-                continueProcessing = (batchSize == BATCH_SIZE)
-
-            } else {
+            if (networkCallSuccess.not()) {
                 // Network error - don't cleanup, events will be retried
-                config.logger.verbose(
-                    config.accountId,
-                    "Failed to send batch - will retry later"
-                )
-
+                config.logger.verbose(config.accountId, "Failed to send batch - will retry later")
                 controllerManager.invokeCallbacksForNetworkError()
                 controllerManager.invokeBatchListener(queue, false)
-
-                // Stop processing on network error
-                continueProcessing = false
+                break
             }
+
+            // Notify success listeners
+            controllerManager.invokeBatchListener(queue, true)
+            totalEventsSent += batchSize
+
+            // cleanup events from table
+            if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
+                // we know queueData does not contain profile ids in this case.
+                databaseManager.cleanupPushNotificationEvents(
+                    context = context,
+                    ids = queueData.eventIds
+                )
+                notifyListenersForPushImpressionSentToServer(queueData.data)
+            } else {
+                databaseManager.cleanupSentEvents(
+                    context = context,
+                    eventIds = queueData.eventIds,
+                    profileEventIds = queueData.profileEventIds
+                )
+            }
+
+            // Continue if we got a full batch (might be more events)
+            // Stop if we got less than full batch (no more events)
+            continueProcessing = queueData.hasMore
         }
 
         config.logger.verbose(
@@ -689,7 +668,6 @@ internal class NetworkManager constructor(
         /* verify whether there is a listener assigned to the push ID for monitoring the 'push impression'
                 event.
                 */
-
         for (i in 0..<queue.length()) {
             try {
                 val notif = queue.getJSONObject(i).optJSONObject("evtData")
@@ -698,8 +676,7 @@ internal class NetworkManager constructor(
                     val pushAccountId = notif.optString(Constants.WZRK_ACCT_ID_KEY)
 
                     notifyListenerForPushImpressionSentToServer(
-                        PushNotificationUtil.buildPushNotificationRenderedListenerKey
-                            (
+                        PushNotificationUtil.buildPushNotificationRenderedListenerKey(
                             pushAccountId,
                             pushId
                         )
