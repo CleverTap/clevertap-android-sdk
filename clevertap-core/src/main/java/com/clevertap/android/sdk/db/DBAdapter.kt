@@ -561,7 +561,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
 
     /**
      * Fetches a combined batch of events from both events and profileEvents tables
-     * Prioritizes events table first, then fills remaining slots from profileEvents
+     * Prioritizes profileEvents table first, then fills remaining slots from events
      *
      * @param batchSize The maximum number of events to fetch (typically 50)
      * @return QueueData containing the events and their IDs for cleanup
@@ -573,31 +573,30 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val eventIds = mutableListOf<String>()
         val profileEventIds = mutableListOf<String>()
 
-        // First priority: Fetch from events table using the base fetchEvents method
-        val eventsData = fetchEvents(Table.EVENTS, batchSize)
+        // First priority: Fetch from profileEvents table using the base fetchEvents method
+        val profileData = fetchEvents(Table.PROFILE_EVENTS, batchSize)
 
-        // Add events to combined data
-        if (!eventsData.isEmpty && eventsData.data != null) {
-            for (i in 0 until eventsData.data!!.length()) {
-                allEvents.put(eventsData.data!!.getJSONObject(i))
+        // Add profile events to combined data
+        if (!profileData.isEmpty && profileData.data != null) {
+            for (i in 0 until profileData.data!!.length()) {
+                allEvents.put(profileData.data!!.getJSONObject(i))
             }
-            eventIds.addAll(eventsData.eventIds)
+            profileEventIds.addAll(profileData.profileEventIds)
         }
 
-        // Calculate remaining slots for profile events
-        val profileEventsNeeded = batchSize - eventIds.size
+        // Calculate remaining slots for normal events
+        val eventsNeeded = batchSize - profileEventIds.size
 
-        // Second priority: Fill remaining slots from profileEvents table
-        if (profileEventsNeeded > 0) {
-            val profileData = fetchEvents(Table.PROFILE_EVENTS, profileEventsNeeded)
+        // Second priority: Fill remaining slots from events table
+        if (eventsNeeded > 0) {
+            val eventsData = fetchEvents(Table.EVENTS, eventsNeeded)
 
-            // Add profile events to combined data
-            if (!profileData.isEmpty && profileData.data != null) {
-                for (i in 0 until profileData.data!!.length()) {
-                    allEvents.put(profileData.data!!.getJSONObject(i))
+            // Add events to combined data
+            if (!eventsData.isEmpty && eventsData.data != null) {
+                for (i in 0 until eventsData.data!!.length()) {
+                    allEvents.put(eventsData.data!!.getJSONObject(i))
                 }
-                // Profile events IDs are in eventIds from fetchEvents, move them to profileEventIds
-                profileEventIds.addAll(profileData.profileEventIds)
+                eventIds.addAll(eventsData.eventIds)
             }
         }
 
@@ -606,7 +605,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         combinedQueueData.eventIds = eventIds
         combinedQueueData.profileEventIds = profileEventIds
 
-        logger.verbose("Fetched combined batch: ${eventIds.size} events, ${profileEventIds.size} profile events")
+        logger.verbose("Fetched combined batch: ${profileEventIds.size} profile events, ${eventIds.size} events")
 
         return combinedQueueData
     }
