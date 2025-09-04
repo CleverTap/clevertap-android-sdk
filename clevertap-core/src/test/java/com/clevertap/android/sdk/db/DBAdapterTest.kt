@@ -450,7 +450,11 @@ class DBAdapterTest : BaseTestCase() {
             //validation
             dbAdapter.fetchEvents(table, Int.MAX_VALUE).let {
                 println("jsonObject = $it")
-                assertNull(it)
+                assertNotNull(it)
+                assertTrue(it.isEmpty)
+                assertFalse(it.hasMore)
+                assertFalse(it.hasEvents)
+                assertFalse(it.hasProfileEvents)
             }
         }
     }
