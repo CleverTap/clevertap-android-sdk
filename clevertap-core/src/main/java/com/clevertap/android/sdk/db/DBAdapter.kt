@@ -452,24 +452,6 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         cleanInternal(PUSH_NOTIFICATIONS, 0)
     }
 
-    /**
-     * Removes sent events with an _id <= last_id from table
-     *
-     * @param lastId the last id to delete
-     * @param table  the table to remove events
-     */
-    @WorkerThread
-    @Synchronized
-    fun cleanupEventsFromLastId(lastId: String, table: Table) {
-        val tName = table.tableName
-        try {
-            dbHelper.writableDatabase.delete(tName, "${Column.ID} <= ?", arrayOf(lastId))
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing sent data from table $tName Recreating DB")
-            deleteDB()
-        }
-    }
-
     @Synchronized
     fun storePushNotificationId(id: String?, ttl: Long) {
         if (id == null) {
@@ -630,31 +612,19 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     }
 
     /**
-     * Cleans up events from the events table by their IDs
+     * Removes sent events with an _id <= last_id from table
      *
-     * @param eventIds List of event IDs to delete
+     * @param lastId the last id to delete
+     * @param table  the table to remove events
      */
     @WorkerThread
     @Synchronized
-    fun cleanupEventsByIds(eventIds: List<String>) {
-        if (eventIds.isEmpty()) return
-
-        val tName = Table.EVENTS.tableName
-
+    fun cleanupEventsFromLastId(lastId: String, table: Table) {
+        val tName = table.tableName
         try {
-            // Process in chunks if the list is too large (SQLite has a limit on query parameters)
-            val chunkSize = 100
-            eventIds.chunked(chunkSize).forEach { chunk ->
-                val placeholders = chunk.joinToString(",") { "?" }
-                val deletedCount = dbHelper.writableDatabase.delete(
-                    tName,
-                    "${Column.ID} IN ($placeholders)",
-                    chunk.toTypedArray()
-                )
-                logger.verbose("Deleted $deletedCount events from $tName")
-            }
+            dbHelper.writableDatabase.delete(tName, "${Column.ID} <= ?", arrayOf(lastId))
         } catch (e: SQLiteException) {
-            logger.verbose("Error removing events from $tName", e)
+            logger.verbose("Error removing sent data from table $tName Recreating DB")
             deleteDB()
         }
     }
@@ -662,49 +632,21 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     /**
      * Cleans up events from the profileEvents table by their IDs
      *
-     * @param profileEventIds List of profile event IDs to delete
+     * @param events List of profile event IDs to delete
      */
     @WorkerThread
     @Synchronized
-    fun cleanupProfileEventsByIds(profileEventIds: List<String>) {
-        if (profileEventIds.isEmpty()) return
+    fun cleanupEventsByIds(table: Table, events: List<String>) {
+        if (events.isEmpty()) {
+            return
+        }
 
-        val tName = Table.PROFILE_EVENTS.tableName
+        val tName = table.tableName
 
         try {
             // Process in chunks if the list is too large
             val chunkSize = 100
-            profileEventIds.chunked(chunkSize).forEach { chunk ->
-                val placeholders = chunk.joinToString(",") { "?" }
-                val deletedCount = dbHelper.writableDatabase.delete(
-                    tName,
-                    "${Column.ID} IN ($placeholders)",
-                    chunk.toTypedArray()
-                )
-                logger.verbose("Deleted $deletedCount profile events from $tName")
-            }
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing profile events from $tName", e)
-            deleteDB()
-        }
-    }
-
-    /**
-     * Cleans up events from the events table by their IDs
-     *
-     * @param eventIds List of event IDs to delete
-     */
-    @WorkerThread
-    @Synchronized
-    fun cleanupPushNotificationEventsByIds(eventIds: List<String>) {
-        if (eventIds.isEmpty()) return
-
-        val tName = Table.PUSH_NOTIFICATION_VIEWED.tableName
-
-        try {
-            // Process in chunks if the list is too large (SQLite has a limit on query parameters)
-            val chunkSize = 100
-            eventIds.chunked(chunkSize).forEach { chunk ->
+            events.chunked(chunkSize).forEach { chunk ->
                 val placeholders = chunk.joinToString(",") { "?" }
                 val deletedCount = dbHelper.writableDatabase.delete(
                     tName,
