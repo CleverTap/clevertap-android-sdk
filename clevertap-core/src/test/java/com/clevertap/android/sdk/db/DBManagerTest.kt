@@ -14,6 +14,7 @@ import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -92,7 +93,8 @@ class DBManagerTest : BaseTestCase() {
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS).forEach { table ->
             val entries = dbAdapter.fetchEvents(table, Int.MAX_VALUE)
             println("after call, entries for table: ${table.tableName} = $entries")
-            assertNull(entries.data)
+            assertNotNull(entries.data)
+            assertTrue(entries.isEmpty)
         }
     }
 
@@ -268,7 +270,8 @@ class DBManagerTest : BaseTestCase() {
         // Validate
         assertNotNull(queueData)
         assertTrue(queueData.isEmpty)
-        assertNull(queueData.data)
+        assertNotNull(queueData.data)
+        assertEquals(JSONArray().toString(), queueData.data.toString())
         assertEquals(0, queueData.eventIds.size)
         assertEquals(0, queueData.profileEventIds.size)
     }
@@ -327,10 +330,12 @@ class DBManagerTest : BaseTestCase() {
         
         // Check that events are removed
         val remainingEvents = dbAdapter.fetchEvents(Table.EVENTS, Int.MAX_VALUE)
-        assertNull(remainingEvents.data, "Events table should be empty after cleanup")
-        
+        assertNotNull(remainingEvents.data, "Events table should be empty after cleanup")
+        assertTrue(remainingEvents.isEmpty, "Events table should be empty after cleanup")
+
         val remainingProfileEvents = dbAdapter.fetchEvents(Table.PROFILE_EVENTS, Int.MAX_VALUE)
-        assertNull(remainingProfileEvents.data, "Profile events table should be empty after cleanup")
+        assertNotNull(remainingProfileEvents.data, "Profile events table should be empty after cleanup")
+        assertTrue(remainingProfileEvents.isEmpty, "Events table should be empty after cleanup")
     }
 
     @Test
@@ -369,10 +374,12 @@ class DBManagerTest : BaseTestCase() {
         
         // Validate - all should be cleaned since we fetched all 40
         val remainingEvents = dbAdapter.fetchEvents(Table.EVENTS, Int.MAX_VALUE)
-        assertNull(remainingEvents.data, "All events should be removed")
-        
+        assertNotNull(remainingEvents.data, "All events should be removed")
+        assertFalse(remainingEvents.hasEvents, "All events should be removed")
+
         val remainingProfileEvents = dbAdapter.fetchEvents(Table.PROFILE_EVENTS, Int.MAX_VALUE)
-        assertNull(remainingProfileEvents.data, "All profile events should be removed")
+        assertNotNull(remainingProfileEvents.data, "All profile events should be removed")
+        assertFalse(remainingProfileEvents.hasEvents, "All events should be removed")
     }
 
     @Test
