@@ -119,9 +119,9 @@ internal class NetworkManager constructor(
         while (continueProcessing) {
             // Retrieve combined batch of events (events + profile events)
             val queueData: QueueData = databaseManager.getQueuedEvents(
-                context,
-                BATCH_SIZE,
-                eventGroup
+                context = context,
+                batchSize = BATCH_SIZE,
+                eventGroup = eventGroup
             )
 
             if (queueData.isEmpty) {
@@ -131,7 +131,7 @@ internal class NetworkManager constructor(
                 if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED && totalEventsSent > 0) {
                     try {
                         // Notify listeners if needed
-                        notifyListenersForPushImpressionSentToServer(queueData.data ?: JSONArray())
+                        notifyListenersForPushImpressionSentToServer(queueData.data)
                     } catch (e: Exception) {
                         config.logger.verbose(
                             config.accountId,
@@ -144,11 +144,6 @@ internal class NetworkManager constructor(
             }
 
             val queue = queueData.data
-            if (queue == null || queue.length() <= 0) {
-                config.logger.verbose(config.accountId, "Empty queue data received")
-                break
-            }
-
             val batchSize = queue.length()
             config.logger.verbose(
                 config.accountId,
@@ -156,7 +151,13 @@ internal class NetworkManager constructor(
             )
 
             // Send the combined batch to CleverTap servers
-            val sendSuccess = sendQueue(context, eventGroup, queue, caller, isUserSwitchFlush)
+            val sendSuccess = sendQueue(
+                context = context,
+                eventGroup = eventGroup,
+                queue = queue,
+                caller = caller,
+                isUserSwitchFlush = isUserSwitchFlush
+            )
 
             if (sendSuccess) {
 

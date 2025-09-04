@@ -501,8 +501,6 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     @Synchronized
     fun fetchEvents(table: Table, limit: Int): QueueData {
         val queueData = QueueData()
-        val events = JSONArray()
-        val eventIds = mutableListOf<String>()
 
         val tName = table.tableName
         try {
@@ -519,8 +517,14 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
 
                     try {
                         val jsonEvent = JSONObject(eventData)
-                        events.put(jsonEvent)
-                        eventIds.add(id)
+                        queueData.data.put(jsonEvent)
+
+                        if (table == Table.PROFILE_EVENTS) {
+                            queueData.profileEventIds.add(id)
+                        } else {
+                            queueData.eventIds.add(id)
+                        }
+
                     } catch (e: JSONException) {
                         logger.verbose("Error parsing event data for id: $id from table: $tName", e)
                     }
@@ -530,32 +534,12 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
             logger.verbose("Could not fetch records from table $tName", e)
         }
 
-        // Set the data and IDs in QueueData
-        queueData.data = if (events.length() > 0) events else null
-
-        // Determine which ID list to populate based on table type
-        when (table) {
-            Table.EVENTS -> {
-                queueData.eventIds = eventIds
-                queueData.profileEventIds = emptyList()
-            }
-            Table.PROFILE_EVENTS -> {
-                queueData.eventIds = emptyList()
-                queueData.profileEventIds = eventIds
-            }
-            Table.PUSH_NOTIFICATION_VIEWED -> {
-                // For push notifications, we store IDs in eventIds for consistency
-                queueData.eventIds = eventIds
-                queueData.profileEventIds = emptyList()
-            }
-            else -> {
-                // For any other table, default to eventIds
-                queueData.eventIds = eventIds
-                queueData.profileEventIds = emptyList()
-            }
+        val size = if (table == Table.PROFILE_EVENTS) {
+            queueData.profileEventIds.size
+        } else {
+            queueData.eventIds.size
         }
-
-        logger.verbose("Fetched ${eventIds.size} events from $tName")
+        logger.verbose("Fetched $size events from $tName")
         return queueData
     }
 
@@ -569,43 +553,35 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
     @Synchronized
     fun fetchCombinedEvents(batchSize: Int): QueueData {
         val combinedQueueData = QueueData()
-        val allEvents = JSONArray()
-        val eventIds = mutableListOf<String>()
-        val profileEventIds = mutableListOf<String>()
 
         // First priority: Fetch from profileEvents table using the base fetchEvents method
         val profileData = fetchEvents(Table.PROFILE_EVENTS, batchSize)
 
         // Add profile events to combined data
-        if (!profileData.isEmpty && profileData.data != null) {
-            for (i in 0 until profileData.data!!.length()) {
-                allEvents.put(profileData.data!!.getJSONObject(i))
+        if (!profileData.isEmpty) {
+            for (i in 0 until profileData.data.length()) {
+                combinedQueueData.data.put(profileData.data.getJSONObject(i))
             }
-            profileEventIds.addAll(profileData.profileEventIds)
+            combinedQueueData.profileEventIds.addAll(profileData.profileEventIds)
         }
 
         // Calculate remaining slots for normal events
-        val eventsNeeded = batchSize - profileEventIds.size
+        val eventsNeeded = batchSize - combinedQueueData.profileEventIds.size
 
         // Second priority: Fill remaining slots from events table
         if (eventsNeeded > 0) {
             val eventsData = fetchEvents(Table.EVENTS, eventsNeeded)
 
             // Add events to combined data
-            if (!eventsData.isEmpty && eventsData.data != null) {
-                for (i in 0 until eventsData.data!!.length()) {
-                    allEvents.put(eventsData.data!!.getJSONObject(i))
+            if (!eventsData.isEmpty) {
+                for (i in 0 until eventsData.data.length()) {
+                    combinedQueueData.data.put(eventsData.data.getJSONObject(i))
                 }
-                eventIds.addAll(eventsData.eventIds)
+                combinedQueueData.eventIds.addAll(eventsData.eventIds)
             }
         }
 
-        // Set combined data
-        combinedQueueData.data = if (allEvents.length() > 0) allEvents else null
-        combinedQueueData.eventIds = eventIds
-        combinedQueueData.profileEventIds = profileEventIds
-
-        logger.verbose("Fetched combined batch: ${profileEventIds.size} profile events, ${eventIds.size} events")
+        logger.verbose("Fetched combined batch: ${combinedQueueData.profileEventIds.size} profile events, ${combinedQueueData.eventIds.size} events")
 
         return combinedQueueData
     }
