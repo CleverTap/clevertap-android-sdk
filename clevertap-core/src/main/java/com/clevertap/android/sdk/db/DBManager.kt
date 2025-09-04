@@ -115,7 +115,8 @@ internal class DBManager(
 
                 // Clean up events from events table
                 if (eventIds.isNotEmpty()) {
-                    adapter.cleanupEventsByIds(eventIds)
+                    //adapter.cleanupEventsByIds(EVENTS, eventIds)
+                    adapter.cleanupEventsFromLastId(eventIds[eventIds.size-1], EVENTS)
                     config.logger.verbose(
                         config.accountId,
                         "Cleaned ${eventIds.size} events from events table"
@@ -124,7 +125,8 @@ internal class DBManager(
 
                 // Clean up events from profileEvents table
                 if (profileEventIds.isNotEmpty()) {
-                    adapter.cleanupProfileEventsByIds(profileEventIds)
+                    //adapter.cleanupEventsByIds(PROFILE_EVENTS, profileEventIds)
+                    adapter.cleanupEventsFromLastId(profileEventIds[profileEventIds.size-1], PROFILE_EVENTS)
                     config.logger.verbose(
                         config.accountId,
                         "Cleaned ${profileEventIds.size} events from profileEvents table"
@@ -155,7 +157,8 @@ internal class DBManager(
                 val adapter = loadDBAdapter(context)
                 // Clean up events from profileEvents table
                 if (ids.isNotEmpty()) {
-                    adapter.cleanupPushNotificationEventsByIds(ids)
+                    //adapter.cleanupEventsByIds(PUSH_NOTIFICATION_VIEWED, ids)
+                    adapter.cleanupEventsFromLastId(ids[ids.size - 1], PUSH_NOTIFICATION_VIEWED)
                     config.logger.verbose(
                         config.accountId,
                         "Cleaned ${ids.size} events from Push impressions table"
