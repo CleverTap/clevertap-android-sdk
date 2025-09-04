@@ -509,9 +509,11 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
                 arrayOf(Column.ID, Column.DATA, Column.CREATED_AT),
                 null, null, null, null,
                 "${Column.CREATED_AT} ASC",
-                limit.toString()
+                (limit + 1).toString()
             )?.use { cursor ->
-                while (cursor.moveToNext()) {
+                queueData.hasMore = cursor.count > limit
+                for (pos in 0 until limit) {
+                    cursor.moveToNext()
                     val id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
                     val eventData = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
 
@@ -563,6 +565,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
                 combinedQueueData.data.put(profileData.data.getJSONObject(i))
             }
             combinedQueueData.profileEventIds.addAll(profileData.profileEventIds)
+            combinedQueueData.hasMore = profileData.hasMore
         }
 
         // Calculate remaining slots for normal events
@@ -578,6 +581,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
                     combinedQueueData.data.put(eventsData.data.getJSONObject(i))
                 }
                 combinedQueueData.eventIds.addAll(eventsData.eventIds)
+                combinedQueueData.hasMore = eventsData.hasMore
             }
         }
 

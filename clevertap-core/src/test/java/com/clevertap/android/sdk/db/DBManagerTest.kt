@@ -95,6 +95,7 @@ class DBManagerTest : BaseTestCase() {
             println("after call, entries for table: ${table.tableName} = $entries")
             assertNotNull(entries.data)
             assertTrue(entries.isEmpty)
+            assertFalse(entries.hasMore)
         }
     }
 
@@ -106,24 +107,24 @@ class DBManagerTest : BaseTestCase() {
         dbManager.queueEventToDB(appCtx, json, Constants.PROFILE_EVENT)
 
         //validate
-        dbAdapter.fetchEvents(Table.PROFILE_EVENTS, Int.MAX_VALUE).let {
+        dbAdapter.fetchEvents(Table.PROFILE_EVENTS, 50).let {
             println(" entries : $it")
             assertNotNull(it)
-            assertEquals(1, it.data!!.length())
-            assertEquals("a1", it.data!!.getJSONObject(0).getString("name"))
-
+            assertEquals(1, it.data.length())
+            assertEquals("a1", it.data.getJSONObject(0).getString("name"))
+            assertFalse(it.hasMore)
         }
 
         //test
         dbManager.queueEventToDB(appCtx, json, Constants.PROFILE_EVENT + 1)
 
         //validate
-        dbAdapter.fetchEvents(Table.EVENTS, Int.MAX_VALUE).let {
+        dbAdapter.fetchEvents(Table.EVENTS, 50).let {
             println(" entries : $it")
             assertNotNull(it)
-            assertEquals(1, it.data!!.length())
-            assertEquals("a1", it.data!!.getJSONObject(0).getString("name"))
-
+            assertEquals(1, it.data.length())
+            assertEquals("a1", it.data.getJSONObject(0).getString("name"))
+            assertFalse(it.hasMore)
         }
     }
 
@@ -135,11 +136,11 @@ class DBManagerTest : BaseTestCase() {
         dbManager.queuePushNotificationViewedEventToDB(appCtx, json)
 
         //validate
-        dbAdapter.fetchEvents(Table.PUSH_NOTIFICATION_VIEWED, Int.MAX_VALUE).let {
+        dbAdapter.fetchEvents(Table.PUSH_NOTIFICATION_VIEWED, 50).let {
             println(" entries : $it")
             assertNotNull(it)
-            assertEquals(1, it.data!!.length())
-            assertEquals("a1", it.data!!.getJSONObject(0).getString("name"))
+            assertEquals(1, it.data.length())
+            assertEquals("a1", it.data.getJSONObject(0).getString("name"))
 
         }
     }
@@ -168,7 +169,8 @@ class DBManagerTest : BaseTestCase() {
         assertNotNull(queueData)
         assertNotNull(queueData.data)
         assertEquals(35, queueData.data?.length()) // Should return all 35 events
-        
+        assertFalse(queueData.hasMore)
+
         // Verify we got both event types
         val resultEvents = mutableListOf<JSONObject>()
         for (i in 0 until queueData.data!!.length()) {
@@ -201,7 +203,8 @@ class DBManagerTest : BaseTestCase() {
         // Validate
         assertNotNull(queueData)
         assertNotNull(queueData.data)
-        assertEquals(50, queueData.data?.length()) // Should return exactly 50 events
+        assertEquals(50, queueData.data.length()) // Should return exactly 50 events
+        assertTrue(queueData.hasMore)
         
         // Verify all 50 are from profile events table (priority)
         val resultEvents = mutableListOf<JSONObject>()
@@ -232,12 +235,13 @@ class DBManagerTest : BaseTestCase() {
         // Validate
         assertNotNull(queueData)
         assertNotNull(queueData.data)
-        assertEquals(50, queueData.data?.length()) // Should return exactly 50 events
+        assertEquals(50, queueData.data.length()) // Should return exactly 50 events
+        assertTrue(queueData.hasMore)
         
         // Verify we got 40 profile events and 10 events
         val resultEvents = mutableListOf<JSONObject>()
-        for (i in 0 until queueData.data!!.length()) {
-            resultEvents.add(queueData.data!!.getJSONObject(i))
+        for (i in 0 until queueData.data.length()) {
+            resultEvents.add(queueData.data.getJSONObject(i))
         }
         
         val eventCount = resultEvents.count { it.getString("type") == "event" }
@@ -257,7 +261,7 @@ class DBManagerTest : BaseTestCase() {
         assertTrue(firstFortyAreProfiles, "First 40 items should be profile events")
         
         val lastTenAreEvents = (40..49).all { 
-            queueData.data!!.getJSONObject(it).getString("type") == "event" 
+            queueData.data.getJSONObject(it).getString("type") == "event"
         }
         assertTrue(lastTenAreEvents, "Last 10 items should be events")
     }
@@ -271,6 +275,7 @@ class DBManagerTest : BaseTestCase() {
         assertNotNull(queueData)
         assertTrue(queueData.isEmpty)
         assertNotNull(queueData.data)
+        assertFalse(queueData.hasMore)
         assertEquals(JSONArray().toString(), queueData.data.toString())
         assertEquals(0, queueData.eventIds.size)
         assertEquals(0, queueData.profileEventIds.size)
@@ -288,12 +293,13 @@ class DBManagerTest : BaseTestCase() {
         // Validate
         assertNotNull(queueData)
         assertNotNull(queueData.data)
-        assertEquals(30, queueData.data?.length()) // Should return all 30 profile events
+        assertEquals(30, queueData.data.length()) // Should return all 30 profile events
+        assertFalse(queueData.hasMore)
         
         // Verify all are profile events
         val resultEvents = mutableListOf<JSONObject>()
-        for (i in 0 until queueData.data!!.length()) {
-            resultEvents.add(queueData.data!!.getJSONObject(i))
+        for (i in 0 until queueData.data.length()) {
+            resultEvents.add(queueData.data.getJSONObject(i))
         }
         
         val profileCount = resultEvents.count { it.getString("type") == "profile" }
@@ -316,7 +322,8 @@ class DBManagerTest : BaseTestCase() {
         // Get the events with IDs
         val queueData = dbManager.getQueuedEvents(appCtx, 50, EventGroup.REGULAR)
         assertNotNull(queueData)
-        assertEquals(20, queueData.data?.length())
+        assertEquals(20, queueData.data.length())
+        assertFalse(queueData.hasMore)
         
         // Test cleanup
         val success = dbManager.cleanupSentEvents(
@@ -363,7 +370,8 @@ class DBManagerTest : BaseTestCase() {
         // Get first batch
         val firstBatch = dbManager.getQueuedEvents(appCtx, 50, EventGroup.REGULAR)
         assertNotNull(firstBatch)
-        assertEquals(40, firstBatch.data?.length()) // 20 + 20
+        assertEquals(40, firstBatch.data.length()) // 20 + 20
+        assertFalse(firstBatch.hasMore)
         
         // Clean up first batch
         dbManager.cleanupSentEvents(
@@ -404,11 +412,12 @@ class DBManagerTest : BaseTestCase() {
         // Validate
         assertNotNull(queueData)
         assertNotNull(queueData.data)
-        assertEquals(5, queueData.data?.length()) // Should only get push notification events
+        assertEquals(5, queueData.data.length()) // Should only get push notification events
+        assertFalse(queueData.hasMore)
         
         // Verify all are push notification events
-        for (i in 0 until queueData.data!!.length()) {
-            val event = queueData.data!!.getJSONObject(i)
+        for (i in 0 until queueData.data.length()) {
+            val event = queueData.data.getJSONObject(i)
             assertEquals("push_viewed", event.getString("type"))
         }
         
@@ -432,12 +441,13 @@ class DBManagerTest : BaseTestCase() {
         // Validate
         assertNotNull(queueData)
         assertNotNull(queueData.data)
-        assertEquals(50, queueData.data?.length()) // Should return exactly 50
+        assertEquals(50, queueData.data.length()) // Should return exactly 50
+        assertTrue(queueData.hasMore)
         
         // Verify we get 30 profile events (all of them) and 20 regular events
         val resultEvents = mutableListOf<JSONObject>()
-        for (i in 0 until queueData.data!!.length()) {
-            resultEvents.add(queueData.data!!.getJSONObject(i))
+        for (i in 0 until queueData.data.length()) {
+            resultEvents.add(queueData.data.getJSONObject(i))
         }
         
         val profileCount = resultEvents.count { it.getString("type") == "profile" }
@@ -452,7 +462,7 @@ class DBManagerTest : BaseTestCase() {
         
         // Verify order - first 30 should be profile events
         val firstThirtyAreProfiles = (0..29).all { 
-            queueData.data!!.getJSONObject(it).getString("type") == "profile" 
+            queueData.data.getJSONObject(it).getString("type") == "profile"
         }
         assertTrue(firstThirtyAreProfiles, "First 30 items should be profile events due to priority")
     }
@@ -472,12 +482,13 @@ class DBManagerTest : BaseTestCase() {
         // Validate
         assertNotNull(queueData)
         assertNotNull(queueData.data)
-        assertEquals(50, queueData.data?.length()) // Should return exactly 50
+        assertEquals(50, queueData.data.length()) // Should return exactly 50
+        assertFalse(queueData.hasMore)
         
         // Verify all are profile events (no regular events)
         val resultEvents = mutableListOf<JSONObject>()
-        for (i in 0 until queueData.data!!.length()) {
-            resultEvents.add(queueData.data!!.getJSONObject(i))
+        for (i in 0 until queueData.data.length()) {
+            resultEvents.add(queueData.data.getJSONObject(i))
         }
         
         val profileCount = resultEvents.count { it.getString("type") == "profile" }

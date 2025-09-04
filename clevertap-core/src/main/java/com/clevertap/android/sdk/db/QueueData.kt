@@ -10,6 +10,7 @@ class QueueData {
     val data: JSONArray = JSONArray()
     val eventIds: MutableList<String> = mutableListOf()  // IDs from events table
     val profileEventIds: MutableList<String> = mutableListOf()  // IDs from profileEvents table
+    var hasMore: Boolean = false
 
     val isEmpty: Boolean
         get() = data.length() <= 0
