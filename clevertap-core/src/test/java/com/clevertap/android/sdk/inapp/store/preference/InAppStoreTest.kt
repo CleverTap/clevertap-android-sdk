@@ -112,138 +112,42 @@ class InAppStoreTest {
     @Test
     fun `storeEvaluatedServerSideInAppIds writes JSONObject to ctPreference`() {
         // Arrange
-        val evaluatedServerSideInAppIds = JSONObject()
-            .put(EventType.PROFILE.key, listOf(100000,1000002,100000001))
-            .put(EventType.RAISED.key, listOf(200000,2000002,200000001))
+        val evaluatedServerSideInAppIds = JSONArray().apply {
+            put(100000)
+            put(1000002)
+            put(100000001)
+        }
         every { ctPreference.writeString(any(), any()) } just Runs
 
         // Act
         inAppStore.storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds)
 
         // Assert
-        verify { ctPreference.writeString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, """{"profile":"[100000, 1000002, 100000001]","raised":"[200000, 2000002, 200000001]"}""") }
+        verify { ctPreference.writeString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, "[100000,1000002,100000001]") }
     }
 
     @Test
     fun `storeSuppressedClientSideInAppIds writes JSONObject to ctPreference`() {
-        // Arrange
-        val evaluatedServerSideInAppIds = JSONObject()
-            .put(EventType.PROFILE.key, listOf(mapOf(Constants.NOTIFICATION_ID_TAG to "id1"), mapOf(Constants.NOTIFICATION_ID_TAG to "id2")))
-            .put(EventType.RAISED.key, listOf(mapOf(Constants.NOTIFICATION_ID_TAG to "id2")))
+
+        val evaluatedServerSideInAppIds = JSONArray().apply {
+            put(
+                JSONObject().apply {
+                    put(Constants.NOTIFICATION_ID_TAG, "id1")
+                }
+            )
+            put(
+                JSONObject().apply {
+                    put(Constants.NOTIFICATION_ID_TAG, "id2")
+                }
+            )
+        }
         every { ctPreference.writeString(any(), any()) } just Runs
 
         // Act
         inAppStore.storeSuppressedClientSideInAppIds(evaluatedServerSideInAppIds)
 
         // Assert
-        verify { ctPreference.writeString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, """{"profile":"[{wzrk_id=id1}, {wzrk_id=id2}]","raised":"[{wzrk_id=id2}]"}""") }
-    }
-
-    @Test
-    fun `readEvaluatedServerSideInAppIds returns JSONObject from ctPreference when saved value`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = """{"profile":"[100000, 1000002, 100000001]","raised":"[200000, 2000002, 200000001]"}"""
-        every { ctPreference.readString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readEvaluatedServerSideInAppIds()
-
-        // Assert
-        assertEquals(evaluatedServerSideInAppIdsString, result.toString())
-    }
-
-    @Test
-    fun `readEvaluatedServerSideInAppIds returns empty JSONObject from ctPreference when saved value is null`()
-    {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = null
-        every { ctPreference.readString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readEvaluatedServerSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject(), result, STRICT)
-    }
-
-    @Test
-    fun `readEvaluatedServerSideInAppIds returns empty JSONObject from ctPreference when saved value is empty`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = ""
-        every { ctPreference.readString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readEvaluatedServerSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject(), result, STRICT)
-    }
-
-    @Test
-    fun `readEvaluatedServerSideInAppIds returns populated JSONObject from ctPreference when saved value is legacy JSoNArray`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = "[100000, 1000002, 100000001]"
-        every { ctPreference.readString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readEvaluatedServerSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject().put(EventType.RAISED.key, JSONArray("[100000, 1000002, 100000001]")), result, STRICT)
-    }
-
-
-    @Test
-    fun `readSuppressedClientSideInAppIds() returns JSONObject from ctPreference when saved value`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = """{"profile":"[{wzrk_id=id1}, {wzrk_id=id2}]","raised":"[{wzrk_id=id2}]"}"""
-        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readSuppressedClientSideInAppIds()
-
-        // Assert
-        assertEquals(evaluatedServerSideInAppIdsString, result.toString())
-    }
-
-    @Test
-    fun `readSuppressedClientSideInAppIds() returns empty JSONObject from ctPreference when saved value is null`()
-    {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = null
-        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readSuppressedClientSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject(), result, STRICT)
-    }
-
-    @Test
-    fun `readSuppressedClientSideInAppIds() returns empty JSONObject from ctPreference when saved value is empty`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = ""
-        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readSuppressedClientSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject(), result, STRICT)
-    }
-
-    @Test
-    fun `readSuppressedClientSideInAppIds() returns populated JSONObject from ctPreference when saved value is legacy JSoNArray`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = "[{wzrk_id=id1}, {wzrk_id=id2}]"
-        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readSuppressedClientSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject().put(EventType.RAISED.key, JSONArray("[{wzrk_id=id1}, {wzrk_id=id2}]")), result, STRICT)
+        verify { ctPreference.writeString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, evaluatedServerSideInAppIds.toString()) }
     }
 
     @Test
