@@ -69,11 +69,11 @@ internal class EvaluationManager(
 
     // Internal map to track server-side evaluated campaign IDs. This map is used to identify the evaluatedIDs for raised and profile events individually
     @VisibleForTesting
-    internal var evaluatedServerSideCampaignIds: MutableMap<String, MutableList<Long>> = mutableMapOf(Constants.RAISED to mutableListOf(), Constants.PROFILE to mutableListOf())
+    internal var evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
 
     // Internal map to track client-side suppressed in-app notifications. This map is used to identify the suppressedIDs for raised and profile events individually.
     @VisibleForTesting
-    internal var suppressedClientSideInApps: MutableMap<String, MutableList<Map<String, Any?>>> = mutableMapOf(Constants.RAISED to mutableListOf(), Constants.PROFILE to mutableListOf())
+    internal var suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
     private val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
 
@@ -209,7 +209,7 @@ internal class EvaluationManager(
                 return JSONArray().also { it.put(inApp) }
             } else {
                 updated = true
-                suppress(inApp, EventType.RAISED)
+                suppress(inApp)
             }
         }
         // save before returning
@@ -251,7 +251,7 @@ internal class EvaluationManager(
                 if (campaignId != 0L) {
                     updated = true
                     val eventType = EventType.fromBoolean(events[0].isUserAttributeChangeEvent())
-                    evaluatedServerSideCampaignIds[eventType.key]?.add(campaignId)
+                    evaluatedServerSideCampaignIds.add(campaignId)
                 }
             }
             // Save the updated list of evaluated server-side campaign IDs to storage if there were updates.
@@ -305,7 +305,7 @@ internal class EvaluationManager(
                 } else {
                     // Update the flag, suppress the in-app, and continue processing.
                     updated = true
-                    suppress(inApp, EventType.fromBoolean(events[0].isUserAttributeChangeEvent()))
+                    suppress(inApp)
                 }
             }
             // Save suppressed client-side in-app IDs before returning if there were updates.
@@ -413,13 +413,13 @@ internal class EvaluationManager(
     }
 
     @VisibleForTesting
-    internal fun suppress(inApp: JSONObject, eventType: EventType) {
+    internal fun suppress(inApp: JSONObject) {
         val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
         val wzrkId = generateWzrkId(campaignId)
         val wzrkPivot = inApp.optString(Constants.INAPP_WZRK_PIVOT, "wzrk_default")
         val wzrkCgId = inApp.optInt(Constants.INAPP_WZRK_CGID)
 
-        suppressedClientSideInApps[eventType.key]?.add(
+        suppressedClientSideInApps.add(
             mapOf(
                 Constants.NOTIFICATION_ID_TAG to wzrkId,
                 Constants.INAPP_WZRK_PIVOT to wzrkPivot,
@@ -460,7 +460,7 @@ internal class EvaluationManager(
         }
     }
 
-    private fun removeSentEvaluatedServerSideCampaignIds(header: JSONObject, eventType: EventType) {
+    private fun removeSentEvaluatedServerSideCampaignIds(header: JSONObject) {
         var updated = false
         val inAppsEval = header.optJSONArray(Constants.INAPP_SS_EVAL_META)
         inAppsEval?.let {
@@ -469,7 +469,7 @@ internal class EvaluationManager(
 
                 if (campaignId != 0L) {
                     updated = true
-                    evaluatedServerSideCampaignIds[eventType.key]?.removeAll { id -> id == campaignId }
+                    evaluatedServerSideCampaignIds.remove(campaignId)
                 }
             }
         }
@@ -478,19 +478,17 @@ internal class EvaluationManager(
         }
     }
 
-    private fun removeSentSuppressedClientSideInApps(header: JSONObject, eventType: EventType) {
+    private fun removeSentSuppressedClientSideInApps(header: JSONObject) {
         var updated = false
         val inAppsEval = header.optJSONArray(Constants.INAPP_SUPPRESSED_META)
-        inAppsEval?.let { inApps ->
-            val suppressedInApps = suppressedClientSideInApps[eventType.key]
-            suppressedInApps?.iterator()?.let { iterator ->
-                while (iterator.hasNext()) {
-                    val suppressedInApp = iterator.next()
-                    val inAppId = suppressedInApp[Constants.NOTIFICATION_ID_TAG] as? String
-                    if (inAppId != null && inApps.toString().contains(inAppId)) {
-                        updated = true
-                        iterator.remove()
-                    }
+        inAppsEval?.let {
+            val iterator = suppressedClientSideInApps.iterator()
+            while (iterator.hasNext()) {
+                val suppressedInApp = iterator.next()
+                val inAppId = suppressedInApp[Constants.NOTIFICATION_ID_TAG] as? String
+                if (inAppId != null && inAppsEval.toString().contains(inAppId)) {
+                    updated = true
+                    iterator.remove()
                 }
             }
         }
@@ -510,19 +508,18 @@ internal class EvaluationManager(
      * @param endpointId The endpoint ID representing the target of the network request.
      * @return A JSONObject containing additional headers, or null if no headers need to be attached.
      */
-    override fun onAttachHeaders(endpointId: EndpointId, eventType: EventType): JSONObject? {
+    override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
         // Initialize a JSONObject to hold additional headers.
         val header = JSONObject()
         // Check if the network request is targeting a specific endpoint (e.g., ENDPOINT_A1).
         if (endpointId == ENDPOINT_A1) {
-            // Attach evaluated server-side in-app campaign IDs if available and not empty.
-            evaluatedServerSideCampaignIds[eventType.key]?.takeIf { it.isNotEmpty() }?.let { campaignIds ->
-                header.put(Constants.INAPP_SS_EVAL_META, JsonUtil.listToJsonArray(campaignIds))
+            // Attach evaluated server-side in-app campaign IDs if available.
+            if (evaluatedServerSideCampaignIds.isNotEmpty()) {
+                header.put(Constants.INAPP_SS_EVAL_META, JsonUtil.listToJsonArray(evaluatedServerSideCampaignIds))
             }
-
-            // Attach suppressed client-side in-app notifications if available and not empty.
-            suppressedClientSideInApps[eventType.key]?.takeIf { it.isNotEmpty() }?.let { suppressedInApps ->
-                header.put(Constants.INAPP_SUPPRESSED_META, JsonUtil.listToJsonArray(suppressedInApps))
+            // Attach suppressed client-side in-app notifications if available.
+            if (suppressedClientSideInApps.isNotEmpty()) {
+                header.put(Constants.INAPP_SUPPRESSED_META, JsonUtil.listToJsonArray(suppressedClientSideInApps))
             }
         }
         // Return the header JSONObject if it is not empty; otherwise, return null.
@@ -542,43 +539,36 @@ internal class EvaluationManager(
      * @param allHeaders The JSONObject containing all headers that were sent in the network request.
      * @param endpointId The endpoint ID representing the target of the network request.
      */
-    override fun onSentHeaders(allHeaders: JSONObject, endpointId: EndpointId, eventType: EventType) {
+    override fun onSentHeaders(allHeaders: JSONObject, endpointId: EndpointId) {
         // Check if the network request is targeting a specific endpoint (e.g., ENDPOINT_A1).
         if (endpointId == ENDPOINT_A1) {
             // Remove evaluated server-side campaign IDs that have been sent successfully.
-            removeSentEvaluatedServerSideCampaignIds(allHeaders, eventType)
+            removeSentEvaluatedServerSideCampaignIds(allHeaders)
             // Remove suppressed client-side in-app notifications that have been sent successfully.
-            removeSentSuppressedClientSideInApps(allHeaders, eventType)
+            removeSentSuppressedClientSideInApps(allHeaders)
         }
     }
 
     @WorkerThread
     fun loadSuppressedCSAndEvaluatedSSInAppsIds() {
         storeRegistry.inAppStore?.let { store ->
-            // store.readEvaluatedServerSideInAppIds() returns list of Int or Long as InApp IDs
-            val evaluatedSSInAppIdsMap =
-                JsonUtil.mapFromJson<MutableList<Number>>(store.readEvaluatedServerSideInAppIds())
-            // forcefully convert list of InApp IDs to Long as evaluatedServerSideCampaignIds expects Long
-            val evaluatedSsInAppIdsMapWithLongList =
-                evaluatedSSInAppIdsMap.mapValues { entry ->
-                    entry.value.map { number -> number.toLong() }.toMutableList()
-                }
-            evaluatedServerSideCampaignIds.putAll(evaluatedSsInAppIdsMapWithLongList)
-            suppressedClientSideInApps.putAll(JsonUtil.mapFromJson(store.readSuppressedClientSideInAppIds()))
+            evaluatedServerSideCampaignIds =
+                store.readEvaluatedServerSideInAppIds().toList<Number>().map { it.toLong() } as MutableList<Long>
+            suppressedClientSideInApps = JsonUtil.listFromJson(store.readSuppressedClientSideInAppIds())
         }
     }
 
     @VisibleForTesting
     internal fun saveEvaluatedServerSideInAppIds() {
         storeRegistry.inAppStore?.storeEvaluatedServerSideInAppIds(
-            JSONObject(evaluatedServerSideCampaignIds.toMap())
+            JsonUtil.listToJsonArray(evaluatedServerSideCampaignIds)
         )
     }
 
     @VisibleForTesting
     internal fun saveSuppressedClientSideInAppIds() {
         storeRegistry.inAppStore?.storeSuppressedClientSideInAppIds(
-            JSONObject(suppressedClientSideInApps.toMap())
+            JsonUtil.listToJsonArray(suppressedClientSideInApps)
         )
     }
 }

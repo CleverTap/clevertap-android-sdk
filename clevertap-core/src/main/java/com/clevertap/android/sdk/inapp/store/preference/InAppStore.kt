@@ -120,18 +120,18 @@ internal class InAppStore(
     /**
      * Stores evaluated Server-side In-App IDs.
      *
-     * @param evaluatedServerSideInAppIds  The JSoNObject representing the map of EventType - evaluated Server-side In-App IDs.
+     * @param evaluatedServerSideInAppIds The array of evaluated Server-side In-App IDs.
      */
-    fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: JSONObject) {
+    fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: JSONArray) {
         ctPreference.writeString(PREFS_EVALUATED_INAPP_KEY_SS, evaluatedServerSideInAppIds.toString())
     }
 
     /**
      * Stores suppressed Client-side In-App IDs.
      *
-     * @param suppressedClientSideInAppIds The JSoNObject representing the map of EventType - suppressed Client-side In-App IDs.
+     * @param suppressedClientSideInAppIds The array of suppressed Client-side In-App IDs.
      */
-    fun storeSuppressedClientSideInAppIds(suppressedClientSideInAppIds: JSONObject) {
+    fun storeSuppressedClientSideInAppIds(suppressedClientSideInAppIds: JSONArray) {
         ctPreference.writeString(PREFS_SUPPRESSED_INAPP_KEY_CS, suppressedClientSideInAppIds.toString())
     }
 
@@ -173,18 +173,13 @@ internal class InAppStore(
     /**
      * Reads evaluated Server-side In-App IDs.
      *
-     * @return A JSoNObject representing the map of EventType - evaluated Server-side In-App IDs
+     * @return An array of evaluated Server-side In-App IDs.
      */
-    fun readEvaluatedServerSideInAppIds(): JSONObject {
+    fun readEvaluatedServerSideInAppIds(): JSONArray {
         val evaluatedServerSideInAppIds = ctPreference.readString(PREFS_EVALUATED_INAPP_KEY_SS, "")
-        if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONObject()
+        if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONArray()
 
-        return try {
-            // Try to convert the string to a JSONObject which signifies already migrated
-            JSONObject(evaluatedServerSideInAppIds)
-        } catch (jsonException: JSONException) {
-            migrateInAppHeaderPrefsForEventType(evaluatedServerSideInAppIds)
-        }
+        return JSONArray(evaluatedServerSideInAppIds)
     }
 
     /**
@@ -192,13 +187,15 @@ internal class InAppStore(
      *
      * @return A JSoNObject representing the map of EventType - suppressed Client-side In-App IDs.
      */
-    fun readSuppressedClientSideInAppIds(): JSONObject {
+    fun readSuppressedClientSideInAppIds(): JSONArray {
         val suppressedClientSideInAppIds = ctPreference.readString(PREFS_SUPPRESSED_INAPP_KEY_CS, "")
-        if (suppressedClientSideInAppIds.isNullOrBlank()) return JSONObject()
+        if (suppressedClientSideInAppIds.isNullOrBlank()) {
+            return JSONArray()
+        }
 
         return try {
             // Try to convert the string to a JSONObject which signifies already migrated
-            JSONObject(suppressedClientSideInAppIds)
+            JSONArray(suppressedClientSideInAppIds)
         } catch (jsonException: JSONException) {
             migrateInAppHeaderPrefsForEventType(suppressedClientSideInAppIds)
         }
@@ -213,11 +210,26 @@ internal class InAppStore(
      * @param - inAppIds to be migrated
      * @return - JSoNObject in the migrated format
      */
-    private fun migrateInAppHeaderPrefsForEventType(inAppIds: String): JSONObject {
-        // If it fails, convert the string to a JSONArray
-        val jsonArray = JSONArray(inAppIds)
-        // Wrap the JSONArray in a JSONObject
-        return JSONObject().put(Constants.RAISED, jsonArray)
+    private fun migrateInAppHeaderPrefsForEventType(inAppIds: String): JSONArray {
+        try {
+            // Old format data from 6.2.1 -> 7.5.1
+            // {"raised":[1733462104],"profile":[]}
+            val oldJsonObject = JSONObject(inAppIds)
+
+            val raisedArray = oldJsonObject.getJSONArray(Constants.RAISED)
+            val profileArray = oldJsonObject.getJSONArray(Constants.PROFILE)
+
+            return JSONArray().apply {
+                for (count in 0 until raisedArray.length())  {
+                    put(raisedArray.get(count))
+                }
+                for (count in 0 until profileArray.length())  {
+                    put(profileArray.get(count))
+                }
+            }
+        } catch (jsonException: JSONException) {
+            return JSONArray()
+        }
     }
 
     /**

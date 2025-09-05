@@ -334,7 +334,7 @@ internal class NetworkManager constructor(
 
         val endpointId: EndpointId = fromEventGroup(eventGroup)
         val queueHeader: JSONObject? = getQueueHeader(caller)
-        applyQueueHeaderListeners(queueHeader, endpointId, queue.optJSONObject(0).has("profile"))
+        applyQueueHeaderListeners(queueHeader, endpointId)
 
         val requestBody = SendQueueRequestBody(queueHeader, queue)
         logger.debug(config.accountId, "Send queue contains " + queue.length() + " items: " + requestBody)
@@ -398,12 +398,9 @@ internal class NetworkManager constructor(
     ) {
         if (requestBody.queueHeader != null) {
             for (listener: NetworkHeadersListener in mNetworkHeadersListeners) {
-                val isProfile: Boolean =
-                    requestBody.queue.optJSONObject(0).has("profile")
                 listener.onSentHeaders(
                     allHeaders = requestBody.queueHeader,
-                    endpointId = endpointId,
-                    eventType = fromBoolean(isProfile)
+                    endpointId = endpointId
                 )
             }
         }
@@ -434,12 +431,11 @@ internal class NetworkManager constructor(
 
     private fun applyQueueHeaderListeners(
         queueHeader: JSONObject?,
-        endpointId: EndpointId,
-        isProfile: Boolean
+        endpointId: EndpointId
     ) {
         if (queueHeader != null) {
             for (listener in mNetworkHeadersListeners) {
-                val headersToAttach = listener.onAttachHeaders(endpointId, fromBoolean(isProfile))
+                val headersToAttach = listener.onAttachHeaders(endpointId)
                 if (headersToAttach != null) {
                     queueHeader.copyFrom(headersToAttach)
                 }
