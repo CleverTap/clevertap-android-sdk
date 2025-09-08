@@ -322,4 +322,86 @@ class InAppStoreTest {
         // Assert
         verify { ctPreference.changePreferenceName(newPrefName) }
     }
+
+    @Test
+    fun `readEvaluatedServerSideInAppIds returns data correctly from current format`() {
+        // Arrange
+        val savedData = "[100000,1000002,100000001]"
+        every { ctPreference.readString(any(), any()) } returns savedData
+        val expectedData = JSONArray(savedData)
+
+        // Act
+        val data: JSONArray = inAppStore.readEvaluatedServerSideInAppIds()
+
+        assertEquals(expectedData.toString(), data.toString())
+    }
+
+    @Test
+    fun `readEvaluatedServerSideInAppIds returns data correctly from older format pre 70501 SDK version`() {
+        // Arrange - legacy data
+        val savedData = """
+            {"profile": [100000, 1000002, 100000001],"raised": [200000, 2000002, 200000001]}
+        """.trimIndent()
+        every { ctPreference.readString(any(), any()) } returns savedData
+        val expectedData = JSONArray().apply {
+            put(200000)
+            put(2000002)
+            put(200000001)
+            put(100000)
+            put(1000002)
+            put(100000001)
+        }
+
+        // Act
+        val data: JSONArray = inAppStore.readEvaluatedServerSideInAppIds()
+
+        assertEquals(expectedData.toString(), data.toString())
+    }
+
+    @Test
+    fun `readSuppressedClientSideInAppIds returns data correctly from current format`() {
+        // Arrange
+        val savedData = "[{wzrk_id=id1}, {wzrk_id=id2}]"
+        every { ctPreference.readString(any(), any()) } returns savedData
+
+        val expectedData = JSONArray().apply {
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id1")
+            })
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id2")
+            })
+        }
+
+        // Act
+        val data: JSONArray = inAppStore.readSuppressedClientSideInAppIds()
+
+        assertEquals(expectedData.toString(), data.toString())
+    }
+
+    @Test
+    fun `readSuppressedClientSideInAppIds returns data correctly from older format pre 70501 SDK version`() {
+        // Arrange
+        val savedData = """
+            {"profile":[{"wzrk_id"="id1"}, {"wzrk_id"="id2"}],"raised":[{"wzrk_id"="id3"}]}
+        """.trimIndent()
+        every { ctPreference.readString(any(), any()) } returns savedData
+
+        val expectedData = JSONArray().apply {
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id3")
+            })
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id1")
+            })
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id2")
+            })
+        }
+
+        // Act
+        val data: JSONArray = inAppStore.readSuppressedClientSideInAppIds()
+
+        assertEquals(expectedData.toString(), data.toString())
+    }
 }

@@ -179,7 +179,32 @@ internal class InAppStore(
         val evaluatedServerSideInAppIds = ctPreference.readString(PREFS_EVALUATED_INAPP_KEY_SS, "")
         if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONArray()
 
-        return JSONArray(evaluatedServerSideInAppIds)
+        return try {
+            JSONArray(evaluatedServerSideInAppIds)
+        } catch (e: JSONException) {
+            migrateEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds)
+        }
+    }
+
+    fun migrateEvaluatedServerSideInAppIds(evaluatedIds: String): JSONArray {
+        try {
+            val oldFormatted = JSONObject(evaluatedIds)
+            val raisedArray = oldFormatted.getJSONArray(Constants.RAISED)
+            val profileArray = oldFormatted.getJSONArray(Constants.PROFILE)
+
+            return JSONArray().apply {
+                for (count in 0 until raisedArray.length())  {
+                    put(raisedArray.get(count))
+                }
+                for (count in 0 until profileArray.length())  {
+                    put(profileArray.get(count))
+                }
+            }
+
+        } catch (e: JSONException) {
+            // We cannot migrate, this is no-op branch, we will never get here.
+            return JSONArray()
+        }
     }
 
     /**
@@ -227,7 +252,8 @@ internal class InAppStore(
                     put(profileArray.get(count))
                 }
             }
-        } catch (jsonException: JSONException) {
+        } catch (_: JSONException) {
+            // Added for code-completion, we never get here.
             return JSONArray()
         }
     }
