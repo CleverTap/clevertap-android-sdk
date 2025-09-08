@@ -511,9 +511,14 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
                 "${Column.CREATED_AT} ASC",
                 (limit + 1).toString()
             )?.use { cursor ->
-                queueData.hasMore = cursor.count > limit
-                for (pos in 0 until limit) {
-                    cursor.moveToNext()
+                val rowCount = cursor.count
+                queueData.hasMore = rowCount > limit
+
+                var pos = 0
+                while (cursor.moveToNext()) {
+                    if (pos == limit) {
+                        break
+                    }
                     val id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
                     val eventData = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
 
@@ -530,6 +535,7 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
                     } catch (e: JSONException) {
                         logger.verbose("Error parsing event data for id: $id from table: $tName", e)
                     }
+                    pos++
                 }
             }
         } catch (e: Exception) {
@@ -560,29 +566,25 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
         val profileData = fetchEvents(Table.PROFILE_EVENTS, batchSize)
 
         // Add profile events to combined data
-        if (!profileData.isEmpty) {
             for (i in 0 until profileData.data.length()) {
                 combinedQueueData.data.put(profileData.data.getJSONObject(i))
             }
             combinedQueueData.profileEventIds.addAll(profileData.profileEventIds)
             combinedQueueData.hasMore = profileData.hasMore
-        }
 
         // Calculate remaining slots for normal events
         val eventsNeeded = batchSize - combinedQueueData.profileEventIds.size
 
         // Second priority: Fill remaining slots from events table
-        if (eventsNeeded > 0) {
+        if (eventsNeeded > 0 || combinedQueueData.hasMore.not()) {
             val eventsData = fetchEvents(Table.EVENTS, eventsNeeded)
 
             // Add events to combined data
-            if (!eventsData.isEmpty) {
                 for (i in 0 until eventsData.data.length()) {
                     combinedQueueData.data.put(eventsData.data.getJSONObject(i))
                 }
                 combinedQueueData.eventIds.addAll(eventsData.eventIds)
-                combinedQueueData.hasMore = eventsData.hasMore
-            }
+            combinedQueueData.hasMore = eventsData.hasMore
         }
 
         logger.verbose("Fetched combined batch: ${combinedQueueData.profileEventIds.size} profile events, ${combinedQueueData.eventIds.size} events")
