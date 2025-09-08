@@ -210,7 +210,7 @@ internal class InAppStore(
     /**
      * Reads suppressed Client-side In-App IDs.
      *
-     * @return A JSoNObject representing the map of EventType - suppressed Client-side In-App IDs.
+     * @return A JSONArray representing suppressed Client-side In-App IDs.
      */
     fun readSuppressedClientSideInAppIds(): JSONArray {
         val suppressedClientSideInAppIds = ctPreference.readString(PREFS_SUPPRESSED_INAPP_KEY_CS, "")
@@ -219,7 +219,7 @@ internal class InAppStore(
         }
 
         return try {
-            // Try to convert the string to a JSONObject which signifies already migrated
+            // Try to convert the string to a JSONArray which signifies already migrated
             JSONArray(suppressedClientSideInAppIds)
         } catch (jsonException: JSONException) {
             migrateInAppHeaderPrefsForEventType(suppressedClientSideInAppIds)
@@ -228,17 +228,15 @@ internal class InAppStore(
 
     /**
      * Migrates suppressed_ss and evaluated_ss after reading from the prefs.
-     * The older format was a JSONArray. This JSoNArray represented the list of all inapps suppressed/evaluated
-     * The migrated format is a JSONObject. This JSoNObject has the key as EvenType and the
-     * value as the corresponding list of inapps suppressed/evaluated
      *
      * @param - inAppIds to be migrated
-     * @return - JSoNObject in the migrated format
+     * @return - JSONArray in the migrated format
      */
     private fun migrateInAppHeaderPrefsForEventType(inAppIds: String): JSONArray {
         try {
             // Old format data from 6.2.1 -> 7.5.1
-            // {"raised":[1733462104],"profile":[]}
+            // {"raised":[123],"profile":[456]}
+            // New format => [123, 456]
             val oldJsonObject = JSONObject(inAppIds)
 
             val raisedArray = oldJsonObject.getJSONArray(Constants.RAISED)
