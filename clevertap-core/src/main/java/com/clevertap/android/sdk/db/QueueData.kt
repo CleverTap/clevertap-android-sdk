@@ -6,19 +6,19 @@ import org.json.JSONArray
  * QueueData that holds event data along with cleanup information
  * Used to track which events were fetched for later cleanup
  */
-class QueueData {
-    val data: JSONArray = JSONArray()
-    val eventIds: MutableList<String> = mutableListOf()  // IDs from events table
-    val profileEventIds: MutableList<String> = mutableListOf()  // IDs from profileEvents table
-    var hasMore: Boolean = false
+internal class QueueData {
+    internal val data: JSONArray = JSONArray()
+    internal val eventIds: MutableList<String> = mutableListOf()  // IDs from events table
+    internal val profileEventIds: MutableList<String> = mutableListOf()  // IDs from profileEvents table
+    internal var hasMore: Boolean = false
 
-    val isEmpty: Boolean
+    internal val isEmpty: Boolean
         get() = data.length() <= 0
 
-    val hasEvents: Boolean
+    internal val hasEvents: Boolean
         get() = eventIds.isNotEmpty()
 
-    val hasProfileEvents: Boolean
+    internal val hasProfileEvents: Boolean
         get() = profileEventIds.isNotEmpty()
 
     override fun toString(): String {
