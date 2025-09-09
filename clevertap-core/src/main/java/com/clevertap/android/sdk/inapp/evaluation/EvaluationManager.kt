@@ -67,11 +67,11 @@ internal class EvaluationManager(
     private val templatesManager: TemplatesManager
 ) : NetworkHeadersListener {
 
-    // Internal map to track server-side evaluated campaign IDs. This map is used to identify the evaluatedIDs for raised and profile events individually
+    // Internal list to track server-side evaluated campaign IDs. This map is used to identify the evaluatedIDs for raised and profile events together.
     @VisibleForTesting
     internal var evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
 
-    // Internal map to track client-side suppressed in-app notifications. This map is used to identify the suppressedIDs for raised and profile events individually.
+    // Internal list to track client-side suppressed in-app notifications. This map is used to identify the suppressedIDs for raised and profile events together.
     @VisibleForTesting
     internal var suppressedClientSideInApps: MutableList<Map<String, Any?>> = ArrayList()
 
