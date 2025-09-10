@@ -23,6 +23,12 @@ internal interface BaseDatabaseManager {
         eventGroup: EventGroup
     ): QueueData
 
+    /**
+     * Fetches a combined batch of events from both events and profileEvents tables
+     * Returns QueueData with events data and ids, also if there are more events to fetch
+     */
+    fun getCombinedQueuedEvents(context: Context, batchSize: Int): QueueData
+
     fun queueEventToDB(context: Context, event: JSONObject, type: Int)
 
     fun queuePushNotificationViewedEventToDB(context: Context, event: JSONObject)

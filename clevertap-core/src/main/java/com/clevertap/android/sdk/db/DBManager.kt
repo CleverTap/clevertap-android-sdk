@@ -79,10 +79,9 @@ internal class DBManager(
 
     /**
      * Fetches a combined batch of events from both events and profileEvents tables
-     * Always uses fixed batch size of 50
-     * Returns QueueData with cleanup information
+     * Returns QueueData with events data and ids, also if there are more events to fetch
      */
-    private fun getCombinedQueuedEvents(context: Context, batchSize: Int): QueueData {
+    override fun getCombinedQueuedEvents(context: Context, batchSize: Int): QueueData {
         synchronized(ctLockManager.eventLock) {
             val adapter = loadDBAdapter(context)
 
