@@ -2,14 +2,11 @@ package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.inapp.evaluation.EventType
 import com.clevertap.android.sdk.store.preference.ICTPreference
 import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
-import org.skyscreamer.jsonassert.JSONAssert
-import org.skyscreamer.jsonassert.JSONCompareMode.STRICT
 import kotlin.test.assertEquals
 
 class InAppStoreTest {
