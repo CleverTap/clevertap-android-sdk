@@ -20,7 +20,6 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
-import com.clevertap.android.sdk.inapp.evaluation.EventType.Companion.fromBoolean
 import com.clevertap.android.sdk.network.EndpointId.Companion.fromEventGroup
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApiWrapper

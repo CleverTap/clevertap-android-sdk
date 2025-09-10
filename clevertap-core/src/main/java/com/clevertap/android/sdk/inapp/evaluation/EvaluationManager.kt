@@ -23,24 +23,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 /**
- * Enumeration representing different groups of events which are sent in the queue
- *
- * Each enum value corresponds to a specific group which is sent as a batch in the queue
- *
- * @property key The string representation of the event type.
- */
-enum class EventType(val key: String) {
-    PROFILE("profile"),
-    RAISED("raised");
-
-    companion object {
-        fun fromBoolean(isProfile: Boolean): EventType {
-            return if (isProfile) PROFILE else RAISED
-        }
-    }
-}
-
-/**
  * Manages the evaluation of in-app notifications for the client and server sides.
  *
  * This class, `EvaluationManager`, is responsible for coordinating the evaluation of in-app notifications
@@ -250,7 +232,6 @@ internal class EvaluationManager(
                 // Add the campaign ID to the list of evaluated server-side campaign IDs if it's not zero.
                 if (campaignId != 0L) {
                     updated = true
-                    val eventType = EventType.fromBoolean(events[0].isUserAttributeChangeEvent())
                     evaluatedServerSideCampaignIds.add(campaignId)
                 }
             }
