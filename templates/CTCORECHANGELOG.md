@@ -1,7 +1,7 @@
 ## CleverTap Android SDK CHANGE LOG
 ### Version 7.5.2 (September 11, 2025)
 
-#### New Features
+#### Improvements
 * Optimises queuing behaviour of various type of clevertap events in a single batch.
 
 #### Bug Fixes
