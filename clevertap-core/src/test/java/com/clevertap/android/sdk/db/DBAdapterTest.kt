@@ -432,37 +432,6 @@ class DBAdapterTest : BaseTestCase() {
     }
 
     @Test
-    fun test_fetchEvents_when_Called_should_ReturnAListOfEntriesAsJsonObject() {
-        //when calling this function, it will return all the entries fro the given table less than or equal to passed limit.
-        // the returned list of entries will be of format {'key' : <jsonArray> } where key is the last index of entries
-
-        //note : this function is not supposed to work with following tables as they have separate functions with different insertion rules :
-        // Table.USER_PROFILES, Table.PUSH_NOTIFICATIONS, Table.INBOX_MESSAGES,Table.UNINSTALL_TS
-
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
-            println("table:$table")
-
-            //assertion
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
-
-            //test
-            dbAdapter.fetchEvents(table, 2).let {  /// {2: ["__","__"]}
-
-                //validation
-                println("jsonObject = $it")
-                val arr = it!!.getJSONArray("2")
-                assertEquals(2, arr.length())
-                assertTrue(arr[0] is JSONObject)
-                assertEquals("${table.tableName}1", (arr[0] as JSONObject).getString("name"))
-                assertEquals("${table.tableName}2", (arr[1] as JSONObject).getString("name"))
-            }
-        }
-    }
-
-    @Test
     fun test_removeEvents_when_called_should_RemoveAllEntries() {
         //note : will not work with Table.USER_PROFILES, Table.PUSH_NOTIFICATIONS, Table.INBOX_MESSAGES, Table.UNINSTALL_TS
 
@@ -481,67 +450,11 @@ class DBAdapterTest : BaseTestCase() {
             //validation
             dbAdapter.fetchEvents(table, Int.MAX_VALUE).let {
                 println("jsonObject = $it")
-                assertNull(it)
-            }
-        }
-    }
-
-    @Test
-    fun test_storeObject_when_called_should_storeTheObjectInGivenTable() {
-        //when calling this function, it will store all the entries in the given table
-        //note : this function is not supposed to work with following tables as they have separate functions with different insertion rules :
-        // Table.USER_PROFILES, Table.PUSH_NOTIFICATIONS, Table.INBOX_MESSAGES,Table.UNINSTALL_TS
-
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
-            println("table:$table")
-
-            //test
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
-
-            //validation
-            dbAdapter.fetchEvents(table, Int.MAX_VALUE).let {
-
-                println("jsonObject = $it")
-                val arr = it!!.getJSONArray("4")
-                assertEquals(4, arr.length())
-                assertTrue(arr[0] is JSONObject)
-                assertEquals("${table.tableName}1", (arr[0] as JSONObject).getString("name"))
-                assertEquals("${table.tableName}2", (arr[1] as JSONObject).getString("name"))
-            }
-        }
-    }
-
-    @Test
-    fun test_cleanupEventsFromLastId_when_called_should_removeAllEntriesWithIdLesserThanPassedId() {
-        //note : this function is not supposed to work with following tables as they have separate functions with different insertion rules :
-        // Table.USER_PROFILES, Table.PUSH_NOTIFICATIONS, Table.INBOX_MESSAGES,Table.UNINSTALL_TS
-
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table ->
-            println("table:$table")
-
-            //assert
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
-            dbAdapter.storeObject(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
-            println("jsonObject = ${dbAdapter.fetchEvents(table, Int.MAX_VALUE)}")
-
-            //test
-            dbAdapter.cleanupEventsFromLastId("2", table)//will remove ids 1 & 2 , and will save ids 3 & 4
-
-            //validation
-            println("after")
-            dbAdapter.fetchEvents(table, Int.MAX_VALUE).let {
-                println("jsonObject = $it")
-                val arr = it!!.getJSONArray("4")
-                assertEquals(2, arr.length())
-                assertTrue(arr[0] is JSONObject)
-                assertEquals("${table.tableName}3", (arr[0] as JSONObject).getString("name"))
-                assertEquals("${table.tableName}4", (arr[1] as JSONObject).getString("name"))
-
+                assertNotNull(it)
+                assertTrue(it.isEmpty)
+                assertFalse(it.hasMore)
+                assertFalse(it.hasEvents)
+                assertFalse(it.hasProfileEvents)
             }
         }
     }
