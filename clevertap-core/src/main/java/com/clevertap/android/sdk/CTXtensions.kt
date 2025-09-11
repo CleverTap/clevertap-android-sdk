@@ -190,7 +190,7 @@ fun JSONArray?.orEmptyArray(): JSONArray {
  * @return A List of elements of type [T] extracted from the JSONArray.
  * @reified T The expected type of elements in the list.
  */
-inline fun <reified T> JSONArray.toList(): List<T> {
+inline fun <reified T> JSONArray.toList(): MutableList<T> {
     val list = mutableListOf<T>()
     for (index in 0 until length()) {
         val element = get(index)

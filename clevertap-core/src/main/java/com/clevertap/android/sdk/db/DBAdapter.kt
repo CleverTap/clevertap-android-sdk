@@ -47,43 +47,43 @@ internal class DBAdapter(
     private val userProfileDAO: UserProfileDAO by lazy { UserProfileDAOImpl(dbHelper, logger) }
     private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger) }
     private val uninstallTimestampDAO: UninstallTimestampDAO by lazy { UninstallTimestampDAOImpl(dbHelper, logger) }
-    
+
     @Volatile
     private var userEventLogDao: UserEventLogDAO? = null
 
     // =====================================================
     // EVENT-RELATED OPERATIONS
     // =====================================================
-    
+
     @WorkerThread
     @Synchronized
     fun storeObject(obj: JSONObject, table: Table): Long = eventDAO.storeEvent(obj, table)
-    
+
     @Synchronized
     fun fetchEvents(table: Table, limit: Int): JSONObject? = eventDAO.fetchEvents(table, limit)
-    
+
     @WorkerThread
     @Synchronized
     fun cleanupEventsFromLastId(lastId: String, table: Table) = eventDAO.cleanupEventsFromLastId(lastId, table)
-    
+
     @Synchronized
     fun cleanupStaleEvents(table: Table) = eventDAO.cleanupStaleEvents(table)
-    
+
     @Synchronized
     fun removeEvents(table: Table) = eventDAO.removeAllEvents(table)
 
     // =====================================================
     // INBOX MESSAGE OPERATIONS
     // =====================================================
-    
+
     @WorkerThread
     @Synchronized
     fun getMessages(userId: String): ArrayList<CTMessageDAO> = inboxMessageDAO.getMessages(userId)
-    
+
     @WorkerThread
     @Synchronized
     fun upsertMessages(inboxMessages: List<CTMessageDAO>) = inboxMessageDAO.upsertMessages(inboxMessages)
-    
+
     @WorkerThread
     @Synchronized
     fun deleteMessageForId(messageId: String?, userId: String?): Boolean {
@@ -91,7 +91,7 @@ internal class DBAdapter(
             inboxMessageDAO.deleteMessage(messageId, userId)
         } else false
     }
-    
+
     @WorkerThread
     @Synchronized
     fun deleteMessagesForIDs(messageIDs: List<String?>?, userId: String?): Boolean {
@@ -102,7 +102,7 @@ internal class DBAdapter(
             } else false
         } else false
     }
-    
+
     @WorkerThread
     @Synchronized
     fun markReadMessageForId(messageId: String?, userId: String?): Boolean {
@@ -110,7 +110,7 @@ internal class DBAdapter(
             inboxMessageDAO.markMessageAsRead(messageId, userId)
         } else false
     }
-    
+
     @WorkerThread
     @Synchronized
     fun markReadMessagesForIds(messageIDs: List<String?>?, userId: String?): Boolean {
@@ -125,7 +125,7 @@ internal class DBAdapter(
     // =====================================================
     // USER PROFILE OPERATIONS
     // =====================================================
-    
+
     @WorkerThread
     @Synchronized
     fun storeUserProfile(id: String?, deviceId: String?, obj: JSONObject): Long {
@@ -133,14 +133,14 @@ internal class DBAdapter(
             userProfileDAO.storeUserProfile(id, deviceId, obj)
         } else DB_UPDATE_ERROR
     }
-    
+
     @Synchronized
     fun fetchUserProfilesByAccountId(accountId: String?): Map<String, JSONObject> {
         return if (accountId != null) {
             userProfileDAO.fetchUserProfilesByAccountId(accountId)
         } else emptyMap()
     }
-    
+
     @Synchronized
     fun fetchUserProfileByAccountIdAndDeviceID(accountId: String?, deviceId: String?): JSONObject? {
         return if (accountId != null && deviceId != null) {
@@ -151,41 +151,41 @@ internal class DBAdapter(
     // =====================================================
     // PUSH NOTIFICATION OPERATIONS
     // =====================================================
-    
+
     @Synchronized
     fun storePushNotificationId(id: String?, ttl: Long) {
         if (id != null) {
             pushNotificationDAO.storePushNotificationId(id, ttl)
         }
     }
-    
+
     @Synchronized
     fun fetchPushNotificationIds(): Array<String?> = pushNotificationDAO.fetchPushNotificationIds()
-    
+
     @Synchronized
     fun doesPushNotificationIdExist(id: String): Boolean = pushNotificationDAO.doesPushNotificationIdExist(id)
-    
+
     @WorkerThread
     @Synchronized
     fun updatePushNotificationIds(ids: Array<String?>) = pushNotificationDAO.updatePushNotificationIds(ids)
-    
+
     @Synchronized
     fun cleanUpPushNotifications() = pushNotificationDAO.cleanUpPushNotifications()
 
     // =====================================================
     // UNINSTALL TIMESTAMP OPERATIONS
     // =====================================================
-    
+
     @Synchronized
     fun storeUninstallTimestamp() = uninstallTimestampDAO.storeUninstallTimestamp()
-    
+
     @Synchronized
     fun getLastUninstallTimestamp(): Long = uninstallTimestampDAO.getLastUninstallTimestamp()
 
     // =====================================================
     // USER EVENT LOG OPERATIONS
     // =====================================================
-    
+
     @WorkerThread
     fun userEventLogDAO(): UserEventLogDAO {
         return userEventLogDao ?: synchronized(this) {
@@ -198,7 +198,7 @@ internal class DBAdapter(
     // =====================================================
     // UTILITY METHODS
     // =====================================================
-    
+
     @VisibleForTesting
     internal fun deleteDB() {
         dbHelper.deleteDatabase()

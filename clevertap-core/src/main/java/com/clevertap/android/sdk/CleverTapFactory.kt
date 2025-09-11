@@ -440,10 +440,9 @@ internal object CleverTapFactory {
         )
         controllerManager.inAppController = inAppController
 
+        val batchListener = CompositeBatchListener()
         val appLaunchListener = AppLaunchListener()
         appLaunchListener.addListener(inAppController.onAppLaunchEventSent)
-
-        val batchListener = CompositeBatchListener()
         batchListener.addListener(appLaunchListener)
         batchListener.addListener(FetchInAppListener(callbackManager))
         callbackManager.batchListener = batchListener

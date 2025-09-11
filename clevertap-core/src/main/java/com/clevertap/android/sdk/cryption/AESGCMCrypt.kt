@@ -67,6 +67,9 @@ internal class AESGCMCrypt(
             val iv = parts[0].fromBase64()
             val encryptedBytes = parts[1].fromBase64()
             AESGCMCryptResult(iv, encryptedBytes)
+        } catch (oom: OutOfMemoryError) {
+            Logger.v("Unable to parse cipher text", oom)
+            null
         } catch (e: Exception) {
             Logger.v("Error parsing cipherText", e)
             null

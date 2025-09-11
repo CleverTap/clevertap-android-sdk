@@ -58,48 +58,138 @@ internal class DBManager(
         }
     }
 
+    /**
+     * Main entry point for getting queued events
+     * Now returns a combined batch of events and profile events with cleanup info
+     */
     override fun getQueuedEvents(
         context: Context,
         batchSize: Int,
-        previousQueue: QueueData?,
         eventGroup: EventGroup
     ): QueueData {
-        return if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-            logger.verbose(accountId, "Returning Queued Notification Viewed events")
-            getPushNotificationViewedQueuedEvents(context, batchSize, previousQueue)
-        } else {
-            logger.verbose(accountId, "Returning Queued events")
-            getQueuedDBEvents(context, batchSize, previousQueue)
+        return when (eventGroup) {
+            EventGroup.PUSH_NOTIFICATION_VIEWED -> {
+                config.logger.verbose(config.accountId, "Returning Queued Notification Viewed events")
+                getPushNotificationViewedQueuedEvents(context, batchSize)
+            }
+            else -> {
+                config.logger.verbose(config.accountId, "Returning combined queued events")
+                getCombinedQueuedEvents(context, batchSize)
+            }
         }
     }
 
     /**
-     * Only works with Queue of Events table. For other queues, it will override its data with Event table's data
+     * Fetches a combined batch of events from both events and profileEvents tables
+     * Returns QueueData with events data and ids, also if there are more events to fetch
      */
-    override fun getQueuedDBEvents(context: Context, batchSize: Int, previousQueue: QueueData?): QueueData {
+    override fun getCombinedQueuedEvents(context: Context, batchSize: Int): QueueData {
         synchronized(ctLockManager.eventLock) {
-            var queue = getQueue(context, EVENTS, batchSize, previousQueue)
-            if (queue.isEmpty && queue.table == EVENTS) {
-                queue = getQueue(context, PROFILE_EVENTS, batchSize, null)
-            }
-            return queue
+            val adapter = loadDBAdapter(context)
+
+            // Fetch combined batch of events with cleanup info
+            return adapter.fetchCombinedEvents(batchSize)
         }
     }
 
-    override fun getQueue(context: Context, table: Table, batchSize: Int, previousQueue: QueueData?): QueueData {
+    /**
+     * Cleans up successfully sent events
+     * Should be called from NetworkManager after successful transmission
+     *
+     * @param context Android context
+     * @param eventIds List of event IDs to clean up from events table
+     * @param profileEventIds List of event IDs to clean up from profileEvents table
+     */
+    override fun cleanupSentEvents(
+        context: Context,
+        eventIds: List<String>,
+        profileEventIds: List<String>
+    ): Boolean {
         synchronized(ctLockManager.eventLock) {
-            val adapter = loadDBAdapter(context)
-            val tableName = previousQueue?.table ?: table
-
-            // Remove the previous batch from the db, if there is such, since it was processed.
-            previousQueue?.lastId?.let { lastId ->
-                adapter.cleanupEventsFromLastId(lastId, previousQueue.table)
+            // Return true if nothing to clean up
+            if (eventIds.isEmpty() && profileEventIds.isEmpty()) {
+                return true
             }
 
-            val dbEvents = adapter.fetchEvents(tableName, batchSize)
-            val newQueue = QueueData(tableName)
-            newQueue.setDataFromDbObject(dbEvents)
-            return newQueue
+            try {
+                val adapter = loadDBAdapter(context)
+
+                // Clean up events from events table
+                if (eventIds.isNotEmpty()) {
+                    //adapter.cleanupEventsByIds(EVENTS, eventIds)
+                    adapter.cleanupEventsFromLastId(eventIds[eventIds.size-1], EVENTS)
+                    config.logger.verbose(
+                        config.accountId,
+                        "Cleaned ${eventIds.size} events from events table"
+                    )
+                }
+
+                // Clean up events from profileEvents table
+                if (profileEventIds.isNotEmpty()) {
+                    //adapter.cleanupEventsByIds(PROFILE_EVENTS, profileEventIds)
+                    adapter.cleanupEventsFromLastId(profileEventIds[profileEventIds.size-1], PROFILE_EVENTS)
+                    config.logger.verbose(
+                        config.accountId,
+                        "Cleaned ${profileEventIds.size} events from profileEvents table"
+                    )
+                }
+
+                return true
+
+            } catch (e: Exception) {
+                config.logger.verbose(
+                    config.accountId,
+                    "Error during cleanup of sent events",
+                    e
+                )
+                return false
+            }
+        }
+    }
+
+    override fun cleanupPushNotificationEvents(context: Context, ids: List<String>) : Boolean {
+        synchronized(ctLockManager.eventLock) {
+            // Return true if nothing to clean up
+            if (ids.isEmpty()) {
+                return true
+            }
+
+            try {
+                val adapter = loadDBAdapter(context)
+                // Clean up events from profileEvents table
+                if (ids.isNotEmpty()) {
+                    //adapter.cleanupEventsByIds(PUSH_NOTIFICATION_VIEWED, ids)
+                    adapter.cleanupEventsFromLastId(ids[ids.size - 1], PUSH_NOTIFICATION_VIEWED)
+                    config.logger.verbose(
+                        config.accountId,
+                        "Cleaned ${ids.size} events from Push impressions table"
+                    )
+                }
+                return true
+            } catch (e: Exception) {
+                config.logger.verbose(
+                    config.accountId,
+                    "Error during cleanup of notification sent events",
+                    e
+                )
+                return false
+            }
+        }
+    }
+
+    /**
+     * Handles push notification viewed events separately
+     * These remain in their own queue
+     */
+    override fun getPushNotificationViewedQueuedEvents(
+        context: Context,
+        batchSize: Int
+    ): QueueData {
+        synchronized(ctLockManager.eventLock) {
+            val adapter = loadDBAdapter(context)
+
+            // Use the optimized fetchEvents method that returns QueueData
+            return adapter.fetchEvents(PUSH_NOTIFICATION_VIEWED, batchSize)
         }
     }
 
@@ -113,14 +203,6 @@ internal class DBManager(
     @WorkerThread
     override fun queuePushNotificationViewedEventToDB(context: Context, event: JSONObject) {
         queueEventForTable(context, event, PUSH_NOTIFICATION_VIEWED)
-    }
-
-    override fun getPushNotificationViewedQueuedEvents(
-        context: Context,
-        batchSize: Int,
-        previousQueue: QueueData?
-    ): QueueData {
-        return getQueue(context, PUSH_NOTIFICATION_VIEWED, batchSize, previousQueue)
     }
 
     //Session
