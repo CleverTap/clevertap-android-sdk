@@ -77,26 +77,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "0-3" -> cleverTapAPI?.recordScreen("Cart Screen Viewed")
             "1-0" -> {
                 //Record a profile
-                val profileUpdate = HashMap<String, Any>()
-                profileUpdate["Name"] = "User Name" // String
-                profileUpdate["Email"] = "User@gmail.com" // Email address of the user
-                profileUpdate["Phone"] =
-                    "+14155551234" // Phone (with the country code, starting with +)
-                profileUpdate["Gender"] = "M" // Can be either M or F
-                profileUpdate["Employed"] = "Y" // Can be either Y or N
-                profileUpdate["Education"] = "Graduate" // Can be either Graduate, College or School
-                profileUpdate["Married"] = "Y" // Can be either Y or N
-                profileUpdate["DOB"] =
-                    Date() // Date of Birth. Set the Date object to the appropriate value first
-                profileUpdate["Age"] = 28 // Not required if DOB is set
-                profileUpdate["MSG-email"] = false // Disable email notifications
-                profileUpdate["MSG-push"] = true // Enable push notifications
-                profileUpdate["MSG-sms"] = false // Disable SMS notifications
-
-                profileUpdate["MyStuffList"] = arrayListOf("bag", "shoes") //ArrayList of Strings
-                profileUpdate["MyStuffArray"] = arrayOf("Jeans", "Perfume")
-
-                cleverTapAPI?.pushProfile(profileUpdate)
+                pushProfile(cleverTapAPI!!)
             }
 
             "1-1" -> {
@@ -607,6 +588,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "13-2" -> {
+                pushProfile(cleverTapAPI!!)
                 cleverTapAPI?.fetchVariables { isSuccess ->
                     Log.i(
                         TAG,
@@ -791,5 +773,28 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
             //"60" -> webViewClickListener?.onWebViewClick()
         }
+    }
+
+    fun pushProfile(cleverTapAPI: CleverTapAPI) {
+        val profileUpdate = HashMap<String, Any>()
+        profileUpdate["Name"] = "User Name" // String
+        profileUpdate["Email"] = "User@gmail.com" // Email address of the user
+        profileUpdate["Phone"] =
+            "+14155551234" // Phone (with the country code, starting with +)
+        profileUpdate["Gender"] = "M" // Can be either M or F
+        profileUpdate["Employed"] = "Y" // Can be either Y or N
+        profileUpdate["Education"] = "Graduate" // Can be either Graduate, College or School
+        profileUpdate["Married"] = "Y" // Can be either Y or N
+        profileUpdate["DOB"] =
+            Date() // Date of Birth. Set the Date object to the appropriate value first
+        profileUpdate["Age"] = 28 // Not required if DOB is set
+        profileUpdate["MSG-email"] = false // Disable email notifications
+        profileUpdate["MSG-push"] = true // Enable push notifications
+        profileUpdate["MSG-sms"] = false // Disable SMS notifications
+
+        profileUpdate["MyStuffList"] = arrayListOf("bag", "shoes") //ArrayList of Strings
+        profileUpdate["MyStuffArray"] = arrayOf("Jeans", "Perfume")
+
+        cleverTapAPI.pushProfile(profileUpdate)
     }
 }
