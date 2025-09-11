@@ -358,7 +358,9 @@ class InAppStoreTest {
     @Test
     fun `readSuppressedClientSideInAppIds returns data correctly from current format`() {
         // Arrange
-        val savedData = "[{wzrk_id=id1}, {wzrk_id=id2}]"
+        val savedData = """
+            [{"wzrk_id":"id1"}, {"wzrk_id":"id2"}]
+        """.trimIndent()
         every { ctPreference.readString(any(), any()) } returns savedData
 
         val expectedData = JSONArray().apply {
@@ -380,7 +382,7 @@ class InAppStoreTest {
     fun `readSuppressedClientSideInAppIds returns data correctly from older format pre 70501 SDK version`() {
         // Arrange
         val savedData = """
-            {"profile":[{"wzrk_id"="id1"}, {"wzrk_id"="id2"}],"raised":[{"wzrk_id"="id3"}]}
+            {"profile":[{"wzrk_id":"id1"}, {"wzrk_id":"id2"}],"raised":[{"wzrk_id":"id3"}]}
         """.trimIndent()
         every { ctPreference.readString(any(), any()) } returns savedData
 

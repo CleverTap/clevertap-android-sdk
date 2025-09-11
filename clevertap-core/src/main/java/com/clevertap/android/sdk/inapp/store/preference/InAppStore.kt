@@ -189,20 +189,24 @@ internal class InAppStore(
     fun migrateEvaluatedServerSideInAppIds(evaluatedIds: String): JSONArray {
         try {
             val oldFormatted = JSONObject(evaluatedIds)
-            val raisedArray = oldFormatted.getJSONArray(Constants.RAISED)
-            val profileArray = oldFormatted.getJSONArray(Constants.PROFILE)
+            val raisedArray = oldFormatted.optJSONArray(Constants.RAISED)
+            val profileArray = oldFormatted.optJSONArray(Constants.PROFILE)
 
             return JSONArray().apply {
-                for (count in 0 until raisedArray.length())  {
-                    put(raisedArray.get(count))
+                if (raisedArray != null) {
+                    for (count in 0 until raisedArray.length())  {
+                        put(raisedArray.get(count))
+                    }
                 }
-                for (count in 0 until profileArray.length())  {
-                    put(profileArray.get(count))
+                if (profileArray != null) {
+                    for (count in 0 until profileArray.length())  {
+                        put(profileArray.get(count))
+                    }
                 }
             }
 
         } catch (e: JSONException) {
-            // We cannot migrate, this is no-op branch, we will never get here.
+            // Not legacy-object or invalid JSON: return empty
             return JSONArray()
         }
     }
@@ -239,19 +243,23 @@ internal class InAppStore(
             // New format => [123, 456]
             val oldJsonObject = JSONObject(inAppIds)
 
-            val raisedArray = oldJsonObject.getJSONArray(Constants.RAISED)
-            val profileArray = oldJsonObject.getJSONArray(Constants.PROFILE)
+            val raisedArray = oldJsonObject.optJSONArray(Constants.RAISED)
+            val profileArray = oldJsonObject.optJSONArray(Constants.PROFILE)
 
             return JSONArray().apply {
-                for (count in 0 until raisedArray.length())  {
-                    put(raisedArray.get(count))
+                if (raisedArray != null) {
+                    for (count in 0 until raisedArray.length())  {
+                        put(raisedArray.get(count))
+                    }
                 }
-                for (count in 0 until profileArray.length())  {
-                    put(profileArray.get(count))
+                if (profileArray != null) {
+                    for (count in 0 until profileArray.length())  {
+                        put(profileArray.get(count))
+                    }
                 }
             }
         } catch (_: JSONException) {
-            // Added for code-completion, we never get here.
+            // Not a legacy-object: return empty to avoid errors.
             return JSONArray()
         }
     }
