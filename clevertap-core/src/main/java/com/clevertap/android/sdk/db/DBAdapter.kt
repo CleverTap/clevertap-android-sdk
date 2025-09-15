@@ -59,8 +59,13 @@ internal class DBAdapter(
     @Synchronized
     fun storeObject(obj: JSONObject, table: Table): Long = eventDAO.storeEvent(obj, table)
 
+    @WorkerThread
     @Synchronized
-    fun fetchEvents(table: Table, limit: Int): JSONObject? = eventDAO.fetchEvents(table, limit)
+    fun fetchEvents(table: Table, limit: Int): QueueData = eventDAO.fetchEvents(table, limit)
+
+    @WorkerThread
+    @Synchronized
+    fun fetchCombinedEvents(batchSize: Int): QueueData = eventDAO.fetchCombinedEvents(batchSize)
 
     @WorkerThread
     @Synchronized

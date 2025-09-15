@@ -69,11 +69,11 @@ internal class DBManager(
     ): QueueData {
         return when (eventGroup) {
             EventGroup.PUSH_NOTIFICATION_VIEWED -> {
-                config.logger.verbose(config.accountId, "Returning Queued Notification Viewed events")
+                logger.verbose(accountId, "Returning Queued Notification Viewed events")
                 getPushNotificationViewedQueuedEvents(context, batchSize)
             }
             else -> {
-                config.logger.verbose(config.accountId, "Returning combined queued events")
+                logger.verbose(accountId, "Returning combined queued events")
                 getCombinedQueuedEvents(context, batchSize)
             }
         }
@@ -118,8 +118,8 @@ internal class DBManager(
                 if (eventIds.isNotEmpty()) {
                     //adapter.cleanupEventsByIds(EVENTS, eventIds)
                     adapter.cleanupEventsFromLastId(eventIds[eventIds.size-1], EVENTS)
-                    config.logger.verbose(
-                        config.accountId,
+                    logger.verbose(
+                        accountId,
                         "Cleaned ${eventIds.size} events from events table"
                     )
                 }
@@ -128,8 +128,8 @@ internal class DBManager(
                 if (profileEventIds.isNotEmpty()) {
                     //adapter.cleanupEventsByIds(PROFILE_EVENTS, profileEventIds)
                     adapter.cleanupEventsFromLastId(profileEventIds[profileEventIds.size-1], PROFILE_EVENTS)
-                    config.logger.verbose(
-                        config.accountId,
+                    logger.verbose(
+                        accountId,
                         "Cleaned ${profileEventIds.size} events from profileEvents table"
                     )
                 }
@@ -137,8 +137,8 @@ internal class DBManager(
                 return true
 
             } catch (e: Exception) {
-                config.logger.verbose(
-                    config.accountId,
+                logger.verbose(
+                    accountId,
                     "Error during cleanup of sent events",
                     e
                 )
@@ -160,15 +160,15 @@ internal class DBManager(
                 if (ids.isNotEmpty()) {
                     //adapter.cleanupEventsByIds(PUSH_NOTIFICATION_VIEWED, ids)
                     adapter.cleanupEventsFromLastId(ids[ids.size - 1], PUSH_NOTIFICATION_VIEWED)
-                    config.logger.verbose(
-                        config.accountId,
+                    logger.verbose(
+                        accountId,
                         "Cleaned ${ids.size} events from Push impressions table"
                     )
                 }
                 return true
             } catch (e: Exception) {
-                config.logger.verbose(
-                    config.accountId,
+                logger.verbose(
+                    accountId,
                     "Error during cleanup of notification sent events",
                     e
                 )
