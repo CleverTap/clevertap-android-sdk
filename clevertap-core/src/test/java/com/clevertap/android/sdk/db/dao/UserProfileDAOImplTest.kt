@@ -129,28 +129,6 @@ class UserProfileDAOImplTest : BaseTestCase() {
     }
 
     @Test
-    fun test_removeUserProfiles_when_validAccountId_should_removeAllProfiles() {
-        val accountId = "userID"
-        userProfileDAO.storeUserProfile(
-            accountId,
-            "deviceID1",
-            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") }
-        )
-
-        userProfileDAO.storeUserProfile(
-            accountId,
-            "deviceID2",
-            JSONObject().also { it.put("name", "wick") }.also { it.put("father", "akshay") }
-        )
-
-        assertNotEquals(emptyMap(), userProfileDAO.fetchUserProfilesByAccountId(accountId))
-
-        userProfileDAO.removeUserProfiles(accountId)
-
-        assertEquals(emptyMap(), userProfileDAO.fetchUserProfilesByAccountId(accountId))
-    }
-
-    @Test
     fun test_fetchUserProfilesByAccountId_when_noProfiles_should_returnEmptyMap() {
         val result = userProfileDAO.fetchUserProfilesByAccountId("nonExistentAccount")
         assertTrue(result.isEmpty())

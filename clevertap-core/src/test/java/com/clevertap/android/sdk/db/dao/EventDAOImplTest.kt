@@ -45,18 +45,17 @@ class EventDAOImplTest : BaseTestCase() {
             val result3 = eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
             val result4 = eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
             
-            assertTrue(result1 > 0)
-            assertTrue(result2 > 0)
-            assertTrue(result3 > 0)
-            assertTrue(result4 > 0)
+            assertEquals(1, result1)
+            assertEquals(2, result2)
+            assertEquals(3, result3)
+            assertEquals(4, result4)
             
-            val fetchedEvents = eventDAO.fetchEvents(table, Int.MAX_VALUE)
+            val fetchedEvents = eventDAO.fetchEvents(table, 50)
             assertNotNull(fetchedEvents)
-            val (lastId, arr) = fetchedEvents.getEventsArray()
-            assertEquals(4, arr.length())
-            assertTrue(arr[0] is JSONObject)
-            assertEquals("${table.tableName}1", (arr[0] as JSONObject).getString("name"))
-            assertEquals("${table.tableName}2", (arr[1] as JSONObject).getString("name"))
+            assertEquals(4, fetchedEvents.data.length())
+            assertTrue(fetchedEvents.data[0] is JSONObject)
+            assertEquals("${table.tableName}1", (fetchedEvents.data[0] as JSONObject).getString("name"))
+            assertEquals("${table.tableName}2", (fetchedEvents.data[1] as JSONObject).getString("name"))
         }
     }
 
@@ -76,11 +75,10 @@ class EventDAOImplTest : BaseTestCase() {
             // Test with limit
             eventDAO.fetchEvents(table, 2).let {
                 println("jsonObject = $it")
-                val (lastId, arr) = it!!.getEventsArray()
-                assertEquals(2, arr.length())
-                assertTrue(arr[0] is JSONObject)
-                assertEquals("${table.tableName}1", (arr[0] as JSONObject).getString("name"))
-                assertEquals("${table.tableName}2", (arr[1] as JSONObject).getString("name"))
+                assertEquals(2, it.data.length())
+                assertTrue(it.data[0] is JSONObject)
+                assertEquals("${table.tableName}1", (it.data[0] as JSONObject).getString("name"))
+                assertEquals("${table.tableName}2", (it.data[1] as JSONObject).getString("name"))
             }
         }
     }
@@ -96,13 +94,17 @@ class EventDAOImplTest : BaseTestCase() {
             eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
             eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
             eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
-            println("jsonObject = ${eventDAO.fetchEvents(table, Int.MAX_VALUE)}")
+            println("jsonObject = ${eventDAO.fetchEvents(table, 50)}")
 
             eventDAO.removeAllEvents(table)
 
-            eventDAO.fetchEvents(table, Int.MAX_VALUE).let {
+            eventDAO.fetchEvents(table, 50).let {
                 println("jsonObject = $it")
-                assertNull(it)
+                assertTrue(it.isEmpty)
+                assertFalse(it.hasMore)
+                assertEquals(0, it.data.length())
+                assertEquals(0, it.eventIds.size)
+                assertEquals(0, it.profileEventIds.size)
             }
         }
     }
@@ -118,19 +120,18 @@ class EventDAOImplTest : BaseTestCase() {
             eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
             eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
             eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
-            println("jsonObject = ${eventDAO.fetchEvents(table, Int.MAX_VALUE)}")
+            println("jsonObject = ${eventDAO.fetchEvents(table, 50)}")
 
             // Remove ids 1 & 2, and keep ids 3 & 4
             eventDAO.cleanupEventsFromLastId("2", table)
 
             println("after")
-            eventDAO.fetchEvents(table, Int.MAX_VALUE).let {
+            eventDAO.fetchEvents(table, 50).let {
                 println("jsonObject = $it")
-                val (lastId, arr) = it!!.getEventsArray()
-                assertEquals(2, arr.length())
-                assertTrue(arr[0] is JSONObject)
-                assertEquals("${table.tableName}3", (arr[0] as JSONObject).getString("name"))
-                assertEquals("${table.tableName}4", (arr[1] as JSONObject).getString("name"))
+                assertEquals(2, it.data.length())
+                assertTrue(it.data[0] is JSONObject)
+                assertEquals("${table.tableName}3", (it.data[0] as JSONObject).getString("name"))
+                assertEquals("${table.tableName}4", (it.data[1] as JSONObject).getString("name"))
             }
         }
     }
@@ -138,7 +139,11 @@ class EventDAOImplTest : BaseTestCase() {
     @Test
     fun test_fetchEvents_when_noEvents_should_returnNull() {
         val result = eventDAO.fetchEvents(Table.EVENTS, 10)
-        assertNull(result)
+        assertTrue(result.isEmpty)
+        assertFalse(result.hasMore)
+        assertEquals(0, result.data.length())
+        assertEquals(0, result.eventIds.size)
+        assertEquals(0, result.profileEventIds.size)
     }
 
     @Test
@@ -150,9 +155,8 @@ class EventDAOImplTest : BaseTestCase() {
 
         val result = eventDAO.fetchEvents(table, 2)
         assertNotNull(result)
-        val (lastId, events) = result.getEventsArray()
-        assertEquals(2, events.length())
-        assertEquals("event1", (events[0] as JSONObject).getString("name"))
-        assertEquals("event2", (events[1] as JSONObject).getString("name"))
+        assertEquals(2, result.data.length())
+        assertEquals("event1", (result.data[0] as JSONObject).getString("name"))
+        assertEquals("event2", (result.data[1] as JSONObject).getString("name"))
     }
 }

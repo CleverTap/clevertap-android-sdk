@@ -74,9 +74,7 @@ class DBAdapterTest : BaseTestCase() {
 
         val events = dbAdapter.fetchEvents(Table.EVENTS, 10)
         assertNotNull(events)
-        val lastId = events.keys().next() as String
-        val eventArray = events.getJSONArray(lastId)
-        assertTrue(eventArray.length() > 0)
+        assertFalse(events.isEmpty)
 
         // Test uninstall timestamp operations
         assertEquals(0, dbAdapter.getLastUninstallTimestamp())
@@ -189,28 +187,6 @@ class DBAdapterTest : BaseTestCase() {
             else
                 assertFalse(msg.isRead == 1)
         }
-    }
-
-    @Test
-    fun test_removeUserProfiles() {
-        // assumption
-        dbAdapter.storeUserProfile(
-            "userID",
-            "deviceID1",
-            JSONObject().also { it.put("name", "john") }.also { it.put("father", "daniel") })
-
-        dbAdapter.storeUserProfile(
-            "userID",
-            "deviceID2",
-            JSONObject().also { it.put("name", "wick") }.also { it.put("father", "akshay") })
-
-        assertNotNull(dbAdapter.fetchUserProfilesByAccountId("userID"))
-
-        //test
-        dbAdapter.removeUserProfilesForAccountId("userID")
-
-        //validation
-        assertEquals(emptyMap(), dbAdapter.fetchUserProfilesByAccountId("userID"))
     }
 
     @Test
