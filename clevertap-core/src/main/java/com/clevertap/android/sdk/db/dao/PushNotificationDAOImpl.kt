@@ -110,7 +110,7 @@ internal class PushNotificationDAOImpl(
     @WorkerThread
     override fun cleanUpPushNotifications() {
         // Push notifications store future epoch (currentTime + TTL)
-        val time = clock.currentTimeSeconds()
+        val time = clock.currentTimeMillis()
         val tName = PUSH_NOTIFICATIONS.tableName
         
         try {

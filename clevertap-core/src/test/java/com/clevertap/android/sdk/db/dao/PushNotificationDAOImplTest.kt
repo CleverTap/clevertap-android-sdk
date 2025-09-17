@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.db.dao
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
@@ -15,6 +17,7 @@ class PushNotificationDAOImplTest : BaseTestCase() {
     private lateinit var pushNotificationDAO: PushNotificationDAO
     private lateinit var instanceConfig: CleverTapInstanceConfig
     private lateinit var dbHelper: DatabaseHelper
+    private lateinit var testClock: TestClock
 
     private val accID = "accountID"
     private val accToken = "token"
@@ -23,8 +26,18 @@ class PushNotificationDAOImplTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
-        dbHelper = DatabaseHelper(appCtx, instanceConfig.accountId, "test_db", instanceConfig.logger)
-        pushNotificationDAO = PushNotificationDAOImpl(dbHelper, instanceConfig.logger)
+        testClock = TestClock()
+        dbHelper = DatabaseHelper(
+            context = appCtx,
+            accountId = instanceConfig.accountId,
+            dbName = "test_db",
+            logger = instanceConfig.logger
+        )
+        pushNotificationDAO = PushNotificationDAOImpl(
+            dbHelper = dbHelper,
+            logger = instanceConfig.logger,
+            clock = testClock
+        )
     }
 
     @After
@@ -114,5 +127,170 @@ class PushNotificationDAOImplTest : BaseTestCase() {
         result.forEach { id ->
             assertTrue(id in ids)
         }
+    }
+
+    @Test
+    fun test_cleanUpPushNotifications_when_notificationsNotExpired_should_keepAll() {
+        val currentTime = System.currentTimeMillis()
+        testClock.setCurrentTime(currentTime)
+        
+        // Store notifications with future TTL (not expired)
+        // TTL is 2 days in the future
+        val futureTTL1 = currentTime + TimeUnit.DAYS.toMillis(2)
+        val futureTTL2 = currentTime + TimeUnit.HOURS.toMillis(12)
+        val futureTTL3 = currentTime + TimeUnit.DAYS.toMillis(1)
+        
+        pushNotificationDAO.storePushNotificationId("future1", futureTTL1)
+        pushNotificationDAO.storePushNotificationId("future2", futureTTL2)
+        pushNotificationDAO.storePushNotificationId("future3", futureTTL3)
+        
+        // Clean up at current time
+        pushNotificationDAO.cleanUpPushNotifications()
+        
+        // All notifications should still exist (not expired)
+        val result = pushNotificationDAO.fetchPushNotificationIds()
+        assertEquals(3, result.size)
+        assertTrue(result.contains("future1"))
+        assertTrue(result.contains("future2"))
+        assertTrue(result.contains("future3"))
+    }
+
+    @Test
+    fun test_cleanUpPushNotifications_when_notificationsExpired_should_removeExpired() {
+        val currentTime = System.currentTimeMillis()
+        
+        // Store some notifications in the past (expired)
+        testClock.setCurrentTime(currentTime - TimeUnit.DAYS.toMillis(4))
+        // These will get a TTL of current time - 3 days + default TTL
+        // When ttl is 0, it uses currentTime + DEFAULT_PUSH_TTL
+        pushNotificationDAO.storePushNotificationId("expired1", 0)
+        
+        // Store with explicit past TTL (expired)
+        val pastTTL = currentTime - TimeUnit.DAYS.toMillis(1)
+        pushNotificationDAO.storePushNotificationId("expired2", pastTTL)
+        
+        // Store notification with future TTL (not expired)
+        val futureTTL = currentTime + TimeUnit.DAYS.toMillis(1)
+        pushNotificationDAO.storePushNotificationId("valid1", futureTTL)
+        
+        // Reset to current time and clean up
+        testClock.setCurrentTime(currentTime)
+        pushNotificationDAO.cleanUpPushNotifications()
+        
+        // Only the notification with future TTL should remain
+        val result = pushNotificationDAO.fetchPushNotificationIds()
+        assertEquals(1, result.size)
+        assertEquals("valid1", result[0])
+    }
+
+    @Test
+    fun test_cleanUpPushNotifications_when_notificationExactlyAtCurrentTime_should_remove() {
+        val currentTime = System.currentTimeMillis()
+        testClock.setCurrentTime(currentTime)
+        
+        // Store notification with TTL exactly at current time (should be removed)
+        pushNotificationDAO.storePushNotificationId("exact_time", currentTime)
+        
+        // Store notification 1 millisecond in the future (should be kept)
+        pushNotificationDAO.storePushNotificationId("future_1ms", currentTime + 1)
+        
+        // Store notification 1 millisecond in the past (should be removed)
+        pushNotificationDAO.storePushNotificationId("past_1ms", currentTime - 1)
+        
+        // Clean up
+        pushNotificationDAO.cleanUpPushNotifications()
+        
+        // Only the future notification should remain
+        val result = pushNotificationDAO.fetchPushNotificationIds()
+        assertEquals(1, result.size)
+        assertEquals("future_1ms", result[0])
+    }
+
+    @Test
+    fun test_cleanUpPushNotifications_when_allNotificationsExpired_should_removeAll() {
+        val currentTime = System.currentTimeMillis()
+        testClock.setCurrentTime(currentTime)
+        
+        // Store all notifications with past TTL (all expired)
+        pushNotificationDAO.storePushNotificationId("expired1", currentTime - TimeUnit.DAYS.toMillis(1))
+        pushNotificationDAO.storePushNotificationId("expired2", currentTime - TimeUnit.HOURS.toMillis(1))
+        pushNotificationDAO.storePushNotificationId("expired3", currentTime - TimeUnit.MINUTES.toMillis(1))
+        
+        // Clean up
+        pushNotificationDAO.cleanUpPushNotifications()
+        
+        // All notifications should be removed
+        val result = pushNotificationDAO.fetchPushNotificationIds()
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun test_cleanUpPushNotifications_when_mixedReadAndUnreadExpired_should_removeAllExpired() {
+        val currentTime = System.currentTimeMillis()
+        testClock.setCurrentTime(currentTime)
+        
+        // Store expired notifications
+        val expiredTTL = currentTime - TimeUnit.DAYS.toMillis(1)
+        pushNotificationDAO.storePushNotificationId("expired1", expiredTTL)
+        pushNotificationDAO.storePushNotificationId("expired2", expiredTTL)
+        
+        // Store valid notifications
+        val validTTL = currentTime + TimeUnit.DAYS.toMillis(1)
+        pushNotificationDAO.storePushNotificationId("valid1", validTTL)
+        pushNotificationDAO.storePushNotificationId("valid2", validTTL)
+        
+        // Mark one expired and one valid as read
+        pushNotificationDAO.updatePushNotificationIds(arrayOf("expired1", "valid1"))
+        
+        // Clean up - should remove both expired notifications regardless of read status
+        pushNotificationDAO.cleanUpPushNotifications()
+        
+        // Need to add a new notification to set rtlDirtyFlag to true to fetch remaining
+        pushNotificationDAO.storePushNotificationId("temp", currentTime + TimeUnit.DAYS.toMillis(1))
+        
+        // Only valid notifications should remain (valid2 and temp are unread)
+        val result = pushNotificationDAO.fetchPushNotificationIds()
+        assertEquals(2, result.size)
+        assertTrue(result.contains("valid2"))
+        assertTrue(result.contains("temp"))
+        // expired1 and expired2 should be removed from database
+        // valid1 is marked as read but still in database
+        assertFalse(pushNotificationDAO.doesPushNotificationIdExist("expired1"))
+        assertFalse(pushNotificationDAO.doesPushNotificationIdExist("expired2"))
+        assertTrue(pushNotificationDAO.doesPushNotificationIdExist("valid1"))
+    }
+
+    @Test
+    fun test_cleanUpPushNotifications_when_defaultTTLUsed_should_handleCorrectly() {
+        val currentTime = System.currentTimeMillis()
+        
+        // First, store a notification with default TTL (ttl = 0)
+        testClock.setCurrentTime(currentTime)
+        pushNotificationDAO.storePushNotificationId("default_ttl", 0)
+        
+        // The notification should have TTL = currentTime + Constants.DEFAULT_PUSH_TTL
+        // Let's advance time but not beyond the default TTL
+        testClock.setCurrentTime(currentTime + TimeUnit.HOURS.toMillis(1))
+        
+        // Clean up - notification should still be valid
+        pushNotificationDAO.cleanUpPushNotifications()
+        
+        val result = pushNotificationDAO.fetchPushNotificationIds()
+        assertEquals(1, result.size)
+        assertEquals("default_ttl", result[0])
+        
+        // Now advance time beyond the default TTL
+        testClock.setCurrentTime(currentTime + Constants.DEFAULT_PUSH_TTL + 1)
+        
+        // Clean up - notification should now be expired
+        pushNotificationDAO.cleanUpPushNotifications()
+        
+        // Add a temp notification to trigger fetch
+        pushNotificationDAO.storePushNotificationId("temp", testClock.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
+        
+        val finalResult = pushNotificationDAO.fetchPushNotificationIds()
+        assertEquals(1, finalResult.size)
+        assertEquals("temp", finalResult[0])
+        assertFalse(pushNotificationDAO.doesPushNotificationIdExist("default_ttl"))
     }
 }
