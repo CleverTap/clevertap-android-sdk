@@ -38,9 +38,6 @@ internal class EventDAOImpl(
 
         return try {
             dbHelper.writableDatabase.insert(tableName, null, cv)
-            val sql = "SELECT COUNT(*) FROM $tableName"
-            val statement = dbHelper.writableDatabase.compileStatement(sql)
-            statement.simpleQueryForLong()
         } catch (e: Exception) {
             logger.verbose("Error adding data to table $tableName. Recreating DB", e)
             dbHelper.deleteDatabase()
