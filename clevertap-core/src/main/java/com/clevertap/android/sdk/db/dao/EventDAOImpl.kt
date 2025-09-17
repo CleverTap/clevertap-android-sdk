@@ -11,12 +11,14 @@ import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.db.Table
+import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONException
 import org.json.JSONObject
 
 internal class EventDAOImpl(
     private val dbHelper: DatabaseHelper,
-    private val logger: ILogger
+    private val logger: ILogger,
+    private val clock: Clock = Clock.SYSTEM
 ) : EventDAO {
 
     companion object {
@@ -33,7 +35,7 @@ internal class EventDAOImpl(
         val tableName = table.tableName
         val cv = ContentValues().apply {
             put(Column.DATA, event.toString())
-            put(Column.CREATED_AT, System.currentTimeMillis())
+            put(Column.CREATED_AT, clock.currentTimeMillis())
         }
 
         return try {
@@ -198,7 +200,7 @@ internal class EventDAOImpl(
 
     @WorkerThread
     override fun cleanupStaleEvents(table: Table) {
-        val time = (System.currentTimeMillis() - DATA_EXPIRATION) / 1000
+        val time = (clock.currentTimeMillis() - DATA_EXPIRATION) / 1000
         val tName = table.tableName
         try {
             dbHelper.writableDatabase.delete(tName, "${Column.CREATED_AT} <= $time", null)
