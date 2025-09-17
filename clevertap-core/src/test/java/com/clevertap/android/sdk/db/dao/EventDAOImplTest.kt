@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.shared.test.BaseTestCase
@@ -16,6 +17,7 @@ class EventDAOImplTest : BaseTestCase() {
     private lateinit var eventDAO: EventDAO
     private lateinit var instanceConfig: CleverTapInstanceConfig
     private lateinit var dbHelper: DatabaseHelper
+    private lateinit var testClock: TestClock
 
     private val accID = "accountID"
     private val accToken = "token"
@@ -24,8 +26,18 @@ class EventDAOImplTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
-        dbHelper = DatabaseHelper(appCtx, instanceConfig.accountId, "test_db", instanceConfig.logger)
-        eventDAO = EventDAOImpl(dbHelper, instanceConfig.logger)
+        testClock = TestClock()
+        dbHelper = DatabaseHelper(
+            context = appCtx,
+            accountId = instanceConfig.accountId,
+            dbName = "test_db",
+            logger = instanceConfig.logger
+        )
+        eventDAO = EventDAOImpl(
+            dbHelper = dbHelper,
+            logger = instanceConfig.logger,
+            clock = testClock
+        )
     }
 
     @After
@@ -158,5 +170,167 @@ class EventDAOImplTest : BaseTestCase() {
         assertEquals(2, result.data.length())
         assertEquals("event1", (result.data[0] as JSONObject).getString("name"))
         assertEquals("event2", (result.data[1] as JSONObject).getString("name"))
+    }
+
+    @Test
+    fun test_cleanupStaleEvents_when_eventsLessThan5DaysOld_should_keepAllEvents() {
+        val table = Table.EVENTS
+        val currentTime = System.currentTimeMillis()
+        
+        // Set current time
+        testClock.setCurrentTime(currentTime)
+        
+        // Store event 3 days old
+        testClock.setCurrentTime(currentTime - (3L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "3_days_old") }, table)
+        
+        // Store event 1 day old
+        testClock.setCurrentTime(currentTime - (1L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "1_day_old") }, table)
+        
+        // Store event 4 days old
+        testClock.setCurrentTime(currentTime - (4L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "4_days_old") }, table)
+        
+        // Store current event
+        testClock.setCurrentTime(currentTime)
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "current_event") }, table)
+        
+        // Call cleanup at current time
+        eventDAO.cleanupStaleEvents(table)
+        
+        // Verify all 4 events are still present (all are less than 5 days old)
+        val result = eventDAO.fetchEvents(table, 50)
+        assertEquals(4, result.data.length())
+        
+        // Verify events are in chronological order (oldest first due to CREATED_AT ASC)
+        assertEquals("4_days_old", (result.data[0] as JSONObject).getString("name"))
+        assertEquals("3_days_old", (result.data[1] as JSONObject).getString("name"))
+        assertEquals("1_day_old", (result.data[2] as JSONObject).getString("name"))
+        assertEquals("current_event", (result.data[3] as JSONObject).getString("name"))
+    }
+
+    @Test
+    fun test_cleanupStaleEvents_when_eventsExactly5DaysOld_should_removeThoseEvents() {
+        val table = Table.EVENTS
+        val currentTime = System.currentTimeMillis()
+        
+        // Set current time
+        testClock.setCurrentTime(currentTime)
+        
+        // Store event exactly 5 days old (should be removed)
+        testClock.setCurrentTime(currentTime - (5L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "exactly_5_days_old") }, table)
+        
+        // Store event 4 days old (should be kept)
+        testClock.setCurrentTime(currentTime - (4L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "4_days_old") }, table)
+        
+        // Store event 2 days old (should be kept)
+        testClock.setCurrentTime(currentTime - (2L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "2_days_old") }, table)
+        
+        // Reset to current time and call cleanup
+        testClock.setCurrentTime(currentTime)
+        eventDAO.cleanupStaleEvents(table)
+        
+        // Verify only events less than 5 days old remain
+        val result = eventDAO.fetchEvents(table, 50)
+        assertEquals(2, result.data.length())
+        assertEquals("4_days_old", (result.data[0] as JSONObject).getString("name"))
+        assertEquals("2_days_old", (result.data[1] as JSONObject).getString("name"))
+    }
+
+    @Test
+    fun test_cleanupStaleEvents_when_eventsMoreThan5DaysOld_should_removeOldEvents() {
+        val table = Table.EVENTS
+        val currentTime = System.currentTimeMillis()
+        
+        // Set current time
+        testClock.setCurrentTime(currentTime)
+        
+        // Store events older than 5 days (should be removed)
+        testClock.setCurrentTime(currentTime - (6L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "6_days_old") }, table)
+        
+        testClock.setCurrentTime(currentTime - (10L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "10_days_old") }, table)
+        
+        testClock.setCurrentTime(currentTime - (7L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "7_days_old") }, table)
+        
+        // Store events less than 5 days old (should be kept)
+        testClock.setCurrentTime(currentTime - (3L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "3_days_old") }, table)
+        
+        testClock.setCurrentTime(currentTime - (1L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "1_day_old") }, table)
+        
+        // Reset to current time and call cleanup
+        testClock.setCurrentTime(currentTime)
+        eventDAO.cleanupStaleEvents(table)
+        
+        // Verify only events less than 5 days old remain
+        val result = eventDAO.fetchEvents(table, 50)
+        assertEquals(2, result.data.length())
+        assertEquals("3_days_old", (result.data[0] as JSONObject).getString("name"))
+        assertEquals("1_day_old", (result.data[1] as JSONObject).getString("name"))
+    }
+
+    @Test
+    fun test_cleanupStaleEvents_when_allEventsAreOld_should_removeAllEvents() {
+        val table = Table.EVENTS
+        val currentTime = System.currentTimeMillis()
+        
+        // Store only old events (all older than 5 days)
+        testClock.setCurrentTime(currentTime - (6L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "6_days_old") }, table)
+        
+        testClock.setCurrentTime(currentTime - (8L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "8_days_old") }, table)
+        
+        testClock.setCurrentTime(currentTime - (15L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "15_days_old") }, table)
+        
+        // Reset to current time and call cleanup
+        testClock.setCurrentTime(currentTime)
+        eventDAO.cleanupStaleEvents(table)
+        
+        // Verify all events are removed
+        val result = eventDAO.fetchEvents(table, 50)
+        assertTrue(result.isEmpty)
+        assertEquals(0, result.data.length())
+    }
+
+    @Test
+    fun test_cleanupStaleEvents_when_multipleTablesHaveStaleEvents_should_cleanupOnlySpecifiedTable() {
+        val currentTime = System.currentTimeMillis()
+        
+        // Store old events in EVENTS table
+        testClock.setCurrentTime(currentTime - (6L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "old_event") }, Table.EVENTS)
+        
+        // Store old events in PROFILE_EVENTS table
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "old_profile_event") }, Table.PROFILE_EVENTS)
+        
+        // Store recent events in both tables
+        testClock.setCurrentTime(currentTime - (1L * 24 * 60 * 60 * 1000))
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "recent_event") }, Table.EVENTS)
+        eventDAO.storeEvent(JSONObject().also { it.put("name", "recent_profile_event") }, Table.PROFILE_EVENTS)
+        
+        // Reset to current time and cleanup only EVENTS table
+        testClock.setCurrentTime(currentTime)
+        eventDAO.cleanupStaleEvents(Table.EVENTS)
+        
+        // Verify EVENTS table is cleaned up
+        val eventsResult = eventDAO.fetchEvents(Table.EVENTS, 50)
+        assertEquals(1, eventsResult.data.length())
+        assertEquals("recent_event", (eventsResult.data[0] as JSONObject).getString("name"))
+        
+        // Verify PROFILE_EVENTS table is NOT cleaned up (still has old event)
+        val profileResult = eventDAO.fetchEvents(Table.PROFILE_EVENTS, 50)
+        assertEquals(2, profileResult.data.length())
+        assertEquals("old_profile_event", (profileResult.data[0] as JSONObject).getString("name"))
+        assertEquals("recent_profile_event", (profileResult.data[1] as JSONObject).getString("name"))
     }
 }
