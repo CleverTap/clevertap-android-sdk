@@ -9,10 +9,12 @@ import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATIONS
+import com.clevertap.android.sdk.utils.Clock
 
 internal class PushNotificationDAOImpl(
     private val dbHelper: DatabaseHelper,
-    private val logger: ILogger
+    private val logger: ILogger,
+    private val clock: Clock = Clock.SYSTEM
 ) : PushNotificationDAO {
 
     @Volatile
@@ -26,7 +28,7 @@ internal class PushNotificationDAOImpl(
         }
         
         val tableName = PUSH_NOTIFICATIONS.tableName
-        val createdAtTime = if (ttl > 0) ttl else System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL
+        val createdAtTime = if (ttl > 0) ttl else clock.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL
         
         val cv = ContentValues().apply {
             put(Column.DATA, id)
@@ -108,7 +110,7 @@ internal class PushNotificationDAOImpl(
     @WorkerThread
     override fun cleanUpPushNotifications() {
         // Push notifications store future epoch (currentTime + TTL)
-        val time = System.currentTimeMillis() / 1000
+        val time = clock.currentTimeSeconds()
         val tName = PUSH_NOTIFICATIONS.tableName
         
         try {
