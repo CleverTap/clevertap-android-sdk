@@ -58,9 +58,10 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
         }
     }
 
-
     init {
-        setUp(context, extras)
+        pt_small_icon_clr =
+            Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR)
+                ?: extras.getString(WZRK_COLOR)
     }
 
     override fun getMessage(extras: Bundle): String? {
@@ -320,12 +321,6 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
             config.logger.debug(config.accountId, "Could not process sound parameter", t)
         }
         return nb
-    }
-
-    private fun setUp(context: Context, extras: Bundle) {
-        pt_small_icon_clr =
-            Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR)
-                ?: extras.getString(WZRK_COLOR)
     }
 
     override fun setActionButtons(
