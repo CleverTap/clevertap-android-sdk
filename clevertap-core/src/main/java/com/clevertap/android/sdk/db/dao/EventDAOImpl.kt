@@ -200,7 +200,7 @@ internal class EventDAOImpl(
 
     @WorkerThread
     override fun cleanupStaleEvents(table: Table) {
-        val time = (clock.currentTimeMillis() - DATA_EXPIRATION) / 1000
+        val time = clock.currentTimeMillis() - DATA_EXPIRATION
         val tName = table.tableName
         try {
             dbHelper.writableDatabase.delete(tName, "${Column.CREATED_AT} <= $time", null)
