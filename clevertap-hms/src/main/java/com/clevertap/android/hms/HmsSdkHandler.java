@@ -7,6 +7,7 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 
 import android.content.Context;
 import android.text.TextUtils;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.huawei.agconnect.AGConnectInstance;
 import com.huawei.agconnect.AGConnectOptions;
@@ -23,7 +24,7 @@ class HmsSdkHandler implements IHmsSdkHandler {
 
     private final Context context;
     private final CleverTapInstanceConfig mConfig;
-    private AGConnectOptions options;
+    private volatile AGConnectOptions options;
 
     HmsSdkHandler(final Context context, final CleverTapInstanceConfig config) {
         this.context = context.getApplicationContext();
@@ -31,13 +32,16 @@ class HmsSdkHandler implements IHmsSdkHandler {
     }
 
     @TestOnly
-    HmsSdkHandler(final Context context, final CleverTapInstanceConfig config,final AGConnectOptions op) {
+    HmsSdkHandler(final Context context, final CleverTapInstanceConfig config, final AGConnectOptions op) {
         this.context = context.getApplicationContext();
         mConfig = config;
         options = op;
     }
 
-    private void initializeOptions() {
+    private synchronized void initializeOptions() {
+        if (options != null) {
+            return;
+        }
         try {
             // Try existing AGConnect instance first
             AGConnectInstance instance = AGConnectInstance.getInstance();
