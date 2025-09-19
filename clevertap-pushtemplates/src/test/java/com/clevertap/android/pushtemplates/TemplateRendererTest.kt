@@ -246,6 +246,20 @@ class TemplateRendererTest {
         assertEquals(testIcon, templateRenderer.smallIcon)
     }
 
+
+    @Test
+    fun test_setSmallIcon_throwsNPE() {
+        // Arrange
+        val testIcon = 123
+        every { Utils.setBitMapColour(any(), testIcon, any(), any()) } throws NullPointerException()
+
+        // Act
+        templateRenderer.setSmallIcon(testIcon, context)
+
+        // Assert
+        verify { Utils.setBitMapColour(any(), testIcon, any(), any()) }
+    }
+
     @Test
     fun test_renderNotification_basic_template_valid() {
         val basicBundle = Bundle(testBundle)
@@ -1306,6 +1320,55 @@ class TemplateRendererTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun test_renderNotification_timerEnd_null() {
+        // Arrange
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+        timerBundle.putString(PTConstants.PT_TIMER_END, "10")
+
+        every { mockTimerTemplateData.timerThreshold } returns -1
+        every { mockTimerTemplateData.timerEnd } returns 3
+        every { mockTimerTemplateData.renderTerminal } returns true
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        mockkConstructor(TimerStyle::class)
+        every {
+            anyConstructed<TimerStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+        every { mockNotificationBuilder.setTimeoutAfter(any()) } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
     @Config(sdk = [Build.VERSION_CODES.N])
     fun test_renderNotification_timer_template_below_oreo() {
         // Arrange
@@ -1498,6 +1561,188 @@ class TemplateRendererTest {
         assertEquals(2, result.size)
         assertEquals("Action 1", result[0].label)
         assertEquals("Action 2", result[1].label)
+    }
+
+    @Test
+    fun test_setActionButtons_with_empty_action_buttons_list() {
+        // Arrange - Use an empty actionButtons list
+        templateRenderer.actionButtons = emptyList()
+        templateRenderer.actionButtonPendingIntents = mutableMapOf()
+
+        // Act
+        val result = templateRenderer.setActionButtons(
+            context,
+            testBundle,
+            123,
+            mockNotificationBuilder,
+            null
+        )
+
+        // Assert
+        assertEquals(mockNotificationBuilder, result)
+        verify(exactly = 0) { mockNotificationBuilder.addAction(any(), any(), any()) }
+    }
+
+    @Test
+    fun test_setActionButtons_with_valid_action_buttons_and_pending_intents() {
+        // Arrange
+        val mockPendingIntent1 = mockk<android.app.PendingIntent>()
+        val mockPendingIntent2 = mockk<android.app.PendingIntent>()
+
+        val actionButton1 = ActionButton("action1", "Action 1", 123)
+        val actionButton2 = ActionButton("action2", "Action 2", 456)
+
+        templateRenderer.actionButtons = listOf(actionButton1, actionButton2)
+        templateRenderer.actionButtonPendingIntents = mutableMapOf(
+            "action1" to mockPendingIntent1,
+            "action2" to mockPendingIntent2
+        )
+
+        every {
+            mockNotificationBuilder.addAction(
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRenderer.setActionButtons(
+            context,
+            testBundle,
+            123,
+            mockNotificationBuilder,
+            null
+        )
+
+        // Assert
+        assertEquals(mockNotificationBuilder, result)
+        verify { mockNotificationBuilder.addAction(123, "Action 1", mockPendingIntent1) }
+        verify { mockNotificationBuilder.addAction(456, "Action 2", mockPendingIntent2) }
+        verify(exactly = 2) { mockNotificationBuilder.addAction(any(), any(), any()) }
+    }
+
+    @Test
+    fun test_setActionButtons_with_action_buttons_but_no_pending_intents() {
+        // Arrange
+        val actionButton1 = ActionButton("action1", "Action 1", 123)
+        val actionButton2 = ActionButton("action2", "Action 2", 456)
+
+        templateRenderer.actionButtons = listOf(actionButton1, actionButton2)
+        templateRenderer.actionButtonPendingIntents = mutableMapOf() // Empty pending intents
+
+        // Act
+        val result = templateRenderer.setActionButtons(
+            context,
+            testBundle,
+            123,
+            mockNotificationBuilder,
+            null
+        )
+
+        // Assert
+        assertEquals(mockNotificationBuilder, result)
+        verify(exactly = 0) { mockNotificationBuilder.addAction(any(), any(), any()) }
+    }
+
+    @Test
+    fun test_setActionButtons_with_partial_pending_intents() {
+        // Arrange
+        val mockPendingIntent1 = mockk<android.app.PendingIntent>()
+
+        val actionButton1 = ActionButton("action1", "Action 1", 123)
+        val actionButton2 = ActionButton("action2", "Action 2", 456)
+        val actionButton3 = ActionButton("action3", "Action 3", 789)
+
+        templateRenderer.actionButtons = listOf(actionButton1, actionButton2, actionButton3)
+        templateRenderer.actionButtonPendingIntents = mutableMapOf(
+            "action1" to mockPendingIntent1,
+            // Note: action2 and action3 don't have pending intents
+        )
+
+        every {
+            mockNotificationBuilder.addAction(
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRenderer.setActionButtons(
+            context,
+            testBundle,
+            123,
+            mockNotificationBuilder,
+            null
+        )
+
+        // Assert
+        assertEquals(mockNotificationBuilder, result)
+        verify { mockNotificationBuilder.addAction(123, "Action 1", mockPendingIntent1) }
+        verify(exactly = 1) { mockNotificationBuilder.addAction(any(), any(), any()) }
+    }
+
+    @Test
+    fun test_setActionButtons_with_null_context() {
+        // Arrange
+        val mockPendingIntent1 = mockk<android.app.PendingIntent>()
+        val actionButton1 = ActionButton("action1", "Action 1", 123)
+
+        templateRenderer.actionButtons = listOf(actionButton1)
+        templateRenderer.actionButtonPendingIntents = mutableMapOf("action1" to mockPendingIntent1)
+
+        every {
+            mockNotificationBuilder.addAction(
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRenderer.setActionButtons(
+            null, // null context
+            testBundle,
+            123,
+            mockNotificationBuilder,
+            null
+        )
+
+        // Assert
+        assertEquals(mockNotificationBuilder, result)
+        verify { mockNotificationBuilder.addAction(123, "Action 1", mockPendingIntent1) }
+    }
+
+    @Test
+    fun test_setActionButtons_with_null_extras() {
+        // Arrange
+        val mockPendingIntent1 = mockk<android.app.PendingIntent>()
+        val actionButton1 = ActionButton("action1", "Action 1", 123)
+
+        templateRenderer.actionButtons = listOf(actionButton1)
+        templateRenderer.actionButtonPendingIntents = mutableMapOf("action1" to mockPendingIntent1)
+
+        every {
+            mockNotificationBuilder.addAction(
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRenderer.setActionButtons(
+            context,
+            null, // null extras
+            123,
+            mockNotificationBuilder,
+            null
+        )
+
+        // Assert
+        assertEquals(mockNotificationBuilder, result)
+        verify { mockNotificationBuilder.addAction(123, "Action 1", mockPendingIntent1) }
     }
 
     @Test
