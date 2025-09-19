@@ -21,7 +21,6 @@ import com.clevertap.android.pushtemplates.media.TemplateMediaManager
 import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.pushtemplates.styles.*
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
-import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.NOTIF_MSG
@@ -33,7 +32,6 @@ import com.clevertap.android.sdk.interfaces.AudibleNotification
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
-import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
@@ -149,9 +147,16 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
                 ValidatorFactory.getValidator(templateData)
                     ?.takeIf { it.validate() }
                     ?.let {
-                        getTimerEnd(templateData)?.let { timerEnd ->
+                        PTTimerHandler.getTimerEnd(templateData)?.let { timerEnd ->
                             if (templateData.renderTerminal) {
-                                timerRunner(context, extras, notificationId, timerEnd, templateData)
+                                PTTimerHandler.scheduleTimer(
+                                    context,
+                                    extras,
+                                    notificationId,
+                                    timerEnd,
+                                    templateData,
+                                    config
+                                )
                             }
                             return TimerStyle(templateData, this)
                                 .builderFromStyle(context, extras, notificationId, nb)
@@ -194,80 +199,6 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
                     notificationManager.cancel(ids)
                 }
             }
-        }
-    }
-
-    private fun getTimerEnd(data: TimerTemplateData): Int? {
-        var timer_end: Int? = null
-        if (data.timerThreshold != -1 && data.timerThreshold >= PT_TIMER_MIN_THRESHOLD) {
-            timer_end =data.timerThreshold * ONE_SECOND + ONE_SECOND
-        } else if (data.timerEnd >= PT_TIMER_MIN_THRESHOLD) {
-            timer_end = data.timerEnd * ONE_SECOND + ONE_SECOND
-        } else {
-            PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: $PT_TIMER_END")
-        }
-        return timer_end
-    }
-
-    @RequiresApi(VERSION_CODES.M)
-    private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?, data: TimerTemplateData) {
-        val handler = Handler(Looper.getMainLooper())
-
-
-        if (delay != null) {
-            handler.postDelayed({
-                if (Utils.isNotificationInTray(
-                        context,
-                        notificationId
-                    )
-                    && ValidatorFactory.getValidator(data.toBasicTemplateData())?.validate() == true
-                ) {
-                    val applicationContext = context.applicationContext
-                    val basicTemplateBundle = extras.clone() as Bundle
-                    basicTemplateBundle.remove("wzrk_rnv")
-                    basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
-                    basicTemplateBundle.putString(PT_ID, "pt_basic") // set to basic
-
-
-                    /**
-                     *  Update existing payload bundle with new title,msg,img for Basic template
-                     */
-                    val ptJsonStr = basicTemplateBundle.getString(PT_JSON)
-                    val ptJsonObj = try {
-                        ptJsonStr?.let { JSONObject(it) }
-                    } catch (_: Exception) {
-                        Logger.v("Unable to convert JSON to String")
-                        null
-                    } ?: JSONObject()
-
-                    with(ptJsonObj) {
-                        put(PT_TITLE, data.terminalTextData.title)
-                        put(PT_BIG_IMG, data.mediaData.bigImage.url)
-                        put(PT_BIG_IMG_ALT_TEXT, data.mediaData.bigImage.altText)
-                        put(PT_MSG, data.terminalTextData.message)
-                        put(PT_MSG_SUMMARY, data.terminalTextData.messageSummary)
-                        put(PT_GIF, data.mediaData.gif.url)
-                    }
-
-                    basicTemplateBundle.putString(PT_JSON, ptJsonObj.toString())
-                    // force random id generation
-                    basicTemplateBundle.putString(PT_COLLAPSE_KEY, null)
-                    basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
-                    basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
-                    val templateRenderer: INotificationRenderer =
-                        TemplateRenderer(applicationContext, basicTemplateBundle, config)
-                    val cleverTapAPI = CleverTapAPI
-                        .getGlobalInstance(
-                            applicationContext,
-                            PushNotificationUtil.getAccountIdFromNotificationBundle(basicTemplateBundle)
-                        )
-                    cleverTapAPI?.renderPushNotification(
-                        templateRenderer,
-                        applicationContext,
-                        basicTemplateBundle
-                    )
-                }
-            }, (delay - 100).toLong())
         }
     }
 
