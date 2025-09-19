@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
+import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.styles.*
@@ -29,7 +30,6 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowPackageManager
-import java.lang.reflect.Field
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
@@ -52,6 +52,33 @@ class TemplateRendererTest {
 
     @MockK
     private lateinit var mockManifestInfo: ManifestInfo
+
+    @MockK(relaxed = true)
+    private lateinit var mockBasicTemplateData: BasicTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockAutoCarouselTemplateData: AutoCarouselTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockManualCarouselTemplateData: ManualCarouselTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockRatingTemplateData: RatingTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockFiveIconsTemplateData: FiveIconsTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockProductTemplateData: ProductTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockZeroBezelTemplateData: ZeroBezelTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockTimerTemplateData: TimerTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockInputBoxTemplateData: InputBoxTemplateData
 
     private lateinit var testBundle: Bundle
     private lateinit var templateRenderer: TemplateRenderer
@@ -79,7 +106,8 @@ class TemplateRendererTest {
         shadowPackageManager.installPackage(packageInfo)
 
         // Mock static methods
-        mockkObject(ValidatorFactory.Companion)
+        mockkObject(TemplateDataFactory)
+        mockkObject(ValidatorFactory)
         mockkStatic(Utils::class)
         mockkStatic(ManifestInfo::class)
 
@@ -91,6 +119,7 @@ class TemplateRendererTest {
         // Setup common mocks
         every { ManifestInfo.getInstance(any()) } returns mockManifestInfo
         every { mockManifestInfo.intentServiceName } returns "com.clevertap.android.sdk.pushnotification.CTNotificationIntentService"
+        every { Utils.isDarkMode(any()) } returns false
 
         // We use a mock for NotificationManager as this is simpler to verify
         mockNotificationManager = mockk(relaxed = true)
@@ -128,11 +157,6 @@ class TemplateRendererTest {
         val expectedCollapseKey = "test_collapse_key"
         testBundle.putString(PTConstants.PT_COLLAPSE_KEY, expectedCollapseKey)
 
-        // Use reflection to set the private field
-        val field: Field = TemplateRenderer::class.java.getDeclaredField("pt_collapse_key")
-        field.isAccessible = true
-        field.set(templateRenderer, expectedCollapseKey)
-
         // Act
         val collapseKey = templateRenderer.getCollapseKey(testBundle)
 
@@ -163,11 +187,15 @@ class TemplateRendererTest {
 
         // Arrange
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.BASIC,
+                basicBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockBasicTemplateData
+        every { ValidatorFactory.getValidator(mockBasicTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(BasicStyle::class)
@@ -205,11 +233,15 @@ class TemplateRendererTest {
     fun test_renderNotification_basic_template_invalid() {
         // Arrange
         every {
-            ValidatorFactory.getValidator(
-                TemplateType.BASIC,
+            TemplateDataFactory.createTemplateData(
+                TemplateType.AUTO_CAROUSEL,
+                testBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockBasicTemplateData
+        every { ValidatorFactory.getValidator(mockBasicTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns false
 
         // Act
@@ -234,11 +266,15 @@ class TemplateRendererTest {
         val templateRendererLocal = TemplateRenderer(context, testBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.AUTO_CAROUSEL,
+                testBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockAutoCarouselTemplateData
+        every { ValidatorFactory.getValidator(mockAutoCarouselTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(AutoCarouselStyle::class)
@@ -281,11 +317,15 @@ class TemplateRendererTest {
         val templateRendererLocal = TemplateRenderer(context, ratingBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.RATING,
+                ratingBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockRatingTemplateData
+        every { ValidatorFactory.getValidator(mockRatingTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(RatingStyle::class)
@@ -329,11 +369,15 @@ class TemplateRendererTest {
         val templateRendererLocal = TemplateRenderer(context, carouselBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.MANUAL_CAROUSEL,
+                carouselBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockManualCarouselTemplateData
+        every { ValidatorFactory.getValidator(mockManualCarouselTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(ManualCarouselStyle::class)
@@ -377,11 +421,15 @@ class TemplateRendererTest {
         val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.FIVE_ICONS,
+                fiveIconsBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockFiveIconsTemplateData
+        every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         val mockSmallContentView = mockk<FiveIconSmallContentView>()
@@ -431,11 +479,15 @@ class TemplateRendererTest {
         val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.FIVE_ICONS,
+                fiveIconsBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockFiveIconsTemplateData
+        every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         val mockSmallContentView = mockk<FiveIconSmallContentView>()
@@ -485,11 +537,15 @@ class TemplateRendererTest {
         val templateRendererLocal = TemplateRenderer(context, productBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.PRODUCT_DISPLAY,
+                productBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockProductTemplateData
+        every { ValidatorFactory.getValidator(mockProductTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(ProductDisplayStyle::class)
@@ -532,11 +588,15 @@ class TemplateRendererTest {
         val templateRendererLocal = TemplateRenderer(context, zeroBezelBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.ZERO_BEZEL,
+                zeroBezelBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockZeroBezelTemplateData
+        every { ValidatorFactory.getValidator(mockZeroBezelTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(ZeroBezelStyle::class)
@@ -578,18 +638,23 @@ class TemplateRendererTest {
         timerBundle.putString(PTConstants.PT_ID, "pt_timer")
         timerBundle.putString(PTConstants.PT_TIMER_END, "10")
 
-        every { Utils.getTimerEnd(timerBundle, any()) } returns 10
+        every { mockTimerTemplateData.timerThreshold } returns -1
+        every { mockTimerTemplateData.timerEnd } returns 15
+        every { mockTimerTemplateData.renderTerminal } returns true
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
-
 
         mockkConstructor(TimerStyle::class)
         every {
@@ -620,7 +685,7 @@ class TemplateRendererTest {
                 mockNotificationBuilder
             )
         }
-        verify { mockNotificationBuilder.setTimeoutAfter(11000) }
+        verify { mockNotificationBuilder.setTimeoutAfter(16000) }
         assertEquals(mockNotificationBuilder, result)
     }
 
@@ -634,17 +699,17 @@ class TemplateRendererTest {
         val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
-        every {
-            ValidatorFactory.getValidator(
-                TemplateType.BASIC,
-                any()
-            )
-        } returns mockContentValidator
+        } returns mockTimerTemplateData
+        every { mockTimerTemplateData.toBasicTemplateData() } returns mockBasicTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
+        every { ValidatorFactory.getValidator(mockBasicTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(BasicStyle::class)
@@ -687,11 +752,15 @@ class TemplateRendererTest {
         val templateRendererLocal = TemplateRenderer(context, inputBoxBundle, mockConfig)
 
         every {
-            ValidatorFactory.getValidator(
+            TemplateDataFactory.createTemplateData(
                 TemplateType.INPUT_BOX,
+                inputBoxBundle,
+                false,
+                any(),
                 any()
             )
-        } returns mockContentValidator
+        } returns mockInputBoxTemplateData
+        every { ValidatorFactory.getValidator(mockInputBoxTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(InputBoxStyle::class)
@@ -725,7 +794,6 @@ class TemplateRendererTest {
         assertEquals(mockNotificationBuilder, result)
     }
 
-
     @Test
     fun test_renderNotification_unknown_template_type() {
         // Arrange
@@ -733,6 +801,16 @@ class TemplateRendererTest {
         unknownBundle.putString(PTConstants.PT_ID, "pt_unknown")
 
         val templateRendererLocal = TemplateRenderer(context, unknownBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                any(),
+                unknownBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns null
 
         // Act
         val result = templateRendererLocal.renderNotification(
@@ -747,6 +825,7 @@ class TemplateRendererTest {
         // Should log "operation not defined!" and return null
         assertNull(result)
     }
+
     @Test
     fun test_renderNotification_with_null_template_id() {
         // Arrange
@@ -830,5 +909,3 @@ class TemplateRendererTest {
         assertTrue(result.isEmpty())
     }
 }
-
-
