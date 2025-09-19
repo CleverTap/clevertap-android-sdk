@@ -645,8 +645,8 @@ class TemplateDataFactoryTest {
         every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns collapsedImage
         every { mockBundle.getString(PT_GIF_COLLAPSED) } returns collapsedGif
         every { mockBundle.getString(PT_GIF_FRAMES_COLLAPSED) } returns collapsedFrames
-        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT) } returns collapsedAltText
-        every { mockBundle.getString(PT_SCALE_TYPE_COLLAPSED) } returns "FIT_CENTER"
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, any()) } returns collapsedAltText
+        every { mockBundle.getString(PT_SCALE_TYPE_COLLAPSED, any()) } returns "FIT_CENTER"
 
         // When
         val result = TemplateDataFactory.createTemplateData(
@@ -674,7 +674,7 @@ class TemplateDataFactoryTest {
         every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns null
         every { mockBundle.getString(PT_GIF_COLLAPSED) } returns null
         every { mockBundle.getString(PT_GIF_FRAMES_COLLAPSED) } returns null
-        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT) } returns null
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, any()) } returns defaultAltText
         every { mockBundle.getString(PT_SCALE_TYPE_COLLAPSED) } returns null
 
         // When
@@ -695,6 +695,7 @@ class TemplateDataFactoryTest {
         assertEquals(zeroBezelData.mediaData.gif.url, zeroBezelData.collapsedMediaData.gif.url)
         assertEquals(zeroBezelData.mediaData.gif.numberOfFrames, zeroBezelData.collapsedMediaData.gif.numberOfFrames)
         assertEquals(zeroBezelData.mediaData.scaleType, zeroBezelData.collapsedMediaData.scaleType)
+        assertEquals(defaultAltText, zeroBezelData.collapsedMediaData.bigImage.altText)
     }
 
     @Test
