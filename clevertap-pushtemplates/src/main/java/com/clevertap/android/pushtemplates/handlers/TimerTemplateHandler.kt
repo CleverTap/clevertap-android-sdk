@@ -1,24 +1,17 @@
-package com.clevertap.android.pushtemplates
+package com.clevertap.android.pushtemplates.handlers
 
 import android.content.Context
-import android.os.Build.VERSION_CODES
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
-import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND
-import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG
-import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT_TEXT
-import com.clevertap.android.pushtemplates.PTConstants.PT_COLLAPSE_KEY
-import com.clevertap.android.pushtemplates.PTConstants.PT_GIF
-import com.clevertap.android.pushtemplates.PTConstants.PT_ID
-import com.clevertap.android.pushtemplates.PTConstants.PT_JSON
-import com.clevertap.android.pushtemplates.PTConstants.PT_MSG
-import com.clevertap.android.pushtemplates.PTConstants.PT_MSG_SUMMARY
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_END
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_MIN_THRESHOLD
-import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE
+import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
+import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.TimerTemplateData
+import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -28,9 +21,9 @@ import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import org.json.JSONObject
 
-internal object PTTimerHandler {
+internal object TimerTemplateHandler {
 
-    @RequiresApi(VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.M)
     internal fun scheduleTimer(
         context: Context,
         extras: Bundle,
@@ -60,7 +53,7 @@ internal object PTTimerHandler {
                         null
                     ) // skip dupe check
                     basicTemplateBundle.putString(
-                        PT_ID,
+                        PTConstants.PT_ID,
                         "pt_basic"
                     ) // set to basic
 
@@ -68,7 +61,7 @@ internal object PTTimerHandler {
                     /**
                      *  Update existing payload bundle with new title,msg,img for Basic template
                      */
-                    val ptJsonStr = basicTemplateBundle.getString(PT_JSON)
+                    val ptJsonStr = basicTemplateBundle.getString(PTConstants.PT_JSON)
                     val ptJsonObj = try {
                         ptJsonStr?.let { JSONObject(it) }
                     } catch (_: Exception) {
@@ -77,23 +70,23 @@ internal object PTTimerHandler {
                     } ?: JSONObject()
 
                     with(ptJsonObj) {
-                        put(PT_TITLE, data.terminalTextData.title)
-                        put(PT_BIG_IMG, data.mediaData.bigImage.url)
+                        put(PTConstants.PT_TITLE, data.terminalTextData.title)
+                        put(PTConstants.PT_BIG_IMG, data.terminalMediaData.bigImage.url)
                         put(
-                            PT_BIG_IMG_ALT_TEXT,
-                            data.mediaData.bigImage.altText
+                            PTConstants.PT_BIG_IMG_ALT_TEXT,
+                            data.terminalMediaData.bigImage.altText
                         )
-                        put(PT_MSG, data.terminalTextData.message)
+                        put(PTConstants.PT_MSG, data.terminalTextData.message)
                         put(
-                            PT_MSG_SUMMARY,
+                            PTConstants.PT_MSG_SUMMARY,
                             data.terminalTextData.messageSummary
                         )
-                        put(PT_GIF, data.mediaData.gif.url)
+                        put(PTConstants.PT_GIF, data.terminalMediaData.gif.url)
                     }
 
-                    basicTemplateBundle.putString(PT_JSON, ptJsonObj.toString())
+                    basicTemplateBundle.putString(PTConstants.PT_JSON, ptJsonObj.toString())
                     // force random id generation
-                    basicTemplateBundle.putString(PT_COLLAPSE_KEY, null)
+                    basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
                     basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
                     basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
                     val templateRenderer: INotificationRenderer =
@@ -122,12 +115,12 @@ internal object PTTimerHandler {
 
     internal fun getTimerEnd(data: TimerTemplateData): Int? {
         var timer_end: Int? = null
-        if (data.timerThreshold != -1 && data.timerThreshold >= PT_TIMER_MIN_THRESHOLD) {
-            timer_end = data.timerThreshold * ONE_SECOND + ONE_SECOND
-        } else if (data.timerEnd >= PT_TIMER_MIN_THRESHOLD) {
-            timer_end = data.timerEnd * ONE_SECOND + ONE_SECOND
+        if (data.timerThreshold != -1 && data.timerThreshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+            timer_end = data.timerThreshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+        } else if (data.timerEnd >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+            timer_end = data.timerEnd * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
         } else {
-            PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: $PT_TIMER_END")
+            PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: ${PTConstants.PT_TIMER_END}")
         }
         return timer_end
     }

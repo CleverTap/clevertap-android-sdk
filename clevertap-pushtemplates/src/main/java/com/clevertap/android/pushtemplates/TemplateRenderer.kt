@@ -1,6 +1,5 @@
 package com.clevertap.android.pushtemplates
 
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.Context
@@ -10,13 +9,14 @@ import android.net.Uri
 import android.os.*
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
+import com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler
+import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
 import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.pushtemplates.styles.*
@@ -147,9 +147,9 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
                 ValidatorFactory.getValidator(templateData)
                     ?.takeIf { it.validate() }
                     ?.let {
-                        PTTimerHandler.getTimerEnd(templateData)?.let { timerEnd ->
+                        TimerTemplateHandler.getTimerEnd(templateData)?.let { timerEnd ->
                             if (templateData.renderTerminal) {
-                                PTTimerHandler.scheduleTimer(
+                                TimerTemplateHandler.scheduleTimer(
                                     context,
                                     extras,
                                     notificationId,
@@ -179,27 +179,12 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
             )
                 return InputBoxStyle(templateData, this).builderFromStyle(context, extras, notificationId, nb)
 
-            is CancelTemplateData -> renderCancelNotification(context, templateData)
+            is CancelTemplateData -> CancelTemplateHandler.renderCancelNotification(context, templateData)
             else -> {
                 PTLog.verbose("operation not defined!")
             }
         }
         return null
-    }
-
-    private fun renderCancelNotification(context: Context, templateData: CancelTemplateData) {
-        val notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (templateData.cancelNotificationId.isNotNullAndEmpty()) {
-            val notificationId = templateData.cancelNotificationId.toInt()
-            notificationManager.cancel(notificationId)
-        } else {
-            if (templateData.cancelNotificationIds.isNotEmpty()) {
-                for (ids in templateData.cancelNotificationIds) {
-                    notificationManager.cancel(ids)
-                }
-            }
-        }
     }
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {
