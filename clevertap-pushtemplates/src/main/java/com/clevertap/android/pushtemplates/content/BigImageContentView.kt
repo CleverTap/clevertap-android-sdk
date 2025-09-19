@@ -16,7 +16,7 @@ internal open class BigImageContentView(
             data.baseContent.colorData.metaColor
         )
         setCustomContentViewTitle(data.baseContent.textData.title)
-        setCustomContentViewMessage(data.baseContent.textData.subtitle)
+        setCustomContentViewMessage(data.baseContent.textData.message)
         setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_big)
         setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
         setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)

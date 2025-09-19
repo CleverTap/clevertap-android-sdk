@@ -33,7 +33,7 @@ internal class ManualCarouselContentView(
             baseContent.colorData.metaColor
         )
         setCustomContentViewTitle(baseContent.textData.title)
-        setCustomContentViewMessage(baseContent.textData.subtitle)
+        setCustomContentViewMessage(baseContent.textData.message)
         setCustomBackgroundColour(baseContent.colorData.backgroundColor, R.id.content_view_big)
         setCustomTextColour(baseContent.colorData.titleColor, R.id.title)
         setCustomTextColour(baseContent.colorData.messageColor, R.id.msg)
