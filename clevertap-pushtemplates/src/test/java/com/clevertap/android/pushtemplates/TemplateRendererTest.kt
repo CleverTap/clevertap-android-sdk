@@ -12,6 +12,8 @@ import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
+import com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler
+import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.pushtemplates.styles.*
 import com.clevertap.android.pushtemplates.validators.ContentValidator
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
@@ -82,6 +84,9 @@ class TemplateRendererTest {
 
     @MockK(relaxed = true)
     private lateinit var mockInputBoxTemplateData: InputBoxTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockCancelTemplateData: CancelTemplateData
 
     private lateinit var testBundle: Bundle
     private lateinit var templateRenderer: TemplateRenderer
@@ -1100,6 +1105,106 @@ class TemplateRendererTest {
         assertEquals(mockNotificationBuilder, result)
     }
 
+
+    @Test
+    fun test_renderNotification_five_icons_small_unloaded_count_3() {
+        // Arrange
+        val fiveIconsBundle = Bundle(testBundle)
+        fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
+
+        val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.FIVE_ICONS,
+                fiveIconsBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockFiveIconsTemplateData
+        every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        val mockSmallContentView = mockk<FiveIconSmallContentView>()
+        val mockBigContentView = mockk<FiveIconBigContentView>()
+        every { mockSmallContentView.getUnloadedFiveIconsCount() } returns 3
+        every { mockBigContentView.getUnloadedFiveIconsCount() } returns 1
+
+        mockkConstructor(FiveIconStyle::class)
+        every {
+            anyConstructed<FiveIconStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+        every { anyConstructed<FiveIconStyle>().fiveIconSmallContentView } returns mockSmallContentView
+        every { anyConstructed<FiveIconStyle>().fiveIconBigContentView } returns mockBigContentView
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            fiveIconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+
+    @Test
+    fun test_renderNotification_five_icons_big_unloaded_count_3() {
+        // Arrange
+        val fiveIconsBundle = Bundle(testBundle)
+        fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
+
+        val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.FIVE_ICONS,
+                fiveIconsBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockFiveIconsTemplateData
+        every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        val mockSmallContentView = mockk<FiveIconSmallContentView>()
+        val mockBigContentView = mockk<FiveIconBigContentView>()
+        every { mockSmallContentView.getUnloadedFiveIconsCount() } returns 1
+        every { mockBigContentView.getUnloadedFiveIconsCount() } returns 3
+
+        mockkConstructor(FiveIconStyle::class)
+        every {
+            anyConstructed<FiveIconStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+        every { anyConstructed<FiveIconStyle>().fiveIconSmallContentView } returns mockSmallContentView
+        every { anyConstructed<FiveIconStyle>().fiveIconBigContentView } returns mockBigContentView
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            fiveIconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
     @Test
     fun test_renderNotification_five_icons_template_invalid_unloaded_icons() {
         // Arrange
@@ -1287,6 +1392,7 @@ class TemplateRendererTest {
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(TimerStyle::class)
+        mockkObject(TimerTemplateHandler)
         every {
             anyConstructed<TimerStyle>().builderFromStyle(
                 any(),
@@ -1316,6 +1422,68 @@ class TemplateRendererTest {
             )
         }
         verify { mockNotificationBuilder.setTimeoutAfter(16000) }
+        verify { TimerTemplateHandler.scheduleTimer(context, timerBundle, 123, 16000, mockTimerTemplateData, mockConfig, any()) }
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun test_renderNotification_timer_template_valid_render_terminal_false() {
+        // Arrange
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+        timerBundle.putString(PTConstants.PT_TIMER_END, "10")
+
+        every { mockTimerTemplateData.timerThreshold } returns -1
+        every { mockTimerTemplateData.timerEnd } returns 15
+        every { mockTimerTemplateData.renderTerminal } returns false
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        mockkConstructor(TimerStyle::class)
+        mockkObject(TimerTemplateHandler)
+        every {
+            anyConstructed<TimerStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+        every { mockNotificationBuilder.setTimeoutAfter(any()) } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        verify {
+            anyConstructed<TimerStyle>().builderFromStyle(
+                any(),
+                timerBundle,
+                123,
+                mockNotificationBuilder
+            )
+        }
+        verify { mockNotificationBuilder.setTimeoutAfter(16000) }
+        verify(exactly = 0) { TimerTemplateHandler.scheduleTimer(any(), any(), any(), any(), any(), any()) }
         assertEquals(mockNotificationBuilder, result)
     }
 
@@ -1388,7 +1556,6 @@ class TemplateRendererTest {
         } returns mockTimerTemplateData
         every { mockTimerTemplateData.toBasicTemplateData() } returns mockBasicTemplateData
         every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
-        every { ValidatorFactory.getValidator(mockBasicTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(BasicStyle::class)
@@ -1420,6 +1587,95 @@ class TemplateRendererTest {
             )
         }
         assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun test_renderNotification_timer_template_below_oreo_null_validator() {
+        // Arrange
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { mockTimerTemplateData.toBasicTemplateData() } returns mockBasicTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns null
+
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun test_renderNotification_timer_template_below_oreo_false_validator() {
+        // Arrange
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { mockTimerTemplateData.toBasicTemplateData() } returns mockBasicTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
     }
 
     @Test
@@ -1768,5 +2024,39 @@ class TemplateRendererTest {
 
         // Assert
         assertTrue(result.isEmpty())
+    }
+
+
+    @Test
+    fun test_renderNotification_cancel_template_valid() {
+        val cancelBundle = Bundle()
+        cancelBundle.putString(PTConstants.PT_ID, "pt_cancel")
+
+        val templateRendererLocal = TemplateRenderer(context, cancelBundle, mockConfig)
+
+        // Arrange
+        mockkObject(CancelTemplateHandler)
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.CANCEL,
+                cancelBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockCancelTemplateData
+
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            cancelBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        verify { CancelTemplateHandler.renderCancelNotification(context, mockCancelTemplateData) }
+        assertNull(result)
     }
 }
