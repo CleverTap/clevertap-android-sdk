@@ -16,6 +16,9 @@ import com.clevertap.android.pushtemplates.styles.*
 import com.clevertap.android.pushtemplates.validators.ContentValidator
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Constants.NOTIF_MSG
+import com.clevertap.android.sdk.Constants.NOTIF_TITLE
 import com.clevertap.android.sdk.ManifestInfo
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
@@ -152,6 +155,57 @@ class TemplateRendererTest {
     }
 
     @Test
+    fun test_getMessage_emptyMainMessage() {
+        val fallbackBundle = Bundle()
+        fallbackBundle.putString(PTConstants.PT_MSG, "")
+        fallbackBundle.putString(NOTIF_MSG, "Fallback Message")
+
+        // Act
+        val title = templateRenderer.getMessage(fallbackBundle)
+
+        // Assert
+        assertEquals("Fallback Message", title)
+    }
+
+    @Test
+    fun test_getTitle_emptyMainTitle() {
+        val fallbackBundle = Bundle()
+        fallbackBundle.putString(PTConstants.PT_TITLE, "")
+        fallbackBundle.putString(NOTIF_TITLE, "Fallback Title")
+
+        // Act
+        val message = templateRenderer.getTitle(fallbackBundle, context)
+
+        // Assert
+        assertEquals("Fallback Title", message)
+    }
+
+
+    @Test
+    fun test_getMessage_fallbackCorrectMessage() {
+        val fallbackBundle = Bundle()
+        fallbackBundle.putString(NOTIF_MSG, "Fallback Message")
+
+        // Act
+        val title = templateRenderer.getMessage(fallbackBundle)
+
+        // Assert
+        assertEquals("Fallback Message", title)
+    }
+
+    @Test
+    fun test_getTitle_fallbackCorrectTitle() {
+        val fallbackBundle = Bundle()
+        fallbackBundle.putString(NOTIF_TITLE, "Fallback Title")
+
+        // Act
+        val message = templateRenderer.getTitle(fallbackBundle, context)
+
+        // Assert
+        assertEquals("Fallback Title", message)
+    }
+
+    @Test
     fun test_getCollapseKey_returnsCorrectValue() {
         // Arrange
         val expectedCollapseKey = "test_collapse_key"
@@ -159,6 +213,20 @@ class TemplateRendererTest {
 
         // Act
         val collapseKey = templateRenderer.getCollapseKey(testBundle)
+
+        // Assert
+        assertEquals(expectedCollapseKey, collapseKey)
+    }
+
+    @Test
+    fun test_getCollapse_returnsFallbackValue() {
+        // Arrange
+        val expectedCollapseKey = "test_fallback_collapse_key"
+        val fallbackBundle = Bundle()
+        fallbackBundle.putString(Constants.WZRK_COLLAPSE, expectedCollapseKey)
+
+        // Act
+        val collapseKey = templateRenderer.getCollapseKey(fallbackBundle)
 
         // Assert
         assertEquals(expectedCollapseKey, collapseKey)
@@ -231,11 +299,16 @@ class TemplateRendererTest {
 
     @Test
     fun test_renderNotification_basic_template_invalid() {
+        val basicBundle = Bundle(testBundle)
+        basicBundle.putString(PTConstants.PT_ID, "pt_basic")
+
+        val templateRendererLocal = TemplateRenderer(context, basicBundle, mockConfig)
+
         // Arrange
         every {
             TemplateDataFactory.createTemplateData(
-                TemplateType.AUTO_CAROUSEL,
-                testBundle,
+                TemplateType.BASIC,
+                basicBundle,
                 false,
                 any(),
                 any()
@@ -245,8 +318,8 @@ class TemplateRendererTest {
         every { mockContentValidator.validate() } returns false
 
         // Act
-        val result = templateRenderer.renderNotification(
-            testBundle,
+        val result = templateRendererLocal.renderNotification(
+            basicBundle,
             context,
             mockNotificationBuilder,
             mockConfig,
@@ -254,6 +327,549 @@ class TemplateRendererTest {
         )
 
         // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_auto_carousel_template_invalid() {
+        val autoCarouselBundle = Bundle(testBundle)
+        autoCarouselBundle.putString(PTConstants.PT_ID, "pt_carousel")
+
+        val templateRendererLocal = TemplateRenderer(context, autoCarouselBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.AUTO_CAROUSEL,
+                autoCarouselBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockAutoCarouselTemplateData
+        every { ValidatorFactory.getValidator(mockAutoCarouselTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            autoCarouselBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_manual_carousel_template_invalid() {
+        val manualCarouselBundle = Bundle(testBundle)
+        manualCarouselBundle.putString(PTConstants.PT_ID, "pt_manual_carousel")
+
+        val templateRendererLocal = TemplateRenderer(context, manualCarouselBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.MANUAL_CAROUSEL,
+                manualCarouselBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockManualCarouselTemplateData
+        every { ValidatorFactory.getValidator(mockManualCarouselTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            manualCarouselBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_rating_template_invalid() {
+        val ratingBundle = Bundle(testBundle)
+        ratingBundle.putString(PTConstants.PT_ID, "pt_rating")
+
+        val templateRendererLocal = TemplateRenderer(context, ratingBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.RATING,
+                ratingBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockRatingTemplateData
+        every { ValidatorFactory.getValidator(mockRatingTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            ratingBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_five_icons_template_invalid() {
+        val fiveIconsBundle = Bundle(testBundle)
+        fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
+
+        val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.FIVE_ICONS,
+                fiveIconsBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockFiveIconsTemplateData
+        every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            fiveIconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_product_display_template_invalid() {
+        val productBundle = Bundle(testBundle)
+        productBundle.putString(PTConstants.PT_ID, "pt_product_display")
+
+        val templateRendererLocal = TemplateRenderer(context, productBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.PRODUCT_DISPLAY,
+                productBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockProductTemplateData
+        every { ValidatorFactory.getValidator(mockProductTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            productBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_zero_bezel_template_invalid() {
+        val zeroBezelBundle = Bundle(testBundle)
+        zeroBezelBundle.putString(PTConstants.PT_ID, "pt_zero_bezel")
+
+        val templateRendererLocal = TemplateRenderer(context, zeroBezelBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.ZERO_BEZEL,
+                zeroBezelBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockZeroBezelTemplateData
+        every { ValidatorFactory.getValidator(mockZeroBezelTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            zeroBezelBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_timer_template_invalid() {
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_input_box_template_invalid() {
+        val inputBoxBundle = Bundle(testBundle)
+        inputBoxBundle.putString(PTConstants.PT_ID, "pt_input")
+
+        val templateRendererLocal = TemplateRenderer(context, inputBoxBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.INPUT_BOX,
+                inputBoxBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockInputBoxTemplateData
+        every { ValidatorFactory.getValidator(mockInputBoxTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            inputBoxBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_basic_template_null_validator() {
+        val basicBundle = Bundle(testBundle)
+        basicBundle.putString(PTConstants.PT_ID, "pt_basic")
+
+        val templateRendererLocal = TemplateRenderer(context, basicBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.BASIC,
+                basicBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockBasicTemplateData
+        every { ValidatorFactory.getValidator(mockBasicTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            basicBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_auto_carousel_template_null_validator() {
+        val autoCarouselBundle = Bundle(testBundle)
+        autoCarouselBundle.putString(PTConstants.PT_ID, "pt_carousel")
+
+        val templateRendererLocal = TemplateRenderer(context, autoCarouselBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.AUTO_CAROUSEL,
+                autoCarouselBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockAutoCarouselTemplateData
+        every { ValidatorFactory.getValidator(mockAutoCarouselTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            autoCarouselBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_manual_carousel_template_null_validator() {
+        val manualCarouselBundle = Bundle(testBundle)
+        manualCarouselBundle.putString(PTConstants.PT_ID, "pt_manual_carousel")
+
+        val templateRendererLocal = TemplateRenderer(context, manualCarouselBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.MANUAL_CAROUSEL,
+                manualCarouselBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockManualCarouselTemplateData
+        every { ValidatorFactory.getValidator(mockManualCarouselTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            manualCarouselBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_rating_template_null_validator() {
+        val ratingBundle = Bundle(testBundle)
+        ratingBundle.putString(PTConstants.PT_ID, "pt_rating")
+
+        val templateRendererLocal = TemplateRenderer(context, ratingBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.RATING,
+                ratingBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockRatingTemplateData
+        every { ValidatorFactory.getValidator(mockRatingTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            ratingBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_five_icons_template_null_validator() {
+        val fiveIconsBundle = Bundle(testBundle)
+        fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
+
+        val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.FIVE_ICONS,
+                fiveIconsBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockFiveIconsTemplateData
+        every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            fiveIconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_product_display_template_null_validator() {
+        val productBundle = Bundle(testBundle)
+        productBundle.putString(PTConstants.PT_ID, "pt_product_display")
+
+        val templateRendererLocal = TemplateRenderer(context, productBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.PRODUCT_DISPLAY,
+                productBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockProductTemplateData
+        every { ValidatorFactory.getValidator(mockProductTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            productBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_zero_bezel_template_null_validator() {
+        val zeroBezelBundle = Bundle(testBundle)
+        zeroBezelBundle.putString(PTConstants.PT_ID, "pt_zero_bezel")
+
+        val templateRendererLocal = TemplateRenderer(context, zeroBezelBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.ZERO_BEZEL,
+                zeroBezelBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockZeroBezelTemplateData
+        every { ValidatorFactory.getValidator(mockZeroBezelTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            zeroBezelBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_timer_template_null_validator() {
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_input_box_template_null_validator() {
+        val inputBoxBundle = Bundle(testBundle)
+        inputBoxBundle.putString(PTConstants.PT_ID, "pt_input")
+
+        val templateRendererLocal = TemplateRenderer(context, inputBoxBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.INPUT_BOX,
+                inputBoxBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockInputBoxTemplateData
+        every { ValidatorFactory.getValidator(mockInputBoxTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            inputBoxBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
         assertNull(result)
     }
 
