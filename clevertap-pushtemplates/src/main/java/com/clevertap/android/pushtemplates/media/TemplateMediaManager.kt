@@ -11,6 +11,11 @@ internal class TemplateMediaManager(
     private val templateRepository: TemplateRepository,
     private val gifDecoder: GifDecoderImpl = GifDecoderImpl()
 ) {
+
+    // Simple in-memory cache to avoid duplicate downloads of successful results
+    private val bitmapCache = mutableMapOf<String, Bitmap>()
+    private val bytesCache = mutableMapOf<String, ByteArray>()
+
     fun getGifFrames(gifUrl: String?, maxFrames: Int): GifResult {
         if (gifUrl.isNullOrBlank() || !gifUrl.startsWith("https") || !gifUrl.lowercase()
                 .endsWith(".gif")
@@ -18,13 +23,26 @@ internal class TemplateMediaManager(
             PTLog.verbose("Invalid GIF URL: $gifUrl")
             return GifResult.failure()
         }
-        val downloadedBitmap = templateRepository.getBytes(gifUrl)
 
-        val rawBytes = if (downloadedBitmap.status == DownloadedBitmap.Status.SUCCESS) {
-            downloadedBitmap.bytes
+        // Check if already downloaded and successful
+        val cachedBytes = bytesCache[gifUrl]
+        val rawBytes = if (cachedBytes != null) {
+            PTLog.verbose("GIF loaded from cache: $gifUrl")
+            cachedBytes
         } else {
-            PTLog.verbose("Network call for GIF failed with URL: $gifUrl, HTTP status: ${downloadedBitmap.status}")
-            null
+            // Download (or re-download if previous attempt failed)
+            val downloadedBitmap = templateRepository.getBytes(gifUrl)
+            val bytes = if (downloadedBitmap.status == DownloadedBitmap.Status.SUCCESS) {
+                downloadedBitmap.bytes
+            } else {
+                PTLog.verbose("Network call for GIF failed with URL: $gifUrl, HTTP status: ${downloadedBitmap.status}")
+                null
+            }
+            // Only cache successful downloads
+            if (bytes != null) {
+                bytesCache[gifUrl] = bytes
+            }
+            bytes
         }
 
         return if (rawBytes != null) {
@@ -33,7 +51,6 @@ internal class TemplateMediaManager(
             GifResult.failure()
         }
     }
-
 
     @Throws(NullPointerException::class)
     fun getNotificationBitmap(
@@ -57,19 +74,43 @@ internal class TemplateMediaManager(
             return null
         }
 
-        var downloadedBitmap: DownloadedBitmap
-        val downloadTime = measureTimeMillis {
-            downloadedBitmap = templateRepository.getBitmap(imageUrl)
-        }
-
-        PTLog.verbose("Fetched IMAGE $imageUrl in $downloadTime ms")
-
-        return when (downloadedBitmap.status) {
-            DownloadedBitmap.Status.SUCCESS -> downloadedBitmap.bitmap
-            else -> {
-                PTLog.verbose("Bitmap download failed. URL: $imageUrl, Status: ${downloadedBitmap.status}")
-                null
+        // Check if already downloaded and successful
+        val cachedBitmap = bitmapCache[imageUrl]
+        return if (cachedBitmap != null && !cachedBitmap.isRecycled) {
+            PTLog.verbose("IMAGE loaded from cache: $imageUrl")
+            cachedBitmap
+        } else {
+            // Download (or re-download if previous attempt failed or bitmap was recycled)
+            var downloadedBitmap: DownloadedBitmap
+            val downloadTime = measureTimeMillis {
+                downloadedBitmap = templateRepository.getBitmap(imageUrl)
             }
+
+            val bitmap = when (downloadedBitmap.status) {
+                DownloadedBitmap.Status.SUCCESS -> {
+                    PTLog.verbose("Fetched IMAGE $imageUrl in $downloadTime ms")
+                    downloadedBitmap.bitmap
+                }
+                else -> {
+                    PTLog.verbose("Bitmap download failed. URL: $imageUrl, Status: ${downloadedBitmap.status}")
+                    null
+                }
+            }
+
+            // Only cache successful downloads
+            if (bitmap != null) {
+                bitmapCache[imageUrl] = bitmap
+            }
+            bitmap
         }
+    }
+
+    /**
+     * Clears both bitmap and bytes caches. Useful for cleanup after template processing.
+     */
+    fun clearCaches() {
+        bitmapCache.clear()
+        bytesCache.clear()
+        PTLog.verbose("Media caches cleared")
     }
 }
