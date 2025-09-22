@@ -169,7 +169,7 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
                 val basicTemplateData = templateData.toBasicTemplateData()
 
                 PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")
-                if (ValidatorFactory.getValidator(templateData)?.validate() == true) {
+                if (ValidatorFactory.getValidator(basicTemplateData)?.validate() == true) {
                     return BasicStyle(basicTemplateData, this).builderFromStyle(context, extras, notificationId, nb)
                 }
             }
