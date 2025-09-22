@@ -16,7 +16,7 @@ import com.clevertap.android.sdk.Constants
 
 internal class ManualCarouselStyle(
     private val data: ManualCarouselTemplateData,
-    private var renderer: TemplateRenderer,
+    renderer: TemplateRenderer,
     private var extras: Bundle
 ) : Style(data.carouselData.baseContent, renderer) {
 

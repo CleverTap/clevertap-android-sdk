@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.*
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
-internal class FiveIconStyle(private val data: FiveIconsTemplateData, private var renderer: TemplateRenderer, private var extras: Bundle) : Style(data.toBaseContent(), renderer) {
+internal class FiveIconStyle(private val data: FiveIconsTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.toBaseContent(), renderer) {
 
     lateinit var fiveIconSmallContentView: ContentView
     lateinit var fiveIconBigContentView: ContentView

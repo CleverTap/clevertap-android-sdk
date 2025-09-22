@@ -12,7 +12,7 @@ import com.clevertap.android.pushtemplates.BaseContent
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
-internal abstract class Style(private val data: BaseContent, private var renderer: TemplateRenderer) {
+internal abstract class Style(private val data: BaseContent, private val renderer: TemplateRenderer) {
 
     protected open fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,

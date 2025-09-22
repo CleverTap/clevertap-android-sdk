@@ -18,7 +18,7 @@ import com.clevertap.android.pushtemplates.content.INPUT_BOX_REPLY_PENDING_INTEN
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
-internal class InputBoxStyle(private val data: InputBoxTemplateData, private var renderer: TemplateRenderer) : Style(data.toBaseContent(), renderer) {
+internal class InputBoxStyle(private val data: InputBoxTemplateData, private val renderer: TemplateRenderer) : Style(data.toBaseContent(), renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
