@@ -3,7 +3,7 @@ package com.clevertap.android.pushtemplates.media
 import com.clevertap.android.sdk.Logger
 import kotlin.math.roundToInt
 
-interface GifDecoder {
+internal interface GifDecoder {
     fun decode(bytes: ByteArray, maxFrames: Int): GifResult
 }
 
@@ -28,7 +28,7 @@ class GifDecoderImpl(
             GifResult(frames, adapter.getDuration(gifDrawable))
         }.getOrElse {
             Logger.v("GIF decoding failed", it)
-            GifResult.Companion.failure()
+            GifResult.failure()
         }
     }
 

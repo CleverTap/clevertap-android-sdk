@@ -2,8 +2,8 @@ package com.clevertap.android.pushtemplates.media
 
 import android.content.Context
 import com.clevertap.android.pushtemplates.PTHttpBitmapLoader
+import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.bitmap.BitmapDownloadRequest
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
 import com.clevertap.android.sdk.network.DownloadedBitmap
@@ -17,7 +17,7 @@ internal class TemplateRepository(val context: Context, val config: CleverTapIns
 
     internal fun getBytes(url: String): DownloadedBitmap {
         if (url.isBlank()) {
-            Logger.v("Cannot download GIF: URL is empty")
+            PTLog.verbose("Cannot download GIF: URL is empty")
             return DownloadedBitmapFactory.nullBitmapWithStatus(DownloadedBitmap.Status.NO_IMAGE)
         }
 
@@ -37,7 +37,7 @@ internal class TemplateRepository(val context: Context, val config: CleverTapIns
 
     internal fun getBitmap(url: String): DownloadedBitmap {
         if (url.isBlank()) {
-            Logger.v("Cannot download Bitmap: URL is empty")
+            PTLog.verbose("Cannot download Bitmap: URL is empty")
             return DownloadedBitmapFactory.nullBitmapWithStatus(DownloadedBitmap.Status.NO_IMAGE)
         }
 
