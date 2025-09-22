@@ -166,10 +166,10 @@ class TemplateRendererTest {
         fallbackBundle.putString(NOTIF_MSG, "Fallback Message")
 
         // Act
-        val title = templateRenderer.getMessage(fallbackBundle)
+        val message = templateRenderer.getMessage(fallbackBundle)
 
         // Assert
-        assertEquals("Fallback Message", title)
+        assertEquals("Fallback Message", message)
     }
 
     @Test
@@ -192,10 +192,10 @@ class TemplateRendererTest {
         fallbackBundle.putString(NOTIF_MSG, "Fallback Message")
 
         // Act
-        val title = templateRenderer.getMessage(fallbackBundle)
+        val message = templateRenderer.getMessage(fallbackBundle)
 
         // Assert
-        assertEquals("Fallback Message", title)
+        assertEquals("Fallback Message", message)
     }
 
     @Test

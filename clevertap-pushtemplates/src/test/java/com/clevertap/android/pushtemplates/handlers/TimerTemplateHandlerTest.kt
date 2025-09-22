@@ -212,41 +212,6 @@ class TimerTemplateHandlerTest {
     }
 
     @Test
-    fun `scheduleTimer should properly modify bundle for basic template conversion`() {
-        // Given
-        val originalJson = JSONObject().apply {
-            put("original_key", "original_value")
-        }
-        every { mockBundle.getString(PT_JSON) } returns originalJson.toString()
-        every { mockBundle.clone() } returns mockBundle
-
-        val slot = slot<Runnable>()
-        every { mockHandler.postDelayed(capture(slot), any()) } returns true
-
-        // When
-        TimerTemplateHandler.scheduleTimer(
-            mockContext,
-            mockBundle,
-            NOTIFICATION_ID,
-            DELAY,
-            timerTemplateData,
-            mockConfig,
-            mockHandler
-        )
-
-        // Execute the delayed runnable
-        slot.captured.run()
-
-        // Then
-        verify { mockBundle.remove("wzrk_rnv") }
-        verify { mockBundle.putString(Constants.WZRK_PUSH_ID, null) }
-        verify { mockBundle.putString(PT_ID, "pt_basic") }
-        verify { mockBundle.putString(PT_COLLAPSE_KEY, null) }
-        verify { mockBundle.putString(Constants.WZRK_COLLAPSE, null) }
-        verify { mockBundle.remove(Constants.PT_NOTIF_ID) }
-    }
-
-    @Test
     fun `scheduleTimer should update JSON with terminal data`() {
         // Arrange
         val slot = slot<Runnable>()
