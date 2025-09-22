@@ -160,21 +160,19 @@ internal class DBAdapter(
     // =====================================================
 
     @Synchronized
-    fun storePushNotificationId(id: String?, ttl: Long) {
-        if (id != null) {
-            pushNotificationDAO.storePushNotificationId(id, ttl)
-        }
+    fun storePushNotificationId(id: String, ttl: Long) {
+        pushNotificationDAO.storePushNotificationId(id, ttl)
     }
 
     @Synchronized
-    fun fetchPushNotificationIds(): Array<String?> = pushNotificationDAO.fetchPushNotificationIds()
+    fun fetchPushNotificationIds(): Array<String> = pushNotificationDAO.fetchPushNotificationIds()
 
     @Synchronized
     fun doesPushNotificationIdExist(id: String): Boolean = pushNotificationDAO.doesPushNotificationIdExist(id)
 
     @WorkerThread
     @Synchronized
-    fun updatePushNotificationIds(ids: Array<String?>) = pushNotificationDAO.updatePushNotificationIds(ids)
+    fun updatePushNotificationIds(ids: Array<String>) = pushNotificationDAO.updatePushNotificationIds(ids)
 
     @Synchronized
     fun cleanUpPushNotifications() = pushNotificationDAO.cleanUpPushNotifications()
