@@ -466,7 +466,7 @@ internal object CleverTapFactory {
         val pushProviders = PushProviders
             .load(
                 context, config, databaseManager, validationResultStack,
-                analyticsManager, controllerManager, ctWorkManager
+                analyticsManager, controllerManager, ctWorkManager, SYSTEM
             )
 
         val activityLifeCycleManager = ActivityLifeCycleManager(

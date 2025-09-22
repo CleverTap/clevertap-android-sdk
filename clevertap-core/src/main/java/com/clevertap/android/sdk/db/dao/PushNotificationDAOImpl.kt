@@ -47,13 +47,13 @@ internal class PushNotificationDAOImpl(
     }
 
     @WorkerThread
-    override fun fetchPushNotificationIds(): Array<String?> {
+    override fun fetchPushNotificationIds(): Array<String> {
         if (!rtlDirtyFlag) {
             return emptyArray()
         }
         
         val tName = PUSH_NOTIFICATIONS.tableName
-        val pushIds: MutableList<String?> = ArrayList()
+        val pushIds: MutableList<String> = ArrayList()
 
         try {
             dbHelper.readableDatabase.query(
@@ -65,7 +65,10 @@ internal class PushNotificationDAOImpl(
                     if (dataIndex >= 0) {
                         val data = cursor.getString(dataIndex)
                         logger.verbose("Fetching PID - $data")
-                        pushIds.add(data)
+                        if (data != null) {
+                            // this case is practically not possible since we have null check in store
+                            pushIds.add(data)
+                        }
                     }
                 }
             }
@@ -81,7 +84,7 @@ internal class PushNotificationDAOImpl(
     }
 
     @WorkerThread
-    override fun updatePushNotificationIds(ids: Array<String?>) {
+    override fun updatePushNotificationIds(ids: Array<String>) {
         if (ids.isEmpty()) return
         
         if (!dbHelper.belowMemThreshold()) {
