@@ -109,7 +109,6 @@ internal open class ProductDisplayLinearBigContentView(
 
     internal fun setImageList(data: ProductTemplateData, scaleType: PTScaleType, extras: Bundle) {
         var imageCounter = 0
-        var isFirstImageOk = false
         val smallImageLayoutIds = ArrayList<Int>()
         smallImageLayoutIds.add(R.id.small_image1)
         smallImageLayoutIds.add(R.id.small_image2)
@@ -134,9 +133,6 @@ internal open class ProductDisplayLinearBigContentView(
                 loadImageURLIntoRemoteView(imageViewId, imageUrl, tempRemoteView, altText)
 
             if (!fallback) {
-                if (!isFirstImageOk) {
-                    isFirstImageOk = true
-                }
                 tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
                 remoteView.setViewVisibility(smallImageLayoutIds[imageCounter], View.VISIBLE)
                 remoteView.addView(R.id.carousel_image, tempRemoteView)
