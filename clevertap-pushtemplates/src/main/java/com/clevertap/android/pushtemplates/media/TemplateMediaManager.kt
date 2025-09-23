@@ -46,7 +46,7 @@ internal class TemplateMediaManager(
         }
 
         return if (rawBytes != null) {
-            gifDecoder.decode(rawBytes, maxFrames)
+            gifDecoder.decode(bytes = rawBytes, maxFrames = maxFrames)
         } else {
             GifResult.failure()
         }
