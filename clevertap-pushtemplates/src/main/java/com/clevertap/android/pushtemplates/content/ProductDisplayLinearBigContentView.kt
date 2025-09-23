@@ -141,6 +141,7 @@ internal open class ProductDisplayLinearBigContentView(
                 remoteView.setViewVisibility(smallImageLayoutIds[imageCounter], View.VISIBLE)
                 remoteView.addView(R.id.carousel_image, tempRemoteView)
                 imageCounter++
+                // Safe to use !! because loadImageURLIntoRemoteView returns false only when imageUrl is valid (non-null, non-blank, starts with https)
                 tempImageList.add(imageUrl!!)
             } else {
                 data.baseContent.deepLinkList.removeAt(index)

@@ -81,6 +81,7 @@ internal class ManualCarouselContentView(
                 remoteView.addView(R.id.carousel_image, centerRemoteView)
 
                 imageCounter++
+                // Safe to use !! because loadImageURLIntoRemoteView returns false only when imageUrl is valid (non-null, non-blank, starts with https)
                 tempImageList.add(imageUrl!!)
             } else {
                 if (imageCounter < deepLinkList.size) {

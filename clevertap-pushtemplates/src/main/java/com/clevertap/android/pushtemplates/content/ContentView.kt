@@ -206,6 +206,18 @@ internal open class ContentView(
         return loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, null)
     }
 
+    /**
+     * Loads an image URL into a RemoteView.
+     * 
+     * @param imageViewID The ID of the ImageView in the RemoteView
+     * @param imageUrl The URL of the image to load (nullable)
+     * @param remoteViews The RemoteViews to load the image into
+     * @param altText Alternative text for accessibility (nullable)
+     * @return true if fallback is needed (image loading failed), false if image was loaded successfully
+     * 
+     * INVARIANT: When this method returns false, the imageUrl parameter is guaranteed to be non-null,
+     * non-blank, and start with "https". This invariant is enforced by getImageBitmap validation.
+     */
     fun loadImageURLIntoRemoteView(
         imageViewID: Int, imageUrl: String?,
         remoteViews: RemoteViews, altText: String?
