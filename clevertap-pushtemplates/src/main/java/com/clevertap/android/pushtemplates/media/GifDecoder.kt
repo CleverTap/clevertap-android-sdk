@@ -7,7 +7,7 @@ internal interface GifDecoder {
     fun decode(bytes: ByteArray, maxFrames: Int): GifResult
 }
 
-class GifDecoderImpl(
+internal class GifDecoderImpl(
     private val adapter: GifDrawableAdapter = GifDrawableAdapterImpl()
 ) : GifDecoder {
 
@@ -25,10 +25,14 @@ class GifDecoderImpl(
                     }
             }
 
-            GifResult(frames, adapter.getDuration(gifDrawable))
+            return if (frames.isEmpty()) {
+                GifResult.Error("GIF decoding failed: No frames extracted")
+            } else {
+                GifResult.Success(frames, adapter.getDuration(gifDrawable))
+            }
         }.getOrElse {
             Logger.v("GIF decoding failed", it)
-            GifResult.failure()
+            GifResult.Error("GIF decoding failed: ${it.message}")
         }
     }
 

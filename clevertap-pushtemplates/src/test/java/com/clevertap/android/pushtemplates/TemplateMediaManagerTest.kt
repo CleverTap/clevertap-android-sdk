@@ -51,7 +51,8 @@ class TemplateMediaManagerTest {
         val result = templateMediaManager.getGifFrames(null, maxFrames)
 
         // Then
-        assertEquals(GifResult.failure(), result)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("Invalid GIF URL"))
         verify(exactly = 0) { mockTemplateRepository.getBytes(any()) }
     }
 
@@ -65,7 +66,8 @@ class TemplateMediaManagerTest {
         val result = templateMediaManager.getGifFrames(gifUrl, maxFrames)
 
         // Then
-        assertEquals(GifResult.failure(), result)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("Invalid GIF URL"))
         verify(exactly = 0) { mockTemplateRepository.getBytes(any()) }
     }
 
@@ -79,7 +81,8 @@ class TemplateMediaManagerTest {
         val result = templateMediaManager.getGifFrames(gifUrl, maxFrames)
 
         // Then
-        assertEquals(GifResult.failure(), result)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("Invalid GIF URL"))
         verify(exactly = 0) { mockTemplateRepository.getBytes(any()) }
     }
 
@@ -93,7 +96,8 @@ class TemplateMediaManagerTest {
         val result = templateMediaManager.getGifFrames(gifUrl, maxFrames)
 
         // Then
-        assertEquals(GifResult.failure(), result)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("Invalid GIF URL"))
         verify(exactly = 0) { mockTemplateRepository.getBytes(any()) }
     }
 
@@ -134,7 +138,8 @@ class TemplateMediaManagerTest {
         val result = templateMediaManager.getGifFrames(gifUrl, maxFrames)
 
         // Then
-        assertEquals(GifResult.failure(), result)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("Failed to download GIF"))
         verify { mockTemplateRepository.getBytes(gifUrl) }
         verify(exactly = 0) { mockGifDecoder.decode(any(), any()) }
     }
@@ -155,7 +160,8 @@ class TemplateMediaManagerTest {
         val result = templateMediaManager.getGifFrames(gifUrl, maxFrames)
 
         // Then
-        assertEquals(GifResult.failure(), result)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("Failed to download GIF"))
         verify { mockTemplateRepository.getBytes(gifUrl) }
         verify(exactly = 0) { mockGifDecoder.decode(any(), any()) }
     }
@@ -238,7 +244,7 @@ class TemplateMediaManagerTest {
         val result = templateMediaManager.getGifFrames(gifUrl, maxFrames)
 
         // Then
-        assertEquals(GifResult.failure(), result)
+        assertTrue((result as GifResult.Error).reason.contains("Invalid GIF URL"))
         verify(exactly = 0) { mockTemplateRepository.getBytes(any()) }
     }
 
@@ -262,7 +268,7 @@ class TemplateMediaManagerTest {
             val result = templateMediaManager.getGifFrames(gifUrl, maxFrames)
 
             // Then
-            assertEquals(GifResult.failure(), result)
+            assertTrue(result is GifResult.Error)
         }
     }
 
@@ -621,7 +627,7 @@ class TemplateMediaManagerTest {
         val mockBytes = ByteArray(200)
         val mockDownloadedBitmap = mockk<DownloadedBitmap>()
         val mockFrames = listOf(mockk<Bitmap>(), mockk<Bitmap>())
-        val expectedGifResult = GifResult(mockFrames, 3000)
+        val expectedGifResult = GifResult.Success(mockFrames, 3000)
 
         every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.SUCCESS
         every { mockDownloadedBitmap.bytes } returns mockBytes
@@ -633,7 +639,8 @@ class TemplateMediaManagerTest {
 
         // Then
         assertEquals(expectedGifResult, result)
-        assertEquals(mockFrames, result.frames)
+        assertTrue(result is GifResult.Success)
+        assertEquals(mockFrames, (result as GifResult.Success).frames)
         assertEquals(3000, result.duration)
         verify { mockTemplateRepository.getBytes(gifUrl) }
         verify { mockGifDecoder.decode(mockBytes, maxFrames) }

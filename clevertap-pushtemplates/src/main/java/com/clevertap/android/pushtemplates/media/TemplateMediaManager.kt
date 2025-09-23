@@ -20,8 +20,7 @@ internal class TemplateMediaManager(
         if (gifUrl.isNullOrBlank() || !gifUrl.startsWith("https") || !gifUrl.lowercase()
                 .endsWith(".gif")
         ) {
-            PTLog.verbose("Invalid GIF URL: $gifUrl")
-            return GifResult.failure()
+            return GifResult.Error("Invalid GIF URL: $gifUrl")
         }
 
         // Check if already downloaded and successful
@@ -48,7 +47,7 @@ internal class TemplateMediaManager(
         return if (rawBytes != null) {
             gifDecoder.decode(bytes = rawBytes, maxFrames = maxFrames)
         } else {
-            GifResult.failure()
+            GifResult.Error("Failed to download GIF from URL: $gifUrl")
         }
     }
 

@@ -56,7 +56,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 2)
 
         // Assert
-        assertEquals(expectedFrames, result.frames)
+        assertTrue(result is GifResult.Success)
+        assertEquals(expectedFrames, (result as GifResult.Success).frames)
         assertEquals(expectedDuration, result.duration)
         
         verify { mockAdapter.create(testBytes) }
@@ -75,8 +76,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 2)
 
         // Assert
-        assertNull(result.frames)
-        assertEquals(-1, result.duration)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("GIF decoding failed"))
         
         verify { mockAdapter.create(testBytes) }
         verify(exactly = 0) { mockAdapter.getFrameCount(any()) }
@@ -92,8 +93,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 2)
 
         // Assert
-        assertNull(result.frames)
-        assertEquals(-1, result.duration)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("GIF decoding failed"))
         
         verify { mockAdapter.create(testBytes) }
         verify { mockAdapter.getFrameCount(mockGifDrawable) }
@@ -114,8 +115,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 3)
 
         // Assert
-        assertNotNull(result.frames)
-        assertEquals(listOf(mockBitmap1, mockBitmap3), result.frames)
+        assertTrue(result is GifResult.Success)
+        assertEquals(listOf(mockBitmap1, mockBitmap3), (result as GifResult.Success).frames)
         assertEquals(expectedDuration, result.duration)
         
         verify { mockAdapter.getFrameAt(mockGifDrawable, 0) }
@@ -136,9 +137,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 2)
 
         // Assert
-        assertNotNull(result.frames)
-        assertTrue(result.frames!!.isEmpty())
-        assertEquals(expectedDuration, result.duration)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("No frames extracted"))
     }
 
     @Test
@@ -156,8 +156,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 3)
 
         // Assert
-        assertNotNull(result.frames)
-        assertEquals(3, result.frames!!.size)
+        assertTrue(result is GifResult.Success)
+        assertEquals(3, (result as GifResult.Success).frames.size)
         assertEquals(listOf(mockBitmap1, mockBitmap2, mockBitmap3), result.frames)
         assertEquals(expectedDuration, result.duration)
         
@@ -182,7 +182,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 5)
 
         // Assert
-        assertEquals(expectedFrames, result.frames)
+        assertTrue(result is GifResult.Success)
+        assertEquals(expectedFrames, (result as GifResult.Success).frames)
         assertEquals(expectedDuration, result.duration)
         
         verify { mockAdapter.getFrameAt(mockGifDrawable, 0) }
@@ -203,8 +204,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 1)
 
         // Assert
-        assertNotNull(result.frames)
-        assertEquals(1, result.frames!!.size)
+        assertTrue(result is GifResult.Success)
+        assertEquals(1, (result as GifResult.Success).frames.size)
         assertEquals(listOf(mockBitmap1), result.frames)
         assertEquals(expectedDuration, result.duration)
         
@@ -224,9 +225,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 0)
 
         // Assert
-        assertNotNull(result.frames)
-        assertTrue(result.frames!!.isEmpty())
-        assertEquals(expectedDuration, result.duration)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("No frames extracted"))
         
         verify(exactly = 0) { mockAdapter.getFrameAt(mockGifDrawable, any()) }
     }
@@ -243,9 +243,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, -1)
 
         // Assert
-        assertNotNull(result.frames)
-        assertTrue(result.frames!!.isEmpty())
-        assertEquals(expectedDuration, result.duration)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("No frames extracted"))
         
         verify(exactly = 0) { mockAdapter.getFrameAt(mockGifDrawable, any()) }
     }
@@ -262,9 +261,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 5)
 
         // Assert
-        assertNotNull(result.frames)
-        assertTrue(result.frames!!.isEmpty())
-        assertEquals(expectedDuration, result.duration)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("No frames extracted"))
         
         verify(exactly = 0) { mockAdapter.getFrameAt(mockGifDrawable, any()) }
     }
@@ -281,10 +279,9 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 3)
 
         // Assert
-        assertNotNull(result.frames)
-        assertTrue(result.frames!!.isEmpty())
-        assertEquals(expectedDuration, result.duration)
-        
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("No frames extracted"))
+
         verify(exactly = 0) { mockAdapter.getFrameAt(mockGifDrawable, any()) }
     }
 
@@ -300,8 +297,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 5)
 
         // Assert
-        assertNotNull(result.frames)
-        assertTrue(result.frames!!.isEmpty())
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("No frames extracted"))
     }
 
     @Test
@@ -316,8 +313,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 0)
 
         // Assert
-        assertNotNull(result.frames)
-        assertTrue(result.frames!!.isEmpty())
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("No frames extracted"))
     }
 
     @Test
@@ -359,8 +356,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 5)
 
         // Assert
-        assertNotNull(result.frames)
-        assertEquals(3, result.frames!!.size)
+        assertTrue(result is GifResult.Success)
+        assertEquals(3, (result as GifResult.Success).frames.size)
         verify { mockAdapter.getFrameAt(mockGifDrawable, 0) }
         verify { mockAdapter.getFrameAt(mockGifDrawable, 1) }
         verify { mockAdapter.getFrameAt(mockGifDrawable, 2) }
@@ -376,8 +373,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 2)
 
         // Assert
-        assertEquals(GifResult.failure().frames, result.frames)
-        assertEquals(GifResult.failure().duration, result.duration)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("GIF decoding failed"))
     }
 
     @Test
@@ -394,8 +391,8 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(testBytes, 2)
 
         // Assert
-        assertNull(result.frames)
-        assertEquals(-1, result.duration)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("GIF decoding failed"))
     }
 
     @Test
@@ -408,7 +405,7 @@ class GifDecoderTest {
         val result = gifDecoderImpl.decode(emptyBytes, 2)
 
         // Assert
-        assertNull(result.frames)
-        assertEquals(-1, result.duration)
+        assertTrue(result is GifResult.Error)
+        assertTrue((result as GifResult.Error).reason.contains("GIF decoding failed"))
     }
 }

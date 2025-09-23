@@ -15,6 +15,7 @@ import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
+import com.clevertap.android.pushtemplates.media.GifResult
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
 
 internal open class ContentView(
@@ -138,7 +139,6 @@ internal open class ContentView(
             layoutId
         )
         if (!gifSuccess) {
-            PTLog.debug("GIF missing or downloading failed. Falling back to static image")
             setCustomContentViewBigImage(
                 bigImageUrl,
                 scaleType,
@@ -163,12 +163,13 @@ internal open class ContentView(
 
     fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int): Boolean {
         val gifResult = templateMediaManager.getGifFrames(gifUrl, numberOfFrames)
-        val frames = gifResult.frames
-        val duration = gifResult.duration
 
-        if (frames.isNullOrEmpty()) {
+        if (gifResult is GifResult.Error) {
+            PTLog.debug("${gifResult.reason}. Falling back to static image")
             return false
         }
+
+        val (frames, duration) = gifResult as GifResult.Success
 
         // Calculate timing for frame flipping
         val extractedFramesSize = frames.size
