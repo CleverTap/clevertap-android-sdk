@@ -7,6 +7,7 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table.INBOX_MESSAGES
 import com.clevertap.android.sdk.inbox.CTMessageDAO
@@ -16,6 +17,8 @@ internal class InboxMessageDAOImpl(
     private val dbHelper: DatabaseHelper,
     private val logger: ILogger
 ) : InboxMessageDAO {
+
+    private val dbEncryptionHandler = DBEncryptionHandler(TODO())
 
     @WorkerThread
     override fun getMessages(userId: String): ArrayList<CTMessageDAO> {
@@ -27,17 +30,29 @@ internal class InboxMessageDAOImpl(
                 tName, null, "${Column.USER_ID} = ?", arrayOf(userId), 
                 null, null, "${Column.CREATED_AT} DESC"
             )?.use { cursor ->
+                // find indices
+                val idColumnIndex = cursor.getColumnIndexOrThrow(Column.ID)
+                val dataColumnIndex = cursor.getColumnIndexOrThrow(Column.DATA)
+                val wzrkParamsColumnIndex = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)
+                val createdAtColumnIndex = cursor.getColumnIndexOrThrow(Column.CREATED_AT)
+                val expiresColumnIndex = cursor.getColumnIndexOrThrow(Column.EXPIRES)
+                val isReadColumnIndex = cursor.getColumnIndexOrThrow(Column.IS_READ)
+                val userIdColumnIndex = cursor.getColumnIndexOrThrow(Column.USER_ID)
+                val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS)
+                val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN)
+
                 while (cursor.moveToNext()) {
                     val ctMessageDAO = CTMessageDAO().apply {
-                        id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
-                        jsonData = JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)))
-                        wzrkParams = JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)))
-                        date = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
-                        expires = cursor.getLong(cursor.getColumnIndexOrThrow(Column.EXPIRES))
-                        isRead = cursor.getInt(cursor.getColumnIndexOrThrow(Column.IS_READ))
-                        this.userId = cursor.getString(cursor.getColumnIndexOrThrow(Column.USER_ID))
-                        tags = cursor.getString(cursor.getColumnIndexOrThrow(Column.TAGS))
-                        campaignId = cursor.getString(cursor.getColumnIndexOrThrow(Column.CAMPAIGN))
+                        this.id = cursor.getString(idColumnIndex)
+                        val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex))
+                        this.jsonData = JSONObject(decryptedData)
+                        this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex))
+                        this.date = cursor.getLong(createdAtColumnIndex)
+                        this.expires = cursor.getLong(expiresColumnIndex)
+                        this.isRead = cursor.getInt(isReadColumnIndex)
+                        this.userId = cursor.getString(userIdColumnIndex) // This seems redundant if you are already filtering by userId
+                        this.tags = cursor.getString(tagsColumnIndex)
+                        this.campaignId = cursor.getString(campaignColumnIndex)
                     }
                     messageDAOArrayList.add(ctMessageDAO)
                 }
@@ -58,7 +73,8 @@ internal class InboxMessageDAOImpl(
         for (messageDAO in inboxMessages) {
             val cv = ContentValues().apply {
                 put(Column.ID, messageDAO.id)
-                put(Column.DATA, messageDAO.jsonData.toString())
+                val encryptedData = dbEncryptionHandler.wrapDbData(messageDAO.jsonData.toString())
+                put(Column.DATA, encryptedData)
                 put(Column.WZRKPARAMS, messageDAO.wzrkParams.toString())
                 put(Column.CAMPAIGN, messageDAO.campaignId)
                 put(Column.TAGS, messageDAO.tags)

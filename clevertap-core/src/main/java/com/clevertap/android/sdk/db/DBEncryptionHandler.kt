@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk.db
 
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.cryption.CryptHandler
 
 internal class DBEncryptionHandler(
-    private val crypt: CryptHandler
+    private val crypt: CryptHandler,
+    private val logger: ILogger = TODO()
 ) {
 
     companion object {
@@ -20,6 +22,7 @@ internal class DBEncryptionHandler(
      * Wraps database data as per encryption level and returns original data in case of failure.
      */
     fun wrapDbData(data: String) : String {
-        return crypt.encrypt(data, DEFAULT_KEY) ?: data
+        return crypt.encrypt(data, DEFAULT_KEY)
+            ?: data.also { logger.verbose(TAG, "Failed to encrypt data, so saving plain text: $data") }
     }
 }
