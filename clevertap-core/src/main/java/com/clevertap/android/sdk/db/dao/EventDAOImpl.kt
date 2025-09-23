@@ -19,14 +19,13 @@ import org.json.JSONObject
 internal class EventDAOImpl(
     private val dbHelper: DatabaseHelper,
     private val logger: ILogger,
+    private val dbEncryptionHandler: DBEncryptionHandler,
     private val clock: Clock = Clock.SYSTEM
 ) : EventDAO {
 
     companion object {
         private const val DATA_EXPIRATION = 1000L * 60 * 60 * 24 * 5
     }
-
-    private val dbEncryptionHandler = DBEncryptionHandler(TODO())
 
     @WorkerThread
     override fun storeEvent(event: JSONObject, table: Table): Long {

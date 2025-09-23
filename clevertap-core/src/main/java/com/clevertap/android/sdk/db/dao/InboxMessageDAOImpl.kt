@@ -15,10 +15,9 @@ import org.json.JSONObject
 
 internal class InboxMessageDAOImpl(
     private val dbHelper: DatabaseHelper,
-    private val logger: ILogger
+    private val logger: ILogger,
+    private val dbEncryptionHandler: DBEncryptionHandler
 ) : InboxMessageDAO {
-
-    private val dbEncryptionHandler = DBEncryptionHandler(TODO())
 
     @WorkerThread
     override fun getMessages(userId: String): ArrayList<CTMessageDAO> {

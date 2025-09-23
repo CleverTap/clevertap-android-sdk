@@ -12,12 +12,13 @@ import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.network.IJRepo
 import org.json.JSONObject
 
-internal class DBManager(
+internal class DBManager constructor(
     private val accountId: String,
     private val logger: ILogger,
     private val databaseName: String,
     private val ctLockManager: CTLockManager,
     private val ijRepo: IJRepo,
+    private val dbEncryptionHandler: DBEncryptionHandler,
     private val clearFirstRequestTs: () -> Unit = {},
     private val clearLastRequestTs: () -> Unit = {}
 ) : BaseDatabaseManager {
@@ -34,7 +35,13 @@ internal class DBManager(
     override fun loadDBAdapter(context: Context): DBAdapter {
         var dbAdapter = this.dbAdapter
         if (dbAdapter == null) {
-            dbAdapter = DBAdapter(context, databaseName, accountId, logger)
+            dbAdapter = DBAdapter(
+                context = context,
+                databaseName = databaseName,
+                accountId = accountId,
+                logger = logger,
+                dbEncryptionHandler = dbEncryptionHandler
+            )
             this.dbAdapter = dbAdapter
             dbAdapter.cleanupStaleEvents(EVENTS)
             dbAdapter.cleanupStaleEvents(PROFILE_EVENTS)

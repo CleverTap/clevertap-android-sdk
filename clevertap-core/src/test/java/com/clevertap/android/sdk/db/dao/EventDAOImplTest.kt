@@ -2,9 +2,11 @@ package com.clevertap.android.sdk.db.dao
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.TestClock
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockk
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.RunWith
@@ -17,6 +19,7 @@ class EventDAOImplTest : BaseTestCase() {
     private lateinit var eventDAO: EventDAO
     private lateinit var instanceConfig: CleverTapInstanceConfig
     private lateinit var dbHelper: DatabaseHelper
+    private lateinit var dbEncryptionHandler: DBEncryptionHandler
     private lateinit var testClock: TestClock
 
     private val accID = "accountID"
@@ -26,6 +29,7 @@ class EventDAOImplTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
+        dbEncryptionHandler = mockk(relaxed = true)
         testClock = TestClock()
         dbHelper = DatabaseHelper(
             context = appCtx,
@@ -36,7 +40,8 @@ class EventDAOImplTest : BaseTestCase() {
         eventDAO = EventDAOImpl(
             dbHelper = dbHelper,
             logger = instanceConfig.logger,
-            clock = testClock
+            clock = testClock,
+            dbEncryptionHandler = dbEncryptionHandler
         )
     }
 

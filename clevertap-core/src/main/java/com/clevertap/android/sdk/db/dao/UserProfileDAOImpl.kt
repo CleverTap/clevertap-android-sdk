@@ -17,10 +17,9 @@ import org.json.JSONObject
 
 internal class UserProfileDAOImpl(
     private val dbHelper: DatabaseHelper,
-    private val logger: ILogger
+    private val logger: ILogger,
+    private val dbEncryptionHandler: DBEncryptionHandler,
 ) : UserProfileDAO {
-
-    private val dbEncryptionHandler = DBEncryptionHandler(TODO())
 
     @WorkerThread
     override fun storeUserProfile(accountId: String, deviceId: String, profile: JSONObject): Long {

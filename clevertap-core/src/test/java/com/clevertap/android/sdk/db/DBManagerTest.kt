@@ -6,8 +6,8 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockk
 import io.mockk.spyk
-import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
@@ -27,23 +27,28 @@ class DBManagerTest : BaseTestCase() {
     private lateinit var instanceConfig: CleverTapInstanceConfig
     private lateinit var lockManager: CTLockManager
     private lateinit var dbAdapter: DBAdapter
+    private lateinit var dbEncryptionHandler: DBEncryptionHandler
+
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, "accountId", "accountToken")
         lockManager = CTLockManager()
+        dbEncryptionHandler = mockk(relaxed = true)
         dbManager = DBManager(
             accountId = instanceConfig.accountId,
             logger = instanceConfig.logger,
             databaseName = DBAdapter.getDatabaseName(instanceConfig),
             ctLockManager = lockManager,
-            ijRepo = IJRepo(config = instanceConfig)
+            ijRepo = IJRepo(config = instanceConfig),
+            dbEncryptionHandler = dbEncryptionHandler
         )
         dbManagerSpy = spyk(dbManager)
         dbAdapter = DBAdapter(
             context = appCtx,
             databaseName = DBAdapter.getDatabaseName(instanceConfig),
             accountId = instanceConfig.accountId,
-            logger = instanceConfig.logger
+            logger = instanceConfig.logger,
+            dbEncryptionHandler = dbEncryptionHandler
         )
     }
 

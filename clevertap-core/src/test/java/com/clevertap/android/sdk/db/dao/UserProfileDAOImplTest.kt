@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.db.dao
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockk
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.RunWith
@@ -15,6 +17,7 @@ class UserProfileDAOImplTest : BaseTestCase() {
     private lateinit var userProfileDAO: UserProfileDAO
     private lateinit var instanceConfig: CleverTapInstanceConfig
     private lateinit var dbHelper: DatabaseHelper
+    private lateinit var dbEncryptionHandler: DBEncryptionHandler
 
     private val accID = "accountID"
     private val accToken = "token"
@@ -22,9 +25,19 @@ class UserProfileDAOImplTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
+        dbEncryptionHandler = mockk(relaxed = true)
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
-        dbHelper = DatabaseHelper(appCtx, instanceConfig.accountId, "test_db", instanceConfig.logger)
-        userProfileDAO = UserProfileDAOImpl(dbHelper, instanceConfig.logger)
+        dbHelper = DatabaseHelper(
+            context = appCtx,
+            accountId = instanceConfig.accountId,
+            dbName = "test_db",
+            logger = instanceConfig.logger
+        )
+        userProfileDAO = UserProfileDAOImpl(
+            dbHelper = dbHelper,
+            logger = instanceConfig.logger,
+            dbEncryptionHandler = dbEncryptionHandler
+        )
     }
 
     @After

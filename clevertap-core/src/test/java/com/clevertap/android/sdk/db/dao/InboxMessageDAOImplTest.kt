@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk.db.dao
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockk
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.RunWith
@@ -15,6 +17,7 @@ class InboxMessageDAOImplTest : BaseTestCase() {
 
     private lateinit var inboxMessageDAO: InboxMessageDAO
     private lateinit var instanceConfig: CleverTapInstanceConfig
+    private lateinit var dbEncryptionHandler: DBEncryptionHandler
     private lateinit var dbHelper: DatabaseHelper
 
     private val accID = "accountID"
@@ -24,8 +27,18 @@ class InboxMessageDAOImplTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
-        dbHelper = DatabaseHelper(appCtx, instanceConfig.accountId, "test_db", instanceConfig.logger)
-        inboxMessageDAO = InboxMessageDAOImpl(dbHelper, instanceConfig.logger)
+        dbEncryptionHandler = mockk(relaxed = true)
+        dbHelper = DatabaseHelper(
+            context = appCtx,
+            accountId = instanceConfig.accountId,
+            dbName = "test_db",
+            logger = instanceConfig.logger
+        )
+        inboxMessageDAO = InboxMessageDAOImpl(
+            dbHelper = dbHelper,
+            logger = instanceConfig.logger,
+            dbEncryptionHandler = dbEncryptionHandler
+        )
     }
 
     @After

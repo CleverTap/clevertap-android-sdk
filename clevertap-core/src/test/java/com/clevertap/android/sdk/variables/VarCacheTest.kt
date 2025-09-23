@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.variables
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.StorageHelper
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.inapp.data.CtCacheType.FILES
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
@@ -12,7 +13,6 @@ import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.junit.*
-import org.junit.runner.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -23,6 +23,7 @@ class VarCacheTest : BaseTestCase() {
     private lateinit var parser: Parser
     private lateinit var fileResourcesRepoImpl: FileResourcesRepoImpl
     private lateinit var fileResourceProvider: FileResourceProvider
+    private lateinit var dbEncryptionHandler: DBEncryptionHandler
 
     @Before
     @Throws(Exception::class)
@@ -33,12 +34,13 @@ class VarCacheTest : BaseTestCase() {
 
         fileResourcesRepoImpl = mockk(relaxed = true)
         fileResourceProvider = mockk(relaxed = true)
+        dbEncryptionHandler = mockk(relaxed = true)
 
         mockkObject(FileResourceProvider.Companion)
         every { FileResourceProvider.getInstance(any(), any()) } returns fileResourceProvider
 
         varCache = VarCache(
-            cleverTapInstanceConfig, application, fileResourcesRepoImpl
+            cleverTapInstanceConfig, application, fileResourcesRepoImpl, dbEncryptionHandler
         )
         ctVariables = CTVariables(varCache)
         parser = Parser(ctVariables)

@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.variables
 
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.VariableDefinitions.TestVarsJI
@@ -20,15 +21,19 @@ class ParserTest:BaseTestCase() {
     private lateinit var fileResourcesRepoImpl: FileResourcesRepoImpl
     private lateinit var fileResourceProvider: FileResourceProvider
 
+    private lateinit var dbEncryptionHandler: DBEncryptionHandler
+
     override fun setUp() {
         super.setUp()
 
         fileResourcesRepoImpl = mockk(relaxed = true)
         fileResourceProvider = mockk(relaxed = true)
+        dbEncryptionHandler = mockk(relaxed = true)
         varCache = VarCache(
             cleverTapInstanceConfig,
             appCtx,
-            fileResourcesRepoImpl
+            fileResourcesRepoImpl,
+            dbEncryptionHandler
         )
 
         ctv = CTVariables(varCache)

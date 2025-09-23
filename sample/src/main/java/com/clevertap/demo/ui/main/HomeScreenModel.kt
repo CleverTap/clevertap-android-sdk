@@ -8,7 +8,8 @@ object HomeScreenModel {
                 "Record Event",
                 "Record event with properties",
                 "Record Charged Event",
-                "Record Screen Event"
+                "Record Screen Event",
+                "Fire Inbox events"
             ),
             "USER PROFILE" to listOf(
                 "Push profile", "Update(Replace) Single-Value properties",
@@ -100,7 +101,8 @@ object HomeScreenModel {
                 "Add Variables Changed Callback",
                 "Remove Variables Changed Callback",
                 "Add One Time Variables Changed Callback",
-                "Remove One Time Variables Changed Callback"
+                "Remove One Time Variables Changed Callback",
+                "Define Multiple vars"
             ),
             "FILE TYPE VARIABLES" to listOf(
                 "Define file Variables listeners \n adds file variables with fileReady() listeners",

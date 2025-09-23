@@ -30,7 +30,6 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
         when (commandPosition) {
             "0-0" -> {
                 cleverTapAPI?.pushEvent("Product viewed")
-//                cleverTapAPI?.pushEvent("BlockBRTesting")
             }
 
             "0-1" -> {
@@ -75,6 +74,14 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "0-3" -> cleverTapAPI?.recordScreen("Cart Screen Viewed")
+            "0-4" -> {
+                cleverTapAPI?.let { ct ->
+                    ct.pushEvent("App Inbox Carousel")
+                    ct.pushEvent("App Inbox Deeplink")
+                    ct.pushEvent("Add Inbox message with links")
+
+                }
+            }
             "1-0" -> {
                 //Record a profile
                 pushProfile(cleverTapAPI!!)
@@ -158,16 +165,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "1-11" -> {
-                // onUserLogin
-                val newProfile = HashMap<String, Any>()
-                val n = (0..10_000).random()
-                val p = (10_000..99_999).random()
-                newProfile["Name"] = "Don Joe $n" // String
-                newProfile["Email"] = "donjoe$n@gmail.com" // Email address of the user
-                newProfile["Phone"] = "+141566$p" // Phone (with the country code, starting with +)
-                newProfile["Identity"] = "00002" // Identity of the user
-                // add any other key value pairs.....
-                cleverTapAPI?.onUserLogin(newProfile)
+                onUserLogin()
             }
 
             "2-0" -> {
@@ -692,6 +690,28 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "13-10" -> {
                 cleverTapAPI?.removeOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
             }
+            "13-11" -> {
+                val map: Map<String, Any> = mapOf(
+                    "int" to 12,
+                    "str" to "factory str"
+                )
+                cleverTapAPI?.let { ct ->
+                    ct.defineVariable("factory_var_int", 11)
+                    ct.defineFileVariable("factory_var_file")
+                    ct.defineFileVariable("group.factory_var_file_in_group")
+                    ct.defineVariable("factory_var_map", map)
+                    ct.defineVariable("group.factory_var_in_group", 13.toByte())
+                    ct.defineVariable("streaming.quality_auto", true)
+                    ct.defineVariable("streaming.max_bitrate", 8000)
+                    ct.defineVariable("streaming.protocol", "HLS")
+                    ct.defineFileVariable("factory_file_jpeg")
+                    ct.defineFileVariable("factory_file_png")
+                    ct.defineFileVariable("factory_file_gif")
+                    ct.defineFileVariable("documents.factory_file_pdf")
+                    ct.defineFileVariable("audio.factory_file_mp3")
+                    ct.defineFileVariable("video.factory_file_mp4")
+                }
+            }
             "14-0" -> {
                 Log.i(TAG, "onChildClick: 14-0")
 
@@ -773,6 +793,18 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
             //"60" -> webViewClickListener?.onWebViewClick()
         }
+    }
+
+    private fun onUserLogin() {
+        // onUserLogin
+        val newProfile = HashMap<String, Any>()
+        val n = (0..10_000).random()
+        val p = (10_000..99_999).random()
+        newProfile["Name"] = "Don Joe $n" // String
+        newProfile["Email"] = "donjoe$n@gmail.com" // Email address of the user
+        newProfile["Phone"] = "+141566$p" // Phone (with the country code, starting with +)
+        // add any other key value pairs.....
+        cleverTapAPI?.onUserLogin(newProfile)
     }
 
     fun pushProfile(cleverTapAPI: CleverTapAPI) {

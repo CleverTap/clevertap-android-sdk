@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.cryption.CryptRepository
 import com.clevertap.android.sdk.cryption.DataMigrationRepository
 import com.clevertap.android.sdk.cryption.EncryptionLevel.Companion.fromInt
 import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.events.EventQueueManager
@@ -123,6 +124,8 @@ internal object CleverTapFactory {
             cryptFactory = cryptFactory
         )
 
+        val dbEncryptionHandler = DBEncryptionHandler(crypt = cryptHandler, logger = config.logger)
+
         val databaseName = DBAdapter.getDatabaseName(config)
 
         val databaseManager = DBManager(
@@ -131,6 +134,7 @@ internal object CleverTapFactory {
             databaseName = databaseName,
             ctLockManager = ctLockManager,
             ijRepo = ijRepo,
+            dbEncryptionHandler = dbEncryptionHandler,
             clearFirstRequestTs = networkRepo::clearFirstRequestTs,
             clearLastRequestTs = networkRepo::clearLastRequestTs
         )
@@ -260,7 +264,8 @@ internal object CleverTapFactory {
         val varCache = VarCache(
             config,
             context,
-            impl
+            impl,
+            dbEncryptionHandler
         )
 
         val ctVariables = CTVariables(varCache)

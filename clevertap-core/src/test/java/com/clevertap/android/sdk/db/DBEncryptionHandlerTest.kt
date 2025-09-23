@@ -8,6 +8,6 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class DBEncryptionHandlerTest : BaseTestCase() {
 
-    internal val dbEncryptionHandler = DBEncryptionHandler(TODO())
+    internal val dbEncryptionHandler = DBEncryptionHandler(TODO(), TODO())
 
 }

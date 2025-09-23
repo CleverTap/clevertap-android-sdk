@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.db
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockk
 import org.json.JSONObject
 import org.junit.*
 import org.junit.Test
@@ -15,6 +16,7 @@ class DBAdapterTest : BaseTestCase() {
 
     private lateinit var dbAdapter: DBAdapter
     private lateinit var instanceConfig: CleverTapInstanceConfig
+    private lateinit var dbEncryptionHandler: DBEncryptionHandler
 
     private val accID = "accountID"
     private val accToken = "token"
@@ -23,11 +25,13 @@ class DBAdapterTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
+        dbEncryptionHandler = mockk(relaxed = true)
         dbAdapter = DBAdapter(
             context = appCtx,
             databaseName = DBAdapter.getDatabaseName(instanceConfig),
             accountId = instanceConfig.accountId,
-            logger = instanceConfig.logger
+            logger = instanceConfig.logger,
+            dbEncryptionHandler = dbEncryptionHandler
         )
     }
 

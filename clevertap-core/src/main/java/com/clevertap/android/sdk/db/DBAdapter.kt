@@ -16,11 +16,12 @@ import org.json.JSONObject
  * Refactored DBAdapter following Single Responsibility Principle
  * Each table now has its own dedicated DAO for better maintainability
  */
-internal class DBAdapter(
+internal class DBAdapter constructor(
     context: Context,
     databaseName: String,
     private val accountId: String,
     private val logger: ILogger,
+    private val dbEncryptionHandler: DBEncryptionHandler,
     private val clock: Clock = Clock.SYSTEM
 ) {
 
@@ -44,9 +45,9 @@ internal class DBAdapter(
     )
 
     // DAO instances - lazy initialization for better performance
-    private val eventDAO: EventDAO by lazy { EventDAOImpl(dbHelper, logger, clock) }
-    private val inboxMessageDAO: InboxMessageDAO by lazy { InboxMessageDAOImpl(dbHelper, logger) }
-    private val userProfileDAO: UserProfileDAO by lazy { UserProfileDAOImpl(dbHelper, logger) }
+    private val eventDAO: EventDAO by lazy { EventDAOImpl(dbHelper, logger, dbEncryptionHandler, clock) }
+    private val inboxMessageDAO: InboxMessageDAO by lazy { InboxMessageDAOImpl(dbHelper, logger, dbEncryptionHandler) }
+    private val userProfileDAO: UserProfileDAO by lazy { UserProfileDAOImpl(dbHelper, logger, dbEncryptionHandler) }
     private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger, clock) }
     private val uninstallTimestampDAO: UninstallTimestampDAO by lazy { UninstallTimestampDAOImpl(dbHelper, logger) }
 

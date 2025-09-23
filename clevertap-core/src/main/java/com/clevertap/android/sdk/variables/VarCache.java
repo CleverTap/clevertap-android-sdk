@@ -45,16 +45,18 @@ public class VarCache {
     // README: Do not forget reset the value of new fields in the reset() method.
     private Map<String, Object> diffs = new HashMap<>();
 
-    private DBEncryptionHandler dbEncryptionHandler = null; // todo inject me
+    private final DBEncryptionHandler dbEncryptionHandler;
 
     public VarCache(
             CleverTapInstanceConfig config,
             Context ctx,
-            FileResourcesRepoImpl fileResourcesRepoImpl
+            FileResourcesRepoImpl fileResourcesRepoImpl,
+            DBEncryptionHandler dbEncryptionHandler
     ) {
         this.variablesCtx = ctx;
         this.instanceConfig = config;
         this.fileResourcesRepoImpl = fileResourcesRepoImpl;
+        this.dbEncryptionHandler = dbEncryptionHandler;
     }
 
     private static void log(String msg) {
