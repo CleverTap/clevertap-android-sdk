@@ -108,17 +108,6 @@ internal object CleverTapFactory {
             FileResourceProvider.getInstance(context, config.logger)
         }
 
-        val databaseName = DBAdapter.getDatabaseName(config)
-
-        val databaseManager = DBManager(
-            accountId = config.accountId,
-            logger = config.logger,
-            databaseName = databaseName,
-            ctLockManager = ctLockManager,
-            ijRepo = ijRepo,
-            clearFirstRequestTs = networkRepo::clearFirstRequestTs,
-            clearLastRequestTs = networkRepo::clearLastRequestTs
-        )
         val repository = CryptRepository(
             context = context,
             accountId = config.accountId
@@ -133,6 +122,19 @@ internal object CleverTapFactory {
             repository = repository,
             cryptFactory = cryptFactory
         )
+
+        val databaseName = DBAdapter.getDatabaseName(config)
+
+        val databaseManager = DBManager(
+            accountId = config.accountId,
+            logger = config.logger,
+            databaseName = databaseName,
+            ctLockManager = ctLockManager,
+            ijRepo = ijRepo,
+            clearFirstRequestTs = networkRepo::clearFirstRequestTs,
+            clearLastRequestTs = networkRepo::clearLastRequestTs
+        )
+
         val task = executors.postAsyncSafelyTask<Unit>()
         task.execute("migratingEncryption") {
 
