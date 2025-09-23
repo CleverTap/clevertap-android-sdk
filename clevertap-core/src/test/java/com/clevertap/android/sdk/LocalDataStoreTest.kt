@@ -49,7 +49,6 @@ class LocalDataStoreTest : BaseTestCase() {
         defConfig = CleverTapInstanceConfig.createDefaultInstance(appCtx, "id", "token", "region")
         cryptHandler = CryptHandler(
             EncryptionLevel.NONE,
-            "accountId",
             mockk<CryptRepository>(relaxed = true),
             mockk<CryptFactory>(relaxed = true),
         )

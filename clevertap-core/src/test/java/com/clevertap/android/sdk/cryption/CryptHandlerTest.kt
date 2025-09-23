@@ -34,7 +34,6 @@ class CryptHandlerTest {
         MockKAnnotations.init(this)
         cryptHandler = CryptHandler(
             encryptionLevel = EncryptionLevel.MEDIUM,
-            accountID = "testAccountId",
             repository = repository,
             cryptFactory = cryptFactory
         )
@@ -78,7 +77,6 @@ class CryptHandlerTest {
         val key = Constants.KEY_ENCRYPTION_EMAIL
         val cryptHandler = CryptHandler(
             encryptionLevel = EncryptionLevel.NONE,
-            accountID = "testAccountId",
             repository = repository,
             cryptFactory = cryptFactory
         )
@@ -122,7 +120,6 @@ class CryptHandlerTest {
         val decryptedText = "decryptedText"
         val cryptHandler = CryptHandler(
             encryptionLevel = EncryptionLevel.NONE,
-            accountID = "testAccountId",
             repository = repository,
             cryptFactory = cryptFactory
         )

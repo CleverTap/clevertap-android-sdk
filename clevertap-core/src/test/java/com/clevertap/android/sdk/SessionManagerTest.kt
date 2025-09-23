@@ -44,7 +44,6 @@ class SessionManagerTest : BaseTestCase() {
         validator = Validator()
         cryptHandler = CryptHandler(
             EncryptionLevel.NONE,
-            "accountId",
             mockk<CryptRepository>(relaxed = true),
             mockk<CryptFactory>(relaxed = true),
         )

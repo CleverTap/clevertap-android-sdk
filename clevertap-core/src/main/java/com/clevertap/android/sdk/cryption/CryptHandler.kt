@@ -10,11 +10,9 @@ import com.clevertap.android.sdk.Constants.AES_PREFIX
  * Handles encryption and decryption for various encryption algorithms and levels.
  *
  * @param encryptionLevel - The encryption level to use.
- * @param accountID - The account ID for which the cryptographic operations are performed.
  */
 internal class CryptHandler constructor(
     private val encryptionLevel: EncryptionLevel,
-    private val accountID: String,
     private val repository: CryptRepository,
     private val cryptFactory: CryptFactory
 ) {
