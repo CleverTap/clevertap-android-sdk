@@ -1555,7 +1555,7 @@ class TemplateRendererTest {
             )
         } returns mockTimerTemplateData
         every { mockTimerTemplateData.toBasicTemplateData() } returns mockBasicTemplateData
-        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
+        every { ValidatorFactory.getValidator(any()) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(BasicStyle::class)
