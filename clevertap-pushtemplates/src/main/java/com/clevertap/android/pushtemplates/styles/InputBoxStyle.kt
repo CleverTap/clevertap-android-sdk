@@ -68,7 +68,7 @@ internal class InputBoxStyle(private val data: InputBoxTemplateData, private var
 
             val replyIntent: PendingIntent = PendingIntentFactory.getPendingIntent(
                 context, notificationId, extras, false,
-                INPUT_BOX_REPLY_PENDING_INTENT, data.deepLinkList.getOrNull(0), data.inputLabel, data.inputAutoOpen, renderer.config
+                INPUT_BOX_REPLY_PENDING_INTENT, data.deepLinkList.getOrNull(0), data.inputFeedback, data.inputAutoOpen, renderer.config
             )!!
             //Notification Action with RemoteInput instance added.
             val replyAction = NotificationCompat.Action.Builder(
