@@ -75,18 +75,24 @@ internal data class CryptMigrator(
                     "with migrationFailureCount $migrationFailureCount and isSSInAppDataMigrated $isSSInAppDataMigrated"
         )
         val migrationSuccess = handleAllMigrations(
-            configEncryptionLevel == EncryptionLevel.MEDIUM.intValue(),
-            migrationFailureCount == -1
+            level = EncryptionLevel.fromInt(configEncryptionLevel),
+            firstUpgrade = migrationFailureCount == -1
         )
 
         cryptRepository.updateIsSSInAppDataMigrated(migrationSuccess)
         cryptRepository.updateMigrationFailureCount(migrationSuccess)
     }
 
-    private fun handleAllMigrations(encrypt: Boolean, firstUpgrade: Boolean): Boolean {
-        val cgkMigrationSuccess = migrateCachedGuidsKeyPref(encrypt, firstUpgrade)
-        val dbMigrationSuccess = migrateDBProfile(encrypt)
-        val inAppMigrationSuccess = migrateInAppData()
+    private fun handleAllMigrations(
+        level: EncryptionLevel,
+        firstUpgrade: Boolean
+    ): Boolean {
+        val cgkMigrationSuccess = migrateCachedGuidsKeyPref(
+            level = level,
+            firstUpgrade = firstUpgrade
+        )
+        val dbMigrationSuccess = migrateDBProfile(level = level)
+        val inAppMigrationSuccess = migrateInAppData(level = level)
         return cgkMigrationSuccess && dbMigrationSuccess && inAppMigrationSuccess
     }
 
@@ -94,12 +100,12 @@ internal data class CryptMigrator(
      * This method migrates the encryption level of the value under cachedGUIDsKey stored in the shared preference file
      *
      * If decryption from AES to plain-text fails, this data is deleted
-     * @param encrypt - Flag to indicate the task to be either encryption or decryption
+     * @param level - Level of encryption
      * @param firstUpgrade - Flag to indicate whether this is the first upgrade to v2
      * Returns true if migration was successful and false otherwise
      */
     private fun migrateCachedGuidsKeyPref(
-        encrypt: Boolean,
+        level: EncryptionLevel,
         firstUpgrade: Boolean,
     ): Boolean {
         logger.verbose(
@@ -108,7 +114,7 @@ internal data class CryptMigrator(
         )
         val cgkString: String = if (firstUpgrade) {
             // translate from old format to new format, in new format we encrypt entire string
-            val cgkJson = migrateFormatForCachedGuidsKeyPref()
+            val cgkJson: JSONObject = convertCachedGuidsToPlainText()
             val cgkLength = cgkJson.length()
             dataMigrationRepository.saveCachedGuidJsonLength(cgkLength)
             if (cgkLength == 0) {
@@ -120,7 +126,7 @@ internal data class CryptMigrator(
             dataMigrationRepository.cachedGuidString() ?: return true
         }
 
-        val migrationResult = performMigrationStep(encrypt, cgkString)
+        val migrationResult = performMigrationStep(level = level, data = cgkString)
         dataMigrationRepository.saveCachedGuidJson(migrationResult.data)
         logger.verbose(
             logPrefix,
@@ -139,7 +145,7 @@ internal data class CryptMigrator(
      *
      * @return JSONObject with all plain text
      */
-    private fun migrateFormatForCachedGuidsKeyPref(): JSONObject {
+    private fun convertCachedGuidsToPlainText(): JSONObject {
         val cachedGuidJsonObj = dataMigrationRepository.cachedGuidJsonObject()
         val migratedGuidJsonObj = JSONObject()
         try {
@@ -147,7 +153,7 @@ internal data class CryptMigrator(
             while (keysIterator.hasNext()) {
                 val nextKey = keysIterator.next()
                 val (key, identifier) = nextKey.split("_", limit = 2)
-                val migrationResult = performMigrationStep(false, identifier)
+                val migrationResult = performMigrationStep(EncryptionLevel.NONE, identifier)
                 if (migrationResult.migrationSuccessful) {
                     val cryptedKey = "${key}_${migrationResult.data}"
                     migratedGuidJsonObj.put(cryptedKey, cachedGuidJsonObj[nextKey])
@@ -167,12 +173,10 @@ internal data class CryptMigrator(
      * Only pii data such as name, phone, email and identity are encrypted from the user profile, remaining are kept as is
      *
      * If decryption from AES to plain-text fails, this data point is deleted
-     * @param encrypt - Flag to indicate the task to be either encryption or decryption
+     * @param level - Level of encryption
      * Returns true if migration was successful and false otherwise
      */
-    private fun migrateDBProfile(
-        encrypt: Boolean
-    ): Boolean {
+    private fun migrateDBProfile(level: EncryptionLevel): Boolean {
         logger.verbose(
             logPrefix,
             "Migrating encryption level for user profiles in DB"
@@ -185,8 +189,16 @@ internal data class CryptMigrator(
             try {
                 piiDBKeys.forEach { piiKey ->
                     profile.getStringOrNull(piiKey)?.let { value ->
+                        val moveTo = if (EncryptionLevel.FULL_DATA == level) {
+                            // Lets convert individual keys to plain text in case of FULL
+                            // dataMigrationRepository.saveUserProfile() internally will correctly save the data completely encrypted (entire profile).
+                            EncryptionLevel.NONE
+                        } else {
+                            level
+                        }
+
                         val migrationResult =
-                            performMigrationStep(encrypt, value)
+                            performMigrationStep(level = moveTo, data = value)
                         migrationSuccessful =
                             migrationSuccessful && migrationResult.migrationSuccessful
                         profile.put(piiKey, migrationResult.data)
@@ -216,12 +228,12 @@ internal data class CryptMigrator(
      * If decryption from AES to plain-text fails, this data point is deleted
      * Returns true if migration was successful and false otherwise
      */
-    private fun migrateInAppData(): Boolean {
+    private fun migrateInAppData(level: EncryptionLevel): Boolean {
         logger.verbose(logPrefix, "Migrating encryption for InAppData")
         var migrationSuccessful = true
 
         val migrateCode: (String) -> String? = { spData: String ->
-            val result = performMigrationStep(true, spData)
+            val result = performMigrationStep(level, spData)
             migrationSuccessful = migrationSuccessful && result.migrationSuccessful
             result.data
         }
@@ -233,11 +245,11 @@ internal data class CryptMigrator(
     }
 
     private fun performMigrationStep(
-        encrypt: Boolean,
+        level: EncryptionLevel,
         data: String
     ): MigrationResult {
         val currentState = getCurrentEncryptionState(data)
-        val targetState = getFinalEncryptionState(encrypt)
+        val targetState = getFinalEncryptionState(level.shouldEncrypt())
 
         return transitionEncryptionState(currentState, targetState, data)
     }

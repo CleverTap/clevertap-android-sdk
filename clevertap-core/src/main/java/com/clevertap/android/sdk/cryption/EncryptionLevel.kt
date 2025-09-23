@@ -10,6 +10,8 @@ enum class EncryptionLevel(private val value: Int) {
 
     fun intValue(): Int = value
 
+    fun shouldEncrypt() : Boolean = value > 0
+
     companion object {
         @JvmStatic
         fun fromInt(value: Int): EncryptionLevel {
