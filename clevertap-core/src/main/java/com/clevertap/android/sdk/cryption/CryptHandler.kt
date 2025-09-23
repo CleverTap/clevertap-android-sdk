@@ -46,6 +46,9 @@ internal class CryptHandler constructor(
         // Use AES_GCM algorithm by default.
         val crypt = cryptFactory.getCryptInstance(algorithm)
         when (encryptionLevel) {
+            EncryptionLevel.FULL_DATA -> {
+                return crypt.encryptInternal(plainText)
+            }
             EncryptionLevel.MEDIUM -> {
                 // Encrypt only if the key is valid
                 if (key in Constants.MEDIUM_CRYPT_KEYS) {
@@ -79,6 +82,10 @@ internal class CryptHandler constructor(
 
         val crypt = cryptFactory.getCryptInstance(algorithm)
         when (encryptionLevel) {
+            EncryptionLevel.FULL_DATA -> {
+                // agnostic of keys
+                return crypt.decryptInternal(cipherText)
+            }
             EncryptionLevel.MEDIUM -> {
                 // Decrypt only if the key is valid.
                 if (key in Constants.MEDIUM_CRYPT_KEYS) {

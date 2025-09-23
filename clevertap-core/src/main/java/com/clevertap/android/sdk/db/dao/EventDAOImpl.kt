@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBAdapter.Companion.DB_OUT_OF_MEMORY_ERROR
 import com.clevertap.android.sdk.db.DBAdapter.Companion.DB_UPDATE_ERROR
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.db.Table
@@ -25,6 +26,8 @@ internal class EventDAOImpl(
         private const val DATA_EXPIRATION = 1000L * 60 * 60 * 24 * 5
     }
 
+    private val dbEncryptionHandler = DBEncryptionHandler(TODO())
+
     @WorkerThread
     override fun storeEvent(event: JSONObject, table: Table): Long {
         if (!dbHelper.belowMemThreshold()) {
@@ -34,7 +37,7 @@ internal class EventDAOImpl(
         
         val tableName = table.tableName
         val cv = ContentValues().apply {
-            put(Column.DATA, event.toString())
+            put(Column.DATA, dbEncryptionHandler.wrapDbData(event.toString()))
             put(Column.CREATED_AT, clock.currentTimeMillis())
         }
 
@@ -79,7 +82,8 @@ internal class EventDAOImpl(
                     val eventData = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
 
                     try {
-                        val jsonEvent = JSONObject(eventData)
+                        val decryptedData = dbEncryptionHandler.unwrapDbData(eventData)
+                        val jsonEvent = JSONObject(decryptedData)
                         queueData.data.put(jsonEvent)
 
                         if (table == Table.PROFILE_EVENTS) {
