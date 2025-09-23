@@ -184,6 +184,7 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
                 PTLog.verbose("operation not defined!")
             }
         }
+        templateMediaManager.clearCaches()
         return null
     }
 
