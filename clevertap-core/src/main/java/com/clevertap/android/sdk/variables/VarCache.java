@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.db.DBEncryptionHandler;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
@@ -44,6 +45,8 @@ public class VarCache {
     // README: Do not forget reset the value of new fields in the reset() method.
     private Map<String, Object> diffs = new HashMap<>();
 
+    private DBEncryptionHandler dbEncryptionHandler = null; // todo inject me
+
     public VarCache(
             CleverTapInstanceConfig config,
             Context ctx,
@@ -65,7 +68,8 @@ public class VarCache {
     private void storeDataInCache(@NonNull String data) {
         log("storeDataInCache() called with: data = [" + data + "]");
         try {
-            StorageHelper.putString(variablesCtx, instanceConfig.getAccountId(), Constants.CACHED_VARIABLES_KEY, data);
+            String encryptedData = dbEncryptionHandler.wrapDbData(data);
+            StorageHelper.putString(variablesCtx, instanceConfig.getAccountId(), Constants.CACHED_VARIABLES_KEY, encryptedData);
         } catch (Throwable t) {
             log("storeDataInCache failed", t);
         }
@@ -73,6 +77,11 @@ public class VarCache {
 
     private String loadDataFromCache() {
         String cache = StorageHelper.getStringFromPrefs(variablesCtx, instanceConfig.getAccountId(), Constants.CACHED_VARIABLES_KEY, "{}");
+        try {
+            cache = dbEncryptionHandler.unwrapDbData(cache);
+        } catch (Throwable t) {
+            log("loadDataFromCache failed in decryption step", t);
+        }
         log("VarCache loaded cache data:\n" + cache);
         return cache;
     }
