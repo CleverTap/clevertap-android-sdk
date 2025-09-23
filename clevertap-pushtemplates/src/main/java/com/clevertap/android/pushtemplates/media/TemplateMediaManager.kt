@@ -76,7 +76,7 @@ internal class TemplateMediaManager(
 
         // Check if already downloaded and successful
         val cachedBitmap = bitmapCache[imageUrl]
-        return if (cachedBitmap != null && !cachedBitmap.isRecycled) {
+        return if (cachedBitmap != null) {
             PTLog.verbose("IMAGE loaded from cache: $imageUrl")
             cachedBitmap
         } else {
