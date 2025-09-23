@@ -898,12 +898,12 @@ class TemplateRendererTest {
         val carouselBundle = Bundle(testBundle)
         carouselBundle.putString(PTConstants.PT_ID, "pt_carousel")
 
-        val templateRendererLocal = TemplateRenderer(context, testBundle, mockConfig)
+        val templateRendererLocal = TemplateRenderer(context, carouselBundle, mockConfig)
 
         every {
             TemplateDataFactory.createTemplateData(
                 TemplateType.AUTO_CAROUSEL,
-                testBundle,
+                carouselBundle,
                 false,
                 any(),
                 any()
@@ -924,7 +924,7 @@ class TemplateRendererTest {
 
         // Act
         val result = templateRendererLocal.renderNotification(
-            testBundle,
+            carouselBundle,
             context,
             mockNotificationBuilder,
             mockConfig,
@@ -935,7 +935,7 @@ class TemplateRendererTest {
         verify {
             anyConstructed<AutoCarouselStyle>().builderFromStyle(
                 any(),
-                testBundle,
+                carouselBundle,
                 123,
                 mockNotificationBuilder
             )
