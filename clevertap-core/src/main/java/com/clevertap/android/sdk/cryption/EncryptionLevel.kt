@@ -5,7 +5,8 @@ package com.clevertap.android.sdk.cryption
  */
 enum class EncryptionLevel(private val value: Int) {
     NONE(0),    // No encryption
-    MEDIUM(1);  // Medium level encryption
+    MEDIUM(1),  // Medium level encryption
+    FULL_DATA(2); // Encrypts full data rather than partial PII keys
 
     fun intValue(): Int = value
 
