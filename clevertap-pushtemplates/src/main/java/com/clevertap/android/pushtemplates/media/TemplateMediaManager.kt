@@ -74,34 +74,40 @@ internal class TemplateMediaManager(
         }
 
         // Check if already downloaded and successful
+        // Download (or re-download if previous attempt failed or bitmap was recycled)
         val cachedBitmap = bitmapCache[imageUrl]
-        return if (cachedBitmap != null) {
-            PTLog.verbose("IMAGE loaded from cache: $imageUrl")
-            cachedBitmap
-        } else {
-            // Download (or re-download if previous attempt failed or bitmap was recycled)
-            var downloadedBitmap: DownloadedBitmap
-            val downloadTime = measureTimeMillis {
-                downloadedBitmap = templateRepository.getBitmap(imageUrl)
+        if (cachedBitmap != null) {
+            if (!cachedBitmap.isRecycled) {
+                PTLog.verbose("IMAGE loaded from cache: $imageUrl")
+                return cachedBitmap
+            } else {
+                PTLog.debug("Recycled bitmap found in cache for $imageUrl; evicting and re-fetching")
+                bitmapCache.remove(imageUrl)
             }
-
-            val bitmap = when (downloadedBitmap.status) {
-                DownloadedBitmap.Status.SUCCESS -> {
-                    PTLog.verbose("Fetched IMAGE $imageUrl in $downloadTime ms")
-                    downloadedBitmap.bitmap
-                }
-                else -> {
-                    PTLog.verbose("Bitmap download failed. URL: $imageUrl, Status: ${downloadedBitmap.status}")
-                    null
-                }
-            }
-
-            // Only cache successful downloads
-            if (bitmap != null) {
-                bitmapCache[imageUrl] = bitmap
-            }
-            bitmap
         }
+        var downloadedBitmap: DownloadedBitmap
+        val downloadTime = measureTimeMillis {
+            downloadedBitmap = templateRepository.getBitmap(imageUrl)
+        }
+
+        val bitmap = when (downloadedBitmap.status) {
+            DownloadedBitmap.Status.SUCCESS -> {
+                PTLog.verbose("Fetched IMAGE $imageUrl in $downloadTime ms")
+                downloadedBitmap.bitmap
+            }
+
+            else -> {
+                PTLog.verbose("Bitmap download failed. URL: $imageUrl, Status: ${downloadedBitmap.status}")
+                null
+            }
+        }
+
+        // Only cache successful downloads
+        if (bitmap != null) {
+            bitmapCache[imageUrl] = bitmap
+        }
+        return bitmap
+
     }
 
     /**
