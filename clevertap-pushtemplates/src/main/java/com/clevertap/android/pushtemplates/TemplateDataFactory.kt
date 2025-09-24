@@ -1,7 +1,7 @@
 package com.clevertap.android.pushtemplates
 
 import android.os.Bundle
-import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND
+import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND_LONG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT
@@ -257,7 +257,7 @@ internal object TemplateDataFactory {
         val mediaData = createMediaData(extras, defaultAltText)
         val timerEnd = Utils.getTimerEnd(extras, System.currentTimeMillis())
         val timerThreshold = Utils.getTimerThreshold(extras)
-        val dismissAfter = TimerTemplateHandler.getDismissAfterMs(timerEnd, timerThreshold)?.toLong()
+        val dismissAfter = TimerTemplateHandler.getDismissAfterMs(timerEnd, timerThreshold)
         val baseContent = createBaseContent(extras, colorMap).copy(notificationBehavior = NotificationBehavior(dismissAfter = dismissAfter))
         return TimerTemplateData(
             baseContent = baseContent,
@@ -443,7 +443,7 @@ internal object TemplateDataFactory {
     private fun createNotificationBehaviorData(extras: Bundle) : NotificationBehavior {
         return NotificationBehavior(
             isSticky = extras.getString(PT_STICKY).toBoolean(),
-            dismissAfter = extras.getString(PT_DISMISS)?.toLongOrNull()?.let { it * ONE_SECOND })
+            dismissAfter = extras.getString(PT_DISMISS)?.toLongOrNull()?.let { it * ONE_SECOND_LONG })
     }
 
     /**

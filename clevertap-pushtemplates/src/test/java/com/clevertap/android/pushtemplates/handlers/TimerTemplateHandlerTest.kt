@@ -13,7 +13,7 @@ import com.clevertap.android.pushtemplates.IconData
 import com.clevertap.android.pushtemplates.ImageData
 import com.clevertap.android.pushtemplates.MediaData
 import com.clevertap.android.pushtemplates.NotificationBehavior
-import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND
+import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND_LONG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT_TEXT
 import com.clevertap.android.pushtemplates.PTConstants.PT_COLLAPSE_KEY
@@ -335,7 +335,7 @@ class TimerTemplateHandlerTest {
         )
 
         // Then
-        assertEquals(validThreshold * ONE_SECOND + ONE_SECOND, result)
+        assertEquals(validThreshold * ONE_SECOND_LONG + ONE_SECOND_LONG, result)
     }
 
     @Test
@@ -347,7 +347,7 @@ class TimerTemplateHandlerTest {
         val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = -1, timerEnd = validTimerEnd)
 
         // Then
-        assertEquals(validTimerEnd * ONE_SECOND + ONE_SECOND, result)
+        assertEquals(validTimerEnd * ONE_SECOND_LONG + ONE_SECOND_LONG, result)
     }
 
     @Test
@@ -359,7 +359,7 @@ class TimerTemplateHandlerTest {
         val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = PT_TIMER_MIN_THRESHOLD - 1, timerEnd = validTimerEnd)
 
         // Then
-        assertEquals(validTimerEnd * ONE_SECOND + ONE_SECOND, result)
+        assertEquals(validTimerEnd * ONE_SECOND_LONG + ONE_SECOND_LONG, result)
     }
 
     @Test
@@ -372,8 +372,8 @@ class TimerTemplateHandlerTest {
         val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = validThreshold, timerEnd = validTimerEnd)
 
         // Then
-        assertEquals(validThreshold * ONE_SECOND + ONE_SECOND, result)
-        assertNotEquals(validTimerEnd * ONE_SECOND + ONE_SECOND, result)
+        assertEquals(validThreshold * ONE_SECOND_LONG + ONE_SECOND_LONG, result)
+        assertNotEquals(validTimerEnd * ONE_SECOND_LONG + ONE_SECOND_LONG, result)
     }
 
     @Test
@@ -382,7 +382,7 @@ class TimerTemplateHandlerTest {
         val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = PT_TIMER_MIN_THRESHOLD, timerEnd = PT_TIMER_MIN_THRESHOLD - 1)
 
         // Then
-        assertEquals(PT_TIMER_MIN_THRESHOLD * ONE_SECOND + ONE_SECOND, result)
+        assertEquals(PT_TIMER_MIN_THRESHOLD * ONE_SECOND_LONG + ONE_SECOND_LONG, result)
     }
 
     @Test
@@ -391,7 +391,7 @@ class TimerTemplateHandlerTest {
         val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = -1, timerEnd = PT_TIMER_MIN_THRESHOLD)
 
         // Then
-        assertEquals(PT_TIMER_MIN_THRESHOLD * ONE_SECOND + ONE_SECOND, result)
+        assertEquals(PT_TIMER_MIN_THRESHOLD * ONE_SECOND_LONG + ONE_SECOND_LONG, result)
     }
     private fun createSampleTimerBundle(): Bundle {
         val ptJsonObj = JSONObject().apply {

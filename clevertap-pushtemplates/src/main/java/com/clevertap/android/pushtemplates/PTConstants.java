@@ -42,6 +42,8 @@ public class PTConstants {
 
     public static final int ONE_SECOND = 1000;
 
+    public static final long ONE_SECOND_LONG = 1000L;
+
     public static final String DEFAULT_DL = "default_dl";
 
     public static final String NOTIF_TAG = "wzrk_pn";

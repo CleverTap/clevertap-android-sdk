@@ -113,12 +113,12 @@ internal object TimerTemplateHandler {
     }
 
 
-    internal fun getDismissAfterMs(timerEnd: Int, timerThreshold: Int): Int? {
-        var timer_end: Int? = null
+    internal fun getDismissAfterMs(timerEnd: Int, timerThreshold: Int): Long? {
+        var timer_end: Long? = null
         if (timerThreshold != -1 && timerThreshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end = timerThreshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+            timer_end = timerThreshold * PTConstants.ONE_SECOND_LONG + PTConstants.ONE_SECOND_LONG
         } else if (timerEnd >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end = timerEnd * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+            timer_end = timerEnd * PTConstants.ONE_SECOND_LONG + PTConstants.ONE_SECOND_LONG
         } else {
             PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: ${PTConstants.PT_TIMER_END}")
         }
