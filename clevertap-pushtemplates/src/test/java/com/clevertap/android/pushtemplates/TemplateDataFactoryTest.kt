@@ -370,8 +370,7 @@ class TemplateDataFactoryTest {
         
         val timerData = result as TimerTemplateData
         assertEquals(TemplateType.TIMER, timerData.templateType)
-        assertEquals(timerEnd, timerData.timerEnd)
-        assertEquals(timerThreshold, timerData.timerThreshold)
+        assertEquals(11000L, timerData.baseContent.notificationBehavior.dismissAfter)
         assertEquals(chronoColor, timerData.chronometerTitleColor)
         assertTrue(timerData.renderTerminal)
         assertNotNull(timerData.baseContent)
@@ -799,7 +798,8 @@ class TemplateDataFactoryTest {
             textData = BaseTextData(SAMPLE_TITLE, SAMPLE_MESSAGE, SAMPLE_SUMMARY, SAMPLE_SUBTITLE),
             colorData = BaseColorData(),
             iconData = IconData(),
-            deepLinkList = arrayListOf()
+            deepLinkList = arrayListOf(),
+            notificationBehavior = NotificationBehavior()
         )
     }
 
@@ -819,8 +819,6 @@ class TemplateDataFactoryTest {
             terminalTextData = BaseTextData("Terminal", "Terminal Msg", "Terminal Summary", null),
             terminalMediaData = createSampleMediaData(),
             chronometerTitleColor = SAMPLE_COLOR,
-            timerEnd = 300,
-            timerThreshold = 10,
             renderTerminal = true
         )
     }
@@ -832,7 +830,8 @@ class TemplateDataFactoryTest {
             backgroundColor = SAMPLE_COLOR,
             smallIconColor = SAMPLE_COLOR,
             title = SAMPLE_TITLE,
-            subtitle = SAMPLE_SUBTITLE
+            subtitle = SAMPLE_SUBTITLE,
+            notificationBehavior = NotificationBehavior()
         )
     }
 
@@ -845,7 +844,8 @@ class TemplateDataFactoryTest {
             inputLabel = "Input Label",
             inputFeedback = "Feedback",
             inputAutoOpen = "true",
-            dismissOnClick = "false"
+            dismissOnClick = "false",
+            notificationBehavior = NotificationBehavior()
         )
     }
 }

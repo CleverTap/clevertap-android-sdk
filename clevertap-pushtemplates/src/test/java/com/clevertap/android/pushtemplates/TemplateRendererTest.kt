@@ -1373,8 +1373,12 @@ class TemplateRendererTest {
         timerBundle.putString(PTConstants.PT_ID, "pt_timer")
         timerBundle.putString(PTConstants.PT_TIMER_END, "10")
 
-        every { mockTimerTemplateData.timerThreshold } returns -1
-        every { mockTimerTemplateData.timerEnd } returns 15
+        val mockBaseContent = mockk<BaseContent>()
+        val mockNotificationBehavior = mockk<NotificationBehavior>()
+
+        every { mockTimerTemplateData.baseContent } returns mockBaseContent
+        every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
+        every { mockNotificationBehavior.dismissAfter } returns 10000 // 10 seconds in milliseconds
         every { mockTimerTemplateData.renderTerminal } returns true
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
@@ -1401,7 +1405,6 @@ class TemplateRendererTest {
                 any()
             )
         } returns mockNotificationBuilder
-        every { mockNotificationBuilder.setTimeoutAfter(any()) } returns mockNotificationBuilder
 
         // Act
         val result = templateRendererLocal.renderNotification(
@@ -1421,8 +1424,7 @@ class TemplateRendererTest {
                 mockNotificationBuilder
             )
         }
-        verify { mockNotificationBuilder.setTimeoutAfter(16000) }
-        verify { TimerTemplateHandler.scheduleTimer(context, timerBundle, 123, 16000, mockTimerTemplateData, mockConfig, any()) }
+        verify { TimerTemplateHandler.scheduleTimer(context, timerBundle, 123, 10000, mockTimerTemplateData, mockConfig, any()) }
         assertEquals(mockNotificationBuilder, result)
     }
 
@@ -1432,10 +1434,13 @@ class TemplateRendererTest {
         // Arrange
         val timerBundle = Bundle(testBundle)
         timerBundle.putString(PTConstants.PT_ID, "pt_timer")
-        timerBundle.putString(PTConstants.PT_TIMER_END, "10")
 
-        every { mockTimerTemplateData.timerThreshold } returns -1
-        every { mockTimerTemplateData.timerEnd } returns 15
+        val mockBaseContent = mockk<BaseContent>()
+        val mockNotificationBehavior = mockk<NotificationBehavior>()
+
+        every { mockTimerTemplateData.baseContent } returns mockBaseContent
+        every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
+        every { mockNotificationBehavior.dismissAfter } returns 15000 // 10 seconds in milliseconds
         every { mockTimerTemplateData.renderTerminal } returns false
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
@@ -1462,7 +1467,6 @@ class TemplateRendererTest {
                 any()
             )
         } returns mockNotificationBuilder
-        every { mockNotificationBuilder.setTimeoutAfter(any()) } returns mockNotificationBuilder
 
         // Act
         val result = templateRendererLocal.renderNotification(
@@ -1482,7 +1486,6 @@ class TemplateRendererTest {
                 mockNotificationBuilder
             )
         }
-        verify { mockNotificationBuilder.setTimeoutAfter(16000) }
         verify(exactly = 0) { TimerTemplateHandler.scheduleTimer(any(), any(), any(), any(), any(), any()) }
         assertEquals(mockNotificationBuilder, result)
     }
@@ -1492,12 +1495,13 @@ class TemplateRendererTest {
     fun test_renderNotification_timerEnd_null() {
         // Arrange
         val timerBundle = Bundle(testBundle)
-        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
-        timerBundle.putString(PTConstants.PT_TIMER_END, "10")
 
-        every { mockTimerTemplateData.timerThreshold } returns -1
-        every { mockTimerTemplateData.timerEnd } returns 3
-        every { mockTimerTemplateData.renderTerminal } returns true
+        val mockBaseContent = mockk<BaseContent>()
+        val mockNotificationBehavior = mockk<NotificationBehavior>()
+
+        every { mockTimerTemplateData.baseContent } returns mockBaseContent
+        every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
+        every { mockNotificationBehavior.dismissAfter } returns null
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
 
@@ -1522,7 +1526,6 @@ class TemplateRendererTest {
                 any()
             )
         } returns mockNotificationBuilder
-        every { mockNotificationBuilder.setTimeoutAfter(any()) } returns mockNotificationBuilder
 
         // Act
         val result = templateRendererLocal.renderNotification(

@@ -56,6 +56,12 @@ internal data class BaseContent(
     val colorData: BaseColorData,
     val iconData: IconData,
     val deepLinkList: ArrayList<String>,
+    val notificationBehavior: NotificationBehavior
+)
+
+internal data class NotificationBehavior(
+    val isSticky: Boolean = false,
+    val dismissAfter: Long? = null,
 )
 
 internal data class CarouselData(
@@ -79,7 +85,8 @@ internal data class FiveIconsTemplateData(
     val backgroundColor: String? = null,
     val smallIconColor: String? = null,
     val title: String? = null,
-    val subtitle: String? = null
+    val subtitle: String? = null,
+    val notificationBehavior: NotificationBehavior
 ) : TemplateData()
 
 internal data class ManualCarouselTemplateData(
@@ -109,8 +116,6 @@ internal data class TimerTemplateData(
     val terminalTextData: BaseTextData,
     val terminalMediaData: MediaData,
     val chronometerTitleColor: String? = null,
-    val timerEnd: Int = 0,
-    val timerThreshold: Int = 0,
     val renderTerminal: Boolean = true,
 ) : TemplateData()
 
@@ -147,6 +152,7 @@ internal data class InputBoxTemplateData(
     val inputFeedback: String? = null,
     val inputAutoOpen: String? = null,
     val dismissOnClick: String? = null,
+    val notificationBehavior: NotificationBehavior
 ) : TemplateData()
 
 internal data class CancelTemplateData(

@@ -12,6 +12,7 @@ import com.clevertap.android.pushtemplates.GifData
 import com.clevertap.android.pushtemplates.IconData
 import com.clevertap.android.pushtemplates.ImageData
 import com.clevertap.android.pushtemplates.MediaData
+import com.clevertap.android.pushtemplates.NotificationBehavior
 import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT_TEXT
@@ -56,7 +57,7 @@ class TimerTemplateHandlerTest {
 
     companion object {
         private const val NOTIFICATION_ID = 123
-        private const val DELAY = 5000
+        private const val DELAY = 5000L
         private const val ACCOUNT_ID = "test-account-id"
     }
 
@@ -97,7 +98,7 @@ class TimerTemplateHandlerTest {
     @Test
     fun `scheduleTimer should not execute when delay is null`() {
         // Given
-        val nullDelay: Int? = null
+        val nullDelay: Long? = null
 
         // When
         TimerTemplateHandler.scheduleTimer(
@@ -132,7 +133,7 @@ class TimerTemplateHandlerTest {
         )
 
         // Then
-        verify { mockHandler.postDelayed(any(), (DELAY - 100).toLong()) }
+        verify { mockHandler.postDelayed(any(), (DELAY - 100)) }
         assertNotNull(slot.captured)
     }
 
@@ -314,76 +315,61 @@ class TimerTemplateHandlerTest {
     }
 
     @Test
-    fun `getTimerEnd should return null when both timerThreshold and timerEnd are below minimum`() {
-        // Given
-        val data = timerTemplateData.copy(
-            timerThreshold = PT_TIMER_MIN_THRESHOLD - 1, timerEnd = PT_TIMER_MIN_THRESHOLD - 1
-        )
-
+    fun `getDismissAfterMs should return null when both timerThreshold and timerEnd are below minimum`() {
         // When
-        val result = TimerTemplateHandler.getTimerEnd(data)
+        val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = PT_TIMER_MIN_THRESHOLD - 1, timerEnd = PT_TIMER_MIN_THRESHOLD - 1)
 
         // Then
         assertNull(result)
     }
 
     @Test
-    fun `getTimerEnd should return timerThreshold plus one second when threshold is valid and not -1`() {
+    fun `getDismissAfterMs should return timerThreshold plus one second when threshold is valid and not -1`() {
         // Given
         val validThreshold = PT_TIMER_MIN_THRESHOLD + 5
-        val data = timerTemplateData.copy(
-            timerThreshold = validThreshold,
-            timerEnd = PT_TIMER_MIN_THRESHOLD - 1 // Make timerEnd invalid to ensure threshold is used
-        )
 
         // When
-        val result = TimerTemplateHandler.getTimerEnd(data)
+        val result = TimerTemplateHandler.getDismissAfterMs(
+            timerThreshold = validThreshold,
+            timerEnd = PT_TIMER_MIN_THRESHOLD - 1
+        )
 
         // Then
         assertEquals(validThreshold * ONE_SECOND + ONE_SECOND, result)
     }
 
     @Test
-    fun `getTimerEnd should return timerEnd plus one second when threshold is -1 and timerEnd is valid`() {
+    fun `getDismissAfterMs should return timerEnd plus one second when threshold is -1 and timerEnd is valid`() {
         // Given
         val validTimerEnd = PT_TIMER_MIN_THRESHOLD + 3
-        val data = timerTemplateData.copy(
-            timerThreshold = -1, timerEnd = validTimerEnd
-        )
 
         // When
-        val result = TimerTemplateHandler.getTimerEnd(data)
+        val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = -1, timerEnd = validTimerEnd)
 
         // Then
         assertEquals(validTimerEnd * ONE_SECOND + ONE_SECOND, result)
     }
 
     @Test
-    fun `getTimerEnd should return timerEnd plus one second when threshold is below minimum and timerEnd is valid`() {
+    fun `getDismissAfterMs should return timerEnd plus one second when threshold is below minimum and timerEnd is valid`() {
         // Given
         val validTimerEnd = PT_TIMER_MIN_THRESHOLD + 2
-        val data = timerTemplateData.copy(
-            timerThreshold = PT_TIMER_MIN_THRESHOLD - 1, timerEnd = validTimerEnd
-        )
 
         // When
-        val result = TimerTemplateHandler.getTimerEnd(data)
+        val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = PT_TIMER_MIN_THRESHOLD - 1, timerEnd = validTimerEnd)
 
         // Then
         assertEquals(validTimerEnd * ONE_SECOND + ONE_SECOND, result)
     }
 
     @Test
-    fun `getTimerEnd should prioritize timerThreshold over timerEnd when both are valid`() {
+    fun `getDismissAfterMs should prioritize timerThreshold over timerEnd when both are valid`() {
         // Given
         val validThreshold = PT_TIMER_MIN_THRESHOLD + 3
         val validTimerEnd = PT_TIMER_MIN_THRESHOLD + 5
-        val data = timerTemplateData.copy(
-            timerThreshold = validThreshold, timerEnd = validTimerEnd
-        )
 
         // When
-        val result = TimerTemplateHandler.getTimerEnd(data)
+        val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = validThreshold, timerEnd = validTimerEnd)
 
         // Then
         assertEquals(validThreshold * ONE_SECOND + ONE_SECOND, result)
@@ -391,28 +377,18 @@ class TimerTemplateHandlerTest {
     }
 
     @Test
-    fun `getTimerEnd should handle edge case when threshold equals minimum`() {
-        // Given
-        val data = timerTemplateData.copy(
-            timerThreshold = PT_TIMER_MIN_THRESHOLD, timerEnd = PT_TIMER_MIN_THRESHOLD - 1
-        )
-
+    fun `getDismissAfterMs should handle edge case when threshold equals minimum`() {
         // When
-        val result = TimerTemplateHandler.getTimerEnd(data)
+        val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = PT_TIMER_MIN_THRESHOLD, timerEnd = PT_TIMER_MIN_THRESHOLD - 1)
 
         // Then
         assertEquals(PT_TIMER_MIN_THRESHOLD * ONE_SECOND + ONE_SECOND, result)
     }
 
     @Test
-    fun `getTimerEnd should handle edge case when timerEnd equals minimum`() {
-        // Given
-        val data = timerTemplateData.copy(
-            timerThreshold = -1, timerEnd = PT_TIMER_MIN_THRESHOLD
-        )
-
+    fun `getDismissAfterMs should handle edge case when timerEnd equals minimum`() {
         // When
-        val result = TimerTemplateHandler.getTimerEnd(data)
+        val result = TimerTemplateHandler.getDismissAfterMs(timerThreshold = -1, timerEnd = PT_TIMER_MIN_THRESHOLD)
 
         // Then
         assertEquals(PT_TIMER_MIN_THRESHOLD * ONE_SECOND + ONE_SECOND, result)
@@ -469,7 +445,8 @@ class TimerTemplateHandlerTest {
             textData = textData,
             colorData = colorData,
             iconData = iconData,
-            deepLinkList = arrayListOf("deeplink1", "deeplink2")
+            deepLinkList = arrayListOf("deeplink1", "deeplink2"),
+            notificationBehavior = NotificationBehavior()
         )
 
         val imageData = ImageData(
@@ -503,8 +480,6 @@ class TimerTemplateHandlerTest {
             terminalTextData = terminalTextData,
             terminalMediaData = terminalMediaData,
             chronometerTitleColor = "#AAAAAA",
-            timerEnd = PT_TIMER_MIN_THRESHOLD + 10,
-            timerThreshold = PT_TIMER_MIN_THRESHOLD + 5,
             renderTerminal = true
         )
     }

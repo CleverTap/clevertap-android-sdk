@@ -1,6 +1,7 @@
 package com.clevertap.android.pushtemplates
 
 import android.os.Bundle
+import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND
 import com.clevertap.android.pushtemplates.PTConstants.PT_BG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT
@@ -11,6 +12,7 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_COLLAPSED_ALT_
 import com.clevertap.android.pushtemplates.PTConstants.PT_CANCEL_NOTIF_ID
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_TITLE_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_DEFAULT_DL
+import com.clevertap.android.pushtemplates.PTConstants.PT_DISMISS
 import com.clevertap.android.pushtemplates.PTConstants.PT_DISMISS_ON_CLICK
 import com.clevertap.android.pushtemplates.PTConstants.PT_GIF
 import com.clevertap.android.pushtemplates.PTConstants.PT_GIF_ALT
@@ -39,10 +41,12 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE_COLLAPSED
 import com.clevertap.android.pushtemplates.PTConstants.PT_SMALL_ICON_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_SMALL_VIEW
+import com.clevertap.android.pushtemplates.PTConstants.PT_STICKY
 import com.clevertap.android.pushtemplates.PTConstants.PT_SUBTITLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_COLOR
+import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
 import org.json.JSONArray
@@ -205,7 +209,8 @@ internal object TemplateDataFactory {
             backgroundColor = colorMap[PT_BG],
             smallIconColor = colorMap[PT_SMALL_ICON_COLOUR],
             title = getStringWithFallback(extras, PT_TITLE, Constants.NOTIF_TITLE),
-            subtitle = getStringWithFallback(extras, PT_SUBTITLE, Constants.WZRK_SUBTITLE)
+            subtitle = getStringWithFallback(extras, PT_SUBTITLE, Constants.WZRK_SUBTITLE),
+            notificationBehavior = createNotificationBehaviorData(extras)
         )
     }
 
@@ -249,8 +254,11 @@ internal object TemplateDataFactory {
         colorMap: Map<String, String>,
         defaultAltText: String
     ): TimerTemplateData {
-        val baseContent = createBaseContent(extras, colorMap)
         val mediaData = createMediaData(extras, defaultAltText)
+        val timerEnd = Utils.getTimerEnd(extras, System.currentTimeMillis())
+        val timerThreshold = Utils.getTimerThreshold(extras)
+        val dismissAfter = TimerTemplateHandler.getDismissAfterMs(timerEnd, timerThreshold)?.toLong()
+        val baseContent = createBaseContent(extras, colorMap).copy(notificationBehavior = NotificationBehavior(dismissAfter = dismissAfter))
         return TimerTemplateData(
             baseContent = baseContent,
             mediaData = mediaData,
@@ -258,8 +266,6 @@ internal object TemplateDataFactory {
             terminalTextData = createTerminalTextData(extras, baseContent.textData),
             terminalMediaData = createTerminalMediaData(extras, defaultAltText, mediaData),
             chronometerTitleColor = colorMap[PT_CHRONO_TITLE_COLOUR],
-            timerEnd = Utils.getTimerEnd(extras, System.currentTimeMillis()),
-            timerThreshold = Utils.getTimerThreshold(extras),
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)
                 ?.equals("true", ignoreCase = true) ?: true
         )
@@ -277,7 +283,8 @@ internal object TemplateDataFactory {
             inputLabel = extras.getString(PT_INPUT_LABEL),
             inputFeedback = extras.getString(PT_INPUT_FEEDBACK),
             inputAutoOpen = extras.getString(PT_INPUT_AUTO_OPEN),
-            dismissOnClick = extras.getString(PT_DISMISS_ON_CLICK)
+            dismissOnClick = extras.getString(PT_DISMISS_ON_CLICK),
+            notificationBehavior = createNotificationBehaviorData(extras)
         )
     }
 
@@ -298,6 +305,7 @@ internal object TemplateDataFactory {
             colorData = createBaseColorData(colorMap, extras.getString(WZRK_COLOR)),
             iconData = createIconData(extras),
             deepLinkList = Utils.getDeepLinkListFromExtras(extras),
+            notificationBehavior = createNotificationBehaviorData(extras)
         )
     }
 
@@ -432,6 +440,12 @@ internal object TemplateDataFactory {
 
     }
 
+    private fun createNotificationBehaviorData(extras: Bundle) : NotificationBehavior {
+        return NotificationBehavior(
+            isSticky = extras.getString(PT_STICKY).toBoolean(),
+            dismissAfter = extras.getString(PT_DISMISS)?.toLongOrNull()?.let { it * ONE_SECOND })
+    }
+
     /**
      * Gets string value with fallback logic, same as TemplateRenderer.setKeysFromDashboard
      */
@@ -471,7 +485,8 @@ internal object TemplateDataFactory {
                 smallIconColor = this.smallIconColor
             ),
             iconData = IconData(),
-            deepLinkList = this.deepLinkList
+            deepLinkList = this.deepLinkList,
+            notificationBehavior = this.notificationBehavior
         )
     }
 
@@ -481,7 +496,8 @@ internal object TemplateDataFactory {
             textData = this.textData,
             colorData = BaseColorData(),
             iconData = IconData(),
-            deepLinkList = this.deepLinkList
+            deepLinkList = this.deepLinkList,
+            notificationBehavior = this.notificationBehavior
         )
     }
 
