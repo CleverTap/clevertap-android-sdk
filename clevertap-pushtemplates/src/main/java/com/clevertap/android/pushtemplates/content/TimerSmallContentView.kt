@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
 internal open class TimerSmallContentView(
     context: Context,
-    timer_end: Int?,
+    timer_end: Long?,
     renderer: TemplateRenderer,
     data: TimerTemplateData,
     layoutId: Int = R.layout.timer_collapsed

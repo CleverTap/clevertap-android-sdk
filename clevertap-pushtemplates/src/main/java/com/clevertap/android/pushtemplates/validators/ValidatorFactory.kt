@@ -17,8 +17,7 @@ const val PT_BIG_TEXT_LIST = "PT_BIG_TEXT_LIST"
 const val PT_SMALL_TEXT_LIST = "PT_SMALL_TEXT_LIST"
 const val PT_PRODUCT_DISPLAY_ACTION = "PT_PRODUCT_DISPLAY_ACTION"
 const val PT_BIG_IMG = "PT_BIG_IMG"
-const val PT_TIMER_THRESHOLD = "PT_TIMER_THRESHOLD"
-const val PT_TIMER_END = "PT_TIMER_END"
+const val PT_TIMER_DISMISS_AFTER = "PT_TIMER_DISMISS_AFTER"
 const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"
 const val PT_ACTIONS = "PT_ACTIONS"
 
@@ -143,8 +142,16 @@ internal class ValidationCheckersBuilder {
     /**
      * Adds integer field validation with minimum value check
      */
-    fun addIntValidation(value: Int, minValue: Int, key: String, errorMessage: String): ValidationCheckersBuilder {
+    fun addIntValidation(value: Int?, minValue: Int, key: String, errorMessage: String): ValidationCheckersBuilder {
         checkers[key] = IntSizeChecker(value, minValue, errorMessage)
+        return this
+    }
+
+    /**
+     * Adds integer field validation with minimum value check
+     */
+    fun addLongValidation(value: Long?, minValue: Int, key: String, errorMessage: String): ValidationCheckersBuilder {
+        checkers[key] = LongSizeChecker(value, minValue, errorMessage)
         return this
     }
 
@@ -282,16 +289,10 @@ internal class ValidatorFactory {
                 is TimerTemplateData -> {
                     builder
                         .addBasicTextValidation(templateData.baseContent.textData)
-                        .addIntValidation(
-                            templateData.timerThreshold,
-                            -1,
-                            PT_TIMER_THRESHOLD,
-                            "Timer threshold not defined"
-                        )
-                        .addIntValidation(
-                            templateData.timerEnd,
-                            -1,
-                            PT_TIMER_END,
+                        .addLongValidation(
+                            templateData.baseContent.notificationBehavior.dismissAfter,
+                            10000,
+                            PT_TIMER_DISMISS_AFTER,
                             "Not rendering notification Timer End value lesser than threshold (10 seconds) from current time"
                         )
                         .build()

@@ -147,7 +147,7 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
                 ValidatorFactory.getValidator(templateData)
                     ?.takeIf { it.validate() }
                     ?.let {
-                        TimerTemplateHandler.getTimerEnd(templateData)?.let { timerEnd ->
+                        templateData.baseContent.notificationBehavior.dismissAfter.let { timerEnd ->
                             if (templateData.renderTerminal) {
                                 TimerTemplateHandler.scheduleTimer(
                                     context,
@@ -160,7 +160,6 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
                             }
                             return TimerStyle(templateData, this)
                                 .builderFromStyle(context, extras, notificationId, nb)
-                                .setTimeoutAfter(timerEnd.toLong())
                         }
                     }
             }

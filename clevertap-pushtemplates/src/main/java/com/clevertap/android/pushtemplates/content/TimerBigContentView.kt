@@ -7,7 +7,7 @@ import com.clevertap.android.pushtemplates.TimerTemplateData
 
 internal class TimerBigContentView(
     context: Context,
-    timer_end: Int?,
+    timer_end: Long?,
     renderer: TemplateRenderer,
     data: TimerTemplateData
 ) :

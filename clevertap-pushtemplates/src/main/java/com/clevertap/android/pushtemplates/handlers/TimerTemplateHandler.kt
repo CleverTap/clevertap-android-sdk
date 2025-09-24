@@ -28,7 +28,7 @@ internal object TimerTemplateHandler {
         context: Context,
         extras: Bundle,
         notificationId: Int,
-        delay: Int?,
+        delay: Long?,
         data: TimerTemplateData,
         config: CleverTapInstanceConfig,
         handler: Handler = Handler(Looper.getMainLooper())
@@ -108,17 +108,17 @@ internal object TimerTemplateHandler {
                         basicTemplateBundle
                     )
                 }
-            }, (delay - 100).toLong()
+            }, (delay - 100)
         )
     }
 
 
-    internal fun getTimerEnd(data: TimerTemplateData): Int? {
-        var timer_end: Int? = null
-        if (data.timerThreshold != -1 && data.timerThreshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end = data.timerThreshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
-        } else if (data.timerEnd >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-            timer_end = data.timerEnd * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+    internal fun getDismissAfterMs(timerEnd: Int, timerThreshold: Int): Long? {
+        var timer_end: Long? = null
+        if (timerThreshold != -1 && timerThreshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+            timer_end = timerThreshold * PTConstants.ONE_SECOND_LONG + PTConstants.ONE_SECOND_LONG
+        } else if (timerEnd >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+            timer_end = timerEnd * PTConstants.ONE_SECOND_LONG + PTConstants.ONE_SECOND_LONG
         } else {
             PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: ${PTConstants.PT_TIMER_END}")
         }
