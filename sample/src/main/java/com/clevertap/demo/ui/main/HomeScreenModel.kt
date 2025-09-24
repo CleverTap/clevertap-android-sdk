@@ -102,7 +102,7 @@ object HomeScreenModel {
                 "Remove Variables Changed Callback",
                 "Add One Time Variables Changed Callback",
                 "Remove One Time Variables Changed Callback",
-                "Define Multiple vars"
+                "Define Multiple vars, fetch and print"
             ),
             "FILE TYPE VARIABLES" to listOf(
                 "Define file Variables listeners \n adds file variables with fileReady() listeners",

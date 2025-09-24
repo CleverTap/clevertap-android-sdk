@@ -8,7 +8,9 @@ import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
 import com.clevertap.android.sdk.cryption.EncryptionState.ENCRYPTED_AES
 import com.clevertap.android.sdk.cryption.EncryptionState.ENCRYPTED_AES_GCM
 import com.clevertap.android.sdk.cryption.EncryptionState.PLAIN_TEXT
+import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.utils.getStringOrNull
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import org.json.JSONObject
 
 internal data class CryptMigrator(
@@ -17,7 +19,9 @@ internal data class CryptMigrator(
     private val logger: ILogger,
     private val cryptHandler: CryptHandler,
     private val cryptRepository: CryptRepository,
-    private val dataMigrationRepository: DataMigrationRepository
+    private val dataMigrationRepository: DataMigrationRepository,
+    private val variablesRepo: VariablesRepo,
+    private val dbAdapter: DBAdapter
 ) {
 
     companion object {
@@ -74,9 +78,15 @@ internal data class CryptMigrator(
             "Starting migration from encryption level $storedEncryptionLevel to $configEncryptionLevel " +
                     "with migrationFailureCount $migrationFailureCount and isSSInAppDataMigrated $isSSInAppDataMigrated"
         )
+
+        val level = EncryptionLevel.fromInt(configEncryptionLevel)
+        val storedLevel = EncryptionLevel.fromInt(storedEncryptionLevel)
+        val isV2Data = level == EncryptionLevel.FULL_DATA || storedLevel == EncryptionLevel.FULL_DATA
+
         val migrationSuccess = handleAllMigrations(
-            level = EncryptionLevel.fromInt(configEncryptionLevel),
-            firstUpgrade = migrationFailureCount == -1
+            level = level,
+            firstUpgrade = migrationFailureCount == -1,
+            isFullEncryptionData = isV2Data
         )
 
         cryptRepository.updateIsSSInAppDataMigrated(migrationSuccess)
@@ -85,7 +95,8 @@ internal data class CryptMigrator(
 
     private fun handleAllMigrations(
         level: EncryptionLevel,
-        firstUpgrade: Boolean
+        firstUpgrade: Boolean,
+        isFullEncryptionData: Boolean
     ): Boolean {
         val cgkMigrationSuccess = migrateCachedGuidsKeyPref(
             level = level,
@@ -93,7 +104,33 @@ internal data class CryptMigrator(
         )
         val dbMigrationSuccess = migrateDBProfile(level = level)
         val inAppMigrationSuccess = migrateInAppData(level = level)
+
+        if (isFullEncryptionData) {
+            migrateVariablesData(level = level)
+            migrateInboxData()
+        }
+
         return cgkMigrationSuccess && dbMigrationSuccess && inAppMigrationSuccess
+    }
+
+    private fun migrateVariablesData(level: EncryptionLevel) : Boolean {
+        val variablesData = variablesRepo.loadDataFromCache()
+        if (variablesData != null) {
+            // Automatically internally saved to correct level and state
+            variablesRepo.storeDataInCache(variablesData)
+        } else {
+            logger.verbose("Skipping variable migration as there is no data")
+        }
+        return false
+    }
+
+    private fun migrateInboxData() : Boolean {
+        for (id in dataMigrationRepository.allDeviceIds()) {
+            val messages = dbAdapter.getMessages(id)
+            // Save function will automatically save it in encrypted form.
+            dbAdapter.upsertMessages(messages)
+        }
+        return true
     }
 
     /**

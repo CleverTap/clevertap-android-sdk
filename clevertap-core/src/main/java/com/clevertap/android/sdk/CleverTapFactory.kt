@@ -69,6 +69,7 @@ import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -126,6 +127,12 @@ internal object CleverTapFactory {
 
         val dbEncryptionHandler = DBEncryptionHandler(crypt = cryptHandler, logger = config.logger)
 
+        val variablesRepo = VariablesRepo(
+            context = context,
+            accountId = config.accountId,
+            dbEncryptionHandler = dbEncryptionHandler
+        )
+
         val databaseName = DBAdapter.getDatabaseName(config)
 
         val databaseManager = DBManager(
@@ -141,20 +148,21 @@ internal object CleverTapFactory {
 
         val task = executors.postAsyncSafelyTask<Unit>()
         task.execute("migratingEncryption") {
-
+            val dbAdapter = databaseManager.loadDBAdapter(context)
             val dataMigrationRepository = DataMigrationRepository(
                 context = context,
                 config = config,
-                dbAdapter = databaseManager.loadDBAdapter(context)
+                dbAdapter = dbAdapter
             )
-
             val cryptMigrator = CryptMigrator(
                 logPrefix = config.accountId,
                 configEncryptionLevel = config.encryptionLevel,
                 logger = config.logger,
                 cryptHandler = cryptHandler,
                 cryptRepository = repository,
-                dataMigrationRepository = dataMigrationRepository
+                dataMigrationRepository = dataMigrationRepository,
+                variablesRepo = variablesRepo,
+                dbAdapter = dbAdapter
             )
             cryptMigrator.migrateEncryption()
         }

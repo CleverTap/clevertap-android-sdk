@@ -115,4 +115,33 @@ internal class UserProfileDAOImpl(
             }
         }
     }
+
+    @WorkerThread
+    override fun fetchAllDeviceIds(): List<String> {
+        val deviceIds = mutableListOf<String>()
+        val tName = USER_PROFILES.tableName
+
+        try {
+            dbHelper.readableDatabase.query(
+                tName,
+                arrayOf(Column.DEVICE_ID),
+                null,
+                null,
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                val deviceIdIndex = cursor.getColumnIndex(Column.DEVICE_ID)
+
+                while (cursor.moveToNext()) {
+                    val deviceIdString = cursor.getString(deviceIdIndex)
+                    deviceIdString?.let { deviceIds.add(it) }
+                }
+            }
+        } catch (e: SQLiteException) {
+            logger.verbose("Could not fetch device IDs from database $tName.", e)
+        }
+
+        return deviceIds
+    }
 }

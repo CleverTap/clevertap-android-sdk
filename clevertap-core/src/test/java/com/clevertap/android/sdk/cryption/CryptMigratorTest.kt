@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.cryption
 
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import org.json.JSONObject
@@ -22,6 +24,12 @@ class CryptMigratorTest {
     @MockK(relaxed = true)
     private lateinit var dataMigrationRepository: DataMigrationRepository
 
+    @MockK(relaxed = true)
+    private lateinit var variablesRepo: VariablesRepo
+
+    @MockK(relaxed = true)
+    private lateinit var dbAdapter: DBAdapter
+
     private lateinit var cryptMigratorMedium: CryptMigrator
 
     private lateinit var cryptMigratorNone: CryptMigrator
@@ -36,7 +44,9 @@ class CryptMigratorTest {
             logger = logger,
             cryptHandler = cryptHandler,
             cryptRepository = cryptRepository,
-            dataMigrationRepository = dataMigrationRepository
+            dataMigrationRepository = dataMigrationRepository,
+            variablesRepo = variablesRepo,
+            dbAdapter = dbAdapter
         )
 
         cryptMigratorNone = CryptMigrator(
@@ -45,7 +55,9 @@ class CryptMigratorTest {
             logger = logger,
             cryptHandler = cryptHandler,
             cryptRepository = cryptRepository,
-            dataMigrationRepository = dataMigrationRepository
+            dataMigrationRepository = dataMigrationRepository,
+            variablesRepo = variablesRepo,
+            dbAdapter = dbAdapter
         )
     }
 

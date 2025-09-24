@@ -691,25 +691,13 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.removeOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
             }
             "13-11" -> {
-                val map: Map<String, Any> = mapOf(
-                    "int" to 12,
-                    "str" to "factory str"
-                )
-                cleverTapAPI?.let { ct ->
-                    ct.defineVariable("factory_var_int", 11)
-                    ct.defineFileVariable("factory_var_file")
-                    ct.defineFileVariable("group.factory_var_file_in_group")
-                    ct.defineVariable("factory_var_map", map)
-                    ct.defineVariable("group.factory_var_in_group", 13.toByte())
-                    ct.defineVariable("streaming.quality_auto", true)
-                    ct.defineVariable("streaming.max_bitrate", 8000)
-                    ct.defineVariable("streaming.protocol", "HLS")
-                    ct.defineFileVariable("factory_file_jpeg")
-                    ct.defineFileVariable("factory_file_png")
-                    ct.defineFileVariable("factory_file_gif")
-                    ct.defineFileVariable("documents.factory_file_pdf")
-                    ct.defineFileVariable("audio.factory_file_mp3")
-                    ct.defineFileVariable("video.factory_file_mp4")
+                defineTestAccVars()
+                cleverTapAPI?.fetchVariables { isSuccess ->
+                    Log.i(
+                        TAG,
+                        "Test Variables Fetched = $isSuccess"
+                    )
+                    printTestVars()
                 }
             }
             "14-0" -> {
@@ -792,6 +780,61 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 Log.i(TAG, "Set Opt Out: userOptOut = false (single parameter method)")
             }
             //"60" -> webViewClickListener?.onWebViewClick()
+        }
+    }
+
+    private fun defineTestAccVars() {
+        val map: Map<String, Any> = mapOf(
+            "int" to 12,
+            "str" to "factory str"
+        )
+        cleverTapAPI?.let { ct ->
+            ct.defineVariable("factory_var_int", 11)
+            ct.defineVariable("factory_var_map", map)
+            ct.defineVariable("group.factory_var_in_group", 13.toByte())
+            ct.defineVariable("streaming.quality_auto", true)
+            ct.defineVariable("streaming.max_bitrate", 8000)
+            ct.defineVariable("streaming.protocol", "HLS")
+
+            ct.defineVariable("var_int", 1)
+            ct.defineVariable("var_long", 1L)
+            ct.defineVariable("var_short", 1)
+            ct.defineVariable("var_float", 1.1)
+            ct.defineVariable("var_double", 1.1111)
+            ct.defineVariable("var_string", "default")
+            ct.defineVariable("var_boolean", false)
+
+            ct.defineFileVariable("factory_var_file")
+            ct.defineFileVariable("group.factory_var_file_in_group")
+            ct.defineFileVariable("factory_file_jpeg")
+            ct.defineFileVariable("factory_file_png")
+            ct.defineFileVariable("factory_file_gif")
+            ct.defineFileVariable("documents.factory_file_pdf")
+            ct.defineFileVariable("audio.factory_file_mp3")
+            ct.defineFileVariable("video.factory_file_mp4")
+        }
+    }
+
+    private fun printTestVars() {
+        cleverTapAPI?.let { ct ->
+            val builder = StringBuilder().apply {
+                appendLine("Test variables are ")
+                appendLine(ct.getVariableValue("factory_var_int"))
+                appendLine(ct.getVariableValue("factory_var_map"))
+                appendLine(ct.getVariableValue("group.factory_var_in_group"))
+                appendLine(ct.getVariableValue("streaming.quality_auto"))
+                appendLine(ct.getVariableValue("streaming.max_bitrate"))
+                appendLine(ct.getVariableValue("streaming.protocol"))
+                appendLine(ct.getVariableValue("var_int"))
+                appendLine(ct.getVariableValue("var_long"))
+                appendLine(ct.getVariableValue("var_short"))
+                appendLine(ct.getVariableValue("var_float"))
+                appendLine(ct.getVariableValue("var_double"))
+                appendLine(ct.getVariableValue("var_string"))
+                appendLine(ct.getVariableValue("var_boolean"))
+            }.toString()
+
+            Log.i(TAG, builder)
         }
     }
 
