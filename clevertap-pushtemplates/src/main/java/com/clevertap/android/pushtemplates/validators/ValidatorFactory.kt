@@ -148,6 +148,14 @@ internal class ValidationCheckersBuilder {
     }
 
     /**
+     * Adds integer field validation with minimum value check
+     */
+    fun addLongValidation(value: Long?, minValue: Int, key: String, errorMessage: String): ValidationCheckersBuilder {
+        checkers[key] = LongSizeChecker(value, minValue, errorMessage)
+        return this
+    }
+
+    /**
      * Adds JSON array validation
      */
     fun addJsonArrayValidation(jsonArray: JSONArray?, key: String, errorMessage: String): ValidationCheckersBuilder {
@@ -281,8 +289,8 @@ internal class ValidatorFactory {
                 is TimerTemplateData -> {
                     builder
                         .addBasicTextValidation(templateData.baseContent.textData)
-                        .addIntValidation(
-                            templateData.baseContent.notificationBehavior.dismissAfter?.toInt(),
+                        .addLongValidation(
+                            templateData.baseContent.notificationBehavior.dismissAfter,
                             10000,
                             PT_TIMER_DISMISS_AFTER,
                             "Not rendering notification Timer End value lesser than threshold (10 seconds) from current time"
