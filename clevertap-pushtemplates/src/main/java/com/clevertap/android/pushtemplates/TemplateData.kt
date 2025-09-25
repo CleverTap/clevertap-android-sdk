@@ -98,7 +98,7 @@ internal data class ManualCarouselTemplateData(
 internal data class AutoCarouselTemplateData(
     override val templateType: TemplateType = TemplateType.AUTO_CAROUSEL,
     val carouselData: CarouselData,
-    val flipInterval: Int = 0,
+    val flipInterval: Int = PTConstants.PT_FLIP_INTERVAL_TIME,
 ) : TemplateData()
 
 internal data class RatingTemplateData(
