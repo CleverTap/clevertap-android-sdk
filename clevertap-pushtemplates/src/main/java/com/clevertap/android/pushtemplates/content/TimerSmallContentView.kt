@@ -3,6 +3,7 @@ package com.clevertap.android.pushtemplates.content
 import android.content.Context
 import android.os.Build
 import android.os.SystemClock
+import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TimerTemplateData
@@ -29,9 +30,11 @@ internal open class TimerSmallContentView(
             data.baseContent.colorData.titleColor
         )
         setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
+
+        // Add a 3 second buffer to prevent negative timer values
         remoteView.setChronometer(
             R.id.chronometer,
-            SystemClock.elapsedRealtime() + timer_end!!,
+            SystemClock.elapsedRealtime() + timer_end!! + 3 * PTConstants.ONE_SECOND_LONG,
             null,
             true
         )
