@@ -40,6 +40,10 @@ internal abstract class Style(private val data: BaseContent, private val rendere
             notificationBuilder.setTimeoutAfter(timeout)
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            notificationBuilder.setOngoing(data.notificationBehavior.isSticky)
+        }
+
         return notificationBuilder.setSmallIcon(renderer.smallIcon)
             .setContentTitle(Html.fromHtml(pt_title))
             .setContentIntent(pIntent)
@@ -47,7 +51,6 @@ internal abstract class Style(private val data: BaseContent, private val rendere
             .setWhen(System.currentTimeMillis())
             .setColor(Color.parseColor(data.colorData.smallIconColor?: PTConstants.PT_META_CLR_DEFAULTS))
             .setAutoCancel(true)
-            .setOngoing(data.notificationBehavior.isSticky)
             .setStyle(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     NotificationCompat.DecoratedCustomViewStyle()
