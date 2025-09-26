@@ -47,27 +47,27 @@ class HmsHandlerTest : BaseTestCase() {
 
     @Test
     fun testAppId_Invalid() {
-        every { agConnectOptionsSpy.getString(HmsConstants.APP_ID_KEY) } throws RuntimeException("Something went wrong")
+        every { agConnectOptionsSpy.getString(APP_ID_KEY) } throws RuntimeException("Something went wrong")
         val appId = sdkHandler.appId()
         Assert.assertNull(appId)
     }
 
     @Test
     fun testAppId_Valid() {
-        every { agConnectOptionsSpy.getString(HmsConstants.APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
+        every { agConnectOptionsSpy.getString(APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
         val appId = sdkHandler.appId()
         Assert.assertNotNull(appId)
     }
 
     @Test
     fun testIsAvailable_Returns_False() {
-        every { agConnectOptionsSpy.getString(HmsConstants.APP_ID_KEY) } throws RuntimeException("Something Went Wrong")
+        every { agConnectOptionsSpy.getString(APP_ID_KEY) } throws RuntimeException("Something Went Wrong")
         Assert.assertFalse(sdkHandler.isAvailable)
     }
 
     @Test
     fun testIsAvailable_Returns_True() {
-        every { agConnectOptionsSpy.getString(HmsConstants.APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
+        every { agConnectOptionsSpy.getString(APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
         Assert.assertTrue(sdkHandler.isAvailable)
     }
 
@@ -102,8 +102,8 @@ class HmsHandlerTest : BaseTestCase() {
 
     @Test
     fun testNewToken_Exception() {
-        every { agConnectOptionsSpy.getString(HmsConstants.APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
-        every { instance.getToken(HmsTestConstants.HMS_APP_ID, HmsConstants.HCM_SCOPE) } throws
+        every { agConnectOptionsSpy.getString(APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
+        every { instance.getToken(HmsTestConstants.HMS_APP_ID, HCM_SCOPE) } throws
                 RuntimeException("Something went wrong")
         mockkStatic(HmsInstanceId::class) {
             every { HmsInstanceId.getInstance(application) } returns instance
@@ -140,7 +140,6 @@ class HmsHandlerTest : BaseTestCase() {
     fun `appId should fallback to AGConnectOptionsBuilder when existing instance is null`() {
         // Arrange
         val mockOptions = mockk<AGConnectOptions>()
-        val mockBuilder = mockk<AGConnectOptionsBuilder>()
 
         mockkStatic(AGConnectInstance::class)
         mockkConstructor(AGConnectOptionsBuilder::class)
@@ -296,18 +295,18 @@ class HmsHandlerTest : BaseTestCase() {
 
     @Test
     fun testNewToken_Invalid_AppId() {
-        every { agConnectOptionsSpy.getString(HmsConstants.APP_ID_KEY) } returns null
+        every { agConnectOptionsSpy.getString(APP_ID_KEY) } returns null
         val token = sdkHandler.onNewToken()
         Assert.assertNull(token)
     }
 
     @Test
     fun testNewToken_Success() {
-        every { agConnectOptionsSpy.getString(HmsConstants.APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
+        every { agConnectOptionsSpy.getString(APP_ID_KEY) } returns HmsTestConstants.HMS_APP_ID
         every {
             instance.getToken(
                 HmsTestConstants.HMS_APP_ID,
-                HmsConstants.HCM_SCOPE
+                HCM_SCOPE
             )
         } returns HmsTestConstants.HMS_TOKEN
         mockkStatic(HmsInstanceId::class) {
