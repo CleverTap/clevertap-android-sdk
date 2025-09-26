@@ -79,6 +79,8 @@ public class PTConstants {
 
     public static final String PT_GIF_FRAMES_ALT = "pt_gif_frames_alt";
 
+    public static final String PT_SCALE_TYPE_ALT = "pt_scale_type_alt";
+
     public static final String PT_BIG_IMG_ALT_TEXT = "pt_big_img_alt_text";
 
     public static final String PT_STICKY = "pt_sticky";

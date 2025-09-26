@@ -37,6 +37,7 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_PRODUCT_DISPLAY_ACTION
 import com.clevertap.android.pushtemplates.PTConstants.PT_PRODUCT_DISPLAY_LINEAR
 import com.clevertap.android.pushtemplates.PTConstants.PT_RENDER_TERMINAL
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE
+import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE_COLLAPSED
 import com.clevertap.android.pushtemplates.PTConstants.PT_SMALL_VIEW
 import com.clevertap.android.pushtemplates.PTConstants.PT_STICKY
@@ -417,7 +418,12 @@ internal object TemplateDataFactory {
                 url = terminalGif,
                 numberOfFrames = extras.getString(PT_GIF_FRAMES_ALT)?.toIntOrNull() ?: defaultMediaData.gif.numberOfFrames
             ),
-            scaleType = defaultMediaData.scaleType
+            scaleType = PTScaleType.fromString(
+                extras.getString(
+                    PT_SCALE_TYPE_ALT,
+                    defaultMediaData.scaleType.name
+                )
+            )
         )
     }
 

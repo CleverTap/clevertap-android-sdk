@@ -80,6 +80,12 @@ internal object TimerTemplateHandler {
                         data.terminalMediaData.gif.numberOfFrames.toString()
                     )
 
+                    basicTemplateBundle.putString(
+                        PTConstants.PT_SCALE_TYPE,
+                        data.terminalMediaData.scaleType.toString()
+                    )
+
+
                     basicTemplateBundle.remove(PTConstants.PT_JSON)
 
                     // force random id generation
