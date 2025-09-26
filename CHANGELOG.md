@@ -1,4 +1,7 @@
 ## CHANGE LOG.
+### September 26, 2025
+* [CleverTap Huawei Push SDK v1.5.1](docs/CTHUAWEIPUSHCHANGELOG.md)
+
 ### September 11, 2025
 * [CleverTap Android SDK v7.5.2](docs/CTCORECHANGELOG.md)
 

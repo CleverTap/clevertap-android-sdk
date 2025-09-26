@@ -1,5 +1,8 @@
 ## CleverTap Huawei Push SDK CHANGE LOG
 
+### Version 1.5.1 (September 26, 2025)
+* Adds support for custom initialization of `AGConnect` using `agconnect-services.json` from the assets folder.
+
 ### Version 1.5.0 (March 11, 2025)
 
 #### Breaking API Changes
