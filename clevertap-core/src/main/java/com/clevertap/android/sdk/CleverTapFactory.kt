@@ -125,7 +125,11 @@ internal object CleverTapFactory {
             cryptFactory = cryptFactory
         )
 
-        val dbEncryptionHandler = DBEncryptionHandler(crypt = cryptHandler, logger = config.logger)
+        val dbEncryptionHandler = DBEncryptionHandler(
+            crypt = cryptHandler,
+            logger = config.logger,
+            encryptionLevel = fromInt(config.encryptionLevel)
+        )
 
         val variablesRepo = VariablesRepo(
             context = context,

@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm;
+import com.clevertap.android.sdk.cryption.EncryptionLevel;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 
 import org.json.JSONObject;
@@ -58,17 +59,23 @@ public class LoginInfoProvider {
         }
         String cacheKey = key + "_" + identifier;
         JSONObject cache = getDecryptedCachedGUIDs();
-        if(cache.optString(cacheKey).equals(guid)) {
+        if (cache.optString(cacheKey).equals(guid)) {
             return;
         }
         try {
             cache.put(cacheKey, guid);
-            String encryptedCache = cryptHandler.encrypt(cache.toString(), key, EncryptionAlgorithm.AES_GCM);
-            if(encryptedCache == null) {
-                encryptedCache = cache.toString();
-                cryptHandler.updateMigrationFailureCount(false);
+
+            String saveString = null;
+            if (EncryptionLevel.fromInt(config.getEncryptionLevel()) != EncryptionLevel.NONE) {
+                saveString = cryptHandler.encrypt(cache.toString(), key, EncryptionAlgorithm.AES_GCM);
+                if (saveString == null) {
+                    cryptHandler.updateMigrationFailureCount(false);
+                }
             }
-            setCachedGUIDsAndLength(encryptedCache, cache.length());
+            if (saveString == null) {
+                saveString = cache.toString();
+            }
+            setCachedGUIDsAndLength(saveString, cache.length());
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error caching guid: " + t);
         }
@@ -127,7 +134,7 @@ public class LoginInfoProvider {
      */
     public JSONObject getDecryptedCachedGUIDs() {
         String json = getCachedGUIDStringFromPrefs();
-        if(json != null) {
+        if (json != null) {
             json = cryptHandler.decrypt(json, KEY_ENCRYPTION_CGK, EncryptionAlgorithm.AES_GCM);
         }
         return CTJsonConverter.toJsonObject(json, config.getLogger(), config.getAccountId());
@@ -143,20 +150,14 @@ public class LoginInfoProvider {
         if (cachedGUIDs == null) {
             return;
         }
-        storeCachedGuidsLength(cgkLength);
-        if(cgkLength == 0) {
+        StorageHelper.putInt(context, config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY, cgkLength);
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Storing size of cachedGUIDs: " + cgkLength);
+        if (cgkLength == 0) {
             removeCachedGuidFromSharedPrefs();
             return;
         }
         StorageHelper.putString(context, config.getAccountId(), Constants.CACHED_GUIDS_KEY, cachedGUIDs);
-        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                "setCachedGUIDs:[" + cachedGUIDs + "]");
-    }
-
-    private void storeCachedGuidsLength(int length) {
-        StorageHelper.putInt(context, config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY, length);
-        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
-                "Storing size of cachedGUIDs: " + length);
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "setCachedGUIDs:[" + cachedGUIDs + "]");
     }
 
     private int getCachedGuidsLength() {

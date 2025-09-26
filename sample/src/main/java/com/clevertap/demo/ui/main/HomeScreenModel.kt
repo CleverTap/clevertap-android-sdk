@@ -12,7 +12,7 @@ object HomeScreenModel {
                 "Fire Inbox events"
             ),
             "USER PROFILE" to listOf(
-                "Push profile", "Update(Replace) Single-Value properties",
+                "Push profile", "Push rich profile data", "Update(Replace) Single-Value properties",
                 "Update(Add) Single-Value properties", "Update(Remove) Single-Value properties",
                 "Update(Replace) Multi-Value property", "Update(Add) Multi-Value property",
                 "Update(Remove) Multi-Value property", "Update(Add) Increment Value",

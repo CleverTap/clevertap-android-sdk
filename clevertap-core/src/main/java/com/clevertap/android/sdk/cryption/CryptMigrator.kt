@@ -81,12 +81,11 @@ internal data class CryptMigrator(
 
         val level = EncryptionLevel.fromInt(configEncryptionLevel)
         val storedLevel = EncryptionLevel.fromInt(storedEncryptionLevel)
-        val isV2Data = level == EncryptionLevel.FULL_DATA || storedLevel == EncryptionLevel.FULL_DATA
 
         val migrationSuccess = handleAllMigrations(
             level = level,
-            firstUpgrade = migrationFailureCount == -1,
-            isFullEncryptionData = isV2Data
+            storedLevel = storedLevel,
+            firstUpgrade = migrationFailureCount == -1
         )
 
         cryptRepository.updateIsSSInAppDataMigrated(migrationSuccess)
@@ -95,8 +94,8 @@ internal data class CryptMigrator(
 
     private fun handleAllMigrations(
         level: EncryptionLevel,
+        storedLevel: EncryptionLevel,
         firstUpgrade: Boolean,
-        isFullEncryptionData: Boolean
     ): Boolean {
         val cgkMigrationSuccess = migrateCachedGuidsKeyPref(
             level = level,
@@ -105,15 +104,16 @@ internal data class CryptMigrator(
         val dbMigrationSuccess = migrateDBProfile(level = level)
         val inAppMigrationSuccess = migrateInAppData(level = level)
 
-        if (isFullEncryptionData) {
-            migrateVariablesData(level = level)
-            migrateInboxData()
-        }
+        migrateVariablesData(level = level, storedLevel = storedLevel)
+        migrateInboxData(level = level, storedLevel = storedLevel)
 
         return cgkMigrationSuccess && dbMigrationSuccess && inAppMigrationSuccess
     }
 
-    private fun migrateVariablesData(level: EncryptionLevel) : Boolean {
+    private fun migrateVariablesData(
+        level: EncryptionLevel,
+        storedLevel: EncryptionLevel
+    ) : Boolean {
         val variablesData = variablesRepo.loadDataFromCache()
         if (variablesData != null) {
             // Automatically internally saved to correct level and state
@@ -121,10 +121,13 @@ internal data class CryptMigrator(
         } else {
             logger.verbose("Skipping variable migration as there is no data")
         }
-        return false
+        return true
     }
 
-    private fun migrateInboxData() : Boolean {
+    private fun migrateInboxData(
+        level: EncryptionLevel,
+        storedLevel: EncryptionLevel
+    ) : Boolean {
         for (id in dataMigrationRepository.allDeviceIds()) {
             val messages = dbAdapter.getMessages(id)
             // Save function will automatically save it in encrypted form.

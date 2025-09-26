@@ -12,6 +12,7 @@ import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm;
+import com.clevertap.android.sdk.cryption.EncryptionLevel;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -571,23 +572,29 @@ public class LocalDataStore {
                     HashMap<String, Object> profile = new HashMap<>(PROFILE_FIELDS_IN_THIS_SESSION);
                     boolean passFlag = true;
                     // Encrypts only the pii keys before storing to DB
+
+                    boolean isMediumEncryption = EncryptionLevel.fromInt(config.getEncryptionLevel()) == EncryptionLevel.MEDIUM;
                     for (String piiKey : piiDBKeys) {
                         if (profile.get(piiKey) != null) {
                             Object value = profile.get(piiKey);
                             if (value instanceof String) {
-                                String encrypted = cryptHandler.encrypt((String) value, piiKey, EncryptionAlgorithm.AES_GCM);
-                                if (encrypted == null) {
+
+                                if (isMediumEncryption) {
+                                    value = cryptHandler.encrypt((String) value, piiKey, EncryptionAlgorithm.AES_GCM);
+                                }
+                                if (value == null) {
                                     passFlag = false;
                                     continue;
                                 }
-                                profile.put(piiKey, encrypted);
+                                profile.put(piiKey, value);
                             }
                         }
                     }
                     JSONObject jsonObjectEncrypted = new JSONObject(profile);
 
-                    if (!passFlag)
+                    if (!passFlag) {
                         cryptHandler.updateMigrationFailureCount(false);
+                    }
 
                     DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                     long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);

@@ -29,7 +29,6 @@ internal class CryptHandler constructor(
      * Encrypts the given plain text using a specific key and the AES_GCM algorithm by default.
      *
      * @param plainText - The text to encrypt.
-     * @param key - The key used for encryption.
      * @return The encrypted text, or the original plain text if encryption is not required.
      */
     @JvmOverloads
@@ -45,28 +44,13 @@ internal class CryptHandler constructor(
 
         // Use AES_GCM algorithm by default.
         val crypt = cryptFactory.getCryptInstance(algorithm)
-        when (encryptionLevel) {
-            EncryptionLevel.FULL_DATA -> {
-                return crypt.encryptInternal(plainText)
-            }
-            EncryptionLevel.MEDIUM -> {
-                // Encrypt only if the key is valid
-                if (key in Constants.MEDIUM_CRYPT_KEYS) {
-                    return crypt.encryptInternal(plainText)
-                }
-            }
-            else -> {
-                return plainText
-            }
-        }
-        return plainText
+        return crypt.encryptInternal(plainText)
     }
 
     /**
      * Decrypts the given cipher text using the specified algorithm.
      *
      * @param cipherText - The text to decrypt.
-     * @param key - The key used for decryption.
      * @param algorithm - The encryption algorithm to use (default is AES_GCM).
      * @return The decrypted text, or the original cipher text if decryption is not required.
      */
@@ -79,24 +63,7 @@ internal class CryptHandler constructor(
         if (!isTextEncrypted(cipherText)) {
             return cipherText
         }
-
-        val crypt = cryptFactory.getCryptInstance(algorithm)
-        when (encryptionLevel) {
-            EncryptionLevel.FULL_DATA -> {
-                // agnostic of keys
-                return crypt.decryptInternal(cipherText)
-            }
-            EncryptionLevel.MEDIUM -> {
-                // Decrypt only if the key is valid.
-                if (key in Constants.MEDIUM_CRYPT_KEYS) {
-                    return crypt.decryptInternal(cipherText)
-                }
-            }
-            else -> {
-                return crypt.decryptInternal(cipherText)
-            }
-        }
-        return cipherText
+        return cryptFactory.getCryptInstance(algorithm).decryptInternal(cipherText)
     }
 
     /**

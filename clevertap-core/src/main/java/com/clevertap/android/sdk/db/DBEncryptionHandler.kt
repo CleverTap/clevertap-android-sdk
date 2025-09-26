@@ -3,11 +3,13 @@ package com.clevertap.android.sdk.db
 import com.clevertap.android.sdk.BuildConfig
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.cryption.EncryptionLevel
 import kotlin.system.measureTimeMillis
 
 internal class DBEncryptionHandler(
     private val crypt: CryptHandler,
-    private val logger: ILogger
+    private val logger: ILogger,
+    private val encryptionLevel: EncryptionLevel = EncryptionLevel.NONE
 ) {
 
     companion object {
@@ -16,9 +18,13 @@ internal class DBEncryptionHandler(
     }
 
     // todo graceful handling for nulls?
-    fun unwrapDbData(data: String) : String? {
+    fun unwrapDbData(data: String?) : String? {
         return measureTimeInMillisAndLog(TAG, "unwrapDbData") {
-            crypt.decrypt(data, DEFAULT_KEY)
+            if (data == null) {
+                data
+            } else {
+                crypt.decrypt(data, DEFAULT_KEY)
+            }
         }
     }
 
@@ -27,8 +33,11 @@ internal class DBEncryptionHandler(
      */
     fun wrapDbData(data: String) : String {
         return measureTimeInMillisAndLog(TAG, "wrapDbData") {
-            crypt.encrypt(data, DEFAULT_KEY)
-                ?: data.also { logger.verbose(TAG, "Failed to encrypt data, so saving plain text: $data") }
+            if (encryptionLevel == EncryptionLevel.FULL_DATA) {
+                crypt.encrypt(data, DEFAULT_KEY) ?: data
+            } else {
+                data
+            }
         }
     }
 
