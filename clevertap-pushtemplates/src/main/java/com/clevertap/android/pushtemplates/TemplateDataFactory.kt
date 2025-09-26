@@ -347,8 +347,17 @@ internal object TemplateDataFactory {
                     defaultMediaData.bigImage.altText
                 )
             ),
+
+            // Priority for picking url:
+            // 1. Use gifCollapsed if available
+            // 2. If gifCollapsed is null but bigImageCollapsed exists, force url = null
+            // 3. If both are null, fallback to defaultMediaData.gif.url
             gif = GifData(
-                url = gifCollapsed ?: defaultMediaData.gif.url,
+                url = when {
+                    gifCollapsed != null -> gifCollapsed
+                    bigImageCollapsed != null -> null
+                    else -> defaultMediaData.gif.url
+                },
                 numberOfFrames = extras.getString(PT_GIF_FRAMES_COLLAPSED)?.toIntOrNull()
                     ?: defaultMediaData.gif.numberOfFrames
             ),

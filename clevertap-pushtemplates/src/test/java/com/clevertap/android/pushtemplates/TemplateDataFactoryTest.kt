@@ -658,6 +658,33 @@ class TemplateDataFactoryTest {
     }
 
     @Test
+    fun `createCollapsedMediaData should use default values when bigImageCollapsed not null`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns "big_image.jpg"
+        every { mockBundle.getString(PT_GIF_COLLAPSED) } returns null
+        every { mockBundle.getString(PT_GIF_FRAMES_COLLAPSED) } returns null
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, any()) } returns defaultAltText
+        every { mockBundle.getString(PT_SCALE_TYPE_COLLAPSED) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ZERO_BEZEL,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertTrue(result is ZeroBezelTemplateData)
+        val zeroBezelData = result as ZeroBezelTemplateData
+
+        // Should use default media data values
+        assertNull(zeroBezelData.collapsedMediaData.gif.url)
+    }
+
+    @Test
     fun `createTerminalTextData should use terminal values when provided`() {
         // Given
         setupBasicMockBundle()
