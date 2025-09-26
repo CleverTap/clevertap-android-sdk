@@ -49,12 +49,15 @@ class HmsSdkHandler implements IHmsSdkHandler {
                 options = instance.getOptions();
                 return;
             }
-
-            // Fallback to building new options
-            options = new AGConnectOptionsBuilder().build(context);
-
         } catch (Exception e) {
             mConfig.log(LOG_TAG, HMS_LOG_TAG + "Failed to initialize AGConnect options: " + e.getMessage());
+        }
+
+        // Fallback to building new options
+        try {
+            options = new AGConnectOptionsBuilder().build(context);
+        } catch (Exception e) {
+            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Failed to build new AGConnect options: " + e.getMessage());
         }
     }
 
