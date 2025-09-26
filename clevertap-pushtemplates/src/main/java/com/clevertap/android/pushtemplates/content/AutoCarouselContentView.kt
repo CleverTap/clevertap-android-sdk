@@ -29,7 +29,7 @@ internal class AutoCarouselContentView(
         setCustomBackgroundColour(baseContent.colorData.backgroundColor, R.id.content_view_big)
         setCustomTextColour(baseContent.colorData.titleColor, R.id.title)
         setCustomTextColour(baseContent.colorData.messageColor, R.id.msg)
-        setCustomContentViewSmallIcon(baseContent.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
         setCustomContentViewLargeIcon(baseContent.iconData.largeIcon)
         setCustomContentViewViewFlipperInterval(data.flipInterval)
         setViewFlipper()

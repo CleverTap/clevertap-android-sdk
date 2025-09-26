@@ -35,7 +35,7 @@ internal class RatingContentView(
         setCustomTextColour(baseContent.colorData.titleColor, R.id.title)
         setCustomTextColour(baseContent.colorData.messageColor, R.id.msg)
         setCustomContentViewMessageSummary(baseContent.textData.messageSummary)
-        setCustomContentViewSmallIcon(baseContent.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
         setCustomContentViewMedia(
             R.layout.image_view_dynamic_linear,
             data.mediaData.gif.url,

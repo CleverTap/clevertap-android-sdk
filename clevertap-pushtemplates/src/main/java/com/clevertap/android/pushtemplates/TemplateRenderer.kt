@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.*
@@ -33,15 +34,17 @@ import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
-class TemplateRenderer(context: Context, extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
+class TemplateRenderer(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
     internal val templateMediaManager: TemplateMediaManager by lazy {
         TemplateMediaManager(templateRepository = TemplateRepository(context, config))
     }
     internal var smallIcon = 0
-    internal var pt_small_icon_clr: String? = null
+    internal var smallIconBitmap : Bitmap? = null
+    internal var smallIconColour : String? = null
 
     internal var actionButtons = emptyList<ActionButton>()
     internal var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
@@ -56,17 +59,25 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
     }
 
     init {
-        pt_small_icon_clr =
-            Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR)
-                ?: extras.getString(WZRK_COLOR)
+        // Parse JSON early to ensure small_icon_colour, title and message can be accessed
+        val pt_json = extras.getString(PT_JSON)
+        var newExtras: Bundle? = null
+        try {
+            if (pt_json.isNotNullAndEmpty()) {
+                newExtras = Utils.fromJson(JSONObject(pt_json))
+            }
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+        if (newExtras != null) extras.putAll(newExtras)
     }
 
     override fun getMessage(extras: Bundle): String? {
-        return extras.getString(PT_MSG).takeUnless { it.isNullOrEmpty() } ?: extras.getString(NOTIF_MSG)
+        return this.extras.getString(PT_MSG).takeUnless { it.isNullOrEmpty() } ?: extras.getString(NOTIF_MSG)
     }
 
     override fun getTitle(extras: Bundle, context: Context): String? {
-        return extras.getString(PT_TITLE).takeUnless { it.isNullOrEmpty() } ?: extras.getString(NOTIF_TITLE)
+        return this.extras.getString(PT_TITLE).takeUnless { it.isNullOrEmpty() } ?: extras.getString(NOTIF_TITLE)
     }
 
 
@@ -189,8 +200,10 @@ class TemplateRenderer(context: Context, extras: Bundle, internal val config: Cl
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {
         this.smallIcon = smallIcon
+        this.smallIconColour = Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR) ?: extras.getString(WZRK_COLOR)
+
         try {
-            Utils.setBitMapColour(context, smallIcon, pt_small_icon_clr, PT_META_CLR_DEFAULTS)
+            this.smallIconBitmap = Utils.setBitMapColour(context, smallIcon, this.smallIconColour, PT_META_CLR_DEFAULTS)
         } catch (_: NullPointerException) {
             PTLog.debug("NPE while setting small icon color")
         }

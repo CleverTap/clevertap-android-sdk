@@ -59,7 +59,7 @@ internal open class ProductDisplayLinearBigContentView(
         setImageList(data, data.scaleType, extras)
         remoteView.setDisplayedChild(R.id.carousel_image, currentPosition)
 
-        setCustomContentViewSmallIcon(data.baseContent.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
 
         remoteView.setOnClickPendingIntent(
             R.id.small_image1, PendingIntentFactory.getPendingIntent(

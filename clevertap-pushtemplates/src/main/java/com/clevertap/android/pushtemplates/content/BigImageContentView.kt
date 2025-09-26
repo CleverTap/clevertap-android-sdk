@@ -21,7 +21,7 @@ internal open class BigImageContentView(
         setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
         setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
         setCustomContentViewMessageSummary(data.baseContent.textData.messageSummary)
-        setCustomContentViewSmallIcon(data.baseContent.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
         setCustomContentViewMedia(
             R.layout.image_view_dynamic_linear,
             data.mediaData.gif.url,

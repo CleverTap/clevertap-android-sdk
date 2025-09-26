@@ -202,7 +202,6 @@ public class PTConstants {
             PT_MSG_COLOR,
             PT_BG,
             PT_META_CLR,
-            PT_SMALL_ICON_COLOUR,
             PT_CHRONO_TITLE_COLOUR,
             PT_PRODUCT_DISPLAY_ACTION_COLOUR,
             PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR);

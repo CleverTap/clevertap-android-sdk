@@ -41,7 +41,7 @@ internal open class TimerSmallContentView(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             remoteView.setChronometerCountDown(R.id.chronometer, true)
         }
-        setCustomContentViewSmallIcon(data.baseContent.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
     }
 
     private fun setCustomContentViewChronometerTitleColour(

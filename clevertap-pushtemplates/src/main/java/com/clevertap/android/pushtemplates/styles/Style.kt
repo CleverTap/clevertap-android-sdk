@@ -49,7 +49,7 @@ internal abstract class Style(private val data: BaseContent, private val rendere
             .setContentIntent(pIntent)
             .setVibrate(longArrayOf(0L))
             .setWhen(System.currentTimeMillis())
-            .setColor(Color.parseColor(data.colorData.smallIconColor?: PTConstants.PT_META_CLR_DEFAULTS))
+            .setColor(Color.parseColor(renderer.smallIconColour?: PTConstants.PT_META_CLR_DEFAULTS))
             .setAutoCancel(true)
             .setStyle(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

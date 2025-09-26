@@ -7,7 +7,6 @@ import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import io.mockk.*
 import org.json.JSONArray
-import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -101,45 +100,6 @@ class TemplateDataFactoryTest {
         assertNull(result)
     }
 
-    @Test
-    fun `createTemplateData should parse pt_json when provided`() {
-        // Given
-        val ptJsonObject = JSONObject().apply {
-            put("test_key", "test_value")
-        }
-        every { mockBundle.getString(PT_JSON) } returns ptJsonObject.toString()
-        
-        // When
-        TemplateDataFactory.createTemplateData(
-            templateType = TemplateType.BASIC,
-            extras = mockBundle,
-            isDarkMode = false,
-            defaultAltText = defaultAltText,
-            notificationIdsProvider = notificationIdsProvider
-        )
-
-        // Then
-        verify { Utils.fromJson(any()) }
-    }
-
-    @Test
-    fun `createTemplateData should handle invalid pt_json gracefully`() {
-        // Given
-        every { mockBundle.getString(PT_JSON) } returns "invalid_json"
-        
-        // When
-        val result = TemplateDataFactory.createTemplateData(
-            templateType = TemplateType.BASIC,
-            extras = mockBundle,
-            isDarkMode = false,
-            defaultAltText = defaultAltText,
-            notificationIdsProvider = notificationIdsProvider
-        )
-
-        // Then
-        assertNotNull(result)
-        assertTrue(result is BasicTemplateData)
-    }
 
     @Test
     fun `createTemplateData should create BasicTemplateData for BASIC template type`() {
@@ -563,7 +523,6 @@ class TemplateDataFactoryTest {
         assertEquals(fiveIconsData.title, baseContent.textData.title)
         assertEquals(fiveIconsData.subtitle, baseContent.textData.subtitle)
         assertEquals(fiveIconsData.backgroundColor, baseContent.colorData.backgroundColor)
-        assertEquals(fiveIconsData.smallIconColor, baseContent.colorData.smallIconColor)
         assertEquals(fiveIconsData.deepLinkList, baseContent.deepLinkList)
     }
 
@@ -829,7 +788,6 @@ class TemplateDataFactoryTest {
             imageList = arrayListOf(),
             deepLinkList = arrayListOf("dl1", "dl2"),
             backgroundColor = SAMPLE_COLOR,
-            smallIconColor = SAMPLE_COLOR,
             title = SAMPLE_TITLE,
             subtitle = SAMPLE_SUBTITLE,
             notificationBehavior = NotificationBehavior()
@@ -1480,7 +1438,6 @@ class TemplateDataFactoryTest {
         assertEquals("#00FF00", colorData.messageColor)
         assertEquals("#0000FF", colorData.backgroundColor)
         assertEquals("#FFFF00", colorData.metaColor)
-        assertEquals("#FF00FF", colorData.smallIconColor)
     }
 
     @Test
@@ -1511,7 +1468,6 @@ class TemplateDataFactoryTest {
         assertNull(colorData.messageColor)
         assertNull(colorData.backgroundColor)
         assertEquals(defaultColor, colorData.metaColor) // fallback to default
-        assertEquals(defaultColor, colorData.smallIconColor) // fallback to default
     }
 
     @Test

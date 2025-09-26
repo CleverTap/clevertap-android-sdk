@@ -434,11 +434,10 @@ class TimerTemplateHandlerTest {
             messageColor = "#00FF00",
             backgroundColor = "#0000FF",
             metaColor = "#FFFF00",
-            smallIconColor = "#FF00FF"
         )
 
         val iconData = IconData(
-            largeIcon = "large_icon_url", smallIconBitmap = null
+            largeIcon = "large_icon_url"
         )
 
         val baseContent = BaseContent(

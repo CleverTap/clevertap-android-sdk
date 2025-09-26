@@ -19,6 +19,6 @@ internal open class ZeroBezelSmallContentView(
         setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
         setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_small)
         setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
-        setCustomContentViewSmallIcon(data.baseContent.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
     }
 }

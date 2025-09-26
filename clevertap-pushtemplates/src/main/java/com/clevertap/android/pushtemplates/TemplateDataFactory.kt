@@ -23,7 +23,6 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_GIF_FRAMES_COLLAPSED
 import com.clevertap.android.pushtemplates.PTConstants.PT_INPUT_AUTO_OPEN
 import com.clevertap.android.pushtemplates.PTConstants.PT_INPUT_FEEDBACK
 import com.clevertap.android.pushtemplates.PTConstants.PT_INPUT_LABEL
-import com.clevertap.android.pushtemplates.PTConstants.PT_JSON
 import com.clevertap.android.pushtemplates.PTConstants.PT_MANUAL_CAROUSEL_TYPE
 import com.clevertap.android.pushtemplates.PTConstants.PT_META_CLR
 import com.clevertap.android.pushtemplates.PTConstants.PT_MSG
@@ -39,7 +38,6 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_PRODUCT_DISPLAY_LINEAR
 import com.clevertap.android.pushtemplates.PTConstants.PT_RENDER_TERMINAL
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE_COLLAPSED
-import com.clevertap.android.pushtemplates.PTConstants.PT_SMALL_ICON_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_SMALL_VIEW
 import com.clevertap.android.pushtemplates.PTConstants.PT_STICKY
 import com.clevertap.android.pushtemplates.PTConstants.PT_SUBTITLE
@@ -50,8 +48,6 @@ import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
 import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
 
 /**
  * Factory class for creating TemplateData objects based on template type.
@@ -76,17 +72,6 @@ internal object TemplateDataFactory {
         defaultAltText: String,
         notificationIdsProvider: () -> ArrayList<Int>
     ): TemplateData? {
-        val pt_json = extras.getString(PT_JSON)
-        var newExtras: Bundle? = null
-        try {
-            if (pt_json.isNotNullAndEmpty()) {
-                newExtras = Utils.fromJson(JSONObject(pt_json))
-            }
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
-        if (newExtras != null) extras.putAll(newExtras)
-
         // Handle dark mode colors (same logic as TemplateRenderer)
         val darkModeAdaptiveColors = Utils.createColorMap(extras, isDarkMode)
 
@@ -207,7 +192,6 @@ internal object TemplateDataFactory {
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
             deepLinkList = Utils.getDeepLinkListFromExtras(extras),
             backgroundColor = colorMap[PT_BG],
-            smallIconColor = colorMap[PT_SMALL_ICON_COLOUR],
             title = getStringWithFallback(extras, PT_TITLE, Constants.NOTIF_TITLE),
             subtitle = getStringWithFallback(extras, PT_SUBTITLE, Constants.WZRK_SUBTITLE),
             notificationBehavior = createNotificationBehaviorData(extras)
@@ -331,7 +315,6 @@ internal object TemplateDataFactory {
             messageColor = colorMap[PT_MSG_COLOR],
             backgroundColor = colorMap[PT_BG],
             metaColor = colorMap[PT_META_CLR] ?: defaultColor,
-            smallIconColor = colorMap[PT_SMALL_ICON_COLOUR] ?: defaultColor,
         )
     }
 
@@ -482,7 +465,6 @@ internal object TemplateDataFactory {
             textData = BaseTextData(title = this.title, subtitle = this.subtitle),
             colorData = BaseColorData(
                 backgroundColor = this.backgroundColor,
-                smallIconColor = this.smallIconColor
             ),
             iconData = IconData(),
             deepLinkList = this.deepLinkList,

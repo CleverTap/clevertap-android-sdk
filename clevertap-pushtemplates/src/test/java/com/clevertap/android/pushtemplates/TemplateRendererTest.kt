@@ -166,9 +166,9 @@ class TemplateRendererTest {
         fallbackBundle.putString(NOTIF_MSG, "Fallback Message")
 
         // Act
-        val message = templateRenderer.getMessage(fallbackBundle)
+        val templateRendererLocal = TemplateRenderer(context, fallbackBundle, mockConfig)
 
-        // Assert
+        val message = templateRendererLocal.getMessage(fallbackBundle)
         assertEquals("Fallback Message", message)
     }
 
@@ -179,10 +179,11 @@ class TemplateRendererTest {
         fallbackBundle.putString(NOTIF_TITLE, "Fallback Title")
 
         // Act
-        val message = templateRenderer.getTitle(fallbackBundle, context)
+        val templateRendererLocal = TemplateRenderer(context, fallbackBundle, mockConfig)
 
         // Assert
-        assertEquals("Fallback Title", message)
+        val title = templateRendererLocal.getTitle(fallbackBundle, context)
+        assertEquals("Fallback Title", title)
     }
 
 
@@ -192,9 +193,10 @@ class TemplateRendererTest {
         fallbackBundle.putString(NOTIF_MSG, "Fallback Message")
 
         // Act
-        val message = templateRenderer.getMessage(fallbackBundle)
+        val templateRendererLocal = TemplateRenderer(context, fallbackBundle, mockConfig)
 
         // Assert
+        val message = templateRendererLocal.getMessage(fallbackBundle)
         assertEquals("Fallback Message", message)
     }
 
@@ -204,10 +206,11 @@ class TemplateRendererTest {
         fallbackBundle.putString(NOTIF_TITLE, "Fallback Title")
 
         // Act
-        val message = templateRenderer.getTitle(fallbackBundle, context)
+        val templateRendererLocal = TemplateRenderer(context, fallbackBundle, mockConfig)
 
         // Assert
-        assertEquals("Fallback Title", message)
+        val title = templateRendererLocal.getTitle(fallbackBundle, context)
+        assertEquals("Fallback Title", title)
     }
 
     @Test

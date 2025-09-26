@@ -1,6 +1,5 @@
 package com.clevertap.android.pushtemplates
 
-import android.graphics.Bitmap
 import org.json.JSONArray
 import java.util.ArrayList
 
@@ -40,7 +39,6 @@ internal data class MediaData(
 
 internal data class IconData(
     val largeIcon: String? = null,
-    val smallIconBitmap: Bitmap? = null
 )
 
 internal data class BaseColorData(
@@ -48,7 +46,6 @@ internal data class BaseColorData(
     val messageColor: String? = null,
     val backgroundColor: String? = null,
     val metaColor: String? = null,
-    val smallIconColor: String? = null,
 )
 
 internal data class BaseContent(
@@ -83,7 +80,6 @@ internal data class FiveIconsTemplateData(
     val imageList: ArrayList<ImageData>,
     val deepLinkList: ArrayList<String>,
     val backgroundColor: String? = null,
-    val smallIconColor: String? = null,
     val title: String? = null,
     val subtitle: String? = null,
     val notificationBehavior: NotificationBehavior

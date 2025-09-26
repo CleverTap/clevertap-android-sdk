@@ -28,6 +28,6 @@ internal class ZeroBezelBigContentView(
             data.mediaData.bigImage.altText,
             data.mediaData.gif.numberOfFrames
         )
-        setCustomContentViewSmallIcon(data.baseContent.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
     }
 }

@@ -19,7 +19,7 @@ internal open class SmallContentView(
         setCustomBackgroundColour(data.colorData.backgroundColor, R.id.content_view_small)
         setCustomTextColour(data.colorData.titleColor, R.id.title)
         setCustomTextColour(data.colorData.messageColor, R.id.msg)
-        setCustomContentViewSmallIcon(data.iconData.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
         setCustomContentViewLargeIcon(data.iconData.largeIcon)
     }
 }
