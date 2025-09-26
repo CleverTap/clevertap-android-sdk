@@ -500,7 +500,7 @@ public class LocalDataStore {
                                 } else {
                                     Object decrypted = value;
                                     if (value instanceof String) {
-                                        decrypted = cryptHandler.decrypt((String) value, key, EncryptionAlgorithm.AES_GCM);
+                                        decrypted = cryptHandler.decryptSafe((String) value);
                                         if (decrypted == null)
                                             decrypted = value;
                                     }
@@ -580,7 +580,7 @@ public class LocalDataStore {
                             if (value instanceof String) {
 
                                 if (isMediumEncryption) {
-                                    value = cryptHandler.encrypt((String) value, piiKey, EncryptionAlgorithm.AES_GCM);
+                                    value = cryptHandler.encryptSafe((String) value, EncryptionAlgorithm.AES_GCM);
                                 }
                                 if (value == null) {
                                     passFlag = false;

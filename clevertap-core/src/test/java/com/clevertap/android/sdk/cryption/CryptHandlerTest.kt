@@ -33,7 +33,6 @@ class CryptHandlerTest {
     fun setUp() {
         MockKAnnotations.init(this)
         cryptHandler = CryptHandler(
-            encryptionLevel = EncryptionLevel.MEDIUM,
             repository = repository,
             cryptFactory = cryptFactory
         )
@@ -53,7 +52,7 @@ class CryptHandlerTest {
 
         every { crypt.encryptInternal(plainText) } returns encryptedText
 
-        val result = cryptHandler.encrypt(plainText, key)
+        val result = cryptHandler.encryptSafe(plainText)
 
         assertEquals(encryptedText, result)
         verify { crypt.encryptInternal(plainText) } // Verify encryptInternal call
@@ -65,7 +64,7 @@ class CryptHandlerTest {
         val plainText = "testPlainText"
         val key = "invalidKey"
 
-        val result = cryptHandler.encrypt(plainText, key)
+        val result = cryptHandler.encryptSafe(plainText)
 
         assertEquals(plainText, result)
         verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
@@ -76,12 +75,11 @@ class CryptHandlerTest {
         val plainText = "testPlainText"
         val key = Constants.KEY_ENCRYPTION_EMAIL
         val cryptHandler = CryptHandler(
-            encryptionLevel = EncryptionLevel.NONE,
             repository = repository,
             cryptFactory = cryptFactory
         )
 
-        val result = cryptHandler.encrypt(plainText, key)
+        val result = cryptHandler.encryptSafe(plainText)
 
         assertEquals(plainText, result)
         verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
@@ -96,7 +94,7 @@ class CryptHandlerTest {
 
         every { crypt.decryptInternal(cipherText) } returns decryptedText
 
-        val result = cryptHandler.decrypt(cipherText, key)
+        val result = cryptHandler.decryptSafe(cipherText)
 
         assertEquals(decryptedText, result)
         verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
@@ -108,7 +106,7 @@ class CryptHandlerTest {
         val cipherText = "encryptedText"
         val key = "invalidKey"
 
-        val result = cryptHandler.decrypt(cipherText, key)
+        val result = cryptHandler.decryptSafe(cipherText)
 
         assertEquals(cipherText, result)
     }
@@ -119,14 +117,13 @@ class CryptHandlerTest {
         val key = Constants.KEY_ENCRYPTION_EMAIL
         val decryptedText = "decryptedText"
         val cryptHandler = CryptHandler(
-            encryptionLevel = EncryptionLevel.NONE,
             repository = repository,
             cryptFactory = cryptFactory
         )
 
         every { crypt.decryptInternal(cipherText) } returns decryptedText
 
-        val result = cryptHandler.decrypt(cipherText, key)
+        val result = cryptHandler.decryptSafe(cipherText)
 
         assertEquals(decryptedText, result)
 
@@ -191,7 +188,7 @@ class CryptHandlerTest {
         val encryptedText = "${Constants.AES_PREFIX}testEncryptedText${Constants.AES_SUFFIX}"
         val key = Constants.KEY_ENCRYPTION_EMAIL
 
-        val result = cryptHandler.encrypt(encryptedText, key)
+        val result = cryptHandler.encryptSafe(encryptedText)
 
         assertEquals(encryptedText, result) // Should return the same encrypted text
     }
@@ -201,7 +198,7 @@ class CryptHandlerTest {
         val plainText = "testPlainText"
         val key = Constants.KEY_ENCRYPTION_EMAIL
 
-        val result = cryptHandler.decrypt(plainText, key)
+        val result = cryptHandler.decryptSafe(plainText)
 
         assertEquals(plainText, result) // Should return the same plain text
     }

@@ -23,7 +23,7 @@ internal class DBEncryptionHandler(
             if (data == null) {
                 data
             } else {
-                crypt.decrypt(data, DEFAULT_KEY)
+                crypt.decryptSafe(data)
             }
         }
     }
@@ -34,7 +34,7 @@ internal class DBEncryptionHandler(
     fun wrapDbData(data: String) : String {
         return measureTimeInMillisAndLog(TAG, "wrapDbData") {
             if (encryptionLevel == EncryptionLevel.FULL_DATA) {
-                crypt.encrypt(data, DEFAULT_KEY) ?: data
+                crypt.encryptSafe(data) ?: data
             } else {
                 data
             }

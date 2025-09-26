@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.login;
 
-import static com.clevertap.android.sdk.Constants.KEY_ENCRYPTION_CGK;
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -67,7 +66,7 @@ public class LoginInfoProvider {
 
             String saveString = null;
             if (EncryptionLevel.fromInt(config.getEncryptionLevel()) != EncryptionLevel.NONE) {
-                saveString = cryptHandler.encrypt(cache.toString(), key, EncryptionAlgorithm.AES_GCM);
+                saveString = cryptHandler.encryptSafe(cache.toString(), EncryptionAlgorithm.AES_GCM);
                 if (saveString == null) {
                     cryptHandler.updateMigrationFailureCount(false);
                 }
@@ -135,7 +134,7 @@ public class LoginInfoProvider {
     public JSONObject getDecryptedCachedGUIDs() {
         String json = getCachedGUIDStringFromPrefs();
         if (json != null) {
-            json = cryptHandler.decrypt(json, KEY_ENCRYPTION_CGK, EncryptionAlgorithm.AES_GCM);
+            json = cryptHandler.decryptSafe(json);
         }
         return CTJsonConverter.toJsonObject(json, config.getLogger(), config.getAccountId());
     }

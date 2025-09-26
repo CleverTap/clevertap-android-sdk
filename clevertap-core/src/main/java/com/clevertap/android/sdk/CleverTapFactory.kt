@@ -120,7 +120,6 @@ internal object CleverTapFactory {
             ctKeyGenerator = ctKeyGenerator
         )
         val cryptHandler = CryptHandler(
-            encryptionLevel = fromInt(value = config.encryptionLevel),
             repository = repository,
             cryptFactory = cryptFactory
         )

@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.json.JSONObject
@@ -25,6 +26,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         super.setUp()
         coreMetaData = CoreMetaData()
         defConfig = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
+        defConfig.setEncryptionLevel(EncryptionLevel.MEDIUM)
         deviceInfo = mockk(relaxed = true)
         cryptHandler = mockk(relaxed = true)
         loginInfoProvider = spyk(
@@ -43,7 +45,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = "abc@gmail.com"
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
+        every { cryptHandler.encryptSafe(any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -58,7 +60,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = "abc@gmail.com"
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
+        every { cryptHandler.encryptSafe(any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -73,7 +75,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = ""
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
+        every { cryptHandler.encryptSafe(any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -88,7 +90,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = "abc@gmail.com"
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
+        every { cryptHandler.encryptSafe(any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -108,7 +110,7 @@ class LoginInfoProviderTest : BaseTestCase() {
             put(cryptedKey, guid)
         }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns null
+        every { cryptHandler.encryptSafe(any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns null
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -128,7 +130,7 @@ class LoginInfoProviderTest : BaseTestCase() {
             put(cryptedKey, guid)
         }
 
-        every { cryptHandler.encrypt(identifier, key) } returns "dummy_encrypted"
+        every { cryptHandler.encryptSafe(identifier) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, identifier)
@@ -144,7 +146,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val cryptedKey = "${key}_$identifier"
         val initialGuids = JSONObject().apply { put(cryptedKey, guid) }
 
-        every { cryptHandler.encrypt(identifier, key) } returns "dummy_encrypted"
+        every { cryptHandler.encryptSafe(identifier) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, "not_cached@gmail.com")

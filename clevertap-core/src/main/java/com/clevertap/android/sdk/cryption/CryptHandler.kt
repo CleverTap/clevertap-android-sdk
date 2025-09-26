@@ -1,18 +1,14 @@
 package com.clevertap.android.sdk.cryption
 
-import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.AES_GCM_SUFFIX
 import com.clevertap.android.sdk.Constants.AES_GCM_PREFIX
 import com.clevertap.android.sdk.Constants.AES_SUFFIX
 import com.clevertap.android.sdk.Constants.AES_PREFIX
 
 /**
- * Handles encryption and decryption for various encryption algorithms and levels.
- *
- * @param encryptionLevel - The encryption level to use.
+ * Handles encryption and decryption for various encryption algorithms
  */
 internal class CryptHandler constructor(
-    private val encryptionLevel: EncryptionLevel,
     private val repository: CryptRepository,
     private val cryptFactory: CryptFactory
 ) {
@@ -32,9 +28,8 @@ internal class CryptHandler constructor(
      * @return The encrypted text, or the original plain text if encryption is not required.
      */
     @JvmOverloads
-    fun encrypt(
+    fun encryptSafe(
         plainText: String,
-        key: String,
         algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
     ): String? {
 
@@ -55,9 +50,8 @@ internal class CryptHandler constructor(
      * @return The decrypted text, or the original cipher text if decryption is not required.
      */
     @JvmOverloads
-    fun decrypt(
+    fun decryptSafe(
         cipherText: String,
-        key: String,
         algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
     ): String? {
         if (!isTextEncrypted(cipherText)) {
