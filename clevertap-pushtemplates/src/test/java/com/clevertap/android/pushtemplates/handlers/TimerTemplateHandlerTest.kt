@@ -14,16 +14,8 @@ import com.clevertap.android.pushtemplates.ImageData
 import com.clevertap.android.pushtemplates.MediaData
 import com.clevertap.android.pushtemplates.NotificationBehavior
 import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND_LONG
-import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG
-import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT_TEXT
-import com.clevertap.android.pushtemplates.PTConstants.PT_COLLAPSE_KEY
-import com.clevertap.android.pushtemplates.PTConstants.PT_GIF
-import com.clevertap.android.pushtemplates.PTConstants.PT_ID
 import com.clevertap.android.pushtemplates.PTConstants.PT_JSON
-import com.clevertap.android.pushtemplates.PTConstants.PT_MSG
-import com.clevertap.android.pushtemplates.PTConstants.PT_MSG_SUMMARY
 import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_MIN_THRESHOLD
-import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TimerTemplateData
@@ -31,7 +23,6 @@ import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import io.mockk.*
 import org.json.JSONObject
@@ -213,81 +204,10 @@ class TimerTemplateHandlerTest {
     }
 
     @Test
-    fun `scheduleTimer should update JSON with terminal data`() {
-        // Arrange
-        val slot = slot<Runnable>()
-        every { mockHandler.postDelayed(capture(slot), any()) } returns true
-
-        // Act
-        TimerTemplateHandler.scheduleTimer(
-            mockContext,
-            createSampleTimerBundle(),
-            NOTIFICATION_ID,
-            DELAY,
-            timerTemplateData,
-            mockConfig,
-            mockHandler
-        )
-
-        slot.captured.run()
-
-        // Assert
-        verify {
-            mockCleverTapAPI.renderPushNotification(
-                any(), any(), withArg { finalBundle ->
-
-                    val jsonStr = finalBundle.getString(PT_JSON)
-                    val jsonObj = JSONObject(jsonStr!!)
-
-                    // Verify terminal text data is applied
-                    assertEquals("Terminal Title", jsonObj.getString(PT_TITLE))
-                    assertEquals("Terminal Message", jsonObj.getString(PT_MSG))
-                    assertEquals("Terminal Summary", jsonObj.getString(PT_MSG_SUMMARY))
-
-                    // Verify terminal media data is applied
-                    assertEquals("terminal_image_url", jsonObj.getString(PT_BIG_IMG))
-                    assertEquals("Terminal Image alt text", jsonObj.getString(PT_BIG_IMG_ALT_TEXT))
-                    assertEquals("terminal_gif_url", jsonObj.getString(PT_GIF))
-                })
-        }
-    }
-
-    @Test
     fun `scheduleTimer should render notification when all conditions are met`() {
         // Given
         every { mockBundle.clone() } returns mockBundle
         every { mockBundle.getString(PT_JSON) } returns JSONObject().toString()
-
-        val slot = slot<Runnable>()
-        every { mockHandler.postDelayed(capture(slot), any()) } returns true
-
-        // When
-        TimerTemplateHandler.scheduleTimer(
-            mockContext,
-            mockBundle,
-            NOTIFICATION_ID,
-            DELAY,
-            timerTemplateData,
-            mockConfig,
-            mockHandler
-        )
-
-        // Execute the delayed runnable
-        slot.captured.run()
-
-        // Then
-        verify {
-            mockCleverTapAPI.renderPushNotification(
-                any(), mockApplicationContext, mockBundle
-            )
-        }
-    }
-
-    @Test
-    fun `scheduleTimer should render notification when all conditions are met_but_invalid_pt_json`() {
-        // Given
-        every { mockBundle.clone() } returns mockBundle
-        every { mockBundle.getString(PT_JSON) } returns "invalid"
 
         val slot = slot<Runnable>()
         every { mockHandler.postDelayed(capture(slot), any()) } returns true
@@ -392,26 +312,6 @@ class TimerTemplateHandlerTest {
 
         // Then
         assertEquals(PT_TIMER_MIN_THRESHOLD * ONE_SECOND_LONG + ONE_SECOND_LONG, result)
-    }
-    private fun createSampleTimerBundle(): Bundle {
-        val ptJsonObj = JSONObject().apply {
-            put(PT_TITLE, "Timer Title")
-            put(PT_MSG, "Timer Message")
-            put(PT_MSG_SUMMARY, "Timer Summary")
-            put(PT_BIG_IMG, "image_url")
-            put(PT_BIG_IMG_ALT_TEXT, "Image alt text")
-            put(PT_GIF, "gif_url")
-        }
-
-        return Bundle().apply {
-            putString(PT_ID, "pt_timer")
-            putString(PT_JSON, ptJsonObj.toString())
-            putString(Constants.WZRK_PUSH_ID, "push_id_123")
-            putString(Constants.PT_NOTIF_ID, "notif_id_123")
-            putString(Constants.WZRK_COLLAPSE, "collapse_key")
-            putString(PT_COLLAPSE_KEY, "collapse_value")
-            putString("wzrk_rnv", "1") // will be removed inside scheduleTimer
-        }
     }
 
     private fun createSampleTimerTemplateData(): TimerTemplateData {

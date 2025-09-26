@@ -408,7 +408,6 @@ internal object TemplateDataFactory {
         val terminalBigImage = extras.getString(PT_BIG_IMG_ALT) ?: defaultMediaData.bigImage.url
         val terminalGif = extras.getString(PT_GIF_ALT)
 
-
         return MediaData(
             bigImage = ImageData(
                 url = terminalBigImage,

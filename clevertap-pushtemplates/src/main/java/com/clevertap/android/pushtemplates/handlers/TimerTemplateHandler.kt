@@ -16,10 +16,8 @@ import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
-import org.json.JSONObject
 
 internal object TimerTemplateHandler {
 
@@ -58,33 +56,32 @@ internal object TimerTemplateHandler {
                     ) // set to basic
 
 
-                    /**
-                     *  Update existing payload bundle with new title,msg,img for Basic template
-                     */
-                    val ptJsonStr = basicTemplateBundle.getString(PTConstants.PT_JSON)
-                    val ptJsonObj = try {
-                        ptJsonStr?.let { JSONObject(it) }
-                    } catch (_: Exception) {
-                        Logger.v("Unable to convert JSON to String")
-                        null
-                    } ?: JSONObject()
+                    basicTemplateBundle.putString(PTConstants.PT_TITLE, data.terminalTextData.title)
+                    basicTemplateBundle.putString(
+                        PTConstants.PT_BIG_IMG,
+                        data.terminalMediaData.bigImage.url
+                    )
+                    basicTemplateBundle.putString(
+                        PTConstants.PT_BIG_IMG_ALT_TEXT,
+                        data.terminalMediaData.bigImage.altText
+                    )
+                    basicTemplateBundle.putString(PTConstants.PT_MSG, data.terminalTextData.message)
+                    basicTemplateBundle.putString(
+                        PTConstants.PT_MSG_SUMMARY,
+                        data.terminalTextData.messageSummary
+                    )
+                    basicTemplateBundle.putString(
+                        PTConstants.PT_GIF,
+                        data.terminalMediaData.gif.url
+                    )
 
-                    with(ptJsonObj) {
-                        put(PTConstants.PT_TITLE, data.terminalTextData.title)
-                        put(PTConstants.PT_BIG_IMG, data.terminalMediaData.bigImage.url)
-                        put(
-                            PTConstants.PT_BIG_IMG_ALT_TEXT,
-                            data.terminalMediaData.bigImage.altText
-                        )
-                        put(PTConstants.PT_MSG, data.terminalTextData.message)
-                        put(
-                            PTConstants.PT_MSG_SUMMARY,
-                            data.terminalTextData.messageSummary
-                        )
-                        put(PTConstants.PT_GIF, data.terminalMediaData.gif.url)
-                    }
+                    basicTemplateBundle.putString(
+                        PTConstants.PT_GIF_FRAMES,
+                        data.terminalMediaData.gif.numberOfFrames.toString()
+                    )
 
-                    basicTemplateBundle.putString(PTConstants.PT_JSON, ptJsonObj.toString())
+                    basicTemplateBundle.remove(PTConstants.PT_JSON)
+
                     // force random id generation
                     basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
                     basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
