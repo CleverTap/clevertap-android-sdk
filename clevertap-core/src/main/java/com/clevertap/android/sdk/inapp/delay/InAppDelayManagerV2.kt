@@ -54,7 +54,7 @@ class InAppDelayManagerV2(
             }
         }
 
-        val job = scope.launch(Dispatchers.Default) {
+        val job = scope.launch {
             try {
                 delay(delayInMs)
 
