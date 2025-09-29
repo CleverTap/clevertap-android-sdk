@@ -73,10 +73,10 @@ internal class EvaluationManager(
      * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
      *         This array includes in-app notifications that meet the criteria for display.
      */
-    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
+    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): Pair<JSONArray,JSONArray> {
         val event = listOf(EventAdapter(eventName, eventProperties, userLocation = userLocation))
         evaluateServerSide(event)
-        return evaluateClientSide(event)
+        return Pair(evaluateClientSide(event),evaluateDelayedClientSide(event))
     }
 
     /**
@@ -96,10 +96,10 @@ internal class EvaluationManager(
         details: Map<String, Any>,
         items: List<Map<String, Any>>,
         userLocation: Location?
-    ): JSONArray {
+    ): Pair<JSONArray,JSONArray> {
         val event = listOf(EventAdapter(Constants.CHARGED_EVENT, details, items, userLocation = userLocation))
         evaluateServerSide(event)
-        return evaluateClientSide(event)
+        return  Pair(evaluateClientSide(event),evaluateDelayedClientSide(event))
     }
 
 
@@ -122,7 +122,7 @@ internal class EvaluationManager(
         eventProperties: Map<String, Map<String, Any>>,
         userLocation: Location?,
         appFields: Map<String, Any>
-    ): JSONArray {
+    ): Pair<JSONArray,JSONArray> {
         val eventAdapterList = eventProperties.map { eventProperty ->
             val mergedEventProperties = eventProperty.value.toMutableMap().apply {
                 putAll(appFields)
@@ -135,7 +135,7 @@ internal class EvaluationManager(
             )
         }
         evaluateServerSide(eventAdapterList)
-        return evaluateClientSide(eventAdapterList)
+        return Pair(evaluateClientSide(eventAdapterList),evaluateDelayedClientSide(eventAdapterList))
     }
 
 
@@ -153,9 +153,9 @@ internal class EvaluationManager(
      *         This array includes in-app notifications that meet the criteria for display.
      */
     // onBatchSent with App Launched event in batch
-    fun evaluateOnAppLaunchedClientSide(eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
+    fun evaluateOnAppLaunchedClientSide(eventProperties: Map<String, Any>, userLocation: Location?): Pair<JSONArray,JSONArray> {
         val event = listOf(EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation))
-        return evaluateClientSide(event)
+        return Pair(evaluateClientSide(event),evaluateDelayedClientSide(event))
     }
 
     /**
@@ -200,6 +200,72 @@ internal class EvaluationManager(
         }
         return JSONArray()
     }
+    fun evaluateOnAppLaunchedDelayedServerSide(
+        appLaunchedDelayedNotifs: List<JSONObject>,
+        eventProperties: Map<String, Any>,
+        userLocation: Location?
+    ): JSONArray {
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
+        val eligibleInApps = evaluate(event, appLaunchedDelayedNotifs)
+
+        // Flag to track if the list of suppressed client-side in-app IDs has been updated.
+        var updated = false
+
+        // Group delayed in-apps by delay value
+        val delayedInAppsByDelay = sortByPriority(eligibleInApps).groupBy { it.optInt("delayAfterTrigger", 0) }
+
+        val inAppsToSchedule = mutableListOf<JSONObject>()
+
+        // For each delay group, select the highest priority in-app
+        delayedInAppsByDelay.forEach { (delay, inAppsWithSameDelay) ->
+            Logger.v(
+                "EvaluationManager",
+                "Processing ${inAppsWithSameDelay.size} app launch delayed in-apps with delay: ${delay}s"
+            )
+
+            // inAppsWithSameDelay is already sorted by priority from sortByPriority()
+            // Find the first non-suppressed in-app in this delay group
+            var selectedInApp: JSONObject? = null
+
+            for (inApp in inAppsWithSameDelay) {
+                if (!shouldSuppress(inApp)) {
+                    selectedInApp = inApp
+                    break
+                } else {
+                    updated = true
+                    suppress(inApp)
+                    Logger.v(
+                        "EvaluationManager",
+                        "Suppressed app launch delayed in-app: ${inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)}"
+                    )
+                }
+            }
+
+            // Add selected in-app to schedule list
+            selectedInApp?.let { inApp ->
+                inAppsToSchedule.add(inApp)
+                Logger.v(
+                    "EvaluationManager",
+                    "Selected app launch delayed in-app for delay ${delay}s: ${inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)}"
+                )
+            }
+        }
+
+        // Save suppressed client-side in-app IDs if there were updates
+        if (updated) {
+            saveSuppressedClientSideInAppIds()
+        }
+
+        // Return all selected delayed in-apps for scheduling
+        if (inAppsToSchedule.isNotEmpty()) {
+            val resultArray = JSONArray()
+            inAppsToSchedule.forEach { resultArray.put(it) }
+            return resultArray
+        }
+
+        return JSONArray()
+    }
+
 
     fun matchWhenLimitsBeforeDisplay(listOfLimitAdapter: List<LimitAdapter>, campaignId: String): Boolean {
         return limitsMatcher.matchWhenLimits(listOfLimitAdapter, campaignId)
@@ -296,6 +362,80 @@ internal class EvaluationManager(
 
             // Return an empty JSONArray if no eligible in-app notifications are displayed.
         }.run { return JSONArray() }
+    }
+
+    internal fun evaluateDelayedClientSide(events: List<EventAdapter>): JSONArray {
+        // Flag to track if the list of suppressed client-side in-app IDs has been updated.
+        var updated = false
+        // Access the in-app store from the store registry.
+        val eligibleInApps = mutableListOf<JSONObject>()
+        storeRegistry.inAppStore?.let { store ->
+            events.forEach { event ->
+                // Only for CS In-Apps check if oldValue != newValue for userAttribute events
+                val oldValue = event.eventProperties[Constants.KEY_OLD_VALUE]
+                val newValue = event.eventProperties[Constants.KEY_NEW_VALUE]
+                if (newValue == null || newValue != oldValue)
+                    eligibleInApps.addAll(
+                        evaluate(
+                            event,
+                            store.readClientSideDelayedInApps().toList()
+                        )
+                    )
+            }
+            // Group delayed in-apps by delay value
+            val delayedInAppsByDelay =
+                sortByPriority(eligibleInApps).groupBy { it.optInt("delayAfterTrigger", 0) }
+
+            val inAppsToSchedule = mutableListOf<JSONObject>()
+
+            // For each delay group, select the highest priority in-app
+            delayedInAppsByDelay.forEach { (delay, inAppsWithSameDelay) ->
+                Logger.v(
+                    "EvaluationManager",
+                    "Processing ${inAppsWithSameDelay.size} in-apps with delay: ${delay}s"
+                )
+
+                // inAppsWithSameDelay is already sorted by priority from sortByPriority()
+                // Find the first non-suppressed in-app in this delay group
+                var selectedInApp: JSONObject? = null
+
+                for (inApp in inAppsWithSameDelay) {
+                    if (!shouldSuppress(inApp)) {
+                        selectedInApp = inApp
+                        break
+                    } else {
+                        updated = true
+                        suppress(inApp)
+                        Logger.v(
+                            "EvaluationManager",
+                            "Suppressed delayed in-app: ${inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)}"
+                        )
+                    }
+                }
+
+                // Add selected in-app to schedule list
+                selectedInApp?.let { inApp ->
+                    updateTTL(inApp)
+                    inAppsToSchedule.add(inApp)
+                    Logger.v(
+                        "EvaluationManager",
+                        "Selected delayed in-app for delay ${delay}s: ${inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)}"
+                    )
+                }
+            }
+
+            if (updated) {
+                saveSuppressedClientSideInAppIds()
+            }
+
+            // Return all selected delayed in-apps for scheduling
+            if (inAppsToSchedule.isNotEmpty()) {
+                val resultArray = JSONArray()
+                inAppsToSchedule.forEach { resultArray.put(it) }
+                return resultArray
+            }
+        }
+        return JSONArray()
     }
 
     /**

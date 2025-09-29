@@ -6,10 +6,12 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
+import com.clevertap.android.sdk.inapp.data.PartitionedInApps;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.FileStore;
@@ -135,19 +137,28 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return;
             }
 
-            Pair<Boolean, JSONArray> legacyInApps = res.getLegacyInApps();
-            if (legacyInApps.getFirst()) {
-                displayInApp(legacyInApps.getSecond());
+            PartitionedInApps partitionedLegacyInApps = res.getPartitionedLegacyInApps();
+            if (partitionedLegacyInApps.getHasImmediateInApps()) {
+                displayInApp(partitionedLegacyInApps.getImmediateInApps());
+            }
+            if (partitionedLegacyInApps.getHasDelayedInApps()) {
+                scheduleDelayedInApps(partitionedLegacyInApps.getDelayedInApps());
             }
 
-            Pair<Boolean, JSONArray> appLaunchInApps = res.getAppLaunchServerSideInApps();
-            if (appLaunchInApps.getFirst()) {
-                handleAppLaunchServerSide(appLaunchInApps.getSecond());
+            PartitionedInApps partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
+            if (partitionedAppLaunchServerSideInApps.getHasImmediateInApps()) {
+                handleAppLaunchServerSideImmediate(partitionedAppLaunchServerSideInApps.getImmediateInApps());
+            }
+            if (partitionedAppLaunchServerSideInApps.getHasDelayedInApps()) {
+                handleAppLaunchServerSideDelayed(partitionedAppLaunchServerSideInApps.getDelayedInApps());
             }
 
-            Pair<Boolean, JSONArray> csInApps = res.getClientSideInApps();
-            if (csInApps.getFirst()) {
-                inAppStore.storeClientSideInApps(csInApps.getSecond());
+            PartitionedInApps partitionedClientSideInApps = res.getPartitionedClientSideInApps();
+            if (partitionedClientSideInApps.getHasImmediateInApps()) {
+                inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
+            }
+            if (partitionedClientSideInApps.getHasDelayedInApps()) {
+                inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
             }
 
             Pair<Boolean, JSONArray> ssInApps = res.getServerSideInApps();
@@ -185,11 +196,23 @@ public class InAppResponse extends CleverTapResponseDecorator {
         }
     }
 
-    private void handleAppLaunchServerSide(JSONArray inappNotifsApplaunched) {
+    private void handleAppLaunchServerSideImmediate(JSONArray immediateAppLaunchInApps) {
         try {
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched, coreMetaData.getLocationFromUser());
+            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(immediateAppLaunchInApps, coreMetaData.getLocationFromUser(), false);
         } catch (Throwable e) {
             logger.verbose(config.getAccountId(), "InAppManager: Malformed AppLaunched ServerSide inApps");
+            logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
+        }
+    }
+
+    private void handleAppLaunchServerSideDelayed(JSONArray delayedAppLaunchInApps) {
+        try {
+            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
+                    delayedAppLaunchInApps,
+                    coreMetaData.getLocationFromUser(),
+                    true);
+        } catch (Throwable e) {
+            logger.verbose(config.getAccountId(), "InAppManager: Malformed delayed AppLaunched ServerSide inApps");
             logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
         }
     }
@@ -204,6 +227,26 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return null;
             }
         });
+    }
+
+    private void scheduleDelayedInApps(JSONArray delayedInApps) {
+        try {
+            InAppController inAppController = controllerManager.getInAppController();
+
+            // Schedule using delay functionality
+            inAppController.scheduleDelayedInApps(delayedInApps);
+
+            logger.verbose(config.getAccountId(),
+                    "InApp: scheduling " + delayedInApps.length() +
+                            " delayed in-apps. Active delays: " +
+                            inAppController.getActiveDelayedInAppsCount());
+
+        } catch (Exception e) {
+            logger.verbose(config.getAccountId(),
+                    "InApp: Error scheduling delayed in-apps, using fallback", e);
+
+            displayInApp(delayedInApps);
+        }
     }
 
 }

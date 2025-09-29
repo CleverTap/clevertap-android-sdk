@@ -22,6 +22,7 @@ import com.clevertap.android.sdk.inapp.StoreRegistryInAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
+import com.clevertap.android.sdk.inapp.delay.InAppDelayManagerV2
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
@@ -416,6 +417,8 @@ internal object CleverTapFactory {
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)
+
+        val inAppDelayManagerV2 = InAppDelayManagerV2(config.accountId, config.logger)
         val inAppController = InAppController(
             context,
             config,
@@ -431,6 +434,7 @@ internal object CleverTapFactory {
             templatesManager,
             inAppActionHandler,
             inAppNotificationInflater,
+            inAppDelayManagerV2,
             SYSTEM
         )
         controllerManager.inAppController = inAppController
