@@ -7,7 +7,6 @@ import com.clevertap.android.sdk.StorageHelper.getStringFromPrefs
 import com.clevertap.android.sdk.StorageHelper.putString
 import com.clevertap.android.sdk.db.DBEncryptionHandler
 
-// TODO Test me
 internal class VariablesRepo(
     val context: Context,
     val accountId: String,
