@@ -14,7 +14,6 @@ internal class DBEncryptionHandler(
 
     companion object {
         private const val TAG = "DBEncryptionHandler"
-        private const val DEFAULT_KEY = "DefaultKey"
     }
 
     // todo graceful handling for nulls?
