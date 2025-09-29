@@ -50,7 +50,7 @@ class InAppDelayManagerV2(
         // Keep existing active job if present
         activeJobs[id]?.let { existingJob ->
             if (existingJob.isActive) {
-                println("InApp callback with id '$id' already scheduled, keeping existing")
+                logger.verbose(accountId,"InApp callback with id '$id' already scheduled, keeping existing")
                 return existingJob
             } else {
                 activeJobs.remove(id)
@@ -65,14 +65,14 @@ class InAppDelayManagerV2(
                 callback(inAppObject)
                 //}
             } catch (e: CancellationException) {
-                println("InApp callback cancelled for id: $id")
+                logger.verbose(accountId, "Cancelled InApp callback with id: $id")
             } finally {
                 activeJobs.remove(id)
             }
         }
 
         activeJobs[id] = job
-        println("Scheduled new InApp callback with id '$id' for ${delayInMs}ms delay")
+        logger.verbose(accountId,"Scheduled new InApp callback with id '$id' for ${delayInMs}ms delay")
 
         return job
     }
@@ -119,7 +119,7 @@ class InAppDelayManagerV2(
         return activeJobs[id]?.let { job ->
             job.cancel()
             activeJobs.remove(id)
-            println("Cancelled InApp callback with id: $id")
+            logger.verbose(accountId,"Cancelled InApp callback with id: $id")
             true
         } ?: false
     }
@@ -132,7 +132,7 @@ class InAppDelayManagerV2(
         val jobsToCancel = activeJobs.values.toList()
         activeJobs.clear()
         jobsToCancel.forEach { it.cancel() }
-        println("Cancelled $cancelledCount InApp callbacks")
+        logger.verbose(accountId, "Cancelled $cancelledCount InApp callbacks")
     }
 
     /**
