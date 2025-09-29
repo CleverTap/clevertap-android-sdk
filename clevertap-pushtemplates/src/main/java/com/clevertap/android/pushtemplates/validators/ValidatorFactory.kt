@@ -304,12 +304,12 @@ internal class ValidatorFactory {
                         .addStringValidation(
                             templateData.inputFeedback,
                             PT_INPUT_FEEDBACK,
-                            "Feedback Text or Actions is missing or empty"
+                            "Feedback Text is missing"
                         )
                         .addJsonArrayValidation(
                             templateData.actions,
                             PT_ACTIONS,
-                            "Feedback Text or Actions is missing or empty"
+                            "Actions is missing or empty"
                         )
                         .build()
                 }
