@@ -184,7 +184,6 @@ internal class InAppResponseAdapter(
      */
     private fun getValidatedInAppDelay(inApp: JSONObject): Int {
         val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
-        // Ensure delay is within valid range as per PRD (1-1000 seconds)
         return if (delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS) {
             delaySeconds
         } else {
@@ -195,7 +194,7 @@ internal class InAppResponseAdapter(
     /**
      * Function to check if an in-app has a valid delay
      * @param inApp JSONObject representing the in-app notification
-     * @return true if the in-app has a valid delay (1-1000 seconds)
+     * @return true if the in-app has a valid delay (1-1200 seconds)
      */
     private fun hasValidDelay(inApp: JSONObject): Boolean = getValidatedInAppDelay(inApp) > INAPP_DEFAULT_DELAY_SECONDS
 }

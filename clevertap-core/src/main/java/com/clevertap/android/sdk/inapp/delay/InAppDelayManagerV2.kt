@@ -2,6 +2,9 @@ package com.clevertap.android.sdk.inapp.delay
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MAX_DELAY_SECONDS
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MIN_DELAY_SECONDS
 import com.clevertap.android.sdk.iterator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -163,7 +166,7 @@ class InAppDelayManagerV2(
      * Extract delay from in-app JSON
      */
     internal fun getInAppDelayInMs(inApp: JSONObject): Long {
-        val delaySeconds = inApp.optInt("delayAfterTrigger", 0)
-        return if (delaySeconds in 1..1000) delaySeconds.seconds.inWholeMilliseconds else 0
+        val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, 0)
+        return if (delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS) delaySeconds.seconds.inWholeMilliseconds else 0
     }
 }

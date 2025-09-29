@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
@@ -212,7 +213,7 @@ internal class EvaluationManager(
         var updated = false
 
         // Group delayed in-apps by delay value
-        val delayedInAppsByDelay = sortByPriority(eligibleInApps).groupBy { it.optInt("delayAfterTrigger", 0) }
+        val delayedInAppsByDelay = sortByPriority(eligibleInApps).groupBy { it.optInt(INAPP_DELAY_AFTER_TRIGGER, 0) }
 
         val inAppsToSchedule = mutableListOf<JSONObject>()
 
@@ -384,7 +385,7 @@ internal class EvaluationManager(
             }
             // Group delayed in-apps by delay value
             val delayedInAppsByDelay =
-                sortByPriority(eligibleInApps).groupBy { it.optInt("delayAfterTrigger", 0) }
+                sortByPriority(eligibleInApps).groupBy { it.optInt(INAPP_DELAY_AFTER_TRIGGER, 0) }
 
             val inAppsToSchedule = mutableListOf<JSONObject>()
 
