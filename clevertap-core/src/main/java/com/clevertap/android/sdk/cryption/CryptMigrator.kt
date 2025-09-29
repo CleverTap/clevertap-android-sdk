@@ -97,6 +97,7 @@ internal data class CryptMigrator(
         storedLevel: EncryptionLevel,
         firstUpgrade: Boolean,
     ): Boolean {
+        // Order is imp, do not change.
         val cgkMigrationSuccess = migrateCachedGuidsKeyPref(
             level = level,
             firstUpgrade = firstUpgrade
@@ -128,7 +129,7 @@ internal data class CryptMigrator(
         level: EncryptionLevel,
         storedLevel: EncryptionLevel
     ) : Boolean {
-        for (id in dataMigrationRepository.allDeviceIds()) {
+        for (id in dataMigrationRepository.userProfilesInAccount().map { it.key }) {
             val messages = dbAdapter.getMessages(id)
             // Save function will automatically save it in encrypted form.
             dbAdapter.upsertMessages(messages)

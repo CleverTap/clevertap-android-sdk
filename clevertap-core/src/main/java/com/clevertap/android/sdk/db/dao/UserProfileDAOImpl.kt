@@ -56,8 +56,13 @@ internal class UserProfileDAOImpl(
 
         try {
             dbHelper.readableDatabase.query(
-                tName, null, "${Column.ID} = ?", arrayOf(accountId), 
-                null, null, null
+                tName,
+                null,
+                "${Column.ID} = ?",
+                arrayOf(accountId),
+                null,
+                null,
+                null
             )?.use { cursor ->
                 val dataIndex = cursor.getColumnIndex(Column.DATA)
                 val deviceIdIndex = cursor.getColumnIndex(Column.DEVICE_ID)

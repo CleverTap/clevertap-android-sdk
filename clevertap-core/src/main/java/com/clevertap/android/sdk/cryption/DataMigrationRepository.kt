@@ -20,7 +20,6 @@ interface IDataMigrationRepository {
     fun userProfilesInAccount(): Map<String, JSONObject>
     fun saveUserProfile(deviceID: String, profile: JSONObject): Long
     fun inAppDataFiles(keysToMigrate: List<String>, migrate: (String) -> String?)
-
     fun allDeviceIds(): List<String>
 }
 
