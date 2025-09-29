@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.json.JSONObject
@@ -21,8 +22,7 @@ class CTVariablesTest : BaseTestCase() {
   private lateinit var parser: Parser
   private lateinit var fileResourcesRepoImpl: FileResourcesRepoImpl
   private lateinit var fileResourceProvider: FileResourceProvider
-
-  private lateinit var dbEncryptionHandler: DBEncryptionHandler
+  private lateinit var variablesRepo: VariablesRepo
 
   @Before
   @Throws(Exception::class)
@@ -31,12 +31,12 @@ class CTVariablesTest : BaseTestCase() {
 
     fileResourcesRepoImpl = mockk(relaxed = true)
     fileResourceProvider = mockk(relaxed = true)
-    dbEncryptionHandler = mockk(relaxed = true)
+    variablesRepo = mockk(relaxed = true)
     varCache = VarCache(
       cleverTapInstanceConfig,
       application,
       fileResourcesRepoImpl,
-      dbEncryptionHandler
+      variablesRepo
     )
     varCache = spyk(varCache)
     ctVariables = CTVariables(varCache)

@@ -276,7 +276,7 @@ internal object CleverTapFactory {
             config,
             context,
             impl,
-            dbEncryptionHandler
+            variablesRepo
         )
 
         val ctVariables = CTVariables(varCache)
