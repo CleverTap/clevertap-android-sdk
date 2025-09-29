@@ -104,99 +104,96 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
         ) { Utils.getNotificationIds(context) }
 
         this.actionButtons = getActionButtons(context, extras, notificationId, templateData?.getActions())
+        val templateBuilder : Builder? = when (templateData) {
+            is BasicTemplateData -> templateData.buildIfValid {
+                BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+            }
 
-        when (templateData) {
-            is BasicTemplateData -> {
-                if (ValidatorFactory.getValidator(templateData)?.validate() == true) {
-                    return BasicStyle(templateData, this).builderFromStyle(context, extras, notificationId, nb)
+            is AutoCarouselTemplateData -> templateData.buildIfValid {
+                AutoCarouselStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+            }
+
+            is ManualCarouselTemplateData -> templateData.buildIfValid {
+                ManualCarouselStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+            }
+
+            is RatingTemplateData -> templateData.buildIfValid {
+                RatingStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+            }
+
+            is FiveIconsTemplateData -> templateData.buildIfValid {
+                val fiveIconStyle = FiveIconStyle(it, this, extras)
+                val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
+                    context,
+                    extras,
+                    notificationId,
+                    nb
+                )
+
+                /**
+                 * Checks whether the imageUrls are perfect to download icon's bitmap,
+                 * if not then do not render notification
+                 */
+                if ((fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
+                    (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2) {
+                    null
+                } else {
+                    fiveIconNotificationBuilder
                 }
             }
 
-            is AutoCarouselTemplateData ->
-                if (ValidatorFactory.getValidator(templateData)?.validate() == true)
-                    return AutoCarouselStyle(templateData, this).builderFromStyle(context, extras, notificationId, nb)
+            is ProductTemplateData -> templateData.buildIfValid {
+                ProductDisplayStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+            }
 
-            is ManualCarouselTemplateData ->
-                if (ValidatorFactory.getValidator(templateData)?.validate() == true)
-                    return ManualCarouselStyle(templateData, this , extras).builderFromStyle(context, extras, notificationId, nb)
-
-            is RatingTemplateData ->
-                if (ValidatorFactory.getValidator(templateData)?.validate() == true)
-                    return RatingStyle(templateData, this, extras).builderFromStyle(context, extras, notificationId, nb)
-
-            is FiveIconsTemplateData ->
-                if (ValidatorFactory.getValidator(templateData)?.validate() == true) {
-                    val fiveIconStyle  = FiveIconStyle(templateData, this, extras)
-                    val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
-                        context,
-                        extras,
-                        notificationId,
-                        nb
-                    )
-
-                    /**
-                     * Checks whether the imageUrls are perfect to download icon's bitmap,
-                     * if not then do not render notification
-                     */
-                    return if ((fiveIconStyle.fiveIconSmallContentView as
-                                FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
-                        (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2){
-                        null
-                    } else fiveIconNotificationBuilder
-                }
-
-            is ProductTemplateData -> if (ValidatorFactory.getValidator(templateData)
-                    ?.validate() == true
-            )
-                return ProductDisplayStyle(templateData, this, extras).builderFromStyle(context, extras, notificationId, nb)
-
-            is ZeroBezelTemplateData ->
-                if (ValidatorFactory.getValidator(templateData)?.validate() == true)
-                    return ZeroBezelStyle(templateData, this).builderFromStyle(context, extras, notificationId, nb)
+            is ZeroBezelTemplateData -> templateData.buildIfValid {
+                ZeroBezelStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+            }
 
             is TimerTemplateData -> if (VERSION.SDK_INT >= VERSION_CODES.O) {
-                ValidatorFactory.getValidator(templateData)
-                    ?.takeIf { it.validate() }
-                    ?.let {
-                        templateData.baseContent.notificationBehavior.dismissAfter.let { timerEnd ->
-                            if (templateData.renderTerminal) {
-                                TimerTemplateHandler.scheduleTimer(
-                                    context,
-                                    extras,
-                                    notificationId,
-                                    timerEnd,
-                                    templateData,
-                                    config
-                                )
-                            }
-                            return TimerStyle(templateData, this)
-                                .builderFromStyle(context, extras, notificationId, nb)
-                        }
+                templateData.buildIfValid {
+                    if (it.renderTerminal) {
+                        TimerTemplateHandler.scheduleTimer(
+                            context,
+                            extras,
+                            notificationId,
+                            it.baseContent.notificationBehavior.dismissAfter,
+                            it,
+                            config
+                        )
                     }
-            }
-            else {
-
+                    TimerStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+                }
+            } else {
                 val basicTemplateData = templateData.toBasicTemplateData()
-
                 PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")
-                if (ValidatorFactory.getValidator(basicTemplateData)?.validate() == true) {
-                    return BasicStyle(basicTemplateData, this).builderFromStyle(context, extras, notificationId, nb)
+                basicTemplateData.buildIfValid {
+                    BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
                 }
             }
 
-            is InputBoxTemplateData -> if (ValidatorFactory.getValidator(templateData)
-                    ?.validate() == true
-            )
-                return InputBoxStyle(templateData, this).builderFromStyle(context, extras, notificationId, nb)
+            is InputBoxTemplateData -> templateData.buildIfValid {
+                InputBoxStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+            }
 
-            is CancelTemplateData -> CancelTemplateHandler.renderCancelNotification(context, templateData)
+            is CancelTemplateData -> {
+                CancelTemplateHandler.renderCancelNotification(context, templateData)
+                null
+            }
+
             else -> {
                 PTLog.verbose("operation not defined!")
+                null
             }
         }
+
         templateMediaManager.clearCaches()
-        return null
+        return templateBuilder
     }
+
+    private fun <T : TemplateData> T.buildIfValid(builder: (T) -> Builder?): Builder? =
+        ValidatorFactory.getValidator(this)?.takeIf { it.validate() }?.let { builder(this) }
+
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {
         this.smallIcon = smallIcon

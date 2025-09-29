@@ -6,7 +6,6 @@
     android:layout_height="wrap_content"
     android:background="@android:color/transparent">
 
-<!--    todo remove if not needed-->
     <include layout="@layout/image_media_dynamic_relative"
         android:id="@+id/big_image_configurable"/>
 

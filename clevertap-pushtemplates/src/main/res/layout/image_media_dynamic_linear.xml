@@ -18,7 +18,5 @@
         android:autoStart="true"
         android:minHeight="196dp"
         android:visibility="gone">
-        <!--        todo - fix flip interval-->
-        <!--        todo test for view-flipper height and width-->
     </ViewFlipper>
 </LinearLayout>
