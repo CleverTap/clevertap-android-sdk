@@ -1381,7 +1381,7 @@ class TemplateRendererTest {
 
         every { mockTimerTemplateData.baseContent } returns mockBaseContent
         every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
-        every { mockNotificationBehavior.dismissAfter } returns 10000 // 10 seconds in milliseconds
+        every { mockNotificationBehavior.dismissAfter } returns 10_000L // 10 seconds in milliseconds
         every { mockTimerTemplateData.renderTerminal } returns true
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
@@ -1443,7 +1443,7 @@ class TemplateRendererTest {
 
         every { mockTimerTemplateData.baseContent } returns mockBaseContent
         every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
-        every { mockNotificationBehavior.dismissAfter } returns 15000 // 10 seconds in milliseconds
+        every { mockNotificationBehavior.dismissAfter } returns 15_000L // 15 seconds in milliseconds
         every { mockTimerTemplateData.renderTerminal } returns false
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)

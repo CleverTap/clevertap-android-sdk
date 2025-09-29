@@ -20,7 +20,7 @@ internal class TimerStyle(private val data: TimerTemplateData, renderer: Templat
         return if (data.baseContent.notificationBehavior.dismissAfter == null)
             null
         else {
-            return TimerSmallContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView
+            TimerSmallContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView
         }
     }
 
@@ -28,7 +28,7 @@ internal class TimerStyle(private val data: TimerTemplateData, renderer: Templat
         return if (data.baseContent.notificationBehavior.dismissAfter == null)
             null
         else {
-            return TimerBigContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView
+            TimerBigContentView(context, data.baseContent.notificationBehavior.dismissAfter, renderer, data).remoteView
         }
     }
 

@@ -8,7 +8,6 @@ import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 
@@ -22,10 +21,6 @@ internal class FiveIconBigContentView constructor(
     private var imageCounter: Int = 0
 
     init {
-        var title = data.title
-        if (data.title == null || data.title.isEmpty()) {
-            title = Utils.getApplicationName(context)
-        }
         setCustomBackgroundColour(data.backgroundColor, R.id.content_view_big)
         val ctaIds = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)
         data.imageList.forEachIndexed { index, imageData ->

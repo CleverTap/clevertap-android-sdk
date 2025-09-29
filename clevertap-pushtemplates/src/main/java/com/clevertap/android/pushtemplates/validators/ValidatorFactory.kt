@@ -65,7 +65,7 @@ internal class ValidationCheckersBuilder {
     }
 
     /**
-     * Adds title validation for templates that have standalone title fields
+     * Adds message validation for templates that have standalone title fields
      */
     fun addMessageValidation(message: String?): ValidationCheckersBuilder {
         checkers[PT_MSG] = StringSizeChecker(message, 0, "Message is missing or empty")
