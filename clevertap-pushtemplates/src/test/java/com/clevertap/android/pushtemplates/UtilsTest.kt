@@ -10,16 +10,12 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.res.Configuration
 import android.content.res.Resources
-import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import android.service.notification.StatusBarNotification
-import android.widget.RemoteViews
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
-import com.clevertap.android.sdk.network.DownloadedBitmap
 import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -736,37 +732,6 @@ class UtilsTest {
         }
     }
 
-    // Tests for loadImageBitmapIntoRemoteView method
-
-    @Test
-    fun `loadImageBitmapIntoRemoteView should set bitmap on remote view`() {
-        // Given
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockBitmap = mockk<Bitmap>()
-        val imageViewId = 123
-
-        // When
-        Utils.loadImageBitmapIntoRemoteView(imageViewId, mockBitmap, mockRemoteViews)
-
-        // Then
-        verify { mockRemoteViews.setImageViewBitmap(imageViewId, mockBitmap) }
-    }
-
-    // Tests for loadImageRidIntoRemoteView method
-
-    @Test
-    fun `loadImageRidIntoRemoteView should set resource on remote view`() {
-        // Given
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val imageViewId = 123
-        val resourceId = 456
-
-        // When
-        Utils.loadImageRidIntoRemoteView(imageViewId, resourceId, mockRemoteViews)
-
-        // Then
-        verify { mockRemoteViews.setImageViewResource(imageViewId, resourceId) }
-    }
 
     // Tests for getTimeStamp method
 
@@ -844,6 +809,19 @@ class UtilsTest {
     }
 
     @Test
+    fun `getTimerEnd should return MIN_VALUE when no timer end key`() {
+        val currentTimestamp = 15000L
+        // Given
+        every { mockBundle.keySet() } returns setOf("invalid_key")
+
+        // When
+        val result = Utils.getTimerEnd(mockBundle, currentTimestamp)
+
+        // Then
+        assertEquals(Integer.MIN_VALUE, result)
+    }
+
+    @Test
     fun `getTimerEnd should calculate difference when valid timestamp provided`() {
         val futureTimestamp = 20L
         val currentTimestamp = 15000L
@@ -873,32 +851,12 @@ class UtilsTest {
         assertEquals(5, result)
     }
 
-
-    // Tests for getFallback method
-
-    @Test
-    fun `getFallback should return current fallback value`() {
-        // Given
-        PTConstants.PT_FALLBACK = true
-
-        // When
-        val result = Utils.getFallback()
-
-        // Then
-        assertTrue(result)
-
-        // Reset
-        PTConstants.PT_FALLBACK = false
-        val resetResult = Utils.getFallback()
-        assertFalse(resetResult)
-    }
-
     // Tests for getImageDataListFromExtras method
 
     @Test
     fun `getImageDataListFromExtras should return list of ImageData objects`() {
         // Given
-        val keys = setOf("pt_img1", "pt_img2", "other_key", "pt_img")
+        val keys = setOf("pt_img1", "pt_img2", "other_key", "pt_img", "pt_img_alt_text", "pt_img1_alt_text")
         val defaultAltText = "Default Image "
         every { mockBundle.keySet() } returns keys
         every { mockBundle.getString("pt_img1") } returns "https://example.com/img1.jpg"
@@ -1640,6 +1598,394 @@ class UtilsTest {
 
     // Tests for raiseCleverTapEvent method
 
+    // Tests for raiseCleverTapEvent(Context, CleverTapInstanceConfig, Bundle) method
+    @Test
+    fun `raiseCleverTapEvent with Bundle with null instance`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val eventName = "test_event"
+
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with Bundle should use instanceWithConfig when config is provided`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "value1")
+
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with Bundle should use getDefaultInstance when config is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "value1")
+
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, null, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.getDefaultInstance(mockContext) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with Bundle should not push event when eventName is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+
+        every { mockBundle.keySet() } returns setOf("pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with Bundle should not push event when eventName is empty`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns ""
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+        }
+    }
+
+// Tests for raiseCleverTapEvent(Context, CleverTapInstanceConfig, Bundle, String) method
+    @Test
+    fun `raiseCleverTapEvent with key when instance is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "test_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "test_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+            verify { mockBundle.getString(key) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should use instanceWithConfig when config is provided`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "test_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "test_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
+            verify { mockBundle.getString(key) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should use getDefaultInstance when config is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "test_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "test_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, null, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.getDefaultInstance(mockContext) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+            verify { mockBundle.getString(key) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should not push event when eventName is null`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should not push event when eventName is empty`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "test_value"
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns ""
+        every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should handle null value from bundle`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val eventName = "test_event"
+        val eventProps = hashMapOf<String, Any>("prop1" to "original_value")
+
+        every { mockBundle.getString(key) } returns null
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "original_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, eventProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, eventProps) }
+            verify { mockBundle.getString(key) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should replace matching property value when pkey matches`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "replacement_value"
+        val eventName = "test_event"
+        val expectedProps = hashMapOf<String, Any>("prop1" to "replacement_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "replacement_value" // Case insensitive match
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, expectedProps) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should use original value when no pkey match found`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "no_match_value"
+        val eventName = "test_event"
+        val expectedProps = hashMapOf<String, Any>("prop1" to "original_value")
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_prop1") } returns "original_value"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { mockInstance.pushEvent(eventName, expectedProps) }
+        }
+    }
+
+    @Test
+    fun `raiseCleverTapEvent with key should handle multiple event properties correctly`() {
+        // Given
+        val mockContext = mockk<Context>()
+        val mockInstance = mockk<CleverTapAPI>()
+        val key = "test_key"
+        val value = "replacement_value"
+        val eventName = "test_event"
+        val expectedProps = hashMapOf<String, Any>(
+            "user_id" to "replacement_value",
+            "session_id" to "session_123"
+        )
+
+        every { mockBundle.getString(key) } returns value
+        every { mockBundle.keySet() } returns setOf(
+            "pt_event_name",
+            "pt_event_property_user_id",
+            "pt_event_property_session_id"
+        )
+        every { mockBundle.getString("pt_event_name") } returns eventName
+        every { mockBundle.getString("pt_event_property_user_id") } returns "replacement_value"
+        every { mockBundle.getString("pt_event_property_session_id") } returns "session_123"
+
+        // When
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
+            every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
+
+            Utils.raiseCleverTapEvent(mockContext, null, mockBundle, key)
+
+            // Then
+            verify { CleverTapAPI.getDefaultInstance(mockContext) }
+            verify { mockInstance.pushEvent(eventName, expectedProps) }
+        }
+    }
+
     @Test
     fun `raiseCleverTapEvent should use instanceWithConfig when config is provided`() {
         // Given
@@ -2180,7 +2526,7 @@ class UtilsTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.N])
+    @Config(sdk = [Build.VERSION_CODES.O])
     fun `isNotificationChannelEnabled should return false when channel is null`() {
         // When
         val result = Utils.isNotificationChannelEnabled(null)
@@ -2592,6 +2938,20 @@ class UtilsTest {
         // Then
         assertTrue(result.isEmpty())
         verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
+    }
+
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
+    fun `getNotificationIds should return empty list when API level is 21`() {
+        // Given
+        val mockContext = mockk<Context>()
+
+        // When
+        val result = Utils.getNotificationIds(mockContext)
+
+        // Then
+        assertTrue(result.isEmpty())
     }
 
     @Test
@@ -3468,414 +3828,7 @@ class UtilsTest {
         assertEquals("myapp://buy", deeplinks[0])
         assertEquals("myapp://info", deeplinks[1])
     }
-
     // Tests for fromJson method end
-
-    // Tests for loadImageURLIntoRemoteView method
-
-    @Test
-    fun `loadImageURLIntoRemoteView should set bitmap when image is successfully downloaded`() {
-        // Given
-        val imageViewID = 123
-        val imageUrl = "https://example.com/image.jpg"
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-        val mockBitmap = mockk<Bitmap>()
-
-        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
-        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.SUCCESS
-        every { mockDownloadedBitmap.bitmap } returns mockBitmap
-
-        // When & Then
-        mockkStatic(HttpBitmapLoader::class) {
-            every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
-
-            mockkStatic(PTLog::class) {
-                every { PTLog.verbose(any()) } just Runs
-
-                mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-                    every { Utils.setFallback(any()) } just Runs
-
-                    // Execute the method under test
-                    Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-
-                    // Verify the interactions
-                    verify { Utils.setFallback(false) }
-                    verify { mockRemoteViews.setImageViewBitmap(imageViewID, mockBitmap) }
-                    verify { PTLog.verbose(match { it.contains("Fetched IMAGE") && it.contains(imageUrl) }) }
-                    verify(exactly = 0) { Utils.setFallback(true) }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should set fallback when image download fails`() {
-        // Given
-        val imageViewID = 456
-        val imageUrl = "https://example.com/invalid-image.jpg"
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-
-        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
-        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
-
-        // When & Then
-        mockkStatic(HttpBitmapLoader::class) {
-            every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
-
-            mockkStatic(PTLog::class) {
-                every { PTLog.debug(any()) } just Runs
-
-                mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-                    every { Utils.setFallback(any()) } just Runs
-
-                    // Execute the method under test
-                    Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-
-                    // Verify the interactions
-                    verify { Utils.setFallback(false) }
-                    verify { Utils.setFallback(true) }
-                    verify { PTLog.debug(match { it.contains("Image was not perfect") && it.contains(imageUrl) }) }
-                    verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
-                    verify(exactly = 0) { PTLog.verbose(any()) }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should handle null image URL gracefully`() {
-        // Given
-        val imageViewID = 789
-        val imageUrl: String? = null
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-
-        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
-        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
-
-        // When & Then
-        mockkStatic(HttpBitmapLoader::class) {
-            every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
-
-            mockkStatic(PTLog::class) {
-                every { PTLog.debug(any()) } just Runs
-
-                mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-                    every { Utils.setFallback(any()) } just Runs
-
-                    Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-
-                    verify { Utils.setFallback(false) }
-                    verify { Utils.setFallback(true) }
-                    verify { PTLog.debug(match { it.contains("Image was not perfect") && it.contains("null") }) }
-                    verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should handle empty image URL`() {
-        // Given
-        val imageViewID = 101
-        val imageUrl = ""
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-
-        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
-        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
-
-        // When & Then
-        mockkStatic(HttpBitmapLoader::class) {
-            every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
-
-            mockkStatic(PTLog::class) {
-                every { PTLog.debug(any()) } just Runs
-
-                mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-                    every { Utils.setFallback(any()) } just Runs
-
-                    Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-
-                    verify { Utils.setFallback(false) }
-                    verify { Utils.setFallback(true) }
-                    verify { PTLog.debug(match { it.contains("Image was not perfect") && it.contains(imageUrl) }) }
-                    verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should handle different image view IDs`() {
-        // Given
-        val imageViewIDs = listOf(1, 100, 999, -1, 0)
-        val imageUrl = "https://example.com/test.jpg"
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-        val mockBitmap = mockk<Bitmap>()
-
-        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
-        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.SUCCESS
-        every { mockDownloadedBitmap.bitmap } returns mockBitmap
-
-        // When & Then
-        mockkStatic(HttpBitmapLoader::class) {
-            every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
-
-            mockkStatic(PTLog::class) {
-                every { PTLog.verbose(any()) } just Runs
-
-                mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-                    every { Utils.setFallback(any()) } just Runs
-
-                    imageViewIDs.forEach { imageViewID ->
-                        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-                        verify { mockRemoteViews.setImageViewBitmap(imageViewID, mockBitmap) }
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should handle various image URL formats`() {
-        // Given
-        val imageViewID = 303
-        val imageUrls = listOf(
-            "https://example.com/image.jpg",
-            "http://test.com/pic.png",
-            "https://cdn.example.com/assets/image.gif",
-            "https://example.com/image-with-dashes.jpg",
-            "https://example.com/image_with_underscores.png"
-        )
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-        val mockBitmap = mockk<Bitmap>()
-
-        val mockDownloadedBitmap = mockk<DownloadedBitmap>()
-        every { mockDownloadedBitmap.status } returns DownloadedBitmap.Status.SUCCESS
-        every { mockDownloadedBitmap.bitmap } returns mockBitmap
-
-        // When & Then
-        mockkStatic(HttpBitmapLoader::class) {
-            every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockDownloadedBitmap
-
-            mockkStatic(PTLog::class) {
-                every { PTLog.verbose(any()) } just Runs
-
-                mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-                    every { Utils.setFallback(any()) } just Runs
-
-                    imageUrls.forEach { imageUrl ->
-                        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-                        verify { mockRemoteViews.setImageViewBitmap(imageViewID, mockBitmap) }
-                        verify { PTLog.verbose(match { it.contains(imageUrl) }) }
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should call setFallback false at start regardless of outcome`() {
-        // Given
-        val imageViewID = 404
-        val imageUrl = "https://example.com/image.jpg"
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-
-        // When & Then
-        mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-            every { Utils.setFallback(any()) } just Runs
-
-            mockkStatic(PTLog::class) {
-                every { PTLog.verbose(any()) } just Runs
-                every { PTLog.debug(any()) } just Runs
-
-                mockkStatic(HttpBitmapLoader::class) {
-                    // Test with successful image download
-                    val mockSuccessBitmap = mockk<DownloadedBitmap>()
-                    every { mockSuccessBitmap.status } returns DownloadedBitmap.Status.SUCCESS
-                    every { mockSuccessBitmap.bitmap } returns mockk<Bitmap>()
-                    every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockSuccessBitmap
-
-                    Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-                    verify { Utils.setFallback(false) }
-
-                    // Test with failed image download
-                    val mockFailedBitmap = mockk<DownloadedBitmap>()
-                    every { mockFailedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
-                    every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
-
-                    Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-                    verify(exactly = 2) { Utils.setFallback(false) } // Called twice
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should log correct messages for success and failure cases`() {
-        // Given
-        val imageViewID = 505
-        val successUrl = "https://example.com/success.jpg"
-        val failUrl = "https://example.com/fail.jpg"
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-        val mockBitmap = mockk<Bitmap>()
-
-        // When & Then
-        mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-            every { Utils.setFallback(any()) } just Runs
-
-            mockkStatic(PTLog::class) {
-                every { PTLog.verbose(any()) } just Runs
-                every { PTLog.debug(any()) } just Runs
-
-                mockkStatic(HttpBitmapLoader::class) {
-                    // Test success case
-                    val mockSuccessBitmap = mockk<DownloadedBitmap>()
-                    every { mockSuccessBitmap.status } returns DownloadedBitmap.Status.SUCCESS
-                    every { mockSuccessBitmap.bitmap } returns mockBitmap
-                    every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockSuccessBitmap
-
-                    Utils.loadImageURLIntoRemoteView(imageViewID, successUrl, mockRemoteViews, mockContext)
-
-                    verify { PTLog.verbose(match {
-                        it.contains("Fetched IMAGE") &&
-                                it.contains(successUrl) &&
-                                it.contains("millis")
-                    }) }
-                    verify(exactly = 0) { PTLog.debug(any()) }
-
-                    // Test failure case
-                    val mockFailedBitmap = mockk<DownloadedBitmap>()
-                    every { mockFailedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
-                    every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
-
-                    Utils.loadImageURLIntoRemoteView(imageViewID, failUrl, mockRemoteViews, mockContext)
-
-                    verify { PTLog.debug(match {
-                        it.contains("Image was not perfect") &&
-                                it.contains(failUrl) &&
-                                it.contains("hiding image view")
-                    }) }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should handle malformed URLs`() {
-        // Given
-        val imageViewID = 606
-        val malformedUrls = listOf(
-            "not-a-url",
-            "://missing-protocol",
-            "https://",
-            "ftp://unsupported-protocol.com/image.jpg"
-        )
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-
-        val mockFailedBitmap = mockk<DownloadedBitmap>()
-        every { mockFailedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
-
-        // When & Then
-        mockkStatic(HttpBitmapLoader::class) {
-            every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
-
-            mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-                every { Utils.setFallback(any()) } just Runs
-
-                mockkStatic(PTLog::class) {
-                    every { PTLog.debug(any()) } just Runs
-
-                    malformedUrls.forEach { malformedUrl ->
-                        Utils.loadImageURLIntoRemoteView(imageViewID, malformedUrl, mockRemoteViews, mockContext)
-                        verify { Utils.setFallback(true) }
-                        verify { PTLog.debug(match { it.contains(malformedUrl) }) }
-                        verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should handle context being null`() {
-        // Given
-        val imageViewID = 808
-        val imageUrl = "https://example.com/image.jpg"
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext: Context? = null
-
-        val mockFailedBitmap = mockk<DownloadedBitmap>()
-        every { mockFailedBitmap.status } returns DownloadedBitmap.Status.NO_NETWORK
-
-        // When & Then
-        mockkStatic(HttpBitmapLoader::class) {
-            every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
-
-            mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-                every { Utils.setFallback(any()) } just Runs
-
-                mockkStatic(PTLog::class) {
-                    every { PTLog.debug(any()) } just Runs
-
-                    Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-
-                    verify { Utils.setFallback(false) }
-                    verify { Utils.setFallback(true) }
-                    verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `loadImageURLIntoRemoteView should handle different bitmap download statuses`() {
-        // Given
-        val imageViewID = 909
-        val imageUrl = "https://example.com/image.jpg"
-        val mockRemoteViews = mockk<RemoteViews>(relaxed = true)
-        val mockContext = mockk<Context>()
-
-        val downloadStatuses = listOf(
-            DownloadedBitmap.Status.NO_NETWORK,
-            DownloadedBitmap.Status.SIZE_LIMIT_EXCEEDED,
-            DownloadedBitmap.Status.DOWNLOAD_FAILED
-        )
-
-        // When & Then
-        mockkStatic("com.clevertap.android.pushtemplates.Utils") {
-            every { Utils.setFallback(any()) } just Runs
-
-            mockkStatic(PTLog::class) {
-                every { PTLog.verbose(any()) } just Runs
-                every { PTLog.debug(any()) } just Runs
-
-                mockkStatic(HttpBitmapLoader::class) {
-                    downloadStatuses.forEach { status ->
-                        val mockFailedBitmap = mockk<DownloadedBitmap>()
-                        every { mockFailedBitmap.status } returns status
-                        every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns mockFailedBitmap
-
-                        Utils.loadImageURLIntoRemoteView(imageViewID, imageUrl, mockRemoteViews, mockContext)
-
-                        verify { Utils.setFallback(true) }
-                        verify { PTLog.debug(match { it.contains("Image was not perfect") }) }
-                        verify(exactly = 0) { mockRemoteViews.setImageViewBitmap(any(), any()) }
-                    }
-                }
-            }
-        }
-    }
-
-    // Tests for loadImageURLIntoRemoteView method end
 
     // Tests for getCTAListFromExtras method
 

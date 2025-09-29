@@ -1,40 +1,42 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Build
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.text.Html
 import android.text.TextUtils
 import android.view.View
 import android.widget.RemoteViews
-import com.clevertap.android.pushtemplates.TemplateMediaManager
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
-import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.TemplateRepository
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
+import com.clevertap.android.pushtemplates.media.GifResult
+import com.clevertap.android.pushtemplates.media.TemplateMediaManager
 
 internal open class ContentView(
     internal var context: Context,
     layoutId: Int,
-    internal var renderer: TemplateRenderer
+    internal val templateMediaManager: TemplateMediaManager
 ) {
 
     internal var remoteView: RemoteViews = RemoteViews(context.packageName, layoutId)
 
-    fun setCustomContentViewBasicKeys() {
+    fun setCustomContentViewBasicKeys(subtitle : String?, metaColor: String?) {
         remoteView.setTextViewText(R.id.app_name, Utils.getApplicationName(context))
         remoteView.setTextViewText(R.id.timestamp, Utils.getTimeStamp(context, System.currentTimeMillis()))
-        if (renderer.pt_subtitle != null && renderer.pt_subtitle!!.isNotEmpty()) {
+        if (subtitle != null && subtitle.isNotEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(
                     R.id.subtitle,
-                    Html.fromHtml(renderer.pt_subtitle, Html.FROM_HTML_MODE_LEGACY)
+                    Html.fromHtml(subtitle, Html.FROM_HTML_MODE_LEGACY)
                 )
             } else {
-                remoteView.setTextViewText(R.id.subtitle, Html.fromHtml(renderer.pt_subtitle))
+                remoteView.setTextViewText(R.id.subtitle, Html.fromHtml(subtitle))
             }
         } else {
             remoteView.setViewVisibility(R.id.subtitle, View.GONE)
@@ -42,16 +44,15 @@ internal open class ContentView(
         }
 
         listOf(R.id.app_name, R.id.timestamp, R.id.subtitle).forEach { resId ->
-            setCustomTextColour(renderer.pt_meta_clr, resId)
+            setCustomTextColour(metaColor, resId)
         }
 
-        setDotSep()
+        setDotSep(metaColor)
     }
 
-    private fun setDotSep() {
+    private fun setDotSep(metaColor: String?) {
         try {
-            renderer.pt_dot = R.drawable.pt_dot_sep
-            Utils.setBitMapColour(context, renderer.pt_dot, renderer.pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
+            Utils.setBitMapColour(context, R.drawable.pt_dot_sep, metaColor, PTConstants.PT_META_CLR_DEFAULTS)
         } catch (_: NullPointerException) {
             PTLog.debug("NPE while setting dot sep color")
         }
@@ -83,17 +84,17 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewSmallIcon() {
-        if (renderer.pt_small_icon != null) {
-            Utils.loadImageBitmapIntoRemoteView(R.id.small_icon, renderer.pt_small_icon, remoteView)
+    fun setCustomContentViewSmallIcon(smallIconBitmap: Bitmap?, smallIconResourceID: Int) {
+        if (smallIconBitmap != null) {
+            remoteView.setImageViewBitmap(R.id.small_icon, smallIconBitmap)
         } else {
-            Utils.loadImageRidIntoRemoteView(R.id.small_icon, renderer.smallIcon, remoteView)
+            remoteView.setImageViewResource(R.id.small_icon, smallIconResourceID)
         }
     }
 
     fun setCustomContentViewLargeIcon(pt_large_icon: String?) {
         if (pt_large_icon.isNotNullAndEmpty()) {
-            Utils.loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView, context)
+            loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView)
         } else {
             remoteView.setViewVisibility(R.id.large_icon, View.GONE)
         }
@@ -124,11 +125,11 @@ internal open class ContentView(
 
     fun setCustomContentViewMedia(
         layoutId: Int,
-        gifUrl: String? = renderer.pt_gif,
-        bigImageUrl: String? = renderer.pt_big_img,
-        scaleType: PTScaleType = renderer.pt_scale_type,
-        altText: String = renderer.pt_big_img_collapsed_alt_text,
-        gifFrames: Int = renderer.pt_gif_frames
+        gifUrl: String?,
+        bigImageUrl: String?,
+        scaleType: PTScaleType,
+        altText: String,
+        gifFrames: Int
     ) {
         val gifSuccess = setCustomContentViewGIF(
             gifUrl,
@@ -138,7 +139,6 @@ internal open class ContentView(
             layoutId
         )
         if (!gifSuccess) {
-            PTLog.debug("Couldn't load GIF. Falling back to static image")
             setCustomContentViewBigImage(
                 bigImageUrl,
                 scaleType,
@@ -153,8 +153,8 @@ internal open class ContentView(
                 PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
                 PTScaleType.CENTER_CROP -> R.id.big_image
             }
-            Utils.loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, context, altText)
-            if (!Utils.getFallback()) {
+            val fallback = loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, altText)
+            if (!fallback) {
                 remoteView.setViewVisibility(imageViewId, View.VISIBLE)
                 remoteView.setViewVisibility(R.id.big_image_configurable, View.VISIBLE)
             }
@@ -162,14 +162,14 @@ internal open class ContentView(
     }
 
     fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int): Boolean {
-        val gifResult = TemplateMediaManager(TemplateRepository(context, renderer.config)).getGifFrames(gifUrl, numberOfFrames)
-        val frames = gifResult.frames
-        val duration = gifResult.duration
+        val gifResult = templateMediaManager.getGifFrames(gifUrl, numberOfFrames)
 
-        if (frames.isNullOrEmpty()) {
-            PTLog.debug("No frames extracted from GIF")
+        if (gifResult is GifResult.Error) {
+            PTLog.debug("${gifResult.reason}. Falling back to static image")
             return false
         }
+
+        val (frames, duration) = gifResult as GifResult.Success
 
         // Calculate timing for frame flipping
         val extractedFramesSize = frames.size
@@ -198,5 +198,54 @@ internal open class ContentView(
         remoteView.setViewVisibility(R.id.view_flipper, View.VISIBLE)
 
         return true
+    }
+
+    fun loadImageURLIntoRemoteView(
+        imageViewID: Int, imageUrl: String?,
+        remoteViews: RemoteViews
+    ): Boolean {
+        return loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, null)
+    }
+
+    /**
+     * Loads an image URL into a RemoteView.
+     * 
+     * @param imageViewID The ID of the ImageView in the RemoteView
+     * @param imageUrl The URL of the image to load (nullable)
+     * @param remoteViews The RemoteViews to load the image into
+     * @param altText Alternative text for accessibility (nullable)
+     * @return true if fallback is needed (image loading failed), false if image was loaded successfully
+     * 
+     * INVARIANT: When this method returns false, the imageUrl parameter is guaranteed to be non-null,
+     * non-blank, and start with "https". This invariant is enforced by getImageBitmap validation.
+     */
+    fun loadImageURLIntoRemoteView(
+        imageViewID: Int, imageUrl: String?,
+        remoteViews: RemoteViews, altText: String?
+    ): Boolean {
+        val image = templateMediaManager.getImageBitmap(imageUrl)
+
+        if (image != null) {
+            remoteViews.setImageViewBitmap(imageViewID, image)
+            if (!TextUtils.isEmpty(altText)) {
+                remoteViews.setContentDescription(imageViewID, altText)
+            }
+            return false
+        } else {
+            PTLog.debug("Image was not perfect. URL:$imageUrl hiding image view")
+            return true
+        }
+    }
+
+   fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
+        if (pt_msg_summary.isNotNullAndEmpty()) {
+            if (VERSION.SDK_INT >= VERSION_CODES.N) {
+                remoteView.setTextViewText(
+                    R.id.msg, Html.fromHtml(pt_msg_summary, Html.FROM_HTML_MODE_LEGACY)
+                )
+            } else {
+                remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg_summary))
+            }
+        }
     }
 }

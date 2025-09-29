@@ -42,6 +42,8 @@ public class PTConstants {
 
     public static final int ONE_SECOND = 1000;
 
+    public static final long ONE_SECOND_LONG = 1000L;
+
     public static final String DEFAULT_DL = "default_dl";
 
     public static final String NOTIF_TAG = "wzrk_pn";
@@ -75,7 +77,15 @@ public class PTConstants {
 
     public static final String PT_GIF_FRAMES = "pt_gif_frames";
 
+    public static final String PT_GIF_FRAMES_ALT = "pt_gif_frames_alt";
+
+    public static final String PT_SCALE_TYPE_ALT = "pt_scale_type_alt";
+
     public static final String PT_BIG_IMG_ALT_TEXT = "pt_big_img_alt_text";
+
+    public static final String PT_STICKY = "pt_sticky";
+
+    public static final String PT_DISMISS = "pt_dismiss";
 
     // Keys for collapsed media in zero bezel
     public static final String PT_GIF_COLLAPSED = "pt_gif_collapsed";
@@ -194,7 +204,6 @@ public class PTConstants {
             PT_MSG_COLOR,
             PT_BG,
             PT_META_CLR,
-            PT_SMALL_ICON_COLOUR,
             PT_CHRONO_TITLE_COLOUR,
             PT_PRODUCT_DISPLAY_ACTION_COLOUR,
             PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR);
