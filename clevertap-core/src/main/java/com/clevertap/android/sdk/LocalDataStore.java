@@ -11,8 +11,8 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.cryption.CryptHandler;
-import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm;
 import com.clevertap.android.sdk.cryption.EncryptionLevel;
+import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -49,7 +49,7 @@ public class LocalDataStore {
 
     private final Context context;
 
-    private final CryptHandler cryptHandler;
+    private final ICryptHandler cryptHandler;
     private final BaseDatabaseManager baseDatabaseManager;
 
     private final ExecutorService es;
@@ -60,7 +60,7 @@ public class LocalDataStore {
     private final Set<String> userNormalizedEventLogKeys = Collections.synchronizedSet(new HashSet<>());
     private final Map<String, String> normalizedEventNames = new HashMap<>();
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
+    LocalDataStore(Context context, CleverTapInstanceConfig config, ICryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
@@ -580,7 +580,7 @@ public class LocalDataStore {
                             if (value instanceof String) {
 
                                 if (isMediumEncryption) {
-                                    value = cryptHandler.encryptSafe((String) value, EncryptionAlgorithm.AES_GCM);
+                                    value = cryptHandler.encryptSafe((String) value);
                                 }
                                 if (value == null) {
                                     passFlag = false;

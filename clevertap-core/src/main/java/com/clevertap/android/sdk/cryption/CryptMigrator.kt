@@ -17,7 +17,7 @@ internal data class CryptMigrator(
     private val logPrefix: String,
     private val configEncryptionLevel: Int,
     private val logger: ILogger,
-    private val cryptHandler: CryptHandler,
+    private val cryptHandler: ICryptHandler,
     private val cryptRepository: CryptRepository,
     private val dataMigrationRepository: DataMigrationRepository,
     private val variablesRepo: VariablesRepo,
@@ -332,20 +332,20 @@ internal data class CryptMigrator(
         targetState: EncryptionState,
         data: String,
     ): MigrationResult {
-        val decrypted = cryptHandler.decrypt(data, EncryptionAlgorithm.AES)
+        val decrypted = cryptHandler.decryptWithAlgorithm(data, EncryptionAlgorithm.AES)
         return when (targetState) {
             ENCRYPTED_AES_GCM -> {
                 val encrypted = decrypted?.let {
-                    cryptHandler.encrypt(
-                        it,
-                        EncryptionAlgorithm.AES_GCM
-                    )
+                    cryptHandler.encrypt(it)
                 }
-                MigrationResult(encrypted ?: decrypted, encrypted != null || decrypted == null)
+                MigrationResult(
+                    data = encrypted ?: decrypted,
+                    migrationSuccessful = encrypted != null || decrypted == null
+                )
             }
 
             PLAIN_TEXT -> {
-                MigrationResult(decrypted ?: data, decrypted != null)
+                MigrationResult(data = decrypted ?: data, migrationSuccessful = decrypted != null)
             }
             else -> {
                 logger.verbose(logPrefix, "Invalid transition from ENCRYPTED_AES to $targetState")
@@ -369,10 +369,7 @@ internal data class CryptMigrator(
         targetState: EncryptionState,
         data: String,
     ): MigrationResult {
-        val decrypted = cryptHandler.decrypt(
-            data,
-            EncryptionAlgorithm.AES_GCM
-        )
+        val decrypted = cryptHandler.decrypt(data)
         return when (targetState) {
             PLAIN_TEXT -> {
                 MigrationResult(decrypted ?: data, decrypted != null)
@@ -401,10 +398,7 @@ internal data class CryptMigrator(
     ): MigrationResult {
         return when (targetState) {
             ENCRYPTED_AES_GCM -> {
-                val encrypted = cryptHandler.encrypt(
-                    data,
-                    EncryptionAlgorithm.AES_GCM
-                )
+                val encrypted = cryptHandler.encrypt(data)
                 MigrationResult(encrypted ?: data, encrypted != null)
             }
             else -> {

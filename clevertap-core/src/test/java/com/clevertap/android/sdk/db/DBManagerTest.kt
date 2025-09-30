@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk.db
 
+import TestCryptHandler
 import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.TestLogger
+import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.mockk
 import io.mockk.spyk
 import org.json.JSONArray
 import org.json.JSONObject
@@ -33,7 +35,7 @@ class DBManagerTest : BaseTestCase() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, "accountId", "accountToken")
         lockManager = CTLockManager()
-        dbEncryptionHandler = mockk(relaxed = true)
+        dbEncryptionHandler = DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.NONE)
         dbManager = DBManager(
             accountId = instanceConfig.accountId,
             logger = instanceConfig.logger,

@@ -47,27 +47,13 @@ class CryptHandlerTest {
     }
 
     @Test
-    fun `encryptSafe - plain text with AES algorithm - returns encrypted text`() {
-        val plainText = "testPlainText"
-        val encryptedText = "${AES_PREFIX}encryptedText${AES_SUFFIX}"
-
-        every { crypt.encryptInternal(plainText) } returns encryptedText
-
-        val result = cryptHandler.encryptSafe(plainText, CryptHandler.EncryptionAlgorithm.AES)
-
-        assertEquals(encryptedText, result)
-        verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES) }
-        verify { crypt.encryptInternal(plainText) }
-    }
-
-    @Test
     fun `encryptSafe - plain text with AES_GCM algorithm - returns encrypted text`() {
         val plainText = "testPlainText"
         val encryptedText = "${Constants.AES_GCM_PREFIX}encryptedText${Constants.AES_GCM_SUFFIX}"
 
         every { crypt.encryptInternal(plainText) } returns encryptedText
 
-        val result = cryptHandler.encryptSafe(plainText, CryptHandler.EncryptionAlgorithm.AES_GCM)
+        val result = cryptHandler.encryptSafe(plainText)
 
         assertEquals(encryptedText, result)
         verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }
@@ -122,13 +108,13 @@ class CryptHandlerTest {
     }
 
     @Test
-    fun `decryptSafe - AES encrypted text - returns decrypted text`() {
+    fun `decryptWithAlgorithm - AES encrypted text - returns decrypted text`() {
         val cipherText = "${Constants.AES_PREFIX}encryptedText${Constants.AES_SUFFIX}"
         val decryptedText = "decryptedText"
 
         every { crypt.decryptInternal(cipherText) } returns decryptedText
 
-        val result = cryptHandler.decryptSafe(cipherText, CryptHandler.EncryptionAlgorithm.AES)
+        val result = cryptHandler.decryptWithAlgorithm(cipherText, CryptHandler.EncryptionAlgorithm.AES)
 
         assertEquals(decryptedText, result)
         verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES) }
@@ -142,7 +128,7 @@ class CryptHandlerTest {
 
         every { crypt.decryptInternal(cipherText) } returns decryptedText
 
-        val result = cryptHandler.decryptSafe(cipherText, CryptHandler.EncryptionAlgorithm.AES_GCM)
+        val result = cryptHandler.decryptSafe(cipherText)
 
         assertEquals(decryptedText, result)
         verify { cryptFactory.getCryptInstance(CryptHandler.EncryptionAlgorithm.AES_GCM) }

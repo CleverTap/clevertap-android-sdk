@@ -126,6 +126,10 @@ class CTVariablesTest : BaseTestCase() {
 
   @Test
   fun `test individual callback on error`() {
+    val jo = JSONObject(mapOf(
+      "var1" to 1
+    ))
+    every { variablesRepo.loadDataFromCache() } returns jo.toString()
     ctVariables.init()
     var success = false
     var callback = false

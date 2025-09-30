@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.db.dao
 
+import TestCryptHandler
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.TestLogger
+import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.inbox.CTMessageDAO
@@ -27,7 +30,7 @@ class InboxMessageDAOImplTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
-        dbEncryptionHandler = mockk(relaxed = true)
+        dbEncryptionHandler = DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.NONE)
         dbHelper = DatabaseHelper(
             context = appCtx,
             accountId = instanceConfig.accountId,

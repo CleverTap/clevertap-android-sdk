@@ -5,13 +5,26 @@ import com.clevertap.android.sdk.Constants.AES_GCM_PREFIX
 import com.clevertap.android.sdk.Constants.AES_SUFFIX
 import com.clevertap.android.sdk.Constants.AES_PREFIX
 
+internal interface ICryptHandler {
+    fun encryptSafe(plainText: String): String?
+
+    fun decryptSafe(cipherText: String): String?
+
+    fun encrypt(plainText: String): String?
+
+    fun decrypt(cipherText: String): String?
+
+    fun decryptWithAlgorithm(cipherText: String, algorithm: CryptHandler.EncryptionAlgorithm): String?
+
+    fun updateMigrationFailureCount(migrationSuccessful: Boolean)
+}
 /**
  * Handles encryption and decryption for various encryption algorithms
  */
 internal class CryptHandler constructor(
     private val repository: CryptRepository,
     private val cryptFactory: CryptFactory
-) {
+) : ICryptHandler {
 
     /**
      * Supported encryption algorithms.
@@ -27,18 +40,14 @@ internal class CryptHandler constructor(
      * @param plainText - The text to encrypt.
      * @return The encrypted text, or the original plain text if encryption is not required.
      */
-    @JvmOverloads
-    fun encryptSafe(
-        plainText: String,
-        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
-    ): String? {
+    override fun encryptSafe(plainText: String): String? {
 
         if (isTextEncrypted(plainText)) {
             return plainText
         }
 
         // Use AES_GCM algorithm by default.
-        val crypt = cryptFactory.getCryptInstance(algorithm)
+        val crypt = cryptFactory.getCryptInstance(DEFAULT_ALGORITHM)
         return crypt.encryptInternal(plainText)
     }
 
@@ -46,18 +55,13 @@ internal class CryptHandler constructor(
      * Decrypts the given cipher text using the specified algorithm.
      *
      * @param cipherText - The text to decrypt.
-     * @param algorithm - The encryption algorithm to use (default is AES_GCM).
      * @return The decrypted text, or the original cipher text if decryption is not required.
      */
-    @JvmOverloads
-    fun decryptSafe(
-        cipherText: String,
-        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
-    ): String? {
+    override fun decryptSafe(cipherText: String): String? {
         if (!isTextEncrypted(cipherText)) {
             return cipherText
         }
-        return cryptFactory.getCryptInstance(algorithm).decryptInternal(cipherText)
+        return cryptFactory.getCryptInstance(DEFAULT_ALGORITHM).decryptInternal(cipherText)
     }
 
     /**
@@ -66,11 +70,8 @@ internal class CryptHandler constructor(
      * @param plainText - The text to encrypt.
      * @return The encrypted text, or null if encryption fails.
      */
-    fun encrypt(
-        plainText: String,
-        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
-    ): String? {
-        val crypt = cryptFactory.getCryptInstance(algorithm)
+    override fun encrypt(plainText: String): String? {
+        val crypt = cryptFactory.getCryptInstance(DEFAULT_ALGORITHM)
         return crypt.encryptInternal(plainText)
     }
 
@@ -80,11 +81,12 @@ internal class CryptHandler constructor(
      * @param cipherText - The text to decrypt.
      * @return The decrypted text, or null if decryption fails.
      */
-    @JvmOverloads
-    fun decrypt(
-        cipherText: String,
-        algorithm: EncryptionAlgorithm = EncryptionAlgorithm.AES_GCM
-    ): String? {
+    override fun decrypt(cipherText: String): String? {
+        val crypt = cryptFactory.getCryptInstance(DEFAULT_ALGORITHM)
+        return crypt.decryptInternal(cipherText)
+    }
+
+    override fun decryptWithAlgorithm(cipherText: String, algorithm: EncryptionAlgorithm): String? {
         val crypt = cryptFactory.getCryptInstance(algorithm)
         return crypt.decryptInternal(cipherText)
     }
@@ -94,11 +96,18 @@ internal class CryptHandler constructor(
      *
      * @param migrationSuccessful - Indicates if migration was successful
      */
-    fun updateMigrationFailureCount(migrationSuccessful: Boolean) {
+    // todo remove this method and use repo in use case
+    override fun updateMigrationFailureCount(migrationSuccessful: Boolean) {
         repository.updateMigrationFailureCount(migrationSuccessful)
     }
 
     companion object {
+
+        /**
+         * Default Algorithm used for encryption on SDK
+         */
+        val DEFAULT_ALGORITHM = EncryptionAlgorithm.AES_GCM
+
         /**
          * Checks if the given text is encrypted (either using AES or AES_GCM).
          *

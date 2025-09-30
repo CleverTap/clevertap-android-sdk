@@ -9,9 +9,8 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.cryption.CryptHandler;
-import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm;
 import com.clevertap.android.sdk.cryption.EncryptionLevel;
+import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 
 import org.json.JSONObject;
@@ -28,9 +27,9 @@ public class LoginInfoProvider {
 
     private final Context context;
 
-    private CryptHandler cryptHandler;
+    private ICryptHandler cryptHandler;
 
-    public LoginInfoProvider(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler) {
+    public LoginInfoProvider(Context context, CleverTapInstanceConfig config, ICryptHandler cryptHandler) {
         this.context = context;
         this.config = config;
         this.cryptHandler = cryptHandler;
@@ -66,7 +65,7 @@ public class LoginInfoProvider {
 
             String saveString = null;
             if (EncryptionLevel.fromInt(config.getEncryptionLevel()) != EncryptionLevel.NONE) {
-                saveString = cryptHandler.encryptSafe(cache.toString(), EncryptionAlgorithm.AES_GCM);
+                saveString = cryptHandler.encryptSafe(cache.toString());
                 if (saveString == null) {
                     cryptHandler.updateMigrationFailureCount(false);
                 }

@@ -146,7 +146,7 @@ class CryptMigratorTest {
         mockkObject(CryptHandler)
         every { CryptHandler.isTextAESEncrypted(any()) } returns false
         every { CryptHandler.isTextAESGCMEncrypted(any()) } returns false
-        every { cryptHandler.encrypt(decryptedText, CryptHandler.EncryptionAlgorithm.AES_GCM)} returns encryptedText
+        every { cryptHandler.encrypt(decryptedText)} returns encryptedText
 
         cryptMigratorMedium.migrateEncryption()
 
@@ -165,7 +165,7 @@ class CryptMigratorTest {
         mockkObject(CryptHandler)
         every { CryptHandler.isTextAESEncrypted(any()) } returns false
         every { CryptHandler.isTextAESGCMEncrypted(any()) } returns false
-        every { cryptHandler.encrypt(decryptedText, CryptHandler.EncryptionAlgorithm.AES_GCM)} returns null
+        every { cryptHandler.encrypt(decryptedText)} returns null
 
         cryptMigratorMedium.migrateEncryption()
 
@@ -185,7 +185,7 @@ class CryptMigratorTest {
         mockkObject(CryptHandler)
         every { CryptHandler.isTextAESEncrypted(any()) } returns false
         every { CryptHandler.isTextAESGCMEncrypted(any()) } returns true
-        every { cryptHandler.decrypt(encryptedText, CryptHandler.EncryptionAlgorithm.AES_GCM)} returns decryptedText
+        every { cryptHandler.decrypt(encryptedText)} returns decryptedText
 
         cryptMigratorNone.migrateEncryption()
 
@@ -204,7 +204,7 @@ class CryptMigratorTest {
         mockkObject(CryptHandler)
         every { CryptHandler.isTextAESEncrypted(any()) } returns false
         every { CryptHandler.isTextAESGCMEncrypted(any()) } returns true
-        every { cryptHandler.decrypt(encryptedText, CryptHandler.EncryptionAlgorithm.AES_GCM)} returns null
+        every { cryptHandler.decrypt(encryptedText)} returns null
 
 
         cryptMigratorNone.migrateEncryption()
@@ -227,8 +227,8 @@ class CryptMigratorTest {
 
         cryptMigratorMedium.migrateEncryption()
 
-        verify(exactly = 0) { cryptHandler.encrypt(any(), CryptHandler.EncryptionAlgorithm.AES_GCM) }
-        verify(exactly = 0) { cryptHandler.decrypt(any(), CryptHandler.EncryptionAlgorithm.AES_GCM) }
+        verify(exactly = 0) { cryptHandler.encrypt(any()) }
+        verify(exactly = 0) { cryptHandler.decrypt(any()) }
     }
 
     @Test
@@ -247,8 +247,8 @@ class CryptMigratorTest {
 
         every { dataMigrationRepository.cachedGuidJsonObject() } returns encryptedJson
 
-        every { cryptHandler.decrypt(any(), CryptHandler.EncryptionAlgorithm.AES)} returns migratedFormatJson
-        every { cryptHandler.encrypt(any(), CryptHandler.EncryptionAlgorithm.AES_GCM)} returns encryptedText
+        every { cryptHandler.decryptWithAlgorithm(any(), CryptHandler.EncryptionAlgorithm.AES)} returns migratedFormatJson
+        every { cryptHandler.encrypt(any())} returns encryptedText
 
         mockkObject(CryptHandler)
 
@@ -271,7 +271,7 @@ class CryptMigratorTest {
         every { cryptRepository.migrationFailureCount() } returns CryptMigrator.MIGRATION_FIRST_UPGRADE
 
         every { dataMigrationRepository.cachedGuidJsonObject() } returns encryptedJson
-        every { cryptHandler.decrypt(any(), CryptHandler.EncryptionAlgorithm.AES)} returns null
+        every { cryptHandler.decryptWithAlgorithm(any(), CryptHandler.EncryptionAlgorithm.AES)} returns null
 
         mockkObject(CryptHandler)
 
@@ -302,8 +302,8 @@ class CryptMigratorTest {
 
         every { dataMigrationRepository.cachedGuidJsonObject() } returns encryptedJson
 
-        every { cryptHandler.decrypt(any(), CryptHandler.EncryptionAlgorithm.AES)} returns migratedFormat
-        every { cryptHandler.encrypt(any(), CryptHandler.EncryptionAlgorithm.AES_GCM)} returns null
+        every { cryptHandler.decryptWithAlgorithm(any(), CryptHandler.EncryptionAlgorithm.AES)} returns migratedFormat
+        every { cryptHandler.encrypt(any())} returns null
 
         mockkObject(CryptHandler)
 
@@ -341,7 +341,7 @@ class CryptMigratorTest {
         mockkObject(CryptHandler)
         every { CryptHandler.isTextAESEncrypted(any()) } returns false
         every { CryptHandler.isTextAESGCMEncrypted(any()) } returns false
-        every { cryptHandler.encrypt(any(), CryptHandler.EncryptionAlgorithm.AES_GCM)} returns encryptedText
+        every { cryptHandler.encrypt(any())} returns encryptedText
         every { dataMigrationRepository.saveUserProfile(any(), any()) } returns 1
 
         cryptMigratorMedium.migrateEncryption()
@@ -370,7 +370,7 @@ class CryptMigratorTest {
         mockkObject(CryptHandler)
         every { CryptHandler.isTextAESEncrypted(any()) } returns false
         every { CryptHandler.isTextAESGCMEncrypted(any()) } returns false
-        every { cryptHandler.encrypt(any(), CryptHandler.EncryptionAlgorithm.AES_GCM)} returns null
+        every { cryptHandler.encrypt(any())} returns null
         every { dataMigrationRepository.saveUserProfile(any(), any()) } returns 1
 
         cryptMigratorMedium.migrateEncryption()
@@ -407,7 +407,7 @@ class CryptMigratorTest {
         every { CryptHandler.isTextAESEncrypted(any()) } returns false
         every { CryptHandler.isTextAESGCMEncrypted(any()) } returns true
 
-        every { cryptHandler.decrypt(encryptedText, CryptHandler.EncryptionAlgorithm.AES_GCM)} returns decryptedText
+        every { cryptHandler.decrypt(encryptedText)} returns decryptedText
         every { dataMigrationRepository.saveUserProfile(any(), any()) } returns 1
 
         cryptMigratorNone.migrateEncryption()
@@ -439,7 +439,7 @@ class CryptMigratorTest {
         every { CryptHandler.isTextAESEncrypted(any()) } returns false
         every { CryptHandler.isTextAESGCMEncrypted(any()) } returns true
 
-        every { cryptHandler.decrypt(encryptedText, CryptHandler.EncryptionAlgorithm.AES_GCM)} returns null
+        every { cryptHandler.decrypt(encryptedText)} returns null
         every { dataMigrationRepository.saveUserProfile(any(), any()) } returns 1
 
         cryptMigratorNone.migrateEncryption()
@@ -475,8 +475,8 @@ class CryptMigratorTest {
 
         mockkObject(CryptHandler)
 
-        every { cryptHandler.decrypt(encryptedTextV1, CryptHandler.EncryptionAlgorithm.AES)} returns decryptedText
-        every { cryptHandler.encrypt(decryptedText, CryptHandler.EncryptionAlgorithm.AES_GCM)} returns encryptedTextV2
+        every { cryptHandler.decryptWithAlgorithm(encryptedTextV1, CryptHandler.EncryptionAlgorithm.AES)} returns decryptedText
+        every { cryptHandler.encrypt(decryptedText)} returns encryptedTextV2
         every { dataMigrationRepository.saveUserProfile(any(), any()) } returns 1
 
         cryptMigratorMedium.migrateEncryption()
@@ -509,7 +509,7 @@ class CryptMigratorTest {
 
         mockkObject(CryptHandler)
 
-        every { cryptHandler.decrypt(encryptedText, CryptHandler.EncryptionAlgorithm.AES)} returns null
+        every { cryptHandler.decryptWithAlgorithm(encryptedText, CryptHandler.EncryptionAlgorithm.AES)} returns null
         every { dataMigrationRepository.saveUserProfile(any(), any()) } returns 1
 
         cryptMigratorMedium.migrateEncryption()
@@ -544,8 +544,8 @@ class CryptMigratorTest {
 
         mockkObject(CryptHandler)
 
-        every { cryptHandler.decrypt(any(), CryptHandler.EncryptionAlgorithm.AES)} returns decryptedText
-        every { cryptHandler.encrypt(any(), CryptHandler.EncryptionAlgorithm.AES_GCM)} returns null
+        every { cryptHandler.decryptWithAlgorithm(any(), CryptHandler.EncryptionAlgorithm.AES)} returns decryptedText
+        every { cryptHandler.encrypt(any())} returns null
         every { dataMigrationRepository.saveUserProfile(any(), any()) } returns 1
 
         cryptMigratorMedium.migrateEncryption()

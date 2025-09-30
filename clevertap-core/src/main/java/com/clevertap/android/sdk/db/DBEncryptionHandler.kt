@@ -2,12 +2,12 @@ package com.clevertap.android.sdk.db
 
 import com.clevertap.android.sdk.BuildConfig
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.cryption.EncryptionLevel
+import com.clevertap.android.sdk.cryption.ICryptHandler
 import kotlin.system.measureTimeMillis
 
 internal class DBEncryptionHandler(
-    private val crypt: CryptHandler,
+    private val crypt: ICryptHandler,
     private val logger: ILogger,
     private val encryptionLevel: EncryptionLevel = EncryptionLevel.NONE
 ) {
