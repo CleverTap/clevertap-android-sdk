@@ -62,8 +62,6 @@ internal data class CryptMigrator(
             else -> storedFailureCount
         }
 
-        cryptRepository.updateEncryptionLevel(configEncryptionLevel)
-
         if (migrationFailureCount == MIGRATION_NOT_NEEDED) {
             logger.verbose(
                 logPrefix,
@@ -88,6 +86,9 @@ internal data class CryptMigrator(
             firstUpgrade = migrationFailureCount == -1
         )
 
+        if (migrationSuccess) {
+            cryptRepository.updateEncryptionLevel(configEncryptionLevel)
+        }
         cryptRepository.updateIsSSInAppDataMigrated(migrationSuccess)
         cryptRepository.updateMigrationFailureCount(migrationSuccess)
     }
@@ -105,8 +106,10 @@ internal data class CryptMigrator(
         val dbMigrationSuccess = migrateDBProfile(level = level)
         val inAppMigrationSuccess = migrateInAppData(level = level)
 
-        migrateVariablesData(level = level, storedLevel = storedLevel)
-        migrateInboxData(level = level, storedLevel = storedLevel)
+        if (EncryptionLevel.FULL_DATA == storedLevel || EncryptionLevel.FULL_DATA == level) {
+            migrateVariablesData(level = level, storedLevel = storedLevel)
+            migrateInboxData(level = level, storedLevel = storedLevel)
+        }
 
         return cgkMigrationSuccess && dbMigrationSuccess && inAppMigrationSuccess
     }
