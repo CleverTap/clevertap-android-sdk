@@ -135,14 +135,11 @@ internal class ManualCarouselContentView(
                 remoteView.showPrevious(R.id.carousel_image_left)
             }
             var dl = ""
-            if (deepLinkList.size == tempImageList.size) {
-                dl = deepLinkList.get(newPosition)
-            } else if (deepLinkList.size == 1) {
-                dl = deepLinkList.get(0)
-            } else if (deepLinkList.size > newPosition) {
-                dl = deepLinkList.get(newPosition)
-            } else if (deepLinkList.size < newPosition) {
-                dl = deepLinkList.get(0)
+
+            dl = when {
+                deepLinkList.isEmpty() -> ""
+                newPosition < deepLinkList.size -> deepLinkList[newPosition]
+                else -> deepLinkList.first()
             }
 
             extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, newPosition)
