@@ -156,8 +156,6 @@ internal class DBAdapter constructor(
         } else null
     }
 
-    fun fetchAllDeviceIds(): List<String> = userProfileDAO.fetchAllDeviceIds()
-
     // =====================================================
     // PUSH NOTIFICATION OPERATIONS
     // =====================================================
