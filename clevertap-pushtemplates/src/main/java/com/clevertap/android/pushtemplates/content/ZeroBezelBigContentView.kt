@@ -33,7 +33,7 @@ internal class ZeroBezelBigContentView(
             data.mediaData.gif.numberOfFrames
         )
         if (!isMediaLoaded) {
-            PTLog.debug("Download failed for all media in ZeroBezel Expanded Notification. Now showing the image")
+            PTLog.debug("Download failed for all media in ZeroBezel Expanded Notification. Not showing the image")
             remoteView.setViewVisibility(R.id.zero_bezel_scrim, View.GONE)
         }
     }

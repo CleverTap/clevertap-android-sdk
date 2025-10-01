@@ -26,7 +26,7 @@ internal class ZeroBezelMixedSmallContentView(
             data.collapsedMediaData.gif.numberOfFrames
         )
         if (!isMediaLoaded) {
-            PTLog.debug("Download failed for all media in ZeroBezel Collapsed Notification. Now showing the image")
+            PTLog.debug("Download failed for all media in ZeroBezel Collapsed Notification. Not showing the image")
             remoteView.setViewVisibility(R.id.zero_bezel_scrim, View.GONE)
         }
     }

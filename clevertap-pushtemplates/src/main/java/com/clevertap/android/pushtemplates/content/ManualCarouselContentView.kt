@@ -82,7 +82,7 @@ internal class ManualCarouselContentView(
         }
 
         if (imageCounter == 0) {
-            PTLog.debug("Download failed for all images in Manual Carousel. Now showing the image")
+            PTLog.debug("Download failed for all images in Manual Carousel. Not showing the image")
             remoteView.setViewVisibility(R.id.view_flipper, View.GONE)
         } else {
             setupCarouselNavigation(context, data, extras, currentPosition, tempImageList, deepLinkList)

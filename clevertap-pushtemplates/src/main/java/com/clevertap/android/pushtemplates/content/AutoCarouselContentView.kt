@@ -69,7 +69,7 @@ internal class AutoCarouselContentView(
         }
 
         if (numberOfImagesLoaded == 0) {
-            PTLog.debug("Download failed for all images in Auto Carousel. Now showing the image")
+            PTLog.debug("Download failed for all images in Auto Carousel. Not showing the image")
             remoteView.setViewVisibility(R.id.view_flipper, View.GONE)
         }
     }
