@@ -45,6 +45,7 @@ internal class AutoCarouselContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
+        var numberOfImagesLoaded = 0
         data.carouselData.imageList.forEach { imageData ->
             val imageUrl = imageData.url
             val altText = imageData.altText
@@ -61,9 +62,15 @@ internal class AutoCarouselContentView(
             if (!fallback) {
                 tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
                 remoteView.addView(R.id.view_flipper, tempRemoteView)
+                numberOfImagesLoaded++
             } else {
                 PTLog.debug("Skipping Image in Auto Carousel.")
             }
+        }
+
+        if (numberOfImagesLoaded == 0) {
+            PTLog.debug("Download failed for all images in Auto Carousel. Now showing the image")
+            remoteView.setViewVisibility(R.id.view_flipper, View.GONE)
         }
     }
 }

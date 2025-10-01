@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
+import com.clevertap.android.pushtemplates.BaseContent
 import com.clevertap.android.pushtemplates.ManualCarouselTemplateData
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
@@ -15,7 +16,7 @@ import java.util.ArrayList
 
 internal class ManualCarouselContentView(
     context: Context,
-    renderer: TemplateRenderer,
+    private val renderer: TemplateRenderer,
     data: ManualCarouselTemplateData,
     extras: Bundle,
 ) :
@@ -27,24 +28,14 @@ internal class ManualCarouselContentView(
 
     init {
         val baseContent = data.carouselData.baseContent
-        setCustomContentViewMessageSummary(baseContent.textData.messageSummary)
-        setCustomContentViewBasicKeys(
-            baseContent.textData.subtitle,
-            baseContent.colorData.metaColor
-        )
-        setCustomContentViewTitle(baseContent.textData.title)
-        setCustomContentViewMessage(baseContent.textData.message)
-        setCustomBackgroundColour(baseContent.colorData.backgroundColor, R.id.content_view_big)
-        setCustomTextColour(baseContent.colorData.titleColor, R.id.title)
-        setCustomTextColour(baseContent.colorData.messageColor, R.id.msg)
-        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
-        setCustomContentViewLargeIcon(baseContent.iconData.largeIcon)
+        setupBaseContent(baseContent, renderer)
 
         val scaleType = data.carouselData.scaleType
-        val deepLinkList = data.carouselData.baseContent.deepLinkList
+        val deepLinkList = baseContent.deepLinkList
 
         remoteView.setViewVisibility(R.id.leftArrowPos0, View.VISIBLE)
         remoteView.setViewVisibility(R.id.rightArrowPos0, View.VISIBLE)
+
         var imageCounter = 0
         var isFirstImageOk = false
         var currentPosition = 0
@@ -53,6 +44,7 @@ internal class ManualCarouselContentView(
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
+
         data.carouselData.imageList.forEachIndexed { index, imageData ->
             val imageUrl = imageData.url
             val altText = imageData.altText
@@ -74,14 +66,12 @@ internal class ManualCarouselContentView(
                 tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
                 val centerRemoteView = tempRemoteView.clone()
 
-                // For filmstrip variant, only set the altText for the central image
                 remoteView.addView(R.id.carousel_image_right, tempRemoteView)
                 remoteView.addView(R.id.carousel_image_left, tempRemoteView)
                 centerRemoteView.setContentDescription(imageViewId, altText)
                 remoteView.addView(R.id.carousel_image, centerRemoteView)
 
                 imageCounter++
-                // Safe to use !! because loadImageURLIntoRemoteView returns false only when imageUrl is valid (non-null, non-blank, starts with https)
                 tempImageList.add(imageUrl!!)
             } else {
                 if (imageCounter < deepLinkList.size) {
@@ -91,6 +81,37 @@ internal class ManualCarouselContentView(
             }
         }
 
+        if (imageCounter == 0) {
+            PTLog.debug("Download failed for all images in Manual Carousel. Now showing the image")
+            remoteView.setViewVisibility(R.id.view_flipper, View.GONE)
+        } else {
+            setupCarouselNavigation(context, data, extras, currentPosition, tempImageList, deepLinkList)
+        }
+    }
+
+    private fun setupBaseContent(baseContent: BaseContent, renderer: TemplateRenderer) {
+        setCustomContentViewMessageSummary(baseContent.textData.messageSummary)
+        setCustomContentViewBasicKeys(
+            baseContent.textData.subtitle,
+            baseContent.colorData.metaColor
+        )
+        setCustomContentViewTitle(baseContent.textData.title)
+        setCustomContentViewMessage(baseContent.textData.message)
+        setCustomBackgroundColour(baseContent.colorData.backgroundColor, R.id.content_view_big)
+        setCustomTextColour(baseContent.colorData.titleColor, R.id.title)
+        setCustomTextColour(baseContent.colorData.messageColor, R.id.msg)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
+        setCustomContentViewLargeIcon(baseContent.iconData.largeIcon)
+    }
+
+    private fun setupCarouselNavigation(
+        context: Context,
+        data: ManualCarouselTemplateData,
+        extras: Bundle,
+        currentPosition: Int,
+        tempImageList: ArrayList<String>,
+        deepLinkList: ArrayList<String>
+    ) {
         if (data.carouselType == null || !data.carouselType.equals(
                 PTConstants.PT_MANUAL_CAROUSEL_FILMSTRIP,
                 ignoreCase = true
@@ -116,12 +137,10 @@ internal class ManualCarouselContentView(
             } else {
                 currPosition - 1
             }
+
             remoteView.setDisplayedChild(R.id.carousel_image, currPosition)
             remoteView.setDisplayedChild(R.id.carousel_image_right, nextPosition)
-            remoteView.setDisplayedChild(
-                R.id.carousel_image_left,
-                prevPosition
-            )
+            remoteView.setDisplayedChild(R.id.carousel_image_left, prevPosition)
 
             if (rightSwipe) {
                 newPosition = nextPosition
@@ -134,9 +153,8 @@ internal class ManualCarouselContentView(
                 remoteView.showPrevious(R.id.carousel_image_right)
                 remoteView.showPrevious(R.id.carousel_image_left)
             }
-            var dl = ""
 
-            dl = when {
+            val dl: String = when {
                 deepLinkList.isEmpty() -> ""
                 newPosition < deepLinkList.size -> deepLinkList[newPosition]
                 else -> deepLinkList.first()
@@ -192,11 +210,6 @@ internal class ManualCarouselContentView(
                     MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT
                 )
             )
-
-
-            if (imageCounter < 2) {
-                PTLog.debug("Need at least 2 images to display Manual Carousel, found - $imageCounter, not displaying the notification.")
-            }
         }
     }
 }

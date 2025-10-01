@@ -1,6 +1,8 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
+import android.view.View
+import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.ZeroBezelTemplateData
@@ -20,7 +22,9 @@ internal class ZeroBezelBigContentView(
         setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
         setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_big)
         setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
-        setCustomContentViewMedia(
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
+
+        val isMediaLoaded = setCustomContentViewMedia(
             R.layout.image_view_dynamic_relative,
             data.mediaData.gif.url,
             data.mediaData.bigImage.url,
@@ -28,6 +32,9 @@ internal class ZeroBezelBigContentView(
             data.mediaData.bigImage.altText,
             data.mediaData.gif.numberOfFrames
         )
-        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
+        if (!isMediaLoaded) {
+            PTLog.debug("Download failed for all media in ZeroBezel Expanded Notification. Now showing the image")
+            remoteView.setViewVisibility(R.id.zero_bezel_scrim, View.GONE)
+        }
     }
 }
