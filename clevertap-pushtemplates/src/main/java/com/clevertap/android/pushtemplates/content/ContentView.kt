@@ -130,35 +130,48 @@ internal open class ContentView(
         scaleType: PTScaleType,
         altText: String,
         gifFrames: Int
-    ) {
-        val gifSuccess = setCustomContentViewGIF(
+    ): Boolean {
+        val isGifLoaded = setCustomContentViewGIF(
             gifUrl,
             altText,
             scaleType,
             gifFrames,
             layoutId
         )
-        if (!gifSuccess) {
+
+        return if (isGifLoaded) {
+            true
+        } else {
             setCustomContentViewBigImage(
-                bigImageUrl,
-                scaleType,
-                altText
+                imageUrl = bigImageUrl,
+                scaleType = scaleType,
+                altText = altText
             )
         }
     }
 
-    fun setCustomContentViewBigImage(pt_big_img: String?, scaleType: PTScaleType, altText: String) {
-        if (pt_big_img.isNotNullAndEmpty()) {
-            val imageViewId = when (scaleType) {
-                PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
-                PTScaleType.CENTER_CROP -> R.id.big_image
-            }
-            val fallback = loadImageURLIntoRemoteView(imageViewId, pt_big_img, remoteView, altText)
-            if (!fallback) {
-                remoteView.setViewVisibility(imageViewId, View.VISIBLE)
-                remoteView.setViewVisibility(R.id.big_image_configurable, View.VISIBLE)
-            }
+    fun setCustomContentViewBigImage(
+        imageUrl: String?,
+        scaleType: PTScaleType,
+        altText: String
+    ): Boolean {
+
+        if (imageUrl.isNullOrBlank()) return false
+
+        val imageViewId = when (scaleType) {
+            PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
+            PTScaleType.CENTER_CROP -> R.id.big_image
         }
+
+        val loaded = !loadImageURLIntoRemoteView(imageViewId, imageUrl, remoteView, altText)
+
+        if (loaded) {
+            remoteView.setViewVisibility(imageViewId, View.VISIBLE)
+            remoteView.setViewVisibility(R.id.big_image_configurable, View.VISIBLE)
+        } else {
+            remoteView.setViewVisibility(R.id.big_media_configurable, View.GONE)
+        }
+        return loaded
     }
 
     fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int): Boolean {

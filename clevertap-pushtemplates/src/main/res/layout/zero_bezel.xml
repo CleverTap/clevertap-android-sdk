@@ -13,13 +13,13 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:minHeight="196dp"
         android:orientation="vertical">
 
         <include layout="@layout/image_media_dynamic_relative"
             android:id="@+id/big_media_configurable"/>
 
         <ImageView
+            android:id="@+id/zero_bezel_scrim"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignBottom="@+id/big_media_configurable"
