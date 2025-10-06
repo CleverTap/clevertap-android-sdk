@@ -161,16 +161,17 @@ class PushNotificationDAOImplTest : BaseTestCase() {
         
         // Store some notifications in the past (expired)
         testClock.setCurrentTime(currentTime - TimeUnit.DAYS.toMillis(4))
-        // These will get a TTL of current time - 3 days + default TTL
-        // When ttl is 0, it uses currentTime + DEFAULT_PUSH_TTL
+        // These will get a TTL of current time - 4 days + default TTL
+        // When ttl is 0, it uses currentTimeSeconds + DEFAULT_PUSH_TTL_SECONDS
         pushNotificationDAO.storePushNotificationId("expired1", 0)
-        
+
+        testClock.setCurrentTime(currentTime)
         // Store with explicit past TTL (expired)
-        val pastTTL = currentTime - TimeUnit.DAYS.toMillis(1)
+        val pastTTL = testClock.currentTimeSeconds() - TimeUnit.DAYS.toSeconds(1)
         pushNotificationDAO.storePushNotificationId("expired2", pastTTL)
         
         // Store notification with future TTL (not expired)
-        val futureTTL = currentTime + TimeUnit.DAYS.toMillis(1)
+        val futureTTL = testClock.currentTimeSeconds() + TimeUnit.DAYS.toSeconds(1)
         pushNotificationDAO.storePushNotificationId("valid1", futureTTL)
         
         // Reset to current time and clean up
@@ -189,13 +190,13 @@ class PushNotificationDAOImplTest : BaseTestCase() {
         testClock.setCurrentTime(currentTime)
         
         // Store notification with TTL exactly at current time (should be removed)
-        pushNotificationDAO.storePushNotificationId("exact_time", currentTime)
+        pushNotificationDAO.storePushNotificationId("exact_time", testClock.currentTimeSeconds())
         
         // Store notification 1 millisecond in the future (should be kept)
-        pushNotificationDAO.storePushNotificationId("future_1ms", currentTime + 1)
+        pushNotificationDAO.storePushNotificationId("future_1ms", testClock.currentTimeSeconds() + 1)
         
         // Store notification 1 millisecond in the past (should be removed)
-        pushNotificationDAO.storePushNotificationId("past_1ms", currentTime - 1)
+        pushNotificationDAO.storePushNotificationId("past_1ms", testClock.currentTimeSeconds() - 1)
         
         // Clean up
         pushNotificationDAO.cleanUpPushNotifications()
@@ -212,9 +213,9 @@ class PushNotificationDAOImplTest : BaseTestCase() {
         testClock.setCurrentTime(currentTime)
         
         // Store all notifications with past TTL (all expired)
-        pushNotificationDAO.storePushNotificationId("expired1", currentTime - TimeUnit.DAYS.toMillis(1))
-        pushNotificationDAO.storePushNotificationId("expired2", currentTime - TimeUnit.HOURS.toMillis(1))
-        pushNotificationDAO.storePushNotificationId("expired3", currentTime - TimeUnit.MINUTES.toMillis(1))
+        pushNotificationDAO.storePushNotificationId("expired1", testClock.currentTimeSeconds() - TimeUnit.DAYS.toSeconds(1))
+        pushNotificationDAO.storePushNotificationId("expired2", testClock.currentTimeSeconds() - TimeUnit.HOURS.toSeconds(1))
+        pushNotificationDAO.storePushNotificationId("expired3", testClock.currentTimeSeconds() - TimeUnit.MINUTES.toSeconds(1))
         
         // Clean up
         pushNotificationDAO.cleanUpPushNotifications()
@@ -230,12 +231,12 @@ class PushNotificationDAOImplTest : BaseTestCase() {
         testClock.setCurrentTime(currentTime)
         
         // Store expired notifications
-        val expiredTTL = currentTime - TimeUnit.DAYS.toMillis(1)
+        val expiredTTL = testClock.currentTimeSeconds() - TimeUnit.DAYS.toSeconds(1)
         pushNotificationDAO.storePushNotificationId("expired1", expiredTTL)
         pushNotificationDAO.storePushNotificationId("expired2", expiredTTL)
         
         // Store valid notifications
-        val validTTL = currentTime + TimeUnit.DAYS.toMillis(1)
+        val validTTL = testClock.currentTimeSeconds() + TimeUnit.DAYS.toSeconds(1)
         pushNotificationDAO.storePushNotificationId("valid1", validTTL)
         pushNotificationDAO.storePushNotificationId("valid2", validTTL)
         
@@ -270,7 +271,7 @@ class PushNotificationDAOImplTest : BaseTestCase() {
         
         // The notification should have TTL = currentTime + Constants.DEFAULT_PUSH_TTL
         // Let's advance time but not beyond the default TTL
-        testClock.setCurrentTime(currentTime + TimeUnit.HOURS.toMillis(1))
+        testClock.setCurrentTime(currentTime + TimeUnit.HOURS.toSeconds(1))
         
         // Clean up - notification should still be valid
         pushNotificationDAO.cleanUpPushNotifications()
@@ -280,7 +281,7 @@ class PushNotificationDAOImplTest : BaseTestCase() {
         assertEquals("default_ttl", result[0])
         
         // Now advance time beyond the default TTL
-        testClock.setCurrentTime(currentTime + Constants.DEFAULT_PUSH_TTL + 1)
+        testClock.setCurrentTime(currentTime + TimeUnit.SECONDS.toMillis(Constants.DEFAULT_PUSH_TTL_SECONDS )+ 1)
         
         // Clean up - notification should now be expired
         pushNotificationDAO.cleanUpPushNotifications()

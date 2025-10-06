@@ -161,8 +161,8 @@ internal class DBAdapter constructor(
     // =====================================================
 
     @Synchronized
-    fun storePushNotificationId(id: String, ttl: Long) {
-        pushNotificationDAO.storePushNotificationId(id, ttl)
+    fun storePushNotificationId(id: String, ttlInSeconds: Long) {
+        pushNotificationDAO.storePushNotificationId(id, ttlInSeconds)
     }
 
     @Synchronized
