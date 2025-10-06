@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.db
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
 import com.clevertap.android.sdk.cryption.EncryptionLevel
 import io.mockk.clearMocks
 import io.mockk.confirmVerified
@@ -96,7 +95,7 @@ internal class DBEncryptionHandlerTest {
         assertEquals(op2, plainText)
         verify(exactly = 0) { cryptHandler.encryptSafe(any()) }
 
-        // Verify there is no encryption done for level FULL_DATA
+        // Verify there is encryption done for level FULL_DATA
         initHandler(EncryptionLevel.FULL_DATA)
         val op3 = dbEncryptionHandler.wrapDbData(plainText)
         assertEquals(op3, encryptedText)
