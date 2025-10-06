@@ -11,7 +11,8 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.cryption.CryptHandler;
-import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm;
+import com.clevertap.android.sdk.cryption.EncryptionLevel;
+import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -48,7 +49,7 @@ public class LocalDataStore {
 
     private final Context context;
 
-    private final CryptHandler cryptHandler;
+    private final ICryptHandler cryptHandler;
     private final BaseDatabaseManager baseDatabaseManager;
 
     private final ExecutorService es;
@@ -59,7 +60,7 @@ public class LocalDataStore {
     private final Set<String> userNormalizedEventLogKeys = Collections.synchronizedSet(new HashSet<>());
     private final Map<String, String> normalizedEventNames = new HashMap<>();
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
+    LocalDataStore(Context context, CleverTapInstanceConfig config, ICryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
@@ -499,7 +500,7 @@ public class LocalDataStore {
                                 } else {
                                     Object decrypted = value;
                                     if (value instanceof String) {
-                                        decrypted = cryptHandler.decrypt((String) value, key, EncryptionAlgorithm.AES_GCM);
+                                        decrypted = cryptHandler.decryptSafe((String) value);
                                         if (decrypted == null)
                                             decrypted = value;
                                     }
@@ -571,23 +572,29 @@ public class LocalDataStore {
                     HashMap<String, Object> profile = new HashMap<>(PROFILE_FIELDS_IN_THIS_SESSION);
                     boolean passFlag = true;
                     // Encrypts only the pii keys before storing to DB
+
+                    boolean isMediumEncryption = EncryptionLevel.fromInt(config.getEncryptionLevel()) == EncryptionLevel.MEDIUM;
                     for (String piiKey : piiDBKeys) {
                         if (profile.get(piiKey) != null) {
                             Object value = profile.get(piiKey);
                             if (value instanceof String) {
-                                String encrypted = cryptHandler.encrypt((String) value, piiKey, EncryptionAlgorithm.AES_GCM);
-                                if (encrypted == null) {
+
+                                if (isMediumEncryption) {
+                                    value = cryptHandler.encryptSafe((String) value);
+                                }
+                                if (value == null) {
                                     passFlag = false;
                                     continue;
                                 }
-                                profile.put(piiKey, encrypted);
+                                profile.put(piiKey, value);
                             }
                         }
                     }
                     JSONObject jsonObjectEncrypted = new JSONObject(profile);
 
-                    if (!passFlag)
+                    if (!passFlag) {
                         cryptHandler.updateMigrationFailureCount(false);
+                    }
 
                     DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                     long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);

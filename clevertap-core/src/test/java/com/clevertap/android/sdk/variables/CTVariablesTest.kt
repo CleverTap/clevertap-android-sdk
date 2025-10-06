@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk.variables
 
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.json.JSONObject
@@ -20,6 +22,7 @@ class CTVariablesTest : BaseTestCase() {
   private lateinit var parser: Parser
   private lateinit var fileResourcesRepoImpl: FileResourcesRepoImpl
   private lateinit var fileResourceProvider: FileResourceProvider
+  private lateinit var variablesRepo: VariablesRepo
 
   @Before
   @Throws(Exception::class)
@@ -28,10 +31,12 @@ class CTVariablesTest : BaseTestCase() {
 
     fileResourcesRepoImpl = mockk(relaxed = true)
     fileResourceProvider = mockk(relaxed = true)
+    variablesRepo = mockk(relaxed = true)
     varCache = VarCache(
-        cleverTapInstanceConfig,
-        application,
-        fileResourcesRepoImpl
+      cleverTapInstanceConfig,
+      application,
+      fileResourcesRepoImpl,
+      variablesRepo
     )
     varCache = spyk(varCache)
     ctVariables = CTVariables(varCache)
@@ -121,6 +126,10 @@ class CTVariablesTest : BaseTestCase() {
 
   @Test
   fun `test individual callback on error`() {
+    val jo = JSONObject(mapOf(
+      "var1" to 1
+    ))
+    every { variablesRepo.loadDataFromCache() } returns jo.toString()
     ctVariables.init()
     var success = false
     var callback = false

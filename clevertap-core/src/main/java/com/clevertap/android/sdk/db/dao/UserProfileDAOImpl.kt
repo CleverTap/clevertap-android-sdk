@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBAdapter.Companion.DB_OUT_OF_MEMORY_ERROR
 import com.clevertap.android.sdk.db.DBAdapter.Companion.DB_UPDATE_ERROR
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table.USER_PROFILES
 import org.json.JSONException
@@ -16,7 +17,8 @@ import org.json.JSONObject
 
 internal class UserProfileDAOImpl(
     private val dbHelper: DatabaseHelper,
-    private val logger: ILogger
+    private val logger: ILogger,
+    private val dbEncryptionHandler: DBEncryptionHandler,
 ) : UserProfileDAO {
 
     @WorkerThread
@@ -30,7 +32,8 @@ internal class UserProfileDAOImpl(
         logger.verbose("Inserting or updating userProfile for accountID = $accountId + deviceID = $deviceId")
         
         val cv = ContentValues().apply {
-            put(Column.DATA, profile.toString())
+            val encryptedProfile = dbEncryptionHandler.wrapDbData(profile.toString())
+            put(Column.DATA, encryptedProfile)
             put(Column.ID, accountId)
             put(Column.DEVICE_ID, deviceId)
         }
@@ -53,24 +56,28 @@ internal class UserProfileDAOImpl(
 
         try {
             dbHelper.readableDatabase.query(
-                tName, null, "${Column.ID} = ?", arrayOf(accountId), 
-                null, null, null
+                tName,
+                null,
+                "${Column.ID} = ?",
+                arrayOf(accountId),
+                null,
+                null,
+                null
             )?.use { cursor ->
                 val dataIndex = cursor.getColumnIndex(Column.DATA)
                 val deviceIdIndex = cursor.getColumnIndex(Column.DEVICE_ID)
                 
-                if (dataIndex >= 0 && deviceIdIndex >= 0) {
-                    while (cursor.moveToNext()) {
-                        val profileString = cursor.getString(dataIndex)
-                        val deviceIdString = cursor.getString(deviceIdIndex)
-                        
-                        profileString?.let {
-                            try {
-                                val jsonObject = JSONObject(it)
-                                profiles[deviceIdString] = jsonObject
-                            } catch (e: JSONException) {
-                                logger.verbose("Error parsing JSON for profile", e)
-                            }
+                while (cursor.moveToNext()) {
+                    val profileString = cursor.getString(dataIndex)
+                    val deviceIdString = cursor.getString(deviceIdIndex)
+
+                    profileString?.let { ps ->
+                        try {
+                            val decryptedProfile = dbEncryptionHandler.unwrapDbData(ps)
+                            val jsonObject = JSONObject(decryptedProfile)
+                            profiles[deviceIdString] = jsonObject
+                        } catch (e: JSONException) {
+                            logger.verbose("Error parsing JSON for profile", e)
                         }
                     }
                 }
@@ -105,9 +112,9 @@ internal class UserProfileDAOImpl(
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
         
-        return profileString?.let {
+        return profileString?.let { ps ->
             try {
-                JSONObject(it)
+                JSONObject(dbEncryptionHandler.unwrapDbData(ps))
             } catch (e: JSONException) {
                 null
             }

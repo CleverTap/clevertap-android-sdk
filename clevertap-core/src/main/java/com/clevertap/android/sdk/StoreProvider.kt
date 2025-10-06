@@ -3,7 +3,7 @@ package com.clevertap.android.sdk
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.clevertap.android.sdk.StoreProvider.Companion.INSTANCE
-import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.inapp.store.preference.FileStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
@@ -86,7 +86,7 @@ internal class StoreProvider {
      */
     fun provideInAppStore(
         context: Context,
-        cryptHandler: CryptHandler,
+        cryptHandler: ICryptHandler,
         deviceId: String,
         accountId: String
     ): InAppStore {

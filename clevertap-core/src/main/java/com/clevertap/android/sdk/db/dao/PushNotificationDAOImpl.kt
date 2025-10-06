@@ -21,25 +21,25 @@ internal class PushNotificationDAOImpl(
     private var rtlDirtyFlag = true
 
     @WorkerThread
-    override fun storePushNotificationId(id: String, ttl: Long) {
+    override fun storePushNotificationId(id: String, ttlInSeconds: Long) {
         if (!dbHelper.belowMemThreshold()) {
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return
         }
         
         val tableName = PUSH_NOTIFICATIONS.tableName
-        val createdAtTime = if (ttl > 0) ttl else clock.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL
+        val expiresAt = if (ttlInSeconds > 0) ttlInSeconds else clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS
         
         val cv = ContentValues().apply {
             put(Column.DATA, id)
-            put(Column.CREATED_AT, createdAtTime)
+            put(Column.CREATED_AT, expiresAt)
             put(Column.IS_READ, 0)
         }
         
         try {
             dbHelper.writableDatabase.insert(tableName, null, cv)
             rtlDirtyFlag = true
-            logger.verbose("Stored PN - $id with TTL - $createdAtTime")
+            logger.verbose("Stored PN - $id with TTL - $expiresAt")
         } catch (e: SQLiteException) {
             logger.verbose("Error adding data to table $tableName. Recreating DB", e)
             dbHelper.deleteDatabase()
@@ -113,7 +113,7 @@ internal class PushNotificationDAOImpl(
     @WorkerThread
     override fun cleanUpPushNotifications() {
         // Push notifications store future epoch (currentTime + TTL)
-        val time = clock.currentTimeMillis()
+        val time = clock.currentTimeSeconds()
         val tName = PUSH_NOTIFICATIONS.tableName
         
         try {

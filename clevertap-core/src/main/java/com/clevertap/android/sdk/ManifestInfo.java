@@ -149,13 +149,17 @@ public class ManifestInfo {
 
         int encLvlTemp;
         try {
-            int parsedEncryptionLevel = Integer.parseInt(_getManifestStringValueForKey(metaData, ManifestInfo.LABEL_ENCRYPTION_LEVEL));
+            String manifestEncryptionLevel = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_ENCRYPTION_LEVEL);
+            int parsedEncryptionLevel = 0;
+            if (manifestEncryptionLevel != null) {
+                parsedEncryptionLevel = Integer.parseInt(manifestEncryptionLevel);
+            }
 
-            if (parsedEncryptionLevel >= 0 && parsedEncryptionLevel <= 1) {
+            if (parsedEncryptionLevel >= 0 && parsedEncryptionLevel <= 2) {
                 encLvlTemp = parsedEncryptionLevel;
             } else {
+                Logger.v("Invalid encryption level is used, defaulting to no encryption");
                 encLvlTemp = 0;
-                Logger.v("Supported encryption levels are only 0 and 1. Setting it to 0 by default");
             }
         } catch (Throwable t) {
             encLvlTemp = 0;
@@ -256,7 +260,7 @@ public class ManifestInfo {
     boolean enableBeta() {
         return beta;
     }
-    public int getEncryptionLevel(){
+    public int getEncryptionLevel() {
         return encryptionLevel;
     }
 
