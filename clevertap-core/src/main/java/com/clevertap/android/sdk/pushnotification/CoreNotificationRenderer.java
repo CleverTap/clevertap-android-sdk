@@ -178,6 +178,16 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
             nb.setColorized(true);
         }// uncommon
 
+        String dismissValue = extras.getString(Constants.WZRK_DISMISS);
+        if (dismissValue != null) {
+            try {
+                long dismissAfter = Long.parseLong(dismissValue) * 1000L;
+                nb.setTimeoutAfter(dismissAfter);
+            } catch (NumberFormatException e) {
+                config.getLogger().verbose(config.getAccountId(), "Failed to parse timeout dismiss value", e);
+            }
+        }
+
         // uncommon
         nb.setContentTitle(notifTitle)
                 .setContentText(notifMessage)
