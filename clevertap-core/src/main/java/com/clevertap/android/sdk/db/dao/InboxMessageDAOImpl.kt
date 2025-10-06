@@ -40,20 +40,26 @@ internal class InboxMessageDAOImpl(
                 val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS)
                 val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN)
 
-                while (cursor.moveToNext()) {
-                    val ctMessageDAO = CTMessageDAO().apply {
-                        this.id = cursor.getString(idColumnIndex)
-                        val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex))
-                        this.jsonData = JSONObject(decryptedData)
-                        this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex))
-                        this.date = cursor.getLong(createdAtColumnIndex)
-                        this.expires = cursor.getLong(expiresColumnIndex)
-                        this.isRead = cursor.getInt(isReadColumnIndex)
-                        this.userId = cursor.getString(userIdColumnIndex) // This seems redundant if you are already filtering by userId
-                        this.tags = cursor.getString(tagsColumnIndex)
-                        this.campaignId = cursor.getString(campaignColumnIndex)
+                try {
+                    while (cursor.moveToNext()) {
+                        val ctMessageDAO = CTMessageDAO().apply {
+                            this.id = cursor.getString(idColumnIndex)
+                            val decryptedData =
+                                dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex))
+                            this.jsonData = JSONObject(decryptedData)
+                            this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex))
+                            this.date = cursor.getLong(createdAtColumnIndex)
+                            this.expires = cursor.getLong(expiresColumnIndex)
+                            this.isRead = cursor.getInt(isReadColumnIndex)
+                            this.userId =
+                                cursor.getString(userIdColumnIndex) // This seems redundant if you are already filtering by userId
+                            this.tags = cursor.getString(tagsColumnIndex)
+                            this.campaignId = cursor.getString(campaignColumnIndex)
+                        }
+                        messageDAOArrayList.add(ctMessageDAO)
                     }
-                    messageDAOArrayList.add(ctMessageDAO)
+                } catch (e: Exception) {
+                    logger.debug("There was some problem in loading inbox message from DB", e)
                 }
             }
         } catch (e: Exception) {
