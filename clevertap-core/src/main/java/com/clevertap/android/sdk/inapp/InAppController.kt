@@ -39,6 +39,7 @@ import com.clevertap.android.sdk.inapp.CTLocalInApp.Companion.FALLBACK_TO_NOTIFI
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter
+import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
 import com.clevertap.android.sdk.inapp.delay.InAppDelayManagerV2
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
@@ -109,7 +110,7 @@ internal class InAppController(
             addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
         }
         if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInApps(clientSideInAppsToDisplay.second)
+            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
         }
     }
 
@@ -121,16 +122,34 @@ internal class InAppController(
     /**
      * Schedule multiple delayed in-apps for display after their respective delays
      */
-    fun scheduleDelayedInApps(delayedInApps: JSONArray) {
+    fun scheduleDelayedInAppsForAllModes(delayedInApps: JSONArray) {
         logger.verbose(
             config.accountId,
             "InAppController: Scheduling ${delayedInApps.length()} delayed in-apps"
         )
-        inAppDelayManagerV2.scheduleDelayedInApps(delayedInApps) {
-            val inAppId = it.optString(Constants.INAPP_ID_IN_PAYLOAD)
-            val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
-            task.execute("InAppController#executeDelayedInAppCallback-$inAppId") {
-                addInAppNotificationInFrontOfQueue(it)
+
+        inAppDelayManagerV2.scheduleDelayedInApps(delayedInApps) { result ->
+            when (result) {
+                is DelayedInAppResult.Success -> {
+                    logger.verbose(
+                        config.accountId,
+                        "InAppController: Successfully retrieved delayed in-app ${result.inAppId}"
+                    )
+
+                    val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
+                    task.execute("InAppController#executeDelayedInAppCallback-${result.inAppId}") {
+                        // Add to display queue
+                        addInAppNotificationInFrontOfQueue(result.inApp)
+                    }
+                }
+
+                is DelayedInAppResult.Error -> {
+                    logger.verbose(
+                        config.accountId,
+                        "InAppController: Error for delayed in-app ${result.inAppId}: ${result.reason}",
+                        result.throwable
+                    )
+                }
             }
         }
     }
@@ -353,7 +372,7 @@ internal class InAppController(
             addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
         }
         if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInApps(clientSideInAppsToDisplay.second)
+            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
         }
     }
 
@@ -375,7 +394,7 @@ internal class InAppController(
             addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
         }
         if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInApps(clientSideInAppsToDisplay.second)
+            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
         }
     }
 
@@ -394,36 +413,41 @@ internal class InAppController(
             addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
         }
         if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInApps(clientSideInAppsToDisplay.second)
+            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
         }
     }
 
     fun onAppLaunchServerSideInAppsResponse(
         appLaunchServerSideInApps: JSONArray,
-        userLocation: Location?,
-        isDelayed: Boolean = false
+        userLocation: Location?
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         val appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps)
+        val serverSideInAppsToDisplayImmediate =
+            evaluationManager.evaluateOnAppLaunchedServerSide(
+                appLaunchSsInAppList, appLaunchedProperties, userLocation
+            )
 
-        if (isDelayed) {
-            val serverSideInAppsToDisplayDelayed =
-                evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
-                    appLaunchSsInAppList, appLaunchedProperties, userLocation
-                )
+        if (serverSideInAppsToDisplayImmediate.length() > 0) {
+            addInAppNotificationsToQueue(serverSideInAppsToDisplayImmediate)
+        }
 
-            if (serverSideInAppsToDisplayDelayed.length() > 0) {
-                scheduleDelayedInApps(serverSideInAppsToDisplayDelayed)
-            }
-        } else {
-            val serverSideInAppsToDisplayImmediate =
-                evaluationManager.evaluateOnAppLaunchedServerSide(
-                    appLaunchSsInAppList, appLaunchedProperties, userLocation
-                )
+    }
 
-            if (serverSideInAppsToDisplayImmediate.length() > 0) {
-                addInAppNotificationsToQueue(serverSideInAppsToDisplayImmediate)
-            }
+    fun onAppLaunchServerSideDelayedInAppsResponse(
+        appLaunchServerSideDelayedInApps: JSONArray,
+        userLocation: Location?,
+    ) {
+        val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
+        val appLaunchSsDelayedInAppList = Utils.toJSONObjectList(appLaunchServerSideDelayedInApps)
+
+        val serverSideInAppsToDisplayDelayed =
+            evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
+                appLaunchSsDelayedInAppList, appLaunchedProperties, userLocation
+            )
+
+        if (serverSideInAppsToDisplayDelayed.length() > 0) {
+            scheduleDelayedInAppsForAllModes(serverSideInAppsToDisplayDelayed)
         }
     }
 

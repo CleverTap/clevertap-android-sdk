@@ -142,15 +142,20 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 displayInApp(partitionedLegacyInApps.getImmediateInApps());
             }
             if (partitionedLegacyInApps.getHasDelayedInApps()) {
-                scheduleDelayedInApps(partitionedLegacyInApps.getDelayedInApps());
+                scheduleDelayedLegacyInApps(partitionedLegacyInApps.getDelayedInApps());
             }
 
             PartitionedInApps partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
             if (partitionedAppLaunchServerSideInApps.getHasImmediateInApps()) {
-                handleAppLaunchServerSideImmediate(partitionedAppLaunchServerSideInApps.getImmediateInApps());
+                controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
+                        partitionedAppLaunchServerSideInApps.getImmediateInApps(),
+                        coreMetaData.getLocationFromUser());
             }
             if (partitionedAppLaunchServerSideInApps.getHasDelayedInApps()) {
-                handleAppLaunchServerSideDelayed(partitionedAppLaunchServerSideInApps.getDelayedInApps());
+                controllerManager.getInAppController().onAppLaunchServerSideDelayedInAppsResponse(
+                        partitionedAppLaunchServerSideInApps.getDelayedInApps(),
+                        coreMetaData.getLocationFromUser()
+                );
             }
 
             PartitionedInApps partitionedClientSideInApps = res.getPartitionedClientSideInApps();
@@ -196,27 +201,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
         }
     }
 
-    private void handleAppLaunchServerSideImmediate(JSONArray immediateAppLaunchInApps) {
-        try {
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(immediateAppLaunchInApps, coreMetaData.getLocationFromUser(), false);
-        } catch (Throwable e) {
-            logger.verbose(config.getAccountId(), "InAppManager: Malformed AppLaunched ServerSide inApps");
-            logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
-        }
-    }
-
-    private void handleAppLaunchServerSideDelayed(JSONArray delayedAppLaunchInApps) {
-        try {
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
-                    delayedAppLaunchInApps,
-                    coreMetaData.getLocationFromUser(),
-                    true);
-        } catch (Throwable e) {
-            logger.verbose(config.getAccountId(), "InAppManager: Malformed delayed AppLaunched ServerSide inApps");
-            logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
-        }
-    }
-
     private void displayInApp(JSONArray inappNotifsArray) {
         // Fire the first notification, if any
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
@@ -229,15 +213,15 @@ public class InAppResponse extends CleverTapResponseDecorator {
         });
     }
 
-    private void scheduleDelayedInApps(JSONArray delayedInApps) {
+    private void scheduleDelayedLegacyInApps(JSONArray delayedLegacyInApps) {
         try {
             InAppController inAppController = controllerManager.getInAppController();
 
             // Schedule using delay functionality
-            inAppController.scheduleDelayedInApps(delayedInApps);
+            inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps);
 
             logger.verbose(config.getAccountId(),
-                    "InApp: scheduling " + delayedInApps.length() +
+                    "InApp: scheduling " + delayedLegacyInApps.length() +
                             " delayed in-apps. Active delays: " +
                             inAppController.getActiveDelayedInAppsCount());
 
@@ -245,7 +229,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             logger.verbose(config.getAccountId(),
                     "InApp: Error scheduling delayed in-apps, using fallback", e);
 
-            displayInApp(delayedInApps);
+            displayInApp(delayedLegacyInApps);
         }
     }
 

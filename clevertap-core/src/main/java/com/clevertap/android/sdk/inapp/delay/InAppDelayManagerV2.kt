@@ -5,7 +5,9 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MAX_DELAY_SECONDS
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MIN_DELAY_SECONDS
+import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.iterator
+import com.clevertap.android.sdk.utils.filterObjects
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -20,9 +22,10 @@ import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
-class InAppDelayManagerV2(
+internal class InAppDelayManagerV2(
     private val accountId: String,
     private val logger: Logger,
+    internal var delayedLegacyInAppStore: DelayedLegacyInAppStore? = null,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 ) {
 
@@ -34,18 +37,16 @@ class InAppDelayManagerV2(
      * the existing one is kept and returned.
      *
      * @param id Unique identifier for the in-app message
-     * @param inAppObject JSONObject containing in-app data
      * @param delayInMs Delay in milliseconds before callback execution
      * @param callbackDispatcher Dispatcher to execute the callback on (default: Main)
-     * @param callback Lambda to be invoked with the in-app object after delay
+     * @param callback Lambda to be invoked with DelayedInAppResult after delay
      * @return Job handle - either existing or newly created
      */
     private fun scheduleInAppCallbackWithDispatcher(
         id: String,
-        inAppObject: JSONObject,
         delayInMs: Long,
         callbackDispatcher: CoroutineDispatcher,
-        callback: (JSONObject) -> Unit
+        callback: (DelayedInAppResult) -> Unit
     ): Job {
         // Keep existing active job if present
         activeJobs[id]?.let { existingJob ->
@@ -61,11 +62,34 @@ class InAppDelayManagerV2(
             try {
                 delay(delayInMs)
 
-                //withContext(callbackDispatcher) {
-                callback(inAppObject)
-                //}
+                // Check if store is initialized
+                val store = delayedLegacyInAppStore
+                if (store == null) {
+                    logger.verbose(accountId, "DelayedLegacyInAppStore is null for callback id: $id")
+                    callback(DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.STORE_NOT_INITIALIZED, id))
+                    return@launch
+                }
+
+                // Fetch from database
+                val delayedInAppJSONObj = store.getDelayedInApp(id)
+
+                // Create appropriate result based on retrieval
+                val result = if (delayedInAppJSONObj != null) {
+                    store.removeDelayedInApp(id)
+                    DelayedInAppResult.Success(delayedInAppJSONObj, id)
+                } else {
+                    DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.NOT_FOUND_IN_DB, id)
+                }
+
+                // Invoke callback with result
+                callback(result)
+
             } catch (e: CancellationException) {
                 logger.verbose(accountId, "Cancelled InApp callback with id: $id")
+                callback(DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.CANCELLED, id, e))
+            } catch (e: Exception) {
+                logger.verbose(accountId, "Error in InApp callback with id: $id", e)
+                callback(DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.UNKNOWN, id, e))
             } finally {
                 activeJobs.remove(id)
             }
@@ -83,20 +107,36 @@ class InAppDelayManagerV2(
     internal fun scheduleDelayedInApps(
         delayedInApps: JSONArray,
         callbackDispatcher: CoroutineDispatcher = Dispatchers.Main,
-        callback: (JSONObject) -> Unit
+        callback: (DelayedInAppResult) -> Unit
     ) {
         logger.verbose(
             accountId,
             "InAppDelayManager: Scheduling ${delayedInApps.length()} delayed in-apps"
         )
-        delayedInApps.iterator<JSONObject> {
+
+        if (delayedLegacyInAppStore == null) {
+            logger.verbose(
+                accountId,
+                "InAppDelayManager: DelayedLegacyInAppStore is null, aborting scheduling"
+            )
+            return
+        }
+
+        val newDelayedInAppsToSchedule = delayedInApps.filterObjects { jsonObject ->
+            val inAppId = jsonObject.optString(Constants.INAPP_ID_IN_PAYLOAD)
+            inAppId.isNotBlank() && activeJobs[inAppId] == null
+        }
+
+        delayedLegacyInAppStore!!.saveDelayedInAppsBatch(newDelayedInAppsToSchedule)
+
+        newDelayedInAppsToSchedule.iterator<JSONObject> {
             val inAppId = it.optString(Constants.INAPP_ID_IN_PAYLOAD)
             val delayInMilliSeconds = getInAppDelayInMs(it)
+
             try {
                 if (delayInMilliSeconds > 0) {
                     scheduleInAppCallbackWithDispatcher(
                         inAppId,
-                        it,
                         delayInMilliSeconds,
                         callbackDispatcher,
                         callback
