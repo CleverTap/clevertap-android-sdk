@@ -3,8 +3,8 @@ package com.clevertap.android.sdk.db
 import android.content.Context
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CTLockManager
-import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.Table.EVENTS
 import com.clevertap.android.sdk.db.Table.PROFILE_EVENTS
 import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATION_VIEWED
@@ -13,7 +13,9 @@ import com.clevertap.android.sdk.network.IJRepo
 import org.json.JSONObject
 
 internal class DBManager(
-    private val config: CleverTapInstanceConfig,
+    private val accountId: String,
+    private val logger: ILogger,
+    private val databaseName: String,
     private val ctLockManager: CTLockManager,
     private val ijRepo: IJRepo,
     private val clearFirstRequestTs: () -> Unit = {},
@@ -32,7 +34,7 @@ internal class DBManager(
     override fun loadDBAdapter(context: Context): DBAdapter {
         var dbAdapter = this.dbAdapter
         if (dbAdapter == null) {
-            dbAdapter = DBAdapter(context, config)
+            dbAdapter = DBAdapter(context, databaseName, accountId, logger)
             this.dbAdapter = dbAdapter
             dbAdapter.cleanupStaleEvents(EVENTS)
             dbAdapter.cleanupStaleEvents(PROFILE_EVENTS)
@@ -67,11 +69,11 @@ internal class DBManager(
     ): QueueData {
         return when (eventGroup) {
             EventGroup.PUSH_NOTIFICATION_VIEWED -> {
-                config.logger.verbose(config.accountId, "Returning Queued Notification Viewed events")
+                logger.verbose(accountId, "Returning Queued Notification Viewed events")
                 getPushNotificationViewedQueuedEvents(context, batchSize)
             }
             else -> {
-                config.logger.verbose(config.accountId, "Returning combined queued events")
+                logger.verbose(accountId, "Returning combined queued events")
                 getCombinedQueuedEvents(context, batchSize)
             }
         }
@@ -116,8 +118,8 @@ internal class DBManager(
                 if (eventIds.isNotEmpty()) {
                     //adapter.cleanupEventsByIds(EVENTS, eventIds)
                     adapter.cleanupEventsFromLastId(eventIds[eventIds.size-1], EVENTS)
-                    config.logger.verbose(
-                        config.accountId,
+                    logger.verbose(
+                        accountId,
                         "Cleaned ${eventIds.size} events from events table"
                     )
                 }
@@ -126,8 +128,8 @@ internal class DBManager(
                 if (profileEventIds.isNotEmpty()) {
                     //adapter.cleanupEventsByIds(PROFILE_EVENTS, profileEventIds)
                     adapter.cleanupEventsFromLastId(profileEventIds[profileEventIds.size-1], PROFILE_EVENTS)
-                    config.logger.verbose(
-                        config.accountId,
+                    logger.verbose(
+                        accountId,
                         "Cleaned ${profileEventIds.size} events from profileEvents table"
                     )
                 }
@@ -135,8 +137,8 @@ internal class DBManager(
                 return true
 
             } catch (e: Exception) {
-                config.logger.verbose(
-                    config.accountId,
+                logger.verbose(
+                    accountId,
                     "Error during cleanup of sent events",
                     e
                 )
@@ -158,15 +160,15 @@ internal class DBManager(
                 if (ids.isNotEmpty()) {
                     //adapter.cleanupEventsByIds(PUSH_NOTIFICATION_VIEWED, ids)
                     adapter.cleanupEventsFromLastId(ids[ids.size - 1], PUSH_NOTIFICATION_VIEWED)
-                    config.logger.verbose(
-                        config.accountId,
+                    logger.verbose(
+                        accountId,
                         "Cleaned ${ids.size} events from Push impressions table"
                     )
                 }
                 return true
             } catch (e: Exception) {
-                config.logger.verbose(
-                    config.accountId,
+                logger.verbose(
+                    accountId,
                     "Error during cleanup of notification sent events",
                     e
                 )
@@ -231,8 +233,8 @@ internal class DBManager(
             val adapter = loadDBAdapter(context)
             val returnCode = adapter.storeObject(event, table)
             if (returnCode > 0) {
-                config.logger.debug(config.accountId, "Queued event: $event")
-                config.logger.verbose(config.accountId, "Queued event to DB table $table: $event")
+                logger.debug(accountId, "Queued event: $event")
+                logger.verbose(accountId, "Queued event to DB table $table: $event")
             }
         }
     }
