@@ -217,6 +217,7 @@ public interface Constants {
     String WZRK_BADGE_COUNT = "wzrk_bc";
     String WZRK_SUBTITLE = "wzrk_st";
     String WZRK_COLOR = "wzrk_clr";
+    String WZRK_DISMISS = "wzrk_dismiss";
     String WZRK_SOUND = "wzrk_sound";
     String WZRK_TIME_TO_LIVE = "wzrk_ttl";
     String WZRK_TIME_TO_LIVE_OFFSET = "wzrk_ttl_offset";
