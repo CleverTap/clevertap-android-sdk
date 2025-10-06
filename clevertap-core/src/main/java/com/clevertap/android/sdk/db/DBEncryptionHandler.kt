@@ -16,13 +16,16 @@ internal class DBEncryptionHandler(
         private const val TAG = "DBEncryptionHandler"
     }
 
-    // todo graceful handling for nulls?
     fun unwrapDbData(data: String?) : String? {
         return measureTimeInMillisAndLog(TAG, "unwrapDbData") {
             if (data == null) {
                 data
             } else {
-                crypt.decryptSafe(data)
+                val op = crypt.decryptSafe(data)
+                if (op == null) {
+                    logger.verbose(TAG, "unwrapDbData: Decryption failed for $data")
+                }
+                op
             }
         }
     }
@@ -33,7 +36,11 @@ internal class DBEncryptionHandler(
     fun wrapDbData(data: String) : String {
         return measureTimeInMillisAndLog(TAG, "wrapDbData") {
             if (encryptionLevel == EncryptionLevel.FULL_DATA) {
-                crypt.encryptSafe(data) ?: data
+                val op = crypt.encryptSafe(data)
+                if (op == null) {
+                    logger.verbose(TAG, "wrapDbData: Encryption failed for $data")
+                }
+                op ?: data
             } else {
                 data
             }
