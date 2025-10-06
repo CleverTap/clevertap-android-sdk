@@ -7,13 +7,13 @@ interface PushNotificationDAO {
     fun storePushNotificationId(id: String, ttl: Long)
     
     @WorkerThread
-    fun fetchPushNotificationIds(): Array<String?>
+    fun fetchPushNotificationIds(): Array<String>
     
     @WorkerThread
     fun doesPushNotificationIdExist(id: String): Boolean
     
     @WorkerThread
-    fun updatePushNotificationIds(ids: Array<String?>)
+    fun updatePushNotificationIds(ids: Array<String>)
     
     @WorkerThread
     fun cleanUpPushNotifications()

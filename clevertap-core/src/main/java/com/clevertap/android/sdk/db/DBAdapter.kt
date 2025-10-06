@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.db.dao.*
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAOImpl
+import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONObject
 
 /**
@@ -19,7 +20,8 @@ internal class DBAdapter(
     context: Context,
     databaseName: String,
     private val accountId: String,
-    private val logger: ILogger
+    private val logger: ILogger,
+    private val clock: Clock = Clock.SYSTEM
 ) {
 
     companion object {
@@ -42,10 +44,10 @@ internal class DBAdapter(
     )
 
     // DAO instances - lazy initialization for better performance
-    private val eventDAO: EventDAO by lazy { EventDAOImpl(dbHelper, logger) }
+    private val eventDAO: EventDAO by lazy { EventDAOImpl(dbHelper, logger, clock) }
     private val inboxMessageDAO: InboxMessageDAO by lazy { InboxMessageDAOImpl(dbHelper, logger) }
     private val userProfileDAO: UserProfileDAO by lazy { UserProfileDAOImpl(dbHelper, logger) }
-    private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger) }
+    private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger, clock) }
     private val uninstallTimestampDAO: UninstallTimestampDAO by lazy { UninstallTimestampDAOImpl(dbHelper, logger) }
 
     @Volatile
@@ -158,21 +160,19 @@ internal class DBAdapter(
     // =====================================================
 
     @Synchronized
-    fun storePushNotificationId(id: String?, ttl: Long) {
-        if (id != null) {
-            pushNotificationDAO.storePushNotificationId(id, ttl)
-        }
+    fun storePushNotificationId(id: String, ttl: Long) {
+        pushNotificationDAO.storePushNotificationId(id, ttl)
     }
 
     @Synchronized
-    fun fetchPushNotificationIds(): Array<String?> = pushNotificationDAO.fetchPushNotificationIds()
+    fun fetchPushNotificationIds(): Array<String> = pushNotificationDAO.fetchPushNotificationIds()
 
     @Synchronized
     fun doesPushNotificationIdExist(id: String): Boolean = pushNotificationDAO.doesPushNotificationIdExist(id)
 
     @WorkerThread
     @Synchronized
-    fun updatePushNotificationIds(ids: Array<String?>) = pushNotificationDAO.updatePushNotificationIds(ids)
+    fun updatePushNotificationIds(ids: Array<String>) = pushNotificationDAO.updatePushNotificationIds(ids)
 
     @Synchronized
     fun cleanUpPushNotifications() = pushNotificationDAO.cleanUpPushNotifications()
