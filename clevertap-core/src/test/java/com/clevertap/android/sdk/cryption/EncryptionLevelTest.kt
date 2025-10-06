@@ -31,4 +31,10 @@ class EncryptionLevelTest {
         assertEquals(EncryptionLevel.fromInt(1), EncryptionLevel.MEDIUM)
         assertEquals(EncryptionLevel.fromInt(2), EncryptionLevel.FULL_DATA)
     }
+
+    @Test
+    fun `EncryptionLevel - check from invalid int values defaults to NONE`() {
+        assertEquals(EncryptionLevel.fromInt(10), EncryptionLevel.NONE)
+        assertEquals(EncryptionLevel.fromInt(-200), EncryptionLevel.NONE)
+    }
 }
