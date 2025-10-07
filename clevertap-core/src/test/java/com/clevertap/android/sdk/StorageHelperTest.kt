@@ -193,11 +193,11 @@ class StorageHelperTest: BaseTestCase() {
 
         //when correct key is passed, the correct value is returned from default SP
         val value1 = StorageHelper.getLong(appCtx, presentKey, -1)
-        assertEquals(51, value1)
+        assertEquals(51L, value1)
 
         //when incorrect key (or the key that is not present already) is passed, the default value is returned from default SP
         val value2 = StorageHelper.getLong(appCtx, absentKey, -1)
-        assertEquals(-1, value2)
+        assertEquals(-1L, value2)
     }
 
     @Test
