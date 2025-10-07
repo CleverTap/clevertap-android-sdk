@@ -30,7 +30,10 @@ internal class InAppPreviewHandler(
                 val inappPreviewPayload = getPreviewPayload(extras) ?: return@execute
                 val inappNotifs = JSONArray().put(
                     if (shouldUseHalfInterstitial(extras)) {
-                        getHalfInterstitialInApp(inappPreviewPayload)
+                        getHalfInterstitialInApp(inappPreviewPayload) ?: run {
+                            logger.debug("Failed to parse the image-interstitial notification. Aborting preview display")
+                            return@execute
+                        }
                     } else {
                         inappPreviewPayload
                     }
@@ -44,7 +47,6 @@ internal class InAppPreviewHandler(
             } catch (t: Throwable) {
                 logger.verbose("Failed to display inapp notification from push notification payload", t)
             }
-            null
         }
     }
 
