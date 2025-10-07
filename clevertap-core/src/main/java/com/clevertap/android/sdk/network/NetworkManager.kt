@@ -461,7 +461,7 @@ internal class NetworkManager constructor(
         } catch (e: Exception) {
             logger.debug(
                 config.accountId,
-                "An exception occurred while fetching the inapp payload from s3",
+                "An exception occurred while fetching the inapp payload from URL",
                 e
             )
             return null
