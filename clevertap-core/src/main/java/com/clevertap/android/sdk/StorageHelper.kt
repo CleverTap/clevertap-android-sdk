@@ -122,7 +122,7 @@ internal object StorageHelper {
         nameSpace: String?
     ): Long {
         val key = storageKeyWithSuffix(accountId, rawKey)
-        return getLong(context, nameSpace, key, defaultValue.toLong())
+        return getLong(context, nameSpace, key, defaultValue)
     }
 
     @JvmStatic
