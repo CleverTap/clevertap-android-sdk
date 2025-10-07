@@ -1015,7 +1015,7 @@ public class PushProviders implements CTPushProviderListener {
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
             String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE);
-            long wzrkTtl = (clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS) / 1000;
+            long wzrkTtl = clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS;
             if (ttl != null) {
                 wzrkTtl = Long.parseLong(ttl);
             }

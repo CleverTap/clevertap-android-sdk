@@ -118,7 +118,7 @@ internal object StorageHelper {
         context: Context,
         accountId: String,
         rawKey: String,
-        defaultValue: Int,
+        defaultValue: Long,
         nameSpace: String?
     ): Long {
         val key = storageKeyWithSuffix(accountId, rawKey)
