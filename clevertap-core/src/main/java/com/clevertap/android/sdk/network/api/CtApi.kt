@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response
+import androidx.core.net.toUri
 
 internal class CtApi(
     private val httpClient: CtHttpClient,
@@ -103,6 +104,25 @@ internal class CtApi(
                 body = body.toString()
             )
         )
+
+    /**
+     * Fetches content from an arbitrary URL (e.g., S3 URLs for in-app preview payloads).
+     * This is a simple GET request without CleverTap-specific headers or query parameters.
+     *
+     * @param url The complete URL to fetch from
+     * @return Response from the server
+     */
+    fun fetchFromUrl(url: String): Response {
+        val uri = url.toUri()
+        val request = Request(
+            url = uri,
+            headers = emptyMap(),
+            body = null
+        )
+
+        logger.verbose(logTag, "Fetching content from URL: $url")
+        return httpClient.execute(request)
+    }
 
     fun performHandshakeForDomain(isViewedEvent: Boolean): Response {
         val baseUrl = getHandshakeDomain(isViewedEvent)

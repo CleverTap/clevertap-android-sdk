@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
+import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InAppResponse;
@@ -51,6 +52,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
+    private final NetworkManager networkManager;
 
     private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Long> notificationViewedIdTagMap = new HashMap<>();
@@ -67,7 +69,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             final CTLockManager ctLockManager,
             InAppResponse inAppResponse,
             Clock currentTimeProvider,
-            CTExecutors executors
+            CTExecutors executors,
+            NetworkManager networkManager
     ) {
         this.context = context;
         this.config = config;
@@ -82,6 +85,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.inAppResponse = inAppResponse;
         this.currentTimeProvider = currentTimeProvider;
         this.executors = executors;
+        this.networkManager = networkManager;
     }
 
     @Override
@@ -249,7 +253,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     @Override
     public void pushEvent(String eventName, Map<String, Object> eventActions) {
 
-        if (eventName == null || eventName.equals("")) {
+        if (eventName == null || eventName.isEmpty()) {
             return;
         }
 
@@ -542,11 +546,20 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("testInappNotification", () -> {
             try {
-                String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
-                String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
-                JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
-
+                String s3Url = extras.getString(Constants.INAPP_PREVIEW_S3_URL_KEY);
+                JSONObject inappPreviewPayload = null;
                 JSONArray inappNotifs = new JSONArray();
+
+                if (s3Url != null && !s3Url.isEmpty()) {
+                    inappPreviewPayload = networkManager.fetchInAppPreviewPayloadFromUrl(s3Url);
+                }
+
+                if (inappPreviewPayload == null) {
+                    String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
+                    inappPreviewPayload = new JSONObject(inappPreviewString);
+                }
+
+                String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
                 if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
                         || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
                     inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
