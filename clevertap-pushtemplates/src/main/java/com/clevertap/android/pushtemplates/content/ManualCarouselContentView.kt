@@ -90,13 +90,13 @@ internal class ManualCarouselContentView(
     }
 
     private fun setupBaseContent(baseContent: BaseContent, renderer: TemplateRenderer) {
-        setCustomContentViewMessageSummary(baseContent.textData.messageSummary)
         setCustomContentViewBasicKeys(
             baseContent.textData.subtitle,
             baseContent.colorData.metaColor
         )
         setCustomContentViewTitle(baseContent.textData.title)
         setCustomContentViewMessage(baseContent.textData.message)
+        setCustomContentViewMessageSummary(baseContent.textData.messageSummary)
         setCustomBackgroundColour(baseContent.colorData.backgroundColor, R.id.content_view_big)
         setCustomTextColour(baseContent.colorData.titleColor, R.id.title)
         setCustomTextColour(baseContent.colorData.messageColor, R.id.msg)

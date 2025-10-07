@@ -19,13 +19,13 @@ internal class AutoCarouselContentView(
     init {
         val baseContent = data.carouselData.baseContent
 
-        setCustomContentViewMessageSummary(baseContent.textData.messageSummary)
         setCustomContentViewBasicKeys(
             baseContent.textData.subtitle,
             baseContent.colorData.metaColor
         )
         setCustomContentViewTitle(baseContent.textData.title)
         setCustomContentViewMessage(baseContent.textData.message)
+        setCustomContentViewMessageSummary(baseContent.textData.messageSummary)
         setCustomBackgroundColour(baseContent.colorData.backgroundColor, R.id.content_view_big)
         setCustomTextColour(baseContent.colorData.titleColor, R.id.title)
         setCustomTextColour(baseContent.colorData.messageColor, R.id.msg)
