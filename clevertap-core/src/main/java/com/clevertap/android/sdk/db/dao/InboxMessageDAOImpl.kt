@@ -40,8 +40,8 @@ internal class InboxMessageDAOImpl(
                 val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS)
                 val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN)
 
-                try {
-                    while (cursor.moveToNext()) {
+                while (cursor.moveToNext()) {
+                    try {
                         val ctMessageDAO = CTMessageDAO().apply {
                             this.id = cursor.getString(idColumnIndex)
                             val decryptedData =
@@ -57,9 +57,9 @@ internal class InboxMessageDAOImpl(
                             this.campaignId = cursor.getString(campaignColumnIndex)
                         }
                         messageDAOArrayList.add(ctMessageDAO)
+                    } catch (e: Exception) {
+                        logger.debug("There was some problem in loading inbox message from DB", e)
                     }
-                } catch (e: Exception) {
-                    logger.debug("There was some problem in loading inbox message from DB", e)
                 }
             }
         } catch (e: Exception) {
@@ -117,6 +117,11 @@ internal class InboxMessageDAOImpl(
 
     @WorkerThread
     override fun deleteMessages(messageIds: List<String>, userId: String): Boolean {
+        if (messageIds.isEmpty()) {
+            // Or just return true if there's nothing to delete
+            logger.verbose("messageIds list is empty, nothing to delete.")
+            return true
+        }
         val tName = INBOX_MESSAGES.tableName
         val idsTemplateGroup = getTemplateMarkersList(messageIds.size)
         val whereArgs = messageIds.toMutableList().apply { add(userId) }

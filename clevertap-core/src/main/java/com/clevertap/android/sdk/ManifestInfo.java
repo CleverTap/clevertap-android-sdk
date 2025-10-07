@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 
+import org.jetbrains.annotations.TestOnly;
+
 /**
  * Parser for android manifest and picks up fields from manifest once to be references
  *
@@ -52,6 +54,7 @@ public class ManifestInfo {
     }
 
     // Only added for testing
+    @TestOnly
     static void clearPreloadedManifestInfo() {
         instance = null;
     }

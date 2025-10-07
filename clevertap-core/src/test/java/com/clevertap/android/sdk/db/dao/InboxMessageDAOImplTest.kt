@@ -64,6 +64,15 @@ class InboxMessageDAOImplTest : BaseTestCase() {
     }
 
     @Test
+    fun test_deleteMessages_withEmptyIds() {
+        val userId = "user_11"
+        val msgIds = emptyList<String>()
+
+        val op = inboxMessageDAO.deleteMessages(messageIds = msgIds, userId = userId)
+        assertTrue(op)
+    }
+
+    @Test
     fun test_deleteMessages_when_MessageIDAndUserIdIsPassed_should_DeleteMessagesIfExists() {
         val userId = "user_11"
         val msgIds = listOf("msg_1", "msg_2", "msg_3")
