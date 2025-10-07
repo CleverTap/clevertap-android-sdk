@@ -62,18 +62,7 @@ public class LoginInfoProvider {
         }
         try {
             cache.put(cacheKey, guid);
-
-            String saveString = null;
-            if (EncryptionLevel.fromInt(config.getEncryptionLevel()) != EncryptionLevel.NONE) {
-                saveString = cryptHandler.encryptSafe(cache.toString());
-                if (saveString == null) {
-                    cryptHandler.updateMigrationFailureCount(false);
-                }
-            }
-            if (saveString == null) {
-                saveString = cache.toString();
-            }
-            setCachedGUIDsAndLength(saveString, cache.length());
+            setCachedGUIDsAndLength(cache.toString(), cache.length());
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error caching guid: " + t);
         }
@@ -97,8 +86,7 @@ public class LoginInfoProvider {
                 String nextJSONObjKey = i.next();
                 String actualKeyInLowerCase = nextJSONObjKey.toLowerCase();
 
-                if (actualKeyInLowerCase.contains(key.toLowerCase()) &&
-                        cachedGuidJsonObj.getString(nextJSONObjKey).equals(guid)) {
+                if (actualKeyInLowerCase.contains(key.toLowerCase()) && cachedGuidJsonObj.getString(nextJSONObjKey).equals(guid)) {
                         cachedGuidJsonObj.remove(nextJSONObjKey);
                         setCachedGUIDsAndLength(cachedGuidJsonObj.toString(), cachedGuidJsonObj.length());
                 }
@@ -148,13 +136,23 @@ public class LoginInfoProvider {
         if (cachedGUIDs == null) {
             return;
         }
+        String saveString = null;
+        if (EncryptionLevel.fromInt(config.getEncryptionLevel()) != EncryptionLevel.NONE) {
+            saveString = cryptHandler.encryptSafe(cachedGUIDs);
+            if (saveString == null) {
+                cryptHandler.updateMigrationFailureCount(false);
+            }
+        }
+        if (saveString == null) {
+            saveString = cachedGUIDs;
+        }
         StorageHelper.putInt(context, config.getAccountId(), Constants.CACHED_GUIDS_LENGTH_KEY, cgkLength);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Storing size of cachedGUIDs: " + cgkLength);
         if (cgkLength == 0) {
             removeCachedGuidFromSharedPrefs();
             return;
         }
-        StorageHelper.putString(context, config.getAccountId(), Constants.CACHED_GUIDS_KEY, cachedGUIDs);
+        StorageHelper.putString(context, config.getAccountId(), Constants.CACHED_GUIDS_KEY, saveString);
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "setCachedGUIDs:[" + cachedGUIDs + "]");
     }
 
