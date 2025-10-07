@@ -10,11 +10,10 @@ import android.os.Bundle;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
-import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
-import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
@@ -25,7 +24,6 @@ import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -48,11 +46,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final DeviceInfo deviceInfo;
     private final ValidationResultStack validationResultStack;
     private final Validator validator;
-    private final InAppResponse inAppResponse;
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
-    private final NetworkManager networkManager;
+    private final InAppPreviewHandler inAppPreviewHandler;
 
     private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Long> notificationViewedIdTagMap = new HashMap<>();
@@ -67,10 +64,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             DeviceInfo deviceInfo,
             BaseCallbackManager callbackManager, ControllerManager controllerManager,
             final CTLockManager ctLockManager,
-            InAppResponse inAppResponse,
             Clock currentTimeProvider,
             CTExecutors executors,
-            NetworkManager networkManager
+            InAppPreviewHandler inAppPreviewHandler
     ) {
         this.context = context;
         this.config = config;
@@ -82,10 +78,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.callbackManager = callbackManager;
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
-        this.inAppResponse = inAppResponse;
         this.currentTimeProvider = currentTimeProvider;
         this.executors = executors;
-        this.networkManager = networkManager;
+        this.inAppPreviewHandler = inAppPreviewHandler;
     }
 
     @Override
@@ -469,7 +464,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            handleInAppPreview(extras);
+            inAppPreviewHandler.handleInAppPreview(extras);
             return;
         }
 
@@ -540,92 +535,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
             return null;
         });
-    }
-
-    private void handleInAppPreview(Bundle extras) {
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("testInappNotification", () -> {
-            try {
-                String s3Url = extras.getString(Constants.INAPP_PREVIEW_S3_URL_KEY);
-                JSONObject inappPreviewPayload = null;
-                JSONArray inappNotifs = new JSONArray();
-
-                if (s3Url != null && !s3Url.isEmpty()) {
-                    inappPreviewPayload = networkManager.fetchInAppPreviewPayloadFromUrl(s3Url);
-                }
-
-                if (inappPreviewPayload == null) {
-                    String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
-                    inappPreviewPayload = new JSONObject(inappPreviewString);
-                }
-
-                String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
-                if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
-                        || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
-                    inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
-                } else {
-                    inappNotifs.put(inappPreviewPayload);
-                }
-
-                JSONObject inAppResponseJson = new JSONObject();
-                inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
-
-                inAppResponse.processResponse(inAppResponseJson, null, context);
-            } catch (Throwable t) {
-                Logger.v("Failed to display inapp notification from push notification payload", t);
-            }
-            return null;
-        });
-    }
-
-    private JSONObject getHalfInterstitialInApp(final JSONObject inapp) throws JSONException {
-        String inAppConfig = inapp.optString(Constants.INAPP_IMAGE_INTERSTITIAL_CONFIG);
-        String htmlContent = wrapImageInterstitialContent(inAppConfig);
-
-        if (htmlContent != null) {
-            inapp.put(Constants.KEY_TYPE, Constants.KEY_CUSTOM_HTML);
-            Object data = inapp.opt(Constants.INAPP_DATA_TAG);
-
-            if (data instanceof JSONObject) {
-                JSONObject dataObject = (JSONObject) data;
-                dataObject = new JSONObject(dataObject.toString()); // Create a mutable copy
-                // Update the html
-                dataObject.put(Constants.INAPP_HTML_TAG, htmlContent);
-                inapp.put(Constants.INAPP_DATA_TAG, dataObject);
-            } else {
-                // If data key is not present or it is not a JSONObject,
-                // set it and overwrite it
-                JSONObject newData = new JSONObject();
-                newData.put(Constants.INAPP_HTML_TAG, htmlContent);
-                inapp.put(Constants.INAPP_DATA_TAG, newData);
-            }
-        } else {
-            config.getLogger().debug(config.getAccountId(), "Failed to parse the image-interstitial notification");
-            return null;
-        }
-
-        return inapp;
-    }
-
-    /**
-     * Wraps the provided content with HTML obtained from the image-interstitial file.
-     *
-     * @param content The content to be wrapped within the image-interstitial HTML.
-     * @return The wrapped content, or null if an error occurs during HTML retrieval or processing.
-     */
-    public String wrapImageInterstitialContent(String content) {
-        try {
-            String html = Utils.readAssetFile(context, Constants.INAPP_IMAGE_INTERSTITIAL_HTML_NAME);
-            if (html != null && content != null) {
-                String[] parts = html.split(Constants.INAPP_HTML_SPLIT);
-                if (parts.length == 2) {
-                    return parts[0] + content + parts[1];
-                }
-            }
-        } catch (IOException e) {
-            config.getLogger().debug(config.getAccountId(), "Failed to read the image-interstitial HTML file");
-        }
-        return null;
     }
 
     /**
