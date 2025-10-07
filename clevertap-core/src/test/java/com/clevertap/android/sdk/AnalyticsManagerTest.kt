@@ -9,9 +9,9 @@ import com.clevertap.android.sdk.displayunits.CTDisplayUnitController
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.inapp.CTInAppNotification
+import com.clevertap.android.sdk.inapp.InAppPreviewHandler
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.inbox.CTInboxMessage
-import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.utils.Clock
@@ -62,10 +62,10 @@ class AnalyticsManagerTest {
     private lateinit var context: Context
 
     @MockK(relaxed = true)
-    private lateinit var inAppResponse: InAppResponse
+    private lateinit var timeProvider: Clock
 
     @MockK(relaxed = true)
-    private lateinit var timeProvider: Clock
+    private lateinit var inAppPreviewHandler: InAppPreviewHandler
 
     private val bundleIdCheck = Bundle().apply {
         putString("wzrk_pn", "wzrk_pn")
@@ -97,9 +97,9 @@ class AnalyticsManagerTest {
             coreState.callbackManager,
             coreState.controllerManager,
             coreState.cTLockManager,
-            inAppResponse,
             timeProvider,
-            MockCTExecutors()
+            MockCTExecutors(),
+            inAppPreviewHandler
         )
     }
 
@@ -1569,47 +1569,6 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `wrapImageInterstitialContent should return null if html is null`() {
-        mockkStatic(Utils::class) {
-            every { Utils.readAssetFile(context, any()) } returns null
-            val result = analyticsManagerSUT.wrapImageInterstitialContent("content")
-            assertEquals(null, result)
-        }
-    }
-
-    @Test
-    fun `wrapImageInterstitialContent should return null if content is null`() {
-        mockkStatic(Utils::class) {
-            every { Utils.readAssetFile(context, any()) } returns "<html></html>"
-            val result = analyticsManagerSUT.wrapImageInterstitialContent(null)
-            assertEquals(null, result)
-        }
-    }
-
-    @Test
-    fun `wrapImageInterstitialContent should return null if html does not contain split token`() {
-        mockkStatic(Utils::class) {
-            every { Utils.readAssetFile(context, any()) } returns "<html></html>"
-            val result = analyticsManagerSUT.wrapImageInterstitialContent("content")
-            assertEquals(null, result)
-        }
-    }
-
-    @Test
-    fun `wrapImageInterstitialContent should return wrapped content`() {
-        mockkStatic(Utils::class) {
-            every {
-                Utils.readAssetFile(
-                    context,
-                    any()
-                )
-            } returns "<html>${Constants.INAPP_HTML_SPLIT}</html>"
-            val result = analyticsManagerSUT.wrapImageInterstitialContent("content")
-            assertEquals("<html>content</html>", result)
-        }
-    }
-
-    @Test
     fun `pushNotificationClickedEvent should handle in-app preview`() {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "test")
@@ -1617,7 +1576,7 @@ class AnalyticsManagerTest {
             putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{}")
         }
         analyticsManagerSUT.pushNotificationClickedEvent(extras)
-        verify { inAppResponse.processResponse(any(), null, context) }
+        verify { inAppPreviewHandler.handleInAppPreview(extras) }
     }
 
     @Test
