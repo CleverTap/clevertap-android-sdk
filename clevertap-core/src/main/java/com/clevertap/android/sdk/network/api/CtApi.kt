@@ -120,7 +120,7 @@ internal class CtApi(
             body = null
         )
 
-        logger.verbose(logTag, "Fetching content from URL: $url")
+        logger.verbose(logTag, "Fetching content from URL")
         return httpClient.execute(request)
     }
 
