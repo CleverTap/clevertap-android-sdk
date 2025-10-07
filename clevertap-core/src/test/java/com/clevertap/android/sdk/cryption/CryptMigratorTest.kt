@@ -1013,9 +1013,9 @@ class CryptMigratorTest {
         verify { dataMigrationRepository.saveUserProfile(eq("device1"), capture(jsonObjectSlot)) }
         
         // Verify all fields are preserved
-        assert(jsonObjectSlot.captured.getString("CustomField1") == "value1")
-        assert(jsonObjectSlot.captured.getInt("CustomField2") == 123)
-        assert(jsonObjectSlot.captured.getBoolean("CustomField3"))
+        assertEquals("value1", jsonObjectSlot.captured.getString("CustomField1"))
+        assertEquals(123, jsonObjectSlot.captured.getInt("CustomField2"))
+        assertTrue(jsonObjectSlot.captured.getBoolean("CustomField3"))
     }
 
     @Test
