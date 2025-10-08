@@ -59,7 +59,8 @@ internal class InputBoxStyle(private val data: InputBoxTemplateData, private val
 
         inputBoxNotificationBuilder = setStandardViewBigImageStyle(
             context, inputBoxNotificationBuilder
-        )
+        ).setSubText(data.textData.subtitle)
+
         if (data.inputLabel.isNotNullAndEmpty()) {
             //Initialise RemoteInput
             val remoteInput = RemoteInput.Builder(PTConstants.PT_INPUT_KEY)
