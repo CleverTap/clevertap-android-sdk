@@ -12,7 +12,6 @@ import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table.USER_PROFILES
-import org.json.JSONException
 import org.json.JSONObject
 
 internal class UserProfileDAOImpl(
@@ -71,14 +70,12 @@ internal class UserProfileDAOImpl(
                     val profileString = cursor.getString(dataIndex)
                     val deviceIdString = cursor.getString(deviceIdIndex)
 
-                    profileString?.let { ps ->
-                        try {
-                            val decryptedProfile = dbEncryptionHandler.unwrapDbData(ps)
-                            val jsonObject = JSONObject(decryptedProfile)
-                            profiles[deviceIdString] = jsonObject
-                        } catch (e: JSONException) {
-                            logger.verbose("Error parsing JSON for profile", e)
-                        }
+                    val decryptedProfile = dbEncryptionHandler.unwrapDbData(profileString)
+                    if (decryptedProfile != null) {
+                        val jsonObject = JSONObject(decryptedProfile)
+                        profiles[deviceIdString] = jsonObject
+                    } else {
+                        logger.verbose("Error decrypting JSON for profile")
                     }
                 }
             }
@@ -92,8 +89,8 @@ internal class UserProfileDAOImpl(
     @WorkerThread
     override fun fetchUserProfile(accountId: String, deviceId: String): JSONObject? {
         val tName = USER_PROFILES.tableName
-        var profileString: String? = null
-        
+
+        var op: JSONObject? = null
         try {
             dbHelper.readableDatabase.query(
                 tName, null,
@@ -104,20 +101,21 @@ internal class UserProfileDAOImpl(
                 if (cursor.moveToFirst()) {
                     val dataIndex = cursor.getColumnIndex(Column.DATA)
                     if (dataIndex >= 0) {
-                        profileString = cursor.getString(dataIndex)
+                        val profileString = cursor.getString(dataIndex)
+                        val decryptedProfile = dbEncryptionHandler.unwrapDbData(profileString)
+                        if (decryptedProfile != null) {
+                            op = JSONObject(decryptedProfile)
+                        } else {
+                            logger.verbose("Failed profile decryption")
+                        }
                     }
+                } else {
+                    logger.verbose("There was no profile found in DB")
                 }
             }
         } catch (e: SQLiteException) {
             logger.verbose("Could not fetch records out of database $tName.", e)
         }
-        
-        return profileString?.let { ps ->
-            try {
-                JSONObject(dbEncryptionHandler.unwrapDbData(ps))
-            } catch (e: JSONException) {
-                null
-            }
-        }
+        return op
     }
 }

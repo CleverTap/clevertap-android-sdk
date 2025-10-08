@@ -35,11 +35,7 @@ internal class VariablesRepo(
             Constants.CACHED_VARIABLES_KEY,
             "{}"
         )
-        try {
-            cache = dbEncryptionHandler.unwrapDbData(cache!!)
-        } catch (t: Throwable) {
-            Logger.d("loadDataFromCache failed in decryption step", t)
-        }
+        cache = dbEncryptionHandler.unwrapDbData(cache)
         Logger.d("VarCache loaded cache data:\n$cache")
         return cache
     }

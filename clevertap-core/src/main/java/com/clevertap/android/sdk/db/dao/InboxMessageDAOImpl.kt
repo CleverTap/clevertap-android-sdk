@@ -41,25 +41,25 @@ internal class InboxMessageDAOImpl(
                 val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN)
 
                 while (cursor.moveToNext()) {
-                    try {
-                        val ctMessageDAO = CTMessageDAO().apply {
-                            this.id = cursor.getString(idColumnIndex)
-                            val decryptedData =
-                                dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex))
-                            this.jsonData = JSONObject(decryptedData)
-                            this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex))
-                            this.date = cursor.getLong(createdAtColumnIndex)
-                            this.expires = cursor.getLong(expiresColumnIndex)
-                            this.isRead = cursor.getInt(isReadColumnIndex)
-                            this.userId =
-                                cursor.getString(userIdColumnIndex) // This seems redundant if you are already filtering by userId
-                            this.tags = cursor.getString(tagsColumnIndex)
-                            this.campaignId = cursor.getString(campaignColumnIndex)
-                        }
-                        messageDAOArrayList.add(ctMessageDAO)
-                    } catch (e: Exception) {
-                        logger.debug("There was some problem in loading inbox message from DB", e)
+                    val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex))
+                    if (decryptedData == null) {
+                        logger.debug("There was some problem in loading inbox message from DB")
+                        continue
                     }
+
+                    val ctMessageDAO = CTMessageDAO().apply {
+                        this.id = cursor.getString(idColumnIndex)
+                        this.jsonData = JSONObject(decryptedData)
+                        this.wzrkParams = JSONObject(cursor.getString(wzrkParamsColumnIndex))
+                        this.date = cursor.getLong(createdAtColumnIndex)
+                        this.expires = cursor.getLong(expiresColumnIndex)
+                        this.isRead = cursor.getInt(isReadColumnIndex)
+                        this.userId =
+                            cursor.getString(userIdColumnIndex) // This seems redundant if you are already filtering by userId
+                        this.tags = cursor.getString(tagsColumnIndex)
+                        this.campaignId = cursor.getString(campaignColumnIndex)
+                    }
+                    messageDAOArrayList.add(ctMessageDAO)
                 }
             }
         } catch (e: Exception) {

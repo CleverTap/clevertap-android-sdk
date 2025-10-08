@@ -13,7 +13,6 @@ import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.utils.Clock
-import org.json.JSONException
 import org.json.JSONObject
 
 internal class EventDAOImpl(
@@ -72,27 +71,29 @@ internal class EventDAOImpl(
                 val rowCount = cursor.count
                 queueData.hasMore = rowCount > limit
 
+                val colId = cursor.getColumnIndexOrThrow(Column.ID)
+                val colData = cursor.getColumnIndexOrThrow(Column.DATA)
+
                 var pos = 0
                 while (cursor.moveToNext()) {
                     if (pos == limit) {
                         break
                     }
-                    val id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
-                    val eventData = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
+                    val id = cursor.getString(colId)
+                    val eventData = cursor.getString(colData)
 
-                    try {
-                        val decryptedData = dbEncryptionHandler.unwrapDbData(eventData)
-                        val jsonEvent = JSONObject(decryptedData)
-                        queueData.data.put(jsonEvent)
+                    val decryptedData = dbEncryptionHandler.unwrapDbData(eventData)
+                    if (decryptedData == null) {
+                        logger.verbose("Error parsing event data for id: $id from table: $tName")
+                        continue
+                    }
+                    val jsonEvent = JSONObject(decryptedData)
+                    queueData.data.put(jsonEvent)
 
-                        if (table == Table.PROFILE_EVENTS) {
-                            queueData.profileEventIds.add(id)
-                        } else {
-                            queueData.eventIds.add(id)
-                        }
-
-                    } catch (e: JSONException) {
-                        logger.verbose("Error parsing event data for id: $id from table: $tName", e)
+                    if (table == Table.PROFILE_EVENTS) {
+                        queueData.profileEventIds.add(id)
+                    } else {
+                        queueData.eventIds.add(id)
                     }
                     pos++
                 }
