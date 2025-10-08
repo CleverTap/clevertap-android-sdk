@@ -11,11 +11,15 @@ import com.clevertap.android.sdk.inapp.CTLocalInApp
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.ExampleVariables
+import com.clevertap.demo.MyApplication
 import java.util.Date
 
 private const val TAG = "HomeScreenViewModel"
 
-class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel() {
+class HomeScreenViewModel(
+    private val cleverTapAPI: CleverTapAPI?,
+    private val ctMultiInstance: CleverTapAPI? = MyApplication.ctMultiInstance
+) : ViewModel() {
 
     val clickCommand: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
@@ -30,6 +34,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
         when (commandPosition) {
             "0-0" -> {
                 cleverTapAPI?.pushEvent("BlockBRTesting")
+                ctMultiInstance?.pushEvent("icon-inbox")
             }
 
             "0-1" -> {
@@ -170,7 +175,8 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "1-12" -> {
-                onUserLogin()
+                onUserLogin(cleverTapAPI)
+                onUserLogin(ctMultiInstance)
             }
 
             "2-0" -> {
@@ -827,7 +833,10 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
         }
     }
 
-    private fun onUserLogin() {
+    private fun onUserLogin(cleverTapAPI: CleverTapAPI?) {
+        if (cleverTapAPI == null) {
+            return
+        }
         // onUserLogin
         val n = (0..10_000).random()
         val p = (10_000..99_999).random()
@@ -837,7 +846,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             put("Phone", "+141566$p") // Phone (with the country code, starting with +)
             // add any other key value pairs.....
         }
-        cleverTapAPI?.onUserLogin(newProfile)
+        cleverTapAPI.onUserLogin(newProfile)
     }
 
     fun pushProfile(cleverTapAPI: CleverTapAPI) {
