@@ -86,8 +86,8 @@ internal class InAppPreviewHandler(
         return inapp
     }
 
-    fun wrapImageInterstitialContent(content: String?): String? {
-        if (content.isNullOrBlank()) return null
+    private fun wrapImageInterstitialContent(content: String): String? {
+        if (content.isBlank()) return null
 
         return try {
             val html = Utils.readAssetFile(context, Constants.INAPP_IMAGE_INTERSTITIAL_HTML_NAME) ?: return null
