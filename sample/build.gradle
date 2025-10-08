@@ -192,12 +192,11 @@ dependencies {
 
 Properties loadLocalProperties() {
     def propertiesFile = project.rootProject.file('local.properties')
+    Properties localProperties = new Properties()
     if (propertiesFile.exists()) {
-        Properties localProperties = new Properties()
         localProperties.load(propertiesFile.newDataInputStream())
-        return localProperties
     }
-    return [:] // Return an empty map if properties file doesn't exist
+    return localProperties
 }
 
 static String getCtProperty(String key, Properties localProperties) {
