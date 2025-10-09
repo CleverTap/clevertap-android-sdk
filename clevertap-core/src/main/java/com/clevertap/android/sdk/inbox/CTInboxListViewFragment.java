@@ -137,7 +137,7 @@ public class CTInboxListViewFragment extends Fragment {
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
             mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
             mediaRecyclerView.setItemAnimator(new DefaultItemAnimator());
-            applySystemBarsInsets(mediaRecyclerView);
+//            applySystemBarsInsets(mediaRecyclerView);
 
             mediaRecyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
@@ -159,7 +159,7 @@ public class CTInboxListViewFragment extends Fragment {
             recyclerView.setLayoutManager(linearLayoutManager);
             recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
             recyclerView.setItemAnimator(new DefaultItemAnimator());
-            applySystemBarsInsets(recyclerView);
+//            applySystemBarsInsets(recyclerView);
             recyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
         }
