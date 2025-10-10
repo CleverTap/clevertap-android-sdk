@@ -1286,7 +1286,7 @@ class TemplateDataFactoryTest {
         // Then
         assertTrue(result is ProductTemplateData)
         val productData = result as ProductTemplateData
-        assertTrue(productData.isLinear) // default is true
+        assertFalse(productData.isLinear) // default is false
     }
 
     @Test

@@ -215,7 +215,7 @@ internal object TemplateDataFactory {
             displayActionColor = colorMap[PT_PRODUCT_DISPLAY_ACTION_COLOUR],
             displayActionTextColor = colorMap[PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR],
             isLinear = extras.getString(PT_PRODUCT_DISPLAY_LINEAR)
-                ?.equals("true", ignoreCase = true) ?: true,
+                ?.equals("true", ignoreCase = true) ?: false
         )
     }
 
