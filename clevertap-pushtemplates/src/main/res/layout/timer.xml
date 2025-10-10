@@ -27,7 +27,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/metadata"
-            android:layout_marginEnd="@dimen/padding_vertical"
             android:layout_toStartOf="@+id/chronometer" >
 
 
