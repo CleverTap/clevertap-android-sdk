@@ -40,6 +40,7 @@ sealed class DelayedInAppResult {
             INVALID_JSON("Retrieved data is not a valid JSONObject"),
             CANCELLED("Delayed in-app callback was cancelled"),
             EMPTY_INAPP_ID("InApp ID is empty or invalid"),
+            DB_SAVE_FAILED("Failed to save delayed in-app to database"),
             UNKNOWN("Unknown error occurred");
 
             override fun toString(): String = message
