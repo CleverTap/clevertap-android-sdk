@@ -18,11 +18,15 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
@@ -35,12 +39,11 @@ internal class InAppDelayManagerV2(
     private val clock: Clock = Clock.SYSTEM,
     private val scope: CoroutineScope = ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.Default
 ) {
-    fun logCoroutineInfo(msg: String) {
-        logger.verbose(
-            accountId,
-            "[InAppDelayManager]: Running on: [${Thread.currentThread().name}] | $msg"
-        )
-    }
+
+    private val activeJobs = ConcurrentHashMap<String, Job>()
+    private val cancelledJobs =
+        ConcurrentHashMap<String, CancelledJobData>()
+    private val TAG = "[InAppDelayManager]:"
 
     init {
         //System.setProperty("kotlinx.coroutines.debug","on")
@@ -52,16 +55,16 @@ internal class InAppDelayManagerV2(
                     onAppForeground()
                     awaitCancellation()
                 } catch (c: CancellationException) {
-                    logger.verbose(accountId, "process lifeCycleOwner: Stopped")
-                    onAppBackground()
+                    logCoroutineInfo("process lifeCycleOwner: Stopped, $coroutineContext, ${coroutineContext[Job]?.parent}}")
+                    withContext(NonCancellable){
+                        logCoroutineInfo("process lifeCycleOwner: withContext block, $coroutineContext, ${coroutineContext[Job]?.parent}}")
+                        onAppBackground() // cleanup
+                    }
+                    ensureActive()// rethrow cancellation
                 }
             }
         }
     }
-
-    private val activeJobs = ConcurrentHashMap<String, Job>()
-    private val cancelledJobs =
-        ConcurrentHashMap<String, Triple<Long, Long, (DelayedInAppResult) -> Unit>>()
 
     /**
      * Schedules an in-app callback to be executed after a specified delay.
@@ -83,7 +86,7 @@ internal class InAppDelayManagerV2(
         // Keep existing active job if present
         activeJobs[id]?.let { existingJob ->
             if (existingJob.isActive) {
-                logger.verbose(accountId,"InApp callback with id '$id' already scheduled, keeping existing")
+                logger.verbose(accountId,"$TAG InApp callback with id '$id' already scheduled, keeping existing")
                 return existingJob
             } else {
                 activeJobs.remove(id)
@@ -98,7 +101,7 @@ internal class InAppDelayManagerV2(
                 // Check if store is initialized
                 val store = delayedLegacyInAppStore
                 if (store == null) {
-                    logger.verbose(accountId, "DelayedLegacyInAppStore is null for callback id: $id")
+                    logger.verbose(accountId, "$TAG DelayedLegacyInAppStore is null for callback id: $id")
                     callback(DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.STORE_NOT_INITIALIZED, id))
                     return@launch
                 }
@@ -118,11 +121,12 @@ internal class InAppDelayManagerV2(
                 cancelledJobs.remove(id)
                 store.removeDelayedInApp(id)
             } catch (e: CancellationException) {
-                logger.verbose(accountId, "Cancelled InApp callback with id: $id")
-                cancelledJobs.putIfAbsent(id, Triple(delayInMs, scheduledAt, callback))
+                logger.verbose(accountId, "$TAG Cancelled InApp callback with id: $id")
+                cancelledJobs.putIfAbsent(id, CancelledJobData(delayInMs, scheduledAt, callback))
+                ensureActive()// rethrow cancellation
                 //callback(DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.CANCELLED, id, e))
             } catch (e: Exception) {
-                logger.verbose(accountId, "Error in InApp callback with id: $id", e)
+                logger.verbose(accountId, "$TAG Error in InApp callback with id: $id", e)
                 callback(DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.UNKNOWN, id, e))
                 cancelledJobs.remove(id)
                 delayedLegacyInAppStore!!.removeDelayedInApp(id)
@@ -132,7 +136,7 @@ internal class InAppDelayManagerV2(
         }
 
         activeJobs[id] = job
-        logger.verbose(accountId,"Scheduled new InApp callback with id '$id' for ${delayInMs}ms delay")
+        logger.verbose(accountId,"$TAG Scheduled new InApp callback with id '$id' for ${delayInMs}ms delay")
 
         return job
     }
@@ -147,13 +151,13 @@ internal class InAppDelayManagerV2(
     ) {
         logger.verbose(
             accountId,
-            "InAppDelayManager: Scheduling ${delayedInApps.length()} delayed in-apps"
+            "$TAG Scheduling ${delayedInApps.length()} delayed in-apps"
         )
 
         if (delayedLegacyInAppStore == null) {
             logger.verbose(
                 accountId,
-                "InAppDelayManager: DelayedLegacyInAppStore is null, aborting scheduling"
+                "$TAG DelayedLegacyInAppStore is null, aborting scheduling"
             )
             return
         }
@@ -195,7 +199,7 @@ internal class InAppDelayManagerV2(
      * Called when app goes to background
      * Cancels all active jobs (will be rescheduled on foreground)
      */
-    fun onAppBackground() {
+    suspend fun onAppBackground() {
         cancelAllCallbacks()
     }
 
@@ -208,25 +212,25 @@ internal class InAppDelayManagerV2(
     ) {
         logger.verbose(
             accountId,
-            "InAppDelayManager: App coming to foreground, checking for pending in-apps"
+            "$TAG App coming to foreground, checking for pending in-apps"
         )
 
         if (delayedLegacyInAppStore == null) {
             logger.verbose(
                 accountId,
-                "InAppDelayManager: DelayedLegacyInAppStore is null, aborting foreground handling"
+                "$TAG DelayedLegacyInAppStore is null, aborting foreground handling"
             )
             return
         }
 
         if (cancelledJobs.isEmpty()) {
-            logger.verbose(accountId, "InAppDelayManager: No pending delayed in-apps found")
+            logger.verbose(accountId, "$TAG No pending delayed in-apps found")
             return
         }
 
         logger.verbose(
             accountId,
-            "InAppDelayManager: Found ${cancelledJobs.size} pending delayed in-apps"
+            "$TAG Found ${cancelledJobs.size} pending delayed in-apps"
         )
 
         val currentTime = clock.currentTimeMillis()
@@ -235,9 +239,9 @@ internal class InAppDelayManagerV2(
         val toDiscard = mutableListOf<String>()
 
         cancelledJobs.forEach { (inAppId, jobData) ->
-            val originalDelayInMs = jobData.first
-            val scheduledAt = jobData.second
-            val callback = jobData.third
+            val originalDelayInMs = jobData.originalDelayInMs
+            val scheduledAt = jobData.scheduledAt
+            val callback = jobData.callback
 
             // Calculate elapsed time since scheduling started
             val elapsedTimeMs = currentTime - scheduledAt
@@ -247,7 +251,7 @@ internal class InAppDelayManagerV2(
 
             logger.verbose(
                 accountId,
-                "InAppDelayManager: InApp $inAppId - Original delay: ${originalDelayInMs}ms, " +
+                "$TAG InApp $inAppId - Original delay: ${originalDelayInMs}ms, " +
                         "Elapsed: ${elapsedTimeMs}ms, Remaining: ${remainingTimeInMs}ms"
             )
 
@@ -278,7 +282,7 @@ internal class InAppDelayManagerV2(
 
             logger.verbose(
                 accountId,
-                "InAppDelayManager: Rescheduled ${data.inAppId} with ${data.remainingTimeInMs}ms remaining"
+                "$TAG Rescheduled ${data.inAppId} with ${data.remainingTimeInMs}ms remaining"
             )
         }
 
@@ -290,13 +294,13 @@ internal class InAppDelayManagerV2(
 
             logger.verbose(
                 accountId,
-                "InAppDelayManager: Discarded expired in-app $inAppId"
+                "$TAG Discarded expired in-app $inAppId"
             )
         }
 
         logger.verbose(
             accountId,
-            "InAppDelayManager: Foreground handling complete - Rescheduled: $rescheduledCount, Discarded: $discardedCount"
+            "$TAG Foreground handling complete - Rescheduled: $rescheduledCount, Discarded: $discardedCount"
         )
     }
 
@@ -315,14 +319,13 @@ internal class InAppDelayManagerV2(
     /**
      * Cancels all scheduled callbacks
      */
-    private fun cancelAllCallbacks() {
+    private suspend fun cancelAllCallbacks() {
         val cancelledCount = activeJobs.size
         val jobsToCancel = activeJobs.values.toList()
         jobsToCancel.forEach {
-            it.cancel()
-            it.invokeOnCompletion { logger.verbose(accountId, "Job Completed") }
+            it.cancelAndJoin()
         }
-        logger.verbose(accountId, "Cancelled $cancelledCount InApp callbacks")
+        logger.verbose(accountId, "$TAG Cancelled $cancelledCount InApp callbacks")
     }
 
     /**
@@ -347,7 +350,7 @@ internal class InAppDelayManagerV2(
     /**
      * Clean up resources
      */
-    internal fun cleanup() {
+    internal suspend fun cleanup() {
         cancelAllCallbacks()
         scope.cancel()
     }
@@ -355,14 +358,26 @@ internal class InAppDelayManagerV2(
     /**
      * Extract delay from in-app JSON
      */
-    internal fun getInAppDelayInMs(inApp: JSONObject): Long {
+    private fun getInAppDelayInMs(inApp: JSONObject): Long {
         val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, 0)
         return if (delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS) delaySeconds.seconds.inWholeMilliseconds else 0
+    }
+
+    private fun logCoroutineInfo(msg: String) {
+        logger.verbose(
+            accountId,
+            "$TAG Running on: [${Thread.currentThread().name}] | $msg"
+        )
     }
 
     private data class RescheduleData(
         val inAppId: String,
         val remainingTimeInMs: Long,
+        val callback: (DelayedInAppResult) -> Unit
+    )
+    private data class CancelledJobData(
+        val originalDelayInMs: Long,
+        val scheduledAt: Long,
         val callback: (DelayedInAppResult) -> Unit
     )
 }
