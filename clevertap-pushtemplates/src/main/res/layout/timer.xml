@@ -34,6 +34,8 @@
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
                 tools:text="title"
                 android:textAppearance="@style/PushTitle" />
 
@@ -41,6 +43,8 @@
                 android:id="@+id/msg"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:maxLines="4"
+                android:ellipsize="end"
                 android:layout_below="@+id/title"
                 android:layout_alignStart="@+id/title"
                 tools:text="message"
