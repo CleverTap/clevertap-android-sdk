@@ -188,6 +188,11 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
             }
         }
 
+        boolean isSticky = "true".equalsIgnoreCase(extras.getString(Constants.WZRK_STICKY));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            nb.setOngoing(isSticky);
+        }
+
         // uncommon
         nb.setContentTitle(notifTitle)
                 .setContentText(notifMessage)
