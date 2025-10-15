@@ -155,6 +155,7 @@ internal object CleverTapFactory {
         inAppDaoLoaderTask.execute("loadInAppsDao") {
             inAppDelayManagerV2.delayedLegacyInAppStore = DelayedLegacyInAppStore(
                 databaseManager.loadDBAdapter(context).delayedLegacyInAppDAO(),
+                cryptHandler,
                 config.logger,
                 accountId
             )
