@@ -7,10 +7,10 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.RelativeLayout
-import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import com.clevertap.android.sdk.customviews.CloseImageView
+import com.clevertap.android.sdk.utils.toColorIntOrDefault
 
 internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
 
@@ -28,7 +28,7 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
         }
 
         val fl = inAppView.findViewById<FrameLayout>(R.id.inapp_cover_image_frame_layout)
-        fl.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
+        fl.setBackgroundColor(inAppNotification.backgroundColor.toColorIntOrDefault())
 
         val relativeLayout = fl.findViewById<RelativeLayout>(R.id.cover_image_relative_layout)
         val imageView = relativeLayout.findViewById<ImageView>(R.id.cover_image)

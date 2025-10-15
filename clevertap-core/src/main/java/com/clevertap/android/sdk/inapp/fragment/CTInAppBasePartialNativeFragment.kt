@@ -15,8 +15,8 @@ import android.view.animation.TranslateAnimation
 import android.widget.Button
 import android.widget.LinearLayout
 import kotlin.math.abs
-import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
+import com.clevertap.android.sdk.utils.toColorIntOrDefault
 
 internal abstract class CTInAppBasePartialNativeFragment : CTInAppBasePartialFragment(),
     OnTouchListener, OnLongClickListener {
@@ -112,8 +112,8 @@ internal abstract class CTInAppBasePartialNativeFragment : CTInAppBasePartialFra
             inAppButton.tag = buttonIndex
             inAppButton.visibility = View.VISIBLE
             inAppButton.text = inAppNotificationButton.text
-            inAppButton.setTextColor(inAppNotificationButton.textColor.toColorInt())
-            inAppButton.setBackgroundColor(inAppNotificationButton.backgroundColor.toColorInt())
+            inAppButton.setTextColor(inAppNotificationButton.textColor.toColorIntOrDefault())
+            inAppButton.setBackgroundColor(inAppNotificationButton.backgroundColor.toColorIntOrDefault())
             inAppButton.setOnClickListener(CTInAppNativeButtonClickListener())
         } else {
             inAppButton.visibility = View.GONE

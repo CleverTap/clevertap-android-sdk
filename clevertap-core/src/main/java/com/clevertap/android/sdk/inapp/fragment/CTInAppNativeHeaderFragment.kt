@@ -11,9 +11,9 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
+import com.clevertap.android.sdk.utils.toColorIntOrDefault
 
 internal class CTInAppNativeHeaderFragment : CTInAppBasePartialNativeFragment() {
 
@@ -29,7 +29,7 @@ internal class CTInAppNativeHeaderFragment : CTInAppBasePartialNativeFragment() 
         val fl = inAppView.findViewById<FrameLayout>(R.id.header_frame_layout)
 
         val relativeLayout = fl.findViewById<RelativeLayout>(R.id.header_relative_layout)
-        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
+        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorIntOrDefault())
         val linearLayout1 = relativeLayout.findViewById<LinearLayout>(R.id.header_linear_layout_1)
         val linearLayout2 = relativeLayout.findViewById<LinearLayout>(R.id.header_linear_layout_2)
         val linearLayout3 = relativeLayout.findViewById<LinearLayout>(R.id.header_linear_layout_3)
@@ -57,11 +57,11 @@ internal class CTInAppNativeHeaderFragment : CTInAppBasePartialNativeFragment() 
 
         val textView1 = linearLayout2.findViewById<TextView>(R.id.header_title)
         textView1.text = inAppNotification.title
-        textView1.setTextColor(inAppNotification.titleColor.toColorInt())
+        textView1.setTextColor(inAppNotification.titleColor.toColorIntOrDefault())
 
         val textView2 = linearLayout2.findViewById<TextView>(R.id.header_message)
         textView2.text = inAppNotification.message
-        textView2.setTextColor(inAppNotification.messageColor.toColorInt())
+        textView2.setTextColor(inAppNotification.messageColor.toColorIntOrDefault())
 
         val buttons = inAppNotification.buttons
         if (!buttons.isEmpty()) {
