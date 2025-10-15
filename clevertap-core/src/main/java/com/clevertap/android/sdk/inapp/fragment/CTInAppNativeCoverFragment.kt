@@ -11,10 +11,10 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import com.clevertap.android.sdk.customviews.CloseImageView
+import com.clevertap.android.sdk.utils.toColorIntOrDefault
 
 internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
 
@@ -35,7 +35,7 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
         val fl = inAppView.findViewById<FrameLayout>(R.id.inapp_cover_frame_layout)
 
         val relativeLayout = fl.findViewById<RelativeLayout>(R.id.cover_relative_layout)
-        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
+        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorIntOrDefault())
         val linearLayout = relativeLayout.findViewById<LinearLayout>(R.id.cover_linear_layout)
         val mainButton = linearLayout.findViewById<Button>(R.id.cover_button1)
         inAppButtons.add(mainButton)
@@ -57,11 +57,11 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
 
         val textView1 = relativeLayout.findViewById<TextView>(R.id.cover_title)
         textView1.text = inAppNotification.title
-        textView1.setTextColor(inAppNotification.titleColor.toColorInt())
+        textView1.setTextColor(inAppNotification.titleColor.toColorIntOrDefault())
 
         val textView2 = relativeLayout.findViewById<TextView>(R.id.cover_message)
         textView2.text = inAppNotification.message
-        textView2.setTextColor(inAppNotification.messageColor.toColorInt())
+        textView2.setTextColor(inAppNotification.messageColor.toColorIntOrDefault())
 
         val buttons = inAppNotification.buttons
         if (buttons.size == 1) {
