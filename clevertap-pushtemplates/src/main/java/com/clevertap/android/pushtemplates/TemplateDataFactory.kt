@@ -243,9 +243,10 @@ internal object TemplateDataFactory {
         val timerEnd = Utils.getTimerEnd(extras, System.currentTimeMillis())
         val timerThreshold = Utils.getTimerThreshold(extras)
         val dismissAfter = TimerTemplateHandler.getDismissAfterMs(timerEnd, timerThreshold)
-        val baseContent = createBaseContent(extras, colorMap).copy(notificationBehavior = NotificationBehavior(dismissAfter = dismissAfter))
+        val baseContent = createBaseContent(extras, colorMap)
+        val resolvedBaseContent = baseContent.copy(notificationBehavior = baseContent.notificationBehavior.copy(dismissAfter = dismissAfter))
         return TimerTemplateData(
-            baseContent = baseContent,
+            baseContent = resolvedBaseContent,
             mediaData = mediaData,
             actions = Utils.getActionKeys(extras),
             terminalTextData = createTerminalTextData(extras, baseContent.textData),

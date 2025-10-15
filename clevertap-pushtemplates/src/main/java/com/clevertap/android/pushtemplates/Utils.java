@@ -148,7 +148,8 @@ public class Utils {
     static ArrayList<String> getSmallTextFromExtras(Bundle extras) {
         ArrayList<String> stList = new ArrayList<>();
         for (String key : extras.keySet()) {
-            if (key.contains("pt_st")) {
+            if (key.startsWith("pt_st") && key.length() > 5
+                    && Character.isDigit(key.charAt(5))) {
                 stList.add(extras.getString(key));
             }
         }
