@@ -81,7 +81,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             if (!isReadPolicy) {
                 showPrivacyPolicyDialog()
             } else if (email == null) {
-                EmailDialogFragment().show(supportFragmentManager, "Email")
+                //EmailDialogFragment().show(supportFragmentManager, "Email")
             }
         }
     }
@@ -144,7 +144,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
                                 apply()
                             }
                             withContext(Dispatchers.Main) {
-                                EmailDialogFragment().show(supportFragmentManager, "Email")
+                                //EmailDialogFragment().show(supportFragmentManager, "Email")
                             }
                         }
                     }

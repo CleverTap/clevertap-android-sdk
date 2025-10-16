@@ -73,6 +73,9 @@ class AESCrypt(accountID: String) : Crypt() {
                 bytes[i] = byteStrings[i].toByte()
             }
             bytes
+        } catch (oom: OutOfMemoryError) {
+            Logger.v("Unable to parse cipher text", oom)
+            null
         } catch (e: Exception) {
             Logger.v("Unable to parse cipher text", e)
             null
