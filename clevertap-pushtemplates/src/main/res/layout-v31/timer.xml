@@ -12,13 +12,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/padding_micro"
-        android:layout_marginRight="@dimen/padding_micro"
-        android:layout_marginLeft="@dimen/padding_micro">
+        android:layout_marginEnd="@dimen/padding_horizontal"
+        android:layout_marginStart="@dimen/padding_micro">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/padding_vertical"
             android:layout_toStartOf="@+id/chronometer">
 
 
@@ -27,6 +26,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="6dp"
+                android:maxLines="1"
+                android:ellipsize="end"
                 tools:text="title"
                 android:textAppearance="@style/PushTitle" />
 
@@ -37,6 +38,8 @@
                 android:layout_below="@+id/title"
                 android:layout_alignStart="@+id/title"
                 android:layout_marginBottom="8dp"
+                android:maxLines="4"
+                android:ellipsize="end"
                 tools:text="message"
                 android:textAppearance="@style/PushMessageMultiLine" />
 

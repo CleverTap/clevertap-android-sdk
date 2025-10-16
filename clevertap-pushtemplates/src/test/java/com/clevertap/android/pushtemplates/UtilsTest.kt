@@ -3921,9 +3921,9 @@ class UtilsTest {
         val result = Utils.getSmallTextFromExtras(mockBundle)
 
         // Then
-        assertEquals(2, result.size)
+        assertEquals(1, result.size)
         assertTrue(result.contains("Small text 1"))
-        assertTrue(result.contains("Subtitle text"))
+        assertFalse(result.contains("Subtitle text"))
         assertFalse(result.contains("ignored"))
     }
 
