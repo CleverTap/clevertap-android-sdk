@@ -353,7 +353,7 @@ internal object CleverTapFactory {
                 callbackManager,
                 controllerManager
             ),
-            FetchVariablesResponse(config, controllerManager, callbackManager),
+            FetchVariablesResponse(config, ctVariables, callbackManager),
             DisplayUnitResponse(config, callbackManager, controllerManager),
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),

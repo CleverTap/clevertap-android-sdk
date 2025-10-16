@@ -5,8 +5,8 @@ import android.content.Context;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 
 import org.json.JSONObject;
@@ -14,18 +14,16 @@ import org.json.JSONObject;
 public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig config;
-
-
-    private final ControllerManager controllerManager;
+    private final CTVariables ctVariables;
     private final BaseCallbackManager callbackMgr;
 
     public FetchVariablesResponse(
             CleverTapInstanceConfig config,
-            ControllerManager controllerManager,
+            CTVariables ctVariables,
             BaseCallbackManager mgr
     ) {
         this.config = config;
-        this.controllerManager = controllerManager;
+        this.ctVariables = ctVariables;
         this.callbackMgr = mgr;
     }
 
@@ -66,14 +64,9 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
             JSONObject kvJson = response.getJSONObject(varsKey);
 
-            if (controllerManager.getCtVariables() != null) {
-                FetchVariablesCallback callback = callbackMgr.getFetchVariablesCallback();
-                controllerManager.getCtVariables().handleVariableResponse(kvJson,callback);
-                callbackMgr.setFetchVariablesCallback(null);
-            }
-            else {
-                logI("Can't parse Variable Response, CTVariables is null");
-            }
+            FetchVariablesCallback callback = callbackMgr.getFetchVariablesCallback();
+            ctVariables.handleVariableResponse(kvJson,callback);
+            callbackMgr.setFetchVariablesCallback(null);
 
         } catch (Throwable t) {
             logI("Failed to parse response", t);
