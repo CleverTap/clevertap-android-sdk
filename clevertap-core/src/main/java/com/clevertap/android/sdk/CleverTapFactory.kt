@@ -480,11 +480,22 @@ internal object CleverTapFactory {
 
         val ctWorkManager = CTWorkManager(context, config)
 
-        val pushProviders = PushProviders
-            .load(
-                context, config, databaseManager, validationResultStack,
-                analyticsManager, controllerManager, ctWorkManager, SYSTEM
-            )
+        val pushProviders = PushProviders(
+            context,
+            config,
+            databaseManager,
+            validationResultStack,
+            analyticsManager,
+            ctWorkManager,
+            executors,
+            SYSTEM
+        )
+        val pushTask = executors.pushProviderTask<Unit>()
+        pushTask.execute("asyncFindAvailableCTPushProviders") {
+            pushProviders.initPushAmp()
+            pushProviders.init()
+        }
+        controllerManager.pushProviders = pushProviders
 
         val activityLifeCycleManager = ActivityLifeCycleManager(
             context,

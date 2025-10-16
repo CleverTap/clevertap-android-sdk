@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.task;
 
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.utils.UrlHashGenerator;
 
 import java.util.HashMap;
@@ -100,6 +101,10 @@ public class CTExecutors {
             postAsyncSafelyTasks.put(featureTag, postAsyncSafelyExecutor);
         }
         return taskOnExecutorWithName(postAsyncSafelyExecutor, DEFAULT_CALLBACK_EXECUTOR, "PostAsyncSafely");
+    }
+
+    public <TResult> Task<TResult> pushProviderTask() {
+        return postAsyncSafelyTask(PushProviders.TAG);
     }
 
     /**

@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import androidx.core.app.NotificationCompat;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -29,7 +30,6 @@ import com.clevertap.android.sdk.CTXtensions;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
@@ -39,7 +39,7 @@ import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpWorker;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.validation.ValidationResult;
@@ -60,7 +60,7 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
 
-    private static final String TAG = "PushProviders";
+    public static final String TAG = "PushProviders";
 
     private static final int DEFAULT_FLEX_INTERVAL = 5;
     private static final int PING_FREQUENCY_VALUE = 240;
@@ -84,6 +84,7 @@ public class PushProviders implements CTPushProviderListener {
     private final Context context;
     private final CTWorkManager ctWorkManager;
     private final Clock clock;
+    private final CTExecutors executors;
 
     private INotificationRenderer iNotificationRenderer = new CoreNotificationRenderer();
 
@@ -95,45 +96,26 @@ public class PushProviders implements CTPushProviderListener {
 
     private DevicePushTokenRefreshListener tokenRefreshListener;
 
-    /**
-     * Factory method to load push providers.
-     *
-     * @return A PushProviders class with the loaded providers.
-     */
-    @NonNull
-    public static PushProviders load(
+    public PushProviders(
             Context context,
             CleverTapInstanceConfig config,
             BaseDatabaseManager baseDatabaseManager,
             ValidationResultStack validationResultStack,
             AnalyticsManager analyticsManager,
-            ControllerManager controllerManager,
             CTWorkManager ctWorkManager,
+            CTExecutors executors,
             Clock clock
     ) {
-        PushProviders providers = new PushProviders(context, config, baseDatabaseManager, validationResultStack,
-                analyticsManager,ctWorkManager, clock);
-        providers.init();
-        controllerManager.setPushProviders(providers);
-        return providers;
-    }
-
-    private PushProviders(
-            Context context,
-            CleverTapInstanceConfig config,
-            BaseDatabaseManager baseDatabaseManager,
-            ValidationResultStack validationResultStack,
-            AnalyticsManager analyticsManager,
-            CTWorkManager ctWorkManager,
-            Clock clock) {
         this.context = context;
         this.config = config;
-        this.clock = clock;
         this.baseDatabaseManager = baseDatabaseManager;
         this.validationResultStack = validationResultStack;
         this.analyticsManager = analyticsManager;
         this.ctWorkManager = ctWorkManager;
+        this.clock = clock;
+        this.executors = executors;
         initPushAmp();
+        configurePushTypes();
     }
 
     /**
@@ -226,7 +208,7 @@ public class PushProviders implements CTPushProviderListener {
         }
 //
         try {
-            Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+            Task<Void> task = executors.ioTask();
             task.execute("PushProviders#cacheToken", new Callable<Void>() {
                 @Override
                 public Void call() {
@@ -356,7 +338,7 @@ public class PushProviders implements CTPushProviderListener {
      * @param extras - Bundle
      */
     public void processCustomPushNotification(final Bundle extras) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("customHandlePushAmplification", new Callable<Void>() {
             @Override
             public Void call() {
@@ -410,7 +392,7 @@ public class PushProviders implements CTPushProviderListener {
         if (frequency != getPingFrequency(context)) {
             setPingFrequency(context, frequency);
             if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
-                Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
+                Task<Void> task = executors.postAsyncSafelyTask(TAG);
                 task.execute("createOrResetWorker", new Callable<Void>() {
                     @Override
                     public Void call() {
@@ -677,37 +659,24 @@ public class PushProviders implements CTPushProviderListener {
     /**
      * Loads all the plugins that are currently supported by the device.
      */
-    private void init() {
-        configurePushTypes();
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
-
-        task.execute("asyncFindAvailableCTPushProviders", () -> {
-            findAvailableCTPushProviders();
-            findNonEnabledPushTypes();
-            return null;
-        });
-
+    @WorkerThread
+    public void init() {
+        findAvailableCTPushProviders();
+        findNonEnabledPushTypes();
     }
 
-    private void initPushAmp() {
-
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
-        task.execute("createOrResetWorker", new Callable<Void>() {
-            @Override
-            public Void call() {
-                if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-                    stopJobScheduler(context);
-                }
-                if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
-                    createOrResetWorker(false);
-                } else {
-                    config.getLogger()
-                            .debug(config.getAccountId(), "Pushamp - Cancelling worker as background sync is disabled or config is analytics only");
-                    stopWorker();
-                }
-                return null;
-            }
-        });
+    @WorkerThread
+    public void initPushAmp() {
+        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+            stopJobScheduler(context);
+        }
+        if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
+            createOrResetWorker(false);
+        } else {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Pushamp - Cancelling worker as background sync is disabled or config is analytics only");
+            stopWorker();
+        }
     }
 
     private boolean isTimeBetweenDNDTime(Date startTime, Date stopTime, Date currentTime) {
@@ -780,7 +749,7 @@ public class PushProviders implements CTPushProviderListener {
      * Fetches latest tokens from various providers and send to Clevertap's server
      */
     private void refreshAllTokens() {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(TAG);
+        Task<Void> task = executors.postAsyncSafelyTask(TAG);
         task.execute("PushProviders#refreshAllTokens", new Callable<Void>() {
             @Override
             public Void call() {
