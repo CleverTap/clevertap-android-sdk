@@ -19,11 +19,11 @@ import androidx.core.graphics.toColorInt
  * ```
  *
  * @receiver The color string to parse (e.g., "#FFFFFF", "#80FF0000").
- * @param defaultColor The fallback color if parsing fails (default is [Color.BLACK]).
+ * @param defaultColor The fallback color if parsing fails (default is [Color.WHITE]).
  * @return The parsed color integer or [defaultColor] if parsing fails.
  */
 @ColorInt
-fun String?.toColorIntOrDefault(@ColorInt defaultColor: Int = Color.BLACK): Int {
+fun String?.toColorIntOrDefault(@ColorInt defaultColor: Int = Color.WHITE): Int {
     // If the string is null or empty, return the default color immediately
     if (this.isNullOrBlank()) return defaultColor
 
@@ -44,7 +44,7 @@ fun String?.toColorIntOrDefault(@ColorInt defaultColor: Int = Color.BLACK): Int 
  *
  * This utility provides two overloads:
  * - [parseColor(colorString, defaultColor)] → returns the parsed color or a provided fallback color.
- * - [parseColor(colorString)] → same as above but defaults to [Color.BLACK] on failure.
+ * - [parseColor(colorString)] → same as above but defaults to [Color.WHITE] on failure.
  *
  * Supported formats:
  * ```
@@ -88,13 +88,13 @@ object Color {
     }
 
     /**
-     * Parses a color string, defaulting to [Color.BLACK] if parsing fails.
+     * Parses a color string, defaulting to [Color.WHITE] if parsing fails.
      *
      * @param colorString The color string to parse.
-     * @return The parsed color integer, or [Color.BLACK] if invalid or null.
+     * @return The parsed color integer, or [Color.WHITE] if invalid or null.
      */
     @ColorInt
     fun parseColor(colorString: String?): Int {
-        return parseColor(colorString, Color.BLACK)
+        return parseColor(colorString, Color.WHITE)
     }
 }
