@@ -62,6 +62,14 @@ interface DelayedLegacyInAppDAO {
      */
     @WorkerThread
     fun fetchSingleInApp(inAppId: String): String?
+
+    /**
+     * Remove all delayed legacy in-app notifications from the table
+     *
+     * @return true if the operation was successful, false otherwise
+     */
+    @WorkerThread
+    fun clearAll(): Boolean
 }
 
 internal class DelayedLegacyInAppDAOImpl(
@@ -196,6 +204,21 @@ internal class DelayedLegacyInAppDAOImpl(
         } catch (e: Exception) {
             logger.verbose("Could not fetch delayed legacy in-app from database $tableName.", e)
             null
+        }
+    }
+
+    @WorkerThread
+    override fun clearAll(): Boolean {
+        val tableName = table.tableName
+
+        return try {
+            logger.verbose("Clearing all delayed legacy in-apps from $tableName")
+            db.writableDatabase.delete(tableName, null, null)
+            logger.verbose("Successfully cleared all delayed legacy in-apps from $tableName")
+            true
+        } catch (e: SQLiteException) {
+            logger.verbose("Error clearing all delayed legacy in-apps from table $tableName.", e)
+            false
         }
     }
 }
