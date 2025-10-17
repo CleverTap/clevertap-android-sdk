@@ -1,4 +1,17 @@
 ## CleverTap Push Templates SDK CHANGE LOG
+### Version 2.2.0 (October 17, 2025)
+
+#### New features
+* Adds support to display GIFs in `Basic`, `Timer`, `Zero Bezel` and `Rating` templates.
+* Adds an option to configure a notification as sticky on `Android 14+` devices using `pt_sticky: true/false`.
+* Adds an option to configure automatic dismissal of the notification after a set time on `Android 8+` devices using `pt_dismiss (value in seconds)`.
+* Adds support to show different media in the expanded and collapsed views of the `Zero Bezel` template.
+* Optimizes image downloading to avoid duplicate fetches.
+
+#### Bug Fixes
+* Fixes an issue to ensure the `chronometer` and the `title/message` don't overlap in the `Timer` template.
+* Fixes an issue where `Zero Bezel` and `Carousel` templates did not correctly fall back to a text-only notification when media download failed.
+
 ### Version 2.1.0 (June 27, 2025)
 
 #### New features
