@@ -62,10 +62,15 @@ internal class AESGCMCrypt(
             // Remove the prefix and suffix
             val content = cipherText.removePrefix(AES_GCM_PREFIX).removeSuffix(AES_GCM_SUFFIX)
 
-            // Split IV and encrypted bytes using a delimiter
-            val parts = content.split(":") // Use ":" as a delimiter
-            val iv = parts[0].fromBase64()
-            val encryptedBytes = parts[1].fromBase64()
+            // Find the delimiter position (more efficient than split)
+            val delimiterIndex = content.indexOf(":")
+            if (delimiterIndex == -1) {
+                Logger.v("Invalid cipher text format: delimiter not found")
+                return null
+            }
+
+            val iv = content.substring(0, delimiterIndex).fromBase64()
+            val encryptedBytes = content.substring(delimiterIndex + 1).fromBase64()
             AESGCMCryptResult(iv, encryptedBytes)
         } catch (oom: OutOfMemoryError) {
             Logger.v("Unable to parse cipher text", oom)

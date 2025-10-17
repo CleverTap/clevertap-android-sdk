@@ -1,9 +1,9 @@
 package com.clevertap.android.sdk.usereventlogs
 
 import android.content.ContentValues
-import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.db.Column
@@ -12,11 +12,12 @@ import com.clevertap.android.sdk.db.DBAdapter.Companion.DB_UPDATE_ERROR
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table
+import com.clevertap.android.sdk.db.Table.USER_EVENT_LOGS_TABLE
 
 internal class UserEventLogDAOImpl(
     private val db: DatabaseHelper,
-    private val logger: Logger,
-    private val table: Table
+    private val logger: ILogger,
+    private val table: Table = USER_EVENT_LOGS_TABLE
 ) : UserEventLogDAO {
 
     // Replace multiple params with single POJO param if param length increases

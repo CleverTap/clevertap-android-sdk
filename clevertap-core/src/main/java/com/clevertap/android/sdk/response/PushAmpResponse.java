@@ -72,22 +72,18 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                     }
 
                 }
-                if (pushAmpObject.has("ack")) {
-                    boolean ack = pushAmpObject.getBoolean("ack");
-                    logger.verbose("Received ACK -" + ack);
-                    if (ack) {
-                        String[] pushIds = baseDatabaseManager.loadDBAdapter(context).fetchPushNotificationIds();
-                        JSONArray rtlArray = pushIdsToJSONArray(pushIds);
-                        String[] rtlStringArray = new String[0];
-                        if (rtlArray != null) {
-                            rtlStringArray = new String[rtlArray.length()];
-                        }
-                        for (int i = 0; i < rtlStringArray.length; i++) {
-                            rtlStringArray[i] = rtlArray.getString(i);
-                        }
-                        logger.verbose("Updating RTL values...");
-                        baseDatabaseManager.loadDBAdapter(context).updatePushNotificationIds(rtlStringArray);
+                if (pushAmpObject.optBoolean("ack", false)) {
+                    logger.verbose("Received ACK - true");
+                    String[] pushIds = baseDatabaseManager.loadDBAdapter(context).fetchPushNotificationIds();
+                    JSONArray rtlArray = pushIdsToJSONArray(pushIds);
+                    String[] rtlStringArray = new String[rtlArray.length()];
+                    for (int i = 0; i < rtlStringArray.length; i++) {
+                        rtlStringArray[i] = rtlArray.getString(i);
                     }
+                    logger.verbose("Updating RTL values...");
+                    baseDatabaseManager.loadDBAdapter(context).updatePushNotificationIds(rtlStringArray);
+                } else {
+                    logger.verbose("Received ACK - false");
                 }
             }
         } catch (Throwable t) {

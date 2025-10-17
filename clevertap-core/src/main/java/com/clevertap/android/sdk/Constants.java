@@ -150,7 +150,7 @@ public interface Constants {
     String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
             NOTIFICATION_VIEWED_EVENT_NAME, GEOFENCE_ENTERED_EVENT_NAME,
             GEOFENCE_EXITED_EVENT_NAME};
-    long DEFAULT_PUSH_TTL = 1000L * 60 * 60 * 24 * 4;// 4 days
+    long DEFAULT_PUSH_TTL_SECONDS = 60 * 60 * 24 * 4;// 4 days
     long ONE_MIN_IN_MILLIS = 60 * 1000L;
     long ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000L;
     String COPY_TYPE = "copy";

@@ -3,15 +3,17 @@ package com.clevertap.android.sdk.login
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.copy
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
-import kotlin.test.assertTrue
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class LoginInfoProviderTest : BaseTestCase() {
 
@@ -23,17 +25,91 @@ class LoginInfoProviderTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
+        initWithEncryptionLevel()
+    }
+
+    fun initWithEncryptionLevel(
+        level: EncryptionLevel = EncryptionLevel.MEDIUM,
+        doSpy: Boolean = true
+    ) {
         coreMetaData = CoreMetaData()
         defConfig = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
+        defConfig.setEncryptionLevel(level)
         deviceInfo = mockk(relaxed = true)
         cryptHandler = mockk(relaxed = true)
-        loginInfoProvider = spyk(
-            LoginInfoProvider(
-                appCtx,
-                defConfig,
-                cryptHandler
-            )
+        val lip = LoginInfoProvider(
+            appCtx,
+            defConfig,
+            cryptHandler
         )
+        loginInfoProvider = if (doSpy) {
+            spyk(lip)
+        } else {
+            lip
+        }
+    }
+
+    @Test
+    fun `check functionality with NONE encryption levels`() {
+        val guid = "__789"
+        val key = "Email"
+        val identifier = "abc@gmail.com"
+        val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
+        val finalGuids = initialGuids.copy().apply { put(key + "_" + identifier, guid) }
+
+        // Setup for NONE level
+        initWithEncryptionLevel(level = EncryptionLevel.NONE, doSpy = true)
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+
+        // Perform and Verify for NONE encryption level
+        loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
+        verify { loginInfoProvider.setCachedGUIDsAndLength(finalGuids.toString(), 2) }
+        verify(exactly = 0) { cryptHandler.encryptSafe(finalGuids.toString()) }
+        verify(exactly = 0) { cryptHandler.updateMigrationFailureCount(any()) }
+
+        confirmVerified(cryptHandler)
+    }
+
+    @Test
+    fun `check functionality with MEDIUM encryption levels`() {
+        val guid = "__789"
+        val key = "Email"
+        val identifier = "abc@gmail.com"
+        val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
+        val finalGuids = initialGuids.copy().apply { put(key + "_" + identifier, guid) }
+
+        // Setup for MEDIUM level
+        initWithEncryptionLevel(level = EncryptionLevel.MEDIUM, doSpy = true)
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+
+        // Perform and Verify for MEDIUM encryption level
+        loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
+        verify { loginInfoProvider.setCachedGUIDsAndLength(finalGuids.toString(), 2) }
+        verify { cryptHandler.encryptSafe(finalGuids.toString()) }
+        verify(exactly = 0) { cryptHandler.updateMigrationFailureCount(any()) }
+
+        confirmVerified(cryptHandler)
+    }
+
+    @Test
+    fun `check functionality with FULL_DATA encryption levels`() {
+        val guid = "__789"
+        val key = "Email"
+        val identifier = "abc@gmail.com"
+        val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
+        val finalGuids = initialGuids.copy().apply { put(key + "_" + identifier, guid) }
+
+        // Setup for FULL_DATA level
+        initWithEncryptionLevel(level = EncryptionLevel.FULL_DATA, doSpy = true)
+        every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
+
+        // Perform and Verify for FULL_DATA encryption level
+        loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
+        verify { loginInfoProvider.setCachedGUIDsAndLength(finalGuids.toString(), 2) }
+        verify { cryptHandler.encryptSafe(finalGuids.toString()) }
+        verify(exactly = 0) { cryptHandler.updateMigrationFailureCount(any()) }
+
+        confirmVerified(cryptHandler)
     }
 
     @Test
@@ -43,12 +119,14 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = "abc@gmail.com"
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
+        // Perform
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
-        verify { loginInfoProvider.setCachedGUIDsAndLength("dummy_encrypted", 2) }
+        // Verify for MEDIUM encryption.
+        verify { loginInfoProvider.setCachedGUIDsAndLength(initialGuids.toString(), 2) }
+        verify { cryptHandler.encryptSafe(any()) }
     }
 
     @Test
@@ -58,12 +136,12 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = "abc@gmail.com"
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
-        verify { loginInfoProvider.setCachedGUIDsAndLength("dummy_encrypted", 2) }
+        verify { loginInfoProvider.setCachedGUIDsAndLength(initialGuids.toString(), 2) }
+        verify { cryptHandler.encryptSafe(any()) }
     }
 
     @Test
@@ -73,12 +151,12 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = ""
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
 
-        verify { loginInfoProvider.setCachedGUIDsAndLength("dummy_encrypted", 2) }
+        verify { loginInfoProvider.setCachedGUIDsAndLength(initialGuids.toString(), 2) }
+        verify { cryptHandler.encryptSafe(any()) }
     }
 
     @Test
@@ -88,7 +166,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val identifier = "abc@gmail.com"
         val initialGuids = JSONObject().apply { put("Phone_id1", "__1234567") }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns "dummy_encrypted"
+        every { cryptHandler.encryptSafe(any()) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -108,7 +186,7 @@ class LoginInfoProviderTest : BaseTestCase() {
             put(cryptedKey, guid)
         }
 
-        every { cryptHandler.encrypt(any(), any(), CryptHandler.EncryptionAlgorithm.AES_GCM) } returns null
+        every { cryptHandler.encryptSafe(any()) } returns null
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         loginInfoProvider.cacheGUIDForIdentifier(guid, key, identifier)
@@ -128,7 +206,7 @@ class LoginInfoProviderTest : BaseTestCase() {
             put(cryptedKey, guid)
         }
 
-        every { cryptHandler.encrypt(identifier, key) } returns "dummy_encrypted"
+        every { cryptHandler.encryptSafe(identifier) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, identifier)
@@ -144,7 +222,7 @@ class LoginInfoProviderTest : BaseTestCase() {
         val cryptedKey = "${key}_$identifier"
         val initialGuids = JSONObject().apply { put(cryptedKey, guid) }
 
-        every { cryptHandler.encrypt(identifier, key) } returns "dummy_encrypted"
+        every { cryptHandler.encryptSafe(identifier) } returns "dummy_encrypted"
         every { loginInfoProvider.getDecryptedCachedGUIDs() } returns initialGuids
 
         val actualGuid = loginInfoProvider.getGUIDForIdentifier(key, "not_cached@gmail.com")

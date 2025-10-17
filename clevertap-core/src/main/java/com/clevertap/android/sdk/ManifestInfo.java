@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 
+import org.jetbrains.annotations.TestOnly;
+
 /**
  * Parser for android manifest and picks up fields from manifest once to be references
  *
@@ -51,35 +53,48 @@ public class ManifestInfo {
         return instance;
     }
 
+    // Only added for testing
+    @TestOnly
+    static void clearPreloadedManifestInfo() {
+        instance = null;
+    }
+
     static void changeCredentials(String id, String token, String region) {
-        accountId = id;
-        accountToken = token;
-        accountRegion = region;
+        ccAccountId = id;
+        ccAccountToken = token;
+        ccAccountRegion = region;
     }
 
     static void changeCredentials(String id, String token, String _proxyDomain, String _spikyProxyDomain) {
-        accountId = id;
-        accountToken = token;
-        proxyDomain = _proxyDomain;
-        spikyProxyDomain = _spikyProxyDomain;
+        ccAccountId = id;
+        ccAccountToken = token;
+        ccProxyDomain = _proxyDomain;
+        ccSpikyProxyDomain = _spikyProxyDomain;
     }
 
     static void changeCredentials(String id, String token, String _proxyDomain, String _spikyProxyDomain, String customHandshakeDomain) {
-        accountId = id;
-        accountToken = token;
-        proxyDomain = _proxyDomain;
-        spikyProxyDomain = _spikyProxyDomain;
-        handshakeDomain = customHandshakeDomain;
+        ccAccountId = id;
+        ccAccountToken = token;
+        ccProxyDomain = _proxyDomain;
+        ccSpikyProxyDomain = _spikyProxyDomain;
+        ccHandshakeDomain = customHandshakeDomain;
     }
 
-    // Have to keep static due to change creds
-    private static String accountId;
-    private static String accountToken;
-    private static String accountRegion;
-    private static String proxyDomain;
-    private static String spikyProxyDomain;
-    private static String handshakeDomain;
+    // Start - Capture the credentials from ChangeCredentials
+    private static String ccAccountId;
+    private static String ccAccountToken;
+    private static String ccAccountRegion;
+    private static String ccProxyDomain;
+    private static String ccSpikyProxyDomain;
+    private static String ccHandshakeDomain;
+    // End - Capture the credentials from ChangeCredentials
 
+    private final String accountId;
+    private final String accountToken;
+    private final String accountRegion;
+    private final String proxyDomain;
+    private final String spikyProxyDomain;
+    private final String handshakeDomain;
     private final boolean useADID;
     private final boolean appLaunchedDisabled;
     private final String notificationIcon;
@@ -112,24 +127,12 @@ public class ManifestInfo {
         }
 
         // start -> assign these if they did not happen in changeCredentials
-        if (accountId == null) {
-            accountId = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_ACCOUNT_ID);
-        }
-        if (accountToken == null) {
-            accountToken = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_TOKEN);
-        }
-        if (accountRegion == null) {
-            accountRegion = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_REGION);
-        }
-        if (proxyDomain == null) {
-            proxyDomain = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PROXY_DOMAIN);
-        }
-        if (spikyProxyDomain == null) {
-            spikyProxyDomain = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_SPIKY_PROXY_DOMAIN);
-        }
-        if (handshakeDomain == null) {
-            handshakeDomain = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_CLEVERTAP_HANDSHAKE_DOMAIN);
-        }
+        accountId = ccAccountId != null ? ccAccountId : _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_ACCOUNT_ID);
+        accountToken = ccAccountToken != null ? ccAccountToken : _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_TOKEN);
+        accountRegion = ccAccountRegion != null ? ccAccountRegion : _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_REGION);
+        proxyDomain = ccProxyDomain != null ? ccProxyDomain : _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PROXY_DOMAIN);
+        spikyProxyDomain = ccSpikyProxyDomain != null ? ccSpikyProxyDomain : _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_SPIKY_PROXY_DOMAIN);
+        handshakeDomain = ccHandshakeDomain != null ? ccHandshakeDomain : _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_CLEVERTAP_HANDSHAKE_DOMAIN);
         // end -> assign these if they did not happen in changeCredentials
 
         notificationIcon = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_NOTIFICATION_ICON);
@@ -149,13 +152,17 @@ public class ManifestInfo {
 
         int encLvlTemp;
         try {
-            int parsedEncryptionLevel = Integer.parseInt(_getManifestStringValueForKey(metaData, ManifestInfo.LABEL_ENCRYPTION_LEVEL));
+            String manifestEncryptionLevel = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_ENCRYPTION_LEVEL);
+            int parsedEncryptionLevel = 0;
+            if (manifestEncryptionLevel != null) {
+                parsedEncryptionLevel = Integer.parseInt(manifestEncryptionLevel);
+            }
 
-            if (parsedEncryptionLevel >= 0 && parsedEncryptionLevel <= 1) {
+            if (parsedEncryptionLevel >= 0 && parsedEncryptionLevel <= 2) {
                 encLvlTemp = parsedEncryptionLevel;
             } else {
+                Logger.v("Invalid encryption level is used, defaulting to no encryption");
                 encLvlTemp = 0;
-                Logger.v("Supported encryption levels are only 0 and 1. Setting it to 0 by default");
             }
         } catch (Throwable t) {
             encLvlTemp = 0;
@@ -200,24 +207,12 @@ public class ManifestInfo {
     ) {
 
         // assign these if they did not happen in change creds
-        if (ManifestInfo.accountId == null) {
-            ManifestInfo.accountId = accountId;
-        }
-        if (ManifestInfo.accountToken == null) {
-            ManifestInfo.accountToken = accountToken;
-        }
-        if (ManifestInfo.accountRegion == null) {
-            ManifestInfo.accountRegion = accountRegion;
-        }
-        if (ManifestInfo.proxyDomain == null) {
-            ManifestInfo.proxyDomain = proxyDomain;
-        }
-        if (ManifestInfo.spikyProxyDomain == null) {
-            ManifestInfo.spikyProxyDomain = spikyProxyDomain;
-        }
-        if (ManifestInfo.handshakeDomain == null) {
-            ManifestInfo.handshakeDomain = handshakeDomain;
-        }
+        this.accountId = accountId;
+        this.accountToken = accountToken;
+        this.accountRegion = accountRegion;
+        this.proxyDomain = proxyDomain;
+        this.spikyProxyDomain = spikyProxyDomain;
+        this.handshakeDomain = handshakeDomain;
 
         this.useADID = useADID;
         this.appLaunchedDisabled = appLaunchedDisabled;
@@ -268,7 +263,7 @@ public class ManifestInfo {
     boolean enableBeta() {
         return beta;
     }
-    public int getEncryptionLevel(){
+    public int getEncryptionLevel() {
         return encryptionLevel;
     }
 
