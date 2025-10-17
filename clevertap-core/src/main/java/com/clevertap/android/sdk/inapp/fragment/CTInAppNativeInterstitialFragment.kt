@@ -21,13 +21,13 @@ import androidx.activity.ComponentDialog
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.toColorInt
 import androidx.core.view.size
 import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.gif.GifImageView
-import com.clevertap.android.sdk.utils.toColorIntOrDefault
 import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 import com.clevertap.android.sdk.video.VideoLibChecker
 import com.clevertap.android.sdk.video.VideoLibraryIntegrated
@@ -84,7 +84,7 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
         videoFrameLayout = relativeLayout?.findViewById(R.id.video_frame)
 
         // Container backgrounds
-        relativeLayout?.setBackgroundColor(inAppNotification.backgroundColor.toColorIntOrDefault())
+        relativeLayout?.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
         fl.background = ColorDrawable(0xBB000000.toInt())
 
         // Container size
@@ -189,11 +189,11 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
     private fun setTitleAndMessage() {
         val textView1 = relativeLayout?.findViewById<TextView>(R.id.interstitial_title)
         textView1?.text = inAppNotification.title
-        textView1?.setTextColor(inAppNotification.titleColor.toColorIntOrDefault())
+        textView1?.setTextColor(inAppNotification.titleColor.toColorInt())
 
         val textView2 = relativeLayout?.findViewById<TextView>(R.id.interstitial_message)
         textView2?.text = inAppNotification.message
-        textView2?.setTextColor(inAppNotification.messageColor.toColorIntOrDefault())
+        textView2?.setTextColor(inAppNotification.messageColor.toColorInt())
     }
 
     private fun setMediaForInApp() {
