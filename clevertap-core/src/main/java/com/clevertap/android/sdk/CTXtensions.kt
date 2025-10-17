@@ -359,3 +359,21 @@ fun View.applyInsetsWithMarginAdjustment(marginAdjuster : (insets:Insets, mlp:Ma
     }
 }
 
+inline fun <reified T> JSONArray.partition(
+    predicate: (T) -> Boolean
+): Pair<JSONArray, JSONArray> {
+    val first = JSONArray()
+    val second = JSONArray()
+
+    for (i in 0 until this.length()) {
+        val element = this.get(i)
+        if (element is T) {
+            if (predicate(element)) {
+                first.put(element)
+            } else {
+                second.put(element)
+            }
+        }
+    }
+    return first to second
+}

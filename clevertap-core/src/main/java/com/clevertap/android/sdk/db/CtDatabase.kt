@@ -28,8 +28,8 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
 
     companion object {
 
-        private const val DATABASE_VERSION = 5
-        private const val DB_LIMIT = 20 * 1024 * 1024 //20mb
+        private const val DATABASE_VERSION = 6
+        private const val DB_LIMIT = 24 * 1024 * 1024 //24mb
     }
 
     private val databaseFile: File
@@ -48,6 +48,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
         executeStatement(db, CREATE_PUSH_NOTIFICATIONS_TABLE)
         executeStatement(db, CREATE_UNINSTALL_TS_TABLE)
         executeStatement(db, CREATE_NOTIFICATION_VIEWED_TABLE)
+        executeStatement(db, CREATE_DELAYED_LEGACY_INAPPS_TABLE)
         executeStatement(db, EVENTS_TIME_INDEX)
         executeStatement(db, PROFILE_EVENTS_TIME_INDEX)
         executeStatement(db, UNINSTALL_TS_INDEX)
@@ -91,6 +92,9 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
 
         if (oldVersion < 5) {
             executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates [1,2,3,4] to 5
+        }
+        if (oldVersion < 6) {
+            executeStatement(db, CREATE_DELAYED_LEGACY_INAPPS_TABLE)
         }
     }
 
@@ -203,7 +207,8 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
     PUSH_NOTIFICATIONS("pushNotifications"),
     UNINSTALL_TS("uninstallTimestamp"),
     PUSH_NOTIFICATION_VIEWED("notificationViewed"),
-    USER_EVENT_LOGS_TABLE("userEventLogs")
+    USER_EVENT_LOGS_TABLE("userEventLogs"),
+    DELAYED_LEGACY_INAPPS("delayedLegacyInApps")
 }
 
 object Column {
@@ -223,6 +228,8 @@ object Column {
     const val FIRST_TS = "firstTs"
     const val LAST_TS = "lastTs"
     const val COUNT = "count"
+    const val INAPP_ID = "inAppId"
+    const val DELAY = "delay"
 }
 
 private val CREATE_EVENTS_TABLE = """
@@ -242,6 +249,15 @@ private val CREATE_USER_EVENT_LOGS_TABLE = """
         ${Column.LAST_TS} INTEGER NOT NULL,
         ${Column.COUNT} INTEGER NOT NULL,
         PRIMARY KEY (${Column.DEVICE_ID}, ${Column.NORMALIZED_EVENT_NAME})
+    );
+"""
+
+private val CREATE_DELAYED_LEGACY_INAPPS_TABLE = """
+    CREATE TABLE ${Table.DELAYED_LEGACY_INAPPS.tableName} (
+        ${Column.INAPP_ID} STRING PRIMARY KEY,
+        ${Column.DELAY} INTEGER NOT NULL,
+        ${Column.DATA} TEXT NOT NULL,
+        ${Column.CREATED_AT} INTEGER NOT NULL
     );
 """
 

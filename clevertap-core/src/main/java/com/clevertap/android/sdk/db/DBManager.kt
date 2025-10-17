@@ -40,6 +40,7 @@ internal class DBManager(
             dbAdapter.cleanUpPushNotifications()
             dbAdapter.userEventLogDAO()
                 .cleanUpExtraEvents(USER_EVENT_LOG_ROWS_THRESHOLD, USER_EVENT_LOG_ROWS_PER_USER)
+            dbAdapter.delayedLegacyInAppDAO().clearAll()
         }
         return dbAdapter
     }
