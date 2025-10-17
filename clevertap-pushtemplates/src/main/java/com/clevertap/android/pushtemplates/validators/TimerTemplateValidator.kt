@@ -9,6 +9,6 @@ class TimerTemplateValidator(private var validator: Validator) : TemplateValidat
     }
 
     override fun loadKeys(): List<Checker<out Any>> {
-        return listOf(keys[PT_TIMER_THRESHOLD]!!, keys[PT_TIMER_END]!!)
+        return listOf(keys[PT_TIMER_DISMISS_AFTER]!!)
     }
 }

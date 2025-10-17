@@ -7,13 +7,14 @@
     android:background="@android:color/transparent"
     android:orientation="vertical">
 
-    <include layout="@layout/image_view_flipper_dynamic"
-        android:id="@+id/big_image_configurable"/>
+    <include layout="@layout/image_media_dynamic_relative"
+        android:id="@+id/big_media_configurable"/>
 
     <ImageView
+        android:id="@+id/zero_bezel_scrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignBottom="@+id/big_image_configurable"
+        android:layout_alignBottom="@+id/big_media_configurable"
         android:importantForAccessibility="no"
         android:background="@drawable/pt_scrim" />
 
@@ -21,7 +22,7 @@
         android:id="@+id/rel_lyt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/big_image_configurable"
+        android:layout_alignBottom="@+id/big_media_configurable"
         android:paddingStart="@dimen/padding_horizontal"
         android:paddingLeft="@dimen/padding_horizontal"
         android:paddingTop="@dimen/padding_vertical"
