@@ -42,6 +42,8 @@ public class PTConstants {
 
     public static final int ONE_SECOND = 1000;
 
+    public static final long ONE_SECOND_LONG = 1000L;
+
     public static final String DEFAULT_DL = "default_dl";
 
     public static final String NOTIF_TAG = "wzrk_pn";
@@ -68,7 +70,29 @@ public class PTConstants {
 
     public static final String PT_BIG_IMG = "pt_big_img";
 
+    public static final String PT_GIF = "pt_gif";
+
+    // GIF key for terminal notification of timer template
+    public static final String PT_GIF_ALT = "pt_gif_alt";
+
+    public static final String PT_GIF_FRAMES = "pt_gif_frames";
+
+    public static final String PT_GIF_FRAMES_ALT = "pt_gif_frames_alt";
+
+    public static final String PT_SCALE_TYPE_ALT = "pt_scale_type_alt";
+
     public static final String PT_BIG_IMG_ALT_TEXT = "pt_big_img_alt_text";
+
+    public static final String PT_STICKY = "pt_sticky";
+
+    public static final String PT_DISMISS = "pt_dismiss";
+
+    // Keys for collapsed media in zero bezel
+    public static final String PT_GIF_COLLAPSED = "pt_gif_collapsed";
+    public static final String PT_GIF_FRAMES_COLLAPSED = "pt_gif_frames_collapsed";
+    public static final String PT_SCALE_TYPE_COLLAPSED = "pt_scale_type_collapsed";
+    public static final String PT_BIG_IMG_COLLAPSED = "pt_big_img_collapsed";
+    public static final String PT_BIG_IMG_COLLAPSED_ALT_TEXT = "pt_big_img_collapsed_alt_text";
 
     public static final String PT_SMALL_IMG = "pt_small_img";
 
@@ -180,7 +204,6 @@ public class PTConstants {
             PT_MSG_COLOR,
             PT_BG,
             PT_META_CLR,
-            PT_SMALL_ICON_COLOUR,
             PT_CHRONO_TITLE_COLOUR,
             PT_PRODUCT_DISPLAY_ACTION_COLOUR,
             PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR);
