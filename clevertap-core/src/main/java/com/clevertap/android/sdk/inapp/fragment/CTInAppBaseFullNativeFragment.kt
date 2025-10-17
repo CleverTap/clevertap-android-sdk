@@ -13,7 +13,6 @@ import android.view.WindowManager
 import android.widget.Button
 import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
-import com.clevertap.android.sdk.utils.toColorIntOrDefault
 
 internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment() {
 
@@ -26,7 +25,7 @@ internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment(
             inAppButton.visibility = View.VISIBLE
             inAppButton.tag = buttonIndex
             inAppButton.text = inAppNotificationButton.text
-            inAppButton.setTextColor(inAppNotificationButton.textColor.toColorIntOrDefault())
+            inAppButton.setTextColor(inAppNotificationButton.textColor.toColorInt())
             inAppButton.setOnClickListener(CTInAppNativeButtonClickListener())
 
             var borderDrawable: ShapeDrawable? = null
@@ -44,7 +43,7 @@ internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment(
                         floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
                     )
                 )
-                shapeDrawable.paint.setColor(inAppNotificationButton.backgroundColor.toColorIntOrDefault())
+                shapeDrawable.paint.setColor(inAppNotificationButton.backgroundColor.toColorInt())
                 shapeDrawable.paint.style = Paint.Style.FILL
                 shapeDrawable.paint.isAntiAlias = true
                 borderDrawable = ShapeDrawable(
@@ -63,7 +62,7 @@ internal abstract class CTInAppBaseFullNativeFragment : CTInAppBaseFullFragment(
 
             if (!inAppNotificationButton.borderColor.isEmpty()) {
                 if (borderDrawable != null) {
-                    borderDrawable.paint.setColor(inAppNotificationButton.borderColor.toColorIntOrDefault())
+                    borderDrawable.paint.setColor(inAppNotificationButton.borderColor.toColorInt())
                     borderDrawable.setPadding(1, 1, 1, 1)
                     borderDrawable.paint.style = Paint.Style.FILL
                 }

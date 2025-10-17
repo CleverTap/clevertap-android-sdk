@@ -11,9 +11,9 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.RelativeLayout
+import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.customviews.CloseImageView
-import com.clevertap.android.sdk.utils.toColorIntOrDefault
 
 internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragment() {
 
@@ -35,7 +35,7 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
 
         val relativeLayout =
             fl.findViewById<RelativeLayout>(R.id.half_interstitial_image_relative_layout)
-        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorIntOrDefault())
+        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
         val imageView = relativeLayout.findViewById<ImageView>(R.id.half_interstitial_image)
         when (currentOrientation) {
             Configuration.ORIENTATION_PORTRAIT -> relativeLayout.getViewTreeObserver()

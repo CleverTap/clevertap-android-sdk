@@ -15,10 +15,10 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
+import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.customviews.CloseImageView
-import com.clevertap.android.sdk.utils.toColorIntOrDefault
 
 internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFragment() {
 
@@ -41,7 +41,7 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
 
         val relativeLayout = fl.findViewById<RelativeLayout>(R.id.half_interstitial_relative_layout)
-        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorIntOrDefault())
+        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
 
         when (currentOrientation) {
             Configuration.ORIENTATION_PORTRAIT -> relativeLayout.getViewTreeObserver()
@@ -140,11 +140,11 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
 
         val textView1 = relativeLayout.findViewById<TextView>(R.id.half_interstitial_title)
         textView1.text = inAppNotification.title
-        textView1.setTextColor(inAppNotification.titleColor.toColorIntOrDefault())
+        textView1.setTextColor(inAppNotification.titleColor.toColorInt())
 
         val textView2 = relativeLayout.findViewById<TextView>(R.id.half_interstitial_message)
         textView2.text = inAppNotification.message
-        textView2.setTextColor(inAppNotification.messageColor.toColorIntOrDefault())
+        textView2.setTextColor(inAppNotification.messageColor.toColorInt())
 
         val buttons = inAppNotification.buttons
         if (buttons.size == 1) {
