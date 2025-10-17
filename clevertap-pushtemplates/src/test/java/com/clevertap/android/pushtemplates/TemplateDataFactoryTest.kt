@@ -1269,7 +1269,7 @@ class TemplateDataFactoryTest {
     }
 
     @Test
-    fun `createProductTemplateData should default PT_PRODUCT_DISPLAY_LINEAR to true when null`() {
+    fun `createProductTemplateData should default PT_PRODUCT_DISPLAY_LINEAR to false when null`() {
         // Given
         setupBasicMockBundle()
         every { mockBundle.getString(PT_PRODUCT_DISPLAY_LINEAR) } returns null
