@@ -779,4 +779,127 @@ class NetworkManagerTest : BaseTestCase() {
             put("error", "Error")
         }
     }
+
+    // fetchInAppPreviewPayloadFromUrl tests
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_successResponse_returnsJsonObject() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        val expectedJson = JSONObject().apply {
+            put("type", "custom-html")
+            put("layout_type", "half-interstitial")
+            put("adonis", false)
+            put("inlineHtml", true)
+            put("format", "custom-html")
+            put("d", JSONObject().apply {
+                put("html", "<!DOCTYPE html>\n<html>\n<head>\n<title> </title>\n</head>\n<body> hello </body>\n</html>")
+            })
+        }
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = expectedJson.toString()
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(expectedJson.toString(), result.toString())
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_successResponseEmptyJson_returnsEmptyJsonObject() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = "{}"
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals("{}", result.toString())
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_errorResponse_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 404
+        mockHttpClient.responseBody = "Not Found"
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_error500_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 500
+        mockHttpClient.responseBody = "Internal Server Error"
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_invalidJsonResponse_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = "This is not valid JSON {]"
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_nullResponseBody_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = null
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_emptyResponseBody_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = ""
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_networkException_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.alwaysThrowOnExecute = true
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
 }

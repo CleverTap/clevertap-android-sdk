@@ -47,6 +47,21 @@ class CtApiTest {
         assertEquals(expectedHeaders, sendContentFetch.request.headers)
     }
 
+
+    @Test
+    fun test_fetchFromUrl_attachEmptyHeaders() {
+        val expectedHeaders = emptyMap<String, String>()
+        val fetchFromUrl = ctApi.fetchFromUrl("test_s3_url")
+        assertEquals(expectedHeaders, fetchFromUrl.request.headers)
+    }
+
+
+    @Test
+    fun test_fetchFromUrl_hasNullBody() {
+        val fetchFromUrl = ctApi.fetchFromUrl("test_s3_url")
+        assertNull(fetchFromUrl.request.body)
+    }
+
     @Test
     fun test_encryption_headers_are_set_for_sendQueue_with_encryption_opt_in() {
         val expectedHeaders = mapOf(
