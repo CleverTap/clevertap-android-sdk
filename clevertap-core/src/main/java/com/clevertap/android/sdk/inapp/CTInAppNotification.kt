@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia.Companion.create
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
 import com.clevertap.android.sdk.utils.getStringOrNull
+import com.clevertap.android.sdk.utils.toValidColorOrFallback
 import org.json.JSONException
 import org.json.JSONObject
 import kotlin.reflect.KClass
@@ -192,10 +193,10 @@ class CTInAppNotification : Parcelable {
         }
         type = parcel.readString()
         title = parcel.readString()
-        titleColor = parcel.readString() ?: titleColor
-        backgroundColor = parcel.readString() ?: backgroundColor
+        titleColor = (parcel.readString() ?: titleColor).toValidColorOrFallback(titleColor);
+        backgroundColor = (parcel.readString() ?: backgroundColor).toValidColorOrFallback(backgroundColor);
         message = parcel.readString()
-        messageColor = parcel.readString() ?: messageColor
+        messageColor = (parcel.readString() ?: messageColor).toValidColorOrFallback(messageColor);
         try {
             _buttons =
                 parcel.createTypedArrayList<CTInAppNotificationButton>(CTInAppNotificationButton.CREATOR)
@@ -352,7 +353,7 @@ class CTInAppNotification : Parcelable {
             maxPerSession = jsonObject.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, -1)
             inAppType = CTInAppType.fromString(type)
             isTablet = jsonObject.optBoolean(Constants.KEY_IS_TABLET, false)
-            backgroundColor = jsonObject.optString(Constants.KEY_BG, backgroundColor)
+            backgroundColor = jsonObject.optString(Constants.KEY_BG, backgroundColor).toValidColorOrFallback(backgroundColor);
             isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(
                 Constants.KEY_PORTRAIT
             )
@@ -362,13 +363,13 @@ class CTInAppNotification : Parcelable {
             val titleObject = jsonObject.optJSONObject(Constants.KEY_TITLE)
             if (titleObject != null) {
                 title = titleObject.optString(Constants.KEY_TEXT, "")
-                titleColor = titleObject.optString(Constants.KEY_COLOR, titleColor)
+                titleColor = titleObject.optString(Constants.KEY_COLOR, titleColor).toValidColorOrFallback(titleColor);
             }
 
             val msgObject = jsonObject.optJSONObject(Constants.KEY_MESSAGE)
             if (msgObject != null) {
                 message = msgObject.optString(Constants.KEY_TEXT, "")
-                messageColor = msgObject.optString(Constants.KEY_COLOR, messageColor)
+                messageColor = msgObject.optString(Constants.KEY_COLOR, messageColor).toValidColorOrFallback(messageColor);
             }
 
             isHideCloseButton = jsonObject.optBoolean(Constants.KEY_HIDE_CLOSE, false)
