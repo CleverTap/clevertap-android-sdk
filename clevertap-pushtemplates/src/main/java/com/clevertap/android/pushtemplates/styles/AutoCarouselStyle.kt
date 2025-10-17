@@ -5,22 +5,23 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import com.clevertap.android.pushtemplates.AutoCarouselTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.AUTO_CAROUSEL_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.AutoCarouselContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.SmallContentView
 
-internal class AutoCarouselStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+internal class AutoCarouselStyle(private val data: AutoCarouselTemplateData, renderer: TemplateRenderer) : Style(data.carouselData.baseContent, renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        return SmallContentView(context, renderer).remoteView
+        return SmallContentView(context, renderer, data.carouselData.baseContent).remoteView
     }
 
     override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        return AutoCarouselContentView(context, renderer).remoteView
+        return AutoCarouselContentView(context, renderer, data).remoteView
     }
 
     override fun makePendingIntent(
@@ -30,7 +31,7 @@ internal class AutoCarouselStyle(private var renderer: TemplateRenderer) : Style
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            AUTO_CAROUSEL_CONTENT_PENDING_INTENT, renderer
+            AUTO_CAROUSEL_CONTENT_PENDING_INTENT, data.carouselData.baseContent.deepLinkList.getOrNull(0)
         )
     }
 
