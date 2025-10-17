@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.utils
 
-import android.graphics.Color
+import android.graphics.Color as GraphicColor
 import androidx.annotation.ColorInt
 import androidx.core.graphics.toColorInt
 
@@ -18,11 +18,11 @@ import androidx.core.graphics.toColorInt
  * ```
  *
  * @receiver The color string to parse (e.g., "#FFFFFF", "#80FF0000").
- * @param defaultColor The fallback color if parsing fails (default is [Color.WHITE]).
+ * @param defaultColor The fallback color if parsing fails (default is [GraphicColor.WHITE]).
  * @return The parsed color integer or [defaultColor] if parsing fails.
  */
 @ColorInt
-fun String?.toColorIntOrDefault(@ColorInt defaultColor: Int = Color.WHITE): Int {
+fun String?.toColorIntOrDefault(@ColorInt defaultColor: Int = GraphicColor.WHITE): Int {
     // If the string is null or empty, return the default color immediately
     if (this.isNullOrBlank()) return defaultColor
 
@@ -117,13 +117,13 @@ object Color {
     }
 
     /**
-     * Parses a color string, defaulting to [Color.WHITE] if parsing fails.
+     * Parses a color string, defaulting to [GraphicColor.WHITE] if parsing fails.
      *
      * @param colorString The color string to parse.
-     * @return The parsed color integer, or [Color.WHITE] if invalid or null.
+     * @return The parsed color integer, or [GraphicColor.WHITE] if invalid or null.
      */
     @ColorInt
     fun parseColor(colorString: String?): Int {
-        return parseColor(colorString, Color.WHITE)
+        return parseColor(colorString, GraphicColor.WHITE)
     }
 }
