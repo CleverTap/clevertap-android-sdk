@@ -935,7 +935,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             final CleverTapAPI finalInstance = instance;
         } else if (instance.getConfig().getEnableCustomCleverTapId() && Utils
                 .validateCTID(cleverTapID) && instance.isErrorDeviceId()) {
-            instance.coreState.getLoginController().asyncProfileSwitchUser(null, null, cleverTapID);
+            instance.coreState.asyncProfileSwitchUser(null, null, cleverTapID);
         }
         Logger.v(config.getAccountId() + ":async_deviceID", "CleverTapAPI instance = " + instance);
         return instance;
@@ -1273,7 +1273,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         task = coreState.getExecutors().postAsyncSafelyTask();
         task.execute("recordDeviceIDErrors", () -> {
             if (coreState.getDeviceInfo().getDeviceID() != null) {
-                coreState.getLoginController().recordDeviceIDErrors();
+                coreState.recordDeviceIDErrors();
             }
             return null;
         });
@@ -2205,7 +2205,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void initializeInbox() {
-        coreState.getControllerManager().initializeInbox();
+        coreState.initializeInbox();
     }
 
     /**
@@ -2316,7 +2316,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void onUserLogin(final Map<String, Object> profile, final String cleverTapID) {
-        coreState.getLoginController().onUserLogin(profile, cleverTapID);
+        coreState.onUserLogin(profile, cleverTapID);
     }
 
     /**

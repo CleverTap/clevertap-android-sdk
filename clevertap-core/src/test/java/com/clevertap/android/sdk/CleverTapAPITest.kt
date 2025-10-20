@@ -793,7 +793,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.loginController.onUserLogin(profile, null)
+            corestate.onUserLogin(profile, null)
         }
     }
 
@@ -812,7 +812,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.loginController.onUserLogin(profile, cleverTapID)
+            corestate.onUserLogin(profile, cleverTapID)
         }
     }
 
@@ -827,7 +827,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.loginController.onUserLogin(profile, null)
+            corestate.onUserLogin(profile, null)
         }
     }
 

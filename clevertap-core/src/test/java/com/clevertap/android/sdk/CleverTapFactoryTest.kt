@@ -188,12 +188,6 @@ class CleverTapFactoryTest : BaseTestCase() {
         val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
         assertNotNull(coreState.activityLifeCycleManager)
     }
-
-    @Test
-    fun test_getCoreState_ReturnedObjectMustHaveNonNullLoginController(){
-        val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
-        assertNotNull(coreState.loginController)
-    }
     @Test
     fun test_getCoreState_ReturnedObjectMustHaveNonNullCryptHandler(){
         val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")

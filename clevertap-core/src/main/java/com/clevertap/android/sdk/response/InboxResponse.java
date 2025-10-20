@@ -67,7 +67,8 @@ public class InboxResponse extends CleverTapResponseDecorator {
     private void _processInboxMessages(JSONArray messages) {
         synchronized (inboxControllerLock) {
             if (controllerManager.getCTInboxController() == null) {
-                controllerManager.initializeInbox();
+                //controllerManager.initializeInbox();
+                // todo lp check if this is really needed, why do we load inbox on data reception.
             }
             if (controllerManager.getCTInboxController() != null) {
                 boolean update = controllerManager.getCTInboxController().updateMessages(messages);

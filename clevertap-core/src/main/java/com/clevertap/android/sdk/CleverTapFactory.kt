@@ -32,7 +32,6 @@ import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Comp
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
-import com.clevertap.android.sdk.login.LoginController
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.AppLaunchListener
 import com.clevertap.android.sdk.network.ArpRepo
@@ -188,12 +187,8 @@ internal object CleverTapFactory {
         val sessionManager = SessionManager(config, coreMetaData, validator, localDataStore)
 
         val controllerManager = ControllerManager(
-            context,
             config,
-            ctLockManager,
-            callbackManager,
-            deviceInfo,
-            databaseManager
+            callbackManager
         )
 
         val triggersMatcher = TriggersMatcher(localDataStore)
@@ -511,14 +506,8 @@ internal object CleverTapFactory {
             SYSTEM
         )
 
-        val loginController = LoginController(
-            context, config, deviceInfo,
-            validationResultStack, baseEventQueueManager, analyticsManager,
-            coreMetaData, controllerManager, sessionManager,
-            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager
-        )
-
         return CoreState(
+            context = context,
             locationManager = locationManager,
             config = config,
             coreMetaData = coreMetaData,
@@ -535,7 +524,6 @@ internal object CleverTapFactory {
             inAppController = inAppController,
             evaluationManager = evaluationManager,
             impressionManager = impressionManager,
-            loginController = loginController,
             sessionManager = sessionManager,
             validationResultStack = validationResultStack,
             mainLooperHandler = mainLooperHandler,
@@ -548,7 +536,9 @@ internal object CleverTapFactory {
             templatesManager = templatesManager,
             profileValueHandler = profileValueHandler,
             cTVariables = ctVariables,
-            executors = executors
+            executors = executors,
+            contentFetchManager = contentFetchManager,
+            loginInfoProvider = loginInfoProvider
         )
     }
 
