@@ -17,6 +17,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
@@ -32,18 +33,23 @@ import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class InAppDelayManagerV2(
     private val accountId: String,
     private val logger: Logger,
     internal var delayedLegacyInAppStore: DelayedLegacyInAppStore? = null,
     private val clock: Clock = Clock.SYSTEM,
-    private val scope: CoroutineScope = ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.Default
+    private val scope: CoroutineScope = ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.Default.limitedParallelism(
+        PARALLEL_SCHEDULERS
+    )
 ) {
-
+    companion object {
+        private const val PARALLEL_SCHEDULERS = 20 // worst case - we assume 1 in-app per minute, session length 20 mins
+        private const val TAG = "[InAppDelayManager]:"
+    }
     private val activeJobs = ConcurrentHashMap<String, Job>()
     private val cancelledJobs =
         ConcurrentHashMap<String, CancelledJobData>()
-    private val TAG = "[InAppDelayManager]:"
 
     init {
         //System.setProperty("kotlinx.coroutines.debug","on")
