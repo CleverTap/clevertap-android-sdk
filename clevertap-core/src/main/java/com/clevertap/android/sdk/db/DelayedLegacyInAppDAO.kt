@@ -17,13 +17,13 @@ import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
  * @property delay the delay in seconds before showing
  * @property inAppData the JSON data for the in-app notification
  */
-data class DelayedLegacyInAppData(
+internal data class DelayedLegacyInAppData(
     val inAppId: String,
     val delay: Int,
     val inAppData: String
 )
 
-interface DelayedLegacyInAppDAO {
+internal interface DelayedLegacyInAppDAO {
 
     /**
      * Insert a delayed legacy in-app notification
