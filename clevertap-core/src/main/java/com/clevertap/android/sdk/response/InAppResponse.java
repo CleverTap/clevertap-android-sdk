@@ -214,23 +214,15 @@ public class InAppResponse extends CleverTapResponseDecorator {
     }
 
     private void scheduleDelayedLegacyInApps(JSONArray delayedLegacyInApps) {
-        try {
-            InAppController inAppController = controllerManager.getInAppController();
+        InAppController inAppController = controllerManager.getInAppController();
 
-            // Schedule using delay functionality
-            inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps);
+        // Schedule using delay functionality
+        inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps);
 
-            logger.verbose(config.getAccountId(),
-                    "InApp: scheduling " + delayedLegacyInApps.length() +
-                            " delayed in-apps. Active delays: " +
-                            inAppController.getActiveDelayedInAppsCount());
-
-        } catch (Exception e) {
-            logger.verbose(config.getAccountId(),
-                    "InApp: Error scheduling delayed in-apps, using fallback", e);
-
-            displayInApp(delayedLegacyInApps);
-        }
+        logger.verbose(config.getAccountId(),
+                "InApp: scheduling " + delayedLegacyInApps.length() +
+                        " delayed in-apps. Active delays: " +
+                        inAppController.getActiveDelayedInAppsCount());
     }
 
 }
