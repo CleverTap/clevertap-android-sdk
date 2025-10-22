@@ -8,7 +8,6 @@ import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener
 import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener
-import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.json.JSONObject
@@ -33,7 +32,7 @@ class CallbackManagerTest : BaseTestCase() {
 
         config = CleverTapInstanceConfig.createDefaultInstance(application, "id", "token", "region")
         coreMetaData = CoreMetaData()
-        deviceInfo = DeviceInfo(application, config, "clevertapId", coreMetaData, MockCTExecutors(config))
+        deviceInfo = DeviceInfo(application, config, "clevertapId", coreMetaData)
         callbackManager = CallbackManager(config, deviceInfo)
         Shadows.shadowOf(Looper.getMainLooper()).idle()
 

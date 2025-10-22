@@ -1,18 +1,16 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
-import com.clevertap.android.sdk.task.CTExecutors
 import org.json.JSONObject
 
 class MockDeviceInfo constructor(
     context: Context?,
     config: CleverTapInstanceConfig?,
     cleverTapID: String?,
-    coreMetaData: CoreMetaData?,
-    ctExecutors: CTExecutors
+    coreMetaData: CoreMetaData?
 ) : DeviceInfo(
     context, config,
-    cleverTapID, coreMetaData, ctExecutors
+    cleverTapID, coreMetaData
 ) {
 
     val ctId: String?

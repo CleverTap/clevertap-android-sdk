@@ -22,7 +22,6 @@ import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.network.http.MockHttpClient
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
-import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
@@ -751,8 +750,7 @@ class NetworkManagerTest : BaseTestCase() {
             context = application,
             config = cleverTapInstanceConfig,
             cleverTapID = "clevertapId",
-            coreMetaData = metaData,
-            ctExecutors = MockCTExecutors(cleverTapInstanceConfig)
+            coreMetaData = metaData
         )
         val callbackManager = mockk<CallbackManager>(relaxed = true)
         dbManager = mockk<DBManager>(relaxed = true)

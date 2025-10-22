@@ -34,8 +34,6 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.login.LoginInfoProvider;
-import com.clevertap.android.sdk.task.CTExecutors;
-import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
@@ -45,7 +43,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
@@ -407,7 +404,6 @@ public class DeviceInfo {
     private final String customClevertapId;
 
     private final Context context;
-    private final CTExecutors executors;
 
     private final Object deviceIDLock = new Object();
 
@@ -476,16 +472,14 @@ public class DeviceInfo {
             Context context,
             CleverTapInstanceConfig config,
             String cleverTapID,
-            CoreMetaData coreMetaData,
-            CTExecutors executors
+            CoreMetaData coreMetaData
     ) {
         this.context = context;
         this.config = config;
         this.library = null;
         this.customLocale = null;
         this.customClevertapId = cleverTapID;
-        this.executors = executors;
-        mCoreMetaData = coreMetaData;
+        this.mCoreMetaData = coreMetaData;
     }
 
     public void forceNewDeviceID() {

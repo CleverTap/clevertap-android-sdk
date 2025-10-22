@@ -8,7 +8,6 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
-import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAOImpl
 import com.clevertap.android.sdk.usereventlogs.UserEventLogTestData
@@ -55,8 +54,7 @@ class LocalDataStoreTest : BaseTestCase() {
             context = appCtx,
             config = defConfig,
             cleverTapID = "id",
-            coreMetaData = metaData,
-            ctExecutors = MockCTExecutors()
+            coreMetaData = metaData
         )
         baseDatabaseManager = mockk<DBManager>(relaxed = true)
         dbAdapter = mockk<DBAdapter>(relaxed = true)

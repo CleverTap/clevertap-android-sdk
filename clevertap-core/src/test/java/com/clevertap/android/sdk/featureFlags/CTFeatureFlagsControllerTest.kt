@@ -42,7 +42,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             )
             coreMetaData = CoreMetaData()
             analyticsManager = mockk(relaxed = true)
-            deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData, ctExecutors = MockCTExecutors(cleverTapInstanceConfig))
+            deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
             callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
             fileUtils = spyk(FileUtils(application, cleverTapInstanceConfig))
             featureFlagsListener = mockk(relaxed = true)

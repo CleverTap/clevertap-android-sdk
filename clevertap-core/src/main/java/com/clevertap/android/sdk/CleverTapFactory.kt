@@ -138,7 +138,7 @@ internal object CleverTapFactory {
             clearLastRequestTs = networkRepo::clearLastRequestTs
         )
 
-        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData, executors)
+        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
 
         val localDataStore =
             LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager)
