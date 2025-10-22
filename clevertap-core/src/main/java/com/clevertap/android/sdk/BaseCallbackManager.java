@@ -1,17 +1,26 @@
 package com.clevertap.android.sdk;
 
 import androidx.annotation.NonNull;
+
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
+import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.network.BatchListener;
+import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
+import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
+
+import org.json.JSONArray;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,10 +134,51 @@ public abstract class BaseCallbackManager {
 
     public abstract void setBatchListener(BatchListener batchListener);
 
+    public abstract CTInboxController getCTInboxController();
+
+    public abstract void setCTInboxController(CTInboxController ctInboxController);
+
+    public abstract CTFeatureFlagsController getCTFeatureFlagsController();
+
+    public abstract void setCTFeatureFlagsController(CTFeatureFlagsController ctInboxController);
+
+    public void invokeBatchListener(JSONArray array, boolean success) {
+        BatchListener batchListener = getBatchListener();
+        if (batchListener != null) {
+            batchListener.onBatchSent(array, success);
+        }
+    }
+
+    public void invokeCallbacksForNetworkError(CTVariables ctVariables) {
+        FetchVariablesCallback fetchVariablesCallback = getFetchVariablesCallback();
+        setFetchVariablesCallback(null);
+        ctVariables.handleVariableResponseError(fetchVariablesCallback);
+    }
+
     public abstract List<ChangeUserCallback> getChangeUserCallbackList();
 
     public abstract void addChangeUserCallback(ChangeUserCallback callback);
 
     public abstract void removeChangeUserCallback(ChangeUserCallback callback);
+
+    public abstract CTDisplayUnitController getCTDisplayUnitController();
+
+    public abstract void setCTDisplayUnitController(final CTDisplayUnitController CTDisplayUnitController);
+
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
+    public abstract CTProductConfigController getCTProductConfigController();
+
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
+    public abstract void setCTProductConfigController(final CTProductConfigController CTProductConfigController);
 
 }

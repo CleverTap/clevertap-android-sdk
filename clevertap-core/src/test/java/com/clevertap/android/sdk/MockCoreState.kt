@@ -1,11 +1,13 @@
 package com.clevertap.android.sdk
 
+import android.content.Context
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import io.mockk.mockk
+import io.mockk.spyk
 
-internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceConfig) : CoreState(
-    context = mockk(relaxed = true),
+internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceConfig, context: Context? = null) : CoreState(
+    context = context ?: mockk(relaxed = true),
     locationManager = mockk(relaxed = true),
     config = cleverTapInstanceConfig,
     coreMetaData = CoreMetaData(),
@@ -17,8 +19,7 @@ internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceCon
     analyticsManager = mockk(relaxed = true),
     baseEventQueueManager = mockk(relaxed = true),
     cTLockManager = CTLockManager(),
-    callbackManager = CallbackManager(cleverTapInstanceConfig, mockk(relaxed = true)),
-    controllerManager = mockk(relaxed = true),
+    callbackManager = spyk(CallbackManager(cleverTapInstanceConfig, mockk(relaxed = true))),
     inAppController = mockk(relaxed = true),
     evaluationManager = mockk(relaxed = true),
     impressionManager = mockk(relaxed = true),
@@ -36,5 +37,11 @@ internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceCon
     cTVariables = mockk(relaxed = true),
     executors = MockCTExecutors(),
     contentFetchManager = mockk(relaxed = true),
-    loginInfoProvider = mockk(relaxed = true)
-)
+    loginInfoProvider = mockk(relaxed = true),
+    storeProvider = mockk(relaxed = true),
+    variablesRepository = mockk(relaxed = true)
+) {
+    init {
+        asyncStartup()
+    }
+}

@@ -45,7 +45,13 @@ class CTProductConfigControllerTest : BaseTestCase() {
             guid = "1212121221"
             coreMetaData = CoreMetaData()
             analyticsManager = mockk(relaxed = true)
-            deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
+            deviceInfo = MockDeviceInfo(
+                context = application,
+                config = cleverTapInstanceConfig,
+                cleverTapID = guid,
+                coreMetaData = coreMetaData,
+                ctExecutors = MockCTExecutors(cleverTapInstanceConfig)
+            )
             callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
             listener = mockk(relaxed = true)
             callbackManager.productConfigListener = listener

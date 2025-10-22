@@ -9,10 +9,10 @@ import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.InAppFCManager
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.copyFrom
@@ -40,22 +40,23 @@ import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
+import com.clevertap.android.sdk.variables.CTVariables
 
 internal class NetworkManager constructor(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
     private val deviceInfo: DeviceInfo,
     private val coreMetaData: CoreMetaData,
-    private val controllerManager: ControllerManager,
     private val databaseManager: BaseDatabaseManager,
-    private val callbackManager: BaseCallbackManager,
+    internal val callbackManager: BaseCallbackManager,
     private val ctApiWrapper: CtApiWrapper,
     private val encryptionManager: NetworkEncryptionManager,
     private val arpResponse: ARPResponse,
     private val networkRepo: NetworkRepo,
     private val queueHeaderBuilder: QueueHeaderBuilder,
     private val cleverTapResponseHandler: ClevertapResponseHandler,
-    private val logger: ILogger = config.logger
+    private val logger: ILogger = config.logger,
+    private val ctVariables: CTVariables
 ) {
 
     companion object {
@@ -91,6 +92,10 @@ internal class NetworkManager constructor(
 
     fun removeNetworkHeadersListener(listener: NetworkHeadersListener) {
         mNetworkHeadersListeners.remove(listener)
+    }
+
+    internal fun setInAppFCManager(inAppFCManager: InAppFCManager) {
+        queueHeaderBuilder.inAppFCManager = inAppFCManager
     }
 
     /**
@@ -147,13 +152,13 @@ internal class NetworkManager constructor(
             if (networkCallSuccess.not()) {
                 // Network error - don't cleanup, events will be retried
                 config.logger.verbose(config.accountId, "Failed to send batch - will retry later")
-                controllerManager.invokeCallbacksForNetworkError()
-                controllerManager.invokeBatchListener(queue, false)
+                callbackManager.invokeCallbacksForNetworkError(ctVariables)
+                callbackManager.invokeBatchListener(queue, false)
                 break
             }
 
             // Notify success listeners
-            controllerManager.invokeBatchListener(queue, true)
+            callbackManager.invokeBatchListener(queue, true)
             totalEventsSent += batchSize
 
             // cleanup events from table

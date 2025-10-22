@@ -6,7 +6,6 @@ import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.InAppFCManager
 import com.clevertap.android.sdk.InAppNotificationActivity
@@ -47,7 +46,6 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class InAppControllerTest {
 
-    private lateinit var mockControllerManager: ControllerManager
     private lateinit var mockInAppFCManager: InAppFCManager
     private lateinit var mockCallbackManager: CallbackManager
     private lateinit var mockInAppListener: InAppNotificationListener
@@ -88,11 +86,9 @@ class InAppControllerTest {
         mockConfig = configMock()
         every { mockConfig.isAnalyticsOnly } returns false
 
-        mockControllerManager = mockk()
         mockInAppFCManager = mockk()
         every { mockInAppFCManager.canShow(any(), any()) } returns true
         every { mockInAppFCManager.didShow(any(), any()) } just runs
-        every { mockControllerManager.inAppFCManager } returns mockInAppFCManager
 
         mockCallbackManager = mockk()
 
@@ -738,7 +734,6 @@ class InAppControllerTest {
             context = mockk(relaxed = true),
             config = mockConfig,
             executors = MockCTExecutors(),
-            controllerManager = mockControllerManager,
             callbackManager = mockCallbackManager,
             analyticsManager = mockAnalyticsManager,
             coreMetaData = mockk(relaxed = true),
@@ -750,7 +745,9 @@ class InAppControllerTest {
             inAppActionHandler = mockInAppActionHandler,
             inAppNotificationInflater = mockInAppInflater,
             clock = fakeClock
-        )
+        ).apply {
+            setInAppFCManager(mockInAppFCManager)
+        }
     }
 
     companion object {

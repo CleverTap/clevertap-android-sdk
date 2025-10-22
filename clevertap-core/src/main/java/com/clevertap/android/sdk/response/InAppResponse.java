@@ -3,9 +3,10 @@ package com.clevertap.android.sdk.response;
 import android.content.Context;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
+import com.clevertap.android.sdk.InAppFCManager;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
@@ -29,8 +30,7 @@ import org.json.JSONObject;
 public class InAppResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig config;
-
-    private final ControllerManager controllerManager;
+    private InAppController inAppController;
 
     private final boolean isSendTest;
 
@@ -46,7 +46,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     public InAppResponse(
             CleverTapInstanceConfig config,
-            ControllerManager controllerManager,
             final boolean isSendTest,
             StoreRegistry storeRegistry,
             TriggerManager triggerManager,
@@ -55,7 +54,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
     ) {
         this.config = config;
         this.logger = this.config.getLogger();
-        this.controllerManager = controllerManager;
         this.isSendTest = isSendTest;
         this.storeRegistry = storeRegistry;
         this.triggerManager = triggerManager;
@@ -112,13 +110,13 @@ public class InAppResponse extends CleverTapResponseDecorator {
             int perSession = res.getInAppsPerSession();
             int perDay = res.getInAppsPerDay();
 
-            if (!isSendTest && controllerManager.getInAppFCManager() != null) {
+            InAppFCManager inAppFCManager = inAppController.getInAppFCManager();
+            if (!isSendTest &&  inAppFCManager != null) {
                 Logger.v("Updating InAppFC Limits");
-                controllerManager.getInAppFCManager().updateLimits(context, perDay, perSession);
-                controllerManager.getInAppFCManager().processResponse(context, response);
+                inAppFCManager.updateLimits(context, perDay, perSession);
+                inAppFCManager.processResponse(context, response);
             } else {
-                logger.verbose(config.getAccountId(),
-                        "controllerManager.getInAppFCManager() is NULL, not Updating InAppFC Limits");
+                logger.verbose(config.getAccountId(), "inAppFCManager is NULL, not Updating InAppFC Limits");
             }
 
             Pair<Boolean, JSONArray> inappStaleList = res.getStaleInApps();
@@ -187,7 +185,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private void handleAppLaunchServerSide(JSONArray inappNotifsApplaunched) {
         try {
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched, coreMetaData.getLocationFromUser());
+            inAppController.onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched, coreMetaData.getLocationFromUser());
         } catch (Throwable e) {
             logger.verbose(config.getAccountId(), "InAppManager: Malformed AppLaunched ServerSide inApps");
             logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
@@ -200,10 +198,13 @@ public class InAppResponse extends CleverTapResponseDecorator {
         task.execute("InAppResponse#processResponse", new Callable<Void>() {
             @Override
             public Void call() {
-                controllerManager.getInAppController().addInAppNotificationsToQueue(inappNotifsArray);
+                inAppController.addInAppNotificationsToQueue(inappNotifsArray);
                 return null;
             }
         });
     }
 
+    public void setInAppController(InAppController inAppController) {
+        this.inAppController = inAppController;
+    }
 }

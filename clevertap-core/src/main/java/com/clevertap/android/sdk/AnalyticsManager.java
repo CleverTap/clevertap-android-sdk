@@ -42,7 +42,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final BaseCallbackManager callbackManager;
     private final CleverTapInstanceConfig config;
     private final Context context;
-    private final ControllerManager controllerManager;
     private final CoreMetaData coreMetaData;
     private final DeviceInfo deviceInfo;
     private final ValidationResultStack validationResultStack;
@@ -63,7 +62,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             ValidationResultStack validationResultStack,
             CoreMetaData coreMetaData,
             DeviceInfo deviceInfo,
-            BaseCallbackManager callbackManager, ControllerManager controllerManager,
+            BaseCallbackManager callbackManager,
             final CTLockManager ctLockManager,
             InAppResponse inAppResponse,
             Clock currentTimeProvider,
@@ -78,7 +77,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
         this.ctLockManager = ctLockManager;
-        this.controllerManager = controllerManager;
         this.inAppResponse = inAppResponse;
         this.currentTimeProvider = currentTimeProvider;
         this.executors = executors;
@@ -173,8 +171,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
+            if (callbackManager.getCTDisplayUnitController() != null) {
+                CleverTapDisplayUnit displayUnit = callbackManager.getCTDisplayUnitController()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtraData = displayUnit.getWZRKFields();
@@ -205,8 +203,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
+            if (callbackManager.getCTDisplayUnitController() != null) {
+                CleverTapDisplayUnit displayUnit = callbackManager.getCTDisplayUnitController()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtras = displayUnit.getWZRKFields();
@@ -529,7 +527,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
                 inboxNotifs.put(testPushObject);
 
-                CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
+                CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager);
                 cleverTapResponse.processResponse(r, null, context);
             } catch (Throwable t) {
                 Logger.v("Failed to process inbox message from push notification payload", t);
@@ -1197,7 +1195,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             JSONObject r = CTJsonConverter.displayUnitFromExtras(extras);
 
-            CleverTapResponse cleverTapResponse = new DisplayUnitResponse(config, callbackManager, controllerManager);
+            CleverTapResponse cleverTapResponse = new DisplayUnitResponse(config, callbackManager);
             cleverTapResponse.processResponse(r, null, context);
 
         } catch (Throwable t) {

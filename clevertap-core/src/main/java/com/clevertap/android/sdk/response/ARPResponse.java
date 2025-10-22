@@ -2,9 +2,9 @@ package com.clevertap.android.sdk.response;
 
 import android.content.Context;
 
+import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.network.ArpRepo;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
@@ -18,10 +18,8 @@ import java.util.ArrayList;
 
 public class ARPResponse extends CleverTapResponseDecorator {
 
-    private final CTProductConfigController ctProductConfigController;
-
+    private final BaseCallbackManager callbackManager;
     private final CleverTapInstanceConfig config;
-
     private final Logger logger;
     private final Validator validator;
     private final ArpRepo arpRepo;
@@ -29,12 +27,12 @@ public class ARPResponse extends CleverTapResponseDecorator {
     public ARPResponse(
             CleverTapInstanceConfig config,
             Validator validator,
-            ControllerManager controllerManager,
+            BaseCallbackManager callbackManager,
             ArpRepo arpRepo
     ) {
         this.config = config;
-        ctProductConfigController = controllerManager.getCTProductConfigController();
-        logger = this.config.getLogger();
+        this.callbackManager = callbackManager;
+        this.logger = this.config.getLogger();
         this.validator = validator;
         this.arpRepo = arpRepo;
     }
@@ -46,6 +44,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
             if (response.has("arp")) {
                 final JSONObject arp = (JSONObject) response.get("arp");
                 if (arp.length() > 0) {
+                    CTProductConfigController ctProductConfigController = callbackManager.getCTProductConfigController();
                     if (ctProductConfigController != null) {
                         ctProductConfigController.setArpValue(arp);
                     }

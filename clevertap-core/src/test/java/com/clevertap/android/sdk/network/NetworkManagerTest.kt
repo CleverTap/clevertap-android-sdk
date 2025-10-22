@@ -2,11 +2,9 @@ package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.TestLogger
-import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
@@ -24,6 +22,7 @@ import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.network.http.MockHttpClient
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
+import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
@@ -49,7 +48,6 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var mockHttpClient: MockHttpClient
     private lateinit var ctApiWrapper: CtApiWrapper
     private lateinit var dbManager: DBManager
-    private lateinit var controllerManager: ControllerManager
     private val networkEncryptionManager: NetworkEncryptionManager = mockk(relaxed = true)
     private val networkRepo = mockk<NetworkRepo>(relaxed = true)
     private val clevertapResponseHandler = mockk<ClevertapResponseHandler>(relaxed = true)
@@ -582,8 +580,8 @@ class NetworkManagerTest : BaseTestCase() {
         verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
         verify(exactly = 0) { dbManager.cleanupSentEvents(any(), any(), any()) }
         // Verify no callbacks when queue is empty
-        verify(exactly = 0) { controllerManager.invokeBatchListener(any(), any()) }
-        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+        verify(exactly = 0) { networkManager.callbackManager.invokeBatchListener(any(), any()) }
+        verify(exactly = 0) { networkManager.callbackManager.invokeCallbacksForNetworkError(any()) }
     }
 
     @Test
@@ -609,8 +607,8 @@ class NetworkManagerTest : BaseTestCase() {
         verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
         verify(exactly = 1) { dbManager.cleanupSentEvents(appCtx, eventIds, profileEventIds) }
         // Verify success callback
-        verify(exactly = 1) { controllerManager.invokeBatchListener(queueData.data, true) }
-        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+        verify(exactly = 1) { networkManager.callbackManager.invokeBatchListener(queueData.data, true) }
+        verify(exactly = 0) { networkManager.callbackManager.invokeCallbacksForNetworkError(any()) }
     }
 
     @Test
@@ -641,12 +639,12 @@ class NetworkManagerTest : BaseTestCase() {
         verify(exactly = 3) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
         verify(exactly = 3) { dbManager.cleanupSentEvents(any(), any(), any()) }
         // Verify success callbacks for all 3 batches
-        verify(exactly = 3) { controllerManager.invokeBatchListener(any(), true) }
+        verify(exactly = 3) { networkManager.callbackManager.invokeBatchListener(any(), true) }
         // Specifically verify each batch
-        verify { controllerManager.invokeBatchListener(batch1.data, true) }
-        verify { controllerManager.invokeBatchListener(batch2.data, true) }
-        verify { controllerManager.invokeBatchListener(batch3.data, true) }
-        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+        verify { networkManager.callbackManager.invokeBatchListener(batch1.data, true) }
+        verify { networkManager.callbackManager.invokeBatchListener(batch2.data, true) }
+        verify { networkManager.callbackManager.invokeBatchListener(batch3.data, true) }
+        verify(exactly = 0) { networkManager.callbackManager.invokeCallbacksForNetworkError(any()) }
     }
 
     @Test
@@ -669,8 +667,8 @@ class NetworkManagerTest : BaseTestCase() {
         // Should not cleanup on failure
         verify(exactly = 0) { dbManager.cleanupSentEvents(any(), any(), any()) }
         // Verify error callbacks
-        verify(exactly = 1) { controllerManager.invokeCallbacksForNetworkError() }
-        verify(exactly = 1) { controllerManager.invokeBatchListener(batch1.data, false) }
+        verify(exactly = 1) { networkManager.callbackManager.invokeCallbacksForNetworkError(any()) }
+        verify(exactly = 1) { networkManager.callbackManager.invokeBatchListener(batch1.data, false) }
     }
 
     @Test
@@ -708,8 +706,8 @@ class NetworkManagerTest : BaseTestCase() {
         verify(exactly = 1) { dbManager.cleanupPushNotificationEvents(appCtx, eventIds) }
         verify(exactly = 0) { dbManager.cleanupSentEvents(any(), any(), any()) }
         // Verify success callback for push notifications
-        verify(exactly = 1) { controllerManager.invokeBatchListener(pushData.data, true) }
-        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+        verify(exactly = 1) { networkManager.callbackManager.invokeBatchListener(pushData.data, true) }
+        verify(exactly = 0) { networkManager.callbackManager.invokeCallbacksForNetworkError(any()) }
     }
 
 
@@ -749,10 +747,15 @@ class NetworkManagerTest : BaseTestCase() {
 
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
-        val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
-        val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
+        val deviceInfo = MockDeviceInfo(
+            context = application,
+            config = cleverTapInstanceConfig,
+            cleverTapID = "clevertapId",
+            coreMetaData = metaData,
+            ctExecutors = MockCTExecutors(cleverTapInstanceConfig)
+        )
+        val callbackManager = mockk<CallbackManager>(relaxed = true)
         dbManager = mockk<DBManager>(relaxed = true)
-        controllerManager = mockk<ControllerManager>(relaxed = true)
         val queueHeaderBuilder = mockk<QueueHeaderBuilder>()
         every { queueHeaderBuilder.buildHeader(any()) } returns JSONObject()
 
@@ -762,7 +765,6 @@ class NetworkManagerTest : BaseTestCase() {
             config = cleverTapInstanceConfig,
             deviceInfo = deviceInfo,
             coreMetaData = metaData,
-            controllerManager = controllerManager,
             databaseManager = dbManager,
             callbackManager = callbackManager,
             ctApiWrapper = ctApiWrapper,
@@ -771,7 +773,8 @@ class NetworkManagerTest : BaseTestCase() {
             networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponseHandler = clevertapResponseHandler,
-            logger = TestLogger()
+            logger = TestLogger(),
+            ctVariables = mockk(relaxed = true)
         )
     }
 

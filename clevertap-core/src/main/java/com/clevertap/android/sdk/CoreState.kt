@@ -3,15 +3,23 @@ package com.clevertap.android.sdk
 import android.content.Context
 import androidx.annotation.AnyThread
 import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.StorageHelper.putString
+import com.clevertap.android.sdk.cryption.CryptMigrator
+import com.clevertap.android.sdk.cryption.CryptRepository
+import com.clevertap.android.sdk.cryption.DataMigrationRepository
 import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.events.EventMediator
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.login.IdentityRepoFactory
@@ -23,10 +31,15 @@ import com.clevertap.android.sdk.product_config.CTProductConfigFactory
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.task.MainLooperHandler
+import com.clevertap.android.sdk.task.Task
+import com.clevertap.android.sdk.utils.Clock
+import com.clevertap.android.sdk.utils.Clock.Companion.SYSTEM
+import com.clevertap.android.sdk.validation.ManifestValidator
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import com.clevertap.android.sdk.video.VideoLibChecker
 
 @Suppress("DEPRECATION")
@@ -44,7 +57,6 @@ internal open class CoreState(
     val baseEventQueueManager: BaseEventQueueManager,
     val cTLockManager: CTLockManager,
     val callbackManager: BaseCallbackManager,
-    val controllerManager: ControllerManager,
     val inAppController: InAppController,
     val evaluationManager: EvaluationManager,
     val impressionManager: ImpressionManager,
@@ -62,13 +74,195 @@ internal open class CoreState(
     val cTVariables: CTVariables,
     val executors: CTExecutors,
     val contentFetchManager: ContentFetchManager,
-    val loginInfoProvider: LoginInfoProvider
+    val loginInfoProvider: LoginInfoProvider,
+    val storeProvider: StoreProvider,
+    val variablesRepository: VariablesRepo,
+    val clock: Clock = SYSTEM
 ) {
+
+    internal var inAppFCManager: InAppFCManager? = null
+    internal var ctInboxController: CTInboxController? = null
+
+    fun setInAppFCManager(inAppFCManager: InAppFCManager) {
+        this.inAppFCManager = inAppFCManager
+        this.inAppController.setInAppFCManager(inAppFCManager)
+        this.networkManager.setInAppFCManager(inAppFCManager)
+    }
+
+    fun getInAppFCManager() : InAppFCManager? {
+        return inAppFCManager
+    }
+
+    fun getCTInboxController() : CTInboxController? {
+        return ctInboxController
+    }
+
+    fun asyncStartup() {
+        val fileResourceProviderInit = executors.ioTask<Unit>()
+        fileResourceProviderInit.execute("initFileResourceProvider") {
+            FileResourceProvider.getInstance(context, config.logger)
+        }
+        val task = executors.postAsyncSafelyTask<Unit>()
+        task.execute("migratingEncryption") {
+            val dbAdapter = databaseManager.loadDBAdapter(context)
+            val dataMigrationRepository = DataMigrationRepository(
+                context = context,
+                config = config,
+                dbAdapter = dbAdapter
+            )
+            val cryptMigrator = CryptMigrator(
+                logPrefix = config.accountId,
+                configEncryptionLevel = config.encryptionLevel,
+                logger = config.logger,
+                cryptHandler = cryptHandler,
+                cryptRepository = CryptRepository(
+                    context = context,
+                    accountId = config.accountId
+                ),
+                dataMigrationRepository = dataMigrationRepository,
+                variablesRepo = variablesRepository,
+                dbAdapter = dbAdapter
+            )
+            cryptMigrator.migrateEncryption()
+        }
+        deviceInfo.onInitDeviceInfo()
+        val taskInitStores = executors.ioTask<Unit>()
+        taskInitStores.execute("initStores") {
+            if (deviceInfo.getDeviceID() != null) {
+                if (storeRegistry.inAppStore == null) {
+                    val inAppStore: InAppStore = storeProvider.provideInAppStore(
+                        context = context,
+                        cryptHandler = cryptHandler,
+                        deviceId = deviceInfo.getDeviceID(),
+                        accountId = config.accountId
+                    )
+                    storeRegistry.inAppStore = inAppStore
+                    evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
+                    callbackManager.addChangeUserCallback(inAppStore)
+                }
+                if (storeRegistry.impressionStore == null) {
+                    val impStore: ImpressionStore = storeProvider.provideImpressionStore(
+                        context = context,
+                        deviceId = deviceInfo.getDeviceID(),
+                        accountId = config.accountId
+                    )
+                    storeRegistry.impressionStore = impStore
+                    callbackManager.addChangeUserCallback(impStore)
+                }
+            }
+        }
+
+        //Get device id should be async to avoid strict mode policy.
+        val taskInitFCManager = executors.ioTask<Unit>()
+        taskInitFCManager.execute("initFCManager") {
+            val deviceId = deviceInfo.deviceID
+            if (deviceId != null && inAppFCManager == null) {
+                config.logger
+                    .verbose(
+                        config.accountId + ":async_deviceID",
+                        "Initializing InAppFC with device Id = $deviceId"
+                    )
+                setInAppFCManager(InAppFCManager(
+                    context,
+                    config,
+                    deviceId,
+                    storeRegistry,
+                    impressionManager,
+                    executors,
+                    SYSTEM
+                ))
+            }
+        }
+
+        val taskVariablesInit = executors.ioTask<Unit>()
+        taskVariablesInit.execute("initCTVariables") {
+            cTVariables.init()
+        }
+
+        val taskInitFeatureFlags = executors.ioTask<Unit>()
+        taskInitFeatureFlags.execute("initFeatureFlags") {
+            initFeatureFlags(
+                context,
+                config,
+                deviceInfo,
+                callbackManager,
+                analyticsManager
+            )
+        }
+
+        val pushTask = executors.pushProviderTask<Unit>()
+        pushTask.execute("asyncFindAvailableCTPushProviders") {
+            pushProviders.initPushAmp()
+            pushProviders.init()
+        }
+        asyncStartupp()
+    }
+
+    // todo rename better, picked from CleverTapAPI constructor.
+    private fun asyncStartupp() {
+        var task: Task<Unit> = executors.postAsyncSafelyTask<Unit>()
+        task.execute("CleverTapAPI#initializeDeviceInfo") {
+            if (config.isDefaultInstance) {
+                ManifestValidator.validate(context, deviceInfo, pushProviders)
+            }
+        }
+
+        val now = clock.currentTimeSecondsInt()
+        if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > 5) {
+            config.setCreatedPostAppLaunch()
+        }
+
+        task = executors.postAsyncSafelyTask<Unit>()
+        task.execute("setStatesAsync") {
+            sessionManager.setLastVisitTime()
+            sessionManager.setUserLastVisitTs()
+            deviceInfo.setDeviceNetworkInfoReportingFromStorage()
+            deviceInfo.setCurrentUserOptOutStateFromStorage()
+            deviceInfo.setSystemEventsAllowedStateFromStorage()
+        }
+
+        task = executors.postAsyncSafelyTask<Unit>()
+        task.execute("saveConfigtoSharedPrefs") {
+            val configJson: String? = config.toJSONString()
+            if (configJson == null) {
+                Logger.v("Unable to save config to SharedPrefs, config Json is null")
+                return@execute
+            }
+            putString(context, config.accountId, "instance", configJson)
+        }
+        task = executors.postAsyncSafelyTask<Unit>()
+        task.execute("recordDeviceIDErrors") {
+            if (deviceInfo.getDeviceID() != null) {
+                recordDeviceIDErrors()
+            }
+        }
+    }
+
+    private fun initFeatureFlags(
+        context: Context?,
+        config: CleverTapInstanceConfig,
+        deviceInfo: DeviceInfo,
+        callbackManager: BaseCallbackManager,
+        analyticsManager: AnalyticsManager?
+    ) {
+        config.logger.verbose(
+            config.accountId + ":async_deviceID",
+            "Initializing Feature Flags with device Id = " + deviceInfo.deviceID
+        )
+        if (config.isAnalyticsOnly) {
+            config.logger.debug(config.accountId, "Feature Flag is not enabled for this instance")
+        } else {
+            callbackManager.ctFeatureFlagsController = CTFeatureFlagsFactory.getInstance(
+                context,
+                deviceInfo.deviceID,
+                config, callbackManager, analyticsManager
+            )
+            config.logger.verbose(config.accountId + ":async_deviceID", "Feature Flags initialized")
+        }
+    }
+
     /**
-     *
-     *
      * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     *
      */
     @Deprecated("")
     fun getCtProductConfigController(context: Context?): CTProductConfigController? {
@@ -80,7 +274,7 @@ internal open class CoreState(
                 )
             return null
         }
-        if (this.controllerManager.ctProductConfigController == null) {
+        if (this.callbackManager.ctProductConfigController == null) {
             this.config.getLogger().verbose(
                 config.accountId + ":async_deviceID",
                 "Initializing Product Config with device Id = " + this.deviceInfo.getDeviceID()
@@ -90,9 +284,9 @@ internal open class CoreState(
                     context, this.deviceInfo,
                     this.config, analyticsManager, coreMetaData, callbackManager
                 )
-            this.controllerManager.ctProductConfigController = ctProductConfigController
+            this.callbackManager.ctProductConfigController = ctProductConfigController
         }
-        return this.controllerManager.ctProductConfigController
+        return this.callbackManager.ctProductConfigController
     }
 
     /**
@@ -162,7 +356,7 @@ internal open class CoreState(
 
                 notifyChangeUserCallback()
 
-                controllerManager.inAppFCManager.changeUser(deviceInfo.getDeviceID())
+                inAppFCManager?.changeUser(deviceInfo.getDeviceID())
             } catch (t: Throwable) {
                 config.getLogger().verbose(config.accountId, "Reset Profile error", t)
             }
@@ -284,8 +478,8 @@ internal open class CoreState(
      * Resets the Display Units in the cache
      */
     private fun resetDisplayUnits() {
-        if (controllerManager.ctDisplayUnitController != null) {
-            controllerManager.ctDisplayUnitController.reset()
+        if (callbackManager.ctDisplayUnitController != null) {
+            callbackManager.ctDisplayUnitController.reset()
         } else {
             config.getLogger().verbose(
                 config.accountId,
@@ -295,7 +489,7 @@ internal open class CoreState(
     }
 
     private fun resetFeatureFlags() {
-        val ctFeatureFlagsController = controllerManager.ctFeatureFlagsController
+        val ctFeatureFlagsController = callbackManager.ctFeatureFlagsController
         if (ctFeatureFlagsController != null && ctFeatureFlagsController.isInitialized()) {
             ctFeatureFlagsController.resetWithGuid(deviceInfo.getDeviceID())
             ctFeatureFlagsController.fetchFeatureFlags()
@@ -310,7 +504,7 @@ internal open class CoreState(
     // always call async
     private fun resetInbox() {
         synchronized(cTLockManager.inboxControllerLock) {
-            controllerManager.ctInboxController = null
+            ctInboxController = null
         }
         initializeInbox()
     }
@@ -333,26 +527,27 @@ internal open class CoreState(
     @WorkerThread
     private fun initializeInboxMain() {
         synchronized(cTLockManager.inboxControllerLock) {
-            if (controllerManager.ctInboxController != null) {
+            if (ctInboxController != null) {
                 callbackManager._notifyInboxInitialized()
                 return
             }
-            if (deviceInfo.getDeviceID() != null) {
-                controllerManager.ctInboxController = CTInboxController(
+            val deviceId = deviceInfo.getDeviceID()
+            if (deviceId != null) {
+                ctInboxController = CTInboxController(
                     config,
-                    deviceInfo.getDeviceID(),
+                    deviceId,
                     databaseManager.loadDBAdapter(context),
                     cTLockManager,
                     callbackManager,
                     VideoLibChecker.haveVideoPlayerSupport
                 )
+                callbackManager.ctInboxController = ctInboxController
                 callbackManager._notifyInboxInitialized()
             } else {
                 config.getLogger().info("CRITICAL : No device ID found!")
             }
         }
     }
-
 
     //Session
     private fun resetProductConfigs() {
@@ -361,21 +556,19 @@ internal open class CoreState(
                 .debug(config.accountId, "Product Config is not enabled for this instance")
             return
         }
-        if (controllerManager.ctProductConfigController != null) {
-            controllerManager.ctProductConfigController.resetSettings()
+        if (callbackManager.ctProductConfigController != null) {
+            callbackManager.ctProductConfigController.resetSettings()
         }
         val ctProductConfigController =
             CTProductConfigFactory.getInstance(
                 context, deviceInfo, config, analyticsManager, coreMetaData,
                 callbackManager
             )
-        controllerManager.ctProductConfigController = ctProductConfigController
+        callbackManager.ctProductConfigController = ctProductConfigController
         config.getLogger().verbose(config.accountId, "Product Config reset")
     }
 
     private fun resetVariables() {
-        if (controllerManager.ctVariables != null) {
-            controllerManager.ctVariables.clearUserContent()
-        }
+        cTVariables.clearUserContent()
     }
 }

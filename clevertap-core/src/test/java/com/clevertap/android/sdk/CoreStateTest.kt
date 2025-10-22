@@ -5,7 +5,6 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.login.ChangeUserCallback
-import com.clevertap.android.sdk.login.IdentityRepo
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.pushnotification.PushProviders
@@ -13,6 +12,7 @@ import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.variables.CTVariables
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import io.mockk.*
 import org.junit.After
 import org.junit.Before
@@ -29,7 +29,6 @@ class CoreStateTest {
     private lateinit var analyticsManager: AnalyticsManager
     private lateinit var baseEventQueueManager: BaseEventQueueManager
     private lateinit var callbackManager: BaseCallbackManager
-    private lateinit var controllerManager: ControllerManager
     private lateinit var pushProviders: PushProviders
     private lateinit var databaseManager: BaseDatabaseManager
     private lateinit var sessionManager: SessionManager
@@ -39,6 +38,8 @@ class CoreStateTest {
     private lateinit var validationResultStack: ValidationResultStack
     private lateinit var loginInfoProvider: LoginInfoProvider
     private lateinit var cTVariables: CTVariables
+    private lateinit var storeProvider: StoreProvider
+    private lateinit var variablesRepo: VariablesRepo
 
     @Before
     fun setup() {
@@ -48,7 +49,6 @@ class CoreStateTest {
         analyticsManager = mockk(relaxed = true)
         baseEventQueueManager = mockk(relaxed = true)
         callbackManager = mockk(relaxed = true)
-        controllerManager = mockk(relaxed = true)
         pushProviders = mockk(relaxed = true)
         databaseManager = mockk(relaxed = true)
         sessionManager = mockk(relaxed = true)
@@ -58,6 +58,8 @@ class CoreStateTest {
         validationResultStack = mockk(relaxed = true)
         loginInfoProvider = mockk(relaxed = true)
         cTVariables = mockk(relaxed = true)
+        storeProvider = mockk(relaxed = true)
+        variablesRepo = mockk(relaxed = true)
 
         every { config.accountId } returns "testAccount"
         every { config.getLogger() } returns mockk(relaxed = true)
@@ -76,7 +78,6 @@ class CoreStateTest {
             baseEventQueueManager = baseEventQueueManager,
             cTLockManager = mockk(relaxed = true),
             callbackManager = callbackManager,
-            controllerManager = controllerManager,
             inAppController = mockk(relaxed = true),
             evaluationManager = mockk(relaxed = true),
             impressionManager = mockk(relaxed = true),
@@ -95,6 +96,9 @@ class CoreStateTest {
             executors = MockCTExecutors(),
             contentFetchManager = contentFetchManager,
             loginInfoProvider = loginInfoProvider,
+            storeProvider = storeProvider,
+            variablesRepository = variablesRepo
+
         )
     }
 
@@ -113,12 +117,12 @@ class CoreStateTest {
         val cleverTapID = null
         val inAppFCManager = mockk<InAppFCManager>(relaxed = true)
 
+        coreState.setInAppFCManager(inAppFCManager)
         every { coreMetaData.isCurrentUserOptedOut = any() } just Runs
         every { deviceInfo.forceUpdateDeviceId(any()) } just Runs
         every { deviceInfo.getDeviceID() } returns cacheGuid
         every { deviceInfo.setCurrentUserOptOutStateFromStorage() } just Runs
         every { deviceInfo.setSystemEventsAllowedStateFromStorage() } just Runs
-        every { controllerManager.inAppFCManager } returns inAppFCManager
 
         mockkStatic(CoreMetaData::class)
         every { CoreMetaData.setActivityCount(any()) } just Runs
@@ -151,14 +155,12 @@ class CoreStateTest {
         val profile = mapOf("Name" to "Test User")
         val cacheGuid = null
         val cleverTapID = "custom-id-456"
-        val inAppFCManager = mockk<InAppFCManager>(relaxed = true)
 
         every { config.enableCustomCleverTapId } returns true
         every { deviceInfo.forceUpdateCustomCleverTapID(any()) } just Awaits
         every { deviceInfo.getDeviceID() } returns cleverTapID
         every { deviceInfo.setCurrentUserOptOutStateFromStorage() } just Runs
         every { deviceInfo.setSystemEventsAllowedStateFromStorage() } just Runs
-        every { controllerManager.inAppFCManager } returns inAppFCManager
 
         mockkStatic(CoreMetaData::class)
         every { CoreMetaData.setActivityCount(any()) } just Runs
@@ -179,14 +181,12 @@ class CoreStateTest {
         val cacheGuid = null
         val cleverTapID = null
         val newDeviceID = "new-device-id-789"
-        val inAppFCManager = mockk<InAppFCManager>(relaxed = true)
 
         every { config.enableCustomCleverTapId } returns false
         every { deviceInfo.forceNewDeviceID() } just Runs
         every { deviceInfo.getDeviceID() } returns newDeviceID
         every { deviceInfo.setCurrentUserOptOutStateFromStorage() } just Runs
         every { deviceInfo.setSystemEventsAllowedStateFromStorage() } just Runs
-        every { controllerManager.inAppFCManager } returns inAppFCManager
 
         mockkStatic(CoreMetaData::class)
         every { CoreMetaData.setActivityCount(any()) } just Runs
@@ -385,7 +385,6 @@ class CoreStateTest {
         // Arrange
         val profile = mapOf("Name" to "Test User") // No identity key
         val currentGUID = "current-guid"
-        val identityRepo = mockk<IdentityRepo>()
 
         every { config.enableCustomCleverTapId } returns false
         every { deviceInfo.getDeviceID() } returns currentGUID
@@ -405,7 +404,6 @@ class CoreStateTest {
         // Arrange
         val profile = mapOf("Identity" to "user123")
         val currentGUID = "current-guid"
-        val identityRepo = mockk<IdentityRepo>()
 
         every { config.enableCustomCleverTapId } returns false
         every { deviceInfo.getDeviceID() } returns currentGUID
@@ -426,8 +424,6 @@ class CoreStateTest {
         val profile = mapOf("Identity" to "user123")
         val currentGUID = "current-guid"
         val cachedGUID = "cached-guid"
-        val identityRepo = mockk<IdentityRepo>()
-        val inAppFCManager = mockk<InAppFCManager>(relaxed = true)
 
         every { config.enableCustomCleverTapId } returns false
         every { deviceInfo.getDeviceID() } returns currentGUID andThen cachedGUID
@@ -437,7 +433,6 @@ class CoreStateTest {
         every { deviceInfo.forceUpdateDeviceId(any()) } just Runs
         every { deviceInfo.setCurrentUserOptOutStateFromStorage() } just Runs
         every { deviceInfo.setSystemEventsAllowedStateFromStorage() } just Runs
-        every { controllerManager.inAppFCManager } returns inAppFCManager
 
         mockkStatic(CoreMetaData::class)
         every { CoreMetaData.setActivityCount(any()) } just Runs
@@ -487,8 +482,6 @@ class CoreStateTest {
         val profile = mapOf("Email" to "newuser@test.com", "Name" to "New User")
         val currentGUID = "current-guid"
         val cachedGUID = null
-        val identityRepo = mockk<IdentityRepo>()
-        val inAppFCManager = mockk<InAppFCManager>(relaxed = true)
 
         every { config.enableCustomCleverTapId } returns false
         every { deviceInfo.getDeviceID() } returns currentGUID andThen "new-guid"
@@ -498,7 +491,6 @@ class CoreStateTest {
         every { deviceInfo.setSystemEventsAllowedStateFromStorage() } just Runs
         every { loginInfoProvider.isAnonymousDevice() } returns false
         every { loginInfoProvider.getGUIDForIdentifier("Email", "newuser@test.com") } returns cachedGUID
-        every { controllerManager.inAppFCManager } returns inAppFCManager
 
 
         mockkStatic(CoreMetaData::class)
@@ -525,7 +517,6 @@ class CoreStateTest {
         // Arrange
         val profile = mapOf("Name" to "Test")
         val cacheGuid = "guid-123"
-        val inAppFCManager = mockk<InAppFCManager>(relaxed = true)
         val ctDisplayUnitController = mockk<com.clevertap.android.sdk.displayunits.CTDisplayUnitController>(relaxed = true)
         val ctFeatureFlagsController = mockk<com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController>(relaxed = true)
         val ctInboxController = mockk<com.clevertap.android.sdk.inbox.CTInboxController>(relaxed = true)
@@ -536,12 +527,10 @@ class CoreStateTest {
         every { deviceInfo.getDeviceID() } returns cacheGuid
         every { deviceInfo.setCurrentUserOptOutStateFromStorage() } just Runs
         every { deviceInfo.setSystemEventsAllowedStateFromStorage() } just Runs
-        every { controllerManager.inAppFCManager } returns inAppFCManager
-        every { controllerManager.ctDisplayUnitController } returns ctDisplayUnitController
-        every { controllerManager.ctFeatureFlagsController } returns ctFeatureFlagsController
-        every { controllerManager.ctInboxController } returns ctInboxController
-        every { controllerManager.ctProductConfigController } returns null
-        every { controllerManager.ctVariables } returns cTVariables
+        every { callbackManager.ctDisplayUnitController } returns ctDisplayUnitController
+        every { callbackManager.ctFeatureFlagsController } returns ctFeatureFlagsController
+        coreState.ctInboxController = ctInboxController
+        every { callbackManager.ctProductConfigController } returns null
         every { ctFeatureFlagsController.isInitialized() } returns true
         every { ctFeatureFlagsController.resetWithGuid(any()) } just Runs
         every { ctFeatureFlagsController.fetchFeatureFlags() } just Runs

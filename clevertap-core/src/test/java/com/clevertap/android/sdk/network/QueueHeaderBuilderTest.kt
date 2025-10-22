@@ -4,7 +4,6 @@ import android.content.Context
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.ILogger
@@ -28,7 +27,6 @@ class QueueHeaderBuilderTest {
     private val context = mockk<Context>(relaxed = true)
     private val config = mockk<CleverTapInstanceConfig>(relaxed = true)
     private val coreMetaData = mockk<CoreMetaData>(relaxed = true)
-    private val controllerManager = mockk<ControllerManager>(relaxed = true)
     private val deviceInfo = mockk<DeviceInfo>(relaxed = true)
     private val arpRepo = mockk<ArpRepo>(relaxed = true)
     private val ijRepo = mockk<IJRepo>(relaxed = true)
@@ -42,7 +40,6 @@ class QueueHeaderBuilderTest {
         context = context,
         config = config,
         coreMetaData = coreMetaData,
-        controllerManager = controllerManager,
         deviceInfo = deviceInfo,
         arpRepo = arpRepo,
         ijRepo = ijRepo,
@@ -147,8 +144,9 @@ class QueueHeaderBuilderTest {
             })
         }
         // Mock controllerManager
-        every { controllerManager.pushProviders } returns null
-        every { controllerManager.inAppFCManager } returns mockk {
+        builder.pushProviders = null
+
+        builder.inAppFCManager = mockk {
             every { shownTodayCount } returns 5
             every { getInAppsCount(any()) } returns inappsJson
         }

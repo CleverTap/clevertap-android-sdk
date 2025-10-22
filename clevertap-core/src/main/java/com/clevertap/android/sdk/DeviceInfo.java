@@ -34,8 +34,7 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.login.LoginInfoProvider;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.OnSuccessListener;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.validation.ValidationResult;
@@ -405,8 +404,10 @@ public class DeviceInfo {
     private DeviceCachedInfo cachedInfo;
 
     private final CleverTapInstanceConfig config;
+    private final String customClevertapId;
 
     private final Context context;
+    private final CTExecutors executors;
 
     private final Object deviceIDLock = new Object();
 
@@ -471,12 +472,19 @@ public class DeviceInfo {
         return sDeviceType;
     }
 
-    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
-            CoreMetaData coreMetaData) {
+    DeviceInfo(
+            Context context,
+            CleverTapInstanceConfig config,
+            String cleverTapID,
+            CoreMetaData coreMetaData,
+            CTExecutors executors
+    ) {
         this.context = context;
         this.config = config;
         this.library = null;
         this.customLocale = null;
+        this.customClevertapId = cleverTapID;
+        this.executors = executors;
         mCoreMetaData = coreMetaData;
     }
 
@@ -713,9 +721,9 @@ public class DeviceInfo {
         return StorageHelper.getInt(context, LOCAL_INAPP_COUNT, 0);
     }
 
-    void onInitDeviceInfo(final String cleverTapID) {
+    void onInitDeviceInfo() {
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
-        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(config).ioTask();
+        Task<Void> taskDeviceCachedInfo = executors.ioTask();
         taskDeviceCachedInfo.execute("getDeviceCachedInfo", new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -724,7 +732,7 @@ public class DeviceInfo {
             }
         });
 
-        Task<String> task = CTExecutorFactory.executors(config).ioTask();
+        Task<String> task = executors.ioTask();
         // callback on main thread
         task.addOnSuccessListener(deviceId -> {
             getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
@@ -735,7 +743,7 @@ public class DeviceInfo {
         task.execute("initDeviceID", new Callable<String>() {
             @Override
             public String call() throws Exception {
-                return initDeviceID(cleverTapID);
+                return initDeviceID(customClevertapId);
             }
         });
 

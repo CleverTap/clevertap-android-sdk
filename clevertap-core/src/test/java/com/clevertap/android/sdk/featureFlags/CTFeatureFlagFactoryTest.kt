@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.MockAnalyticsManager
 import com.clevertap.android.sdk.MockDeviceInfo
+import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
 import org.junit.runner.*
@@ -24,7 +25,7 @@ internal class CTFeatureFlagFactoryTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         coreMetaData = CoreMetaData()
-        deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
+        deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData, ctExecutors = MockCTExecutors(cleverTapInstanceConfig))
         analyticsManager = MockAnalyticsManager()
         callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
     }

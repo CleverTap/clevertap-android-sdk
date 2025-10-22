@@ -12,7 +12,6 @@ import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.FailureFlushListener;
@@ -21,15 +20,17 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.SessionManager;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
+import com.clevertap.android.sdk.variables.CTVariables;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -71,13 +72,17 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private final ValidationResultStack validationResultStack;
 
-    private Runnable pushNotificationViewedRunnable = null;
+    private InAppController inAppController;
+    private final BaseCallbackManager callbackManager;
+    private final CTVariables cTVariables;
+    private final CTExecutors executors;
 
-    private final ControllerManager controllerManager;
+    private Runnable pushNotificationViewedRunnable = null;
 
     private final LoginInfoProvider loginInfoProvider;
 
-    public EventQueueManager(final BaseDatabaseManager baseDatabaseManager,
+    public EventQueueManager(
+            final BaseDatabaseManager baseDatabaseManager,
             Context context,
             CleverTapInstanceConfig config,
             EventMediator eventMediator,
@@ -89,26 +94,36 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             NetworkManager networkManager,
             CoreMetaData coreMetaData,
             CTLockManager ctLockManager,
-            final LocalDataStore localDataStore,
-            ControllerManager controllerManager,
-            LoginInfoProvider loginInfoProvider) {
+            LocalDataStore localDataStore,
+            LoginInfoProvider loginInfoProvider,
+            InAppController inAppController,
+            CTVariables ctVariables,
+            CTExecutors executors
+    ) {
         this.baseDatabaseManager = baseDatabaseManager;
         this.context = context;
         this.config = config;
         this.eventMediator = eventMediator;
+        this.inAppController = inAppController;
         this.sessionManager = sessionManager;
         this.mainLooperHandler = mainLooperHandler;
         this.deviceInfo = deviceInfo;
         this.validationResultStack = validationResultStack;
         this.networkManager = networkManager;
         this.localDataStore = localDataStore;
-        logger = this.config.getLogger();
-        cleverTapMetaData = coreMetaData;
+        this.logger = this.config.getLogger();
+        this.cleverTapMetaData = coreMetaData;
         this.ctLockManager = ctLockManager;
-        this.controllerManager = controllerManager;
         this.loginInfoProvider = loginInfoProvider;
+        this.callbackManager = callbackManager;
+        this.cTVariables = ctVariables;
+        this.executors = executors;
 
         callbackManager.setFailureFlushListener(this);
+    }
+
+    public void setInAppController(InAppController controller) {
+        this.inAppController = controller;
     }
 
     // only call async
@@ -142,7 +157,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     @Override
     public void flushQueueAsync(final Context context, final EventGroup eventGroup) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("CommsManager#flushQueueAsync", new Callable<Void>() {
             @Override
             public Void call() {
@@ -187,8 +202,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
-            controllerManager.invokeCallbacksForNetworkError();
-            controllerManager.invokeBatchListener(new JSONArray(), false);
+            callbackManager.invokeCallbacksForNetworkError(cTVariables);
+            callbackManager.invokeBatchListener(new JSONArray(), false);
             return;
         }
 
@@ -196,8 +211,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         if (cleverTapMetaData.isOffline()) {
             logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
-            controllerManager.invokeCallbacksForNetworkError();
-            controllerManager.invokeBatchListener(new JSONArray(), false);
+            callbackManager.invokeCallbacksForNetworkError(cTVariables);
+            callbackManager.invokeBatchListener(new JSONArray(), false);
             return;
         }
 
@@ -318,23 +333,29 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         updateLocalStore(eventName, eventType);
 
         if (eventMediator.isChargedEvent(event)) {
-            controllerManager.getInAppController()
-                    .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
-                            eventMediator.getChargedEventItemDetails(event), userLocation);
+            inAppController.onQueueChargedEvent(
+                    eventMediator.getChargedEventDetails(event),
+                    eventMediator.getChargedEventItemDetails(event), userLocation
+            );
         } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
             // in case device is offline just evaluate all events
-            controllerManager.getInAppController().onQueueEvent(eventName,
-                    eventMediator.getEventProperties(event), userLocation);
+            inAppController.onQueueEvent(
+                    eventName,
+                    eventMediator.getEventProperties(event),
+                    userLocation
+            );
         } else if (eventType == Constants.PROFILE_EVENT) {
             // in case profile event, evaluate for user attribute changes
             Map<String, Map<String, Object>> userAttributeChangedProperties
                     = eventMediator.computeUserAttributeChangeProperties(event);
-            controllerManager.getInAppController()
-                    .onQueueProfileEvent(userAttributeChangedProperties, userLocation);
+            inAppController.onQueueProfileEvent(userAttributeChangedProperties, userLocation);
         } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
             // in case device is online only evaluate non-appLaunched events
-            controllerManager.getInAppController().onQueueEvent(eventName,
-                    eventMediator.getEventProperties(event), userLocation);
+            inAppController.onQueueEvent(
+                    eventName,
+                    eventMediator.getEventProperties(event),
+                    userLocation
+            );
         }
     }
 
@@ -445,7 +466,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void pushInitialEventsAsync() {
         if (!cleverTapMetaData.inCurrentSession()) {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+            Task<Void> task = executors.postAsyncSafelyTask();
             task.execute("CleverTapAPI#pushInitialEventsAsync", new Callable<Void>() {
                 @Override
                 public Void call() {
@@ -470,7 +491,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      */
     @Override
     public Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        Task<Void> task = executors.postAsyncSafelyTask();
         return task.submit("queueEvent", new Callable<Void>() {
             @Override
             @WorkerThread
@@ -482,7 +503,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     config.getLogger().debug(config.getAccountId(),
                             "App Launched not yet processed, re-queuing event " + event + "after 2s");
                     mainLooperHandler.postDelayed(() -> {
-                        Task<Void> task1 = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+                        Task<Void> task1 = executors.postAsyncSafelyTask();
                         task1.execute("queueEventWithDelay", new Callable<Void>() {
                             @Override
                             @WorkerThread

@@ -4,7 +4,6 @@ import android.content.Context;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
@@ -20,19 +19,15 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig config;
 
-    private final ControllerManager controllerManager;
-
     private final Logger logger;
 
     public DisplayUnitResponse(
             CleverTapInstanceConfig config,
-            BaseCallbackManager callbackManager,
-            ControllerManager controllerManager
+            BaseCallbackManager callbackManager
     ) {
         this.config = config;
-        logger = this.config.getLogger();
+        this.logger = this.config.getLogger();
         this.callbackManager = callbackManager;
-        this.controllerManager = controllerManager;
     }
 
     //Logic for the processing of Display Unit response
@@ -84,11 +79,11 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         }
 
         synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
-            if (controllerManager.getCTDisplayUnitController() == null) {
-                controllerManager.setCTDisplayUnitController(new CTDisplayUnitController());
+            if (callbackManager.getCTDisplayUnitController() == null) {
+                callbackManager.setCTDisplayUnitController(new CTDisplayUnitController());
             }
         }
-        ArrayList<CleverTapDisplayUnit> displayUnits = controllerManager.getCTDisplayUnitController()
+        ArrayList<CleverTapDisplayUnit> displayUnits = callbackManager.getCTDisplayUnitController()
                 .updateDisplayUnits(messages);
 
         callbackManager.notifyDisplayUnitsLoaded(displayUnits);

@@ -6,7 +6,6 @@ import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,19 +20,15 @@ public class InboxResponse extends CleverTapResponseDecorator {
 
     private final Logger logger;
 
-    private final ControllerManager controllerManager;
-
     public InboxResponse(
             CleverTapInstanceConfig config,
             CTLockManager ctLockManager,
-            final BaseCallbackManager callbackManager,
-            ControllerManager controllerManager
+            final BaseCallbackManager callbackManager
     ) {
         this.config = config;
         this.callbackManager = callbackManager;
         logger = this.config.getLogger();
         inboxControllerLock = ctLockManager.getInboxControllerLock();
-        this.controllerManager = controllerManager;
     }
 
     //NotificationInbox
@@ -66,12 +61,12 @@ public class InboxResponse extends CleverTapResponseDecorator {
     @WorkerThread
     private void _processInboxMessages(JSONArray messages) {
         synchronized (inboxControllerLock) {
-            if (controllerManager.getCTInboxController() == null) {
+            if (callbackManager.getCTInboxController() == null) {
                 //controllerManager.initializeInbox();
                 // todo lp check if this is really needed, why do we load inbox on data reception.
             }
-            if (controllerManager.getCTInboxController() != null) {
-                boolean update = controllerManager.getCTInboxController().updateMessages(messages);
+            if (callbackManager.getCTInboxController() != null) {
+                boolean update = callbackManager.getCTInboxController().updateMessages(messages);
                 if (update) {
                     callbackManager._notifyInboxMessagesDidUpdate();
                 }

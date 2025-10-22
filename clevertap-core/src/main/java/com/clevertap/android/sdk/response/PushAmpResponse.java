@@ -6,11 +6,12 @@ import android.content.Context;
 import android.os.Bundle;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
+import com.clevertap.android.sdk.pushnotification.PushProviders;
+
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,23 +27,20 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
 
     private final Logger logger;
 
-    private final ControllerManager controllerManager;
-
     private final BaseDatabaseManager baseDatabaseManager;
+    private PushProviders pushProviders;
 
     public PushAmpResponse(
             Context context,
             CleverTapInstanceConfig config,
             BaseDatabaseManager dbManager,
-            BaseCallbackManager callbackManager,
-            ControllerManager controllerManager
+            BaseCallbackManager callbackManager
     ) {
         this.context = context;
         this.config = config;
         logger = this.config.getLogger();
         this.baseDatabaseManager = dbManager;
         this.callbackManager = callbackManager;
-        this.controllerManager = controllerManager;
     }
 
     @Override
@@ -65,7 +63,9 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                 if (pushAmpObject.has("pf")) {
                     try {
                         int frequency = pushAmpObject.getInt("pf");
-                        controllerManager.getPushProviders().updatePingFrequencyIfNeeded(context, frequency);
+                        if (pushProviders != null) {
+                            pushProviders.updatePingFrequencyIfNeeded(context, frequency);
+                        }
                     } catch (Throwable t) {
                         logger
                                 .verbose("Error handling ping frequency in response : " + t.getMessage());
@@ -125,5 +125,9 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
         } catch (JSONException e) {
             logger.verbose(config.getAccountId(), "Error parsing push notification JSON");
         }
+    }
+
+    public void setPushProviders(PushProviders pushProviders) {
+        this.pushProviders = pushProviders;
     }
 }

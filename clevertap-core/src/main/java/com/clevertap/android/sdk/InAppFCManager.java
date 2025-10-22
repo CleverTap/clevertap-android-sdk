@@ -45,13 +45,15 @@ public class InAppFCManager {
     private final CTExecutors executors;
     private final Clock clock;
 
-    InAppFCManager(Context context,
-                   CleverTapInstanceConfig config,
-                   String deviceId,
-                   StoreRegistry storeRegistry,
-                   ImpressionManager impressionManager,
-                   CTExecutors executors,
-                   Clock clock) {
+    InAppFCManager(
+            Context context,
+            CleverTapInstanceConfig config,
+            String deviceId,
+            StoreRegistry storeRegistry,
+            ImpressionManager impressionManager,
+            CTExecutors executors,
+            Clock clock
+    ) {
         this.config = config;
         this.context = context;
         this.deviceId = deviceId;

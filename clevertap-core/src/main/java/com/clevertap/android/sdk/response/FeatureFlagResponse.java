@@ -1,9 +1,10 @@
 package com.clevertap.android.sdk.response;
 
 import android.content.Context;
+
+import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,12 +16,12 @@ public class FeatureFlagResponse extends CleverTapResponseDecorator {
 
     private final Logger logger;
 
-    private final ControllerManager controllerManager;
+    private final BaseCallbackManager callbackManager;
 
-    public FeatureFlagResponse(CleverTapInstanceConfig config, ControllerManager controllerManager) {
+    public FeatureFlagResponse(CleverTapInstanceConfig config, BaseCallbackManager callbackManager) {
         this.config = config;
         logger = this.config.getLogger();
-        this.controllerManager = controllerManager;
+        this.callbackManager = callbackManager;
     }
 
     @Override
@@ -59,8 +60,8 @@ public class FeatureFlagResponse extends CleverTapResponseDecorator {
     private void parseFeatureFlags(JSONObject responseKV) throws JSONException {
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
-        if (kvArray != null && controllerManager.getCTFeatureFlagsController() != null) {
-            controllerManager.getCTFeatureFlagsController().updateFeatureFlags(responseKV);
+        if (kvArray != null && callbackManager.getCTFeatureFlagsController() != null) {
+            callbackManager.getCTFeatureFlagsController().updateFeatureFlags(responseKV);
         }else {
             config.getLogger().verbose(config.getAccountId(),
                     Constants.FEATURE_FLAG_UNIT + "Can't parse feature flags, CTFeatureFlagsController is null");

@@ -2,20 +2,23 @@ package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
-import android.os.Handler;
-import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
+import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.network.BatchListener;
+import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -76,6 +79,16 @@ public class CallbackManager extends BaseCallbackManager {
     private FetchVariablesCallback fetchVariablesCallback;
 
     private BatchListener batchListener;
+    private CTInboxController ctInboxController;
+    private CTFeatureFlagsController ctFeatureFlagsController;
+    private CTDisplayUnitController ctDisplayUnitController;
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
+    private CTProductConfigController ctProductConfigController;
 
     @Override
     public void _notifyInboxMessagesDidUpdate() {
@@ -385,5 +398,60 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public void setBatchListener(BatchListener batchListener) {
         this.batchListener = batchListener;
+    }
+
+    @Override
+    public CTInboxController getCTInboxController() {
+        return this.ctInboxController;
+    }
+
+    @Override
+    public void setCTInboxController(CTInboxController ctInboxController) {
+        this.ctInboxController = ctInboxController;
+    }
+
+    @Override
+    public CTFeatureFlagsController getCTFeatureFlagsController() {
+        return this.ctFeatureFlagsController;
+    }
+
+    @Override
+    public void setCTFeatureFlagsController(CTFeatureFlagsController ctFeatureFlagsController) {
+        this.ctFeatureFlagsController = ctFeatureFlagsController;
+    }
+
+    @Override
+    public CTDisplayUnitController getCTDisplayUnitController() {
+        return ctDisplayUnitController;
+    }
+
+    @Override
+    public void setCTDisplayUnitController(
+            final CTDisplayUnitController CTDisplayUnitController) {
+        ctDisplayUnitController = CTDisplayUnitController;
+    }
+
+
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
+    @Override
+    public CTProductConfigController getCTProductConfigController() {
+        return ctProductConfigController;
+    }
+
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
+    @Override
+    public void setCTProductConfigController(
+            final CTProductConfigController CTProductConfigController) {
+        ctProductConfigController = CTProductConfigController;
     }
 }

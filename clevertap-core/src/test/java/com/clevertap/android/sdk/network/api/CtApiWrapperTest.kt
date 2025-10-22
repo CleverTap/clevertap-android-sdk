@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.network.NetworkRepo
+import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -28,7 +29,13 @@ class CtApiWrapperTest : BaseTestCase() {
         super.setUp()
         guid = "1212121221"
         coreMetaData = CoreMetaData()
-        deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
+        deviceInfo = MockDeviceInfo(
+            context = application,
+            config = cleverTapInstanceConfig,
+            cleverTapID = guid,
+            coreMetaData = coreMetaData,
+            ctExecutors = MockCTExecutors(cleverTapInstanceConfig)
+        )
         networkRepo = NetworkRepo(application, cleverTapInstanceConfig)
         ctApiWrapper = CtApiWrapper(networkRepo, cleverTapInstanceConfig, deviceInfo)
     }

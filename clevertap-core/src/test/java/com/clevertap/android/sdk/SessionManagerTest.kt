@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.cryption.CryptRepository
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
+import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.usereventlogs.UserEventLog
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.shared.test.BaseTestCase
@@ -45,7 +46,7 @@ class SessionManagerTest : BaseTestCase() {
             mockk<CryptRepository>(relaxed = true),
             mockk<CryptFactory>(relaxed = true),
         )
-        deviceInfo = MockDeviceInfo(appCtx, configDef, "id", coreMetaData)
+        deviceInfo = MockDeviceInfo(appCtx, configDef, "id", coreMetaData, ctExecutors = MockCTExecutors(config))
         baseDatabaseManager = mockk<DBManager>(relaxed = true)
         localDataStoreDef = LocalDataStore(
             application,

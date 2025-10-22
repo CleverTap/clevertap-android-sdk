@@ -1,9 +1,10 @@
 package com.clevertap.android.sdk.response;
 
 import android.content.Context;
+
+import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import org.json.JSONArray;
@@ -18,17 +19,17 @@ public class ProductConfigResponse extends CleverTapResponseDecorator {
 
     private final Logger logger;
 
-    private final ControllerManager controllerManager;
+    private final BaseCallbackManager callbackManager;
 
     public ProductConfigResponse(
             CleverTapInstanceConfig config,
             CoreMetaData coreMetaData,
-            ControllerManager controllerManager
+            BaseCallbackManager callbackManager
     ) {
         this.config = config;
-        logger = this.config.getLogger();
+        this.logger = this.config.getLogger();
         this.coreMetaData = coreMetaData;
-        this.controllerManager = controllerManager;
+        this.callbackManager = callbackManager;
     }
 
     @Override
@@ -68,8 +69,8 @@ public class ProductConfigResponse extends CleverTapResponseDecorator {
 
     private void onProductConfigFailed() {
         if (coreMetaData.isProductConfigRequested()) {
-            if (controllerManager.getCTProductConfigController() != null) {
-                controllerManager.getCTProductConfigController().onFetchFailed();
+            if (callbackManager.getCTProductConfigController() != null) {
+                callbackManager.getCTProductConfigController().onFetchFailed();
             }
             coreMetaData.setProductConfigRequested(false);
         }
@@ -78,8 +79,8 @@ public class ProductConfigResponse extends CleverTapResponseDecorator {
     private void parseProductConfigs(JSONObject responseKV) throws JSONException {
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
-        if (kvArray != null && controllerManager.getCTProductConfigController() != null) {
-            controllerManager.getCTProductConfigController().onFetchSuccess(responseKV);
+        if (kvArray != null && callbackManager.getCTProductConfigController() != null) {
+            callbackManager.getCTProductConfigController().onFetchSuccess(responseKV);
         } else {
             onProductConfigFailed();
         }
