@@ -650,12 +650,12 @@ internal open class CoreState(
             val deviceId = deviceInfo.getDeviceID()
             if (deviceId != null) {
                 ctInboxController = CTInboxController(
-                    config,
                     deviceId,
                     databaseManager.loadDBAdapter(context),
                     cTLockManager,
                     callbackManager,
-                    VideoLibChecker.haveVideoPlayerSupport
+                    VideoLibChecker.haveVideoPlayerSupport,
+                    executors
                 )
                 callbackManager.ctInboxController = ctInboxController
                 callbackManager._notifyInboxInitialized()
