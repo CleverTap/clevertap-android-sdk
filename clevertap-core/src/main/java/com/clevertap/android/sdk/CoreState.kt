@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
+import android.text.TextUtils
 import androidx.annotation.AnyThread
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.StorageHelper.putString
+import com.clevertap.android.sdk.StoreProvider.Companion.getInstance
 import com.clevertap.android.sdk.cryption.CryptMigrator
 import com.clevertap.android.sdk.cryption.CryptRepository
 import com.clevertap.android.sdk.cryption.DataMigrationRepository
@@ -12,6 +14,7 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.events.EventMediator
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppController
@@ -126,6 +129,23 @@ internal open class CoreState(
             cryptMigrator.migrateEncryption()
         }
         deviceInfo.onInitDeviceInfo()
+
+        val taskDeviceCachedInfo = executors.ioTask<Unit>()
+        taskDeviceCachedInfo.execute("getDeviceCachedInfo"
+        ) { deviceInfo.getDeviceCachedInfo() }
+
+        val task1 = executors.ioTask<String>()
+        // callback on main thread
+        task1.addOnSuccessListener { deviceId: String ->
+            config.logger.verbose(
+                config.accountId + ":async_deviceID",
+                "DeviceID initialized successfully!" + Thread.currentThread()
+            )
+            // No need to put getDeviceID() on background thread because prefs already loaded
+            deviceIDCreated(deviceId)
+        }
+        task1.execute("initDeviceID") { deviceInfo.initDeviceID() }
+
         val taskInitStores = executors.ioTask<Unit>()
         taskInitStores.execute("initStores") {
             if (deviceInfo.getDeviceID() != null) {
@@ -236,6 +256,102 @@ internal open class CoreState(
                 recordDeviceIDErrors()
             }
         }
+    }
+
+    fun deviceIDCreated(deviceId: String) {
+        val accountId: String = config.accountId
+
+        /*if (callbackManager == null) {
+            config.logger.verbose(
+                "$accountId:async_deviceID",
+                "ControllerManager not set yet! Returning from deviceIDCreated()"
+            )
+            return
+        }*/
+
+        val storeProvider = getInstance()
+
+        // Inflate the local profile here as deviceId is required
+        localDataStore.inflateLocalProfileAsync(context)
+
+        // must move initStores task to async executor due to addChangeUserCallback synchronization
+        val task: Task<Unit> = executors.ioTask<Unit>()
+        task.execute("initStores") {
+            if (storeRegistry.inAppStore == null) {
+                val inAppStore = storeProvider.provideInAppStore(
+                    context = context,
+                    cryptHandler = cryptHandler,
+                    deviceId = deviceId,
+                    accountId = accountId
+                )
+                storeRegistry.inAppStore = inAppStore
+                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
+                callbackManager.addChangeUserCallback(inAppStore)
+            }
+            if (storeRegistry.impressionStore == null) {
+                val impStore = storeProvider.provideImpressionStore(
+                    context = context,
+                    deviceId = deviceId,
+                    accountId = accountId
+                )
+                storeRegistry.impressionStore = impStore
+                callbackManager.addChangeUserCallback(impStore)
+            }
+        }
+
+
+        /*
+          Reinitialising InAppFCManager with device id, if it's null
+          during first initialisation from CleverTapFactory.getCoreState()
+         */
+        if (getInAppFCManager() == null) {
+            config.logger.verbose(
+                "$accountId:async_deviceID",
+                "Initializing InAppFC after Device ID Created = $deviceId"
+            )
+            setInAppFCManager(
+                InAppFCManager(
+                    context, config, deviceId,
+                    storeRegistry, impressionManager,
+                    executors, SYSTEM
+                )
+            )
+        }
+
+        //todo : replace with variables
+        /*
+          Reinitialising product config & Feature Flag controllers with device id, if it's null
+          during first initialisation from CleverTapFactory.getCoreState()
+         */
+        val ctFeatureFlagsController: CTFeatureFlagsController? = callbackManager
+            .getCTFeatureFlagsController()
+
+        if (ctFeatureFlagsController != null && TextUtils.isEmpty(ctFeatureFlagsController.getGuid())) {
+            config.logger.verbose(
+                "$accountId:async_deviceID",
+                "Initializing Feature Flags after Device ID Created = $deviceId"
+            )
+            ctFeatureFlagsController.setGuidAndInit(deviceId)
+        }
+        //todo: replace with variables
+        val ctProductConfigController: CTProductConfigController? = callbackManager
+            .getCTProductConfigController()
+
+        if (ctProductConfigController != null && TextUtils
+                .isEmpty(ctProductConfigController.settings.guid)
+        ) {
+            config.logger.verbose(
+                "$accountId:async_deviceID",
+                "Initializing Product Config after Device ID Created = $deviceId"
+            )
+            ctProductConfigController.setGuidAndInit(deviceId)
+        }
+        config.logger.verbose(
+            "$accountId:async_deviceID",
+            "Got device id from DeviceInfo, notifying user profile initialized to SyncListener"
+        )
+        callbackManager.notifyUserProfileInitialized(deviceId)
+        callbackManager.notifyCleverTapIDChanged(deviceId)
     }
 
     private fun initFeatureFlags(

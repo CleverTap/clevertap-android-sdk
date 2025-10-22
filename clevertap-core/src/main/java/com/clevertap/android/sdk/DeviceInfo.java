@@ -723,30 +723,6 @@ public class DeviceInfo {
 
     void onInitDeviceInfo() {
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
-        Task<Void> taskDeviceCachedInfo = executors.ioTask();
-        taskDeviceCachedInfo.execute("getDeviceCachedInfo", new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                getDeviceCachedInfo();
-                return null;
-            }
-        });
-
-        Task<String> task = executors.ioTask();
-        // callback on main thread
-        task.addOnSuccessListener(deviceId -> {
-            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
-                    "DeviceID initialized successfully!" + Thread.currentThread());
-            // No need to put getDeviceID() on background thread because prefs already loaded
-            CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(deviceId);
-        });
-        task.execute("initDeviceID", new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return initDeviceID(customClevertapId);
-            }
-        });
-
     }
 
     public void setCurrentUserOptOutStateFromStorage() {
@@ -904,7 +880,8 @@ public class DeviceInfo {
         return this.config.getLogger();
     }
 
-    private DeviceCachedInfo getDeviceCachedInfo() {
+    @WorkerThread
+    DeviceCachedInfo getDeviceCachedInfo() {
         if (cachedInfo == null) {
             cachedInfo = new DeviceCachedInfo();
         }
@@ -923,7 +900,10 @@ public class DeviceInfo {
         return Constants.FALLBACK_ID_TAG + ":" + this.config.getAccountId();
     }
 
-    private String initDeviceID(String cleverTapID) {
+    @WorkerThread
+    @NonNull
+    String initDeviceID() {
+        String cleverTapID = customClevertapId;
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called initDeviceID()");
         //Show logging as per Manifest flag
         if (config.getEnableCustomCleverTapId()) {
