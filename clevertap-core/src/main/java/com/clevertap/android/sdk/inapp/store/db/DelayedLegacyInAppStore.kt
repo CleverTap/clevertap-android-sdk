@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.inapp.store.db
 
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.db.DelayedLegacyInAppDAO
 import com.clevertap.android.sdk.db.DelayedLegacyInAppData
@@ -29,7 +29,7 @@ import org.json.JSONObject
 internal class DelayedLegacyInAppStore(
     private val delayedLegacyInAppDAO: DelayedLegacyInAppDAO,
     private val cryptHandler: CryptHandler,
-    private val logger: Logger,
+    private val logger: ILogger,
     private val accountId: String
 ) {
 
