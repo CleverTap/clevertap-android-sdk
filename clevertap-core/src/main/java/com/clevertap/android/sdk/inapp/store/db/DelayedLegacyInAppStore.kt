@@ -56,6 +56,7 @@ internal class DelayedLegacyInAppStore(
         return result > 0
     }
 
+    @WorkerThread
     fun saveDelayedInAppsBatch(delayedInApps: JSONArray): Boolean {
         if (delayedInApps.length() == 0) return true
 
