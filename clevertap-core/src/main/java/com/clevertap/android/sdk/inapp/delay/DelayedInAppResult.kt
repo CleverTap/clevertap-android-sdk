@@ -5,7 +5,7 @@ import org.json.JSONObject
 /**
  * Sealed class representing the result of a delayed in-app callback
  */
-sealed class DelayedInAppResult {
+sealed interface DelayedInAppResult {
 
     /**
      * Success state - in-app was successfully retrieved and is ready for display
@@ -16,7 +16,7 @@ sealed class DelayedInAppResult {
     data class Success(
         val inApp: JSONObject,
         val inAppId: String
-    ) : DelayedInAppResult()
+    ) : DelayedInAppResult
 
     /**
      * Error state - in-app retrieval failed or data is unavailable
@@ -29,7 +29,7 @@ sealed class DelayedInAppResult {
         val reason: ErrorReason,
         val inAppId: String = "",
         val throwable: Throwable? = null
-    ) : DelayedInAppResult() {
+    ) : DelayedInAppResult {
 
         /**
          * Enum representing specific error reasons
