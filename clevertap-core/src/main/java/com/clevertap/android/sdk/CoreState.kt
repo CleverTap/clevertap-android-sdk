@@ -163,8 +163,8 @@ internal open class CoreState(
             )
             cryptMigrator.migrateEncryption()
         }
-        core.deviceInfo.onInitDeviceInfo()
 
+        core.config.logger.verbose(config.accountId + ":async_deviceID", "DeviceInfo() called")
         val taskDeviceCachedInfo = core.executors.ioTask<Unit>()
         taskDeviceCachedInfo.execute("getDeviceCachedInfo"
         ) { core.deviceInfo.getDeviceCachedInfo() }
@@ -221,7 +221,38 @@ internal open class CoreState(
             push.pushProviders.initPushAmp()
             push.pushProviders.init()
         }
-        asyncStartupp()
+        core.executors.postAsyncSafelyTask<Unit>().execute("CleverTapAPI#initializeDeviceInfo") {
+            if (core.config.isDefaultInstance) {
+                ManifestValidator.validate(core.context, core.deviceInfo, push.pushProviders)
+            }
+        }
+
+        val now = core.clock.currentTimeSecondsInt()
+        if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > 5) {
+            core.config.setCreatedPostAppLaunch()
+        }
+
+        core.executors.postAsyncSafelyTask<Unit>().execute("setStatesAsync") {
+            analytics.sessionManager.setLastVisitTime()
+            analytics.sessionManager.setUserLastVisitTs()
+            core.deviceInfo.setDeviceNetworkInfoReportingFromStorage()
+            core.deviceInfo.setCurrentUserOptOutStateFromStorage()
+            core.deviceInfo.setSystemEventsAllowedStateFromStorage()
+        }
+
+        core.executors.postAsyncSafelyTask<Unit>().execute("saveConfigtoSharedPrefs") {
+            val configJson: String? = core.config.toJSONString()
+            if (configJson == null) {
+                Logger.v("Unable to save config to SharedPrefs, config Json is null")
+                return@execute
+            }
+            putString(core.context, core.config.accountId, "instance", configJson)
+        }
+        core.executors.postAsyncSafelyTask<Unit>().execute("recordDeviceIDErrors") {
+            if (core.deviceInfo.getDeviceID() != null) {
+                recordDeviceIDErrors()
+            }
+        }
     }
 
     @WorkerThread
@@ -246,46 +277,6 @@ internal open class CoreState(
                 )
                 data.storeRegistry.impressionStore = impStore
                 callback.callbackManager.addChangeUserCallback(impStore)
-            }
-        }
-    }
-
-    // todo rename better, picked from CleverTapAPI constructor.
-    private fun asyncStartupp() {
-        var task: Task<Unit> = core.executors.postAsyncSafelyTask<Unit>()
-        task.execute("CleverTapAPI#initializeDeviceInfo") {
-            if (core.config.isDefaultInstance) {
-                ManifestValidator.validate(core.context, core.deviceInfo, push.pushProviders)
-            }
-        }
-
-        val now = core.clock.currentTimeSecondsInt()
-        if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > 5) {
-            core.config.setCreatedPostAppLaunch()
-        }
-
-        task = core.executors.postAsyncSafelyTask<Unit>()
-        task.execute("setStatesAsync") {
-            analytics.sessionManager.setLastVisitTime()
-            analytics.sessionManager.setUserLastVisitTs()
-            core.deviceInfo.setDeviceNetworkInfoReportingFromStorage()
-            core.deviceInfo.setCurrentUserOptOutStateFromStorage()
-            core.deviceInfo.setSystemEventsAllowedStateFromStorage()
-        }
-
-        task = core.executors.postAsyncSafelyTask<Unit>()
-        task.execute("saveConfigtoSharedPrefs") {
-            val configJson: String? = core.config.toJSONString()
-            if (configJson == null) {
-                Logger.v("Unable to save config to SharedPrefs, config Json is null")
-                return@execute
-            }
-            putString(core.context, core.config.accountId, "instance", configJson)
-        }
-        task = core.executors.postAsyncSafelyTask<Unit>()
-        task.execute("recordDeviceIDErrors") {
-            if (core.deviceInfo.getDeviceID() != null) {
-                recordDeviceIDErrors()
             }
         }
     }
@@ -319,7 +310,7 @@ internal open class CoreState(
           Reinitialising product config & Feature Flag controllers with device id, if it's null
           during first initialisation from CleverTapFactory.getCoreState()
          */
-        val ctFeatureFlagsController: CTFeatureFlagsController? = callback.callbackManager
+        val ctFeatureFlagsController = callback.callbackManager
             .getCTFeatureFlagsController()
 
         if (ctFeatureFlagsController != null && TextUtils.isEmpty(ctFeatureFlagsController.getGuid())) {
@@ -330,8 +321,7 @@ internal open class CoreState(
             ctFeatureFlagsController.setGuidAndInit(deviceId)
         }
         //todo: replace with variables
-        val ctProductConfigController: CTProductConfigController? = callback.callbackManager
-            .getCTProductConfigController()
+        val ctProductConfigController = callback.callbackManager.getCTProductConfigController()
 
         if (ctProductConfigController != null && TextUtils
                 .isEmpty(ctProductConfigController.settings.guid)

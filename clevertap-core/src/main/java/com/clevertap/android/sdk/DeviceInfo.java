@@ -715,10 +715,6 @@ public class DeviceInfo {
         return StorageHelper.getInt(context, LOCAL_INAPP_COUNT, 0);
     }
 
-    void onInitDeviceInfo() {
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
-    }
-
     public void setCurrentUserOptOutStateFromStorage() {
         String key = optOutKey();
         if (key == null) {
