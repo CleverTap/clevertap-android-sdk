@@ -392,7 +392,7 @@ public class PushProviders implements CTPushProviderListener {
         if (frequency != getPingFrequency(context)) {
             setPingFrequency(context, frequency);
             if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
-                Task<Void> task = executors.postAsyncSafelyTask(TAG);
+                Task<Void> task = executors.pushProviderTask();
                 task.execute("createOrResetWorker", new Callable<Void>() {
                     @Override
                     public Void call() {
@@ -749,7 +749,7 @@ public class PushProviders implements CTPushProviderListener {
      * Fetches latest tokens from various providers and send to Clevertap's server
      */
     private void refreshAllTokens() {
-        Task<Void> task = executors.postAsyncSafelyTask(TAG);
+        Task<Void> task = executors.pushProviderTask();
         task.execute("PushProviders#refreshAllTokens", new Callable<Void>() {
             @Override
             public Void call() {
