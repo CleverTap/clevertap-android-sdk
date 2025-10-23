@@ -23,6 +23,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.text.TextUtils;
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -1373,12 +1374,28 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * The InApp Notifications will be displayed only once resumeInAppNotifications() is called.
      * @noinspection unused
      */
+    @MainThread
     public void discardInAppNotifications() {
+        discardInAppNotifications(false);
+    }
+
+    /**
+     * Suspends the display of InApp Notifications and discards any new InApp Notifications to be shown
+     * after this method is called.
+     * <p>
+     * The InApp Notifications will be displayed only once resumeInAppNotifications() is called.
+     *
+     * @param dismissInAppIfVisible if true, dismisses the currently visible InApp (if any) immediately;
+     *                              if false, allows the currently visible InApp to remain displayed
+     * @noinspection unused
+     */
+    @MainThread
+    public void discardInAppNotifications(boolean dismissInAppIfVisible) {
         if (!coreState.getConfig().isAnalyticsOnly()) {
             getConfigLogger().debug(getAccountId(), "Discarding InApp Notifications...");
             getConfigLogger().debug(getAccountId(),
                     "Please Note - InApp Notifications will be dropped till resumeInAppNotifications() is not called again");
-            coreState.getInAppController().discardInApps();
+            coreState.getInAppController().discardInApps(dismissInAppIfVisible);
         } else {
             getConfigLogger().debug(getAccountId(),
                     "CleverTap instance is set for Analytics only! Cannot discard InApp Notifications.");
