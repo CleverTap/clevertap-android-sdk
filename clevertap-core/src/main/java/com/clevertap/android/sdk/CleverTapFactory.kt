@@ -277,19 +277,10 @@ internal object CleverTapFactory {
         contentFetchManager.clevertapResponseHandler = responseHandler
 
         val networkManager = NetworkManager(
-            context = context,
-            config = config,
-            deviceInfo = deviceInfo,
-            coreMetaData = coreMetaData,
-            databaseManager = databaseManager,
-            callbackManager = callbackManager,
             ctApiWrapper = ctApiWrapper,
             encryptionManager = encryptionManager,
-            arpResponse = arpResponse,
             networkRepo = networkRepo,
-            queueHeaderBuilder = queueHeaderBuilder,
-            cleverTapResponseHandler = responseHandler,
-            ctVariables = ctVariables
+            queueHeaderBuilder = queueHeaderBuilder
         )
 
         val loginInfoProvider = LoginInfoProvider(
@@ -349,7 +340,6 @@ internal object CleverTapFactory {
             { FileResourceProvider.getInstance(context, config.logger) }
         )
 
-        networkManager.addNetworkHeadersListener(evaluationManager)
         val inAppController = InAppController(
             context,
             config,
@@ -434,9 +424,14 @@ internal object CleverTapFactory {
         // Network layer
         val networkFeature = NetworkFeature(
             networkManager = networkManager,
-            contentFetchManager = contentFetchManager
+            contentFetchManager = contentFetchManager,
+            encryptionManager = encryptionManager,
+            arpResponse = arpResponse,
+            clevertapResponseHandler = responseHandler,
+            networkHeadersListeners = mutableListOf()
         )
-        
+        networkFeature.addNetworkHeadersListener(evaluationManager)
+
         // Analytics
         val analyticsFeature = AnalyticsFeature(
             analyticsManager = analyticsManager,

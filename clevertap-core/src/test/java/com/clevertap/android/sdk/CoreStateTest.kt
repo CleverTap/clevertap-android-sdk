@@ -8,18 +8,30 @@ import com.clevertap.android.sdk.features.*
 import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.ContentFetchManager
+import com.clevertap.android.sdk.network.EndpointId
+import com.clevertap.android.sdk.network.NetworkEncryptionManager
+import com.clevertap.android.sdk.network.NetworkHeadersListener
+import com.clevertap.android.sdk.network.api.CtApi
+import com.clevertap.android.sdk.network.api.EncryptionFailure
+import com.clevertap.android.sdk.network.api.EncryptionSuccess
+import com.clevertap.android.sdk.network.api.SendQueueRequestBody
+import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.pushnotification.PushProviders
+import com.clevertap.android.sdk.response.ARPResponse
+import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import io.mockk.*
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import kotlin.test.assertNull
+import kotlin.test.*
 
 class CoreStateTest {
 
@@ -41,6 +53,9 @@ class CoreStateTest {
     private lateinit var cTVariables: CTVariables
     private lateinit var storeProvider: StoreProvider
     private lateinit var variablesRepo: VariablesRepo
+    private lateinit var encryptionManager: NetworkEncryptionManager
+    private lateinit var arpResponse: ARPResponse
+    private lateinit var clevertapResponseHandler: ClevertapResponseHandler
 
     // Feature objects
     private lateinit var coreFeature: CoreFeature
@@ -74,9 +89,13 @@ class CoreStateTest {
         cTVariables = mockk(relaxed = true)
         storeProvider = mockk(relaxed = true)
         variablesRepo = mockk(relaxed = true)
+        encryptionManager = mockk(relaxed = true)
+        arpResponse = mockk(relaxed = true)
+        clevertapResponseHandler = mockk(relaxed = true)
 
         every { config.accountId } returns "testAccount"
         every { config.getLogger() } returns mockk(relaxed = true)
+        every { config.logger } returns mockk(relaxed = true)
 
         // Create feature objects
         coreFeature = mockk(relaxed = true) {
@@ -101,6 +120,10 @@ class CoreStateTest {
         networkFeature = mockk(relaxed = true) {
             every { networkManager } returns mockk(relaxed = true)
             every { contentFetchManager } returns this@CoreStateTest.contentFetchManager
+            every { encryptionManager } returns this@CoreStateTest.encryptionManager
+            every { arpResponse } returns this@CoreStateTest.arpResponse
+            every { clevertapResponseHandler } returns this@CoreStateTest.clevertapResponseHandler
+            every { networkHeadersListeners } returns mutableListOf()
         }
 
         analyticsFeature = mockk(relaxed = true) {
@@ -167,6 +190,506 @@ class CoreStateTest {
     @After
     fun tearDown() {
         unmockkAll()
+    }
+
+    // ========== CoreContract Response Handling Tests ==========
+
+    @Test
+    fun `handleSendQueueResponse with valid response should delegate to handler`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        val requestBody = SendQueueRequestBody(JSONObject(), JSONArray())
+        val endpointId = EndpointId.ENDPOINT_A1
+        val responseBody = JSONObject().apply {
+            put("key", "value")
+        }.toString()
+
+        every { response.readBody() } returns responseBody
+        every { response.getHeaderValue(CtApi.HEADER_ENCRYPTION_ENABLED) } returns "false"
+
+        // Act
+        coreState.handleSendQueueResponse(
+            response = response,
+            isFullResponse = true,
+            requestBody = requestBody,
+            endpointId = endpointId,
+            isUserSwitchFlush = false
+        )
+
+        // Assert
+        verify { clevertapResponseHandler.handleResponse(true, any(), responseBody, false) }
+        verify { callbackManager.invokeBatchListener(requestBody.queue, true) }
+    }
+
+    @Test
+    fun `handleSendQueueResponse with null body should invoke success callback only`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        val requestBody = SendQueueRequestBody(JSONObject(), JSONArray())
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        every { response.readBody() } returns null
+
+        // Act
+        coreState.handleSendQueueResponse(
+            response = response,
+            isFullResponse = true,
+            requestBody = requestBody,
+            endpointId = endpointId,
+            isUserSwitchFlush = false
+        )
+
+        // Assert
+        verify(exactly = 0) { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify { callbackManager.invokeBatchListener(requestBody.queue, true) }
+    }
+
+    @Test
+    fun `handleSendQueueResponse with empty body should invoke success callback only`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        val requestBody = SendQueueRequestBody(JSONObject(), JSONArray())
+        val endpointId = EndpointId.ENDPOINT_A1
+
+        every { response.readBody() } returns ""
+
+        // Act
+        coreState.handleSendQueueResponse(
+            response = response,
+            isFullResponse = true,
+            requestBody = requestBody,
+            endpointId = endpointId,
+            isUserSwitchFlush = false
+        )
+
+        // Assert
+        verify(exactly = 0) { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify { callbackManager.invokeBatchListener(requestBody.queue, true) }
+    }
+
+    @Test
+    fun `handleSendQueueResponse with encrypted response should decrypt and process`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        val requestBody = SendQueueRequestBody(JSONObject(), JSONArray())
+        val endpointId = EndpointId.ENDPOINT_A1
+        val encryptedBody = JSONObject().apply {
+            put("data", "encrypted-data")
+        }.toString()
+        val decryptedBody = JSONObject().apply {
+            put("decrypted", "data")
+        }.toString()
+
+        every { response.readBody() } returns encryptedBody
+        every { response.getHeaderValue(CtApi.HEADER_ENCRYPTION_ENABLED) } returns "true"
+        every { encryptionManager.decryptResponse(encryptedBody) } returns EncryptionSuccess(decryptedBody, "iv")
+
+        // Act
+        coreState.handleSendQueueResponse(
+            response = response,
+            isFullResponse = false,
+            requestBody = requestBody,
+            endpointId = endpointId,
+            isUserSwitchFlush = true
+        )
+
+        // Assert
+        verify { encryptionManager.decryptResponse(encryptedBody) }
+        verify { clevertapResponseHandler.handleResponse(false, any(), decryptedBody, true) }
+        verify { callbackManager.invokeBatchListener(requestBody.queue, true) }
+    }
+
+    @Test
+    fun `handleSendQueueResponse with encryption failure should invoke failure callback`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        val requestBody = SendQueueRequestBody(JSONObject(), JSONArray())
+        val endpointId = EndpointId.ENDPOINT_A1
+        val encryptedBody = """
+            {"data": "encrypted-data"}
+        """.trimIndent()
+
+        every { response.readBody() } returns encryptedBody
+        every { response.getHeaderValue(CtApi.HEADER_ENCRYPTION_ENABLED) } returns "true"
+        every { encryptionManager.decryptResponse(encryptedBody) } returns EncryptionFailure
+
+        // Act
+        coreState.handleSendQueueResponse(
+            response = response,
+            isFullResponse = true,
+            requestBody = requestBody,
+            endpointId = endpointId,
+            isUserSwitchFlush = false
+        )
+
+        // Assert
+        verify { encryptionManager.decryptResponse(encryptedBody) }
+        verify(exactly = 0) { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify { callbackManager.invokeBatchListener(requestBody.queue, false) }
+    }
+
+    @Test
+    fun `handleVariablesResponse should delegate to ARPResponse`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        val responseBody = JSONObject().apply {
+            put("vars", "data")
+        }.toString()
+
+        every { response.readBody() } returns responseBody
+
+        // Act
+        coreState.handleVariablesResponse(response)
+
+        // Assert
+        verify { arpResponse.processResponse(any(), responseBody, context) }
+    }
+
+    @Test
+    fun `handleVariablesResponse with null body should still call ARPResponse`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        every { response.readBody() } returns null
+
+        // Act
+        coreState.handleVariablesResponse(response)
+
+        // Assert
+        verify { arpResponse.processResponse(null, null, context) }
+    }
+
+    @Test
+    fun `handlePushImpressionsResponse should notify push listeners`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        val queue = JSONArray().apply {
+            put(JSONObject().apply {
+                put("type", "event")
+                put("evtData", JSONObject().apply {
+                    put(Constants.WZRK_PUSH_ID, "push123")
+                    put(Constants.WZRK_ACCT_ID_KEY, "account456")
+                })
+            })
+        }
+
+        every { response.readBody() } returns JSONObject().toString()
+        
+        // Mock the static method
+        mockkStatic(CleverTapAPI::class)
+        val mockListener = mockk<com.clevertap.android.sdk.interfaces.NotificationRenderedListener>(relaxed = true)
+        every { CleverTapAPI.getNotificationRenderedListener(any()) } returns mockListener
+
+        // Act
+        coreState.handlePushImpressionsResponse(response, queue)
+
+        // Assert
+        verify { mockListener.onNotificationRendered(true) }
+    }
+
+    @Test
+    fun `handlePushImpressionsResponse with empty queue should complete without errors`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        val queue = JSONArray()
+
+        every { response.readBody() } returns JSONObject().toString()
+
+        // Act - should not throw
+        coreState.handlePushImpressionsResponse(response, queue)
+
+        // Assert - no exceptions
+    }
+
+    @Test
+    fun `handlePushImpressionsResponse with malformed event should skip and continue`() {
+        // Arrange
+        val response = mockk<Response>(relaxed = true)
+        val queue = JSONArray().apply {
+            put(JSONObject().apply {
+                put("type", "event")
+                // Missing evtData
+            })
+            put(JSONObject().apply {
+                put("type", "event")
+                put("evtData", JSONObject().apply {
+                    put(Constants.WZRK_PUSH_ID, "push456")
+                    put(Constants.WZRK_ACCT_ID_KEY, "account789")
+                })
+            })
+        }
+
+        every { response.readBody() } returns JSONObject().toString()
+        
+        mockkStatic(CleverTapAPI::class)
+        val mockListener = mockk<com.clevertap.android.sdk.interfaces.NotificationRenderedListener>(relaxed = true)
+        every { CleverTapAPI.getNotificationRenderedListener(any()) } returns mockListener
+
+        // Act - should not throw
+        coreState.handlePushImpressionsResponse(response, queue)
+
+        // Assert - should process valid event
+        verify { mockListener.onNotificationRendered(true) }
+    }
+
+    // ========== CoreContract Callback Tests ==========
+
+    @Test
+    fun `onNetworkError should invoke callback manager`() {
+        // Act
+        coreState.onNetworkError()
+
+        // Assert
+        verify { callbackManager.invokeCallbacksForNetworkError(cTVariables) }
+    }
+
+    @Test
+    fun `onNetworkSuccess should invoke batch listener`() {
+        // Arrange
+        val queue = JSONArray().apply {
+            put(JSONObject())
+        }
+
+        // Act
+        coreState.onNetworkSuccess(queue, true)
+
+        // Assert
+        verify { callbackManager.invokeBatchListener(queue, true) }
+    }
+
+    @Test
+    fun `onNetworkSuccess with failure should invoke batch listener with false`() {
+        // Arrange
+        val queue = JSONArray()
+
+        // Act
+        coreState.onNetworkSuccess(queue, false)
+
+        // Assert
+        verify { callbackManager.invokeBatchListener(queue, false) }
+    }
+
+    @Test
+    fun `onFlushFailure should invoke failure flush listener`() {
+        // Arrange
+        val mockFailureListener = mockk<FailureFlushListener>(relaxed = true)
+        every { callbackManager.failureFlushListener } returns mockFailureListener
+
+        // Act
+        coreState.onFlushFailure(context)
+
+        // Assert
+        verify { mockFailureListener.failureFlush(context) }
+    }
+
+    @Test
+    fun `onFlushFailure with null listener should not throw`() {
+        // Arrange
+        every { callbackManager.failureFlushListener } returns null
+
+        // Act - should not throw
+        coreState.onFlushFailure(context)
+
+        // Assert - no exception
+    }
+
+    // ========== CoreContract Header Management Tests ==========
+
+    @Test
+    fun `notifyHeadersSent should notify all registered listeners`() {
+        // Arrange
+        val headers = JSONObject().apply {
+            put("X-Custom", "value")
+        }
+        val endpointId = EndpointId.ENDPOINT_A1
+        val listener1 = mockk<NetworkHeadersListener>(relaxed = true)
+        val listener2 = mockk<NetworkHeadersListener>(relaxed = true)
+        
+        every { networkFeature.networkHeadersListeners } returns mutableListOf(listener1, listener2)
+
+        // Act
+        coreState.notifyHeadersSent(headers, endpointId)
+
+        // Assert
+        verify { listener1.onSentHeaders(headers, endpointId) }
+        verify { listener2.onSentHeaders(headers, endpointId) }
+    }
+
+    @Test
+    fun `notifyHeadersSent with no listeners should complete without errors`() {
+        // Arrange
+        val headers = JSONObject()
+        val endpointId = EndpointId.ENDPOINT_A1
+        every { networkFeature.networkHeadersListeners } returns mutableListOf()
+
+        // Act - should not throw
+        coreState.notifyHeadersSent(headers, endpointId)
+
+        // Assert - no exception
+    }
+
+    @Test
+    fun `getHeadersToAttach should combine headers from all listeners`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+        val listener1 = mockk<NetworkHeadersListener>()
+        val listener2 = mockk<NetworkHeadersListener>()
+        
+        val headers1 = JSONObject().apply {
+            put("X-Header1", "value1")
+        }
+        val headers2 = JSONObject().apply {
+            put("X-Header2", "value2")
+        }
+        
+        every { listener1.onAttachHeaders(endpointId) } returns headers1
+        every { listener2.onAttachHeaders(endpointId) } returns headers2
+        every { networkFeature.networkHeadersListeners } returns mutableListOf(listener1, listener2)
+
+        // Act
+        val result = coreState.getHeadersToAttach(endpointId)
+
+        // Assert
+        assertNotNull(result)
+        assertTrue(result.has("X-Header1"))
+        assertTrue(result.has("X-Header2"))
+        assertEquals("value1", result.getString("X-Header1"))
+        assertEquals("value2", result.getString("X-Header2"))
+    }
+
+    @Test
+    fun `getHeadersToAttach with null responses should return null`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+        val listener = mockk<NetworkHeadersListener>()
+        
+        every { listener.onAttachHeaders(endpointId) } returns null
+        every { networkFeature.networkHeadersListeners } returns mutableListOf(listener)
+
+        // Act
+        val result = coreState.getHeadersToAttach(endpointId)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun `getHeadersToAttach with no listeners should return null`() {
+        // Arrange
+        val endpointId = EndpointId.ENDPOINT_A1
+        every { networkFeature.networkHeadersListeners } returns mutableListOf()
+
+        // Act
+        val result = coreState.getHeadersToAttach(endpointId)
+
+        // Assert
+        assertNull(result)
+    }
+
+    // ========== CoreContract Domain Notification Tests ==========
+
+    @Test
+    fun `notifySCDomainAvailable should notify SCDomain listener`() {
+        // Arrange
+        val domain = "test.domain.com"
+        val mockListener = mockk<com.clevertap.android.sdk.interfaces.SCDomainListener>(relaxed = true)
+        every { callbackManager.scDomainListener } returns mockListener
+
+        // Act
+        coreState.notifySCDomainAvailable(domain)
+
+        // Assert
+        verify { mockListener.onSCDomainAvailable(domain) }
+    }
+
+    @Test
+    fun `notifySCDomainAvailable with null listener should not throw`() {
+        // Arrange
+        every { callbackManager.scDomainListener } returns null
+
+        // Act - should not throw
+        coreState.notifySCDomainAvailable("domain.com")
+
+        // Assert - no exception
+    }
+
+    @Test
+    fun `notifySCDomainUnavailable should notify SCDomain listener`() {
+        // Arrange
+        val mockListener = mockk<com.clevertap.android.sdk.interfaces.SCDomainListener>(relaxed = true)
+        every { callbackManager.scDomainListener } returns mockListener
+
+        // Act
+        coreState.notifySCDomainUnavailable()
+
+        // Assert
+        verify { mockListener.onSCDomainUnavailable() }
+    }
+
+    @Test
+    fun `notifySCDomainUnavailable with null listener should not throw`() {
+        // Arrange
+        every { callbackManager.scDomainListener } returns null
+
+        // Act - should not throw
+        coreState.notifySCDomainUnavailable()
+
+        // Assert - no exception
+    }
+
+    // ========== CoreContract Dependencies Tests ==========
+
+    @Test
+    fun `getContext should return context from CoreFeature`() {
+        // Act
+        val result = coreState.context()
+
+        // Assert
+        assertEquals(context, result)
+    }
+
+    @Test
+    fun `getConfig should return config from CoreFeature`() {
+        // Act
+        val result = coreState.config()
+
+        // Assert
+        assertEquals(config, result)
+    }
+
+    @Test
+    fun `getDeviceInfo should return deviceInfo from CoreFeature`() {
+        // Act
+        val result = coreState.deviceInfo()
+
+        // Assert
+        assertEquals(deviceInfo, result)
+    }
+
+    @Test
+    fun `getCoreMetaData should return coreMetaData from CoreFeature`() {
+        // Act
+        val result = coreState.coreMetaData()
+
+        // Assert
+        assertEquals(coreMetaData, result)
+    }
+
+    @Test
+    fun `getDatabase should return databaseManager from DataFeature`() {
+        // Act
+        val result = coreState.database()
+
+        // Assert
+        assertEquals(databaseManager, result)
+    }
+
+    @Test
+    fun `getLogger should return logger from Config`() {
+        // Act
+        val result = coreState.logger()
+
+        // Assert
+        verify { config.logger }
     }
 
     // ========== asyncProfileSwitchUser Tests ==========

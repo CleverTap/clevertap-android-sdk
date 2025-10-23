@@ -13,7 +13,6 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.events.EventMediator
-import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.features.AnalyticsFeature
 import com.clevertap.android.sdk.features.CallbackFeature
@@ -38,7 +37,10 @@ import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.ContentFetchManager
+import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.api.SendQueueRequestBody
+import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.product_config.CTProductConfigController
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory
 import com.clevertap.android.sdk.pushnotification.PushProviders
@@ -53,6 +55,9 @@ import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import com.clevertap.android.sdk.video.VideoLibChecker
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 
 @Suppress("DEPRECATION")
 internal open class CoreState(
@@ -67,7 +72,11 @@ internal open class CoreState(
     val push: PushFeature,
     val lifecycle: LifecycleFeature,
     val callback: CallbackFeature
-) {
+) : CoreContract {
+
+    init {
+        network.coreContract(this)
+    }
 
     // Backward compatibility accessors - delegate to feature groups
     val context: Context get() = core.context
@@ -672,5 +681,162 @@ internal open class CoreState(
 
     private fun resetVariables() {
         variables.cTVariables.clearUserContent()
+    }
+
+    override fun handleSendQueueResponse(
+        response: Response,
+        isFullResponse: Boolean,
+        requestBody: SendQueueRequestBody,
+        endpointId: EndpointId,
+        isUserSwitchFlush: Boolean
+    ) {
+        var bodyString: String? = response.readBody()
+        var bodyJson: JSONObject? = bodyString.toJsonOrNull()
+
+        core.config.logger.verbose(config.accountId, "Processing response : $bodyJson")
+
+        if (bodyString.isNullOrBlank() || bodyJson == null) {
+            callback.callbackManager.invokeBatchListener(requestBody.queue, true)
+            return
+        }
+
+        // Handle decryption if needed
+        val isEncryptedResponse = response.getHeaderValue(
+            com.clevertap.android.sdk.network.api.CtApi.HEADER_ENCRYPTION_ENABLED
+        ).toBoolean()
+
+        if (isEncryptedResponse) {
+            when (val decryptResponse = network.encryptionManager.decryptResponse(bodyString = bodyString)) {
+                is com.clevertap.android.sdk.network.api.EncryptionFailure -> {
+                    core.config.logger.verbose(config.accountId, "Failed to decrypt response")
+                    callback.callbackManager.invokeBatchListener(requestBody.queue, false)
+                    return
+                }
+                is com.clevertap.android.sdk.network.api.EncryptionSuccess -> {
+                    bodyString = decryptResponse.data
+                    bodyJson = bodyString.toJsonOrNull()
+                    core.config.logger.verbose("Decrypted response = $bodyString")
+                }
+            }
+        }
+
+        // Delegate to response handler
+        network.clevertapResponseHandler.handleResponse(
+            isFullResponse,
+            bodyJson,
+            bodyString,
+            isUserSwitchFlush
+        )
+
+        // Notify success
+        callback.callbackManager.invokeBatchListener(requestBody.queue, true)
+    }
+
+    override fun handleVariablesResponse(response: Response) {
+        val bodyString = response.readBody()
+        val bodyJson = bodyString.toJsonOrNull()
+
+        core.config.logger.verbose(config.accountId, "Processing variables response : $bodyJson")
+
+        // Process through ARP response handler
+        network.arpResponse.processResponse(bodyJson, bodyString, core.context)
+    }
+
+    override fun handlePushImpressionsResponse(response: Response, queue: JSONArray) {
+        core.config.logger.verbose(
+            config.accountId,
+            "Processing push impressions response : ${response.readBody().toJsonOrNull()}"
+        )
+
+        // Notify listeners for push impressions
+        notifyListenersForPushImpressionSentToServer(queue)
+    }
+
+    override fun onNetworkError() {
+        callback.callbackManager.invokeCallbacksForNetworkError(variables.cTVariables)
+    }
+
+    override fun onNetworkSuccess(queue: JSONArray, success: Boolean) {
+        callback.callbackManager.invokeBatchListener(queue, success)
+    }
+
+    override fun onFlushFailure(context: Context) {
+        callback.callbackManager.failureFlushListener?.failureFlush(context)
+    }
+
+    override fun notifyHeadersSent(allHeaders: JSONObject, endpointId: EndpointId) {
+        val networkHeadersListeners = network.networkHeadersListeners
+        for (listener in networkHeadersListeners) {
+            listener.onSentHeaders(allHeaders, endpointId)
+        }
+    }
+
+    override fun getHeadersToAttach(endpointId: EndpointId): JSONObject? {
+        val networkHeadersListeners = network.networkHeadersListeners
+        val combinedHeaders = JSONObject()
+
+        for (listener in networkHeadersListeners) {
+            val headersToAttach = listener.onAttachHeaders(endpointId)
+            if (headersToAttach != null) {
+                combinedHeaders.copyFrom(headersToAttach)
+            }
+        }
+
+        return if (combinedHeaders.length() > 0) combinedHeaders else null
+    }
+
+    override fun notifySCDomainAvailable(domain: String) {
+        callback.callbackManager.scDomainListener?.onSCDomainAvailable(domain)
+    }
+
+    override fun notifySCDomainUnavailable() {
+        callback.callbackManager.scDomainListener?.onSCDomainUnavailable()
+    }
+
+    // ============ CORE DEPENDENCIES ACCESS ============
+
+    override fun context(): Context = core.context
+    override fun config(): CleverTapInstanceConfig = core.config
+    override fun deviceInfo(): DeviceInfo = core.deviceInfo
+    override fun coreMetaData(): CoreMetaData = core.coreMetaData
+    override fun database(): BaseDatabaseManager = data.databaseManager
+    override fun logger(): ILogger = core.config.logger
+
+    // ============ HELPER METHODS ============
+
+    @Throws(JSONException::class)
+    private fun notifyListenersForPushImpressionSentToServer(queue: JSONArray) {
+        for (i in 0..<queue.length()) {
+            try {
+                val notif = queue.getJSONObject(i).optJSONObject("evtData")
+                if (notif != null) {
+                    val pushId = notif.optString(Constants.WZRK_PUSH_ID)
+                    val pushAccountId = notif.optString(Constants.WZRK_ACCT_ID_KEY)
+
+                    notifyListenerForPushImpressionSentToServer(
+                        com.clevertap.android.sdk.pushnotification.PushNotificationUtil
+                            .buildPushNotificationRenderedListenerKey(
+                                pushAccountId,
+                                pushId
+                            )
+                    )
+                }
+            } catch (e: JSONException) {
+                core.config.logger.verbose(
+                    config.accountId,
+                    "Encountered an exception while parsing the push notification viewed event queue"
+                )
+            }
+        }
+
+        core.config.logger.verbose(
+            config.accountId,
+            "push notification viewed event sent successfully"
+        )
+    }
+
+    private fun notifyListenerForPushImpressionSentToServer(listenerKey: String) {
+        val notificationRenderedListener = CleverTapAPI.getNotificationRenderedListener(listenerKey)
+        notificationRenderedListener?.onNotificationRendered(true)
     }
 }
