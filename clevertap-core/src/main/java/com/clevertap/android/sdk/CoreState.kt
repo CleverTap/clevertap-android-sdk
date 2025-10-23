@@ -5,7 +5,6 @@ import android.text.TextUtils
 import androidx.annotation.AnyThread
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.StorageHelper.putString
-import com.clevertap.android.sdk.StoreProvider.Companion.getInstance
 import com.clevertap.android.sdk.cryption.CryptMigrator
 import com.clevertap.android.sdk.cryption.CryptRepository
 import com.clevertap.android.sdk.cryption.DataMigrationRepository
@@ -86,10 +85,18 @@ internal open class CoreState(
     internal var inAppFCManager: InAppFCManager? = null
     internal var ctInboxController: CTInboxController? = null
 
-    fun setInAppFCManager(inAppFCManager: InAppFCManager) {
-        this.inAppFCManager = inAppFCManager
-        this.inAppController.setInAppFCManager(inAppFCManager)
-        this.networkManager.setInAppFCManager(inAppFCManager)
+    fun initInAppFCManager(deviceId: String) {
+        val iam = InAppFCManager(
+            context, config, deviceId,
+            storeRegistry, impressionManager,
+            executors, SYSTEM
+        )
+        executors.postAsyncSafelyTask<Unit>().execute("initInAppFCManager") {
+            iam.init(deviceId)
+        }
+        this.inAppFCManager = iam
+        this.inAppController.setInAppFCManager(iam)
+        this.networkManager.setInAppFCManager(iam)
     }
 
     fun getInAppFCManager() : InAppFCManager? {
@@ -148,28 +155,7 @@ internal open class CoreState(
 
         val taskInitStores = executors.ioTask<Unit>()
         taskInitStores.execute("initStores") {
-            if (deviceInfo.getDeviceID() != null) {
-                if (storeRegistry.inAppStore == null) {
-                    val inAppStore: InAppStore = storeProvider.provideInAppStore(
-                        context = context,
-                        cryptHandler = cryptHandler,
-                        deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId
-                    )
-                    storeRegistry.inAppStore = inAppStore
-                    evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
-                    callbackManager.addChangeUserCallback(inAppStore)
-                }
-                if (storeRegistry.impressionStore == null) {
-                    val impStore: ImpressionStore = storeProvider.provideImpressionStore(
-                        context = context,
-                        deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId
-                    )
-                    storeRegistry.impressionStore = impStore
-                    callbackManager.addChangeUserCallback(impStore)
-                }
-            }
+            initInAppStores(deviceInfo.getDeviceID())
         }
 
         //Get device id should be async to avoid strict mode policy.
@@ -182,15 +168,7 @@ internal open class CoreState(
                         config.accountId + ":async_deviceID",
                         "Initializing InAppFC with device Id = $deviceId"
                     )
-                setInAppFCManager(InAppFCManager(
-                    context,
-                    config,
-                    deviceId,
-                    storeRegistry,
-                    impressionManager,
-                    executors,
-                    SYSTEM
-                ))
+                initInAppFCManager(deviceId)
             }
         }
 
@@ -216,6 +194,32 @@ internal open class CoreState(
             pushProviders.init()
         }
         asyncStartupp()
+    }
+
+    @WorkerThread
+    private fun initInAppStores(deviceId: String?) {
+        if (deviceId != null) {
+            if (storeRegistry.inAppStore == null) {
+                val inAppStore: InAppStore = storeProvider.provideInAppStore(
+                    context = context,
+                    cryptHandler = cryptHandler,
+                    deviceId = deviceId,
+                    accountId = config.accountId
+                )
+                storeRegistry.inAppStore = inAppStore
+                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
+                callbackManager.addChangeUserCallback(inAppStore)
+            }
+            if (storeRegistry.impressionStore == null) {
+                val impStore: ImpressionStore = storeProvider.provideImpressionStore(
+                    context = context,
+                    deviceId = deviceId,
+                    accountId = config.accountId
+                )
+                storeRegistry.impressionStore = impStore
+                callbackManager.addChangeUserCallback(impStore)
+            }
+        }
     }
 
     // todo rename better, picked from CleverTapAPI constructor.
@@ -269,7 +273,6 @@ internal open class CoreState(
             return
         }*/
 
-        val storeProvider = getInstance()
 
         // Inflate the local profile here as deviceId is required
         localDataStore.inflateLocalProfileAsync(context)
@@ -277,45 +280,19 @@ internal open class CoreState(
         // must move initStores task to async executor due to addChangeUserCallback synchronization
         val task: Task<Unit> = executors.ioTask<Unit>()
         task.execute("initStores") {
-            if (storeRegistry.inAppStore == null) {
-                val inAppStore = storeProvider.provideInAppStore(
-                    context = context,
-                    cryptHandler = cryptHandler,
-                    deviceId = deviceId,
-                    accountId = accountId
-                )
-                storeRegistry.inAppStore = inAppStore
-                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
-                callbackManager.addChangeUserCallback(inAppStore)
-            }
-            if (storeRegistry.impressionStore == null) {
-                val impStore = storeProvider.provideImpressionStore(
-                    context = context,
-                    deviceId = deviceId,
-                    accountId = accountId
-                )
-                storeRegistry.impressionStore = impStore
-                callbackManager.addChangeUserCallback(impStore)
-            }
+            initInAppStores(deviceId)
         }
-
 
         /*
           Reinitialising InAppFCManager with device id, if it's null
           during first initialisation from CleverTapFactory.getCoreState()
          */
-        if (getInAppFCManager() == null) {
+        if (inAppFCManager == null) {
             config.logger.verbose(
                 "$accountId:async_deviceID",
                 "Initializing InAppFC after Device ID Created = $deviceId"
             )
-            setInAppFCManager(
-                InAppFCManager(
-                    context, config, deviceId,
-                    storeRegistry, impressionManager,
-                    executors, SYSTEM
-                )
-            )
+            initInAppFCManager(deviceId)
         }
 
         //todo : replace with variables

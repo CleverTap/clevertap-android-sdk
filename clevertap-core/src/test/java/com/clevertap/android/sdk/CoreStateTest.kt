@@ -116,8 +116,8 @@ class CoreStateTest {
         val cacheGuid = "cached-guid-123"
         val cleverTapID = null
         val inAppFCManager = mockk<InAppFCManager>(relaxed = true)
+        coreState.inAppFCManager = inAppFCManager // intentionally force so we can verify method calls.
 
-        coreState.setInAppFCManager(inAppFCManager)
         every { coreMetaData.isCurrentUserOptedOut = any() } just Runs
         every { deviceInfo.forceUpdateDeviceId(any()) } just Runs
         every { deviceInfo.getDeviceID() } returns cacheGuid
