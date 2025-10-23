@@ -1,138 +1,105 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import static com.clevertap.android.sdk.CleverTapAPI.isAppForeground;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.location.Location
+import android.location.LocationManager
+import com.clevertap.android.sdk.events.BaseEventQueueManager
+import com.clevertap.android.sdk.utils.Clock
+import org.json.JSONObject
+import java.util.concurrent.Future
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.location.Location;
-import com.clevertap.android.sdk.events.BaseEventQueueManager;
-import java.util.List;
-import java.util.concurrent.Future;
-import org.json.JSONObject;
+internal class LocationManager(
+    private val mContext: Context,
+    private val mConfig: CleverTapInstanceConfig,
+    private val mCoreMetaData: CoreMetaData,
+    private val mBaseEventQueueManager: BaseEventQueueManager,
+    private val clock: Clock = Clock.SYSTEM
+) : BaseLocationManager {
+    var lastLocationPingTime: Int = 0
 
-class LocationManager extends BaseLocationManager {
+    var lastLocationPingTimeForGeofence: Int = 0
 
-    private int lastLocationPingTime = 0;
-
-    private int lastLocationPingTimeForGeofence = 0;
-
-    private final BaseEventQueueManager mBaseEventQueueManager;
-
-    private final CleverTapInstanceConfig mConfig;
-
-    private final Context mContext;
-
-    private final CoreMetaData mCoreMetaData;
-
-    private final Logger mLogger;
-
-    LocationManager(Context context,
-            CleverTapInstanceConfig config,
-            CoreMetaData coreMetaData,
-            BaseEventQueueManager baseEventQueueManager) {
-        mContext = context;
-        mConfig = config;
-        mLogger = mConfig.getLogger();
-        mCoreMetaData = coreMetaData;
-        mBaseEventQueueManager = baseEventQueueManager;
-    }
+    private val mLogger: Logger = mConfig.getLogger()
 
     @SuppressLint("MissingPermission")
-    @Override
-    public Location _getLocation() {
+    override fun _getLocation(): Location? {
         try {
-            android.location.LocationManager lm = (android.location.LocationManager) mContext
-                    .getSystemService(Context.LOCATION_SERVICE);
+            val lm = mContext
+                .getSystemService(Context.LOCATION_SERVICE) as LocationManager?
             if (lm == null) {
-                Logger.d("Location Manager is null.");
-                return null;
+                Logger.d("Location Manager is null.")
+                return null
             }
-            List<String> providers = lm.getProviders(true);
-            Location bestLocation = null;
-            Location l = null;
-            for (String provider : providers) {
+            val providers = lm.getProviders(true)
+            var bestLocation: Location? = null
+            var l: Location? = null
+            for (provider in providers) {
                 try {
-                    l = lm.getLastKnownLocation(provider);
-                } catch (SecurityException e) {
+                    l = lm.getLastKnownLocation(provider)
+                } catch (e: SecurityException) {
                     //no-op
-                    Logger.v("Location security exception", e);
+                    Logger.v("Location security exception", e)
                 }
 
                 if (l == null) {
-                    continue;
+                    continue
                 }
-                if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
-                    bestLocation = l;
+                if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
+                    bestLocation = l
                 }
             }
 
-            return bestLocation;
-        } catch (Throwable t) {
-            Logger.v("Couldn't get user's location", t);
-            return null;
+            return bestLocation
+        } catch (t: Throwable) {
+            Logger.v("Couldn't get user's location", t)
+            return null
         }
     }
 
-    @Override
-    Future<?> _setLocation(Location location) {
+    override fun _setLocation(location: Location?): Future<*>? {
         if (location == null) {
-            return null;
+            return null
         }
 
-        mCoreMetaData.setLocationFromUser(location);
-        mLogger.verbose(mConfig.getAccountId(),
-                "Location updated (" + location.getLatitude() + ", " + location.getLongitude() + ")");
+        mCoreMetaData.locationFromUser = location
+        mLogger.verbose(
+            mConfig.accountId,
+            "Location updated (" + location.latitude + ", " + location.longitude + ")"
+        )
 
         // only queue the location ping if we are in the foreground
-        if (!mCoreMetaData.isLocationForGeofence() && !isAppForeground()) {
-            return null;
+        if (!mCoreMetaData.isLocationForGeofence && !CleverTapAPI.isAppForeground()) {
+            return null
         }
 
         // Queue the ping event to transmit location update to server
         // min 10 second interval between location pings
-        final int now = getNow();
-        Future<?> future = null;
+        val now = clock.currentTimeSecondsInt()
+        var future: Future<*>? = null
 
-        if (mCoreMetaData.isLocationForGeofence() && now > (lastLocationPingTimeForGeofence
-                + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
-
-            future = mBaseEventQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
-            setLastLocationPingTimeForGeofence(now);
-            mLogger.verbose(mConfig.getAccountId(),
-                    "Queuing location ping event for geofence location (" + location.getLatitude() + ", " + location
-                            .getLongitude() + ")");
-
-        } else if (!mCoreMetaData.isLocationForGeofence() && now > (lastLocationPingTime
-                + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
-
-            future = mBaseEventQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
-            setLastLocationPingTime(now);
-            mLogger.verbose(mConfig.getAccountId(),
-                    "Queuing location ping event for location (" + location.getLatitude() + ", " + location
-                            .getLongitude() + ")");
+        if (mCoreMetaData.isLocationForGeofence && now > (lastLocationPingTimeForGeofence
+                    + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)
+        ) {
+            future = mBaseEventQueueManager.queueEvent(mContext, JSONObject(), Constants.PING_EVENT)
+            this.lastLocationPingTimeForGeofence = now
+            mLogger.verbose(
+                mConfig.accountId,
+                "Queuing location ping event for geofence location (" + location.latitude + ", " + location
+                    .longitude + ")"
+            )
+        } else if (!mCoreMetaData.isLocationForGeofence && now > (lastLocationPingTime
+                    + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)
+        ) {
+            future = mBaseEventQueueManager.queueEvent(mContext, JSONObject(), Constants.PING_EVENT)
+            this.lastLocationPingTime = now
+            mLogger.verbose(
+                mConfig.accountId,
+                "Queuing location ping event for location (" + location.latitude + ", " + location
+                    .longitude + ")"
+            )
         }
 
-        return future;
+        return future
     }
-
-    int getLastLocationPingTime() {
-        return lastLocationPingTime;
-    }
-
-    void setLastLocationPingTime(final int lastLocationPingTime) {
-        this.lastLocationPingTime = lastLocationPingTime;
-    }
-
-    int getLastLocationPingTimeForGeofence() {
-        return lastLocationPingTimeForGeofence;
-    }
-
-    void setLastLocationPingTimeForGeofence(final int lastLocationPingTimeForGeofence) {
-        this.lastLocationPingTimeForGeofence = lastLocationPingTimeForGeofence;
-    }
-
-    int getNow() {
-        return (int) (System.currentTimeMillis() / 1000);
-    }
-
 }

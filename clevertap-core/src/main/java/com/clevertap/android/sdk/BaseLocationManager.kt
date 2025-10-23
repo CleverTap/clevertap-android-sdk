@@ -1,11 +1,10 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import android.location.Location;
-import java.util.concurrent.Future;
+import android.location.Location
+import java.util.concurrent.Future
 
-public abstract class BaseLocationManager {
+internal interface BaseLocationManager {
+    fun _getLocation(): Location?
 
-    public abstract Location _getLocation();
-
-    abstract Future<?> _setLocation(final Location location);
+    fun _setLocation(location: Location?): Future<*>?
 }
