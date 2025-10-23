@@ -64,6 +64,17 @@ import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
+import com.clevertap.android.sdk.features.AnalyticsFeature
+import com.clevertap.android.sdk.features.CallbackFeature
+import com.clevertap.android.sdk.features.CoreFeature
+import com.clevertap.android.sdk.features.DataFeature
+import com.clevertap.android.sdk.features.InAppFeature
+import com.clevertap.android.sdk.features.InboxFeature
+import com.clevertap.android.sdk.features.LifecycleFeature
+import com.clevertap.android.sdk.features.NetworkFeature
+import com.clevertap.android.sdk.features.ProfileFeature
+import com.clevertap.android.sdk.features.PushFeature
+import com.clevertap.android.sdk.features.VariablesFeature
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -397,40 +408,99 @@ internal object CleverTapFactory {
             SYSTEM
         )
 
-        val state = CoreState(
+        // ========== Build Feature Groups ==========
+        
+        // Core infrastructure
+        val coreFeature = CoreFeature(
             context = context,
-            locationManager = locationManager,
             config = config,
-            coreMetaData = coreMetaData,
-            databaseManager = databaseManager,
             deviceInfo = deviceInfo,
-            eventMediator = eventMediator,
+            coreMetaData = coreMetaData,
+            executors = executors,
+            mainLooperHandler = mainLooperHandler,
+            validationResultStack = validationResultStack,
+            cryptHandler = cryptHandler,
+            clock = SYSTEM
+        )
+        
+        // Data layer
+        val dataFeature = DataFeature(
+            databaseManager = databaseManager,
             localDataStore = localDataStore,
-            activityLifeCycleManager = activityLifeCycleManager,
+            storeRegistry = storeRegistry,
+            storeProvider = storeProvider
+        )
+        
+        // Network layer
+        val networkFeature = NetworkFeature(
+            networkManager = networkManager,
+            contentFetchManager = contentFetchManager
+        )
+        
+        // Analytics
+        val analyticsFeature = AnalyticsFeature(
             analyticsManager = analyticsManager,
             baseEventQueueManager = baseEventQueueManager,
-            cTLockManager = ctLockManager,
-            callbackManager = callbackManager,
+            eventMediator = eventMediator,
+            sessionManager = sessionManager
+        )
+        
+        // Profile
+        val profileFeature = ProfileFeature(
+            loginInfoProvider = loginInfoProvider,
+            profileValueHandler = profileValueHandler,
+            locationManager = locationManager
+        )
+        
+        // InApp
+        val inAppFeature = InAppFeature(
             inAppController = inAppController,
             evaluationManager = evaluationManager,
             impressionManager = impressionManager,
-            sessionManager = sessionManager,
-            validationResultStack = validationResultStack,
-            mainLooperHandler = mainLooperHandler,
-            networkManager = networkManager,
-            pushProviders = pushProviders,
+            templatesManager = templatesManager
+        )
+        
+        // Inbox
+        val inboxFeature = InboxFeature(
+            cTLockManager = ctLockManager
+        )
+        
+        // Variables
+        val variablesFeature = VariablesFeature(
+            cTVariables = ctVariables,
             varCache = varCache,
             parser = parser,
-            cryptHandler = cryptHandler,
-            storeRegistry = storeRegistry,
-            templatesManager = templatesManager,
-            profileValueHandler = profileValueHandler,
-            cTVariables = ctVariables,
-            executors = executors,
-            contentFetchManager = contentFetchManager,
-            loginInfoProvider = loginInfoProvider,
-            storeProvider = storeProvider,
             variablesRepository = variablesRepo
+        )
+        
+        // Push
+        val pushFeature = PushFeature(
+            pushProviders = pushProviders
+        )
+        
+        // Lifecycle
+        val lifecycleFeature = LifecycleFeature(
+            activityLifeCycleManager = activityLifeCycleManager
+        )
+        
+        // Callback
+        val callbackFeature = CallbackFeature(
+            callbackManager = callbackManager
+        )
+        
+        // ========== Create CoreState with Feature Groups ==========
+        val state = CoreState(
+            core = coreFeature,
+            data = dataFeature,
+            network = networkFeature,
+            analytics = analyticsFeature,
+            profileFeat = profileFeature,
+            inApp = inAppFeature,
+            inbox = inboxFeature,
+            variables = variablesFeature,
+            push = pushFeature,
+            lifecycle = lifecycleFeature,
+            callback = callbackFeature
         )
         state.asyncStartup()
         return state

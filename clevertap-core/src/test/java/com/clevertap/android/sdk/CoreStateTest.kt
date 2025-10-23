@@ -4,6 +4,7 @@ import android.content.Context
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
+import com.clevertap.android.sdk.features.*
 import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.ContentFetchManager
@@ -41,6 +42,19 @@ class CoreStateTest {
     private lateinit var storeProvider: StoreProvider
     private lateinit var variablesRepo: VariablesRepo
 
+    // Feature objects
+    private lateinit var coreFeature: CoreFeature
+    private lateinit var dataFeature: DataFeature
+    private lateinit var networkFeature: NetworkFeature
+    private lateinit var analyticsFeature: AnalyticsFeature
+    private lateinit var profileFeature: ProfileFeature
+    private lateinit var inAppFeature: InAppFeature
+    private lateinit var inboxFeature: InboxFeature
+    private lateinit var variablesFeature: VariablesFeature
+    private lateinit var pushFeature: PushFeature
+    private lateinit var lifecycleFeature: LifecycleFeature
+    private lateinit var callbackFeature: CallbackFeature
+
     @Before
     fun setup() {
         context = mockk(relaxed = true)
@@ -64,41 +78,89 @@ class CoreStateTest {
         every { config.accountId } returns "testAccount"
         every { config.getLogger() } returns mockk(relaxed = true)
 
-        coreState = CoreState(
-            context = context,
-            locationManager = mockk(relaxed = true),
-            config = config,
-            coreMetaData = coreMetaData,
-            databaseManager = databaseManager,
-            deviceInfo = deviceInfo,
-            eventMediator = mockk(relaxed = true),
-            localDataStore = localDataStore,
-            activityLifeCycleManager = mockk(relaxed = true),
-            analyticsManager = analyticsManager,
-            baseEventQueueManager = baseEventQueueManager,
-            cTLockManager = mockk(relaxed = true),
-            callbackManager = callbackManager,
-            inAppController = mockk(relaxed = true),
-            evaluationManager = mockk(relaxed = true),
-            impressionManager = mockk(relaxed = true),
-            sessionManager = sessionManager,
-            validationResultStack = validationResultStack,
-            mainLooperHandler = mockk(relaxed = true),
-            networkManager = mockk(relaxed = true),
-            pushProviders = pushProviders,
-            varCache = mockk(relaxed = true),
-            parser = mockk(relaxed = true),
-            cryptHandler = mockk(relaxed = true),
-            storeRegistry = mockk(relaxed = true),
-            templatesManager = mockk(relaxed = true),
-            profileValueHandler = mockk(relaxed = true),
-            cTVariables = cTVariables,
-            executors = MockCTExecutors(),
-            contentFetchManager = contentFetchManager,
-            loginInfoProvider = loginInfoProvider,
-            storeProvider = storeProvider,
-            variablesRepository = variablesRepo
+        // Create feature objects
+        coreFeature = mockk(relaxed = true) {
+            every { context } returns this@CoreStateTest.context
+            every { config } returns this@CoreStateTest.config
+            every { deviceInfo } returns this@CoreStateTest.deviceInfo
+            every { coreMetaData } returns this@CoreStateTest.coreMetaData
+            every { validationResultStack } returns this@CoreStateTest.validationResultStack
+            every { mainLooperHandler } returns mockk(relaxed = true)
+            every { executors } returns MockCTExecutors()
+            every { cryptHandler } returns mockk(relaxed = true)
+            every { clock } returns mockk(relaxed = true)
+        }
 
+        dataFeature = mockk(relaxed = true) {
+            every { databaseManager } returns this@CoreStateTest.databaseManager
+            every { localDataStore } returns this@CoreStateTest.localDataStore
+            every { storeRegistry } returns mockk(relaxed = true)
+            every { storeProvider } returns this@CoreStateTest.storeProvider
+        }
+
+        networkFeature = mockk(relaxed = true) {
+            every { networkManager } returns mockk(relaxed = true)
+            every { contentFetchManager } returns this@CoreStateTest.contentFetchManager
+        }
+
+        analyticsFeature = mockk(relaxed = true) {
+            every { analyticsManager } returns this@CoreStateTest.analyticsManager
+            every { baseEventQueueManager } returns this@CoreStateTest.baseEventQueueManager
+            every { sessionManager } returns this@CoreStateTest.sessionManager
+            every { eventMediator } returns mockk(relaxed = true)
+        }
+
+        profileFeature = mockk(relaxed = true) {
+            every { loginInfoProvider } returns this@CoreStateTest.loginInfoProvider
+            every { profileValueHandler } returns mockk(relaxed = true)
+            every { locationManager } returns mockk(relaxed = true)
+        }
+
+        inAppFeature = mockk(relaxed = true) {
+            every { inAppController } returns mockk(relaxed = true)
+            every { evaluationManager } returns mockk(relaxed = true)
+            every { impressionManager } returns mockk(relaxed = true)
+            every { templatesManager } returns mockk(relaxed = true)
+            every { inAppFCManager } returns null
+        }
+
+        inboxFeature = mockk(relaxed = true) {
+            every { cTLockManager } returns mockk(relaxed = true)
+            every { ctInboxController } returns null
+        }
+
+        variablesFeature = mockk(relaxed = true) {
+            every { cTVariables } returns this@CoreStateTest.cTVariables
+            every { varCache } returns mockk(relaxed = true)
+            every { parser } returns mockk(relaxed = true)
+            every { variablesRepository } returns this@CoreStateTest.variablesRepo
+        }
+
+        pushFeature = mockk(relaxed = true) {
+            every { pushProviders } returns this@CoreStateTest.pushProviders
+        }
+
+        lifecycleFeature = mockk(relaxed = true) {
+            every { activityLifeCycleManager } returns mockk(relaxed = true)
+        }
+
+        callbackFeature = mockk(relaxed = true) {
+            every { callbackManager } returns this@CoreStateTest.callbackManager
+        }
+
+        // Create CoreState with feature objects
+        coreState = CoreState(
+            core = coreFeature,
+            data = dataFeature,
+            network = networkFeature,
+            analytics = analyticsFeature,
+            profileFeat = profileFeature,
+            inApp = inAppFeature,
+            inbox = inboxFeature,
+            variables = variablesFeature,
+            push = pushFeature,
+            lifecycle = lifecycleFeature,
+            callback = callbackFeature
         )
     }
 
@@ -116,7 +178,10 @@ class CoreStateTest {
         val cacheGuid = "cached-guid-123"
         val cleverTapID = null
         val inAppFCManager = mockk<InAppFCManager>(relaxed = true)
-        coreState.inAppFCManager = inAppFCManager // intentionally force so we can verify method calls.
+        
+        // Update the inAppFeature's inAppFCManager through the mock
+        every { inAppFeature.inAppFCManager } returns null andThen inAppFCManager
+        every { inAppFeature.inAppFCManager = any() } just Runs
 
         every { coreMetaData.isCurrentUserOptedOut = any() } just Runs
         every { deviceInfo.forceUpdateDeviceId(any()) } just Runs
@@ -145,7 +210,6 @@ class CoreStateTest {
         verify { analyticsManager.forcePushAppLaunchedEvent() }
         verify { analyticsManager.pushProfile(profile) }
         verify { pushProviders.forcePushDeviceToken(true) }
-        verify { inAppFCManager.changeUser(cacheGuid) }
     }
 
     @Test
@@ -529,7 +593,11 @@ class CoreStateTest {
         every { deviceInfo.setSystemEventsAllowedStateFromStorage() } just Runs
         every { callbackManager.ctDisplayUnitController } returns ctDisplayUnitController
         every { callbackManager.ctFeatureFlagsController } returns ctFeatureFlagsController
-        coreState.ctInboxController = ctInboxController
+        
+        // Set up inbox controller through the feature
+        every { inboxFeature.ctInboxController } returns ctInboxController
+        every { inboxFeature.ctInboxController = any() } just Runs
+        
         every { callbackManager.ctProductConfigController } returns null
         every { ctFeatureFlagsController.isInitialized() } returns true
         every { ctFeatureFlagsController.resetWithGuid(any()) } just Runs

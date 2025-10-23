@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 
+import androidx.annotation.RestrictTo;
+
 import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
@@ -18,7 +20,8 @@ import com.clevertap.android.sdk.utils.Clock;
 
 import java.util.concurrent.Callable;
 
-class ActivityLifeCycleManager {
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+public class ActivityLifeCycleManager {
 
     private final AnalyticsManager analyticsManager;
 
