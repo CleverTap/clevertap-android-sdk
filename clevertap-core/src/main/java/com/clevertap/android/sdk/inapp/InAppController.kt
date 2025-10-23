@@ -55,6 +55,7 @@ import com.clevertap.android.sdk.utils.filterObjects
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 import java.util.Collections
 
 internal class InAppController(
@@ -80,6 +81,17 @@ internal class InAppController(
         DISCARDED,
         SUSPENDED,
         RESUMED
+    }
+
+    private var inAppDisplayListener: WeakReference<InAppDisplayListener>? = null
+
+    fun registerInAppDisplayListener(display: InAppDisplayListener) {
+        inAppDisplayListener = WeakReference(display)
+    }
+
+    fun unregisterInAppDisplayListener() {
+        logger.verbose("Unregistering InAppDisplay Listener")
+        inAppDisplayListener = null
     }
 
     companion object {
@@ -329,9 +341,21 @@ internal class InAppController(
         }
     }
 
-    fun discardInApps() {
+    fun discardInApps(hideInAppIfVisible: Boolean = true) {
         inAppState = InAppState.DISCARDED
         logger.verbose(defaultLogTag, "InAppState is DISCARDED")
+
+        if (hideInAppIfVisible) {
+            logger.verbose(defaultLogTag, "Hiding InApp if visible")
+            hideCurrentlyDisplayingInApp()
+        }
+    }
+
+    private fun hideCurrentlyDisplayingInApp() {
+        val inApp = currentlyDisplayingInApp ?: return
+
+        logger.verbose(defaultLogTag, "Hiding currently displaying InApp: ${inApp.campaignId}")
+        inAppDisplayListener?.get()?.hideInApp()
     }
 
     fun resumeInApps() {
