@@ -1772,7 +1772,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public GeofenceCallback getGeofenceCallback() {
-        return coreState.getCallbackManager().getGeofenceCallback();
+        return coreState.getGeofenceF().getGeofenceCallback();
     }
 
     /**
@@ -1785,7 +1785,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings("unused")
     public void setGeofenceCallback(GeofenceCallback geofenceCallback) {
-        coreState.getCallbackManager().setGeofenceCallback(geofenceCallback);
+        coreState.getGeofenceF().setGeofenceCallback(geofenceCallback);
     }
 
     /**

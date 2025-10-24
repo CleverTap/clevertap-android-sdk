@@ -20,6 +20,7 @@ import com.clevertap.android.sdk.features.CoreFeature
 import com.clevertap.android.sdk.features.DataFeature
 import com.clevertap.android.sdk.features.DisplayUnitFeature
 import com.clevertap.android.sdk.features.FeatureFlagFeature
+import com.clevertap.android.sdk.features.GeofenceFeature
 import com.clevertap.android.sdk.features.InAppFeature
 import com.clevertap.android.sdk.features.InboxFeature
 import com.clevertap.android.sdk.features.LifecycleFeature
@@ -77,7 +78,8 @@ internal open class CoreState(
     val callback: CallbackFeature,
     val productConfig: ProductConfigFeature,
     val displayUnitF: DisplayUnitFeature,
-    val featureFlagF: FeatureFlagFeature
+    val featureFlagF: FeatureFlagFeature,
+    val geofenceF: GeofenceFeature
 ) : CoreContract {
 
     init {

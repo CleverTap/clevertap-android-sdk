@@ -46,8 +46,6 @@ public abstract class BaseCallbackManager {
 
     public abstract void setFailureFlushListener(FailureFlushListener failureFlushListener);
 
-    public abstract void setGeofenceCallback(GeofenceCallback geofenceCallback);
-
     public abstract void setSCDomainListener(SCDomainListener scDomainListener);
 
     public abstract void setInAppNotificationButtonListener(
