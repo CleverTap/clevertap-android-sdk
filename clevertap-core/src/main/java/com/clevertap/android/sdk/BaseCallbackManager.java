@@ -14,7 +14,6 @@ import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
-import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 
@@ -58,8 +57,6 @@ public abstract class BaseCallbackManager {
      */
     @Deprecated
     public abstract CTProductConfigListener getProductConfigListener();
-
-    public abstract CTPushAmpListener getPushAmpListener();
 
     public abstract CTPushNotificationListener getPushNotificationListener();
 
@@ -107,8 +104,6 @@ public abstract class BaseCallbackManager {
     @Deprecated
     public abstract void setProductConfigListener(
             CTProductConfigListener productConfigListener);
-
-    public abstract void setPushAmpListener(CTPushAmpListener pushAmpListener);
 
     public abstract void setPushNotificationListener(
             CTPushNotificationListener pushNotificationListener);

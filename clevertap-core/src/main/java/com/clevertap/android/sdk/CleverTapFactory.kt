@@ -254,9 +254,9 @@ internal object CleverTapFactory {
         val contentFetchResponse = ContentFetchResponse(config, contentFetchManager)
         val pushAmpResponse = PushAmpResponse(
             context,
-            config,
-            databaseManager,
-            callbackManager
+            accountId,
+            config.logger,
+            databaseManager
         )
         val cleverTapResponses = listOf<CleverTapResponse>(
             inAppResponse,
@@ -475,7 +475,8 @@ internal object CleverTapFactory {
         
         // Push
         val pushFeature = PushFeature(
-            pushProviders = pushProviders
+            pushProviders = pushProviders,
+            pushAmpResponse = pushAmpResponse
         )
         
         // Lifecycle

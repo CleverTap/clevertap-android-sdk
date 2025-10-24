@@ -21,7 +21,6 @@ import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
-import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -60,8 +59,6 @@ public class CallbackManager extends BaseCallbackManager {
 
     @Deprecated
     private WeakReference<CTProductConfigListener> productConfigListener;
-
-    private CTPushAmpListener pushAmpListener = null;
 
     private CTPushNotificationListener pushNotificationListener = null;
 
@@ -251,16 +248,6 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public CTPushAmpListener getPushAmpListener() {
-        return pushAmpListener;
-    }
-
-    @Override
-    public void setPushAmpListener(final CTPushAmpListener pushAmpListener) {
-        this.pushAmpListener = pushAmpListener;
-    }
-
-    @Override
     public CTPushNotificationListener getPushNotificationListener() {
         return pushNotificationListener;
     }
@@ -429,29 +416,5 @@ public class CallbackManager extends BaseCallbackManager {
     public void setCTDisplayUnitController(
             final CTDisplayUnitController CTDisplayUnitController) {
         ctDisplayUnitController = CTDisplayUnitController;
-    }
-
-
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    @Override
-    public CTProductConfigController getCTProductConfigController() {
-        return ctProductConfigController;
-    }
-
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    @Override
-    public void setCTProductConfigController(
-            final CTProductConfigController CTProductConfigController) {
-        ctProductConfigController = CTProductConfigController;
     }
 }

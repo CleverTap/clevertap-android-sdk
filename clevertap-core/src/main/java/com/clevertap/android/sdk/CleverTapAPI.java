@@ -1484,7 +1484,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("WeakerAccess")
     public CTPushAmpListener getCTPushAmpListener() {
-        return coreState.getCallbackManager().getPushAmpListener();
+        return coreState.getPush().getPushAmpListener();
     }
 
     /**
@@ -1494,7 +1494,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void setCTPushAmpListener(CTPushAmpListener pushAmpListener) {
-        coreState.getCallbackManager().setPushAmpListener(pushAmpListener);
+        coreState.getPush().setPushAmpListener(pushAmpListener);
     }
 
     /**
