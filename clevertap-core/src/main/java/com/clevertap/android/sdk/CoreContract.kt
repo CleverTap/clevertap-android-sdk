@@ -90,4 +90,5 @@ internal interface CoreContract {
     fun coreMetaData(): CoreMetaData
     fun database(): BaseDatabaseManager
     fun logger(): ILogger
+    fun analytics(): AnalyticsManager
 }

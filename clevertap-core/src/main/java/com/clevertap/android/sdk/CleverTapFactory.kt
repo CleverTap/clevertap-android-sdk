@@ -270,7 +270,7 @@ internal object CleverTapFactory {
             ),
             pushAmpResponse,
             FetchVariablesResponse(config, ctVariables),
-            DisplayUnitResponse(config, callbackManager),
+            DisplayUnitResponse(accountId, config.logger),
             FeatureFlagResponse(config, callbackManager),
             ProductConfigResponse(config, coreMetaData),
             GeofenceResponse(config, callbackManager),
@@ -495,8 +495,8 @@ internal object CleverTapFactory {
         )
         // DisplayUnit
         val displayUnitFeature = DisplayUnitFeature(
-            displayUnitController = callbackManager.ctDisplayUnitController,
-            contentFetchManager = contentFetchManager
+            contentFetchManager = contentFetchManager,
+            displayUnitResponse = DisplayUnitResponse(accountId, config.logger)
         )
 
         // Geofence
@@ -525,7 +525,8 @@ internal object CleverTapFactory {
             productConfig = ProductConfigFeature(
                 productConfigResponse = ProductConfigResponse(config, coreMetaData),
                 arpResponse = arpResponse
-            )
+            ),
+            displayUnitF = displayUnitFeature
         )
         state.asyncStartup()
         return state

@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.features.AnalyticsFeature
 import com.clevertap.android.sdk.features.CallbackFeature
 import com.clevertap.android.sdk.features.CoreFeature
 import com.clevertap.android.sdk.features.DataFeature
+import com.clevertap.android.sdk.features.DisplayUnitFeature
 import com.clevertap.android.sdk.features.InAppFeature
 import com.clevertap.android.sdk.features.InboxFeature
 import com.clevertap.android.sdk.features.LifecycleFeature
@@ -73,7 +74,8 @@ internal open class CoreState(
     val push: PushFeature,
     val lifecycle: LifecycleFeature,
     val callback: CallbackFeature,
-    val productConfig: ProductConfigFeature
+    val productConfig: ProductConfigFeature,
+    val displayUnitF: DisplayUnitFeature
 ) : CoreContract {
 
     init {
@@ -591,8 +593,8 @@ internal open class CoreState(
      * Resets the Display Units in the cache
      */
     private fun resetDisplayUnits() {
-        if (callback.callbackManager.ctDisplayUnitController != null) {
-            callback.callbackManager.ctDisplayUnitController.reset()
+        if (displayUnitF.controller != null) {
+            displayUnitF.controller!!.reset()
         } else {
             core.config.getLogger().verbose(
                 core.config.accountId,
@@ -805,6 +807,7 @@ internal open class CoreState(
     override fun coreMetaData(): CoreMetaData = core.coreMetaData
     override fun database(): BaseDatabaseManager = data.databaseManager
     override fun logger(): ILogger = core.config.logger
+    override fun analytics(): AnalyticsManager = analytics.analyticsManager
 
     // ============ HELPER METHODS ============
 

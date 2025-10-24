@@ -267,16 +267,6 @@ public class CallbackManager extends BaseCallbackManager {
         }
     }
 
-    @Override
-    public void setDisplayUnitListener(DisplayUnitListener listener) {
-        if (listener != null) {
-            displayUnitListenerWeakReference = new WeakReference<>(listener);
-        } else {
-            config.getLogger().verbose(config.getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT + "Failed to set - DisplayUnitListener can't be null");
-        }
-    }
-
     /**
      * Notify the registered Display Unit listener about the running Display Unit campaigns
      *
@@ -336,16 +326,5 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public void setCTFeatureFlagsController(CTFeatureFlagsController ctFeatureFlagsController) {
         this.ctFeatureFlagsController = ctFeatureFlagsController;
-    }
-
-    @Override
-    public CTDisplayUnitController getCTDisplayUnitController() {
-        return ctDisplayUnitController;
-    }
-
-    @Override
-    public void setCTDisplayUnitController(
-            final CTDisplayUnitController CTDisplayUnitController) {
-        ctDisplayUnitController = CTDisplayUnitController;
     }
 }

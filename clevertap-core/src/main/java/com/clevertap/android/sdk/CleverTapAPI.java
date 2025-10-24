@@ -29,7 +29,7 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import com.clevertap.android.sdk.cryption.ICryptHandler;
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -44,11 +44,8 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatePresenter;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
-import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -71,7 +68,6 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.UriHelper;
-import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.Var;
@@ -1420,8 +1416,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @Nullable
     public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
 
-        if (coreState.getCallbackManager().getCTDisplayUnitController() != null) {
-            return coreState.getCallbackManager().getCTDisplayUnitController().getAllDisplayUnits();
+        CTDisplayUnitController displayUnitController = coreState.getDisplayUnitF().getController();
+        if (displayUnitController != null) {
+            return displayUnitController.getAllDisplayUnits();
         } else {
             getConfigLogger()
                     .verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
@@ -1739,8 +1736,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public CleverTapDisplayUnit getDisplayUnitForId(String unitID) {
-        if (coreState.getCallbackManager().getCTDisplayUnitController() != null) {
-            return coreState.getCallbackManager().getCTDisplayUnitController().getDisplayUnitForID(unitID);
+        CTDisplayUnitController dc = coreState.getDisplayUnitF().getController();
+        if (dc != null) {
+            return dc.getDisplayUnitForID(unitID);
         } else {
             getConfigLogger().verbose(getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
@@ -2359,7 +2357,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushDisplayUnitClickedEventForID(String unitID) {
-        coreState.getAnalyticsManager().pushDisplayUnitClickedEventForID(unitID);
+        coreState.getDisplayUnitF().pushDisplayUnitClickedEventForID(unitID);
     }
 
     /**
@@ -2369,7 +2367,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushDisplayUnitViewedEventForID(String unitID) {
-        coreState.getAnalyticsManager().pushDisplayUnitViewedEventForID(unitID);
+        coreState.getDisplayUnitF().pushDisplayUnitViewedEventForID(unitID);
     }
 
     /**
@@ -2696,7 +2694,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param listener- {@link DisplayUnitListener}
      */
     public void setDisplayUnitListener(DisplayUnitListener listener) {
-        coreState.getCallbackManager().setDisplayUnitListener(listener);
+        coreState.getDisplayUnitF().attachListener(listener);
     }
 
     //Listener

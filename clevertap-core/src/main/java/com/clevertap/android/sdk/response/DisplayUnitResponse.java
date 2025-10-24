@@ -1,12 +1,12 @@
 package com.clevertap.android.sdk.response;
 
 import android.content.Context;
-import com.clevertap.android.sdk.BaseCallbackManager;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.ILogger;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.features.DisplayUnitNotifier;
+
 import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,19 +15,20 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     private final Object displayUnitControllerLock = new Object();
 
-    private final BaseCallbackManager callbackManager;
+    private final String accountId;
 
-    private final CleverTapInstanceConfig config;
+    private final ILogger logger;
 
-    private final Logger logger;
+    private CTDisplayUnitController controller;
+
+    private DisplayUnitNotifier displayUnitNotifier;
 
     public DisplayUnitResponse(
-            CleverTapInstanceConfig config,
-            BaseCallbackManager callbackManager
+            String accountId,
+            ILogger logger
     ) {
-        this.config = config;
-        this.logger = this.config.getLogger();
-        this.callbackManager = callbackManager;
+        this.accountId = accountId;
+        this.logger = logger;
     }
 
     //Logic for the processing of Display Unit response
@@ -35,34 +36,27 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
     @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
 
-        logger.verbose(config.getAccountId(), "Processing Display Unit items...");
-
-        if (config.isAnalyticsOnly()) {
-            logger.verbose(config.getAccountId(),
-                    "CleverTap instance is configured to analytics only, not processing Display Unit response");
-            // process feature flag response
-            return;
-        }
+        logger.verbose(accountId, "Processing Display Unit items...");
 
         // Adding response null check because this will get processed first in case of analytics
         if (response == null) {
-            logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT
+            logger.verbose(accountId, Constants.FEATURE_DISPLAY_UNIT
                     + "Can't parse Display Unit Response, JSON response object is null");
             return;
         }
 
         if (!response.has(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY)) {
-            logger.verbose(config.getAccountId(),
+            logger.verbose(accountId,
                     Constants.FEATURE_DISPLAY_UNIT + "JSON object doesn't contain the Display Units key");
             return;
         }
         try {
             logger
-                    .verbose(config.getAccountId(),
+                    .verbose(accountId,
                             Constants.FEATURE_DISPLAY_UNIT + "Processing Display Unit response");
             parseDisplayUnits(response.getJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY));
         } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to parse response", t);
+            logger.verbose(accountId, Constants.FEATURE_DISPLAY_UNIT + "Failed to parse response", t);
         }
     }
 
@@ -73,19 +67,29 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
      */
     private void parseDisplayUnits(JSONArray messages) {
         if (messages == null || messages.length() == 0) {
-            logger.verbose(config.getAccountId(),
+            logger.verbose(accountId,
                     Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is either empty or null");
             return;
         }
 
         synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
-            if (callbackManager.getCTDisplayUnitController() == null) {
-                callbackManager.setCTDisplayUnitController(new CTDisplayUnitController());
+            if (controller == null) {
+                controller = new CTDisplayUnitController();
+                displayUnitNotifier.updateController(controller);
             }
         }
-        ArrayList<CleverTapDisplayUnit> displayUnits = callbackManager.getCTDisplayUnitController()
-                .updateDisplayUnits(messages);
+        ArrayList<CleverTapDisplayUnit> displayUnits = controller.updateDisplayUnits(messages);
 
-        callbackManager.notifyDisplayUnitsLoaded(displayUnits);
+        if (displayUnitNotifier != null) {
+            displayUnitNotifier.notifyDisplayUnitsLoaded(displayUnits);
+        }
+    }
+
+    public void setController(CTDisplayUnitController controller) {
+        this.controller = controller;
+    }
+
+    public void setDisplayUnitNotifier(DisplayUnitNotifier displayUnitNotifier) {
+        this.displayUnitNotifier = displayUnitNotifier;
     }
 }

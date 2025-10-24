@@ -164,29 +164,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     @Override
-    public void pushDisplayUnitClickedEventForID(String unitID) {
+    public void pushDisplayUnitClickedEvent(JSONObject data) {
         JSONObject event = new JSONObject();
 
         try {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
-
-            //wzrk fields
-            if (callbackManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = callbackManager.getCTDisplayUnitController()
-                        .getDisplayUnitForID(unitID);
-                if (displayUnit != null) {
-                    JSONObject eventExtraData = displayUnit.getWZRKFields();
-                    if (eventExtraData != null) {
-                        event.put("evtData", eventExtraData);
-                        try {
-                            coreMetaData.setWzrkParams(eventExtraData);
-                        } catch (Throwable t) {
-                            // no-op
-                        }
-                    }
-                }
+            event.put("evtData", data);
+            try {
+                coreMetaData.setWzrkParams(data);
+            } catch (Throwable t) {
+                // no-op
             }
-
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
@@ -196,23 +184,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     @Override
-    public void pushDisplayUnitViewedEventForID(String unitID) {
+    public void pushDisplayUnitViewedEvent(JSONObject data) {
         JSONObject event = new JSONObject();
 
         try {
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
-
-            //wzrk fields
-            if (callbackManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = callbackManager.getCTDisplayUnitController()
-                        .getDisplayUnitForID(unitID);
-                if (displayUnit != null) {
-                    JSONObject eventExtras = displayUnit.getWZRKFields();
-                    if (eventExtras != null) {
-                        event.put("evtData", eventExtras);
-                    }
-                }
-            }
+            event.put("evtData", data); // wzrk fields
 
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
@@ -1195,7 +1172,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             JSONObject r = CTJsonConverter.displayUnitFromExtras(extras);
 
-            CleverTapResponse cleverTapResponse = new DisplayUnitResponse(config, callbackManager);
+            CleverTapResponse cleverTapResponse = new DisplayUnitResponse(config.getAccountId(), config.getLogger());
             cleverTapResponse.processResponse(r, null, context);
 
         } catch (Throwable t) {

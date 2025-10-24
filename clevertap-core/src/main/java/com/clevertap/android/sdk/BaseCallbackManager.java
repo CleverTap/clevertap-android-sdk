@@ -2,9 +2,6 @@ package com.clevertap.android.sdk;
 
 import androidx.annotation.NonNull;
 
-import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
-import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
-import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
@@ -16,7 +13,6 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 
 import org.json.JSONArray;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class BaseCallbackManager {
@@ -52,14 +48,10 @@ public abstract class BaseCallbackManager {
 
     public abstract SyncListener getSyncListener();
 
-    public abstract void notifyDisplayUnitsLoaded(final ArrayList<CleverTapDisplayUnit> displayUnits);
-
     //Profile
     public abstract void notifyUserProfileInitialized(String deviceID);
 
     abstract void notifyUserProfileInitialized();
-
-    public abstract void setDisplayUnitListener(DisplayUnitListener listener);
 
     public abstract void setFailureFlushListener(FailureFlushListener failureFlushListener);
 
@@ -128,9 +120,5 @@ public abstract class BaseCallbackManager {
     public abstract void addChangeUserCallback(ChangeUserCallback callback);
 
     public abstract void removeChangeUserCallback(ChangeUserCallback callback);
-
-    public abstract CTDisplayUnitController getCTDisplayUnitController();
-
-    public abstract void setCTDisplayUnitController(final CTDisplayUnitController CTDisplayUnitController);
 
 }
