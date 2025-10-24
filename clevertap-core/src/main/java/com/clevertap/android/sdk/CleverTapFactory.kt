@@ -68,10 +68,14 @@ import com.clevertap.android.sdk.features.AnalyticsFeature
 import com.clevertap.android.sdk.features.CallbackFeature
 import com.clevertap.android.sdk.features.CoreFeature
 import com.clevertap.android.sdk.features.DataFeature
+import com.clevertap.android.sdk.features.DisplayUnitFeature
+import com.clevertap.android.sdk.features.FeatureFlagFeature
+import com.clevertap.android.sdk.features.GeofenceFeature
 import com.clevertap.android.sdk.features.InAppFeature
 import com.clevertap.android.sdk.features.InboxFeature
 import com.clevertap.android.sdk.features.LifecycleFeature
 import com.clevertap.android.sdk.features.NetworkFeature
+import com.clevertap.android.sdk.features.ProductConfigFeature
 import com.clevertap.android.sdk.features.ProfileFeature
 import com.clevertap.android.sdk.features.PushFeature
 import com.clevertap.android.sdk.features.VariablesFeature
@@ -240,7 +244,7 @@ internal object CleverTapFactory {
             logger = config.logger
         )
 
-        val arpResponse = ARPResponse(config, validator, callbackManager, arpRepo)
+        val arpResponse = ARPResponse(validator, arpRepo)
         val contentFetchManager = ContentFetchManager(
             config,
             coreMetaData,
@@ -268,7 +272,7 @@ internal object CleverTapFactory {
             FetchVariablesResponse(config, ctVariables, callbackManager),
             DisplayUnitResponse(config, callbackManager),
             FeatureFlagResponse(config, callbackManager),
-            ProductConfigResponse(config, coreMetaData, callbackManager),
+            ProductConfigResponse(config, coreMetaData),
             GeofenceResponse(config, callbackManager),
             contentFetchResponse
         )
@@ -410,7 +414,8 @@ internal object CleverTapFactory {
             mainLooperHandler = mainLooperHandler,
             validationResultStack = validationResultStack,
             cryptHandler = cryptHandler,
-            clock = SYSTEM
+            clock = SYSTEM,
+            arpResponse = arpResponse
         )
         
         // Data layer
@@ -482,6 +487,21 @@ internal object CleverTapFactory {
         val callbackFeature = CallbackFeature(
             callbackManager = callbackManager
         )
+        // DisplayUnit
+        val displayUnitFeature = DisplayUnitFeature(
+            displayUnitController = callbackManager.ctDisplayUnitController,
+            contentFetchManager = contentFetchManager
+        )
+
+        // Geofence
+        val geofenceFeature = GeofenceFeature(
+            locationManager = locationManager
+        )
+
+        // FeatureFlag
+        val featureFlagFeature = FeatureFlagFeature(
+            ctFeatureFlagsController = callbackManager.ctFeatureFlagsController
+        )
         
         // ========== Create CoreState with Feature Groups ==========
         val state = CoreState(
@@ -495,7 +515,11 @@ internal object CleverTapFactory {
             variables = variablesFeature,
             push = pushFeature,
             lifecycle = lifecycleFeature,
-            callback = callbackFeature
+            callback = callbackFeature,
+            productConfig = ProductConfigFeature(
+                productConfigResponse = ProductConfigResponse(config, coreMetaData),
+                arpResponse = arpResponse
+            )
         )
         state.asyncStartup()
         return state

@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.features
 
+import android.content.Context
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
@@ -7,6 +8,7 @@ import com.clevertap.android.sdk.network.NetworkHeadersListener
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
+import org.json.JSONObject
 
 /**
  * NetworkFeature encapsulates all network-related components
@@ -30,5 +32,8 @@ internal data class NetworkFeature(
 
     override fun coreContract(coreContract: CoreContract) {
         networkManager.coreContract = coreContract
+    }
+
+    override fun handleApiData(response: JSONObject, stringBody: String, context: Context) {
     }
 }

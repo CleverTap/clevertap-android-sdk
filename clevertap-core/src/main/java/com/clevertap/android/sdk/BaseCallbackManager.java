@@ -12,7 +12,6 @@ import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.network.BatchListener;
-import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -164,21 +163,5 @@ public abstract class BaseCallbackManager {
     public abstract CTDisplayUnitController getCTDisplayUnitController();
 
     public abstract void setCTDisplayUnitController(final CTDisplayUnitController CTDisplayUnitController);
-
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    public abstract CTProductConfigController getCTProductConfigController();
-
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    public abstract void setCTProductConfigController(final CTProductConfigController CTProductConfigController);
 
 }

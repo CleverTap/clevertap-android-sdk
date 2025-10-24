@@ -22,6 +22,7 @@ import com.clevertap.android.sdk.features.InAppFeature
 import com.clevertap.android.sdk.features.InboxFeature
 import com.clevertap.android.sdk.features.LifecycleFeature
 import com.clevertap.android.sdk.features.NetworkFeature
+import com.clevertap.android.sdk.features.ProductConfigFeature
 import com.clevertap.android.sdk.features.ProfileFeature
 import com.clevertap.android.sdk.features.PushFeature
 import com.clevertap.android.sdk.features.VariablesFeature
@@ -71,7 +72,8 @@ internal open class CoreState(
     val variables: VariablesFeature,
     val push: PushFeature,
     val lifecycle: LifecycleFeature,
-    val callback: CallbackFeature
+    val callback: CallbackFeature,
+    val productConfig: ProductConfigFeature
 ) : CoreContract {
 
     init {
@@ -330,7 +332,7 @@ internal open class CoreState(
             ctFeatureFlagsController.setGuidAndInit(deviceId)
         }
         //todo: replace with variables
-        val ctProductConfigController = callback.callbackManager.getCTProductConfigController()
+        val ctProductConfigController = productConfig.productConfigController
 
         if (ctProductConfigController != null && TextUtils
                 .isEmpty(ctProductConfigController.settings.guid)
@@ -377,27 +379,27 @@ internal open class CoreState(
      */
     @Deprecated("")
     fun getCtProductConfigController(context: Context?): CTProductConfigController? {
-        if (this.core.config.isAnalyticsOnly) {
-            this.core.config.getLogger()
+        if (core.config.isAnalyticsOnly) {
+            core.config.getLogger()
                 .debug(
-                    this.core.config.accountId,
+                    core.config.accountId,
                     "Product Config is not enabled for this instance"
                 )
             return null
         }
-        if (this.callback.callbackManager.ctProductConfigController == null) {
-            this.core.config.getLogger().verbose(
+        if (productConfig.productConfigController == null) {
+            core.config.getLogger().verbose(
                 core.config.accountId + ":async_deviceID",
-                "Initializing Product Config with device Id = " + this.core.deviceInfo.getDeviceID()
+                "Initializing Product Config with device Id = " + core.deviceInfo.getDeviceID()
             )
             val ctProductConfigController = CTProductConfigFactory
                 .getInstance(
-                    context, this.core.deviceInfo,
-                    this.core.config, analytics.analyticsManager, core.coreMetaData, callback.callbackManager
+                    context, core.deviceInfo,
+                    core.config, analytics.analyticsManager, core.coreMetaData, callback.callbackManager
                 )
-            this.callback.callbackManager.ctProductConfigController = ctProductConfigController
+            productConfig.productConfigController = ctProductConfigController
         }
-        return this.callback.callbackManager.ctProductConfigController
+        return productConfig.productConfigController
     }
 
     /**
@@ -667,15 +669,13 @@ internal open class CoreState(
                 .debug(core.config.accountId, "Product Config is not enabled for this instance")
             return
         }
-        if (callback.callbackManager.ctProductConfigController != null) {
-            callback.callbackManager.ctProductConfigController.resetSettings()
-        }
+        productConfig.productConfigController?.resetSettings()
         val ctProductConfigController =
             CTProductConfigFactory.getInstance(
                 core.context, core.deviceInfo, core.config, analytics.analyticsManager, core.coreMetaData,
                 callback.callbackManager
             )
-        callback.callbackManager.ctProductConfigController = ctProductConfigController
+        productConfig.productConfigController = ctProductConfigController
         core.config.getLogger().verbose(core.config.accountId, "Product Config reset")
     }
 
