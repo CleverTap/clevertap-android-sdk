@@ -1370,7 +1370,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfig().getLogger()
                     .debug(getAccountId(), "Feature flag is not supported with analytics only configuration");
         }
-        return coreState.getCallbackManager().getCTFeatureFlagsController();
+        return coreState.getFeatureFlagF().getCtFeatureFlagsController();
     }
 
     /**
@@ -2670,7 +2670,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     @Deprecated
     public void setCTFeatureFlagsListener(CTFeatureFlagsListener featureFlagsListener) {
-        coreState.getCallbackManager().setFeatureFlagListener(featureFlagsListener);
+        coreState.getFeatureFlagF().attachListener(featureFlagsListener);
     }
 
     /**

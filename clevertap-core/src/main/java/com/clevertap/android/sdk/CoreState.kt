@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.features.CallbackFeature
 import com.clevertap.android.sdk.features.CoreFeature
 import com.clevertap.android.sdk.features.DataFeature
 import com.clevertap.android.sdk.features.DisplayUnitFeature
+import com.clevertap.android.sdk.features.FeatureFlagFeature
 import com.clevertap.android.sdk.features.InAppFeature
 import com.clevertap.android.sdk.features.InboxFeature
 import com.clevertap.android.sdk.features.LifecycleFeature
@@ -75,7 +76,8 @@ internal open class CoreState(
     val lifecycle: LifecycleFeature,
     val callback: CallbackFeature,
     val productConfig: ProductConfigFeature,
-    val displayUnitF: DisplayUnitFeature
+    val displayUnitF: DisplayUnitFeature,
+    val featureFlagF: FeatureFlagFeature
 ) : CoreContract {
 
     init {
@@ -323,8 +325,7 @@ internal open class CoreState(
           Reinitialising product config & Feature Flag controllers with device id, if it's null
           during first initialisation from CleverTapFactory.getCoreState()
          */
-        val ctFeatureFlagsController = callback.callbackManager
-            .getCTFeatureFlagsController()
+        val ctFeatureFlagsController = featureFlagF.ctFeatureFlagsController
 
         if (ctFeatureFlagsController != null && TextUtils.isEmpty(ctFeatureFlagsController.getGuid())) {
             core.config.logger.verbose(
@@ -367,7 +368,7 @@ internal open class CoreState(
         if (config.isAnalyticsOnly) {
             config.logger.debug(config.accountId, "Feature Flag is not enabled for this instance")
         } else {
-            callbackManager.ctFeatureFlagsController = CTFeatureFlagsFactory.getInstance(
+            featureFlagF.ctFeatureFlagsController = CTFeatureFlagsFactory.getInstance(
                 context,
                 deviceInfo.deviceID,
                 config, callbackManager, analyticsManager
@@ -604,7 +605,7 @@ internal open class CoreState(
     }
 
     private fun resetFeatureFlags() {
-        val ctFeatureFlagsController = callback.callbackManager.ctFeatureFlagsController
+        val ctFeatureFlagsController = featureFlagF.ctFeatureFlagsController
         if (ctFeatureFlagsController != null && ctFeatureFlagsController.isInitialized()) {
             ctFeatureFlagsController.resetWithGuid(core.deviceInfo.getDeviceID())
             ctFeatureFlagsController.fetchFeatureFlags()

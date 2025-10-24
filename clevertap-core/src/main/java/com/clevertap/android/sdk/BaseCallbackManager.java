@@ -2,7 +2,6 @@ package com.clevertap.android.sdk;
 
 import androidx.annotation.NonNull;
 
-import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
@@ -17,14 +16,6 @@ import java.util.List;
 
 public abstract class BaseCallbackManager {
     public abstract FailureFlushListener getFailureFlushListener();
-
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    public abstract CTFeatureFlagsListener getFeatureFlagListener();
 
     public abstract GeofenceCallback getGeofenceCallback();
 
@@ -54,14 +45,6 @@ public abstract class BaseCallbackManager {
     abstract void notifyUserProfileInitialized();
 
     public abstract void setFailureFlushListener(FailureFlushListener failureFlushListener);
-
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    public abstract void setFeatureFlagListener(CTFeatureFlagsListener listener);
 
     public abstract void setGeofenceCallback(GeofenceCallback geofenceCallback);
 
@@ -103,10 +86,6 @@ public abstract class BaseCallbackManager {
     public abstract BatchListener getBatchListener();
 
     public abstract void setBatchListener(BatchListener batchListener);
-
-    public abstract CTFeatureFlagsController getCTFeatureFlagsController();
-
-    public abstract void setCTFeatureFlagsController(CTFeatureFlagsController ctInboxController);
 
     public void invokeBatchListener(JSONArray array, boolean success) {
         BatchListener batchListener = getBatchListener();

@@ -271,7 +271,7 @@ internal object CleverTapFactory {
             pushAmpResponse,
             FetchVariablesResponse(config, ctVariables),
             DisplayUnitResponse(accountId, config.logger),
-            FeatureFlagResponse(config, callbackManager),
+            FeatureFlagResponse(accountId, config.logger),
             ProductConfigResponse(config, coreMetaData),
             GeofenceResponse(config, callbackManager),
             contentFetchResponse
@@ -506,7 +506,7 @@ internal object CleverTapFactory {
 
         // FeatureFlag
         val featureFlagFeature = FeatureFlagFeature(
-            ctFeatureFlagsController = callbackManager.ctFeatureFlagsController
+            featureFlagResponse = FeatureFlagResponse(accountId, config.logger)
         )
         
         // ========== Create CoreState with Feature Groups ==========
@@ -526,7 +526,8 @@ internal object CleverTapFactory {
                 productConfigResponse = ProductConfigResponse(config, coreMetaData),
                 arpResponse = arpResponse
             ),
-            displayUnitF = displayUnitFeature
+            displayUnitF = displayUnitFeature,
+            featureFlagF = featureFlagFeature
         )
         state.asyncStartup()
         return state

@@ -1,15 +1,9 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.Utils.runOnUiThread;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
-import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
-import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
-import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
@@ -24,8 +18,6 @@ import java.util.List;
 
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager extends BaseCallbackManager {
-
-    private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
     private GeofenceCallback geofenceCallback;
 
@@ -66,9 +58,6 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     private BatchListener batchListener;
-    private CTFeatureFlagsController ctFeatureFlagsController;
-    private CTDisplayUnitController ctDisplayUnitController;
-
     @Override
     public List<ChangeUserCallback> getChangeUserCallbackList() {
         return changeUserCallbackList;
@@ -92,31 +81,6 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public void setFailureFlushListener(final FailureFlushListener failureFlushListener) {
         this.failureFlushListener = failureFlushListener;
-    }
-
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    @Override
-    public CTFeatureFlagsListener getFeatureFlagListener() {
-        if (featureFlagListenerWeakReference != null && featureFlagListenerWeakReference.get() != null) {
-            return featureFlagListenerWeakReference.get();
-        }
-        return null;
-    }
-
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    @Override
-    public void setFeatureFlagListener(final CTFeatureFlagsListener listener) {
-        this.featureFlagListenerWeakReference = new WeakReference<>(listener);
     }
 
     @Override
@@ -267,34 +231,6 @@ public class CallbackManager extends BaseCallbackManager {
         }
     }
 
-    /**
-     * Notify the registered Display Unit listener about the running Display Unit campaigns
-     *
-     * @param displayUnits - Array of Display Units {@link CleverTapDisplayUnit}
-     */
-    public void notifyDisplayUnitsLoaded(final ArrayList<CleverTapDisplayUnit> displayUnits) {
-        if (displayUnits != null && !displayUnits.isEmpty()) {
-            if (displayUnitListenerWeakReference != null && displayUnitListenerWeakReference.get() != null) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //double check to ensure null safety
-                        if (displayUnitListenerWeakReference != null
-                                && displayUnitListenerWeakReference.get() != null) {
-                            displayUnitListenerWeakReference.get().onDisplayUnitsLoaded(displayUnits);
-                        }
-                    }
-                });
-            } else {
-                config.getLogger().verbose(config.getAccountId(),
-                        Constants.FEATURE_DISPLAY_UNIT + "No registered listener, failed to notify");
-            }
-        } else {
-            config.getLogger()
-                    .verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "No Display Units found");
-        }
-    }
-
     void notifyUserProfileInitialized() {
         notifyUserProfileInitialized(deviceInfo.getDeviceID());
     }
@@ -316,15 +252,5 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public void setBatchListener(BatchListener batchListener) {
         this.batchListener = batchListener;
-    }
-
-    @Override
-    public CTFeatureFlagsController getCTFeatureFlagsController() {
-        return this.ctFeatureFlagsController;
-    }
-
-    @Override
-    public void setCTFeatureFlagsController(CTFeatureFlagsController ctFeatureFlagsController) {
-        this.ctFeatureFlagsController = ctFeatureFlagsController;
     }
 }
