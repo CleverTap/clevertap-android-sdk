@@ -165,7 +165,7 @@ internal object CleverTapFactory {
 
         getInstance(context, config)
 
-        val callbackManager = CallbackManager(config, deviceInfo)
+        val callbackManager = CallbackManager(deviceInfo)
 
         val sessionManager = SessionManager(config, coreMetaData, validator, localDataStore)
 

@@ -29,16 +29,11 @@ public class CallbackManager extends BaseCallbackManager {
 
     private final List<PushPermissionResponseListener> pushPermissionResponseListenerList = new ArrayList<>();
 
-
-    private final CleverTapInstanceConfig config;
-
     private final DeviceInfo deviceInfo;
 
     private FailureFlushListener failureFlushListener;
 
     @Deprecated
-    private WeakReference<CTFeatureFlagsListener> featureFlagListenerWeakReference;
-
     private final List<OnInitCleverTapIDListener> onInitCleverTapIDListeners =  Collections.synchronizedList(new ArrayList<>());
 
     @Deprecated
@@ -52,8 +47,7 @@ public class CallbackManager extends BaseCallbackManager {
 
     private final List<ChangeUserCallback> changeUserCallbackList = Collections.synchronizedList(new ArrayList<>());
 
-    public CallbackManager(CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
-        this.config = config;
+    public CallbackManager(DeviceInfo deviceInfo) {
         this.deviceInfo = deviceInfo;
     }
 
@@ -86,11 +80,6 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public GeofenceCallback getGeofenceCallback() {
         return geofenceCallback;
-    }
-
-    @Override
-    public void setGeofenceCallback(final GeofenceCallback geofenceCallback) {
-        this.geofenceCallback = geofenceCallback;
     }
 
     @Override
