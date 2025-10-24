@@ -752,7 +752,7 @@ internal open class CoreState(
     }
 
     override fun onNetworkError() {
-        callback.callbackManager.invokeCallbacksForNetworkError(variables.cTVariables)
+        variables.invokeCallbacksForNetworkError()
     }
 
     override fun onNetworkSuccess(queue: JSONArray, success: Boolean) {
@@ -790,6 +790,11 @@ internal open class CoreState(
 
     override fun notifySCDomainUnavailable() {
         callback.callbackManager.scDomainListener?.onSCDomainUnavailable()
+    }
+
+    override fun didNotFlush() {
+        variables.invokeCallbacksForNetworkError()
+        callbackManager.invokeBatchListener(JSONArray(), false)
     }
 
     // ============ CORE DEPENDENCIES ACCESS ============

@@ -8,10 +8,10 @@ import android.location.Location;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.CoreContract;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.FailureFlushListener;
@@ -73,13 +73,13 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     private final ValidationResultStack validationResultStack;
 
     private InAppController inAppController;
-    private final BaseCallbackManager callbackManager;
-    private final CTVariables cTVariables;
     private final CTExecutors executors;
 
     private Runnable pushNotificationViewedRunnable = null;
 
     private final LoginInfoProvider loginInfoProvider;
+
+    private CoreContract coreContract;
 
     public EventQueueManager(
             final BaseDatabaseManager baseDatabaseManager,
@@ -87,7 +87,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             CleverTapInstanceConfig config,
             EventMediator eventMediator,
             SessionManager sessionManager,
-            BaseCallbackManager callbackManager,
             MainLooperHandler mainLooperHandler,
             DeviceInfo deviceInfo,
             ValidationResultStack validationResultStack,
@@ -97,7 +96,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             LocalDataStore localDataStore,
             LoginInfoProvider loginInfoProvider,
             InAppController inAppController,
-            CTVariables ctVariables,
             CTExecutors executors
     ) {
         this.baseDatabaseManager = baseDatabaseManager;
@@ -115,11 +113,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         this.cleverTapMetaData = coreMetaData;
         this.ctLockManager = ctLockManager;
         this.loginInfoProvider = loginInfoProvider;
-        this.callbackManager = callbackManager;
-        this.cTVariables = ctVariables;
         this.executors = executors;
-
-        callbackManager.setFailureFlushListener(this);
     }
 
     public void setInAppController(InAppController controller) {
@@ -202,8 +196,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
-            callbackManager.invokeCallbacksForNetworkError(cTVariables);
-            callbackManager.invokeBatchListener(new JSONArray(), false);
+            coreContract.didNotFlush();
             return;
         }
 
@@ -211,8 +204,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         if (cleverTapMetaData.isOffline()) {
             logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
-            callbackManager.invokeCallbacksForNetworkError(cTVariables);
-            callbackManager.invokeBatchListener(new JSONArray(), false);
+            coreContract.didNotFlush();
             return;
         }
 
@@ -608,4 +600,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         }
     }
 
+    public void setCoreContract(CoreContract coreContract) {
+        this.coreContract = coreContract;
+    }
 }

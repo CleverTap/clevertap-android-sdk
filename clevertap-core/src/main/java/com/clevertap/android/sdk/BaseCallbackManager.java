@@ -13,8 +13,6 @@ import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
-import com.clevertap.android.sdk.variables.CTVariables;
-import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 
 import org.json.JSONArray;
 
@@ -106,10 +104,6 @@ public abstract class BaseCallbackManager {
 
     public abstract void notifyCleverTapIDChanged(String id);
 
-    public abstract FetchVariablesCallback getFetchVariablesCallback();
-
-    public abstract void setFetchVariablesCallback(FetchVariablesCallback fetchVariablesCallback);
-
     public abstract FetchInAppsCallback getFetchInAppsCallback();
 
     public abstract void setFetchInAppsCallback(FetchInAppsCallback fetchInAppsCallback);
@@ -127,12 +121,6 @@ public abstract class BaseCallbackManager {
         if (batchListener != null) {
             batchListener.onBatchSent(array, success);
         }
-    }
-
-    public void invokeCallbacksForNetworkError(CTVariables ctVariables) {
-        FetchVariablesCallback fetchVariablesCallback = getFetchVariablesCallback();
-        setFetchVariablesCallback(null);
-        ctVariables.handleVariableResponseError(fetchVariablesCallback);
     }
 
     public abstract List<ChangeUserCallback> getChangeUserCallbackList();

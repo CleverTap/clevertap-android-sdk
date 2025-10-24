@@ -269,7 +269,7 @@ internal object CleverTapFactory {
                 ctLockManager
             ),
             pushAmpResponse,
-            FetchVariablesResponse(config, ctVariables, callbackManager),
+            FetchVariablesResponse(config, ctVariables),
             DisplayUnitResponse(config, callbackManager),
             FeatureFlagResponse(config, callbackManager),
             ProductConfigResponse(config, coreMetaData),
@@ -299,7 +299,6 @@ internal object CleverTapFactory {
             config,
             eventMediator,
             sessionManager,
-            callbackManager,
             mainLooperHandler,
             deviceInfo,
             validationResultStack,
@@ -309,9 +308,9 @@ internal object CleverTapFactory {
             localDataStore,
             loginInfoProvider,
             null, // set this later
-            ctVariables,
             executors
         )
+        callbackManager.setFailureFlushListener(baseEventQueueManager);
 
         val inAppResponseForSendTestInApp = InAppResponse(
             config,
@@ -475,7 +474,8 @@ internal object CleverTapFactory {
             cTVariables = ctVariables,
             varCache = varCache,
             parser = parser,
-            variablesRepository = variablesRepo
+            variablesRepository = variablesRepo,
+            fetchVariablesResponse = FetchVariablesResponse(config, ctVariables)
         )
         
         // Push

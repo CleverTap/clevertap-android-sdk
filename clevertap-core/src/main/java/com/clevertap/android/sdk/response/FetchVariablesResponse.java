@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.response;
 
 import android.content.Context;
 
-import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
@@ -15,16 +14,14 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig config;
     private final CTVariables ctVariables;
-    private final BaseCallbackManager callbackMgr;
+    private FetchVariablesCallback fetchVariablesCallback;
 
     public FetchVariablesResponse(
             CleverTapInstanceConfig config,
-            CTVariables ctVariables,
-            BaseCallbackManager mgr
+            CTVariables ctVariables
     ) {
         this.config = config;
         this.ctVariables = ctVariables;
-        this.callbackMgr = mgr;
     }
 
     private  void logD(String m){
@@ -63,10 +60,8 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
             logI("Processing Request Variables response");
 
             JSONObject kvJson = response.getJSONObject(varsKey);
-
-            FetchVariablesCallback callback = callbackMgr.getFetchVariablesCallback();
-            ctVariables.handleVariableResponse(kvJson,callback);
-            callbackMgr.setFetchVariablesCallback(null);
+            ctVariables.handleVariableResponse(kvJson, fetchVariablesCallback);
+            fetchVariablesCallback = null;
 
         } catch (Throwable t) {
             logI("Failed to parse response", t);

@@ -3474,7 +3474,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
         Logger.v("variables", "Fetching  variables");
         if (callback != null) {
-            coreState.getCallbackManager().setFetchVariablesCallback(callback);
+            coreState.getVariables().setFetchVariablesCallback(callback);
         }
 
         JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_VARIABLES);

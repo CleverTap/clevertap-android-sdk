@@ -3,7 +3,6 @@ package com.clevertap.android.sdk;
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
@@ -12,15 +11,12 @@ import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
-import com.clevertap.android.sdk.inbox.CTInboxController;
-import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
-import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,8 +47,6 @@ public class CallbackManager extends BaseCallbackManager {
     @Deprecated
     private WeakReference<CTFeatureFlagsListener> featureFlagListenerWeakReference;
 
-    private NotificationRenderedListener notificationRenderedListener;
-
     private final List<OnInitCleverTapIDListener> onInitCleverTapIDListeners =  Collections.synchronizedList(new ArrayList<>());
 
     @Deprecated
@@ -71,10 +65,7 @@ public class CallbackManager extends BaseCallbackManager {
         this.deviceInfo = deviceInfo;
     }
 
-    private FetchVariablesCallback fetchVariablesCallback;
-
     private BatchListener batchListener;
-    private CTInboxController ctInboxController;
     private CTFeatureFlagsController ctFeatureFlagsController;
     private CTDisplayUnitController ctDisplayUnitController;
 
@@ -316,17 +307,6 @@ public class CallbackManager extends BaseCallbackManager {
 
     void notifyUserProfileInitialized() {
         notifyUserProfileInitialized(deviceInfo.getDeviceID());
-    }
-
-    @Override @Nullable
-    public FetchVariablesCallback getFetchVariablesCallback() {
-        return fetchVariablesCallback;
-    }
-
-    @Override
-    public void setFetchVariablesCallback(
-            FetchVariablesCallback fetchVariablesCallback) {
-        this.fetchVariablesCallback = fetchVariablesCallback;
     }
 
     @Override

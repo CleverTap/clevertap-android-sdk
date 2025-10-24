@@ -14,6 +14,9 @@ import org.json.JSONObject
  */
 internal interface CoreContract {
 
+    // ============ DATABASE QUEUES ============
+    fun didNotFlush()
+
     // ============ NETWORK RESPONSE ROUTING ============
 
     /**
