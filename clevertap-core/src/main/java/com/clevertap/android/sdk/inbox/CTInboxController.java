@@ -5,10 +5,10 @@ import androidx.annotation.AnyThread;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.DBAdapter;
+import com.clevertap.android.sdk.features.InboxLiveCallbacks;
 import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
 import org.json.JSONArray;
@@ -34,9 +34,9 @@ public class CTInboxController {
 
     private final CTLockManager ctLockManager;
 
-    private final BaseCallbackManager callbackManager;
 
     private final CTExecutors ctExecutors;
+    private final InboxLiveCallbacks callbacks;
 
     // always call async
     @WorkerThread
@@ -44,16 +44,16 @@ public class CTInboxController {
             String guid,
             DBAdapter adapter,
             CTLockManager ctLockManager,
-            BaseCallbackManager callbackManager,
             boolean videoSupported,
-            CTExecutors ctExecutors
+            CTExecutors ctExecutors,
+            InboxLiveCallbacks callbacks
     ) {
         this.userId = guid;
         this.dbAdapter = adapter;
         this.messages = this.dbAdapter.getMessages(this.userId);
         this.videoSupported = videoSupported;
         this.ctLockManager = ctLockManager;
-        this.callbackManager = callbackManager;
+        this.callbacks = callbacks;
         this.ctExecutors = ctExecutors;
     }
 
@@ -68,7 +68,7 @@ public class CTInboxController {
             synchronized (ctLockManager.getInboxControllerLock()) {
                 boolean update = _deleteMessageWithId(message.getMessageId());
                 if (update) {
-                    callbackManager._notifyInboxMessagesDidUpdate();
+                    callbacks._notifyInboxMessagesDidUpdate();
                 }
             }
             return null;
@@ -82,7 +82,7 @@ public class CTInboxController {
             synchronized (ctLockManager.getInboxControllerLock()) {
                 boolean update = _deleteMessagesForIds(messageIDs);
                 if (update) {
-                    callbackManager._notifyInboxMessagesDidUpdate();
+                    callbacks._notifyInboxMessagesDidUpdate();
                 }
             }
             return null;
@@ -123,7 +123,7 @@ public class CTInboxController {
             synchronized (ctLockManager.getInboxControllerLock()) {
                 boolean read = _markReadForMessageWithId(message.getMessageId());
                 if (read) {
-                    callbackManager._notifyInboxMessagesDidUpdate();
+                    callbacks._notifyInboxMessagesDidUpdate();
                 }
             }
             return null;
@@ -137,7 +137,7 @@ public class CTInboxController {
             synchronized (ctLockManager.getInboxControllerLock()) {
                 boolean read = _markReadForMessagesWithIds(messageIDs);
                 if (read) {
-                    callbackManager._notifyInboxMessagesDidUpdate();
+                    callbacks._notifyInboxMessagesDidUpdate();
                 }
             }
             return null;
@@ -253,7 +253,7 @@ public class CTInboxController {
             messageDAO.setRead(1);
         }
         Task<Void> task = ctExecutors.postAsyncSafelyTask();
-        task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate() );//  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
+        task.addOnSuccessListener(unused -> callbacks._notifyInboxMessagesDidUpdate() );//  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
         task.addOnFailureListener(e -> Logger.d("Failed to update message read state for id:"+messageId,e));
 
         task.execute("RunMarkMessageRead", new Callable<Void>() {
@@ -285,7 +285,7 @@ public class CTInboxController {
             return false;
 
         Task<Void> task = ctExecutors.postAsyncSafelyTask();
-        task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate());
+        task.addOnSuccessListener(unused -> callbacks._notifyInboxMessagesDidUpdate());
         task.addOnFailureListener(e -> Logger.d("Failed to update message read state for ids:" + messageIDs, e));
 
         task.execute("RunMarkMessagesReadForIDs", new Callable<Void>() {

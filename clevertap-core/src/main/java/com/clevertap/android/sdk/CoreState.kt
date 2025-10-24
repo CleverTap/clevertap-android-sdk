@@ -641,7 +641,7 @@ internal open class CoreState(
     private fun initializeInboxMain() {
         synchronized(inbox.cTLockManager.inboxControllerLock) {
             if (inbox.ctInboxController != null) {
-                callback.callbackManager._notifyInboxInitialized()
+                inbox._notifyInboxInitialized()
                 return
             }
             val deviceId = core.deviceInfo.getDeviceID()
@@ -650,12 +650,11 @@ internal open class CoreState(
                     deviceId,
                     data.databaseManager.loadDBAdapter(core.context),
                     inbox.cTLockManager,
-                    callback.callbackManager,
                     VideoLibChecker.haveVideoPlayerSupport,
-                    core.executors
+                    core.executors,
+                    inbox
                 )
-                callback.callbackManager.ctInboxController = inbox.ctInboxController
-                callback.callbackManager._notifyInboxInitialized()
+                inbox._notifyInboxInitialized()
             } else {
                 core.config.getLogger().info("CRITICAL : No device ID found!")
             }

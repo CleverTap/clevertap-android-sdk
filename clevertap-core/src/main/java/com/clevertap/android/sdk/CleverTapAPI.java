@@ -1461,7 +1461,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public CTInboxListener getCTNotificationInboxListener() {
-        return coreState.getCallbackManager().getInboxListener();
+        return coreState.getInbox().getInboxListener();
     }
 
     /**
@@ -1471,7 +1471,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void setCTNotificationInboxListener(CTInboxListener notificationInboxListener) {
-        coreState.getCallbackManager().setInboxListener(notificationInboxListener);
+        coreState.getInbox().setInboxListener(notificationInboxListener);
     }
 
     //Debug

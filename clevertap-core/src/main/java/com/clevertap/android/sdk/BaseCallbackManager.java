@@ -7,7 +7,6 @@ import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
-import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.login.ChangeUserCallback;
@@ -23,11 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class BaseCallbackManager {
-
-    abstract void _notifyInboxInitialized();
-
-    public abstract void _notifyInboxMessagesDidUpdate();
-
     public abstract FailureFlushListener getFailureFlushListener();
 
     /**
@@ -47,8 +41,6 @@ public abstract class BaseCallbackManager {
     public abstract InAppNotificationListener getInAppNotificationListener();
 
     public abstract List<PushPermissionResponseListener> getPushPermissionResponseListenerList();
-
-    public abstract CTInboxListener getInboxListener();
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
@@ -94,8 +86,6 @@ public abstract class BaseCallbackManager {
 
     public abstract void registerPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener);
 
-    public abstract void setInboxListener(CTInboxListener inboxListener);
-
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
      *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
@@ -127,10 +117,6 @@ public abstract class BaseCallbackManager {
     public abstract BatchListener getBatchListener();
 
     public abstract void setBatchListener(BatchListener batchListener);
-
-    public abstract CTInboxController getCTInboxController();
-
-    public abstract void setCTInboxController(CTInboxController ctInboxController);
 
     public abstract CTFeatureFlagsController getCTFeatureFlagsController();
 

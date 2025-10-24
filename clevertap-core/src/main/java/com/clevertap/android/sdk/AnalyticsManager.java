@@ -527,7 +527,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
                 inboxNotifs.put(testPushObject);
 
-                CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager);
+                CleverTapResponse cleverTapResponse = new InboxResponse(config.getAccountId(), config.getLogger(), ctLockManager); // todo call setController and setCallbacks
                 cleverTapResponse.processResponse(r, null, context);
             } catch (Throwable t) {
                 Logger.v("Failed to process inbox message from push notification payload", t);

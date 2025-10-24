@@ -18,7 +18,6 @@ import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.network.BatchListener;
-import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
@@ -42,7 +41,6 @@ public class CallbackManager extends BaseCallbackManager {
 
     private final List<PushPermissionResponseListener> pushPermissionResponseListenerList = new ArrayList<>();
 
-    private CTInboxListener inboxListener;
 
     private final CleverTapInstanceConfig config;
 
@@ -79,27 +77,6 @@ public class CallbackManager extends BaseCallbackManager {
     private CTInboxController ctInboxController;
     private CTFeatureFlagsController ctFeatureFlagsController;
     private CTDisplayUnitController ctDisplayUnitController;
-    /**
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
-     */
-    @Deprecated
-    private CTProductConfigController ctProductConfigController;
-
-    @Override
-    public void _notifyInboxMessagesDidUpdate() {
-        if (this.inboxListener != null) {
-            Utils.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (inboxListener != null) {
-                        inboxListener.inboxMessagesDidUpdate();
-                    }
-                }
-            });
-        }
-    }
 
     @Override
     public List<ChangeUserCallback> getChangeUserCallbackList() {
@@ -210,16 +187,6 @@ public class CallbackManager extends BaseCallbackManager {
         this.pushPermissionResponseListenerList.remove(pushPermissionResponseListener);
     }
 
-    @Override
-    public CTInboxListener getInboxListener() {
-        return inboxListener;
-    }
-
-    @Override
-    public void setInboxListener(final CTInboxListener inboxListener) {
-        this.inboxListener = inboxListener;
-    }
-
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
      *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
@@ -319,12 +286,6 @@ public class CallbackManager extends BaseCallbackManager {
         }
     }
 
-    void _notifyInboxInitialized() {
-        if (this.inboxListener != null) {
-            this.inboxListener.inboxDidInitialize();
-        }
-    }
-
     /**
      * Notify the registered Display Unit listener about the running Display Unit campaigns
      *
@@ -385,16 +346,6 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public void setBatchListener(BatchListener batchListener) {
         this.batchListener = batchListener;
-    }
-
-    @Override
-    public CTInboxController getCTInboxController() {
-        return this.ctInboxController;
-    }
-
-    @Override
-    public void setCTInboxController(CTInboxController ctInboxController) {
-        this.ctInboxController = ctInboxController;
     }
 
     @Override

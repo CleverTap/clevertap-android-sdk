@@ -264,9 +264,9 @@ internal object CleverTapFactory {
             arpResponse,
             ConsoleResponse(config),
             InboxResponse(
-                config,
-                ctLockManager,
-                callbackManager
+                accountId,
+                config.logger,
+                ctLockManager
             ),
             pushAmpResponse,
             FetchVariablesResponse(config, ctVariables, callbackManager),
@@ -462,7 +462,12 @@ internal object CleverTapFactory {
         
         // Inbox
         val inboxFeature = InboxFeature(
-            cTLockManager = ctLockManager
+            cTLockManager = ctLockManager,
+            inboxResponse = InboxResponse(
+                accountId,
+                config.logger,
+                ctLockManager
+            )
         )
         
         // Variables
