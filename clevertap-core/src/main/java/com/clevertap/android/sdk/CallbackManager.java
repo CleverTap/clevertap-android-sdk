@@ -4,11 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
-import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.login.ChangeUserCallback;
-import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import java.lang.ref.WeakReference;
@@ -19,13 +17,7 @@ import java.util.List;
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager extends BaseCallbackManager {
 
-    private GeofenceCallback geofenceCallback;
-
     private SCDomainListener scDomainListener;
-
-    private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
-
-    private InAppNotificationListener inAppNotificationListener;
 
     private final List<PushPermissionResponseListener> pushPermissionResponseListenerList = new ArrayList<>();
 
@@ -43,15 +35,13 @@ public class CallbackManager extends BaseCallbackManager {
 
     private SyncListener syncListener = null;
 
-    private FetchInAppsCallback fetchInAppsCallback;
-
     private final List<ChangeUserCallback> changeUserCallbackList = Collections.synchronizedList(new ArrayList<>());
+    private GeofenceCallback geofenceCallback;
 
     public CallbackManager(DeviceInfo deviceInfo) {
         this.deviceInfo = deviceInfo;
     }
 
-    private BatchListener batchListener;
     @Override
     public List<ChangeUserCallback> getChangeUserCallbackList() {
         return changeUserCallbackList;
@@ -93,32 +83,8 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public InAppNotificationButtonListener getInAppNotificationButtonListener() {
-        if (inAppNotificationButtonListener != null && inAppNotificationButtonListener.get() != null) {
-            return inAppNotificationButtonListener.get();
-        }
-        return null;
-    }
-
-    @Override
-    public void setInAppNotificationButtonListener(
-            InAppNotificationButtonListener inAppNotificationButtonListener) {
-        this.inAppNotificationButtonListener = new WeakReference<>(inAppNotificationButtonListener);
-    }
-
-    @Override
-    public InAppNotificationListener getInAppNotificationListener() {
-        return inAppNotificationListener;
-    }
-
-    @Override
     public List<PushPermissionResponseListener> getPushPermissionResponseListenerList() {
         return pushPermissionResponseListenerList;
-    }
-
-    @Override
-    public void setInAppNotificationListener(final InAppNotificationListener inAppNotificationListener) {
-        this.inAppNotificationListener = inAppNotificationListener;
     }
 
     @Override
@@ -222,24 +188,5 @@ public class CallbackManager extends BaseCallbackManager {
 
     void notifyUserProfileInitialized() {
         notifyUserProfileInitialized(deviceInfo.getDeviceID());
-    }
-
-    @Override
-    public FetchInAppsCallback getFetchInAppsCallback() {
-        return fetchInAppsCallback;
-    }
-
-    @Override
-    public void setFetchInAppsCallback(FetchInAppsCallback fetchInAppsCallback) {
-        this.fetchInAppsCallback = fetchInAppsCallback;
-    }
-
-    public BatchListener getBatchListener() {
-        return batchListener;
-    }
-
-    @Override
-    public void setBatchListener(BatchListener batchListener) {
-        this.batchListener = batchListener;
     }
 }

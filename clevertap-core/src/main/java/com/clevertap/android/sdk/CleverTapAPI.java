@@ -1834,7 +1834,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public InAppNotificationListener getInAppNotificationListener() {
-        return coreState.getCallbackManager().getInAppNotificationListener();
+        return coreState.getInApp().getInAppCallbackManager().getInAppNotificationListener();
     }
 
     /**
@@ -1844,7 +1844,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener) {
-        coreState.getCallbackManager().setInAppNotificationListener(inAppNotificationListener);
+        coreState.getInApp().getInAppCallbackManager().setInAppNotificationListener(inAppNotificationListener);
     }
 
     /**
@@ -2701,7 +2701,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings("unused")
     public void setInAppNotificationButtonListener(InAppNotificationButtonListener listener) {
-        coreState.getCallbackManager().setInAppNotificationButtonListener(listener);
+        coreState.getInApp().getInAppCallbackManager().setInAppNotificationButtonListener(listener);
     }
 
     @SuppressWarnings("unused")
@@ -3437,7 +3437,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         Logger.v(Constants.LOG_TAG_INAPP + " Fetching In Apps...");
 
         if (callback != null) {
-            coreState.getCallbackManager().setFetchInAppsCallback(callback);
+            coreState.getInApp().getInAppCallbackManager().setFetchInAppsCallback(callback);
         }
 
         JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS);

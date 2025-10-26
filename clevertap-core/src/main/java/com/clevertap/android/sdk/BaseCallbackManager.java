@@ -2,15 +2,11 @@ package com.clevertap.android.sdk;
 
 import androidx.annotation.NonNull;
 
-import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.login.ChangeUserCallback;
-import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
-
-import org.json.JSONArray;
 
 import java.util.List;
 
@@ -20,10 +16,6 @@ public abstract class BaseCallbackManager {
     public abstract GeofenceCallback getGeofenceCallback();
 
     public abstract SCDomainListener getSCDomainListener();
-
-    public abstract InAppNotificationButtonListener getInAppNotificationButtonListener();
-
-    public abstract InAppNotificationListener getInAppNotificationListener();
 
     public abstract List<PushPermissionResponseListener> getPushPermissionResponseListenerList();
 
@@ -48,11 +40,6 @@ public abstract class BaseCallbackManager {
 
     public abstract void setSCDomainListener(SCDomainListener scDomainListener);
 
-    public abstract void setInAppNotificationButtonListener(
-            InAppNotificationButtonListener inAppNotificationButtonListener);
-
-    public abstract void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener);
-
     public abstract void unregisterPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener);
 
     public abstract void registerPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener);
@@ -76,21 +63,6 @@ public abstract class BaseCallbackManager {
     public abstract void removeOnInitCleverTapIDListener(@NonNull OnInitCleverTapIDListener listener);
 
     public abstract void notifyCleverTapIDChanged(String id);
-
-    public abstract FetchInAppsCallback getFetchInAppsCallback();
-
-    public abstract void setFetchInAppsCallback(FetchInAppsCallback fetchInAppsCallback);
-
-    public abstract BatchListener getBatchListener();
-
-    public abstract void setBatchListener(BatchListener batchListener);
-
-    public void invokeBatchListener(JSONArray array, boolean success) {
-        BatchListener batchListener = getBatchListener();
-        if (batchListener != null) {
-            batchListener.onBatchSent(array, success);
-        }
-    }
 
     public abstract List<ChangeUserCallback> getChangeUserCallbackList();
 

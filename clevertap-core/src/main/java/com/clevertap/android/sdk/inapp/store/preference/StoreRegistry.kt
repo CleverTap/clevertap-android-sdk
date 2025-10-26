@@ -17,4 +17,8 @@ internal data class StoreRegistry(
     val legacyInAppStore: LegacyInAppStore,
     val inAppAssetsStore: InAppAssetsStore,
     val filesStore: FileStore
-)
+) {
+    fun isNotInitialised() : Boolean {
+        return inAppStore !== null && impressionStore != null
+    }
+}

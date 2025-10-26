@@ -700,7 +700,7 @@ internal open class CoreState(
         core.config.logger.verbose(config.accountId, "Processing response : $bodyJson")
 
         if (bodyString.isNullOrBlank() || bodyJson == null) {
-            callback.callbackManager.invokeBatchListener(requestBody.queue, true)
+            inApp.batchSent(requestBody.queue, true)
             return
         }
 
@@ -713,7 +713,7 @@ internal open class CoreState(
             when (val decryptResponse = network.encryptionManager.decryptResponse(bodyString = bodyString)) {
                 is com.clevertap.android.sdk.network.api.EncryptionFailure -> {
                     core.config.logger.verbose(config.accountId, "Failed to decrypt response")
-                    callback.callbackManager.invokeBatchListener(requestBody.queue, false)
+                    inApp.batchSent(requestBody.queue, false)
                     return
                 }
                 is com.clevertap.android.sdk.network.api.EncryptionSuccess -> {
@@ -733,7 +733,7 @@ internal open class CoreState(
         )
 
         // Notify success
-        callback.callbackManager.invokeBatchListener(requestBody.queue, true)
+        inApp.batchSent(requestBody.queue, true)
     }
 
     override fun handleVariablesResponse(response: Response) {
@@ -761,7 +761,7 @@ internal open class CoreState(
     }
 
     override fun onNetworkSuccess(queue: JSONArray, success: Boolean) {
-        callback.callbackManager.invokeBatchListener(queue, success)
+        inApp.batchSent(queue, success)
     }
 
     override fun onFlushFailure(context: Context) {
@@ -799,7 +799,7 @@ internal open class CoreState(
 
     override fun didNotFlush() {
         variables.invokeCallbacksForNetworkError()
-        callbackManager.invokeBatchListener(JSONArray(), false)
+        inApp.batchSent(JSONArray(), false)
     }
 
     // ============ CORE DEPENDENCIES ACCESS ============

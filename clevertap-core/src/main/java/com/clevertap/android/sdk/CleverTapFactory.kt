@@ -28,11 +28,8 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginInfoProvider
-import com.clevertap.android.sdk.network.AppLaunchListener
 import com.clevertap.android.sdk.network.ArpRepo
-import com.clevertap.android.sdk.network.CompositeBatchListener
 import com.clevertap.android.sdk.network.ContentFetchManager
-import com.clevertap.android.sdk.network.FetchInAppListener
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
@@ -79,6 +76,7 @@ import com.clevertap.android.sdk.features.ProductConfigFeature
 import com.clevertap.android.sdk.features.ProfileFeature
 import com.clevertap.android.sdk.features.PushFeature
 import com.clevertap.android.sdk.features.VariablesFeature
+import com.clevertap.android.sdk.features.callbacks.InAppCallbackManager
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -207,15 +205,6 @@ internal object CleverTapFactory {
 
         val parser = Parser(ctVariables)
 
-        val inAppResponse = InAppResponse(
-            config,
-            false,
-            storeRegistry,
-            triggersManager,
-            templatesManager,
-            coreMetaData,
-        )
-
         val ctApiWrapper = CtApiWrapper(
             networkRepo = networkRepo,
             config = config,
@@ -259,7 +248,6 @@ internal object CleverTapFactory {
             databaseManager
         )
         val cleverTapResponses = listOf<CleverTapResponse>(
-            inAppResponse,
             MetadataResponse(config, deviceInfo, ijRepo),
             arpResponse,
             ConsoleResponse(config),
@@ -312,15 +300,6 @@ internal object CleverTapFactory {
         )
         callbackManager.setFailureFlushListener(baseEventQueueManager);
 
-        val inAppResponseForSendTestInApp = InAppResponse(
-            config,
-            true,
-            storeRegistry,
-            triggersManager,
-            templatesManager,
-            coreMetaData
-        )
-
         val analyticsManager = AnalyticsManager(
             context,
             config,
@@ -331,7 +310,7 @@ internal object CleverTapFactory {
             deviceInfo,
             callbackManager,
             ctLockManager,
-            inAppResponseForSendTestInApp,
+            null, // todo fixme
             SYSTEM,
             executors
         )
@@ -343,11 +322,12 @@ internal object CleverTapFactory {
             { FileResourceProvider.getInstance(context, config.logger) }
         )
 
+        val inAppCallbackManager = InAppCallbackManager()
         val inAppController = InAppController(
             context,
             config,
             executors,
-            callbackManager,
+            inAppCallbackManager,
             analyticsManager,
             coreMetaData,
             ManifestInfo.getInstance(context),
@@ -360,15 +340,6 @@ internal object CleverTapFactory {
             SYSTEM
         )
         baseEventQueueManager.setInAppController(inAppController)
-        inAppResponse.setInAppController(inAppController)
-        inAppResponseForSendTestInApp.setInAppController(inAppController)
-
-        val batchListener = CompositeBatchListener()
-        val appLaunchListener = AppLaunchListener()
-        appLaunchListener.addListener(inAppController.onAppLaunchEventSent)
-        batchListener.addListener(appLaunchListener)
-        batchListener.addListener(FetchInAppListener(callbackManager))
-        callbackManager.batchListener = batchListener
 
         val locationManager = LocationManager(context, config, coreMetaData, baseEventQueueManager)
 
@@ -456,7 +427,12 @@ internal object CleverTapFactory {
             inAppController = inAppController,
             evaluationManager = evaluationManager,
             impressionManager = impressionManager,
-            templatesManager = templatesManager
+            templatesManager = templatesManager,
+            inAppResponse = InAppResponse(accountId, config.logger, false, templatesManager),
+            inAppCallbackManager = inAppCallbackManager,
+            storeRegistry = storeRegistry,
+            executors = executors,
+            triggerManager = triggersManager
         )
         
         // Inbox
