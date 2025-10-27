@@ -10,8 +10,6 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import java.util.List;
 
 public abstract class BaseCallbackManager {
-    public abstract FailureFlushListener getFailureFlushListener();
-
     public abstract GeofenceCallback getGeofenceCallback();
 
     public abstract SCDomainListener getSCDomainListener();
@@ -34,8 +32,6 @@ public abstract class BaseCallbackManager {
     public abstract void notifyUserProfileInitialized(String deviceID);
 
     abstract void notifyUserProfileInitialized();
-
-    public abstract void setFailureFlushListener(FailureFlushListener failureFlushListener);
 
     public abstract void setSCDomainListener(SCDomainListener scDomainListener);
 

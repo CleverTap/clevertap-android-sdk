@@ -22,8 +22,6 @@ public class CallbackManager extends BaseCallbackManager {
 
     private final DeviceInfo deviceInfo;
 
-    private FailureFlushListener failureFlushListener;
-
     @Deprecated
     private final List<OnInitCleverTapIDListener> onInitCleverTapIDListeners =  Collections.synchronizedList(new ArrayList<>());
 
@@ -38,16 +36,6 @@ public class CallbackManager extends BaseCallbackManager {
 
     public CallbackManager(DeviceInfo deviceInfo) {
         this.deviceInfo = deviceInfo;
-    }
-
-    @Override
-    public FailureFlushListener getFailureFlushListener() {
-        return failureFlushListener;
-    }
-
-    @Override
-    public void setFailureFlushListener(final FailureFlushListener failureFlushListener) {
-        this.failureFlushListener = failureFlushListener;
     }
 
     @Override

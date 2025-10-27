@@ -173,9 +173,12 @@ internal object CleverTapFactory {
         val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
 
         val inAppActionHandler = InAppActionHandler(
-            context,
-            config,
-            PushPermissionHandler(config, callbackManager.pushPermissionResponseListenerList)
+            context = context,
+            ctConfig = config,
+            pushPermissionHandler = PushPermissionHandler(
+                config = config,
+                ctListeners = callbackManager.pushPermissionResponseListenerList
+            )
         )
         val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
         val templatesManager = TemplatesManager.createInstance(config, systemTemplates)
@@ -298,7 +301,6 @@ internal object CleverTapFactory {
             null, // set this later
             executors
         )
-        callbackManager.setFailureFlushListener(baseEventQueueManager);
 
         val analyticsManager = AnalyticsManager(
             context,

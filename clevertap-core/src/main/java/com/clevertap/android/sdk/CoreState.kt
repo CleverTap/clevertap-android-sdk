@@ -754,7 +754,7 @@ internal open class CoreState(
     }
 
     override fun onFlushFailure(context: Context) {
-        callback.callbackManager.failureFlushListener?.failureFlush(context)
+        analytics.networkFailed()
     }
 
     override fun notifyHeadersSent(allHeaders: JSONObject, endpointId: EndpointId) {
