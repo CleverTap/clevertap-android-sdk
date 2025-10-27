@@ -463,7 +463,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
+        if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)) {
             inAppPreviewHandler.handleInAppPreview(extras);
             return;
         }

@@ -1573,7 +1573,7 @@ class AnalyticsManagerTest {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "test")
             putString(Constants.WZRK_ACCT_ID_KEY, cleverTapInstanceConfig.accountId)
-            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{}")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "{}")
         }
         analyticsManagerSUT.pushNotificationClickedEvent(extras)
         verify { inAppPreviewHandler.handleInAppPreview(extras) }
