@@ -29,15 +29,8 @@ public class CallbackManager extends BaseCallbackManager {
 
     private SyncListener syncListener = null;
 
-    private GeofenceCallback geofenceCallback;
-
     public CallbackManager(DeviceInfo deviceInfo) {
         this.deviceInfo = deviceInfo;
-    }
-
-    @Override
-    public GeofenceCallback getGeofenceCallback() {
-        return geofenceCallback;
     }
 
     @Override

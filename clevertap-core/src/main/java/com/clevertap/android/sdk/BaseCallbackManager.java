@@ -9,8 +9,6 @@ import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import java.util.List;
 
 public abstract class BaseCallbackManager {
-    public abstract GeofenceCallback getGeofenceCallback();
-
     public abstract SCDomainListener getSCDomainListener();
 
     public abstract List<PushPermissionResponseListener> getPushPermissionResponseListenerList();
