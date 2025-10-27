@@ -40,7 +40,7 @@ public abstract class BaseAnalyticsManager {
 
     public abstract void pushInstallReferrer(String source, String medium, String campaign);
 
-    public abstract void pushNotificationClickedEvent(Bundle extras);
+    public abstract boolean pushNotificationClickedEvent(Bundle extras);
 
     @SuppressWarnings({"unused", "WeakerAccess"})
     public abstract void pushNotificationViewedEvent(Bundle extras);

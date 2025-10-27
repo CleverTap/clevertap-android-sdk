@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.features
 
 import android.content.Context
 import com.clevertap.android.sdk.CoreContract
+import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener
 import com.clevertap.android.sdk.response.PushAmpResponse
@@ -14,7 +15,8 @@ import org.json.JSONObject
 internal data class PushFeature(
     val pushProviders: PushProviders,
     val pushAmpResponse: PushAmpResponse,
-    var pushAmpListener: CTPushAmpListener? = null
+    var pushAmpListener: CTPushAmpListener? = null,
+    var pushNotificationListener : CTPushNotificationListener? = null
 ) : CleverTapFeature {
 
     lateinit var coreContract: CoreContract

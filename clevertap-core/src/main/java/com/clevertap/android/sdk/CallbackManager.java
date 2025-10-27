@@ -7,7 +7,6 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
-import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,8 +26,6 @@ public class CallbackManager extends BaseCallbackManager {
 
     @Deprecated
     private WeakReference<CTProductConfigListener> productConfigListener;
-
-    private CTPushNotificationListener pushNotificationListener = null;
 
     private SyncListener syncListener = null;
 
@@ -93,17 +90,6 @@ public class CallbackManager extends BaseCallbackManager {
         if (productConfigListener != null) {
             this.productConfigListener = new WeakReference<>(productConfigListener);
         }
-    }
-
-    @Override
-    public CTPushNotificationListener getPushNotificationListener() {
-        return pushNotificationListener;
-    }
-
-    @Override
-    public void setPushNotificationListener(
-            final CTPushNotificationListener pushNotificationListener) {
-        this.pushNotificationListener = pushNotificationListener;
     }
 
     @Override

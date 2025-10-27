@@ -967,7 +967,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
             try {
                 if (instance != null) {
-                    instance.coreState.getActivityLifeCycleManager().activityPaused();
+                    instance.coreState.activityPaused();
                 }
             } catch (Throwable t) {
                 // Ignore
@@ -975,7 +975,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void onActivityResumed(Activity activity) {
         onActivityResumed(activity, null);
     }
@@ -1012,7 +1012,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
             try {
                 if (instance != null) {
-                    instance.coreState.getActivityLifeCycleManager().activityResumed(activity);
+                    instance.coreState.activityResumed(activity);
                 }
             } catch (Throwable t) {
                 Logger.v("Throwable - " + t.getLocalizedMessage());
@@ -1502,7 +1502,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("WeakerAccess")
     public CTPushNotificationListener getCTPushNotificationListener() {
-        return coreState.getCallbackManager().getPushNotificationListener();
+        return coreState.getPush().getPushNotificationListener();
     }
 
     /**
@@ -1512,7 +1512,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void setCTPushNotificationListener(CTPushNotificationListener pushNotificationListener) {
-        coreState.getCallbackManager().setPushNotificationListener(pushNotificationListener);
+        coreState.getPush().setPushNotificationListener(pushNotificationListener);
     }
 
     /**
@@ -2525,7 +2525,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushNotificationClickedEvent(final Bundle extras) {
-        coreState.getAnalyticsManager().pushNotificationClickedEvent(extras);
+        boolean sent = coreState.getAnalyticsManager().pushNotificationClickedEvent(extras);
+        if (sent) {
+            CTPushNotificationListener pnl = coreState.getPush().getPushNotificationListener();
+            if (pnl != null) {
+                pnl.onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras));
+            }
+        }
     }
 
     /**
@@ -2966,6 +2972,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return coreState.getDeviceInfo().isErrorDeviceId();
     }
 
+    @SuppressWarnings("unused")
     static void onActivityCreated(Activity activity) {
         onActivityCreated(activity, null);
     }
@@ -3029,8 +3036,44 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             for (String accountId : CleverTapAPI.instances.keySet()) {
                 CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
                 if (instance != null) {
-                    instance.coreState.getActivityLifeCycleManager()
-                            .onActivityCreated(notification, deepLink, _accountId);
+                    handleDeepLinkOrNotificationClickedLaunch(instance.coreState, notification, deepLink, _accountId);
+                }
+            }
+        } catch (Throwable t) {
+            Logger.v("Throwable - " + t.getLocalizedMessage());
+        }
+    }
+
+    private static void handleDeepLinkOrNotificationClickedLaunch(
+            @NonNull CoreState coreState,
+            @Nullable Bundle notification,
+            @Nullable Uri deepLink,
+            @Nullable String accountId
+    ) {
+        try {
+            boolean shouldProcess = (accountId == null && coreState.config().isDefaultInstance())
+                    || coreState.config().getAccountId().equals(accountId);
+
+            if (shouldProcess) {
+                if (notification != null && !notification.isEmpty() && notification
+                        .containsKey(Constants.NOTIFICATION_TAG)
+                ) {
+                    boolean sent = coreState.analytics().pushNotificationClickedEvent(notification);
+                    if (sent) {
+                        // todo handle me when changing and notify the listeners
+                        CTPushNotificationListener pnl = coreState.getPush().getPushNotificationListener();
+                        if (pnl != null) {
+                            pnl.onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(notification));
+                        }
+                    }
+                }
+
+                if (deepLink != null) {
+                    try {
+                        coreState.analytics().pushDeepLink(deepLink, false);
+                    } catch (Throwable t) {
+                        // no-op
+                    }
                 }
             }
         } catch (Throwable t) {

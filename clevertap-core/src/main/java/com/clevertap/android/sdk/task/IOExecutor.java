@@ -30,7 +30,7 @@ class IOExecutor implements ExecutorService {
         );
     }
 
-    private final int numCores = Runtime.getRuntime().availableProcessors();
+    private final int numCores = Runtime.getRuntime().availableProcessors(); //1.2.4
 
     public void setExecutorService(final ExecutorService executorService) {
         this.executorService = executorService;

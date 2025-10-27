@@ -1,9 +1,14 @@
 package com.clevertap.android.sdk
 
+import android.app.Activity
 import android.content.Context
+import android.os.RemoteException
 import android.text.TextUtils
 import androidx.annotation.AnyThread
 import androidx.annotation.WorkerThread
+import com.android.installreferrer.api.InstallReferrerClient
+import com.android.installreferrer.api.InstallReferrerStateListener
+import com.android.installreferrer.api.ReferrerDetails
 import com.clevertap.android.sdk.StorageHelper.putString
 import com.clevertap.android.sdk.cryption.CryptMigrator
 import com.clevertap.android.sdk.cryption.CryptRepository
@@ -23,7 +28,6 @@ import com.clevertap.android.sdk.features.FeatureFlagFeature
 import com.clevertap.android.sdk.features.GeofenceFeature
 import com.clevertap.android.sdk.features.InAppFeature
 import com.clevertap.android.sdk.features.InboxFeature
-import com.clevertap.android.sdk.features.LifecycleFeature
 import com.clevertap.android.sdk.features.NetworkFeature
 import com.clevertap.android.sdk.features.ProductConfigFeature
 import com.clevertap.android.sdk.features.ProfileFeature
@@ -74,7 +78,6 @@ internal open class CoreState(
     val inbox: InboxFeature,
     val variables: VariablesFeature,
     val push: PushFeature,
-    val lifecycle: LifecycleFeature,
     val callback: CallbackFeature,
     val productConfig: ProductConfigFeature,
     val displayUnitF: DisplayUnitFeature,
@@ -95,7 +98,6 @@ internal open class CoreState(
     val deviceInfo: DeviceInfo get() = core.deviceInfo
     val eventMediator: EventMediator get() = analytics.eventMediator
     val localDataStore: LocalDataStore get() = data.localDataStore
-    val activityLifeCycleManager: ActivityLifeCycleManager get() = lifecycle.activityLifeCycleManager
     val analyticsManager: AnalyticsManager get() = analytics.analyticsManager
     val baseEventQueueManager: BaseEventQueueManager get() = analytics.baseEventQueueManager
     val cTLockManager: CTLockManager get() = inbox.cTLockManager
@@ -837,5 +839,153 @@ internal open class CoreState(
     private fun notifyListenerForPushImpressionSentToServer(listenerKey: String) {
         val notificationRenderedListener = CleverTapAPI.getNotificationRenderedListener(listenerKey)
         notificationRenderedListener?.onNotificationRendered(true)
+    }
+
+    // lifecycle triggers
+    fun activityPaused() {
+        CoreMetaData.setAppForeground(false)
+        analytics.sessionManager.appLastSeen = clock.currentTimeMillis()
+        core.config.logger.verbose(core.config.accountId, "App in background")
+        val task = executors.postAsyncSafelyTask<Unit>()
+        task.execute(
+            "activityPaused"
+        ) {
+            val now = core.clock.currentTimeSecondsInt()
+            if (core.coreMetaData.inCurrentSession()) {
+                try {
+                    StorageHelper.putInt(
+                        context,
+                        config.accountId,
+                        Constants.LAST_SESSION_EPOCH,
+                        now
+                    )
+                    core.config.getLogger()
+                        .verbose(core.config.accountId, "Updated session time: $now")
+                } catch (t: Throwable) {
+                    core.config.getLogger().verbose(
+                        core.config.accountId,
+                        "Failed to update session time time: " + t.message
+                    )
+                }
+            }
+        }
+    }
+
+    fun activityResumed(activity: Activity?) {
+        core.config.getLogger().verbose(core.config.accountId, "App in foreground")
+        analytics.sessionManager.checkTimeoutSession()
+
+        //Anything in this If block will run once per App Launch.
+        if (!core.coreMetaData.isAppLaunchPushed) {
+            analytics.analyticsManager.pushAppLaunchedEvent()
+            analytics.analyticsManager.fetchFeatureFlags()
+            push.pushProviders.onTokenRefresh()
+            val task = core.executors.postAsyncSafelyTask<Unit>()
+            task.execute("HandlingInstallReferrer") {
+                if (!core.coreMetaData.isInstallReferrerDataSent && core.coreMetaData.isFirstSession) {
+                    handleInstallReferrerOnFirstInstall()
+                }
+            }
+
+            val cleanUpTask = core.executors.ioTask<Unit>()
+            cleanUpTask.execute("CleanUpOldGIFs") {
+                Utils.cleanupOldGIFs(core.context, core.config, core.clock)
+            }
+
+            try {
+                geofenceF.geofenceCallback?.triggerLocation()
+            } catch (e: IllegalStateException) {
+                core.config.getLogger().verbose(core.config.accountId, e.localizedMessage)
+            } catch (_: Exception) {
+                core.config.getLogger().verbose(core.config.accountId, "Failed to trigger location")
+            }
+        }
+        analytics.baseEventQueueManager.pushInitialEventsAsync()
+        inApp.inAppController.showNotificationIfAvailable()
+    }
+
+    private fun handleInstallReferrerOnFirstInstall() {
+        core.config.getLogger().verbose(core.config.accountId, "Starting to handle install referrer")
+        try {
+            val referrerClient = InstallReferrerClient.newBuilder(context).build()
+            referrerClient.startConnection(object : InstallReferrerStateListener {
+                override fun onInstallReferrerServiceDisconnected() {
+                    if (!coreMetaData.isInstallReferrerDataSent) {
+                        handleInstallReferrerOnFirstInstall()
+                    }
+                }
+
+                override fun onInstallReferrerSetupFinished(responseCode: Int) {
+                    when (responseCode) {
+                        InstallReferrerClient.InstallReferrerResponse.OK -> {
+                            // Connection established
+                            val task = core.executors.postAsyncSafelyTask<ReferrerDetails?>()
+
+                            task.addOnSuccessListener { response: ReferrerDetails? ->
+                                try {
+                                    val referrerUrl = response!!.installReferrer
+                                    core.coreMetaData.referrerClickTime =
+                                        response.referrerClickTimestampSeconds
+                                    core.coreMetaData.appInstallTime =
+                                        response.installBeginTimestampSeconds
+                                    analytics.analyticsManager.pushInstallReferrer(referrerUrl)
+                                    core.coreMetaData.isInstallReferrerDataSent = true
+                                    core.config.getLogger().debug(
+                                        core.config.accountId,
+                                        "Install Referrer data set [Referrer URL-$referrerUrl]"
+                                    )
+                                } catch (npe: NullPointerException) {
+                                    core.config.getLogger().debug(
+                                        core.config.accountId,
+                                        "Install referrer client null pointer exception caused by Google Play Install Referrer library - "
+                                                + npe
+                                            .message
+                                    )
+                                    referrerClient.endConnection()
+                                    core.coreMetaData.isInstallReferrerDataSent = false
+                                }
+                            }
+
+                            task.execute("ActivityLifeCycleManager#getInstallReferrer") {
+                                var response: ReferrerDetails? = null
+                                try {
+                                    response = referrerClient.installReferrer
+                                } catch (e: RemoteException) {
+                                    core.config.getLogger().debug(
+                                        core.config.accountId,
+                                        "Remote exception caused by Google Play Install Referrer library - " + e
+                                            .message
+                                    )
+                                    referrerClient.endConnection()
+                                    core.coreMetaData.isInstallReferrerDataSent = false
+                                }
+                                response
+                            }
+                        }
+
+                        // API not available on the current Play Store app.
+                        InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED ->
+                            core.config.getLogger().debug(
+                                core.config.accountId,
+                                "Install Referrer data not set, API not supported by Play Store on device"
+                            )
+
+                        // Connection couldn't be established.
+                        InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE ->
+                            core.config.getLogger().debug(
+                                core.config.accountId,
+                                "Install Referrer data not set, connection to Play Store unavailable"
+                            )
+                    }
+                }
+            })
+        } catch (t: Throwable) {
+            config.getLogger().verbose(
+                config.accountId,
+                ("Google Play Install Referrer's InstallReferrerClient Class not found - " + t
+                    .localizedMessage
+                        + " \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle")
+            )
+        }
     }
 }

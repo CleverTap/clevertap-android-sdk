@@ -70,7 +70,6 @@ import com.clevertap.android.sdk.features.FeatureFlagFeature
 import com.clevertap.android.sdk.features.GeofenceFeature
 import com.clevertap.android.sdk.features.InAppFeature
 import com.clevertap.android.sdk.features.InboxFeature
-import com.clevertap.android.sdk.features.LifecycleFeature
 import com.clevertap.android.sdk.features.NetworkFeature
 import com.clevertap.android.sdk.features.ProductConfigFeature
 import com.clevertap.android.sdk.features.ProfileFeature
@@ -310,7 +309,6 @@ internal object CleverTapFactory {
             validationResultStack,
             coreMetaData,
             deviceInfo,
-            callbackManager,
             ctLockManager,
             null, // todo fixme
             SYSTEM,
@@ -359,20 +357,6 @@ internal object CleverTapFactory {
         )
         queueHeaderBuilder.pushProviders = pushProviders
         pushAmpResponse.setPushProviders(pushProviders)
-
-        val activityLifeCycleManager = ActivityLifeCycleManager(
-            context,
-            config,
-            analyticsManager,
-            coreMetaData,
-            sessionManager,
-            pushProviders,
-            callbackManager,
-            inAppController,
-            baseEventQueueManager,
-            executors,
-            SYSTEM
-        )
 
         // ========== Build Feature Groups ==========
         
@@ -461,12 +445,7 @@ internal object CleverTapFactory {
             pushProviders = pushProviders,
             pushAmpResponse = pushAmpResponse
         )
-        
-        // Lifecycle
-        val lifecycleFeature = LifecycleFeature(
-            activityLifeCycleManager = activityLifeCycleManager
-        )
-        
+
         // Callback
         val callbackFeature = CallbackFeature(
             callbackManager = callbackManager
@@ -499,7 +478,6 @@ internal object CleverTapFactory {
             inbox = inboxFeature,
             variables = variablesFeature,
             push = pushFeature,
-            lifecycle = lifecycleFeature,
             callback = callbackFeature,
             productConfig = ProductConfigFeature(
                 productConfigResponse = ProductConfigResponse(config, coreMetaData),

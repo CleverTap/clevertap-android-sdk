@@ -5,7 +5,6 @@ import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
-import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 
 import java.util.List;
 
@@ -23,8 +22,6 @@ public abstract class BaseCallbackManager {
      */
     @Deprecated
     public abstract CTProductConfigListener getProductConfigListener();
-
-    public abstract CTPushNotificationListener getPushNotificationListener();
 
     public abstract SyncListener getSyncListener();
 
@@ -47,9 +44,6 @@ public abstract class BaseCallbackManager {
     @Deprecated
     public abstract void setProductConfigListener(
             CTProductConfigListener productConfigListener);
-
-    public abstract void setPushNotificationListener(
-            CTPushNotificationListener pushNotificationListener);
 
     public abstract void setSyncListener(SyncListener syncListener);
 

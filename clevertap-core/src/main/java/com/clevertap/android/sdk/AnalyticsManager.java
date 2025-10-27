@@ -7,7 +7,6 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -39,7 +38,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final CTLockManager ctLockManager;
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
     private final BaseEventQueueManager baseEventQueueManager;
-    private final BaseCallbackManager callbackManager;
     private final CleverTapInstanceConfig config;
     private final Context context;
     private final CoreMetaData coreMetaData;
@@ -62,7 +60,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             ValidationResultStack validationResultStack,
             CoreMetaData coreMetaData,
             DeviceInfo deviceInfo,
-            BaseCallbackManager callbackManager,
             final CTLockManager ctLockManager,
             InAppResponse inAppResponse,
             Clock currentTimeProvider,
@@ -75,7 +72,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.validationResultStack = validationResultStack;
         this.coreMetaData = coreMetaData;
         this.deviceInfo = deviceInfo;
-        this.callbackManager = callbackManager;
         this.ctLockManager = ctLockManager;
         this.inAppResponse = inAppResponse;
         this.currentTimeProvider = currentTimeProvider;
@@ -408,19 +404,19 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     @Override
-    public void pushNotificationClickedEvent(final Bundle extras) {
+    public boolean pushNotificationClickedEvent(final Bundle extras) {
 
         if (config.isAnalyticsOnly()) {
             config.getLogger()
                     .debug(config.getAccountId(),
                             "is Analytics Only - will not process Notification Clicked event.");
-            return;
+            return false;
         }
 
         if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
             config.getLogger().debug(config.getAccountId(),
                     "Push notification not from CleverTap - will not process Notification Clicked event.");
-            return;
+            return false;
         }
 
         String accountId = null;
@@ -436,28 +432,28 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         if (!shouldProcess) {
             config.getLogger().debug(config.getAccountId(),
                     "Push notification not targeted at this instance, not processing Notification Clicked Event");
-            return;
+            return false;
         }
 
         if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
             handleInAppPreview(extras);
-            return;
+            return false;
         }
 
         if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
             handleInboxPreview(extras);
-            return;
+            return false;
         }
 
         if (extras.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
             handleSendTestForDisplayUnits(extras);
-            return;
+            return false;
         }
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             config.getLogger().debug(config.getAccountId(),
                     "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras);
-            return;
+            return false;
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (5 secs) don't process
@@ -470,7 +466,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             config.getLogger().debug(config.getAccountId(),
                     "Already processed Notification Clicked event for " + extras
                             + ", dropping duplicate.");
-            return;
+            return false;
         }
 
         try {
@@ -482,12 +478,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } catch (Throwable t) {
             // We won't get here
         }
-        if (callbackManager.getPushNotificationListener() != null) {
-            callbackManager.getPushNotificationListener()
-                    .onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras));
-        } else {
-            Logger.d("CTPushNotificationListener is not set");
-        }
+        return true;
     }
 
     private void handleInboxPreview(Bundle extras) {
@@ -513,6 +504,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         });
     }
 
+    // todo handle previews flow gracefully via core.
     private void handleInAppPreview(Bundle extras) {
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("testInappNotification", () -> {
@@ -532,7 +524,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 JSONObject inAppResponseJson = new JSONObject();
                 inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
 
-                inAppResponse.processResponse(inAppResponseJson, null, context);
+                //inAppResponse.processResponse(inAppResponseJson, null, context);
             } catch (Throwable t) {
                 Logger.v("Failed to display inapp notification from push notification payload", t);
             }
