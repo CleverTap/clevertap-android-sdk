@@ -2041,27 +2041,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Returns the SyncListener object
-     *
-     * @return The {@link SyncListener} object
-     * @noinspection unused
-     */
-    @SuppressWarnings("WeakerAccess")
-    public SyncListener getSyncListener() {
-        return coreState.getCallbackManager().getSyncListener();
-    }
-
-    /**
-     * This method is used to set the SyncListener
-     *
-     * @param syncListener The {@link SyncListener} object
-     */
-    @SuppressWarnings("unused")
-    public void setSyncListener(SyncListener syncListener) {
-        coreState.getCallbackManager().setSyncListener(syncListener);
-    }
-
-    /**
      * Returns the time elapsed by the user on the app
      *
      * @return Time elapsed by user on the app in int

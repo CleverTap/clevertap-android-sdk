@@ -19,18 +19,13 @@ public class CallbackManager extends BaseCallbackManager {
 
     private final List<PushPermissionResponseListener> pushPermissionResponseListenerList = new ArrayList<>();
 
-    private final DeviceInfo deviceInfo;
-
     @Deprecated
     private final List<OnInitCleverTapIDListener> onInitCleverTapIDListeners =  Collections.synchronizedList(new ArrayList<>());
 
     @Deprecated
     private WeakReference<CTProductConfigListener> productConfigListener;
 
-    private SyncListener syncListener = null;
-
-    public CallbackManager(DeviceInfo deviceInfo) {
-        this.deviceInfo = deviceInfo;
+    public CallbackManager() {
     }
 
     @Override
@@ -86,16 +81,6 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public SyncListener getSyncListener() {
-        return syncListener;
-    }
-
-    @Override
-    public void setSyncListener(final SyncListener syncListener) {
-        this.syncListener = syncListener;
-    }
-
-    @Override
     public void addOnInitCleverTapIDListener(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
         onInitCleverTapIDListeners.add(onInitCleverTapIDListener);
     }
@@ -114,29 +99,5 @@ public class CallbackManager extends BaseCallbackManager {
                 }
             }
         }
-    }
-
-    //Profile
-    @Override
-    public void notifyUserProfileInitialized(String deviceID) {
-        deviceID = (deviceID != null) ? deviceID : deviceInfo.getDeviceID();
-
-        if (deviceID == null) {
-            return;
-        }
-
-        final SyncListener sl;
-        try {
-            sl = getSyncListener();
-            if (sl != null) {
-                sl.profileDidInitialize(deviceID);
-            }
-        } catch (Throwable t) {
-            // Ignore
-        }
-    }
-
-    void notifyUserProfileInitialized() {
-        notifyUserProfileInitialized(deviceInfo.getDeviceID());
     }
 }

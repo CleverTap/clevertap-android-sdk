@@ -352,7 +352,6 @@ internal open class CoreState(
             "$accountId:async_deviceID",
             "Got device id from DeviceInfo, notifying user profile initialized to SyncListener"
         )
-        callback.callbackManager.notifyUserProfileInitialized(deviceId)
         callback.callbackManager.notifyCleverTapIDChanged(deviceId)
     }
 
@@ -445,7 +444,6 @@ internal open class CoreState(
                 // either force restore the cached GUID or generate a new one
                 if (cacheGuid != null) {
                     core.deviceInfo.forceUpdateDeviceId(cacheGuid)
-                    callback.callbackManager.notifyUserProfileInitialized(cacheGuid)
                 } else if (core.config.enableCustomCleverTapId) {
                     core.deviceInfo.forceUpdateCustomCleverTapID(cleverTapID)
                 } else {
@@ -453,7 +451,6 @@ internal open class CoreState(
                 }
 
                 data.localDataStore.changeUser()
-                callback.callbackManager.notifyUserProfileInitialized(core.deviceInfo.getDeviceID())
 
                 // Restore state of opt out and system events from storage
                 core.deviceInfo.setCurrentUserOptOutStateFromStorage()

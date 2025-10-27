@@ -21,13 +21,6 @@ public abstract class BaseCallbackManager {
     @Deprecated
     public abstract CTProductConfigListener getProductConfigListener();
 
-    public abstract SyncListener getSyncListener();
-
-    //Profile
-    public abstract void notifyUserProfileInitialized(String deviceID);
-
-    abstract void notifyUserProfileInitialized();
-
     public abstract void setSCDomainListener(SCDomainListener scDomainListener);
 
     public abstract void unregisterPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener);
@@ -42,8 +35,6 @@ public abstract class BaseCallbackManager {
     @Deprecated
     public abstract void setProductConfigListener(
             CTProductConfigListener productConfigListener);
-
-    public abstract void setSyncListener(SyncListener syncListener);
 
     public abstract void addOnInitCleverTapIDListener(@NonNull OnInitCleverTapIDListener listener);
 
