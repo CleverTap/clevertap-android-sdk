@@ -24,18 +24,6 @@ internal data class DelayedLegacyInAppData(
 )
 
 internal interface DelayedLegacyInAppDAO {
-
-    /**
-     * Insert a delayed legacy in-app notification
-     *
-     * @param inAppId the unique identifier for the in-app campaign
-     * @param delay the delay in seconds before showing
-     * @param inAppData the JSON data for the in-app notification
-     * @return the row ID of the newly inserted record, or error code if failed
-     */
-    @WorkerThread
-    fun insert(singleDelayedInApp: DelayedLegacyInAppData): Long
-
     /**
      * Insert multiple delayed legacy in-app notifications in a batch transaction
      *
@@ -77,42 +65,6 @@ internal class DelayedLegacyInAppDAOImpl(
     private val logger: Logger,
     private val table: Table
 ) : DelayedLegacyInAppDAO {
-
-    @WorkerThread
-    override fun insert(singleDelayedInApp: DelayedLegacyInAppData): Long {
-        val inAppId = singleDelayedInApp.inAppId
-        val delay = singleDelayedInApp.delay
-        val inAppData = singleDelayedInApp.inAppData
-
-        if (!db.belowMemThreshold()) {
-            logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return DB_OUT_OF_MEMORY_ERROR
-        }
-
-        val tableName = table.tableName
-        logger.verbose("Inserting delayed legacy in-app: $inAppId with delay: ${delay}s in $tableName")
-
-        val now = Utils.getNowInMillis()
-        val values = ContentValues().apply {
-            put(Column.INAPP_ID, inAppId)
-            put(Column.DELAY, delay)
-            put(Column.DATA, inAppData)
-            put(Column.CREATED_AT, now)
-        }
-
-        return try {
-            db.writableDatabase.insertWithOnConflict(
-                tableName,
-                null,
-                values,
-                SQLiteDatabase.CONFLICT_REPLACE
-            )
-        } catch (e: SQLiteException) {
-            logger.verbose("Error adding delayed legacy in-app to table $tableName. Recreating DB. Exception: $e")
-            db.deleteDatabase()
-            DB_UPDATE_ERROR
-        }
-    }
 
     @WorkerThread
     override fun insertBatch(delayedInApps: List<DelayedLegacyInAppData>): Boolean {

@@ -32,30 +32,6 @@ internal class DelayedLegacyInAppStore(
     private val logger: ILogger,
     private val accountId: String
 ) {
-
-    @WorkerThread
-    fun saveDelayedInApp(inAppId: String, delay: Int, inAppJson: JSONObject): Boolean {
-        // Encrypt the inAppData before saving to database
-        val encryptedInAppData = cryptHandler.encrypt(inAppJson.toString())
-
-        if (encryptedInAppData == null) {
-            logger.verbose(
-                accountId,
-                "Failed to encrypt delayed in-app: $inAppId. Data will not be stored."
-            )
-            return false
-        }
-
-        val data = DelayedLegacyInAppData(
-            inAppId = inAppId,
-            delay = delay,
-            inAppData = encryptedInAppData
-        )
-
-        val result = delayedLegacyInAppDAO.insert(data)
-        return result > 0
-    }
-
     @WorkerThread
     fun saveDelayedInAppsBatch(delayedInApps: JSONArray): Boolean {
         if (delayedInApps.length() == 0) return true
