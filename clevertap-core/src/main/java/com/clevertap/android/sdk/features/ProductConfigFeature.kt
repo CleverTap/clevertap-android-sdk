@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.features
 
 import android.content.Context
 import com.clevertap.android.sdk.CoreContract
+import com.clevertap.android.sdk.features.callbacks.ProductConfigClientCallbacks
 import com.clevertap.android.sdk.product_config.CTProductConfigController
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ProductConfigResponse
@@ -12,7 +13,8 @@ import org.json.JSONObject
  */
 internal class ProductConfigFeature(
     val productConfigResponse: ProductConfigResponse,
-    val arpResponse: ARPResponse
+    val arpResponse: ARPResponse,
+    val callbacks: ProductConfigClientCallbacks = ProductConfigClientCallbacks()
 ) : CleverTapFeature {
 
     lateinit var coreContract: CoreContract

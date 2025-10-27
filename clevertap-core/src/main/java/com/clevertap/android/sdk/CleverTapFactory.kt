@@ -62,7 +62,6 @@ import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import com.clevertap.android.sdk.features.AnalyticsFeature
-import com.clevertap.android.sdk.features.CallbackFeature
 import com.clevertap.android.sdk.features.CoreFeature
 import com.clevertap.android.sdk.features.DataFeature
 import com.clevertap.android.sdk.features.DisplayUnitFeature
@@ -162,8 +161,6 @@ internal object CleverTapFactory {
 
         getInstance(context, config)
 
-        val callbackManager = CallbackManager()
-
         val sessionManager = SessionManager(config, coreMetaData, validator, localDataStore)
 
         val triggersMatcher = TriggersMatcher(localDataStore)
@@ -171,12 +168,13 @@ internal object CleverTapFactory {
         val impressionManager = ImpressionManager(storeRegistry)
         val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
 
+        val inAppCallbackManager = InAppCallbackManager()
         val inAppActionHandler = InAppActionHandler(
             context = context,
             ctConfig = config,
             pushPermissionHandler = PushPermissionHandler(
                 config = config,
-                ctListeners = callbackManager.pushPermissionResponseListenerList
+                ctListeners = inAppCallbackManager.getPushPermissionResponseListenerList()
             )
         )
         val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
@@ -322,7 +320,6 @@ internal object CleverTapFactory {
             { FileResourceProvider.getInstance(context, config.logger) }
         )
 
-        val inAppCallbackManager = InAppCallbackManager()
         val inAppController = InAppController(
             context,
             config,
@@ -446,10 +443,6 @@ internal object CleverTapFactory {
             pushAmpResponse = pushAmpResponse
         )
 
-        // Callback
-        val callbackFeature = CallbackFeature(
-            callbackManager = callbackManager
-        )
         // DisplayUnit
         val displayUnitFeature = DisplayUnitFeature(
             contentFetchManager = contentFetchManager,
@@ -478,7 +471,6 @@ internal object CleverTapFactory {
             inbox = inboxFeature,
             variables = variablesFeature,
             push = pushFeature,
-            callback = callbackFeature,
             productConfig = ProductConfigFeature(
                 productConfigResponse = ProductConfigResponse(config, coreMetaData),
                 arpResponse = arpResponse

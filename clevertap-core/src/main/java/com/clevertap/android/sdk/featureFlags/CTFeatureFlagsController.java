@@ -5,7 +5,6 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.text.TextUtils;
 import com.clevertap.android.sdk.BaseAnalyticsManager;
-import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTFeatureFlagsListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -51,8 +50,6 @@ public class CTFeatureFlagsController {
 
     final BaseAnalyticsManager mAnalyticsManager;
 
-    final BaseCallbackManager mCallbackManager;
-
     FileUtils mFileUtils;
 
     private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String, Boolean>());
@@ -64,10 +61,9 @@ public class CTFeatureFlagsController {
      */
     @Deprecated
     CTFeatureFlagsController(String guid, CleverTapInstanceConfig config,
-            BaseCallbackManager callbackManager, BaseAnalyticsManager analyticsManager, FileUtils fileUtils) {
+                             BaseAnalyticsManager analyticsManager, FileUtils fileUtils) {
         this.guid = guid;
         this.config = config;
-        mCallbackManager = callbackManager;
         mAnalyticsManager = analyticsManager;
         mFileUtils = fileUtils;
         init();

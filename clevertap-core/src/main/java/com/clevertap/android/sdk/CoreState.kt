@@ -20,7 +20,6 @@ import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.features.AnalyticsFeature
-import com.clevertap.android.sdk.features.CallbackFeature
 import com.clevertap.android.sdk.features.CoreFeature
 import com.clevertap.android.sdk.features.DataFeature
 import com.clevertap.android.sdk.features.DisplayUnitFeature
@@ -78,7 +77,6 @@ internal open class CoreState(
     val inbox: InboxFeature,
     val variables: VariablesFeature,
     val push: PushFeature,
-    val callback: CallbackFeature,
     val productConfig: ProductConfigFeature,
     val displayUnitF: DisplayUnitFeature,
     val featureFlagF: FeatureFlagFeature,
@@ -101,7 +99,6 @@ internal open class CoreState(
     val analyticsManager: AnalyticsManager get() = analytics.analyticsManager
     val baseEventQueueManager: BaseEventQueueManager get() = analytics.baseEventQueueManager
     val cTLockManager: CTLockManager get() = inbox.cTLockManager
-    val callbackManager: BaseCallbackManager get() = callback.callbackManager
     val inAppController: InAppController get() = inApp.inAppController
     val evaluationManager: EvaluationManager get() = inApp.evaluationManager
     val impressionManager: ImpressionManager get() = inApp.impressionManager
@@ -227,11 +224,10 @@ internal open class CoreState(
         val taskInitFeatureFlags = core.executors.ioTask<Unit>()
         taskInitFeatureFlags.execute("initFeatureFlags") {
             initFeatureFlags(
-                core.context,
-                core.config,
-                core.deviceInfo,
-                callback.callbackManager,
-                analytics.analyticsManager
+                context = core.context,
+                config = core.config,
+                deviceInfo = core.deviceInfo,
+                analyticsManager = analytics.analyticsManager
             )
         }
 
@@ -359,7 +355,6 @@ internal open class CoreState(
         context: Context?,
         config: CleverTapInstanceConfig,
         deviceInfo: DeviceInfo,
-        callbackManager: BaseCallbackManager,
         analyticsManager: AnalyticsManager?
     ) {
         config.logger.verbose(
@@ -372,7 +367,7 @@ internal open class CoreState(
             featureFlagF.ctFeatureFlagsController = CTFeatureFlagsFactory.getInstance(
                 context,
                 deviceInfo.deviceID,
-                config, callbackManager, analyticsManager
+                config, analyticsManager
             )
             config.logger.verbose(config.accountId + ":async_deviceID", "Feature Flags initialized")
         }
@@ -398,8 +393,12 @@ internal open class CoreState(
             )
             val ctProductConfigController = CTProductConfigFactory
                 .getInstance(
-                    context, core.deviceInfo,
-                    core.config, analytics.analyticsManager, core.coreMetaData, callback.callbackManager
+                    context,
+                    core.deviceInfo,
+                    core.config,
+                    analytics.analyticsManager,
+                    core.coreMetaData,
+                    productConfig.callbacks
                 )
             productConfig.productConfigController = ctProductConfigController
         }
@@ -664,8 +663,12 @@ internal open class CoreState(
         productConfig.productConfigController?.resetSettings()
         val ctProductConfigController =
             CTProductConfigFactory.getInstance(
-                core.context, core.deviceInfo, core.config, analytics.analyticsManager, core.coreMetaData,
-                callback.callbackManager
+                core.context,
+                core.deviceInfo,
+                core.config,
+                analytics.analyticsManager,
+                core.coreMetaData,
+                productConfig.callbacks
             )
         productConfig.productConfigController = ctProductConfigController
         core.config.getLogger().verbose(core.config.accountId, "Product Config reset")

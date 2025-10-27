@@ -4,6 +4,7 @@ import android.os.Bundle
 import com.clevertap.android.sdk.InAppNotificationButtonListener
 import com.clevertap.android.sdk.InAppNotificationListener
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.PushPermissionResponseListener
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
@@ -26,6 +27,8 @@ internal class InAppCallbackManager {
     // Fetch InApps callback
     @Volatile
     private var fetchInAppsCallback: FetchInAppsCallback? = null
+
+    private val pushPermRespListeners: MutableList<PushPermissionResponseListener> = mutableListOf()
 
     // Setters
     fun setInAppNotificationListener(listener: InAppNotificationListener?) {
@@ -101,5 +104,17 @@ internal class InAppCallbackManager {
         } catch (t: Throwable) {
             Logger.v("InAppCallbackManager", "Error in onDismissed callback", t)
         }
+    }
+
+    fun getPushPermissionResponseListenerList(): List<PushPermissionResponseListener> {
+        return pushPermRespListeners
+    }
+
+    fun registerPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener) {
+        this.pushPermRespListeners.add(pushPermissionResponseListener)
+    }
+
+    fun unregisterPushPermissionResponseListener(pushPermissionResponseListener: PushPermissionResponseListener) {
+        this.pushPermRespListeners.remove(pushPermissionResponseListener)
     }
 }

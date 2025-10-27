@@ -1859,7 +1859,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public void unregisterPushPermissionNotificationResponseListener(PushPermissionResponseListener
                                                                            pushPermissionResponseListener) {
-        coreState.getCallbackManager().
+        if (pushPermissionResponseListener == null) {
+            Logger.v("Passing null PushPermissionResponseListener to unregister is not allowed");
+            return;
+        }
+        coreState.getInApp().getInAppCallbackManager().
                 unregisterPushPermissionResponseListener(pushPermissionResponseListener);
     }
 
@@ -1875,7 +1879,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public void registerPushPermissionNotificationResponseListener(PushPermissionResponseListener
                                                                           pushPermissionResponseListener) {
-        coreState.getCallbackManager().
+        if (pushPermissionResponseListener == null) {
+            Logger.v("Passing null PushPermissionResponseListener to register is not allowed");
+            return;
+        }
+        coreState.getInApp().getInAppCallbackManager().
                 registerPushPermissionResponseListener(pushPermissionResponseListener);
     }
 
@@ -2671,7 +2679,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     @Deprecated
     public void setCTProductConfigListener(CTProductConfigListener listener) {
-        coreState.getCallbackManager().setProductConfigListener(listener);
+        coreState.getProductConfig().getCallbacks().setProductConfigListener(listener);
     }
 
     /**

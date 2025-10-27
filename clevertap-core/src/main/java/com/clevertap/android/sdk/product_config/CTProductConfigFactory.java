@@ -2,10 +2,10 @@ package com.clevertap.android.sdk.product_config;
 
 import android.content.Context;
 import com.clevertap.android.sdk.BaseAnalyticsManager;
-import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
+import com.clevertap.android.sdk.features.callbacks.ProductConfigClientCallbacks;
 import com.clevertap.android.sdk.utils.FileUtils;
 
 /**
@@ -25,8 +25,7 @@ public class CTProductConfigFactory {
      */
     @Deprecated
     public static CTProductConfigController getInstance(Context context, DeviceInfo deviceInfo,
-            CleverTapInstanceConfig config, BaseAnalyticsManager baseAnalyticsManager, CoreMetaData coreMetaData,
-            BaseCallbackManager callbackManager) {
+            CleverTapInstanceConfig config, BaseAnalyticsManager baseAnalyticsManager, CoreMetaData coreMetaData, ProductConfigClientCallbacks callbackManager) {
         final String guid = deviceInfo.getDeviceID();
         FileUtils fileUtils = new FileUtils(context, config);
         ProductConfigSettings configSettings = new ProductConfigSettings(guid, config, fileUtils);

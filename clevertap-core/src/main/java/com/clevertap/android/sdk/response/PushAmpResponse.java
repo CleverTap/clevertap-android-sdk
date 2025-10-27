@@ -4,10 +4,7 @@ import static com.clevertap.android.sdk.utils.CTJsonConverter.pushIdsToJSONArray
 
 import android.content.Context;
 import android.os.Bundle;
-import com.clevertap.android.sdk.BaseCallbackManager;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.ILogger;
-import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
@@ -128,6 +125,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
     }
 
     public void setPushAmpListener(CTPushAmpListener pushAmpListener) {
+        // todo someone should set me, please fix.
         this.pushAmpListener = pushAmpListener;
     }
 }
