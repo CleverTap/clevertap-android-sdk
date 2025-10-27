@@ -86,7 +86,6 @@ internal class InAppDelayManagerV2(
     private fun scheduleInAppCallbackWithDispatcher(
         id: String,
         delayInMs: Long,
-        callbackDispatcher: CoroutineDispatcher,
         callback: (DelayedInAppResult) -> Unit
     ): Job {
         // Keep existing active job if present
@@ -152,7 +151,6 @@ internal class InAppDelayManagerV2(
      */
     internal fun scheduleDelayedInApps(
         delayedInApps: JSONArray,
-        callbackDispatcher: CoroutineDispatcher = Dispatchers.Main,
         callback: (DelayedInAppResult) -> Unit
     ) {
         logger.verbose(
@@ -194,7 +192,6 @@ internal class InAppDelayManagerV2(
                 scheduleInAppCallbackWithDispatcher(
                     inAppId,
                     delayInMilliSeconds,
-                    callbackDispatcher,
                     callback
                 )
             }
@@ -213,9 +210,7 @@ internal class InAppDelayManagerV2(
      * Called when app comes to foreground
      * Reschedules in-apps based on elapsed time
      */
-    fun onAppForeground(
-        callbackDispatcher: CoroutineDispatcher = Dispatchers.Main
-    ) {
+    fun onAppForeground() {
         logger.verbose(
             accountId,
             "$TAG App coming to foreground, checking for pending in-apps"
@@ -281,7 +276,6 @@ internal class InAppDelayManagerV2(
             scheduleInAppCallbackWithDispatcher(
                 data.inAppId,
                 data.remainingTimeInMs,
-                callbackDispatcher,
                 data.callback
             )
             rescheduledCount++
