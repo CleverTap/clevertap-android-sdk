@@ -1,41 +1,22 @@
 package com.clevertap.android.sdk;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
-import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
-import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager extends BaseCallbackManager {
 
-    private SCDomainListener scDomainListener;
-
     private final List<PushPermissionResponseListener> pushPermissionResponseListenerList = new ArrayList<>();
-
-    @Deprecated
-    private final List<OnInitCleverTapIDListener> onInitCleverTapIDListeners =  Collections.synchronizedList(new ArrayList<>());
 
     @Deprecated
     private WeakReference<CTProductConfigListener> productConfigListener;
 
     public CallbackManager() {
-    }
-
-    @Override
-    public SCDomainListener getSCDomainListener() {
-        return scDomainListener;
-    }
-
-    @Override
-    public void setSCDomainListener(SCDomainListener scDomainListener) {
-        this.scDomainListener = scDomainListener;
     }
 
     @Override
@@ -77,27 +58,6 @@ public class CallbackManager extends BaseCallbackManager {
     public void setProductConfigListener(final CTProductConfigListener productConfigListener) {
         if (productConfigListener != null) {
             this.productConfigListener = new WeakReference<>(productConfigListener);
-        }
-    }
-
-    @Override
-    public void addOnInitCleverTapIDListener(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
-        onInitCleverTapIDListeners.add(onInitCleverTapIDListener);
-    }
-
-    @Override
-    public void removeOnInitCleverTapIDListener(@NonNull final OnInitCleverTapIDListener listener) {
-        onInitCleverTapIDListeners.remove(listener);
-    }
-
-    @Override
-    public void notifyCleverTapIDChanged(final String id) {
-        synchronized (onInitCleverTapIDListeners) {
-            for (final OnInitCleverTapIDListener listener : onInitCleverTapIDListeners) {
-                if (listener != null) {
-                    listener.onInitCleverTapID(id);
-                }
-            }
         }
     }
 }

@@ -1393,14 +1393,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @RestrictTo(Scope.LIBRARY_GROUP)
     @WorkerThread
     public void setSCDomainListener(SCDomainListener scDomainListener) {
-        coreState.getCallbackManager().setSCDomainListener(scDomainListener);
-
-        if (coreState.getNetworkManager() != null) {
+        try {
+            coreState.getCore().getCoreCallbacks().setScDomainListener(scDomainListener);
             NetworkManager networkManager = coreState.getNetworkManager();
             String domain = networkManager.getDomain(EventGroup.REGULAR);
             if (domain != null) {
                 scDomainListener.onSCDomainAvailable(getSCDomain(domain));
             }
+        } catch (Exception e) {
+            // unreachable code.
         }
     }
 
@@ -3188,7 +3189,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             if (deviceID != null) {
                 runOnUiThread(() -> onInitCleverTapIDListener.onInitCleverTapID(deviceID));
             }
-            coreState.getCallbackManager().addOnInitCleverTapIDListener(onInitCleverTapIDListener);
+            coreState.getCore().getCoreCallbacks().addOnInitCleverTapIDListener(onInitCleverTapIDListener);
             return null;
         });
     }
@@ -3202,9 +3203,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @noinspection unused
      */
     public void removeCleverTapIDListener(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
-        if (coreState != null && coreState.getCallbackManager() != null) {
-            coreState.getCallbackManager().removeOnInitCleverTapIDListener(onInitCleverTapIDListener);
-        }
+        coreState.getCore().getCoreCallbacks().removeOnInitCleverTapIDListener(onInitCleverTapIDListener);
     }
 
     //TODO: start synchronizing entire flow from here

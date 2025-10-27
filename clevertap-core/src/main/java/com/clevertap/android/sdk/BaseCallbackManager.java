@@ -1,16 +1,10 @@
 package com.clevertap.android.sdk;
 
-import androidx.annotation.NonNull;
-
-import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
-import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 
 import java.util.List;
 
 public abstract class BaseCallbackManager {
-    public abstract SCDomainListener getSCDomainListener();
-
     public abstract List<PushPermissionResponseListener> getPushPermissionResponseListenerList();
 
     /**
@@ -20,8 +14,6 @@ public abstract class BaseCallbackManager {
      */
     @Deprecated
     public abstract CTProductConfigListener getProductConfigListener();
-
-    public abstract void setSCDomainListener(SCDomainListener scDomainListener);
 
     public abstract void unregisterPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener);
 
@@ -35,10 +27,4 @@ public abstract class BaseCallbackManager {
     @Deprecated
     public abstract void setProductConfigListener(
             CTProductConfigListener productConfigListener);
-
-    public abstract void addOnInitCleverTapIDListener(@NonNull OnInitCleverTapIDListener listener);
-
-    public abstract void removeOnInitCleverTapIDListener(@NonNull OnInitCleverTapIDListener listener);
-
-    public abstract void notifyCleverTapIDChanged(String id);
 }

@@ -352,7 +352,7 @@ internal open class CoreState(
             "$accountId:async_deviceID",
             "Got device id from DeviceInfo, notifying user profile initialized to SyncListener"
         )
-        callback.callbackManager.notifyCleverTapIDChanged(deviceId)
+        core.coreCallbacks.notifyCleverTapIDChanged(deviceId)
     }
 
     private fun initFeatureFlags(
@@ -778,11 +778,11 @@ internal open class CoreState(
     }
 
     override fun notifySCDomainAvailable(domain: String) {
-        callback.callbackManager.scDomainListener?.onSCDomainAvailable(domain)
+        core.coreCallbacks.scDomainListener?.onSCDomainAvailable(domain)
     }
 
     override fun notifySCDomainUnavailable() {
-        callback.callbackManager.scDomainListener?.onSCDomainUnavailable()
+        core.coreCallbacks.scDomainListener?.onSCDomainUnavailable()
     }
 
     override fun didNotFlush() {

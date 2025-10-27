@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.cryption.ICryptHandler
+import com.clevertap.android.sdk.features.callbacks.CoreClientCallbacks
 import com.clevertap.android.sdk.product_config.CTProductConfigController
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.task.CTExecutors
@@ -28,7 +29,8 @@ internal data class CoreFeature(
     val validationResultStack: ValidationResultStack,
     val cryptHandler: ICryptHandler,
     val clock: Clock,
-    val arpResponse: ARPResponse
+    val arpResponse: ARPResponse,
+    val coreCallbacks: CoreClientCallbacks = CoreClientCallbacks()
 ) : CleverTapFeature {
 
     private lateinit var coreContract: CoreContract
