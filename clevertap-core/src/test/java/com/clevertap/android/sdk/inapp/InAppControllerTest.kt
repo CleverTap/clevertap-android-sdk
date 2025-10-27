@@ -401,7 +401,7 @@ class InAppControllerTest {
     @Test
     fun `discardInApps should drop all in apps until resumeInApps is called`() {
         val inAppController = createInAppController()
-        inAppController.discardInApps()
+        inAppController.discardInApps(false)
 
         // TODO verify when multiple inApps are added to the queue only the first is discarded
 //        val inApps =

@@ -341,7 +341,7 @@ internal class InAppController(
         }
     }
 
-    fun discardInApps(hideInAppIfVisible: Boolean = true) {
+    fun discardInApps(hideInAppIfVisible: Boolean) {
         inAppState = InAppState.DISCARDED
         logger.verbose(defaultLogTag, "InAppState is DISCARDED")
 
