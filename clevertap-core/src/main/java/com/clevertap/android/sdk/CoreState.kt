@@ -284,7 +284,6 @@ internal open class CoreState(
                 )
                 data.storeRegistry.inAppStore = inAppStore
                 inApp.evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
-                callback.callbackManager.addChangeUserCallback(inAppStore)
             }
             if (data.storeRegistry.impressionStore == null) {
                 val impStore: ImpressionStore = data.storeProvider.provideImpressionStore(
@@ -293,7 +292,6 @@ internal open class CoreState(
                     accountId = core.config.accountId
                 )
                 data.storeRegistry.impressionStore = impStore
-                callback.callbackManager.addChangeUserCallback(impStore)
             }
         }
     }
@@ -472,20 +470,11 @@ internal open class CoreState(
                 recordDeviceIDErrors()
                 resetDisplayUnits()
 
-                notifyChangeUserCallback()
+                inApp.userChanged(core.deviceInfo.getDeviceID())
 
                 inApp.inAppFCManager?.changeUser(core.deviceInfo.getDeviceID())
             } catch (t: Throwable) {
                 core.config.getLogger().verbose(core.config.accountId, "Reset Profile error", t)
-            }
-        }
-    }
-
-    fun notifyChangeUserCallback() {
-        val changeUserCallbackList = callback.callbackManager.getChangeUserCallbackList()
-        synchronized(changeUserCallbackList) {
-            for (callback in changeUserCallbackList) {
-                callback?.onChangeUser(core.deviceInfo.getDeviceID(), core.config.accountId)
             }
         }
     }

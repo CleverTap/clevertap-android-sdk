@@ -6,7 +6,6 @@ import androidx.annotation.RestrictTo.Scope;
 
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
-import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import java.lang.ref.WeakReference;
@@ -35,26 +34,10 @@ public class CallbackManager extends BaseCallbackManager {
 
     private SyncListener syncListener = null;
 
-    private final List<ChangeUserCallback> changeUserCallbackList = Collections.synchronizedList(new ArrayList<>());
     private GeofenceCallback geofenceCallback;
 
     public CallbackManager(DeviceInfo deviceInfo) {
         this.deviceInfo = deviceInfo;
-    }
-
-    @Override
-    public List<ChangeUserCallback> getChangeUserCallbackList() {
-        return changeUserCallbackList;
-    }
-
-    @Override
-    public void addChangeUserCallback(ChangeUserCallback callback) {
-        changeUserCallbackList.add(callback);
-    }
-
-    @Override
-    public void removeChangeUserCallback(ChangeUserCallback callback) {
-        changeUserCallbackList.remove(callback);
     }
 
     @Override

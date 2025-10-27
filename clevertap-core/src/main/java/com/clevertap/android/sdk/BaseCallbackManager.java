@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
-import com.clevertap.android.sdk.login.ChangeUserCallback;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 
@@ -63,11 +62,4 @@ public abstract class BaseCallbackManager {
     public abstract void removeOnInitCleverTapIDListener(@NonNull OnInitCleverTapIDListener listener);
 
     public abstract void notifyCleverTapIDChanged(String id);
-
-    public abstract List<ChangeUserCallback> getChangeUserCallbackList();
-
-    public abstract void addChangeUserCallback(ChangeUserCallback callback);
-
-    public abstract void removeChangeUserCallback(ChangeUserCallback callback);
-
 }

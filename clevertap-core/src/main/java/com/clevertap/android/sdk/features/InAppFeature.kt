@@ -172,6 +172,20 @@ internal data class InAppFeature(
         inAppFCManager?.updateLimits(coreContract.context(), perDay, perSession)
         inAppFCManager?.processResponse(coreContract.context(), response)
     }
+
+    /**
+     * Called when user changes, updates the inapp stores to save data against this new user.
+     */
+    fun userChanged(deviceId: String) {
+        storeRegistry.inAppStore?.onChangeUser(
+            deviceId = deviceId,
+            accountId = coreContract.config().accountId
+        )
+        storeRegistry.impressionStore?.onChangeUser(
+            deviceId = deviceId,
+            accountId = coreContract.config().accountId
+        )
+    }
 }
 
 internal interface InAppFeatureMethods {
