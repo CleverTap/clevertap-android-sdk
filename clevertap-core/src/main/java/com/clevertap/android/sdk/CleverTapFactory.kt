@@ -249,19 +249,7 @@ internal object CleverTapFactory {
         )
         val cleverTapResponses = listOf<CleverTapResponse>(
             MetadataResponse(config, deviceInfo, ijRepo),
-            arpResponse,
             ConsoleResponse(config),
-            InboxResponse(
-                accountId,
-                config.logger,
-                ctLockManager
-            ),
-            pushAmpResponse,
-            FetchVariablesResponse(config, ctVariables),
-            DisplayUnitResponse(accountId, config.logger),
-            FeatureFlagResponse(accountId, config.logger),
-            ProductConfigResponse(config, coreMetaData),
-            GeofenceResponse(accountId, config.logger),
             contentFetchResponse
         )
 

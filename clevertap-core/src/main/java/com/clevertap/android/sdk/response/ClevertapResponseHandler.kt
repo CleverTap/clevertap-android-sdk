@@ -22,7 +22,7 @@ internal class ClevertapResponseHandler(
                 .forEach { decorator ->
                     decorator.isFullResponse = isFullResponse
                     if (decorator is InAppResponse) {
-                        decorator.processResponse(bodyJson, bodyString, context, true)
+                        decorator.processResponse(bodyJson, isFullResponse, isUserSwitching, null, null)
                     } else {
                         decorator.processResponse(bodyJson, bodyString, context)
                     }
