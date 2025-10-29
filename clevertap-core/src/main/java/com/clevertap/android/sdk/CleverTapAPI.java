@@ -1019,7 +1019,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         }
     }
-    private static CleverTapAPI fromBundle(final Context context, final Bundle extras) {
+    private static CleverTapAPI fromBundle(final Context context, @NonNull final Bundle extras) {
         String _accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
         return fromAccountId(context, _accountId);
     }
@@ -2960,6 +2960,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return coreState.getDeviceInfo().isErrorDeviceId();
     }
 
+    // static lifecycle callbacks
     @SuppressWarnings("unused")
     static void onActivityCreated(Activity activity) {
         onActivityCreated(activity, null);
@@ -2977,97 +2978,61 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
-        boolean alreadyProcessedByCleverTap = false;
-        Bundle notification = null;
-        Uri deepLink = null;
-        String _accountId = null;
+        handleNotificationClicked(activity);
+        handleDeepLink(activity);
+    }
 
-        // check for launch deep link
+    private static void handleDeepLink(Activity activity) {
+        final Uri deepLink;
         try {
             Intent intent = activity.getIntent();
+            if (intent == null || intent.getData() == null) {
+                return; // Nothing to do, there is no deeplink to handle.
+            }
             deepLink = intent.getData();
-            if (deepLink != null) {
-                Bundle queryArgs = UriHelper.getAllKeyValuePairs(deepLink.toString(), true);
-                _accountId = queryArgs.getString(Constants.WZRK_ACCT_ID_KEY);
-            }
         } catch (Throwable t) {
-            // Ignore
+            Logger.v("Throwable trying to process deep link", t);
+            return; // Ignore and return
         }
 
-        // check for launch via notification click
+        Bundle queryArgs = UriHelper.getAllKeyValuePairs(deepLink.toString(), true);
+
+        // match from payload to find correct clevertap instance
+        // if payload does not contain any acc id then try with default
+        CleverTapAPI eligibleCtApi = fromBundle(activity.getApplicationContext(), queryArgs);
+        if (eligibleCtApi != null) {
+            eligibleCtApi.coreState.analytics().pushDeepLink(deepLink, false);
+        }
+    }
+
+    private static void handleNotificationClicked(Activity activity) {
+        final Bundle notification;
         try {
-            notification = activity.getIntent().getExtras();
-            if (notification != null && !notification.isEmpty()) {
-                try {
-                    alreadyProcessedByCleverTap = (notification.containsKey(Constants.WZRK_FROM_KEY)
-                            && Constants.WZRK_FROM.equals(notification.get(Constants.WZRK_FROM_KEY)));
-                    if (alreadyProcessedByCleverTap) {
-                        Logger.v("ActivityLifecycleCallback: Notification Clicked already processed for "
-                                + notification + ", dropping duplicate.");
-                    }
-                    if (notification.containsKey(Constants.WZRK_ACCT_ID_KEY)) {
-                        _accountId = (String) notification.get(Constants.WZRK_ACCT_ID_KEY);
-                    }
-                } catch (Throwable t) {
-                    // no-op
-                }
+            Intent intent = activity.getIntent();
+            if (intent == null || intent.getExtras() == null || intent.getExtras().isEmpty()) {
+                return;
             }
+            notification = intent.getExtras();
         } catch (Throwable t) {
-            // Ignore
-        }
-
-        if (alreadyProcessedByCleverTap && deepLink == null) {
+            Logger.v("Throwable trying to process notification", t);
             return;
         }
 
-        try {
-            for (String accountId : CleverTapAPI.instances.keySet()) {
-                CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-                if (instance != null) {
-                    handleDeepLinkOrNotificationClickedLaunch(instance.coreState, notification, deepLink, _accountId);
-                }
-            }
-        } catch (Throwable t) {
-            Logger.v("Throwable - " + t.getLocalizedMessage());
+        if (notification.containsKey(Constants.WZRK_FROM_KEY) && Constants.WZRK_FROM
+                .equals(notification.get(Constants.WZRK_FROM_KEY))) {
+            Logger.v("ActivityLifecycleCallback: Notification Clicked already processed for "
+                    + notification + ", dropping duplicate.");
+            return;
+        }
+
+        // match from payload to find correct clevertap instance
+        // if payload does not contain any acc id then try with default
+        CleverTapAPI eligibleCtApi = CleverTapAPI.fromBundle(activity.getApplicationContext(), notification);
+        if (eligibleCtApi != null) {
+            eligibleCtApi.pushNotificationClickedEvent(notification);
         }
     }
 
-    private static void handleDeepLinkOrNotificationClickedLaunch(
-            @NonNull CoreState coreState,
-            @Nullable Bundle notification,
-            @Nullable Uri deepLink,
-            @Nullable String accountId
-    ) {
-        try {
-            boolean shouldProcess = (accountId == null && coreState.config().isDefaultInstance())
-                    || coreState.config().getAccountId().equals(accountId);
-
-            if (shouldProcess) {
-                if (notification != null && !notification.isEmpty() && notification
-                        .containsKey(Constants.NOTIFICATION_TAG)
-                ) {
-                    boolean sent = coreState.analytics().pushNotificationClickedEvent(notification);
-                    if (sent) {
-                        // todo handle me when changing and notify the listeners
-                        CTPushNotificationListener pnl = coreState.getPush().getPushNotificationListener();
-                        if (pnl != null) {
-                            pnl.onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(notification));
-                        }
-                    }
-                }
-
-                if (deepLink != null) {
-                    try {
-                        coreState.analytics().pushDeepLink(deepLink, false);
-                    } catch (Throwable t) {
-                        // no-op
-                    }
-                }
-            }
-        } catch (Throwable t) {
-            Logger.v("Throwable - " + t.getLocalizedMessage());
-        }
-    }
 
     private static CleverTapAPI createInstanceIfAvailable(Context context, String _accountId) {
         return createInstanceIfAvailable(context, _accountId, null);
