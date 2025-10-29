@@ -20,7 +20,7 @@ internal class ContentFetchResponse(
 
         if (config.isAnalyticsOnly) {
             logger.verbose(config.accountId,
-                           "CleverTap instance is configured to analytics only, not processing Content Fetch response")
+                "CleverTap instance is configured to analytics only, not processing Content Fetch response")
             return
         }
 

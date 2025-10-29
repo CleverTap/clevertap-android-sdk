@@ -715,13 +715,19 @@ internal open class CoreState(
             }
         }
 
-        // Delegate to response handler
-        network.clevertapResponseHandler.handleResponse(
-            isFullResponse,
-            bodyJson,
-            bodyString,
-            isUserSwitchFlush
-        )
+        if (bodyJson == null) {
+            core.config.logger.verbose("The parsed response is null so do not process.")
+            return
+        }
+
+        val allFeat = listOf(core, network, analytics, inApp, inbox, variables, push, productConfig, displayUnitF, featureFlagF, geofenceF)
+        val userSwitchFeats = listOf(inbox, displayUnitF, variables)
+
+        val featuresToProcess = if (isUserSwitchFlush) userSwitchFeats else allFeat
+
+        featuresToProcess.forEach { feat ->
+            feat.handleApiData(bodyJson, bodyString, context)
+        }
 
         // Notify success
         inApp.batchSent(requestBody.queue, true)
@@ -847,9 +853,7 @@ internal open class CoreState(
         analytics.sessionManager.appLastSeen = clock.currentTimeMillis()
         core.config.logger.verbose(core.config.accountId, "App in background")
         val task = executors.postAsyncSafelyTask<Unit>()
-        task.execute(
-            "activityPaused"
-        ) {
+        task.execute("activityPaused") {
             val now = core.clock.currentTimeSecondsInt()
             if (core.coreMetaData.inCurrentSession()) {
                 try {

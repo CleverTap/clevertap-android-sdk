@@ -2,21 +2,19 @@ package com.clevertap.android.sdk.response;
 
 import android.content.Context;
 import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.ILogger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ConsoleResponse extends CleverTapResponseDecorator {
 
-    private final CleverTapInstanceConfig config;
+    private final String accountId;
 
+    private final ILogger logger;
 
-    private final Logger logger;
-
-    public ConsoleResponse(CleverTapInstanceConfig config) {
-        this.config = config;
-        logger = this.config.getLogger();
+    public ConsoleResponse(String accountId, ILogger logger) {
+        this.accountId = accountId;
+        this.logger = logger;
     }
 
     @Override
@@ -31,7 +29,7 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
                 final JSONArray console = (JSONArray) response.get("console");
                 if (console.length() > 0) {
                     for (int i = 0; i < console.length(); i++) {
-                        logger.debug(config.getAccountId(), console.get(i).toString());
+                        logger.debug(accountId, console.get(i).toString());
                     }
                 }
             }
@@ -45,8 +43,7 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
                 final int debugLevel = response.getInt("dbg_lvl");
                 if (debugLevel >= 0) {
                     CleverTapAPI.setDebugLevel(debugLevel);
-                    logger.verbose(config.getAccountId(),
-                            "Set debug level to " + debugLevel + " for this session (set by upstream)");
+                    logger.verbose(accountId, "Set debug level to " + debugLevel + " for this session (set by upstream)");
                 }
             }
         } catch (Throwable t) {

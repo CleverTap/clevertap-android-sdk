@@ -39,9 +39,6 @@ import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
-import com.clevertap.android.sdk.response.CleverTapResponse
-import com.clevertap.android.sdk.response.ClevertapResponseHandler
-import com.clevertap.android.sdk.response.ConsoleResponse
 import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.response.FeatureFlagResponse
@@ -49,7 +46,6 @@ import com.clevertap.android.sdk.response.FetchVariablesResponse
 import com.clevertap.android.sdk.response.GeofenceResponse
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.response.InboxResponse
-import com.clevertap.android.sdk.response.MetadataResponse
 import com.clevertap.android.sdk.response.ProductConfigResponse
 import com.clevertap.android.sdk.response.PushAmpResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
@@ -240,22 +236,12 @@ internal object CleverTapFactory {
             queueHeaderBuilder,
             ctApiWrapper
         )
-        val contentFetchResponse = ContentFetchResponse(config, contentFetchManager)
         val pushAmpResponse = PushAmpResponse(
             context,
             accountId,
             config.logger,
             databaseManager
         )
-        val cleverTapResponses = listOf<CleverTapResponse>(
-            MetadataResponse(config, deviceInfo, ijRepo),
-            ConsoleResponse(config),
-            contentFetchResponse
-        )
-
-        val responseHandler = ClevertapResponseHandler(context, cleverTapResponses)
-        contentFetchManager.clevertapResponseHandler = responseHandler
-
         val networkManager = NetworkManager(
             ctApiWrapper = ctApiWrapper,
             encryptionManager = encryptionManager,
@@ -373,7 +359,6 @@ internal object CleverTapFactory {
             contentFetchManager = contentFetchManager,
             encryptionManager = encryptionManager,
             arpResponse = arpResponse,
-            clevertapResponseHandler = responseHandler,
             networkHeadersListeners = mutableListOf()
         )
         networkFeature.addNetworkHeadersListener(evaluationManager)
@@ -400,6 +385,7 @@ internal object CleverTapFactory {
             impressionManager = impressionManager,
             templatesManager = templatesManager,
             inAppResponse = InAppResponse(accountId, config.logger, false, templatesManager),
+            contentFetchResponse = ContentFetchResponse(config, contentFetchManager),
             inAppCallbackManager = inAppCallbackManager,
             storeRegistry = storeRegistry,
             executors = executors,

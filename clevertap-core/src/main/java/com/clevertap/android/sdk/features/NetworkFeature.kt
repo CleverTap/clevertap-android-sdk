@@ -7,7 +7,6 @@ import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkHeadersListener
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.response.ARPResponse
-import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import org.json.JSONObject
 
 /**
@@ -18,7 +17,6 @@ internal data class NetworkFeature(
     val contentFetchManager: ContentFetchManager,
     val encryptionManager: NetworkEncryptionManager,
     val arpResponse: ARPResponse,
-    val clevertapResponseHandler: ClevertapResponseHandler,
     val networkHeadersListeners: MutableList<NetworkHeadersListener> = mutableListOf()
 ) : CleverTapFeature {
 

@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.task.CTExecutors
 import org.json.JSONArray
@@ -30,6 +31,7 @@ internal data class InAppFeature(
     val templatesManager: TemplatesManager,
     val triggerManager: TriggerManager,
     val inAppResponse: InAppResponse,
+    val contentFetchResponse: ContentFetchResponse,
     val executors: CTExecutors,
     val inAppCallbackManager: InAppCallbackManager = InAppCallbackManager()
 ) : CleverTapFeature, InAppFeatureMethods {
@@ -46,6 +48,11 @@ internal data class InAppFeature(
         stringBody: String,
         context: Context,
     ) {
+        handleInAppResponse(response)
+        contentFetchResponse.processResponse(response, stringBody, context)
+    }
+
+    private fun handleInAppResponse(response: JSONObject) {
         if (coreContract.config().isAnalyticsOnly) {
             coreContract.logger().verbose(
                 coreContract.config().accountId,
@@ -67,8 +74,10 @@ internal data class InAppFeature(
             return
         }
         // todo: fix user switch flush flag, full response flag.
-        inAppResponse.processResponse(response, false, false,
-            inAppController.getInAppFCManager(), this)
+        inAppResponse.processResponse(
+            response, false, false,
+            inAppController.getInAppFCManager(), this
+        )
     }
 
     fun batchSent(batch: JSONArray, success: Boolean) {
