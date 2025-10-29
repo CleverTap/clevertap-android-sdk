@@ -128,7 +128,10 @@ internal class InAppController(
 
     private val logger = config.logger
     private val defaultLogTag = config.accountId
+
+    @Volatile
     private var inAppState = InAppState.RESUMED
+
     private val inAppExcludedActivityNames = getExcludedActivitiesSet(manifestInfo)
 
     /**
@@ -730,7 +733,13 @@ internal class InAppController(
             return
         }
 
-        Logger.v(defaultLogTag, "Attempting to show next In-App")
+        if (inAppState == InAppState.DISCARDED) {
+            logger.verbose(
+                defaultLogTag,
+                "InApp Notifications are set to be discarded at main thread check, not showing the InApp Notification"
+            )
+            return
+        }
 
         if (!CoreMetaData.isAppForeground()) {
             pendingNotifications.add(inAppNotification)
@@ -753,6 +762,15 @@ internal class InAppController(
             return
         }
 
+        if (inAppState == InAppState.SUSPENDED) {
+            pendingNotifications.add(inAppNotification)
+            logger.verbose(
+                defaultLogTag,
+                "InApp Notifications are set to be suspended at main thread check, queuing the nosi"
+            )
+            return
+        }
+
         if ((clock.currentTimeMillis() / 1000) > inAppNotification.timeToLive) {
             Logger.d("InApp has elapsed its time to live, not showing the InApp")
             return
@@ -767,6 +785,8 @@ internal class InAppController(
             showNotificationIfAvailable()
             return
         }
+
+        Logger.v(defaultLogTag, "Attempting to show next In-App")
 
         currentlyDisplayingInApp = inAppNotification
 

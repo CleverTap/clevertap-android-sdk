@@ -415,6 +415,44 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `discardInApps should not hideInApp when nothing is displayed`() {
+        val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
+        val inAppController = createInAppController()
+        inAppController.registerInAppDisplayListener(mockDisplayListener)
+
+        inAppController.discardInApps(true)
+
+        verify(exactly = 0) { mockDisplayListener.hideInApp() }
+
+        inAppController.unregisterInAppDisplayListener()
+    }
+
+    @Test
+    fun `discardInApps should hideInApp when inapp is displayed`() {
+        val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
+        val inAppController = createInAppController()
+        inAppController.registerInAppDisplayListener(mockDisplayListener)
+        val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
+        inAppController.addInAppNotificationsToQueue(inApps)
+
+        inAppController.discardInApps(true)
+
+        verify { mockDisplayListener.hideInApp() }
+    }
+
+    @Test
+    fun `discardInApps should not hideInApp when inapp is displayed and listener is not set`() {
+        val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
+        val inAppController = createInAppController()
+        inAppController.registerInAppDisplayListener(mockDisplayListener)
+        inAppController.unregisterInAppDisplayListener()
+
+        inAppController.discardInApps(true)
+
+        verify(exactly = 0) { mockDisplayListener.hideInApp() }
+    }
+
+    @Test
     fun `onQueueEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
@@ -538,6 +576,21 @@ class InAppControllerTest {
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
+
+        //verify only the custom html with kv is displayed
+        verifyInAppsDisplayed(inAppController, Constants.KEY_CUSTOM_HTML)
+    }
+
+    @Test
+    fun `showNotificationIfAvailable should not display in-apps when state is discarded`() {
+        val inApps =
+            JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
+        fakeInAppQueue.enqueueAll(inApps)
+
+        val inAppController = createInAppController()
+        inAppController.showNotificationIfAvailable()
+
+
 
         //verify only the custom html with kv is displayed
         verifyInAppsDisplayed(inAppController, Constants.KEY_CUSTOM_HTML)
