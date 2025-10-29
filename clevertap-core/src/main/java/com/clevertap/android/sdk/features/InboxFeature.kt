@@ -1,12 +1,18 @@
 package com.clevertap.android.sdk.features
 
 import android.content.Context
+import android.os.Bundle
+import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CTInboxListener
 import com.clevertap.android.sdk.CTLockManager
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.response.InboxResponse
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -66,6 +72,29 @@ internal data class InboxFeature(
             return
         }
         inboxResponse.processResponse(response)
+    }
+
+    @WorkerThread
+    fun handleSendTestInbox(extras: Bundle) {
+        extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)?.let { notifPayload ->
+            try {
+                Logger.v("Received inbox via push payload: $notifPayload")
+
+                val notificationJson = JSONObject(notifPayload).apply {
+                    // Add an identifier, consider if this is the best approach for IDs
+                    put("_id", coreContract.clock().currentTimeSeconds())
+                }
+
+                val jsonResponse = JSONObject().apply {
+                    put(Constants.INBOX_JSON_RESPONSE_KEY, JSONArray().put(notificationJson))
+                }
+
+                handleApiData(jsonResponse, "", coreContract.context())
+
+            } catch (e: JSONException) {
+                Logger.v("Failed to process inbox message from push notification payload", e)
+            }
+        }
     }
 }
 

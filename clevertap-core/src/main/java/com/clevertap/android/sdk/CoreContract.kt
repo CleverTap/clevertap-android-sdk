@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
+import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -91,4 +92,6 @@ internal interface CoreContract {
     fun database(): BaseDatabaseManager
     fun logger(): ILogger
     fun analytics(): AnalyticsManager
+
+    fun clock(): Clock
 }

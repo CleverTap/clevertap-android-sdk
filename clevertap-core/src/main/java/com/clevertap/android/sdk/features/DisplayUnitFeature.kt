@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.features
 
 import android.content.Context
+import android.os.Bundle
+import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController
@@ -9,6 +11,8 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 
@@ -91,6 +95,33 @@ internal data class DisplayUnitFeature(
                 coreContract.config().accountId,
                 "${Constants.FEATURE_DISPLAY_UNIT} Failed to push Display Unit viewed event $t"
             )
+        }
+    }
+
+    @WorkerThread
+    fun handleSendTest(extras: Bundle) {
+        val pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)
+            ?: run {
+                coreContract.logger().verbose("Display unit preview push payload not found in extras bundle.")
+                return
+            }
+
+        coreContract.logger().verbose("Received Display Unit via push payload: $pushJsonPayload")
+
+        try {
+            val testPushObject = JSONObject(pushJsonPayload)
+
+            val displayUnits = JSONArray().apply {
+                put(testPushObject)
+            }
+            val responseJson = JSONObject().apply {
+                put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits)
+            }
+
+            handleApiData(responseJson, "", coreContract.context())
+
+        } catch (e: JSONException) {
+            coreContract.logger().verbose("Failed to parse display unit preview JSON from payload: $pushJsonPayload", e)
         }
     }
 }

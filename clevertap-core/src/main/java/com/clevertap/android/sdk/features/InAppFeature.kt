@@ -1,9 +1,13 @@
 package com.clevertap.android.sdk.features
 
 import android.content.Context
+import android.os.Bundle
+import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.InAppFCManager
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.features.callbacks.InAppCallbackManager
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppController
@@ -16,7 +20,10 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.task.CTExecutors
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
+import java.io.IOException
+import kotlin.text.split
 
 /**
  * In-app messaging feature
@@ -191,6 +198,99 @@ internal data class InAppFeature(
             deviceId = deviceId,
             accountId = coreContract.config().accountId
         )
+    }
+
+    @WorkerThread
+    fun handleInAppPreview(extras: Bundle) {
+        try {
+            // Use requireNotNull for values that must exist, or let for safer parsing
+            val payloadString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)
+            if (payloadString.isNullOrEmpty()) {
+                Logger.v("In-app preview payload string is missing or empty.")
+                return
+            }
+
+            val payloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)
+            val payloadJson = JSONObject(payloadString)
+
+            // Determine the content based on the payload type
+            val notificationContent = when (payloadType) {
+                Constants.INAPP_IMAGE_INTERSTITIAL_TYPE,
+                Constants.INAPP_ADVANCED_BUILDER_TYPE -> getHalfInterstitialInApp(payloadJson)
+
+                else -> payloadJson
+            }
+
+            // Construct the final JSON response
+            val notificationsArray = JSONArray().put(notificationContent)
+            val apiResponseJson = JSONObject().apply {
+                put(Constants.INAPP_JSON_RESPONSE_KEY, notificationsArray)
+            }
+
+            handleApiData(apiResponseJson, "", coreContract.context())
+
+        } catch (e: JSONException) {
+            // Catch specific exceptions
+            Logger.v("Failed to parse in-app preview JSON from push payload", e)
+        } catch (t: Throwable) {
+            // A fallback for any other unexpected errors
+            Logger.v("An unexpected error occurred while handling in-app preview", t)
+        }
+    }
+
+    @Throws(JSONException::class)
+    private fun getHalfInterstitialInApp(inapp: JSONObject): JSONObject? {
+        val inAppConfig = inapp.optString(Constants.INAPP_IMAGE_INTERSTITIAL_CONFIG)
+        val htmlContent: String? = wrapImageInterstitialContent(inAppConfig)
+
+        if (htmlContent != null) {
+            inapp.put(Constants.KEY_TYPE, Constants.KEY_CUSTOM_HTML)
+            val data = inapp.opt(Constants.INAPP_DATA_TAG)
+
+            if (data is JSONObject) {
+                var dataObject = data
+                dataObject = JSONObject(dataObject.toString()) // Create a mutable copy
+                // Update the html
+                dataObject.put(Constants.INAPP_HTML_TAG, htmlContent)
+                inapp.put(Constants.INAPP_DATA_TAG, dataObject)
+            } else {
+                // If data key is not present or it is not a JSONObject,
+                // set it and overwrite it
+                val newData = JSONObject()
+                newData.put(Constants.INAPP_HTML_TAG, htmlContent)
+                inapp.put(Constants.INAPP_DATA_TAG, newData)
+            }
+        } else {
+            coreContract.config().getLogger()
+                .debug(coreContract.config().accountId, "Failed to parse the image-interstitial notification")
+            return null
+        }
+
+        return inapp
+    }
+
+    /**
+     * Wraps the provided content with HTML obtained from the image-interstitial file.
+     *
+     * @param content The content to be wrapped within the image-interstitial HTML.
+     * @return The wrapped content, or null if an error occurs during HTML retrieval or processing.
+     */
+    fun wrapImageInterstitialContent(content: String?): String? {
+        try {
+            val html = Utils.readAssetFile(coreContract.context(), Constants.INAPP_IMAGE_INTERSTITIAL_HTML_NAME)
+            if (html != null && content != null) {
+                val parts: Array<String?> =
+                    html.split(Constants.INAPP_HTML_SPLIT.toRegex()).dropLastWhile { it.isEmpty() }
+                        .toTypedArray()
+                if (parts.size == 2) {
+                    return parts[0] + content + parts[1]
+                }
+            }
+        } catch (e: IOException) {
+            coreContract.config().getLogger()
+                .debug(/* suffix = */ coreContract.config().accountId, /* message = */ "Failed to read the image-interstitial HTML file")
+        }
+        return null
     }
 }
 
