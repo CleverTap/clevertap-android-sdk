@@ -281,8 +281,6 @@ internal object CleverTapFactory {
             validationResultStack,
             coreMetaData,
             deviceInfo,
-            ctLockManager,
-            null, // todo fixme
             SYSTEM,
             executors
         )

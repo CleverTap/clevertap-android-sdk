@@ -2513,13 +2513,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushNotificationClickedEvent(final Bundle extras) {
-        boolean sent = coreState.getAnalyticsManager().pushNotificationClickedEvent(extras);
-        if (sent) {
-            CTPushNotificationListener pnl = coreState.getPush().getPushNotificationListener();
-            if (pnl != null) {
-                pnl.onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras));
-            }
-        }
+        coreState.pushNotificationClickedEvent(extras);
     }
 
     /**

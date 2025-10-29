@@ -2,6 +2,7 @@ package com.clevertap.android.sdk
 
 import android.app.Activity
 import android.content.Context
+import android.os.Bundle
 import android.os.RemoteException
 import android.text.TextUtils
 import androidx.annotation.AnyThread
@@ -50,10 +51,14 @@ import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.product_config.CTProductConfigController
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory
+import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.PushProviders
+import com.clevertap.android.sdk.response.CleverTapResponse
+import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.task.Task
+import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.validation.ManifestValidator
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -65,6 +70,7 @@ import com.clevertap.android.sdk.video.VideoLibChecker
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.IOException
 
 @Suppress("DEPRECATION")
 internal open class CoreState(
@@ -990,6 +996,151 @@ internal open class CoreState(
                     .localizedMessage
                         + " \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle")
             )
+        }
+    }
+
+    fun handleInboxPreview(extras: Bundle) {
+        val task = executors.postAsyncSafelyTask<Unit>()
+        task.execute("testInboxNotification") {
+            try {
+                Logger.v(
+                    "Received inbox via push payload: " + extras
+                        .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)
+                )
+                val r = JSONObject()
+                val inboxNotifs = JSONArray()
+                r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs)
+                val testPushObject = JSONObject(
+                    extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)
+                )
+                testPushObject.put("_id", clock.currentTimeSeconds())
+                inboxNotifs.put(testPushObject)
+
+                inbox.handleApiData(r, "", context)
+            } catch (t: Throwable) {
+                Logger.v("Failed to process inbox message from push notification payload", t)
+            }
+        }
+    }
+
+    fun handleInAppPreview(extras: Bundle) {
+        val task = executors.postAsyncSafelyTask<Unit>()
+        task.execute("testInappNotification") {
+            try {
+                val inappPreviewPayloadType =
+                    extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)
+                val inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)
+                val inappPreviewPayload = JSONObject(inappPreviewString)
+
+                val inappNotifs = JSONArray()
+                if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE == inappPreviewPayloadType
+                    || Constants.INAPP_ADVANCED_BUILDER_TYPE == inappPreviewPayloadType
+                ) {
+                    inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload))
+                } else {
+                    inappNotifs.put(inappPreviewPayload)
+                }
+
+                val inAppResponseJson = JSONObject()
+                inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs)
+
+                //inAppResponse.processResponse(inAppResponseJson, null, context);
+            } catch (t: Throwable) {
+                Logger.v("Failed to display inapp notification from push notification payload", t)
+            }
+        }
+    }
+
+    @Throws(JSONException::class)
+    private fun getHalfInterstitialInApp(inapp: JSONObject): JSONObject? {
+        val inAppConfig = inapp.optString(Constants.INAPP_IMAGE_INTERSTITIAL_CONFIG)
+        val htmlContent: String? = wrapImageInterstitialContent(inAppConfig)
+
+        if (htmlContent != null) {
+            inapp.put(Constants.KEY_TYPE, Constants.KEY_CUSTOM_HTML)
+            val data = inapp.opt(Constants.INAPP_DATA_TAG)
+
+            if (data is JSONObject) {
+                var dataObject = data
+                dataObject = JSONObject(dataObject.toString()) // Create a mutable copy
+                // Update the html
+                dataObject.put(Constants.INAPP_HTML_TAG, htmlContent)
+                inapp.put(Constants.INAPP_DATA_TAG, dataObject)
+            } else {
+                // If data key is not present or it is not a JSONObject,
+                // set it and overwrite it
+                val newData = JSONObject()
+                newData.put(Constants.INAPP_HTML_TAG, htmlContent)
+                inapp.put(Constants.INAPP_DATA_TAG, newData)
+            }
+        } else {
+            config.getLogger()
+                .debug(config.getAccountId(), "Failed to parse the image-interstitial notification")
+            return null
+        }
+
+        return inapp
+    }
+
+    /**
+     * Wraps the provided content with HTML obtained from the image-interstitial file.
+     *
+     * @param content The content to be wrapped within the image-interstitial HTML.
+     * @return The wrapped content, or null if an error occurs during HTML retrieval or processing.
+     */
+    fun wrapImageInterstitialContent(content: String?): String? {
+        try {
+            val html = Utils.readAssetFile(context, Constants.INAPP_IMAGE_INTERSTITIAL_HTML_NAME)
+            if (html != null && content != null) {
+                val parts: Array<String?> =
+                    html.split(Constants.INAPP_HTML_SPLIT.toRegex()).dropLastWhile { it.isEmpty() }
+                        .toTypedArray()
+                if (parts.size == 2) {
+                    return parts[0] + content + parts[1]
+                }
+            }
+        } catch (e: IOException) {
+            config.getLogger()
+                .debug(config.getAccountId(), "Failed to read the image-interstitial HTML file")
+        }
+        return null
+    }
+
+    /**
+     * This method handles send Test flow for Display Units
+     *
+     * @param extras - bundled data of notification payload
+     */
+    fun handleSendTestForDisplayUnits(extras: Bundle) {
+        try {
+            val r = CTJsonConverter.displayUnitFromExtras(extras)
+
+            val cleverTapResponse: CleverTapResponse =
+                DisplayUnitResponse(config.getAccountId(), config.getLogger())
+            cleverTapResponse.processResponse(r, null, context)
+        } catch (t: Throwable) {
+            Logger.v("Failed to process Display Unit from push notification payload", t)
+        }
+    }
+
+    fun pushNotificationClickedEvent(extras: Bundle) {
+        if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
+            handleInAppPreview(extras)
+            return
+        }
+
+        if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
+            handleInboxPreview(extras)
+            return
+        }
+
+        if (extras.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
+            handleSendTestForDisplayUnits(extras)
+            return
+        }
+        val sent: Boolean = analyticsManager.pushNotificationClickedEvent(extras)
+        if (sent) {
+            push.pushNotificationListener?.onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras))
         }
     }
 }

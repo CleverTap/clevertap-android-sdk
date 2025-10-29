@@ -65,7 +65,7 @@ internal data class InboxFeature(
             )
             return
         }
-        inboxResponse.processResponse(response, stringBody, context)
+        inboxResponse.processResponse(response)
     }
 }
 

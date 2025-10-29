@@ -11,7 +11,7 @@ import com.clevertap.android.sdk.inbox.CTInboxController;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class InboxResponse extends CleverTapResponseDecorator {
+public class InboxResponse {
 
     private final Object inboxControllerLock;
 
@@ -35,8 +35,7 @@ public class InboxResponse extends CleverTapResponseDecorator {
 
     //NotificationInbox
     @WorkerThread
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    public void processResponse(final JSONObject response) {
 
         logger.verbose(accountId, "Inbox: Processing response");
 
