@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.features
 
 import android.content.Context
 import com.clevertap.android.sdk.CoreContract
-import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkHeadersListener
 import com.clevertap.android.sdk.network.NetworkManager
@@ -14,7 +13,6 @@ import org.json.JSONObject
  */
 internal data class NetworkFeature(
     val networkManager: NetworkManager,
-    val contentFetchManager: ContentFetchManager,
     val encryptionManager: NetworkEncryptionManager,
     val arpResponse: ARPResponse,
     val networkHeadersListeners: MutableList<NetworkHeadersListener> = mutableListOf()

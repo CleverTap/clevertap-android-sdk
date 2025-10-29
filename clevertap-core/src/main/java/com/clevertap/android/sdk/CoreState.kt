@@ -115,7 +115,7 @@ internal open class CoreState(
     val profileValueHandler: ProfileValueHandler get() = profileFeat.profileValueHandler
     val cTVariables: CTVariables get() = variables.cTVariables
     val executors: CTExecutors get() = core.executors
-    val contentFetchManager: ContentFetchManager get() = network.contentFetchManager
+    val contentFetchManager: ContentFetchManager get() = displayUnitF.contentFetchManager
     val loginInfoProvider: LoginInfoProvider get() = profileFeat.loginInfoProvider
     val storeProvider: StoreProvider get() = data.storeProvider
     val variablesRepository: VariablesRepo get() = variables.variablesRepository
@@ -433,7 +433,7 @@ internal open class CoreState(
                     null,
                     true
                 )
-                network.contentFetchManager.cancelAllResponseJobs()
+                displayUnitF.contentFetchManager.cancelAllResponseJobs()
                 data.databaseManager.clearQueues(core.context)
 
                 // clear out the old data

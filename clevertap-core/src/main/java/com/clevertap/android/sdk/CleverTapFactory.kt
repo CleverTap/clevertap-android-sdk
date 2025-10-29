@@ -356,7 +356,6 @@ internal object CleverTapFactory {
         // Network layer
         val networkFeature = NetworkFeature(
             networkManager = networkManager,
-            contentFetchManager = contentFetchManager,
             encryptionManager = encryptionManager,
             arpResponse = arpResponse,
             networkHeadersListeners = mutableListOf()
@@ -385,7 +384,6 @@ internal object CleverTapFactory {
             impressionManager = impressionManager,
             templatesManager = templatesManager,
             inAppResponse = InAppResponse(accountId, config.logger, false, templatesManager),
-            contentFetchResponse = ContentFetchResponse(config, contentFetchManager),
             inAppCallbackManager = inAppCallbackManager,
             storeRegistry = storeRegistry,
             executors = executors,
@@ -420,6 +418,7 @@ internal object CleverTapFactory {
         // DisplayUnit
         val displayUnitFeature = DisplayUnitFeature(
             contentFetchManager = contentFetchManager,
+            contentFetchResponse = ContentFetchResponse(accountId, config.logger),
             displayUnitResponse = DisplayUnitResponse(accountId, config.logger)
         )
 

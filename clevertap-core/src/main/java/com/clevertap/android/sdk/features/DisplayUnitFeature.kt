@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.displayunits.CTDisplayUnitController
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.network.ContentFetchManager
+import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import org.json.JSONObject
 import java.lang.ref.WeakReference
@@ -17,6 +18,7 @@ import java.lang.ref.WeakReference
  */
 internal data class DisplayUnitFeature(
     val contentFetchManager: ContentFetchManager,
+    val contentFetchResponse: ContentFetchResponse,
     val displayUnitResponse: DisplayUnitResponse
 ) : CleverTapFeature, DisplayUnitNotifier {
     var displayUnitListener: WeakReference<DisplayUnitListener> = WeakReference(null)
@@ -53,10 +55,15 @@ internal data class DisplayUnitFeature(
                 coreContract.config().accountId,
                 "CleverTap instance is configured to analytics only, not processing Display Unit response"
             )
+            coreContract.logger().verbose(
+                coreContract.config().accountId,
+                "CleverTap instance is configured to analytics only, not processing Content Fetch response"
+            )
             // process feature flag response
             return
         }
         displayUnitResponse.processResponse(response, stringBody, context)
+        contentFetchResponse.processResponse(response, context.packageName, contentFetchManager)
     }
 
     fun pushDisplayUnitClickedEventForID(unitID: String?) {
