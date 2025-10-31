@@ -33,12 +33,12 @@ internal data class PushFeature(
         // Handle Pull Notifications response
         if (coreContract.config().isAnalyticsOnly) {
             coreContract.logger().verbose(
-                coreContract.config().getAccountId(),
+                coreContract.config().accountId,
                 "CleverTap instance is configured to analytics only, not processing push amp response"
             )
             return
         }
-        pushAmpResponse.processResponse(response, stringBody, context)
+        pushAmpResponse.processResponse(response, context, coreContract.database(), pushProviders, pushAmpListener)
     }
 
 }

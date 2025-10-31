@@ -30,7 +30,7 @@ internal data class VariablesFeature(
         stringBody: String,
         context: Context
     ) {
-        fetchVariablesResponse.processResponse(response, stringBody, context)
+        fetchVariablesResponse.processResponse(response)
     }
 
     fun invokeCallbacksForNetworkError() {

@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.response;
 
-import android.content.Context;
-
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
@@ -10,7 +8,7 @@ import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 
 import org.json.JSONObject;
 
-public class FetchVariablesResponse extends CleverTapResponseDecorator {
+public class FetchVariablesResponse {
 
     private final CleverTapInstanceConfig config;
     private final CTVariables ctVariables;
@@ -34,10 +32,9 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
         Logger.i("variables", m, t);
     }
 
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    public void processResponse(final JSONObject response) {
         logI("Processing Variable response...");
-        logD("processResponse() called with: response = [" + response + "], stringBody = [" + stringBody + "], context = [" + context + "]");
+        logD("processResponse() called with: response = " + response);
 
         if (config.isAnalyticsOnly()) {
             logI("CleverTap instance is configured to analytics only, not processing Variable response");

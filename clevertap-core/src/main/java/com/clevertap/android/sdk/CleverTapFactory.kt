@@ -229,7 +229,6 @@ internal object CleverTapFactory {
             logger = config.logger
         )
 
-        val arpResponse = ARPResponse(accountId, config.logger, validator, arpRepo)
         val contentFetchManager = ContentFetchManager(
             config.logger,
             coreMetaData,
@@ -237,10 +236,8 @@ internal object CleverTapFactory {
             ctApiWrapper
         )
         val pushAmpResponse = PushAmpResponse(
-            context,
             accountId,
             config.logger,
-            databaseManager
         )
         val networkManager = NetworkManager(
             ctApiWrapper = ctApiWrapper,
@@ -325,7 +322,6 @@ internal object CleverTapFactory {
             SYSTEM
         )
         queueHeaderBuilder.pushProviders = pushProviders
-        pushAmpResponse.setPushProviders(pushProviders)
 
         // ========== Build Feature Groups ==========
         
@@ -340,7 +336,7 @@ internal object CleverTapFactory {
             validationResultStack = validationResultStack,
             cryptHandler = cryptHandler,
             clock = SYSTEM,
-            arpResponse = arpResponse
+            arpRepo = arpRepo
         )
         
         // Data layer
@@ -442,7 +438,7 @@ internal object CleverTapFactory {
             variables = variablesFeature,
             push = pushFeature,
             productConfig = ProductConfigFeature(
-                productConfigResponse = ProductConfigResponse(config, coreMetaData)
+                productConfigResponse = ProductConfigResponse(accountId, config.logger)
             ),
             displayUnitF = displayUnitFeature,
             featureFlagF = featureFlagFeature,

@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.features.callbacks.CoreClientCallbacks
+import com.clevertap.android.sdk.network.ArpRepo
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ConsoleResponse
@@ -31,10 +32,11 @@ internal data class CoreFeature(
     val validationResultStack: ValidationResultStack,
     val cryptHandler: ICryptHandler,
     val clock: Clock,
-    val arpResponse: ARPResponse,
+    val arpRepo: ArpRepo,
+    val ijRepo: IJRepo = IJRepo(config), // todo access IJRepo properly.
+    val arpResponse: ARPResponse = ARPResponse(config.accountId, config.logger),
     val metadataResponse: MetadataResponse = MetadataResponse(config.accountId, config.logger),
     val consoleResponse: ConsoleResponse = ConsoleResponse(config.accountId, config.logger),
-    val ijRepo: IJRepo = IJRepo(config), // todo access IJRepo properly.
     val coreCallbacks: CoreClientCallbacks = CoreClientCallbacks()
 ) : CleverTapFeature {
 
@@ -45,8 +47,8 @@ internal data class CoreFeature(
     }
 
     override fun handleApiData(response: JSONObject, stringBody: String, context: Context) {
-        consoleResponse.processResponse(response, stringBody, context)
+        consoleResponse.processResponse(response)
         metadataResponse.processResponse(response, context, ijRepo, deviceInfo)
-        arpResponse.processResponse(response, context)
+        arpResponse.processResponse(response, context, TODO(), arpRepo)
     }
 }

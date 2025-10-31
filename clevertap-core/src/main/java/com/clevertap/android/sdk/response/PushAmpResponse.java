@@ -16,33 +16,27 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class PushAmpResponse extends CleverTapResponseDecorator {
+public class PushAmpResponse {
 
     private final String accountId;
 
-    private final Context context;
-
     private final ILogger logger;
 
-    private final BaseDatabaseManager baseDatabaseManager;
-    private PushProviders pushProviders;
-
-    private CTPushAmpListener pushAmpListener;
-
     public PushAmpResponse(
-            Context context,
             String accountId,
-            ILogger logger,
-            BaseDatabaseManager dbManager
+            ILogger logger
     ) {
-        this.context = context;
         this.accountId = accountId;
         this.logger = logger;
-        this.baseDatabaseManager = dbManager;
     }
 
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    public void processResponse(
+            final JSONObject response,
+            final Context context,
+            final BaseDatabaseManager baseDatabaseManager,
+            final PushProviders pushProviders,
+            final CTPushAmpListener pushAmpListener
+    ) {
         //Handle Pull Notifications response
         try {
             if (response.has("pushamp_notifs")) {
@@ -51,7 +45,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                 final JSONArray pushNotifications = pushAmpObject.getJSONArray("list");
                 if (pushNotifications.length() > 0) {
                     logger.verbose(accountId, "Handling Push payload locally");
-                    handlePushNotificationsInResponse(pushNotifications);
+                    handlePushNotificationsInResponse(pushNotifications, context, baseDatabaseManager, pushAmpListener);
                 }
                 if (pushAmpObject.has("pf")) {
                     try {
@@ -86,7 +80,12 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
 
     //PN
     @SuppressWarnings("rawtypes")
-    private void handlePushNotificationsInResponse(JSONArray pushNotifications) {
+    private void handlePushNotificationsInResponse(
+            JSONArray pushNotifications,
+            Context context,
+            BaseDatabaseManager baseDatabaseManager,
+            CTPushAmpListener pushAmpListener
+    ) {
         try {
             for (int i = 0; i < pushNotifications.length(); i++) {
                 Bundle pushBundle = new Bundle();
@@ -118,14 +117,5 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
         } catch (JSONException e) {
             logger.verbose(accountId, "Error parsing push notification JSON");
         }
-    }
-
-    public void setPushProviders(PushProviders pushProviders) {
-        this.pushProviders = pushProviders;
-    }
-
-    public void setPushAmpListener(CTPushAmpListener pushAmpListener) {
-        // todo someone should set me, please fix.
-        this.pushAmpListener = pushAmpListener;
     }
 }

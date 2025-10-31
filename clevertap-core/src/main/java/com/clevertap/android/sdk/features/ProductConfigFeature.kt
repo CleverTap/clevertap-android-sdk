@@ -18,9 +18,6 @@ internal class ProductConfigFeature(
     lateinit var coreContract: CoreContract
 
     var productConfigController: CTProductConfigController? = null
-        set(value) {
-            productConfigResponse.setController(value)
-        }
 
     override fun coreContract(coreContract: CoreContract) {
         this.coreContract = coreContract
@@ -46,6 +43,6 @@ internal class ProductConfigFeature(
             )
             return
         }
-        productConfigResponse.processResponse(response, stringBody, context)
+        productConfigResponse.processResponse(response, productConfigController, coreContract.coreMetaData())
     }
 }

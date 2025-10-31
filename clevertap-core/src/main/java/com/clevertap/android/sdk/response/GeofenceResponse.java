@@ -1,12 +1,11 @@
 package com.clevertap.android.sdk.response;
 
-import android.content.Context;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.GeofenceCallback;
 import com.clevertap.android.sdk.ILogger;
 import org.json.JSONObject;
 
-public class GeofenceResponse extends CleverTapResponseDecorator {
+public class GeofenceResponse {
 
     private final String accountId;
 
@@ -50,9 +49,5 @@ public class GeofenceResponse extends CleverTapResponseDecorator {
             logger.verbose(accountId,
                     Constants.LOG_TAG_GEOFENCES + "Failed to handle Geofences response", t);
         }
-    }
-
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
     }
 }

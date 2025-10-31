@@ -15,26 +15,21 @@ import java.util.ArrayList;
 
 public class ARPResponse {
 
-    private final Validator validator;
-    private final ArpRepo arpRepo;
-
     private final ILogger logger;
 
     private final String accountId;
 
-    public ARPResponse(
-            String accountId,
-            ILogger logger,
-            Validator validator,
-            ArpRepo arpRepo
-    ) {
+    public ARPResponse(String accountId, ILogger logger) {
         this.accountId = accountId;
         this.logger = logger;
-        this.validator = validator;
-        this.arpRepo = arpRepo;
     }
 
-    public void processResponse(final JSONObject response, final Context context) {
+    public void processResponse(
+            final JSONObject response,
+            final Context context,
+            final Validator validator,
+            final ArpRepo arpRepo
+    ) {
         // Handle "arp" (additional request parameters)
         try {
             if (response.has("arp")) {
@@ -42,7 +37,7 @@ public class ARPResponse {
                 if (arp.length() > 0) {
                     //Handle Discarded events in ARP
                     try {
-                        processDiscardedEventsList(arp);
+                        processDiscardedEventsList(arp, validator);
                     } catch (Throwable t) {
                         logger.verbose("Error handling discarded events response: " + t.getLocalizedMessage());
                     }
@@ -57,10 +52,8 @@ public class ARPResponse {
     /**
      * Dashboard has a feature where marketers can discard event. We get that list in the ARP response,
      * SDK then checks if the event is in the discarded list before sending it to LC
-     *
-     * @param response response from server
      */
-    private void processDiscardedEventsList(JSONObject response) {
+    private void processDiscardedEventsList(JSONObject response, Validator validator) {
         if (!response.has(Constants.DISCARDED_EVENT_JSON_KEY)) {
             logger.verbose(accountId, "ARP doesn't contain the Discarded Events key");
             return;

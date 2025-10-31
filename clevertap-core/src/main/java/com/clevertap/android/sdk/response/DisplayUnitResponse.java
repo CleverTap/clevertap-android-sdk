@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.response;
 
-import android.content.Context;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ILogger;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class DisplayUnitResponse extends CleverTapResponseDecorator {
+public class DisplayUnitResponse {
 
     private final Object displayUnitControllerLock = new Object();
 
@@ -33,8 +32,7 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     //Logic for the processing of Display Unit response
 
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    public void processResponse(final JSONObject response) {
 
         logger.verbose(accountId, "Processing Display Unit items...");
 

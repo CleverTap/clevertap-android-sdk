@@ -66,7 +66,7 @@ internal data class DisplayUnitFeature(
             // process feature flag response
             return
         }
-        displayUnitResponse.processResponse(response, stringBody, context)
+        displayUnitResponse.processResponse(response)
         contentFetchResponse.processResponse(response, context.packageName, contentFetchManager)
     }
 

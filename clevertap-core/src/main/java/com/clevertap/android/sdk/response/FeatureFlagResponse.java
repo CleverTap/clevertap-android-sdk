@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.response;
 
-import android.content.Context;
-
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ILogger;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
@@ -10,7 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class FeatureFlagResponse extends CleverTapResponseDecorator {
+public class FeatureFlagResponse {
 
     private final String accountId;
     private final ILogger logger;
@@ -42,10 +40,6 @@ public class FeatureFlagResponse extends CleverTapResponseDecorator {
         } catch (Throwable t) {
             logger.verbose(accountId, Constants.FEATURE_FLAG_UNIT + "Failed to parse response", t);
         }
-    }
-
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
     }
 
     private void parseFeatureFlags(CTFeatureFlagsController controller, JSONObject responseKV) throws JSONException {

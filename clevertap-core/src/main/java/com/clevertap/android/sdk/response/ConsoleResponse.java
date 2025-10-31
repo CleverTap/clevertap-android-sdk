@@ -1,12 +1,11 @@
 package com.clevertap.android.sdk.response;
 
-import android.content.Context;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.ILogger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class ConsoleResponse extends CleverTapResponseDecorator {
+public class ConsoleResponse {
 
     private final String accountId;
 
@@ -17,8 +16,7 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
         this.logger = logger;
     }
 
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    public void processResponse(final JSONObject response) {
         // Handle "console" - print them as info to the console
         try {
             /**
