@@ -229,7 +229,7 @@ internal object CleverTapFactory {
             logger = config.logger
         )
 
-        val arpResponse = ARPResponse(validator, arpRepo)
+        val arpResponse = ARPResponse(accountId, config.logger, validator, arpRepo)
         val contentFetchManager = ContentFetchManager(
             config,
             coreMetaData,
@@ -355,7 +355,6 @@ internal object CleverTapFactory {
         val networkFeature = NetworkFeature(
             networkManager = networkManager,
             encryptionManager = encryptionManager,
-            arpResponse = arpResponse,
             networkHeadersListeners = mutableListOf()
         )
         networkFeature.addNetworkHeadersListener(evaluationManager)
@@ -443,8 +442,7 @@ internal object CleverTapFactory {
             variables = variablesFeature,
             push = pushFeature,
             productConfig = ProductConfigFeature(
-                productConfigResponse = ProductConfigResponse(config, coreMetaData),
-                arpResponse = arpResponse
+                productConfigResponse = ProductConfigResponse(config, coreMetaData)
             ),
             displayUnitF = displayUnitFeature,
             featureFlagF = featureFlagFeature,

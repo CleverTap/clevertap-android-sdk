@@ -47,6 +47,6 @@ internal data class CoreFeature(
     override fun handleApiData(response: JSONObject, stringBody: String, context: Context) {
         consoleResponse.processResponse(response, stringBody, context)
         metadataResponse.processResponse(response, context, ijRepo, deviceInfo)
-        arpResponse.processResponse(response, stringBody, context)
+        arpResponse.processResponse(response, context)
     }
 }

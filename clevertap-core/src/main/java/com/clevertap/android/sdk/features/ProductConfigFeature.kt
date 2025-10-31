@@ -4,7 +4,6 @@ import android.content.Context
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.features.callbacks.ProductConfigClientCallbacks
 import com.clevertap.android.sdk.product_config.CTProductConfigController
-import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ProductConfigResponse
 import org.json.JSONObject
 
@@ -13,7 +12,6 @@ import org.json.JSONObject
  */
 internal class ProductConfigFeature(
     val productConfigResponse: ProductConfigResponse,
-    val arpResponse: ARPResponse,
     val callbacks: ProductConfigClientCallbacks = ProductConfigClientCallbacks()
 ) : CleverTapFeature {
 
@@ -21,7 +19,6 @@ internal class ProductConfigFeature(
 
     var productConfigController: CTProductConfigController? = null
         set(value) {
-            arpResponse.setCtProductConfigController(value)
             productConfigResponse.setController(value)
         }
 
@@ -34,7 +31,12 @@ internal class ProductConfigFeature(
         stringBody: String,
         context: Context
     ) {
-        arpResponse.processResponse(response, stringBody, context)
+        // Arp handling happens irrespective of analytics mode
+        response.optJSONObject("arp")?.let { arp ->
+            if (arp.length() > 0) {
+                productConfigController?.setArpValue(arp)
+            }
+        }
 
         // Intentional as per legacy code, we process arp.
         if (coreContract.config().isAnalyticsOnly) {
