@@ -231,7 +231,7 @@ internal object CleverTapFactory {
 
         val arpResponse = ARPResponse(accountId, config.logger, validator, arpRepo)
         val contentFetchManager = ContentFetchManager(
-            config,
+            config.logger,
             coreMetaData,
             queueHeaderBuilder,
             ctApiWrapper

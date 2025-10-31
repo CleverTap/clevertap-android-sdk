@@ -85,6 +85,7 @@ internal open class CoreState(
 ) : CoreContract {
 
     init {
+        contentFetchManager.coreContract = this
         network.coreContract(this)
     }
 
@@ -732,6 +733,17 @@ internal open class CoreState(
 
         // Notify success
         inApp.batchSent(requestBody.queue, true)
+    }
+
+    override fun handleContentResponseData(
+        response: JSONObject,
+        isUserSwitchFlush: Boolean
+    ) {
+
+        val allFeat = listOf(core, network, analytics, inApp, inbox, variables, push, productConfig, displayUnitF, featureFlagF, geofenceF)
+        allFeat.forEach { feat ->
+            feat.handleApiData(response, "", context)
+        }
     }
 
     override fun handleVariablesResponse(response: Response) {

@@ -33,6 +33,20 @@ internal interface CoreContract {
     )
 
     /**
+     * Handles the response from content fetch APIs (inbox, product config, display units).
+     * Routes the response to the appropriate feature handler (e.g., CTInboxController, ProductConfig).
+     * (Currently clevertap only supports this for Native Displays)
+     *
+     * Note: Called only on success of api call.
+     *
+     * @param response The network response object containing the fetched content.
+     */
+    fun handleContentResponseData(
+        response: JSONObject,
+        isUserSwitchFlush: Boolean
+    )
+
+    /**
      * Handles the response from variables API (/vars)
      * Routes to VariablesFeature and ARPResponse
      */
