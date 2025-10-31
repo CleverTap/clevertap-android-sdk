@@ -445,6 +445,8 @@ class InAppControllerTest {
         val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
         val inAppController = createInAppController()
         inAppController.registerInAppDisplayListener(mockDisplayListener)
+        val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
+        inAppController.addInAppNotificationsToQueue(inApps)
         inAppController.unregisterInAppDisplayListener()
 
         inAppController.discardInApps(true)
