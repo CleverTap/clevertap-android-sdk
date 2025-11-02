@@ -33,10 +33,8 @@ import com.clevertap.android.sdk.features.ProductConfigFeature
 import com.clevertap.android.sdk.features.ProfileFeature
 import com.clevertap.android.sdk.features.PushFeature
 import com.clevertap.android.sdk.features.VariablesFeature
-import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
-import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
@@ -103,8 +101,6 @@ internal open class CoreState(
     val baseEventQueueManager: BaseEventQueueManager get() = analytics.baseEventQueueManager
     val cTLockManager: CTLockManager get() = inbox.cTLockManager
     val inAppController: InAppController get() = inApp.inAppController
-    val evaluationManager: EvaluationManager get() = inApp.evaluationManager
-    val impressionManager: ImpressionManager get() = inApp.impressionManager
     val sessionManager: SessionManager get() = analytics.sessionManager
     val validationResultStack: ValidationResultStack get() = core.validationResultStack
     val mainLooperHandler: MainLooperHandler get() = core.mainLooperHandler
@@ -120,7 +116,6 @@ internal open class CoreState(
     val executors: CTExecutors get() = core.executors
     val contentFetchManager: ContentFetchManager get() = displayUnitF.contentFetchManager
     val loginInfoProvider: LoginInfoProvider get() = profileFeat.loginInfoProvider
-    val variablesRepository: VariablesRepo get() = variables.variablesRepository
     val clock: Clock get() = core.clock
     
     internal var inAppFCManager: InAppFCManager?
