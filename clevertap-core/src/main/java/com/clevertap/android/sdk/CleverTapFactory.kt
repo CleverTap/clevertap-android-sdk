@@ -34,7 +34,6 @@ import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkRepo
-import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
@@ -214,19 +213,6 @@ internal object CleverTapFactory {
             logger = config.logger,
             deviceInfo = deviceInfo
         )
-        val queueHeaderBuilder = QueueHeaderBuilder(
-            context = context,
-            config = config,
-            coreMetaData = coreMetaData,
-            deviceInfo = deviceInfo,
-            arpRepo = arpRepo,
-            ijRepo = ijRepo,
-            databaseManager = databaseManager,
-            validationResultStack = validationResultStack,
-            firstRequestTs = networkRepo::getFirstRequestTs,
-            lastRequestTs = networkRepo::getLastRequestTs,
-            logger = config.logger
-        )
 
         val contentFetchManager = ContentFetchManager(
             config.logger,
@@ -316,7 +302,6 @@ internal object CleverTapFactory {
             executors,
             SYSTEM
         )
-        queueHeaderBuilder.pushProviders = pushProviders
 
         // ========== Build Feature Groups ==========
         
