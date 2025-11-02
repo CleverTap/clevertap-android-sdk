@@ -113,14 +113,13 @@ internal open class CoreState(
     val varCache: VarCache get() = variables.varCache
     val parser: Parser get() = variables.parser
     val cryptHandler: ICryptHandler get() = core.cryptHandler
-    val storeRegistry: StoreRegistry get() = data.storeRegistry
+    val storeRegistry: StoreRegistry get() = inApp.storeRegistry
     val templatesManager: TemplatesManager get() = inApp.templatesManager
     val profileValueHandler: ProfileValueHandler get() = profileFeat.profileValueHandler
     val cTVariables: CTVariables get() = variables.cTVariables
     val executors: CTExecutors get() = core.executors
     val contentFetchManager: ContentFetchManager get() = displayUnitF.contentFetchManager
     val loginInfoProvider: LoginInfoProvider get() = profileFeat.loginInfoProvider
-    val storeProvider: StoreProvider get() = data.storeProvider
     val variablesRepository: VariablesRepo get() = variables.variablesRepository
     val clock: Clock get() = core.clock
     
@@ -135,7 +134,7 @@ internal open class CoreState(
     fun initInAppFCManager(deviceId: String) {
         val iam = InAppFCManager(
             core.context, core.config, deviceId,
-            data.storeRegistry, inApp.impressionManager,
+            inApp.storeRegistry, inApp.impressionManager,
             core.executors, core.clock
         )
         core.executors.postAsyncSafelyTask<Unit>().execute("initInAppFCManager") {
@@ -275,23 +274,23 @@ internal open class CoreState(
     @WorkerThread
     private fun initInAppStores(deviceId: String?) {
         if (deviceId != null) {
-            if (data.storeRegistry.inAppStore == null) {
-                val inAppStore: InAppStore = data.storeProvider.provideInAppStore(
+            if (inApp.storeRegistry.inAppStore == null) {
+                val inAppStore: InAppStore = inApp.storeProvider.provideInAppStore(
                     context = core.context,
                     cryptHandler = core.cryptHandler,
                     deviceId = deviceId,
                     accountId = core.config.accountId
                 )
-                data.storeRegistry.inAppStore = inAppStore
+                inApp.storeRegistry.inAppStore = inAppStore
                 inApp.evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
             }
-            if (data.storeRegistry.impressionStore == null) {
-                val impStore: ImpressionStore = data.storeProvider.provideImpressionStore(
+            if (inApp.storeRegistry.impressionStore == null) {
+                val impStore: ImpressionStore = inApp.storeProvider.provideImpressionStore(
                     context = core.context,
                     deviceId = deviceId,
                     accountId = core.config.accountId
                 )
-                data.storeRegistry.impressionStore = impStore
+                inApp.storeRegistry.impressionStore = impStore
             }
         }
     }

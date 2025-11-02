@@ -340,9 +340,7 @@ internal object CleverTapFactory {
         // Data layer
         val dataFeature = DataFeature(
             databaseManager = databaseManager,
-            localDataStore = localDataStore,
-            storeRegistry = storeRegistry,
-            storeProvider = storeProvider
+            localDataStore = localDataStore
         )
         
         // Network layer
@@ -378,7 +376,8 @@ internal object CleverTapFactory {
             inAppCallbackManager = inAppCallbackManager,
             storeRegistry = storeRegistry,
             executors = executors,
-            triggerManager = triggersManager
+            triggerManager = triggersManager,
+            storeProvider = storeProvider
         )
         
         // Inbox

@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.InAppFCManager
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.features.callbacks.InAppCallbackManager
 import com.clevertap.android.sdk.inapp.ImpressionManager
@@ -38,6 +39,7 @@ internal data class InAppFeature(
     val triggerManager: TriggerManager,
     val inAppResponse: InAppResponse,
     val executors: CTExecutors,
+    val storeProvider: StoreProvider,
     val inAppCallbackManager: InAppCallbackManager = InAppCallbackManager()
 ) : CleverTapFeature, InAppFeatureMethods {
 
