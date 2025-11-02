@@ -753,7 +753,7 @@ internal open class CoreState(
         core.config.logger.verbose(config.accountId, "Processing variables response : $bodyJson")
 
         // Process through ARP response handler
-        core.arpResponse.processResponse(bodyJson, core.context)
+        core.arpResponse.processResponse(bodyJson, core.context, core.arpRepo)
     }
 
     override fun handlePushImpressionsResponse(response: Response, queue: JSONArray) {

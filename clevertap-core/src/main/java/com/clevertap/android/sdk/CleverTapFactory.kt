@@ -360,7 +360,8 @@ internal object CleverTapFactory {
             analyticsManager = analyticsManager,
             baseEventQueueManager = baseEventQueueManager,
             eventMediator = eventMediator,
-            sessionManager = sessionManager
+            sessionManager = sessionManager,
+            validator = validator
         )
         
         // Profile
